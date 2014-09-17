@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DualVOps - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Atılım Güneş Baydin">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DualVOps</h1>
+<div class="xmldoc">
+<p>DualV operations module (automatically opened)</p>
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7110', 7110)" onmouseover="showTip(event, '7110', 7110)">
+            dualV p m
+          </code>
+          <div class="tip" id="7110">
+            <strong>Signature:</strong> p:float -&gt; m:int -&gt; DualV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make DualV, with primal value <code>p</code> and all tangent components 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7111', 7111)" onmouseover="showTip(event, '7111', 7111)">
+            dualVActive p m i
+          </code>
+          <div class="tip" id="7111">
+            <strong>Signature:</strong> p:float -&gt; m:int -&gt; i:int -&gt; DualV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make active DualV (i.e. variable of differentiation), with primal value <code>p</code>, dimension of tangent components <code>m</code>, the component with index <code>i</code> having value 1, and the rest of the components 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7112', 7112)" onmouseover="showTip(event, '7112', 7112)">
+            dualVActiveSet p m i t
+          </code>
+          <div class="tip" id="7112">
+            <strong>Signature:</strong> p:float -&gt; m:int -&gt; i:int -&gt; t:float&lt;MeasureOne&gt; -&gt; DualV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make active DualV (i.e. variable of differentiation), with primal value <code>p</code>, dimension of tangent components <code>m</code>, the component with index <code>i</code> having value <code>t</code>, and the rest of the components 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7113', 7113)" onmouseover="showTip(event, '7113', 7113)">
+            dualVSet (p, t)
+          </code>
+          <div class="tip" id="7113">
+            <strong>Signature:</strong> (p:float * t:float []) -&gt; DualV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make DualV, with primal value <code>p</code> and tangent components given in array <code>t</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7114', 7114)" onmouseover="showTip(event, '7114', 7114)">
+            primal arg1
+          </code>
+          <div class="tip" id="7114">
+            <strong>Signature:</strong> DualV -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal value of a DualV</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7115', 7115)" onmouseover="showTip(event, '7115', 7115)">
+            tangent arg1
+          </code>
+          <div class="tip" id="7115">
+            <strong>Signature:</strong> DualV -&gt; float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the tangent components of a DualV</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7116', 7116)" onmouseover="showTip(event, '7116', 7116)">
+            tuple arg1
+          </code>
+          <div class="tip" id="7116">
+            <strong>Signature:</strong> DualV -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal value and the first of the tangent components of a DualV, as a tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7117', 7117)" onmouseover="showTip(event, '7117', 7117)">
+            tupleV arg1
+          </code>
+          <div class="tip" id="7117">
+            <strong>Signature:</strong> DualV -&gt; float * float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal value and the array of the tangent components of a DualV, as a tuple</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home page</a></li>
+            <li><a href="">Get package via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
+            <li><a href="">License</a></li>
+            <li><a href="">Release notes</a></li>
+            
+            <li class="nav-header">How to use</li>
+            <li><a href="../howto-typeinference.html">Type inference</a></li>
+            <li><a href="">Forward AD</a></li>
+            <li><a href="">Reverse AD</a></li>
+            <li><a href="">Symbolic differentiation</a></li>
+            <li><a href="">Numerical differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="">Example 1</a></li>
+            <li><a href="">Example 2</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="../api-overview.html">API overview</a></li>
+            <li><a href="index.html">API reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>

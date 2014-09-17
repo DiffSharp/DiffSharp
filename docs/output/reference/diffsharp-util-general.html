@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>General - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Atılım Güneş Baydin">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>General</h1>
+<div class="xmldoc">
+<p>Various utility functions used all over the library</p>
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '194', 194)" onmouseover="showTip(event, '194', 194)">
+            deps 
+          </code>
+          <div class="tip" id="194">
+            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Two times eps</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '195', 195)" onmouseover="showTip(event, '195', 195)">
+            eps 
+          </code>
+          <div class="tip" id="195">
+            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Global step size for numerical approximations</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '196', 196)" onmouseover="showTip(event, '196', 196)">
+            epssq 
+          </code>
+          <div class="tip" id="196">
+            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Square of eps</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '197', 197)" onmouseover="showTip(event, '197', 197)">
+            fsttrd (f, arg2, t)
+          </code>
+          <div class="tip" id="197">
+            <strong>Signature:</strong> (f:&#39;?20285 * &#39;?20286 * t:&#39;?20287) -&gt; &#39;?20285 * &#39;?20287<br />
+                          <strong>Type parameters:</strong> '?20285, '?20286, '?20287          </div>
+        </td>
+        <td class="xmldoc">
+          <p>First and third terms of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '198', 198)" onmouseover="showTip(event, '198', 198)">
+            sndtrd (arg1, s, t)
+          </code>
+          <div class="tip" id="198">
+            <strong>Signature:</strong> (&#39;?20289 * s:&#39;?20290 * t:&#39;?20291) -&gt; &#39;?20290 * &#39;?20291<br />
+                          <strong>Type parameters:</strong> '?20289, '?20290, '?20291          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Second and third terms of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '199', 199)" onmouseover="showTip(event, '199', 199)">
+            sum i0 i1 f
+          </code>
+          <div class="tip" id="199">
+            <strong>Signature:</strong> i0:int -&gt; i1:int -&gt; f:(int -&gt; float&lt;MeasureOne&gt;) -&gt; float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Apply <code>f</code> to a range of integers <code>i0</code> to <code>i1</code>, and accumulate the result</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '200', 200)" onmouseover="showTip(event, '200', 200)">
+            symmetricFromUpperTriangular t
+          </code>
+          <div class="tip" id="200">
+            <strong>Signature:</strong> t:float [,] -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Fill the elements of a symmetrix matrix from the upper triangular part given in 2d array <code>t</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '201', 201)" onmouseover="showTip(event, '201', 201)">
+            trace m
+          </code>
+          <div class="tip" id="201">
+            <strong>Signature:</strong> m:float&lt;MeasureOne&gt; [,] -&gt; float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Matrix trace of a 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '202', 202)" onmouseover="showTip(event, '202', 202)">
+            transpose m
+          </code>
+          <div class="tip" id="202">
+            <strong>Signature:</strong> m:&#39;?20297 [,] -&gt; &#39;?20297 [,]<br />
+                          <strong>Type parameters:</strong> '?20297          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Matrix transpose of a 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '203', 203)" onmouseover="showTip(event, '203', 203)">
+            transposeList _arg1
+          </code>
+          <div class="tip" id="203">
+            <strong>Signature:</strong> _arg1:&#39;?20299 list list -&gt; &#39;?20299 list list<br />
+                          <strong>Type parameters:</strong> '?20299          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Matrix transpose of a list of lists</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '204', 204)" onmouseover="showTip(event, '204', 204)">
+            trd (arg1, arg2, t)
+          </code>
+          <div class="tip" id="204">
+            <strong>Signature:</strong> (&#39;?20293 * &#39;?20294 * t:&#39;?20295) -&gt; &#39;?20295<br />
+                          <strong>Type parameters:</strong> '?20293, '?20294, '?20295          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Tail of a 3-tuple</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home page</a></li>
+            <li><a href="">Get package via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
+            <li><a href="">License</a></li>
+            <li><a href="">Release notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="../howto-typeinference.html">Type inference</a></li>
+            <li><a href="">Forward AD</a></li>
+            <li><a href="">Reverse AD</a></li>
+            <li><a href="">Symbolic differentiation</a></li>
+            <li><a href="">Numerical differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="">Example 1</a></li>
+            <li><a href="">Example 2</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="../api-overview.html">API overview</a></li>
+            <li><a href="index.html">API reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>

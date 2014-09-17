@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{CD409EFB-0AE4-41E5-9987-C99C5F061588}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{F5A5EF8F-1521-4F66-9F10-C9ADD596FCA3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Docs", "docs\tools\DiffSharp.Docs\DiffSharp.Docs.fsproj", "{7F843ADC-17FE-4290-9777-89178AE0131C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2010-4E20-9FBF-21A543466EEB}"
+	ProjectSection(SolutionItems) = preProject
+		docs\input\api-overview.fsx = docs\input\api-overview.fsx
+		docs\input\howto-typeinference.fsx = docs\input\howto-typeinference.fsx
+		docs\input\index.fsx = docs\input\index.fsx
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5A5EF8F-1521-4F66-9F10-C9ADD596FCA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5A5EF8F-1521-4F66-9F10-C9ADD596FCA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5A5EF8F-1521-4F66-9F10-C9ADD596FCA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5A5EF8F-1521-4F66-9F10-C9ADD596FCA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F843ADC-17FE-4290-9777-89178AE0131C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F843ADC-17FE-4290-9777-89178AE0131C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F843ADC-17FE-4290-9777-89178AE0131C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F843ADC-17FE-4290-9777-89178AE0131C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
