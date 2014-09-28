@@ -54,10 +54,10 @@
     <Compile Include="Util.Vector.fs" />
     <Compile Include="Util.Matrix.fs" />
     <Compile Include="AD.Forward.fs" />
-    <Compile Include="AD.ForwardDoublet.fs" />
-    <Compile Include="AD.ForwardLazy.fs" />
-    <Compile Include="AD.ForwardTriplet.fs" />
-    <Compile Include="AD.ForwardTwice.fs" />
+    <Compile Include="AD.Forward2.fs" />
+    <Compile Include="AD.ForwardN.fs" />
+    <Compile Include="AD.ForwardV.fs" />
+    <Compile Include="AD.ForwardV2.fs" />
     <Compile Include="AD.Reverse.fs" />
     <Compile Include="Numerical.fs" />
     <Compile Include="Symbolic.fs" />

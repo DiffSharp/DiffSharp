@@ -3,7 +3,7 @@
 
 (**
 API Overview
-===============
+============
 
 The following table gives an overview of the differentiation API provided by the DiffSharp library.
 
@@ -40,7 +40,31 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-kr94"></td>
   </tr>
   <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardDoublet</td>
+    <td class="tg-k6pi">DiffSharp.AD.Forward2</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+  </tr>
+  <tr>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardN</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+  </tr>
+  <tr>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardV</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94"></td>
     <td class="tg-kr94"></td>
@@ -52,19 +76,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-kr94"></td>
   </tr>
   <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardLazy</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-  </tr>
-  <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardTriplet</td>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardV2</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94"></td>
     <td class="tg-kr94"></td>
@@ -72,18 +84,6 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-  </tr>
-  <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardTwice</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94"></td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
   </tr>
@@ -97,7 +97,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-kr94">A</td>
     <td class="tg-kr94">XA</td>
     <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
+    <td class="tg-kr94">A</td>
   </tr>
   <tr>
     <td class="tg-k6pi">DiffSharp.Numerical</td>
@@ -131,8 +131,22 @@ The following table gives an overview of the differentiation API provided by the
 
 **XA**: Exact gradient, approximated Hessian
 
+Implemented Techniques
+----------------------
+
+Currently, the library provides the following implementations:
+
+- DiffSharp.AD.Forward
+- DiffSharp.AD.Forward2
+- DiffSharp.AD.ForwardN
+- DiffSharp.AD.ForwardV
+- DiffSharp.AD.ForwardV2
+- DiffSharp.AD.Reverse
+- DiffSharp.Numerical
+- DiffSharp.Symbolic
+
 Operations and Variations
---------------------
+-------------------------
 
 The operations summarized above have _'-suffixed_ varieties that return a 2-tuple of (_value of original function_, _value of desired operation_). This is advantageous in the majority of AD computations, since the original function value has been already computed during AD computations, providing a performance advantage. 
 *)

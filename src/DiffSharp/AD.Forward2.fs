@@ -1,8 +1,21 @@
 ﻿//
+// This file is part of
 // DiffSharp -- F# Automatic Differentiation Library
 //
-// Copyright 2014 National University of Ireland Maynooth.
-// All rights reserved.
+// Copyright (C) 2014, National University of Ireland Maynooth.
+//
+//   DiffSharp is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   DiffSharp is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
 //
 // Written by:
 //
@@ -14,7 +27,7 @@
 //
 //   Hamilton Institute & Department of Computer Science
 //   National University of Ireland Maynooth
-//   Co. Kildare
+//   Maynooth, Co. Kildare
 //   Ireland
 //
 //   www.bcl.hamilton.ie
@@ -23,7 +36,7 @@
 #light
 
 /// Forward AD module, 2nd order
-module DiffSharp.AD.ForwardTwice
+module DiffSharp.AD.Forward2
 
 open DiffSharp.Util.General
 
@@ -94,9 +107,9 @@ module Dual2Ops =
     let inline tupleAll (Dual2(p, t, t2)) = (p, t, t2)
 
 
-/// ForwardTwice differentiation operations module (automatically opened)
+/// Forward2 differentiation operations module (automatically opened)
 [<AutoOpen>]
-module ForwardTwiceOps =
+module Forward2Ops =
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff' f =
         dual2Act >> f >> tupleAll

@@ -75,7 +75,31 @@
     <td class="tg-kr94"></td>
   </tr>
   <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardDoublet</td>
+    <td class="tg-k6pi">DiffSharp.AD.Forward2</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+  </tr>
+  <tr>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardN</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94"></td>
+    <td class="tg-kr94">X</td>
+    <td class="tg-kr94">X</td>
+  </tr>
+  <tr>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardV</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94"></td>
     <td class="tg-kr94"></td>
@@ -87,19 +111,7 @@
     <td class="tg-kr94"></td>
   </tr>
   <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardLazy</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-  </tr>
-  <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardTriplet</td>
+    <td class="tg-k6pi">DiffSharp.AD.ForwardV2</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94"></td>
     <td class="tg-kr94"></td>
@@ -107,18 +119,6 @@
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-  </tr>
-  <tr>
-    <td class="tg-k6pi">DiffSharp.AD.ForwardTwice</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
-    <td class="tg-kr94"></td>
     <td class="tg-kr94">X</td>
     <td class="tg-kr94">X</td>
   </tr>
@@ -132,7 +132,7 @@
     <td class="tg-kr94">A</td>
     <td class="tg-kr94">XA</td>
     <td class="tg-kr94">X</td>
-    <td class="tg-kr94"></td>
+    <td class="tg-kr94">A</td>
   </tr>
   <tr>
     <td class="tg-k6pi">DiffSharp.Numerical</td>
@@ -165,6 +165,21 @@
 <p><strong>A</strong>: Numerical approximation</p>
 
 <p><strong>XA</strong>: Exact gradient, approximated Hessian</p>
+
+<h2>Implemented Techniques</h2>
+
+<p>Currently, the library provides the following implementations:</p>
+
+<ul>
+<li>DiffSharp.AD.Forward</li>
+<li>DiffSharp.AD.Forward2</li>
+<li>DiffSharp.AD.ForwardN</li>
+<li>DiffSharp.AD.ForwardV</li>
+<li>DiffSharp.AD.ForwardV2</li>
+<li>DiffSharp.AD.Reverse</li>
+<li>DiffSharp.Numerical</li>
+<li>DiffSharp.Symbolic</li>
+</ul>
 
 <h2>Operations and Variations</h2>
 
@@ -251,8 +266,7 @@
             <li><a href="index.html">Home page</a></li>
             <li><a href="">Get package via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
-            <li><a href="">License</a></li>
-            <li><a href="">Release notes</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release notes</a></li>
 
             <li class="nav-header">Getting started</li>
             <li><a href="howto-typeinference.html">Type inference</a></li>
@@ -265,6 +279,9 @@
             <li><a href="">Example 1</a></li>
             <li><a href="">Example 2</a></li>
 
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="">Benchmarks</a></li>
+            
             <li class="nav-header">Documentation</li>
             <li><a href="api-overview.html">API overview</a></li>
             <li><a href="reference/index.html">API reference</a></li>

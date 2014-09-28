@@ -42,9 +42,9 @@
 
 <p>DiffSharp (∂#) is an <em>automatic differentiation</em> (AD) library implemented in the F# language.</p>
 
-<p>AD allows exact and efficient calculation of derivatives, by systematically applying the chain rule of calculus at the elementary operator level. AD is different from <em>numerical differentiation</em>, which is prone to truncation and round-off errors, and <em>symbolic differentiation</em>, which is exact but not efficient for run-time calculations.</p>
+<p>AD allows exact and efficient calculation of derivatives, by systematically applying the chain rule of calculus at the elementary operator level. AD is different from <em>numerical differentiation</em>, which is prone to truncation and round-off errors, and <em>symbolic differentiation</em>, which is exact but not efficient for run-time calculations and can only handle closed-form mathematical expressions.</p>
 
-<p>Using the DiffSharp library, AD can be incorporated with minimal change into existing implementations.</p>
+<p>Using the DiffSharp library, derivative calculations can be incorporated with minimal change into existing algorithms.</p>
 
 <p>The library is under active development by <a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a> and <a href="http://bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a> mainly for research applications in machine learning, as part of their work at the <a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a>, Hamilton Institute, National University of Ireland Maynooth.</p>
 
@@ -67,39 +67,29 @@
 
 <p>The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.</p>
 
-<p>Currently, the library provides the following implementations:</p>
-
-<ul>
-<li>DiffSharp.AD.Forward</li>
-<li>DiffSharp.AD.ForwardDoublet</li>
-<li>DiffSharp.AD.ForwardLazy</li>
-<li>DiffSharp.AD.ForwardTriplet</li>
-<li>DiffSharp.AD.ForwardTwice</li>
-<li>DiffSharp.AD.Reverse</li>
-<li>DiffSharp.Numerical</li>
-<li>DiffSharp.Symbolic</li>
-</ul>
-
 <p>We are working on the following features for the next release:</p>
 
 <ul>
-<li>Ability to nest AD operations</li>
+<li>Handling of nested AD operations</li>
 <li>AD via source code transformation</li>
-<li>Use of code quotations with AD</li>
+<li>Use of code quotations for AD</li>
 </ul>
 
 <h2>Quick Usage Example</h2>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-<span class="l">2: </span>
-<span class="l">3: </span>
-<span class="l">4: </span>
-<span class="l">5: </span>
-<span class="l">6: </span>
-<span class="l">7: </span>
-<span class="l">8: </span>
-<span class="l">9: </span>
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
@@ -110,15 +100,18 @@
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">f</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="i">x</span> <span class="o">=</span> 
     <span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs7', 7)" onmouseover="showTip(event, 'fs7', 7)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs5', 8)" onmouseover="showTip(event, 'fs5', 8)" class="i">x</span>)
 
-<span class="c">// Derivative of f at a point</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs8', 9)" onmouseover="showTip(event, 'fs8', 9)" class="i">y&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 10)" onmouseover="showTip(event, 'fs9', 10)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs4', 11)" onmouseover="showTip(event, 'fs4', 11)" class="i">f</span> <span class="n">2.</span></pre>
+<span class="c">// Derivative of f</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs8', 9)" onmouseover="showTip(event, 'fs8', 9)" class="i">f&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 10)" onmouseover="showTip(event, 'fs9', 10)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs4', 11)" onmouseover="showTip(event, 'fs4', 11)" class="i">f</span>
+
+<span class="c">// Value of the derivative of f at a point</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="i">y&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 13)" onmouseover="showTip(event, 'fs8', 13)" class="i">f&#39;</span> <span class="n">2.</span></pre>
 </td>
 </tr>
 </table>
 
 <h2>More Info</h2>
 
-<p>For an overview of AD and other differentiation methods, you can refer to our <a href="http://www.cs.nuim.ie/~gunes/files/AGBaydinICML2014Poster.pdf">recent poster</a> at the AutoML 2014 workshop. For in-depth information, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
+<p>For a quick overview of AD and other differentiation methods, you can refer to our <a href="http://www.cs.nuim.ie/~gunes/files/AGBaydinICML2014Poster.pdf">recent poster</a> for the AutoML workshop at the International Conference on Machine Learning 2014. For in-depth material, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
@@ -127,8 +120,9 @@
 <div class="tip" id="fs5">val x : Dual</div>
 <div class="tip" id="fs6">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs7">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
-<div class="tip" id="fs8">val y&#39; : float<br /><br />Full name: Index.y&#39;</div>
+<div class="tip" id="fs8">val f&#39; : (float -&gt; float)<br /><br />Full name: Index.f&#39;</div>
 <div class="tip" id="fs9">val diff : f:(Dual -&gt; Dual) -&gt; (float -&gt; float)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
+<div class="tip" id="fs10">val y&#39; : float<br /><br />Full name: Index.y&#39;</div>
           
         </div>
         <div class="span3">
@@ -139,8 +133,7 @@
             <li><a href="index.html">Home page</a></li>
             <li><a href="">Get package via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
-            <li><a href="">License</a></li>
-            <li><a href="">Release notes</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release notes</a></li>
 
             <li class="nav-header">Getting started</li>
             <li><a href="howto-typeinference.html">Type inference</a></li>
@@ -153,6 +146,9 @@
             <li><a href="">Example 1</a></li>
             <li><a href="">Example 2</a></li>
 
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="">Benchmarks</a></li>
+            
             <li class="nav-header">Documentation</li>
             <li><a href="api-overview.html">API overview</a></li>
             <li><a href="reference/index.html">API reference</a></li>
