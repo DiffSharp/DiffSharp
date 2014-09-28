@@ -28,10 +28,8 @@ You can download the [compiled library binaries](https://github.com/gbaydin/Diff
     <div class="span1"></div>
 </div>
 
-Implemented Techniques
-----------------------
-
-The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
+Future Releases
+---------------
 
 We are working on the following features for the next release:
 
