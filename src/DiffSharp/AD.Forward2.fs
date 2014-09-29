@@ -85,8 +85,10 @@ type Dual2 =
 module Dual2Ops =
     /// Make Dual2, with primal value `p`, tangent 0, and tangent-of-tangent 0
     let inline dual2 p = Dual2(p, 0., 0.)
+    /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent 0
+    let inline dual2Set (p, t) = Dual2(p, t, 0.)
     /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent value `t2`
-    let inline dual2Set (p, t, t2) = Dual2(p, t, t2)
+    let inline dual2Set2 (p, t, t2) = Dual2(p, t, t2)
     /// Make active Dual2 (i.e. variable of differentiation), with primal value `p`, tangent 1, and tangent-of-tangent 0
     let inline dual2Act p = Dual2(p, 1., 0.)
     /// Make an array of arrays of Dual2, with primal values given in array `x`. The tangent values along the diagonal are 1, the rest are 0.
@@ -125,6 +127,14 @@ module Forward2Ops =
     /// Original value and second derivative of a scalar-to-scalar function `f`
     let inline diff2' f =
         dual2Act >> f >> tuple2
+        
+    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir' r f =
+        fun x -> Array.zip x r |> Array.map dual2Set |> f |> tuple
+
+    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir r f =
+        diffdir' r f >> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`
     let inline grad' f =

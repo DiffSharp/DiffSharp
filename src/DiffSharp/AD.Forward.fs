@@ -84,9 +84,9 @@ type Dual =
 [<AutoOpen>]
 module DualOps =
     /// Make Dual, with primal value `p` and tangent 0
-    let inline dual p = Dual(float p, 0.)
+    let inline dual p = Dual(p, 0.)
     /// Make Dual, with primal value `p` and tangent value `t`
-    let inline dualSet (p, t) = Dual(float p, float t)
+    let inline dualSet (p, t) = Dual(p, t)
     /// Make active Dual (i.e. variable of differentiation), with primal value `p` and tangent 1
     let inline dualAct p = Dual(p, 1.)
     /// Make an array of arrays of Dual, with primal values given in array `x`. The tangent values along the diagonal are 1 and the rest are 0.
@@ -110,7 +110,7 @@ module ForwardOps =
     let inline diff f =
         diff' f >> snd
         
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `r`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f =
         fun x -> Array.zip x r |> Array.map dualSet |> f |> tuple
 

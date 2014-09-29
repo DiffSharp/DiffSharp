@@ -157,7 +157,7 @@
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
-    <td class="tg-v6es">X</td>
+    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
@@ -176,37 +176,18 @@
 
 <p>Currently, the library provides the following implementations:</p>
 
-<h3>DiffSharp.AD.Forward</h3>
+<ul>
+<li>DiffSharp.AD.Forward</li>
+<li>DiffSharp.AD.Forward2</li>
+<li>DiffSharp.AD.ForwardN</li>
+<li>DiffSharp.AD.ForwardV</li>
+<li>DiffSharp.AD.ForwardV2</li>
+<li>DiffSharp.AD.Reverse</li>
+<li>DiffSharp.Numerical</li>
+<li>DiffSharp.Symbolic</li>
+</ul>
 
-<p>Forward AD module implemented using <a href="http://en.wikipedia.org/wiki/Dual_number">dual numbers</a> of primal and tangent values. It provides a performance advantage when computing the first derivative of scalar-to-scalar functions and is used with the <strong>Dual</strong> numeric type.</p>
-
-<h3>DiffSharp.AD.Forward2</h3>
-
-<p>Forward AD module, also keeping the 2nd derivative. It provides the 2nd derivative of scalar-to-scalar functions and is used with the <strong>Dual2</strong> numeric type.</p>
-
-<h3>DiffSharp.AD.ForwardN</h3>
-
-<p>Forward AD module, lazily evaluating higher-order derivatives as they are called. It provides higher order derivatives of scalar-to-scalar functions and is used with the <strong>DualN</strong> numeric type.</p>
-
-<h3>DiffSharp.AD.ForwardV</h3>
-
-<p>Forward AD module, using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions and Jacobians of vector-to-vector functions and is used with the <strong>DualV</strong> numeric type.</p>
-
-<h3>DiffSharp.AD.ForwardV2</h3>
-
-<p>Forward AD module, using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians and is used with the <strong>DualV2</strong> numeric type.</p>
-
-<h3>DiffSharp.AD.Reverse</h3>
-
-<p>Reverse AD module, recording a trace of operations in forward evaluation, and using this in the reverse sweep for backpropagating adjoints. It provides a performance advantage when computing gradients of vector-to-scalar functions and Jacobians of vector-to-vector functions and is used with the <strong>Adj</strong> numeric type.</p>
-
-<h3>DiffSharp.Numerical</h3>
-
-<p>Numerical differentiation module, used with the regular <strong>float</strong> numeric type.</p>
-
-<h3>DiffSharp.Symbolic</h3>
-
-<p>Symbolic differentiation module, used with the <strong>Expr</strong> type representing F# expressions.</p>
+<p>For brief explanations of these implementations, please refer to the <a href="gettingstarted-forwardad.html">Forward AD</a>, <a href="gettingstarted-reversead.html">Reverse AD</a>, <a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a>, and <a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a> pages.</p>
 
 <h2>Operations and Variations</h2>
 
@@ -239,7 +220,7 @@
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs8', 9)" onmouseover="showTip(event, 'fs8', 9)" class="i">a</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 10)" onmouseover="showTip(event, 'fs9', 10)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs4', 11)" onmouseover="showTip(event, 'fs4', 11)" class="i">f</span> <span class="n">2.</span>
 
 <span class="c">// (Original value, derivative) of f at a point</span>
-<span class="k">let</span> (<span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="i">y</span>, <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">y&#39;</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="i">diff&#39;</span> <span onmouseout="hideTip(event, 'fs4', 15)" onmouseover="showTip(event, 'fs4', 15)" class="i">f</span> <span class="n">2.</span></pre>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="i">y</span>, <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">y&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="i">diff&#39;</span> <span onmouseout="hideTip(event, 'fs4', 15)" onmouseover="showTip(event, 'fs4', 15)" class="i">f</span> <span class="n">2.</span></pre>
 </td>
 </tr>
 </table>
@@ -248,45 +229,28 @@
 
 <p>Currently, the library provides the following operations:</p>
 
-<p><strong>diff</strong>: First derivative of a scalar-to-scalar function</p>
-
-<p><strong>diff'</strong>: Original value and first derivative of a scalar-to-scalar function</p>
-
-<p><strong>diff2</strong>: Second derivative of a scalar-to-scalar function</p>
-
-<p><strong>diff2'</strong>: Original value and second derivative of a scalar-to-scalar function</p>
-
-<p><strong>diffn</strong>: N-th derivative of a scalar-to-scalar function</p>
-
-<p><strong>diffn'</strong>: Original value and n-th derivative of a scalar-to-scalar function</p>
-
-<p><strong>diffdir</strong>: Directional derivative of a vector-to-scalar function</p>
-
-<p><strong>diffdir'</strong>: Original value and directional derivative of a vector-to-scalar function</p>
-
-<p><strong>grad</strong>: Gradient of a vector-to-scalar function</p>
-
-<p><strong>grad'</strong>: Original value and gradient of a vector-to-scalar function</p>
-
-<p><strong>hessian</strong>: Hessian of a vector-to-scalar function</p>
-
-<p><strong>hessian'</strong>: Original value and Hessian of a vector-to-scalar function</p>
-
-<p><strong>gradhessian</strong>: Gradient and Hessian of a vector-to-scalar function</p>
-
-<p><strong>gradhessian'</strong>: Original value, gradient, and Hessian of a vector-to-scalar function</p>
-
-<p><strong>jacobian</strong>: Jacobian of a vector-to-vector function</p>
-
-<p><strong>jacobian'</strong>: Original value and Jacobian of a vector-to-vector function</p>
-
-<p><strong>jacobianT</strong>: Transposed Jacobian of a vector-to-vector function</p>
-
-<p><strong>jacobianT'</strong>: Original value and transposed Jacobian of a vector-to-vector function</p>
-
-<p><strong>laplacian</strong>: Laplacian of a vector-to-scalar function</p>
-
-<p><strong>laplacian'</strong>: Original value and Laplacian of a vector-to-scalar function</p>
+<ul>
+<li><strong>diff</strong>: First derivative of a scalar-to-scalar function</li>
+<li><strong>diff'</strong>: Original value and first derivative of a scalar-to-scalar function</li>
+<li><strong>diff2</strong>: Second derivative of a scalar-to-scalar function</li>
+<li><strong>diff2'</strong>: Original value and second derivative of a scalar-to-scalar function</li>
+<li><strong>diffn</strong>: N-th derivative of a scalar-to-scalar function</li>
+<li><strong>diffn'</strong>: Original value and n-th derivative of a scalar-to-scalar function</li>
+<li><strong>diffdir</strong>: Directional derivative of a vector-to-scalar function</li>
+<li><strong>diffdir'</strong>: Original value and directional derivative of a vector-to-scalar function</li>
+<li><strong>grad</strong>: Gradient of a vector-to-scalar function</li>
+<li><strong>grad'</strong>: Original value and gradient of a vector-to-scalar function</li>
+<li><strong>hessian</strong>: Hessian of a vector-to-scalar function</li>
+<li><strong>hessian'</strong>: Original value and Hessian of a vector-to-scalar function</li>
+<li><strong>gradhessian</strong>: Gradient and Hessian of a vector-to-scalar function</li>
+<li><strong>gradhessian'</strong>: Original value, gradient, and Hessian of a vector-to-scalar function</li>
+<li><strong>jacobian</strong>: Jacobian of a vector-to-vector function</li>
+<li><strong>jacobian'</strong>: Original value and Jacobian of a vector-to-vector function</li>
+<li><strong>jacobianT</strong>: Transposed Jacobian of a vector-to-vector function</li>
+<li><strong>jacobianT'</strong>: Original value and transposed Jacobian of a vector-to-vector function</li>
+<li><strong>laplacian</strong>: Laplacian of a vector-to-scalar function</li>
+<li><strong>laplacian'</strong>: Original value and Laplacian of a vector-to-scalar function</li>
+</ul>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
@@ -307,28 +271,24 @@
 
           <ul class="nav nav-list" id="menu">
             <li class="nav-header">DiffSharp</li>
-            <li><a href="index.html">Home page</a></li>
-            <li><a href="">Get library via NuGet</a></li>
-            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
-            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release notes</a></li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
 
-            <li class="nav-header">Getting started</li>
-            <li><a href="howto-typeinference.html">Type inference</a></li>
-            <li><a href="">Forward AD</a></li>
-            <li><a href="">Reverse AD</a></li>
-            <li><a href="">Symbolic differentiation</a></li>
-            <li><a href="">Numerical differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li><a href="">Example 1</a></li>
-            <li><a href="">Example 2</a></li>
+            <li class="nav-header">Getting Started</li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Benchmarks</li>
-            <li><a href="">Benchmarks</a></li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
             
-            <li class="nav-header">Documentation</li>
-            <li><a href="api-overview.html">API overview</a></li>
-            <li><a href="reference/index.html">API reference</a></li>
+            <li class="nav-header">Reference</li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>

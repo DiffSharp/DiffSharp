@@ -97,8 +97,7 @@ let f7'y = tangent (f7 3Q 7R)
 Generic Functions
 -----------------
 
-DiffSharp can be used with [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that allow computations with a variety of numeric types without changing the code.
-
+F# supports [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that allow computations with a variety of numeric types without changing the code.
 *)
 
 // A simple generic function
@@ -114,7 +113,9 @@ let g2 = sum 2 2
 // Use sum with bigint
 let g3 = sum 2I 2I
 
-(** *)
+(** 
+DiffSharp can be used with generic numeric functions.
+*)
 
 // A generic implementation of cosine, 8-th degree approximation
 // cosine: 'a -> 'a
@@ -125,5 +126,5 @@ let inline cosine (x: ^a) =
     |> Seq.take 8
     |> Seq.sum
 
-// The derivative of cosine at a point
+// Derivative of cosine at 3
 let g6 = diff cosine 3.

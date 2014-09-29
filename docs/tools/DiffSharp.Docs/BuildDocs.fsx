@@ -1,8 +1,21 @@
 ﻿//
+// This file is part of
 // DiffSharp -- F# Automatic Differentiation Library
 //
-// Copyright 2014 National University of Ireland Maynooth.
-// All rights reserved.
+// Copyright (C) 2014, National University of Ireland Maynooth.
+//
+//   DiffSharp is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   DiffSharp is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
 //
 // Written by:
 //
@@ -14,7 +27,7 @@
 //
 //   Hamilton Institute & Department of Computer Science
 //   National University of Ireland Maynooth
-//   Co. Kildare
+//   Maynooth, Co. Kildare
 //   Ireland
 //
 //   www.bcl.hamilton.ie
@@ -23,7 +36,6 @@
 //
 // Script for generating library documentation
 //
-
 
 #I "../../../packages/FSharp.Compiler.Service.0.0.59/lib/net40/"
 #r "FSharp.Compiler.Service.dll"
@@ -71,11 +83,17 @@ for fileInfo in DirectoryInfo(relative "input/files/img").EnumerateFiles() do
 //
 // Generate documentation
 //
+
 let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/gbaydin/DiffSharp"; "project-nuget", ""; "root", ""]
 
 Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates/template.html", relative "output/index.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/api-overview.fsx", relative "input/templates/template.html", relative "output/api-overview.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/howto-typeinference.fsx", relative "input/templates/template.html", relative "output/howto-typeinference.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-typeinference.fsx", relative "input/templates/template.html", relative "output/gettingstarted-typeinference.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-forwardad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-forwardad.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-reversead.fsx", relative "input/templates/template.html", relative "output/gettingstarted-reversead.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-symbolicdifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-symbolicdifferentiation.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-numericaldifferentiation.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/benchmarks.fsx", relative "input/templates/template.html", relative "output/benchmarks.html", replacements = tags)
 
 //
 // Generate API reference

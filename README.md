@@ -4,20 +4,19 @@ DiffSharp -- F# Automatic Differentiation Library
 
 Copyright 2014, National University of Ireland Maynooth.
 
-```
-Written by:
+> Written by:
+>
+> Atilim Gunes Baydin (atilimgunes.baydin@nuim.ie)
+> 
+> Barak A. Pearlmutter (barak@cs.nuim.ie)
+>
+> Hamilton Institute & Department of Computer Science
+> National University of Ireland Maynooth
+> Maynooth, Co. Kildare
+> Ireland
+>
+> www.bcl.hamilton.ie
 
-Atilim Gunes Baydin (atilimgunes.baydin@nuim.ie)
-
-Barak A. Pearlmutter (barak@cs.nuim.ie)
-
-Hamilton Institute & Department of Computer Science
-National University of Ireland Maynooth
-Maynooth, Co. Kildare
-Ireland
-
-www.bcl.hamilton.ie
-```
 
 For open source use, DiffSharp is licensed under GNU General Public License version 3. Permitting uses outside of these license terms may be considered on a by-case basis. Please contact Atilim Gunes Baydin and Barak A. Pearlmutter for licensing options at atilimgunes.baydin@nuim.ie and barak@cs.nuim.ie.
 

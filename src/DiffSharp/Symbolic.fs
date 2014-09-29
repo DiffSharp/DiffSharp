@@ -144,7 +144,7 @@ module ExprOps =
 [<AutoOpen>]
 module SymbolicOps =
     /// First derivative of a scalar-to-scalar function `f`
-    let diff (f:Expr<float->float>) =
+    let diff (f:Expr) =
         fun x ->
             let fe = expand f
             let args = getExprArgs fe
@@ -156,7 +156,7 @@ module SymbolicOps =
         fun x -> (evalSS x f, diff f x)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`
-    let diffn n (f:Expr<float->float>) =
+    let diffn n (f:Expr) =
         fun x -> 
             let fe = expand f
             let args = getExprArgs fe
@@ -168,7 +168,7 @@ module SymbolicOps =
         fun x -> (evalSS x f, diffn n f x)
     
     /// Second derivative of a scalar-to-scalar function `f`
-    let diff2 (f:Expr<float->float>) =
+    let diff2 (f:Expr) =
         diffn 2 f
 
     /// Original value and second derivative of a scalar-to-scalar function `f`
@@ -176,7 +176,7 @@ module SymbolicOps =
         fun x -> (evalSS x f, diff2 f x)
 
     /// Gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let grad (f:Expr<float[]->float>) =
+    let grad (f:Expr) =
         fun x ->
             let fe = expand f
             fe
@@ -189,7 +189,7 @@ module SymbolicOps =
         fun x -> (evalVS x f, grad f x)
 
     /// Transposed Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let jacobianT (f:Expr<float[]->float[]>) =
+    let jacobianT (f:Expr) =
         fun x ->
             let fe = expand f
             fe
@@ -211,7 +211,7 @@ module SymbolicOps =
         jacobianT' f >> fun (r, j) -> (r, transpose j)
 
     /// Laplacian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let laplacian (f:Expr<float[]->float>) =
+    let laplacian (f:Expr) =
         fun x ->
             let fe = expand f
             fe
@@ -224,7 +224,7 @@ module SymbolicOps =
         fun x -> (evalVS x f, laplacian f x)
 
     /// Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let hessian (f:Expr<float[]->float>) =
+    let hessian (f:Expr) =
         fun (x:float[]) ->
             let fe = expand f
             let args = getExprArgs fe

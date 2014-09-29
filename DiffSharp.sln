@@ -12,7 +12,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2010-4E20-9FBF-21A543466EEB}"
 	ProjectSection(SolutionItems) = preProject
 		docs\input\api-overview.fsx = docs\input\api-overview.fsx
-		docs\input\howto-typeinference.fsx = docs\input\howto-typeinference.fsx
+		docs\input\benchmarks.fsx = docs\input\benchmarks.fsx
+		docs\input\gettingstarted-forwardad.fsx = docs\input\gettingstarted-forwardad.fsx
+		docs\input\gettingstarted-numericaldifferentiation.fsx = docs\input\gettingstarted-numericaldifferentiation.fsx
+		docs\input\gettingstarted-reversead.fsx = docs\input\gettingstarted-reversead.fsx
+		docs\input\gettingstarted-symbolicdifferentiation.fsx = docs\input\gettingstarted-symbolicdifferentiation.fsx
+		docs\input\gettingstarted-typeinference.fsx = docs\input\gettingstarted-typeinference.fsx
 		docs\input\index.fsx = docs\input\index.fsx
 	EndProjectSection
 EndProject

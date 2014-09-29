@@ -194,7 +194,7 @@
 
 <h2>Generic Functions</h2>
 
-<p>DiffSharp can be used with <a href="http://tomasp.net/blog/fsharp-generic-numeric.aspx/">generic numeric functions</a> that allow computations with a variety of numeric types without changing the code.</p>
+<p>F# supports <a href="http://tomasp.net/blog/fsharp-generic-numeric.aspx/">generic numeric functions</a> that allow computations with a variety of numeric types without changing the code.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -228,6 +228,8 @@
 </tr>
 </table>
 
+<p>DiffSharp can be used with generic numeric functions.</p>
+
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
 <span class="l"> 2: </span>
@@ -252,41 +254,41 @@
     <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs34', 79)" onmouseover="showTip(event, 'fs34', 79)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 80)" onmouseover="showTip(event, 'fs39', 80)" class="i">take</span> <span class="n">8</span>
     <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs34', 81)" onmouseover="showTip(event, 'fs34', 81)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 82)" onmouseover="showTip(event, 'fs40', 82)" class="i">sum</span>
 
-<span class="c">// The derivative of cosine at a point</span>
+<span class="c">// Derivative of cosine at 3</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs41', 83)" onmouseover="showTip(event, 'fs41', 83)" class="i">g6</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs11', 84)" onmouseover="showTip(event, 'fs11', 84)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs29', 85)" onmouseover="showTip(event, 'fs29', 85)" class="i">cosine</span> <span class="n">3.</span></pre>
 </td>
 </tr>
 </table>
 
-          <div class="tip" id="fs1">val f1 : x:float -&gt; float<br /><br />Full name: Howto-typeinference.f1</div>
+          <div class="tip" id="fs1">val f1 : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.f1</div>
 <div class="tip" id="fs2">val x : float</div>
 <div class="tip" id="fs3">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs4">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
 <div class="tip" id="fs5">namespace DiffSharp</div>
 <div class="tip" id="fs6">namespace DiffSharp.AD</div>
 <div class="tip" id="fs7">module Forward<br /><br />from DiffSharp.AD</div>
-<div class="tip" id="fs8">val f2 : x:Dual -&gt; Dual<br /><br />Full name: Howto-typeinference.f2</div>
+<div class="tip" id="fs8">val f2 : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f2</div>
 <div class="tip" id="fs9">val x : Dual</div>
-<div class="tip" id="fs10">val f2&#39; : (float -&gt; float)<br /><br />Full name: Howto-typeinference.f2&#39;</div>
+<div class="tip" id="fs10">val f2&#39; : (float -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.f2&#39;</div>
 <div class="tip" id="fs11">val diff : f:(Dual -&gt; Dual) -&gt; (float -&gt; float)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
-<div class="tip" id="fs12">val f3 : x:float -&gt; float<br /><br />Full name: Howto-typeinference.f3</div>
-<div class="tip" id="fs13">val f4 : x:Dual -&gt; Dual<br /><br />Full name: Howto-typeinference.f4</div>
+<div class="tip" id="fs12">val f3 : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.f3</div>
+<div class="tip" id="fs13">val f4 : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f4</div>
 <div class="tip" id="fs14">Multiple items<br />union case Dual.Dual: float * float -&gt; Dual<br /><br />--------------------<br />type Dual =<br />&#160;&#160;| Dual of float * float<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Acos : Dual -&gt; Dual<br />&#160;&#160;static member Asin : Dual -&gt; Dual<br />&#160;&#160;static member Atan : Dual -&gt; Dual<br />&#160;&#160;static member Cos : Dual -&gt; Dual<br />&#160;&#160;static member Cosh : Dual -&gt; Dual<br />&#160;&#160;static member DivideByInt : Dual * i:int -&gt; Dual<br />&#160;&#160;static member Exp : Dual -&gt; Dual<br />&#160;&#160;static member Log : Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:float * Dual -&gt; Dual<br />&#160;&#160;static member Pow : Dual * b:float -&gt; Dual<br />&#160;&#160;static member Pow : Dual * Dual -&gt; Dual<br />&#160;&#160;static member Sin : Dual -&gt; Dual<br />&#160;&#160;static member Sinh : Dual -&gt; Dual<br />&#160;&#160;static member Sqrt : Dual -&gt; Dual<br />&#160;&#160;static member Tan : Dual -&gt; Dual<br />&#160;&#160;static member Tanh : Dual -&gt; Dual<br />&#160;&#160;static member One : Dual<br />&#160;&#160;static member Zero : Dual<br />&#160;&#160;static member ( + ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member op_Explicit : Dual -&gt; float<br />&#160;&#160;static member op_Explicit : p:float -&gt; Dual<br />&#160;&#160;static member ( * ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( ~- ) : Dual -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.Dual</div>
-<div class="tip" id="fs15">val f5 : x:Dual -&gt; Dual<br /><br />Full name: Howto-typeinference.f5</div>
-<div class="tip" id="fs16">val dual : p:&#39;a -&gt; Dual (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
-<div class="tip" id="fs17">val f6 : x:Dual -&gt; Dual<br /><br />Full name: Howto-typeinference.f6</div>
-<div class="tip" id="fs18">val f7 : x:Dual -&gt; y:Dual -&gt; Dual<br /><br />Full name: Howto-typeinference.f7</div>
+<div class="tip" id="fs15">val f5 : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f5</div>
+<div class="tip" id="fs16">val dual : p:float -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
+<div class="tip" id="fs17">val f6 : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f6</div>
+<div class="tip" id="fs18">val f7 : x:Dual -&gt; y:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f7</div>
 <div class="tip" id="fs19">val y : Dual</div>
-<div class="tip" id="fs20">val f7&#39;x : float<br /><br />Full name: Howto-typeinference.f7&#39;x</div>
+<div class="tip" id="fs20">val f7&#39;x : float<br /><br />Full name: Gettingstarted-typeinference.f7&#39;x</div>
 <div class="tip" id="fs21">val tangent : Dual -&gt; float<br /><br />Full name: DiffSharp.AD.Forward.DualOps.tangent</div>
-<div class="tip" id="fs22">val f7&#39;y : float<br /><br />Full name: Howto-typeinference.f7&#39;y</div>
-<div class="tip" id="fs23">val sum : a:&#39;a -&gt; b:&#39;b -&gt; &#39;c (requires member ( + ))<br /><br />Full name: Howto-typeinference.sum</div>
+<div class="tip" id="fs22">val f7&#39;y : float<br /><br />Full name: Gettingstarted-typeinference.f7&#39;y</div>
+<div class="tip" id="fs23">val sum : a:&#39;a -&gt; b:&#39;b -&gt; &#39;c (requires member ( + ))<br /><br />Full name: Gettingstarted-typeinference.sum</div>
 <div class="tip" id="fs24">val a : &#39;a (requires member ( + ))</div>
 <div class="tip" id="fs25">val b : &#39;b (requires member ( + ))</div>
-<div class="tip" id="fs26">val g1 : float<br /><br />Full name: Howto-typeinference.g1</div>
-<div class="tip" id="fs27">val g2 : int<br /><br />Full name: Howto-typeinference.g2</div>
-<div class="tip" id="fs28">val g3 : System.Numerics.BigInteger<br /><br />Full name: Howto-typeinference.g3</div>
-<div class="tip" id="fs29">val cosine : x:&#39;a -&gt; &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)<br /><br />Full name: Howto-typeinference.cosine</div>
+<div class="tip" id="fs26">val g1 : float<br /><br />Full name: Gettingstarted-typeinference.g1</div>
+<div class="tip" id="fs27">val g2 : int<br /><br />Full name: Gettingstarted-typeinference.g2</div>
+<div class="tip" id="fs28">val g3 : System.Numerics.BigInteger<br /><br />Full name: Gettingstarted-typeinference.g3</div>
+<div class="tip" id="fs29">val cosine : x:&#39;a -&gt; &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)<br /><br />Full name: Gettingstarted-typeinference.cosine</div>
 <div class="tip" id="fs30">val x : &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)</div>
 <div class="tip" id="fs31">val one : &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)</div>
 <div class="tip" id="fs32">module LanguagePrimitives<br /><br />from Microsoft.FSharp.Core</div>
@@ -298,7 +300,7 @@
 <div class="tip" id="fs38">val scan : folder:(&#39;State -&gt; &#39;T -&gt; &#39;State) -&gt; state:&#39;State -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;State&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.scan</div>
 <div class="tip" id="fs39">val take : count:int -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.take</div>
 <div class="tip" id="fs40">val sum : source:seq&lt;&#39;T&gt; -&gt; &#39;T (requires member ( + ) and member get_Zero)<br /><br />Full name: Microsoft.FSharp.Collections.Seq.sum</div>
-<div class="tip" id="fs41">val g6 : float<br /><br />Full name: Howto-typeinference.g6</div>
+<div class="tip" id="fs41">val g6 : float<br /><br />Full name: Gettingstarted-typeinference.g6</div>
           
         </div>
         <div class="span3">
@@ -306,28 +308,24 @@
 
           <ul class="nav nav-list" id="menu">
             <li class="nav-header">DiffSharp</li>
-            <li><a href="index.html">Home page</a></li>
-            <li><a href="">Get library via NuGet</a></li>
-            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub page</a></li>
-            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release notes</a></li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
 
-            <li class="nav-header">Getting started</li>
-            <li><a href="howto-typeinference.html">Type inference</a></li>
-            <li><a href="">Forward AD</a></li>
-            <li><a href="">Reverse AD</a></li>
-            <li><a href="">Symbolic differentiation</a></li>
-            <li><a href="">Numerical differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li><a href="">Example 1</a></li>
-            <li><a href="">Example 2</a></li>
+            <li class="nav-header">Getting Started</li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Benchmarks</li>
-            <li><a href="">Benchmarks</a></li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
             
-            <li class="nav-header">Documentation</li>
-            <li><a href="api-overview.html">API overview</a></li>
-            <li><a href="reference/index.html">API reference</a></li>
+            <li class="nav-header">Reference</li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>

@@ -71,7 +71,7 @@ let trace (m:_[,]) =
         t
     if m.GetLength 0 = m.GetLength 1 then sum 0 ((m.GetLength 0) - 1) (fun i -> m.[i, i]) else failwith "Trace not defined for nonsquare matrix."
 
-/// Fill the elements of a symmetrix matrix from the upper triangular part given in 2d array `t`
+/// Fill the elements of a symmetric matrix from the upper triangular part given in 2d array `t`
 let symmetricFromUpperTriangular (t:float[,]) =
     let m = t.GetLength 0
     if m = t.GetLength 1 then 
