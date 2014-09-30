@@ -91,7 +91,7 @@ module DualV2Ops =
     /// Make DualV2, with primal value `p`, gradient dimension `m`, and all gradient and Hessian components 0
     let inline dualV2 p m = DualV2(p, Vector.Create(m, 0.), Matrix.Create(m, m, 0.))
     /// Make DualV2, with primal value `p`, gradient array `g`, and Hessian 2d array `h`
-    let inline dualV2Set (p, g, h) = DualV2(p, Vector.Create(g), Matrix.Create(h))
+    let inline dualV2Set (p, g, h:float[,]) = DualV2(p, Vector.Create(g), Matrix.Create(h))
     /// Make active DualV2 (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the gradient component with index `i` having value 1, the rest of the gradient components 0, and Hessian components 0
     let inline dualV2Act p m i = DualV2(p, Vector.Create(m, i, 1.), Matrix.Create(m, m, 0.))
     /// Make an array of active DualV2, with primal values given in array `x`. For a DualV2 with index _i_, the gradient is the unit vector with 1 in the _i_th place, and the Hessian components are 0.
