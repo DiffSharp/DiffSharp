@@ -108,8 +108,8 @@ module ForwardOps =
 
     /// First derivative of a scalar-to-scalar function `f`
     let inline diff f =
-        diff' f >> snd
-        
+        dualAct >> f >> tangent
+       
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f =
         fun x -> Array.zip x r |> Array.map dualSet |> f |> tuple

@@ -87,7 +87,7 @@ type DualV =
 /// DualV operations module (automatically opened)
 [<AutoOpen>]
 module DualVOps =
-    /// Make DualV, with primal value `p` and all gradient components 0
+    /// Make DualV, with primal value `p`, gradient dimension `m`, and all gradient components 0
     let inline dualV p m = DualV(p, Vector.Create(m, 0.))
     /// Make DualV, with primal value `p` and gradient array `g`
     let inline dualVSet (p, g) = DualV(p, Vector.Create(g))

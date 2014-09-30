@@ -159,18 +159,14 @@ Operations and Variations
 The operations summarized in the above table have _'-suffixed_ varieties that return a 2-tuple of (_value of original function_, _value of desired operation_). This is advantageous in the majority of AD computations, since the original function value has been already computed during AD computations, providing a performance advantage. 
 *)
 
-// Use forward mode AD
+// Use forward AD
 open DiffSharp.AD.Forward
 
-// A scalar-to-scalar function
-let f x = 
-    sin (sqrt x)
+// Derivative of Sin(Sqrt(x)) at x = 2
+let a = diff (fun x -> sin (sqrt x)) 2.
 
-// Derivative of f at a point
-let a = diff f 2.
-
-// (Original value, derivative) of f at a point
-let y, y' = diff' f 2.
+// (Original value, derivative) of Sin(Sqrt(x)) at x = 2
+let b, c = diff' (fun x -> sin (sqrt x)) 2.
 
 (**
 In addition to these, **jacobian** operations have _T-suffixed varieties_ returning the transposed version of the Jacobian matrix.

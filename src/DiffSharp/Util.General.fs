@@ -85,7 +85,7 @@ let symmetricFromUpperTriangular (t:float[,]) =
     else failwith "Expecting a square 2d array."
 
 /// Global step size for numerical approximations
-let eps = 0.000001
+let eps = 0.00001
 
 /// Two times eps
 let deps = eps * 2.

@@ -24,5 +24,12 @@ open DiffSharp.AD.Reverse
 // g: Adj[] -> Adj
 let g (x:Adj[]) = sin (x.[0] * x.[1] * x.[2])
 
-// Gradient of g at (2, 3, 5)
-let gg = grad g [|2.; 3.; 5.|]
+// Gradient of g
+let ga = grad g
+
+(**
+Alternatively, we can use a lambda expression to alleviate the need to explicitly define the type **x:Adj[]**, as it will be automatically inferred.
+*)
+
+// The same gradient
+let gb = grad (fun x -> sin (x.[0] * x.[1] * x.[2]))

@@ -48,6 +48,18 @@ type Matrix =
     member m.Cols = m.M.GetLength 1
     member m.Item(i, j) = m.M.[i, j]
     override m.ToString() = sprintf "Matrix %A" m.M
+    member m.ToMathematicaString() = 
+        let sb = System.Text.StringBuilder()
+        sb.Append("{") |> ignore
+        for i = 0 to m.Rows - 1 do
+            sb.Append("{") |> ignore
+            for j = 0 to m.Cols - 1 do
+                sb.Append(sprintf "%.2f" m.M.[i, j]) |> ignore
+                if j <> m.Cols - 1 then sb.Append(", ") |> ignore
+            sb.Append("}") |> ignore
+            if i <> m.Rows - 1 then sb.Append(", ") |> ignore
+        sb.Append("}") |> ignore
+        sb.ToString()
     /// Create Matrix from given 2d array `m`
     static member Create(m) = Matrix(m)
     /// Create Matrix with `m` rows, `n` columns, and a generator function `f` to compute the elements
@@ -60,6 +72,8 @@ type Matrix =
     static member Create(m, (f:int->Vector)) =
         let a = Array.init m f
         Matrix(Array2D.init m (a.[0].Dim) (fun i j -> a.[i].V.[j]))
+    /// Create Matrix with rows given in Vector[] `v`
+    static member Create(v:Vector[]) = Matrix.Create(v.Length, fun i -> v.[i])
     /// Create Matrix with `m` rows and all rows equal to float[] `v`
     static member Create(m, (v:float[])) = Matrix.Create(m, fun i -> v)
     /// Create zero Matrix

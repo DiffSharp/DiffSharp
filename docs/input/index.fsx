@@ -49,10 +49,10 @@ let f x =
     sin (sqrt x)
 
 // Derivative of f
-let f' = diff f
+let df = diff f
 
 // Value of the derivative of f at a point
-let y' = f' 2.
+let df2 = df 2.
 
 (**
 More Info

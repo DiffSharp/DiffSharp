@@ -9,29 +9,41 @@ F# is a statically typed language with [type inference](http://msdn.microsoft.co
 
 There are several ways the F# type inference system can work together with the DiffSharp library.
 
-Without Change in Existing Code
--------------------------------
+Lambda Expressions
+------------------
 
-In some cases, just opening the DiffSharp library and using a differentiation operation is sufficient for an existing function to get inferred to use AD-enabled types.
+The simplest and easiest way is to define functions using [lambda expressions](http://msdn.microsoft.com/en-us/library/dd233201.aspx) after differentiation operators. The expression will automatically assume the AD-enabled numeric type corresponding to the DiffSharp module and operator you are using.
 
 (You can hover the pointer over the examples to check the types.)
+*)
+
+open DiffSharp.AD.Forward
+
+// The lambda expression after "diff" has type Dual -> Dual
+let f1 = diff (fun x -> sin (sqrt x))
+
+(**
+Existing Functions
+------------------
+
+When you have an existing function, in some cases, just opening the DiffSharp library and using a differentiation operation is sufficient for getting it interpreted as using AD-enabled types.
 
 *)
 
-// f1: float -> float
-let f1 x =
+// f2: float -> float
+let f2 x =
     sin (sqrt x)
 
 (** *)
 
 open DiffSharp.AD.Forward
 
-// f2 has the same definition as f1, here Dual type is inferred automatically
-// f2: Dual -> Dual
-let f2 x =
+// f3 has the same definition as f2, here Dual type is inferred automatically
+// f3: Dual -> Dual
+let f3 x =
     sin (sqrt x)
 
-let f2' = diff f2
+let df3 = diff f3
 
 (**
 "Injecting" AD-enabled Types
@@ -40,8 +52,8 @@ let f2' = diff f2
 Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer **float** or **int** arithmetic.
 *)
 
-// f3: float -> float
-let f3 x =
+// f4: float -> float
+let f4 x =
     sin (3. * sqrt x)
 
 (** 
@@ -52,16 +64,16 @@ A function's signature can be usually changed without having to change the type 
 Explicitly marking a parameter as **Dual**:
 *)
 
-// f4: Dual -> Dual
-let f4 (x:Dual) =
+// f5: Dual -> Dual
+let f5 (x:Dual) =
     sin (3. * sqrt x)
 
 (**
 Converting a **float** into a **Dual**:
 *)
 
-// f5: Dual -> Dual
-let f5 x =
+// f6: Dual -> Dual
+let f6 x =
     sin ((dual 3.) * sqrt x)
 
 (**
@@ -73,8 +85,8 @@ The library provides the _Q_ and _R_ numeric literals for the **Dual** type. A _
 Using numeric literals to cause **Dual** inference:
 *)
 
-// f6: Dual -> Dual
-let f6 x =
+// f7: Dual -> Dual
+let f7 x =
     sin (3Q * sqrt x)
 
 (**
@@ -83,15 +95,15 @@ Using numeric literals to calculate partial derivatives with **DiffSharp.AD.Forw
 *)
 
 // A multivariate function
-// f7: Dual -> Dual -> Dual
-let f7 x y =
+// f8: Dual -> Dual -> Dual
+let f8 x y =
     sin (x * y)
 
-// df7 / dx at (3, 7)
-let f7'x = tangent (f7 3R 7Q)
+// df8 / dx at (3, 7)
+let df8x = tangent (f8 3R 7Q)
 
-// df7 / dx at (3, 7)
-let f7'y = tangent (f7 3Q 7R)
+// df8 / dx at (3, 7)
+let df8y = tangent (f8 3Q 7R)
 
 (**
 Generic Functions

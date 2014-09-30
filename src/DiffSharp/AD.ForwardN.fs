@@ -109,7 +109,7 @@ module DualNOps =
         | a when a < 0 -> failwith "Order of derivative cannot be negative."
         | 0 -> fun (x:DualN) -> x
         | 1 -> fun x -> x.T
-        | _ -> fun x -> diffLazy (n - 1) x.T
+        | _ -> fun x -> diffLazy (n - 1) x
 
     /// Custom operator (/^) for differentiation. Usage: `x` /^ `n`, value of the `n`-th order derivative of `x`.
     let ( /^ ) x n =
