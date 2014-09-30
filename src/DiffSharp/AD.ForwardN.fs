@@ -125,7 +125,7 @@ module ForwardNOps =
     
     /// First derivative of a scalar-to-scalar function `f`
     let inline diff f =
-        diff' f >> snd
+        dualNAct >> f >> tangent
 
     /// Original value and second derivative of a scalar-to-scalar function `f`
     let inline diff2' f =
@@ -133,7 +133,7 @@ module ForwardNOps =
         
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f =
-        diff2' f >> snd
+        dualNAct >> f >> tangent2
 
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
     let inline diffn' n f =

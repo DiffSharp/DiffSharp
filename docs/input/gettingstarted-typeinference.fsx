@@ -14,12 +14,13 @@ Lambda Expressions
 
 The simplest and easiest way is to define functions using [lambda expressions](http://msdn.microsoft.com/en-us/library/dd233201.aspx) after differentiation operators. The expression will automatically assume the AD-enabled numeric type corresponding to the DiffSharp module and operator you are using.
 
-(You can hover the pointer over the examples to check the types.)
+(You can hover the pointer over the examples to check their types.)
 *)
 
 open DiffSharp.AD.Forward
 
 // The lambda expression after "diff" has type Dual -> Dual
+// f1: float -> float, the derivative of Sin(Sqrt(x))
 let f1 = diff (fun x -> sin (sqrt x))
 
 (**
@@ -57,7 +58,7 @@ let f4 x =
     sin (3. * sqrt x)
 
 (** 
-In such cases, AD-enabled types should be explicitly used in one or more places in the function definition. 
+In such cases, AD-enabled types should be explicitly used in one or more places in the function definition.
 
 A function's signature can be usually changed without having to change the type of all the involved values. For example, "injecting" some **Dual**s into a large **float** expression can cause the whole function to have **Dual** arithmetic.
 

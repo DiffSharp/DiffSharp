@@ -1,5 +1,5 @@
 ﻿
-#r "F:/GIT/GitHub/gbaydin/DiffSharp/src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 let fss_Adj = fun (x:DiffSharp.AD.Reverse.Adj) -> (sin x) * (cos (exp x))
 

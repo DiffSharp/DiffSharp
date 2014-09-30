@@ -34,6 +34,7 @@ Future Releases
 We are working on the following features for the next release:
 
 - Handling of nested AD operations
+- Improved Hessian calculations exploiting structure (e.g. sparsity)
 - AD via source code transformation
 - Use of code quotations for AD
 
