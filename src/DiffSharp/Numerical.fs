@@ -36,7 +36,7 @@
 /// Numerical differentiation module
 module DiffSharp.Numerical
 
-open DiffSharp.Util
+open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// Numerical differentiation operations module (automatically opened)
@@ -131,3 +131,43 @@ module NumericalOps =
     /// Jacobian of a vector-to-vector function `f`
     let inline jacobian f =
         jacobian' f >> snd
+
+
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
+module Vector =
+    /// Original value and first derivative of a scalar-to-scalar function `f`
+    let inline diff' f = NumericalOps.diff' f
+    /// First derivative of a scalar-to-scalar function `f`
+    let inline diff f = NumericalOps.diff f
+    /// Original value and second derivative of a scalar-to-scalar function `f`
+    let inline diff2' f = NumericalOps.diff2' f
+    /// Second derivative of a scalar-to-scalar function `f`
+    let inline diff2 f = NumericalOps.diff2 f
+    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir' r f = array >> NumericalOps.diffdir' (array r) f
+    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir r f = array >> NumericalOps.diffdir (array r) f
+    /// Original value and gradient of a vector-to-scalar function `f`
+    let inline grad' f = array >> NumericalOps.grad' f >> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`
+    let inline grad f = array >> NumericalOps.grad f >> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`
+    let inline laplacian' f = array >> NumericalOps.laplacian' f
+    /// Laplacian of a vector-to-scalar function `f`
+    let inline laplacian f = array >> NumericalOps.laplacian f
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT' f = array >> NumericalOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT f = array >> NumericalOps.jacobianT f >> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`
+    let inline jacobian' f = array >> NumericalOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`
+    let inline jacobian f = array >> NumericalOps.jacobian f >> matrix
+    /// Original value and Hessian of a vector-to-scalar function `f`
+    let inline hessian' f = array >> NumericalOps.hessian' f >> fun (a, b) -> (a, matrix b)
+    /// Hessian of a vector-to-scalar function `f`
+    let inline hessian f = array >> NumericalOps.hessian f >> matrix
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian' f = array >> NumericalOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, matrix c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian f = array >> NumericalOps.gradhessian f >> fun (a, b) -> (vector a, matrix b)

@@ -51,13 +51,12 @@
   <ItemGroup>
     <Compile Include="Util.General.fs" />
     <Compile Include="Util.Quotations.fs" />
-    <Compile Include="Util.Vector.fs" />
-    <Compile Include="Util.Matrix.fs" />
+    <Compile Include="Util.LinearAlgebra.fs" />
     <Compile Include="AD.Forward.fs" />
     <Compile Include="AD.Forward2.fs" />
+    <Compile Include="AD.ForwardG.fs" />
+    <Compile Include="AD.ForwardGH.fs" />
     <Compile Include="AD.ForwardN.fs" />
-    <Compile Include="AD.ForwardV.fs" />
-    <Compile Include="AD.ForwardV2.fs" />
     <Compile Include="AD.Reverse.fs" />
     <Compile Include="Numerical.fs" />
     <Compile Include="Symbolic.fs" />

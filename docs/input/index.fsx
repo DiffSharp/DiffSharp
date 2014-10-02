@@ -37,6 +37,7 @@ We are working on the following features for the next release:
 - Improved Hessian calculations exploiting structure (e.g. sparsity)
 - AD via source code transformation
 - Use of code quotations for AD
+- Integration with [Math.NET](http://numerics.mathdotnet.com/) vectors and matrices
 
 Quick Usage Example
 -------------------

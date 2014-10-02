@@ -20,8 +20,11 @@ The simplest and easiest way is to define functions using [lambda expressions](h
 open DiffSharp.AD.Forward
 
 // The lambda expression after "diff" has type Dual -> Dual
-// f1: float -> float, the derivative of Sin(Sqrt(x))
-let f1 = diff (fun x -> sin (sqrt x))
+// a: float -> float, the derivative of Sin(Sqrt(x))
+let a = diff (fun x -> sin (sqrt x))
+
+// Use a to compute the derivative at 2
+let da = a 2.
 
 (**
 Existing Functions
@@ -31,20 +34,20 @@ When you have an existing function, in some cases, just opening the DiffSharp li
 
 *)
 
-// f2: float -> float
-let f2 x =
+// b: float -> float
+let b x =
     sin (sqrt x)
 
 (** *)
 
 open DiffSharp.AD.Forward
 
-// f3 has the same definition as f2, here Dual type is inferred automatically
-// f3: Dual -> Dual
-let f3 x =
+// c has the same definition as b, here Dual type is inferred automatically
+// c: Dual -> Dual
+let c x =
     sin (sqrt x)
 
-let df3 = diff f3
+let dc = diff c
 
 (**
 "Injecting" AD-enabled Types
@@ -53,8 +56,8 @@ let df3 = diff f3
 Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer **float** or **int** arithmetic.
 *)
 
-// f4: float -> float
-let f4 x =
+// d: float -> float
+let d x =
     sin (3. * sqrt x)
 
 (** 
@@ -65,16 +68,16 @@ A function's signature can be usually changed without having to change the type 
 Explicitly marking a parameter as **Dual**:
 *)
 
-// f5: Dual -> Dual
-let f5 (x:Dual) =
+// e: Dual -> Dual
+let e (x:Dual) =
     sin (3. * sqrt x)
 
 (**
 Converting a **float** into a **Dual**:
 *)
 
-// f6: Dual -> Dual
-let f6 x =
+// f: Dual -> Dual
+let f x =
     sin ((dual 3.) * sqrt x)
 
 (**
@@ -86,8 +89,8 @@ The library provides the _Q_ and _R_ numeric literals for the **Dual** type. A _
 Using numeric literals to cause **Dual** inference:
 *)
 
-// f7: Dual -> Dual
-let f7 x =
+// g: Dual -> Dual
+let g x =
     sin (3Q * sqrt x)
 
 (**
@@ -96,15 +99,15 @@ Using numeric literals to calculate partial derivatives with **DiffSharp.AD.Forw
 *)
 
 // A multivariate function
-// f8: Dual -> Dual -> Dual
-let f8 x y =
+// h: Dual -> Dual -> Dual
+let h x y =
     sin (x * y)
 
-// df8 / dx at (3, 7)
-let df8x = tangent (f8 3R 7Q)
+// dh / dx at (3, 7)
+let dhx = tangent (h 3R 7Q)
 
-// df8 / dx at (3, 7)
-let df8y = tangent (f8 3Q 7R)
+// dh / dx at (3, 7)
+let dhy = tangent (h 3Q 7R)
 
 (**
 Generic Functions
@@ -118,13 +121,13 @@ let inline sum a b =
     a + b
 
 // Use sum with float
-let g1 = sum 2. 2.
+let i1 = sum 2. 2.
 
 // Use sum with int
-let g2 = sum 2 2
+let i2 = sum 2 2
 
 // Use sum with bigint
-let g3 = sum 2I 2I
+let i3 = sum 2I 2I
 
 (** 
 DiffSharp can be used with generic numeric functions.
@@ -140,4 +143,4 @@ let inline cosine (x: ^a) =
     |> Seq.sum
 
 // Derivative of cosine at 3
-let g6 = diff cosine 3.
+let j = diff cosine 3.

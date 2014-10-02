@@ -38,6 +38,7 @@
 /// Forward AD module
 module DiffSharp.AD.Forward
 
+open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// Dual numeric type, keeping primal and tangent values
@@ -147,11 +148,36 @@ module ForwardOps =
         jacobian' f >> snd
 
 
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
+module Vector =
+    /// Original value and first derivative of a scalar-to-scalar function `f`
+    let inline diff' f = ForwardOps.diff' f
+    /// First derivative of a scalar-to-scalar function `f`
+    let inline diff f = ForwardOps.diff f
+    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir' r f = array >> ForwardOps.diffdir' (array r) f
+    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir r f = array >> ForwardOps.diffdir (array r) f
+    /// Original value and gradient of a vector-to-scalar function `f`
+    let inline grad' f = array >> ForwardOps.grad' f >> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`
+    let inline grad f = array >> ForwardOps.grad f >> vector
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT' f = array >> ForwardOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT f = array >> ForwardOps.jacobianT f >> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`
+    let inline jacobian' f = array >> ForwardOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`
+    let inline jacobian f = array >> ForwardOps.jacobian f >> matrix
+
+
 /// Numeric literal for a Dual with tangent 0
 module NumericLiteralQ = // (Allowed literals : Q, R, Z, I, N, G)
     let FromZero () = dual 0.
     let FromOne () = dual 1.
     let FromInt32 p = dual (float p)
+
 
 /// Numeric literal for a Dual with tangent 1 (i.e. the variable of differentiation)
 module NumericLiteralR =    

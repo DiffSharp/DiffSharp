@@ -64,6 +64,46 @@ let g2 (x:Dual2[]) = sin (x.[0] * x.[1])
 let lg2 = laplacian g2 [|2.; 3.|]
 
 (**
+DiffSharp.AD.ForwardG
+---------------------
+
+This is a forward AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.
+
+This module is used with the **DualG** numeric type.
+*)
+
+open DiffSharp.AD.ForwardG
+
+// gv: DualG[] -> DualG
+let gv (x:DualG[]) = sin (x.[0] * x.[1])
+
+// Gradient of gv at (2, 3)
+let ggv = grad gv [|2.; 3.|]
+
+// hv: DualG[] -> DualG[]
+let hv (x:DualG[]) = [| sin x.[0]; cos x.[1] |]
+
+// Jacobian of hv at (2, 3)
+let jhv = jacobian hv [|2.; 3.|]
+
+(**
+DiffSharp.AD.ForwardGH
+----------------------
+
+This is a forward AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.
+
+This module is used with the **DualGH** numeric type.
+*)
+
+open DiffSharp.AD.ForwardGH
+
+// gv2: DualGH[] -> DualGH
+let gv2 (x:DualGH[]) = sin (x.[0] * x.[1])
+
+// Gradient and Hessian of gv2 at (2, 3)
+let ggv2, hgv2 = gradhessian gv2 [|2.; 3.|]
+
+(**
 DiffSharp.AD.ForwardN
 ---------------------
 
@@ -79,43 +119,3 @@ let fn (x:DualN) = sin (3. * sqrt x)
 
 // 3rd derivative of fn at 2.
 let d3fn = diffn 3 fn 2.
-
-(**
-DiffSharp.AD.ForwardV
----------------------
-
-This is a forward AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.
-
-This module is used with the **DualV** numeric type.
-*)
-
-open DiffSharp.AD.ForwardV
-
-// gv: DualV[] -> DualV
-let gv (x:DualV[]) = sin (x.[0] * x.[1])
-
-// Gradient of gv at (2, 3)
-let ggv = grad gv [|2.; 3.|]
-
-// hv: DualV[] -> DualV[]
-let hv (x:DualV[]) = [| sin x.[0]; cos x.[1] |]
-
-// Jacobian of hv at (2, 3)
-let jhv = jacobian hv [|2.; 3.|]
-
-(**
-DiffSharp.AD.ForwardV2
-----------------------
-
-This is a forward AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.
-
-This module is used with the **DualV2** numeric type.
-*)
-
-open DiffSharp.AD.ForwardV2
-
-// gv2: DualV2[] -> DualV2
-let gv2 (x:DualV2[]) = sin (x.[0] * x.[1])
-
-// Gradient and Hessian of gv2 at (2, 3)
-let ggv2, hgv2 = gradhessian gv2 [|2.; 3.|]

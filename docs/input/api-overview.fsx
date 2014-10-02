@@ -11,6 +11,9 @@ The following table gives an overview of the differentiation API provided by the
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg .tg-eugx{background-color:#e4ffb3;text-align:center}
+.tg .tg-e3zv{font-weight:bold}
+.tg .tg-tfw5{background-color:#ffffc7;text-align:center}
 .tg .tg-a0td{font-size:100%}
 .tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
 .tg .tg-u986{font-size:100%;background-color:#e4ffb3}
@@ -19,6 +22,7 @@ The following table gives an overview of the differentiation API provided by the
 .tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
 .tg .tg-v6es{font-size:100%;background-color:#e4ffb3;text-align:center}
 .tg .tg-uy90{font-size:100%;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-ci37{background-color:#ecf4ff;text-align:center}
 </style>
 <table class="tg">
   <tr>
@@ -58,19 +62,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-uy90">X</td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.ForwardN</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-uy90">X</td>
-  </tr>
-  <tr>
-    <td class="tg-dyge">DiffSharp.AD.ForwardV</td>
+    <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
@@ -82,7 +74,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-uy90">X</td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.ForwardV2</td>
+    <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
@@ -92,6 +84,18 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
+    <td class="tg-tfw5">X</td>
+    <td class="tg-tfw5">X</td>
+    <td class="tg-tfw5">X</td>
+    <td class="tg-eugx">X</td>
+    <td class="tg-eugx">X</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Reverse</td>
@@ -140,23 +144,23 @@ Implemented Techniques
 
 The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
 
-Currently, the library provides the following implementations:
+Currently, the library provides the following implementations in different modules:
 
 - DiffSharp.AD.Forward
 - DiffSharp.AD.Forward2
+- DiffSharp.AD.ForwardG
+- DiffSharp.AD.ForwardGH
 - DiffSharp.AD.ForwardN
-- DiffSharp.AD.ForwardV
-- DiffSharp.AD.ForwardV2
 - DiffSharp.AD.Reverse
 - DiffSharp.Numerical
 - DiffSharp.Symbolic
 
 For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
 
-Operations and Variations
--------------------------
+Operations and Variants
+-----------------------
 
-The operations summarized in the above table have _'-suffixed_ varieties that return a 2-tuple of (_value of original function_, _value of desired operation_). This is advantageous in the majority of AD computations, since the original function value has been already computed during AD computations, providing a performance advantage. 
+The operations summarized in the above table have _'-suffixed_ variants that return tuples of _the value of the original function_ and _the value of the desired operation_. This is advantageous in the majority of AD computations, since the original function value has been already computed as a by-product during AD operations, providing a performance advantage. 
 *)
 
 // Use forward AD
@@ -169,7 +173,7 @@ let a = diff (fun x -> sin (sqrt x)) 2.
 let b, c = diff' (fun x -> sin (sqrt x)) 2.
 
 (**
-In addition to these, **jacobian** operations have _T-suffixed varieties_ returning the transposed version of the Jacobian matrix.
+In addition to these, **jacobian** operations have _T-suffixed_ variants returning the transposed version of the Jacobian matrix.
 
 Currently, the library provides the following operations:
 
@@ -194,4 +198,29 @@ Currently, the library provides the following operations:
 - **laplacian**: Laplacian of a vector-to-scalar function
 - **laplacian'**: Original value and Laplacian of a vector-to-scalar function
 
+Vector and Matrix versus float[] and float[,]
+---------------------------------------------
+
+When a differentiation module such as **DiffSharp.AD.Forward** is opened, the default operations involving vectors or matrices handle these via **float[]** and **float[,]** arrays.
+
 *)
+
+open DiffSharp.AD.Forward
+
+// Gradient of a vector-to-scalar function
+// g1: float[] -> float[]
+// i.e. take the function arguments as a float[] and return the gradient as a float[]
+let g1 = grad (fun x -> sin (x.[0] * x.[1]))
+
+(**
+
+In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**. 
+
+*)
+
+open DiffSharp.AD.Forward.Vector
+
+// Gradient of a vector-to-scalar function
+// g2: Vector -> Vector
+// i.e. take the function arguments as a Vector and return the gradient as a Vector
+let g2 = grad (fun x -> sin (x.[0] * x.[1]))

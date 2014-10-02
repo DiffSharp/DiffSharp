@@ -44,7 +44,7 @@
 module DiffSharp.AD.Reverse
 
 open System.Collections.Generic
-open DiffSharp.Util
+open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// Global trace for recording operations
@@ -246,3 +246,35 @@ module ReverseOps =
     /// Laplacian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
     let inline laplacian f =
         laplacian' f >> snd
+
+
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
+module Vector =
+    /// Original value and first derivative of a scalar-to-scalar function `f`
+    let inline diff' f = ReverseOps.diff' f
+    /// First derivative of a scalar-to-scalar function `f`
+    let inline diff f = ReverseOps.diff f
+    /// Original value and gradient of a vector-to-scalar function `f`
+    let inline grad' f = array >> ReverseOps.grad' f >> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`
+    let inline grad f = array >> ReverseOps.grad f >> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`
+    let inline laplacian' f = array >> ReverseOps.laplacian' f
+    /// Laplacian of a vector-to-scalar function `f`
+    let inline laplacian f = array >> ReverseOps.laplacian f
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT' f = array >> ReverseOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT f = array >> ReverseOps.jacobianT f >> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`
+    let inline jacobian' f = array >> ReverseOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`
+    let inline jacobian f = array >> ReverseOps.jacobian f >> matrix
+    /// Original value and Hessian of a vector-to-scalar function `f`
+    let inline hessian' f = array >> ReverseOps.hessian' f >> fun (a, b) -> (a, matrix b)
+    /// Hessian of a vector-to-scalar function `f`
+    let inline hessian f = array >> ReverseOps.hessian f >> matrix
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian' f = array >> ReverseOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, matrix c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian f = array >> ReverseOps.gradhessian f >> fun (a, b) -> (vector a, matrix b)

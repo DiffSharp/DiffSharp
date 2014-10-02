@@ -94,6 +94,7 @@ Literate.ProcessScriptFile(relative "input/gettingstarted-reversead.fsx", relati
 Literate.ProcessScriptFile(relative "input/gettingstarted-symbolicdifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-symbolicdifferentiation.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-numericaldifferentiation.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/benchmarks.fsx", relative "input/templates/template.html", relative "output/benchmarks.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/examples-gradientdescent.fsx", relative "input/templates/template.html", relative "output/examples-gradientdescent.html", replacements = tags)
 
 //
 // Generate API reference

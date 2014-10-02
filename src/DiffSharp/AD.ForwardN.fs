@@ -38,7 +38,7 @@
 /// Forward AD module, lazy higher-order
 module DiffSharp.AD.ForwardN
 
-open DiffSharp.Util
+open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// DualN numeric type, where the tangent value is another DualN, forming a lazy chain of higher-order derivatives
@@ -192,3 +192,39 @@ module ForwardNOps =
     /// Jacobian of a vector-to-vector function `f`
     let inline jacobian f =
         jacobian' f >> snd
+
+
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
+module Vector =
+    /// Original value and first derivative of a scalar-to-scalar function `f`
+    let inline diff' f = ForwardNOps.diff' f
+    /// First derivative of a scalar-to-scalar function `f`
+    let inline diff f = ForwardNOps.diff f
+    /// Original value and second derivative of a scalar-to-scalar function `f`
+    let inline diff2' f = ForwardNOps.diff2' f
+    /// Second derivative of a scalar-to-scalar function `f`
+    let inline diff2 f = ForwardNOps.diff2 f
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
+    let inline diffn' n f = ForwardNOps.diffn' n f
+    /// `n`-th derivative of a scalar-to-scalar function `f`
+    let inline diffn n f = ForwardNOps.diffn n f
+    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir' r f = array >> ForwardNOps.diffdir' (array r) f
+    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
+    let inline diffdir r f = array >> ForwardNOps.diffdir (array r) f
+    /// Original value and gradient of a vector-to-scalar function `f`
+    let inline grad' f = array >> ForwardNOps.grad' f >> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`
+    let inline grad f = array >> ForwardNOps.grad f >> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`
+    let inline laplacian' f = array >> ForwardNOps.laplacian' f
+    /// Laplacian of a vector-to-scalar function `f`
+    let inline laplacian f = array >> ForwardNOps.laplacian f
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT' f = array >> ForwardNOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT f = array >> ForwardNOps.jacobianT f >> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`
+    let inline jacobian' f = array >> ForwardNOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`
+    let inline jacobian f = array >> ForwardNOps.jacobian f >> matrix

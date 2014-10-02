@@ -50,6 +50,7 @@ open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.ExprShape
+open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 open DiffSharp.Util.Quotations
 open Swensen.Unquote
@@ -247,3 +248,43 @@ module SymbolicOps =
     /// Gradient and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let gradhessian f =
         gradhessian' f >> sndtrd
+
+
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
+module Vector =
+    /// Original value and first derivative of a scalar-to-scalar function `f`
+    let inline diff' f = SymbolicOps.diff' f
+    /// First derivative of a scalar-to-scalar function `f`
+    let inline diff f = SymbolicOps.diff f
+    /// Original value and second derivative of a scalar-to-scalar function `f`
+    let inline diff2' f = SymbolicOps.diff2' f
+    /// Second derivative of a scalar-to-scalar function `f`
+    let inline diff2 f = SymbolicOps.diff2 f
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
+    let inline diffn' n f = SymbolicOps.diffn' n f
+    /// `n`-th derivative of a scalar-to-scalar function `f`
+    let inline diffn n f = SymbolicOps.diffn n f
+    /// Original value and gradient of a vector-to-scalar function `f`
+    let inline grad' f = array >> SymbolicOps.grad' f >> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`
+    let inline grad f = array >> SymbolicOps.grad f >> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`
+    let inline laplacian' f = array >> SymbolicOps.laplacian' f
+    /// Laplacian of a vector-to-scalar function `f`
+    let inline laplacian f = array >> SymbolicOps.laplacian f
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT' f = array >> SymbolicOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`
+    let inline jacobianT f = array >> SymbolicOps.jacobianT f >> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`
+    let inline jacobian' f = array >> SymbolicOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`
+    let inline jacobian f = array >> SymbolicOps.jacobian f >> matrix
+    /// Original value and Hessian of a vector-to-scalar function `f`
+    let inline hessian' f = array >> SymbolicOps.hessian' f >> fun (a, b) -> (a, matrix b)
+    /// Hessian of a vector-to-scalar function `f`
+    let inline hessian f = array >> SymbolicOps.hessian f >> matrix
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian' f = array >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, matrix c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`
+    let inline gradhessian f = array >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, matrix b)

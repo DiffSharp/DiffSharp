@@ -47,30 +47,6 @@ let sndtrd (_, s, t) = (s, t)
 /// Tail of a 3-tuple
 let trd (_, _, t) = t
     
-/// Matrix transpose of a 2d array `m`
-let transpose (m:_[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun x y -> m.[y,x])
-
-/// Matrix transpose of a list of lists
-let rec transposeList = function
-    | (_::_)::_ as M -> List.map List.head M :: transposeList (List.map List.tail M)
-    | _ -> []
-
-/// Apply `f` to a range of integers `i0` to `i1`, and accumulate the result
-let sum i0 i1 f =
-    let mutable t = 0.
-    for i in i0..i1 do
-        t <- t + f i
-    t
-
-/// Matrix trace of a 2d array `m`
-let trace (m:_[,]) = 
-    let sum i0 i1 f =
-        let mutable t = 0.
-        for i in i0..i1 do
-            t <- t + f i
-        t
-    if m.GetLength 0 = m.GetLength 1 then sum 0 ((m.GetLength 0) - 1) (fun i -> m.[i, i]) else failwith "Trace not defined for nonsquare matrix."
-
 /// Fill the elements of a symmetric matrix from the upper triangular part given in 2d array `t`
 let symmetricFromUpperTriangular (t:float[,]) =
     let m = t.GetLength 0
@@ -83,6 +59,14 @@ let symmetricFromUpperTriangular (t:float[,]) =
                     t.[i, j] <- t.[j, i]
             Array2D.init m m (fun i j -> t.[i, j])
     else failwith "Expecting a square 2d array."
+
+/// Apply function `f` to the numbers in the range `i0` to `i1` and sum the result
+let sum i0 i1 f = Array.sumBy f [|i0..i1|]
+
+/// Transpose of float[,] `m`
+let transpose (m:float[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun x y -> m.[y,x])
+
+let trace (m:float[,]) = if m.GetLength 0 = m.GetLength 1 then sum 0 (m.GetLength 0 - 1) (fun i -> m.[i, i]) else failwith "Trace is not defined for a nonsquare matrix."
 
 /// Global step size for numerical approximations
 let eps = 0.00001
