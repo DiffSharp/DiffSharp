@@ -15,7 +15,7 @@ The library is under active development by [Atılım Güneş Baydin](http://www.
 
 Installation
 ------------
-You can download the [compiled library binaries](https://github.com/gbaydin/DiffSharp/) as a zip file or install the library package via NuGet.
+You can download and install the library via NuGet.
 
 <div class="row">
     <div class="span1"></div>
