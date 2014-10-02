@@ -62,6 +62,7 @@
     <Compile Include="Symbolic.fs" />
     <Content Include="packages.config" />
     <Content Include="app.config" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
