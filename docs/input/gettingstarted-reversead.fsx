@@ -12,7 +12,7 @@ For a complete list of available differentiation operations, please refer to [AP
 DiffSharp.AD.Reverse
 --------------------
 
-This is a reverse AD module that works by recording a trace of operations in forward evaluation and using this in the reverse sweep for backpropagating adjoints. The technique is essentially equivalent to the backpropagation method for training artificial neural networks, which is just a special case of reverse AD.
+This is a reverse AD module that works by recording a trace of operations in forward evaluation and using this in the reverse sweep for backpropagating adjoints. The technique is essentially equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method for training artificial neural networks in machine learning, which is just a special case of reverse AD.
 
 Reverse AD provides a performance advantage when computing gradients of vector-to-scalar functions.
 

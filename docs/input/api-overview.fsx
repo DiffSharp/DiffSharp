@@ -160,7 +160,7 @@ For brief explanations of these implementations, please refer to the [Forward AD
 Operations and Variants
 -----------------------
 
-The operations summarized in the above table have _'-suffixed_ variants that return tuples of _the value of the original function_ and _the value of the desired operation_. This is advantageous in the majority of AD computations, since the original function value has been already computed as a by-product during AD operations, providing a performance advantage. 
+The operations summarized in the above table have _'-suffixed_ variants that return tuples of (_the value of the original function_, _the value of the desired operation_). This is advantageous in the majority of AD operations, since the original function value has been already computed as a by-product during AD computations, providing a performance advantage. 
 *)
 
 // Use forward AD

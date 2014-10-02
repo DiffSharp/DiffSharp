@@ -30,7 +30,7 @@ let da = a 2.
 Existing Functions
 ------------------
 
-When you have an existing function, in some cases, just opening the DiffSharp library and using a differentiation operation is sufficient for getting it interpreted as using AD-enabled types.
+When you have an existing function, just opening the DiffSharp library and using a differentiation operation is sufficient in some cases for getting it interpreted as using AD-enabled types.
 
 *)
 
@@ -42,7 +42,7 @@ let b x =
 
 open DiffSharp.AD.Forward
 
-// c has the same definition as b, here Dual type is inferred automatically
+// c has the same definition with b, here Dual type is inferred automatically
 // c: Dual -> Dual
 let c x =
     sin (sqrt x)
@@ -106,7 +106,7 @@ let h x y =
 // dh / dx at (3, 7)
 let dhx = tangent (h 3R 7Q)
 
-// dh / dx at (3, 7)
+// dh / dy at (3, 7)
 let dhy = tangent (h 3Q 7R)
 
 (**
@@ -128,6 +128,9 @@ let i2 = sum 2 2
 
 // Use sum with bigint
 let i3 = sum 2I 2I
+
+// Use sum with Dual
+let i4 = sum 2Q 2Q
 
 (** 
 DiffSharp can be used with generic numeric functions.

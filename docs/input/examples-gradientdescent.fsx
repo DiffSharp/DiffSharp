@@ -8,7 +8,7 @@ Gradient Descent
 
 The [gradient descent algorithm](http://en.wikipedia.org/wiki/Gradient_descent) is an optimization algorithm for finding a local minimum of a function near a starting point, taking successive steps in the direction of the negative of the gradient. 
 
-The following code implements gradient descent with a fixed step size, stopping when the norm of the gradient falls below a given threshold.
+Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the norm of the gradient falls below a given threshold.
 
 *)
 
@@ -50,7 +50,7 @@ let c v = Chart.Line(List.append [for x in -1.6..0.01..1.4->(x,acos(v-sin x))]
                                  [for y in 3.0..0.01..4.->(asin(v-cos y),y)], 
                      Color = System.Drawing.Color.Tomato)
 
-// Draw the contours and combine with the graph of the descent xseq
+// Draw some contours and combine with the graph of the descent xseq
 Chart.Combine(List.append [for x in -2.2..0.4..2. -> c x]
                           [Chart.Line(Seq.map (fun (x:Vector)->(x.[0],x.[1])) xseq)]
              ).WithXAxis(Min = -1.6, Max = 1.4).WithYAxis(Min = 0., Max = 4.)

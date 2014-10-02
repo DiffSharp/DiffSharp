@@ -5,7 +5,7 @@
 Symbolic Differentiation
 ========================
 
-In addition to AD, DiffSharp also implements symbolic differentiation, which works by symbolic manipulation of mathematical expressions using rules of differential calculus.
+In addition to AD, DiffSharp also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of mathematical expressions using rules of differential calculus.
 
 For a complete list of available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
@@ -44,7 +44,7 @@ let gg = grad <@ g @> [|2.; 3.|]
 
 (**
 
-Functions can be marked with the **ReflectedDefinition** attribute one by one, or they can be put into a module marked with this attribute to make it apply recursively to all.
+Functions can be marked with the **ReflectedDefinition** attribute one by one, or they can be put into a module marked with this attribute to make it apply to all recursively.
 
 Operations will delve into the definitions of other functions referenced from a given function (the referenced function will be _inlined_ into the body of the calling function), as long as they have the **ReflectedDefinition** attribute.
 

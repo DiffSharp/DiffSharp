@@ -99,6 +99,8 @@ module DualGOps =
     let inline primal (DualG(p, _)) = p
     /// Get the gradient array of a DualG
     let inline gradient (DualG(_, g)) = g.V
+    /// Get the first gradient component of a DualG
+    let inline tangent (DualG(_, g)) = g.V.[0]
     /// Get the primal value and the first gradient component of a DualG, as a tuple
     let inline tuple (DualG(p, g)) = (p, g.V.[0])
     /// Get the primal value and the gradient array of a DualG, as a tuple
@@ -114,7 +116,7 @@ module ForwardGOps =
 
     /// First derivative of a scalar-to-scalar function `f`
     let inline diff f =
-        diff' f >> snd
+        fun x -> dualGAct x 1 0 |> f |> tangent
 
     /// Original value and gradient of a vector-to-scalar function `f`
     let inline grad' f =

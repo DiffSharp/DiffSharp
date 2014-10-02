@@ -44,7 +44,7 @@ let jh = jacobian h [|2.; 3.|]
 DiffSharp.AD.Forward2
 ---------------------
 
-This is a forward AD module that also keeps the 2nd derivative. It provides the 2nd derivative of scalar-to-scalar functions.
+This is a forward AD module that also keeps the tangent-of-tangent values to compute 2nd derivatives.
 
 This module is used with the **Dual2** numeric type.
 *)
@@ -74,17 +74,17 @@ This module is used with the **DualG** numeric type.
 
 open DiffSharp.AD.ForwardG
 
-// gv: DualG[] -> DualG
-let gv (x:DualG[]) = sin (x.[0] * x.[1])
+// g3: DualG[] -> DualG
+let g3 (x:DualG[]) = sin (x.[0] * x.[1])
 
-// Gradient of gv at (2, 3)
-let ggv = grad gv [|2.; 3.|]
+// Gradient of g3 at (2, 3)
+let gg3 = grad g3 [|2.; 3.|]
 
-// hv: DualG[] -> DualG[]
-let hv (x:DualG[]) = [| sin x.[0]; cos x.[1] |]
+// h3: DualG[] -> DualG[]
+let h3 (x:DualG[]) = [| sin x.[0]; cos x.[1] |]
 
-// Jacobian of hv at (2, 3)
-let jhv = jacobian hv [|2.; 3.|]
+// Jacobian of h3 at (2, 3)
+let jh3 = jacobian h3 [|2.; 3.|]
 
 (**
 DiffSharp.AD.ForwardGH
@@ -97,11 +97,11 @@ This module is used with the **DualGH** numeric type.
 
 open DiffSharp.AD.ForwardGH
 
-// gv2: DualGH[] -> DualGH
-let gv2 (x:DualGH[]) = sin (x.[0] * x.[1])
+// g4: DualGH[] -> DualGH
+let g4 (x:DualGH[]) = sin (x.[0] * x.[1])
 
-// Gradient and Hessian of gv2 at (2, 3)
-let ggv2, hgv2 = gradhessian gv2 [|2.; 3.|]
+// Gradient and Hessian of g4 at (2, 3)
+let gg4, hg4 = gradhessian g4 [|2.; 3.|]
 
 (**
 DiffSharp.AD.ForwardN
@@ -114,8 +114,8 @@ This module is used with the **DualN** numeric type.
 
 open DiffSharp.AD.ForwardN
 
-// fn: DualN -> DualN
-let fn (x:DualN) = sin (3. * sqrt x)
+// f5: DualN -> DualN
+let f5 (x:DualN) = sin (3. * sqrt x)
 
-// 3rd derivative of fn at 2.
-let d3fn = diffn 3 fn 2.
+// 3rd derivative of f5 at 2.
+let d3f5 = diffn 3 f5 2.
