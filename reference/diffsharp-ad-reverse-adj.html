@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Adj - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>Adj</h1>
+<div class="xmldoc">
+<p>Adj numeric type, keeping primal and adjoint values</p>
+</div>
+  <h3>Record Fields</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Record Field</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '981', 981)" onmouseover="showTip(event, '981', 981)">
+            A
+          </code>
+          <div class="tip" id="981">
+            <strong>Signature:</strong> float<br />
+              <strong>Modifiers:</strong> mutable<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '982', 982)" onmouseover="showTip(event, '982', 982)">
+            P
+          </code>
+          <div class="tip" id="982">
+            <strong>Signature:</strong> float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Constructors</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Constructor</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '987', 987)" onmouseover="showTip(event, '987', 987)">
+            new(p, a)
+          </code>
+          <div class="tip" id="987">
+            <strong>Signature:</strong> (p:float * a:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '988', 988)" onmouseover="showTip(event, '988', 988)">
+            new(p)
+          </code>
+          <div class="tip" id="988">
+            <strong>Signature:</strong> p:float -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1124', 1124)" onmouseover="showTip(event, '1124', 1124)">
+            AddAdj(a)
+          </code>
+          <div class="tip" id="1124">
+            <strong>Signature:</strong> a:float -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1228', 1228)" onmouseover="showTip(event, '1228', 1228)">
+            ( - )(x, y)
+          </code>
+          <div class="tip" id="1228">
+            <strong>Signature:</strong> (x:float * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1229', 1229)" onmouseover="showTip(event, '1229', 1229)">
+            ( - )(x, y)
+          </code>
+          <div class="tip" id="1229">
+            <strong>Signature:</strong> (x:Adj * y:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1230', 1230)" onmouseover="showTip(event, '1230', 1230)">
+            ( - )(x, y)
+          </code>
+          <div class="tip" id="1230">
+            <strong>Signature:</strong> (x:Adj * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1231', 1231)" onmouseover="showTip(event, '1231', 1231)">
+            ( * )(x, y)
+          </code>
+          <div class="tip" id="1231">
+            <strong>Signature:</strong> (x:float * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1232', 1232)" onmouseover="showTip(event, '1232', 1232)">
+            ( * )(x, y)
+          </code>
+          <div class="tip" id="1232">
+            <strong>Signature:</strong> (x:Adj * y:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1233', 1233)" onmouseover="showTip(event, '1233', 1233)">
+            ( * )(x, y)
+          </code>
+          <div class="tip" id="1233">
+            <strong>Signature:</strong> (x:Adj * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1234', 1234)" onmouseover="showTip(event, '1234', 1234)">
+            ( / )(x, y)
+          </code>
+          <div class="tip" id="1234">
+            <strong>Signature:</strong> (x:float * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1235', 1235)" onmouseover="showTip(event, '1235', 1235)">
+            ( / )(x, y)
+          </code>
+          <div class="tip" id="1235">
+            <strong>Signature:</strong> (x:Adj * y:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1236', 1236)" onmouseover="showTip(event, '1236', 1236)">
+            ( / )(x, y)
+          </code>
+          <div class="tip" id="1236">
+            <strong>Signature:</strong> (x:Adj * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1237', 1237)" onmouseover="showTip(event, '1237', 1237)">
+            ( ~- )(x)
+          </code>
+          <div class="tip" id="1237">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1238', 1238)" onmouseover="showTip(event, '1238', 1238)">
+            ( + )(x, y)
+          </code>
+          <div class="tip" id="1238">
+            <strong>Signature:</strong> (x:float * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1239', 1239)" onmouseover="showTip(event, '1239', 1239)">
+            ( + )(x, y)
+          </code>
+          <div class="tip" id="1239">
+            <strong>Signature:</strong> (x:Adj * y:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1240', 1240)" onmouseover="showTip(event, '1240', 1240)">
+            ( + )(x, y)
+          </code>
+          <div class="tip" id="1240">
+            <strong>Signature:</strong> (x:Adj * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1241', 1241)" onmouseover="showTip(event, '1241', 1241)">
+            Acos(x)
+          </code>
+          <div class="tip" id="1241">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1242', 1242)" onmouseover="showTip(event, '1242', 1242)">
+            Asin(x)
+          </code>
+          <div class="tip" id="1242">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1243', 1243)" onmouseover="showTip(event, '1243', 1243)">
+            Atan(x)
+          </code>
+          <div class="tip" id="1243">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1244', 1244)" onmouseover="showTip(event, '1244', 1244)">
+            Cos(x)
+          </code>
+          <div class="tip" id="1244">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1245', 1245)" onmouseover="showTip(event, '1245', 1245)">
+            Cosh(x)
+          </code>
+          <div class="tip" id="1245">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1246', 1246)" onmouseover="showTip(event, '1246', 1246)">
+            DivideByInt(x, i)
+          </code>
+          <div class="tip" id="1246">
+            <strong>Signature:</strong> (x:Adj * i:int) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1247', 1247)" onmouseover="showTip(event, '1247', 1247)">
+            Exp(x)
+          </code>
+          <div class="tip" id="1247">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1248', 1248)" onmouseover="showTip(event, '1248', 1248)">
+            Log(x)
+          </code>
+          <div class="tip" id="1248">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1249', 1249)" onmouseover="showTip(event, '1249', 1249)">
+            One
+          </code>
+          <div class="tip" id="1249">
+            <strong>Signature:</strong> Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1250', 1250)" onmouseover="showTip(event, '1250', 1250)">
+            One
+          </code>
+          <div class="tip" id="1250">
+            <strong>Signature:</strong> Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1251', 1251)" onmouseover="showTip(event, '1251', 1251)">
+            op_Explicit(x)
+          </code>
+          <div class="tip" id="1251">
+            <strong>Signature:</strong> x:Adj -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1252', 1252)" onmouseover="showTip(event, '1252', 1252)">
+            op_Explicit(x)
+          </code>
+          <div class="tip" id="1252">
+            <strong>Signature:</strong> x:float -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1253', 1253)" onmouseover="showTip(event, '1253', 1253)">
+            Pow(x, y)
+          </code>
+          <div class="tip" id="1253">
+            <strong>Signature:</strong> (x:float * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1254', 1254)" onmouseover="showTip(event, '1254', 1254)">
+            Pow(x, y)
+          </code>
+          <div class="tip" id="1254">
+            <strong>Signature:</strong> (x:Adj * y:float) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1255', 1255)" onmouseover="showTip(event, '1255', 1255)">
+            Pow(x, y)
+          </code>
+          <div class="tip" id="1255">
+            <strong>Signature:</strong> (x:Adj * y:Adj) -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1256', 1256)" onmouseover="showTip(event, '1256', 1256)">
+            Sin(x)
+          </code>
+          <div class="tip" id="1256">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1257', 1257)" onmouseover="showTip(event, '1257', 1257)">
+            Sinh(x)
+          </code>
+          <div class="tip" id="1257">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1258', 1258)" onmouseover="showTip(event, '1258', 1258)">
+            Sqrt(x)
+          </code>
+          <div class="tip" id="1258">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1259', 1259)" onmouseover="showTip(event, '1259', 1259)">
+            Tan(x)
+          </code>
+          <div class="tip" id="1259">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1260', 1260)" onmouseover="showTip(event, '1260', 1260)">
+            Tanh(x)
+          </code>
+          <div class="tip" id="1260">
+            <strong>Signature:</strong> x:Adj -&gt; Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1261', 1261)" onmouseover="showTip(event, '1261', 1261)">
+            Zero
+          </code>
+          <div class="tip" id="1261">
+            <strong>Signature:</strong> Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1262', 1262)" onmouseover="showTip(event, '1262', 1262)">
+            Zero
+          </code>
+          <div class="tip" id="1262">
+            <strong>Signature:</strong> Adj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+
+            <li class="nav-header">Reference</li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

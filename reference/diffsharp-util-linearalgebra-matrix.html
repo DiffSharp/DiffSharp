@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Matrix - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>Matrix</h1>
+<div class="xmldoc">
+<p>Lightweight matrix type</p>
+</div>
+  <h3>Record Fields</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Record Field</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '983', 983)" onmouseover="showTip(event, '983', 983)">
+            M
+          </code>
+          <div class="tip" id="983">
+            <strong>Signature:</strong> float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Constructors</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Constructor</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '986', 986)" onmouseover="showTip(event, '986', 986)">
+            new(m)
+          </code>
+          <div class="tip" id="986">
+            <strong>Signature:</strong> (m:float [,]) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '994', 994)" onmouseover="showTip(event, '994', 994)">
+            Cols
+          </code>
+          <div class="tip" id="994">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '995', 995)" onmouseover="showTip(event, '995', 995)">
+            Cols
+          </code>
+          <div class="tip" id="995">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '996', 996)" onmouseover="showTip(event, '996', 996)">
+            GetTrace()
+          </code>
+          <div class="tip" id="996">
+            <strong>Signature:</strong> unit -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the trace of this Matrix</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '997', 997)" onmouseover="showTip(event, '997', 997)">
+            GetTranspose()
+          </code>
+          <div class="tip" id="997">
+            <strong>Signature:</strong> unit -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the transpose of this Matrix</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '998', 998)" onmouseover="showTip(event, '998', 998)">
+            [i, j]
+          </code>
+          <div class="tip" id="998">
+            <strong>Signature:</strong> i:int * j:int -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '999', 999)" onmouseover="showTip(event, '999', 999)">
+            Rows
+          </code>
+          <div class="tip" id="999">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1000', 1000)" onmouseover="showTip(event, '1000', 1000)">
+            Rows
+          </code>
+          <div class="tip" id="1000">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1001', 1001)" onmouseover="showTip(event, '1001', 1001)">
+            ToMathematicaString()
+          </code>
+          <div class="tip" id="1001">
+            <strong>Signature:</strong> unit -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get a string representation of this Matrix that can be pasted into a Mathematica notebook</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1125', 1125)" onmouseover="showTip(event, '1125', 1125)">
+            ( - )(a, b)
+          </code>
+          <div class="tip" id="1125">
+            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Subtract Matrix <code>b</code> from Matrix <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1126', 1126)" onmouseover="showTip(event, '1126', 1126)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1126">
+            <strong>Signature:</strong> (a:float * b:Matrix) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Multiply Matrix <code>b</code> by float <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1127', 1127)" onmouseover="showTip(event, '1127', 1127)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1127">
+            <strong>Signature:</strong> (a:Matrix * b:float) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Multiply Matrix <code>a</code> by float <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1128', 1128)" onmouseover="showTip(event, '1128', 1128)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1128">
+            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Matrix product of Matrix <code>a</code> and Matrix <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1129', 1129)" onmouseover="showTip(event, '1129', 1129)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="1129">
+            <strong>Signature:</strong> (a:Matrix * b:float) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Divide Matrix <code>a</code> by float <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1130', 1130)" onmouseover="showTip(event, '1130', 1130)">
+            ( ~- )(a)
+          </code>
+          <div class="tip" id="1130">
+            <strong>Signature:</strong> a:Matrix -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Negative of Matrix <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1131', 1131)" onmouseover="showTip(event, '1131', 1131)">
+            ( + )(a, b)
+          </code>
+          <div class="tip" id="1131">
+            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Add Matrix <code>a</code> to Matrix <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1132', 1132)" onmouseover="showTip(event, '1132', 1132)">
+            Create(m, v)
+          </code>
+          <div class="tip" id="1132">
+            <strong>Signature:</strong> (m:int * v:float []) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with <code>m</code> rows and all rows equal to float[] <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1133', 1133)" onmouseover="showTip(event, '1133', 1133)">
+            Create(v)
+          </code>
+          <div class="tip" id="1133">
+            <strong>Signature:</strong> (v:Vector []) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with rows given in Vector[] <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1134', 1134)" onmouseover="showTip(event, '1134', 1134)">
+            Create(m, f)
+          </code>
+          <div class="tip" id="1134">
+            <strong>Signature:</strong> (m:int * f:(int -&gt; Vector)) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a Vector</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1135', 1135)" onmouseover="showTip(event, '1135', 1135)">
+            Create(m, f)
+          </code>
+          <div class="tip" id="1135">
+            <strong>Signature:</strong> (m:int * f:(int -&gt; float [])) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a float[]</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1136', 1136)" onmouseover="showTip(event, '1136', 1136)">
+            Create(m, n, v)
+          </code>
+          <div class="tip" id="1136">
+            <strong>Signature:</strong> (m:int * n:int * v:float) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with <code>m</code> rows, <code>n</code> columns, and all elements having value <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1137', 1137)" onmouseover="showTip(event, '1137', 1137)">
+            Create(m, n, f)
+          </code>
+          <div class="tip" id="1137">
+            <strong>Signature:</strong> (m:int * n:int * f:(int -&gt; int -&gt; float)) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix with <code>m</code> rows, <code>n</code> columns, and a generator function <code>f</code> to compute the elements</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1138', 1138)" onmouseover="showTip(event, '1138', 1138)">
+            Create(m)
+          </code>
+          <div class="tip" id="1138">
+            <strong>Signature:</strong> (m:float [,]) -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Matrix from given 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1139', 1139)" onmouseover="showTip(event, '1139', 1139)">
+            map(f m)
+          </code>
+          <div class="tip" id="1139">
+            <strong>Signature:</strong> (f:(float -&gt; float)) -&gt; m:Matrix -&gt; Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Builds a new Matrix whose elements are the results of applying function <code>f</code> to each of the elements of Matrix <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1140', 1140)" onmouseover="showTip(event, '1140', 1140)">
+            Zero
+          </code>
+          <div class="tip" id="1140">
+            <strong>Signature:</strong> Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create zero Matrix</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1141', 1141)" onmouseover="showTip(event, '1141', 1141)">
+            Zero
+          </code>
+          <div class="tip" id="1141">
+            <strong>Signature:</strong> Matrix<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create zero Matrix</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+
+            <li class="nav-header">Reference</li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

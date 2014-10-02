@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- 
+      The Benchmarks
+ parameters will be replaced with the 
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>Benchmarks
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    
+    <link type="text/css" rel="stylesheet" href="misc/style.css" />
+    <script src="misc/tips.js" type="text/javascript"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          <h1>Benchmarks</h1>
+
+<p>The following tables present the result of an experiment measuring the running times of the operations in the library. For descriptions of these operations, please refer to <a href="api-overview.html">API Overview</a>.</p>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg .tg-eugx{background-color:#e4ffb3;text-align:center}
+.tg .tg-5y5n{background-color:#ecf4ff}
+.tg .tg-a1rn{background-color:#ffffc7}
+.tg .tg-e3zv{font-weight:bold}
+.tg .tg-tfw5{background-color:#ffffc7;text-align:center}
+.tg .tg-a0td{font-size:100%}
+.tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
+.tg .tg-u986{font-size:100%;background-color:#e4ffb3}
+.tg .tg-40di{font-size:100%;background-color:#ecf4ff;color:#000000}
+.tg .tg-dyge{font-weight:bold;font-size:100%}
+.tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
+.tg .tg-v6es{font-size:100%;background-color:#e4ffb3;text-align:center}
+.tg .tg-uy90{font-size:100%;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-ci37{background-color:#ecf4ff;text-align:center}
+.tg .tg-2sn5{background-color:#e4ffb3}
+</style>
+<table class="tg">
+  <tr>
+    <th class="tg-a0td"></th>
+    <th class="tg-lgsi">diff </th>
+    <th class="tg-lgsi">diff2 </th>
+    <th class="tg-lgsi">diffn </th>
+    <th class="tg-u986">diffdir </th>
+    <th class="tg-u986">grad </th>
+    <th class="tg-u986">hessian </th>
+    <th class="tg-u986">gradhessian </th>
+    <th class="tg-u986">laplacian </th>
+    <th class="tg-40di">jacobian </th>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.AD.Forward</td>
+    <td class="tg-gkzk">1.71</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es">1.06</td>
+    <td class="tg-v6es">2.38</td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-uy90">13.93</td>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.AD.Forward2</td>
+    <td class="tg-gkzk">2.71</td>
+    <td class="tg-gkzk">2.86</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es">1.31</td>
+    <td class="tg-v6es">3.38</td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es">3.42</td>
+    <td class="tg-uy90">16.00</td>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
+    <td class="tg-gkzk">2.71</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es">2.27</td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-uy90">6.33</td>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-gkzk">16.29</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es">12.62</td>
+    <td class="tg-v6es">14.96</td>
+    <td class="tg-v6es">13.50</td>
+    <td class="tg-v6es">14.65</td>
+    <td class="tg-uy90">20.53</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
+    <td class="tg-tfw5">9.86</td>
+    <td class="tg-tfw5">27.71</td>
+    <td class="tg-tfw5">28.57</td>
+    <td class="tg-eugx">4.85</td>
+    <td class="tg-eugx">14.85</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">38.42</td>
+    <td class="tg-ci37">30.13</td>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.AD.Reverse</td>
+    <td class="tg-gkzk">4.29</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es"></td>
+    <td class="tg-v6es">1.73</td>
+    <td class="tg-v6es">21.58</td>
+    <td class="tg-v6es">17.58</td>
+    <td class="tg-v6es">20.19</td>
+    <td class="tg-uy90">8.80</td>
+  </tr>
+  <tr>
+    <td class="tg-dyge">DiffSharp.Numerical</td>
+    <td class="tg-gkzk">1.06</td>
+    <td class="tg-gkzk">1.14</td>
+    <td class="tg-gkzk"></td>
+    <td class="tg-v6es">1.04</td>
+    <td class="tg-v6es">2.65</td>
+    <td class="tg-v6es">25.92</td>
+    <td class="tg-v6es">21.27</td>
+    <td class="tg-v6es">23.42</td>
+    <td class="tg-uy90">21.33</td>
+  </tr>
+  <tr style="visibility:hidden">
+    <td class="tg-031e"></td>
+    <td class="tg-a1rn"></td>
+    <td class="tg-a1rn"></td>
+    <td class="tg-a1rn"></td>
+    <td class="tg-2sn5"></td>
+    <td class="tg-2sn5"></td>
+    <td class="tg-2sn5"></td>
+    <td class="tg-2sn5"></td>
+    <td class="tg-2sn5"></td>
+    <td class="tg-5y5n"></td>
+  </tr>
+  <tr>
+    <td class="tg-031e"></td>
+    <td class="tg-a1rn">diff'</td>
+    <td class="tg-a1rn">diff2'</td>
+    <td class="tg-a1rn">diffn'</td>
+    <td class="tg-2sn5">diffdir'</td>
+    <td class="tg-2sn5">grad'</td>
+    <td class="tg-2sn5">hessian'</td>
+    <td class="tg-2sn5">gradhessian'</td>
+    <td class="tg-2sn5">laplacian'</td>
+    <td class="tg-5y5n">jacobian'</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.Forward</td>
+    <td class="tg-tfw5">1.43</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx">1.03</td>
+    <td class="tg-eugx">2.12</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-ci37">13.8</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.Forward2</td>
+    <td class="tg-tfw5">3.29</td>
+    <td class="tg-tfw5">2.71</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx">1.08</td>
+    <td class="tg-eugx">3.19</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">3.19</td>
+    <td class="tg-ci37">15.6</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.ForwardG</td>
+    <td class="tg-tfw5">2.86</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">2.19</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-ci37">5.93</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-tfw5">15.14</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">12.85</td>
+    <td class="tg-eugx">12.96</td>
+    <td class="tg-eugx">13.12</td>
+    <td class="tg-eugx">14.42</td>
+    <td class="tg-ci37">19.93</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
+    <td class="tg-tfw5">10.29</td>
+    <td class="tg-tfw5">28.00</td>
+    <td class="tg-tfw5">29.00</td>
+    <td class="tg-eugx">4.54</td>
+    <td class="tg-eugx">14.19</td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">37.46</td>
+    <td class="tg-ci37">30.47</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.AD.Reverse</td>
+    <td class="tg-tfw5">3.43</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx"></td>
+    <td class="tg-eugx">1.35</td>
+    <td class="tg-eugx">17.62</td>
+    <td class="tg-eugx">17.08</td>
+    <td class="tg-eugx">19.31</td>
+    <td class="tg-ci37">8.4</td>
+  </tr>
+  <tr>
+    <td class="tg-e3zv">DiffSharp.Numerical</td>
+    <td class="tg-tfw5">1.29</td>
+    <td class="tg-tfw5">1.57</td>
+    <td class="tg-tfw5"></td>
+    <td class="tg-eugx">1.15</td>
+    <td class="tg-eugx">2.19</td>
+    <td class="tg-eugx">22.19</td>
+    <td class="tg-eugx">20.92</td>
+    <td class="tg-eugx">23.38</td>
+    <td class="tg-ci37">39.50</td>
+  </tr>
+</table>
+
+<br>
+
+<p>The values are normalized with respect to the running time of the original function corresponding to each column.</p>
+
+<p>The used functions were <span class="math">\(f(x) = (\sin \sqrt{x - 2}) ^ 3\)</span> as the scalar-to-scalar, <span class="math">\(f(x,y,z) = (x\;\sqrt{y - z}\;\log z) ^ y\)</span> as the vector-to-scalar, and <span class="math">\(f(x,y,z) = (\sin{x ^ y}, \sqrt{y - 2}, \log{xz})\)</span> as the vector-to-vector.</p>
+
+<p>The running times were measured using <a href="http://msdn.microsoft.com/en-us/library/system.diagnostics.process.totalprocessortime(v=vs.110).aspx"><strong>Process.TotalProcessorTime</strong></a>, averaged over a million calls to each operation, on a PC with an Intel Core i7-4510U 2.0 GHz CPU and 16 GB RAM, running Windows 8.1 and .NET Framework 4.5.1.</p>
+
+                    
+        </div>
+        <div class="span3">
+          <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
+            
+            <li class="nav-header">Reference</li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

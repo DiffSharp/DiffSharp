@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Vector - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Atılım Güneş Baydin">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>Vector</h1>
+<div class="xmldoc">
+<p>Lightweight vector type for internal usage</p>
+</div>
+  <h3>Record Fields</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Record Field</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1755', 1755)" onmouseover="showTip(event, '1755', 1755)">
+            V
+          </code>
+          <div class="tip" id="1755">
+            <strong>Signature:</strong> float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Constructors</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Constructor</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1760', 1760)" onmouseover="showTip(event, '1760', 1760)">
+            new(v)
+          </code>
+          <div class="tip" id="1760">
+            <strong>Signature:</strong> (v:float []) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1803', 1803)" onmouseover="showTip(event, '1803', 1803)">
+            Dim
+          </code>
+          <div class="tip" id="1803">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1804', 1804)" onmouseover="showTip(event, '1804', 1804)">
+            Dim
+          </code>
+          <div class="tip" id="1804">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1805', 1805)" onmouseover="showTip(event, '1805', 1805)">
+            [i]
+          </code>
+          <div class="tip" id="1805">
+            <strong>Signature:</strong> i:int -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1943', 1943)" onmouseover="showTip(event, '1943', 1943)">
+            ( - )(a, b)
+          </code>
+          <div class="tip" id="1943">
+            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Subtract Vector <code>b</code> from Vector <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1945', 1945)" onmouseover="showTip(event, '1945', 1945)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1945">
+            <strong>Signature:</strong> (a:float * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Multiply Vector <code>b</code> by float <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1946', 1946)" onmouseover="showTip(event, '1946', 1946)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1946">
+            <strong>Signature:</strong> (a:Vector * b:float) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Multiply Vector <code>a</code> by float <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1947', 1947)" onmouseover="showTip(event, '1947', 1947)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="1947">
+            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Multiply Vector <code>a</code> and Vector <code>b</code> element-wise (Hadamard product)</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1948', 1948)" onmouseover="showTip(event, '1948', 1948)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="1948">
+            <strong>Signature:</strong> (a:float * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Vector whose elements are float <code>a</code> divided by the corresponding element of Vector <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1949', 1949)" onmouseover="showTip(event, '1949', 1949)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="1949">
+            <strong>Signature:</strong> (a:Vector * b:float) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Divide Vector <code>a</code> by float <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1950', 1950)" onmouseover="showTip(event, '1950', 1950)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="1950">
+            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Divide Vector <code>a</code> by Vector <code>b</code> element-wise</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1951', 1951)" onmouseover="showTip(event, '1951', 1951)">
+            ( ~- )(a)
+          </code>
+          <div class="tip" id="1951">
+            <strong>Signature:</strong> a:Vector -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Negative of Vector <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1952', 1952)" onmouseover="showTip(event, '1952', 1952)">
+            ( + )(a, b)
+          </code>
+          <div class="tip" id="1952">
+            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Add Vector <code>a</code> to Vector <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1953', 1953)" onmouseover="showTip(event, '1953', 1953)">
+            Create(n, i, v)
+          </code>
+          <div class="tip" id="1953">
+            <strong>Signature:</strong> (n:int * i:int * v:float&lt;MeasureOne&gt;) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Vector with dimension <code>n</code>, the element with index <code>i</code> having value <code>v</code>, and the rest of the elements 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1954', 1954)" onmouseover="showTip(event, '1954', 1954)">
+            Create(n, v)
+          </code>
+          <div class="tip" id="1954">
+            <strong>Signature:</strong> (n:int * v:float) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Vector with dimension <code>n</code> and all elements having value <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1955', 1955)" onmouseover="showTip(event, '1955', 1955)">
+            Create(n, f)
+          </code>
+          <div class="tip" id="1955">
+            <strong>Signature:</strong> (n:int * f:(int -&gt; float)) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Vector with dimension <code>n</code> and a generator function <code>f</code> to compute the elements</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1956', 1956)" onmouseover="showTip(event, '1956', 1956)">
+            Create(v)
+          </code>
+          <div class="tip" id="1956">
+            <strong>Signature:</strong> (v:float []) -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create Vector from array <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1957', 1957)" onmouseover="showTip(event, '1957', 1957)">
+            Zero
+          </code>
+          <div class="tip" id="1957">
+            <strong>Signature:</strong> Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create zero Vector</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1958', 1958)" onmouseover="showTip(event, '1958', 1958)">
+            Zero
+          </code>
+          <div class="tip" id="1958">
+            <strong>Signature:</strong> Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Create zero Vector</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+
+            <li class="nav-header">Reference</li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>

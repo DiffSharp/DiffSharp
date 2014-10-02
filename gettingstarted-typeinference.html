@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- 
+      The Type Inference
+ parameters will be replaced with the 
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>Type Inference
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    
+    <link type="text/css" rel="stylesheet" href="misc/style.css" />
+    <script src="misc/tips.js" type="text/javascript"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          <h1>Type Inference</h1>
+
+<p>F# is a statically typed language with <a href="http://msdn.microsoft.com/en-us/library/dd233180.aspx">type inference</a>. Parts of the DiffSharp library work via AD-enabled numeric types, such as the <strong>Diffsharp.AD.Forward.Dual</strong> type implementing <a href="http://en.wikipedia.org/wiki/Dual_number">dual numbers</a>.</p>
+
+<p>There are several ways the F# type inference system can work together with the DiffSharp library.</p>
+
+<h2>Lambda Expressions</h2>
+
+<p>The simplest and easiest way is to define functions using <a href="http://msdn.microsoft.com/en-us/library/dd233201.aspx">lambda expressions</a> after differentiation operators. The expression will automatically assume the AD-enabled numeric type corresponding to the DiffSharp module and operator you are using.</p>
+
+<p>(You can hover the pointer over the examples to check their types.)</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">Forward</span>
+
+<span class="c">// The lambda expression after &quot;diff&quot; has type Dual -&gt; Dual</span>
+<span class="c">// a: float -&gt; float, the derivative of Sin(Sqrt(x))</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">a</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="i">diff</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 7)" onmouseover="showTip(event, 'fs7', 7)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs8', 8)" onmouseover="showTip(event, 'fs8', 8)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs6', 9)" onmouseover="showTip(event, 'fs6', 9)" class="i">x</span>))
+
+<span class="c">// Use a to compute the derivative at 2</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 10)" onmouseover="showTip(event, 'fs9', 10)" class="i">da</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs4', 11)" onmouseover="showTip(event, 'fs4', 11)" class="i">a</span> <span class="n">2.</span></pre>
+</td>
+</tr>
+</table>
+
+<h2>Existing Functions</h2>
+
+<p>When you have an existing function, just opening the DiffSharp library and using a differentiation operation is sufficient in some cases for getting it interpreted as using AD-enabled types.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// b: float -&gt; float</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="i">b</span> <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 14)" onmouseover="showTip(event, 'fs7', 14)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs8', 15)" onmouseover="showTip(event, 'fs8', 15)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs11', 16)" onmouseover="showTip(event, 'fs11', 16)" class="i">x</span>)</pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 17)" onmouseover="showTip(event, 'fs1', 17)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 18)" onmouseover="showTip(event, 'fs2', 18)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 19)" onmouseover="showTip(event, 'fs3', 19)" class="i">Forward</span>
+
+<span class="c">// c has the same definition with b, here Dual type is inferred automatically</span>
+<span class="c">// c: Dual -&gt; Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs12', 20)" onmouseover="showTip(event, 'fs12', 20)" class="i">c</span> <span onmouseout="hideTip(event, 'fs6', 21)" onmouseover="showTip(event, 'fs6', 21)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 22)" onmouseover="showTip(event, 'fs7', 22)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs8', 23)" onmouseover="showTip(event, 'fs8', 23)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs6', 24)" onmouseover="showTip(event, 'fs6', 24)" class="i">x</span>)
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs13', 25)" onmouseover="showTip(event, 'fs13', 25)" class="i">dc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs5', 26)" onmouseover="showTip(event, 'fs5', 26)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs12', 27)" onmouseover="showTip(event, 'fs12', 27)" class="i">c</span></pre>
+</td>
+</tr>
+</table>
+
+<h2>"Injecting" AD-enabled Types</h2>
+
+<p>Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer <strong>float</strong> or <strong>int</strong> arithmetic.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// d: float -&gt; float</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 28)" onmouseover="showTip(event, 'fs14', 28)" class="i">d</span> <span onmouseout="hideTip(event, 'fs11', 29)" onmouseover="showTip(event, 'fs11', 29)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 30)" onmouseover="showTip(event, 'fs7', 30)" class="i">sin</span> (<span class="n">3.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs8', 31)" onmouseover="showTip(event, 'fs8', 31)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs11', 32)" onmouseover="showTip(event, 'fs11', 32)" class="i">x</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>In such cases, AD-enabled types should be explicitly used in one or more places in the function definition.</p>
+
+<p>A function's signature can be usually changed without having to change the type of all the involved values. For example, "injecting" some <strong>Dual</strong>s into a large <strong>float</strong> expression can cause the whole function to have <strong>Dual</strong> arithmetic.</p>
+
+<p>Explicitly marking a parameter as <strong>Dual</strong>:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// e: Dual -&gt; Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs15', 33)" onmouseover="showTip(event, 'fs15', 33)" class="i">e</span> (<span onmouseout="hideTip(event, 'fs6', 34)" onmouseover="showTip(event, 'fs6', 34)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs16', 35)" onmouseover="showTip(event, 'fs16', 35)" class="i">Dual</span>) <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 36)" onmouseover="showTip(event, 'fs7', 36)" class="i">sin</span> (<span class="n">3.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs8', 37)" onmouseover="showTip(event, 'fs8', 37)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs6', 38)" onmouseover="showTip(event, 'fs6', 38)" class="i">x</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>Converting a <strong>float</strong> into a <strong>Dual</strong>:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// f: Dual -&gt; Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs17', 39)" onmouseover="showTip(event, 'fs17', 39)" class="i">f</span> <span onmouseout="hideTip(event, 'fs6', 40)" onmouseover="showTip(event, 'fs6', 40)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 41)" onmouseover="showTip(event, 'fs7', 41)" class="i">sin</span> ((<span onmouseout="hideTip(event, 'fs18', 42)" onmouseover="showTip(event, 'fs18', 42)" class="i">dual</span> <span class="n">3.</span>) <span class="o">*</span> <span onmouseout="hideTip(event, 'fs8', 43)" onmouseover="showTip(event, 'fs8', 43)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs6', 44)" onmouseover="showTip(event, 'fs6', 44)" class="i">x</span>)</pre>
+</td>
+</tr>
+</table>
+
+<h2>Numeric Literals for DiffSharp.AD.Forward.Dual</h2>
+
+<p>The library provides the <em>Q</em> and <em>R</em> numeric literals for the <strong>Dual</strong> type. A <em>Q-literal</em> produces a <strong>Dual</strong> with tangent (or, derivative) value 0 and an <em>R-literal</em> produces a <strong>Dual</strong> with tangent value 1 (representing the variable of differentiation, because the derivative of the variable of differentiation is, by definition, 1).</p>
+
+<p>Using numeric literals to cause <strong>Dual</strong> inference:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// g: Dual -&gt; Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs19', 45)" onmouseover="showTip(event, 'fs19', 45)" class="i">g</span> <span onmouseout="hideTip(event, 'fs6', 46)" onmouseover="showTip(event, 'fs6', 46)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 47)" onmouseover="showTip(event, 'fs7', 47)" class="i">sin</span> (<span class="n">3Q</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs8', 48)" onmouseover="showTip(event, 'fs8', 48)" class="i">sqrt</span> <span onmouseout="hideTip(event, 'fs6', 49)" onmouseover="showTip(event, 'fs6', 49)" class="i">x</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>Using numeric literals to calculate partial derivatives with <strong>DiffSharp.AD.Forward</strong>:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// A multivariate function</span>
+<span class="c">// h: Dual -&gt; Dual -&gt; Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs20', 50)" onmouseover="showTip(event, 'fs20', 50)" class="i">h</span> <span onmouseout="hideTip(event, 'fs6', 51)" onmouseover="showTip(event, 'fs6', 51)" class="i">x</span> <span onmouseout="hideTip(event, 'fs21', 52)" onmouseover="showTip(event, 'fs21', 52)" class="i">y</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs7', 53)" onmouseover="showTip(event, 'fs7', 53)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs6', 54)" onmouseover="showTip(event, 'fs6', 54)" class="i">x</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs21', 55)" onmouseover="showTip(event, 'fs21', 55)" class="i">y</span>)
+
+<span class="c">// dh / dx at (3, 7)</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 56)" onmouseover="showTip(event, 'fs22', 56)" class="i">dhx</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 57)" onmouseover="showTip(event, 'fs23', 57)" class="i">tangent</span> (<span onmouseout="hideTip(event, 'fs20', 58)" onmouseover="showTip(event, 'fs20', 58)" class="i">h</span> <span class="n">3R</span> <span class="n">7Q</span>)
+
+<span class="c">// dh / dy at (3, 7)</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 59)" onmouseover="showTip(event, 'fs24', 59)" class="i">dhy</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 60)" onmouseover="showTip(event, 'fs23', 60)" class="i">tangent</span> (<span onmouseout="hideTip(event, 'fs20', 61)" onmouseover="showTip(event, 'fs20', 61)" class="i">h</span> <span class="n">3Q</span> <span class="n">7R</span>)</pre>
+</td>
+</tr>
+</table>
+
+<h2>Generic Functions</h2>
+
+<p>F# supports <a href="http://tomasp.net/blog/fsharp-generic-numeric.aspx/">generic numeric functions</a> that allow computations with a variety of numeric types without changing the code.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// A simple generic function</span>
+<span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, 'fs25', 62)" onmouseover="showTip(event, 'fs25', 62)" class="i">sum</span> <span onmouseout="hideTip(event, 'fs26', 63)" onmouseover="showTip(event, 'fs26', 63)" class="i">a</span> <span onmouseout="hideTip(event, 'fs27', 64)" onmouseover="showTip(event, 'fs27', 64)" class="i">b</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs26', 65)" onmouseover="showTip(event, 'fs26', 65)" class="i">a</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs27', 66)" onmouseover="showTip(event, 'fs27', 66)" class="i">b</span>
+
+<span class="c">// Use sum with float</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs28', 67)" onmouseover="showTip(event, 'fs28', 67)" class="i">i1</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 68)" onmouseover="showTip(event, 'fs25', 68)" class="i">sum</span> <span class="n">2.</span> <span class="n">2.</span>
+
+<span class="c">// Use sum with int</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs29', 69)" onmouseover="showTip(event, 'fs29', 69)" class="i">i2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 70)" onmouseover="showTip(event, 'fs25', 70)" class="i">sum</span> <span class="n">2</span> <span class="n">2</span>
+
+<span class="c">// Use sum with bigint</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs30', 71)" onmouseover="showTip(event, 'fs30', 71)" class="i">i3</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 72)" onmouseover="showTip(event, 'fs25', 72)" class="i">sum</span> <span class="n">2I</span> <span class="n">2I</span>
+
+<span class="c">// Use sum with Dual</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs31', 73)" onmouseover="showTip(event, 'fs31', 73)" class="i">i4</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 74)" onmouseover="showTip(event, 'fs25', 74)" class="i">sum</span> <span class="n">2Q</span> <span class="n">2Q</span></pre>
+</td>
+</tr>
+</table>
+
+<p>DiffSharp can be used with generic numeric functions.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// A generic implementation of cosine, 8-th degree approximation</span>
+<span class="c">// cosine: &#39;a -&gt; &#39;a</span>
+<span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, 'fs32', 75)" onmouseover="showTip(event, 'fs32', 75)" class="i">cosine</span> (<span onmouseout="hideTip(event, 'fs33', 76)" onmouseover="showTip(event, 'fs33', 76)" class="i">x</span><span class="o">:</span> <span class="o">^</span><span class="i">a</span>) <span class="o">=</span>
+    <span class="k">let</span> <span onmouseout="hideTip(event, 'fs34', 77)" onmouseover="showTip(event, 'fs34', 77)" class="i">one</span><span class="o">:</span> <span class="o">^</span><span class="i">a</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 78)" onmouseover="showTip(event, 'fs35', 78)" class="i">LanguagePrimitives</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs36', 79)" onmouseover="showTip(event, 'fs36', 79)" class="i">GenericOne</span>
+    <span onmouseout="hideTip(event, 'fs37', 80)" onmouseover="showTip(event, 'fs37', 80)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs38', 81)" onmouseover="showTip(event, 'fs38', 81)" class="i">initInfinite</span>(<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs39', 82)" onmouseover="showTip(event, 'fs39', 82)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs35', 83)" onmouseover="showTip(event, 'fs35', 83)" class="i">LanguagePrimitives</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 84)" onmouseover="showTip(event, 'fs40', 84)" class="i">DivideByInt</span> (<span class="o">-</span><span onmouseout="hideTip(event, 'fs33', 85)" onmouseover="showTip(event, 'fs33', 85)" class="i">x</span><span class="o">*</span><span onmouseout="hideTip(event, 'fs33', 86)" onmouseover="showTip(event, 'fs33', 86)" class="i">x</span>) ((<span class="n">2</span><span class="o">*</span><span onmouseout="hideTip(event, 'fs39', 87)" onmouseover="showTip(event, 'fs39', 87)" class="i">i</span><span class="o">+</span><span class="n">1</span>) <span class="o">*</span> (<span class="n">2</span><span class="o">*</span><span onmouseout="hideTip(event, 'fs39', 88)" onmouseover="showTip(event, 'fs39', 88)" class="i">i</span><span class="o">+</span><span class="n">2</span>)))
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs37', 89)" onmouseover="showTip(event, 'fs37', 89)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs41', 90)" onmouseover="showTip(event, 'fs41', 90)" class="i">scan</span> <span class="o">(*)</span> <span onmouseout="hideTip(event, 'fs34', 91)" onmouseover="showTip(event, 'fs34', 91)" class="i">one</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs37', 92)" onmouseover="showTip(event, 'fs37', 92)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs42', 93)" onmouseover="showTip(event, 'fs42', 93)" class="i">take</span> <span class="n">8</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs37', 94)" onmouseover="showTip(event, 'fs37', 94)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 95)" onmouseover="showTip(event, 'fs43', 95)" class="i">sum</span>
+
+<span class="c">// Derivative of cosine at 3</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs44', 96)" onmouseover="showTip(event, 'fs44', 96)" class="i">j</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs5', 97)" onmouseover="showTip(event, 'fs5', 97)" class="i">diff</span> <span onmouseout="hideTip(event, 'fs32', 98)" onmouseover="showTip(event, 'fs32', 98)" class="i">cosine</span> <span class="n">3.</span></pre>
+</td>
+</tr>
+</table>
+
+          <div class="tip" id="fs1">namespace DiffSharp</div>
+<div class="tip" id="fs2">namespace DiffSharp.AD</div>
+<div class="tip" id="fs3">module Forward<br /><br />from DiffSharp.AD</div>
+<div class="tip" id="fs4">val a : (float -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.a</div>
+<div class="tip" id="fs5">val diff : f:(Dual -&gt; Dual) -&gt; (float -&gt; float)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
+<div class="tip" id="fs6">val x : Dual</div>
+<div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
+<div class="tip" id="fs8">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
+<div class="tip" id="fs9">val da : float<br /><br />Full name: Gettingstarted-typeinference.da</div>
+<div class="tip" id="fs10">val b : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.b</div>
+<div class="tip" id="fs11">val x : float</div>
+<div class="tip" id="fs12">val c : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.c</div>
+<div class="tip" id="fs13">val dc : (float -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.dc</div>
+<div class="tip" id="fs14">val d : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.d</div>
+<div class="tip" id="fs15">val e : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.e</div>
+<div class="tip" id="fs16">Multiple items<br />union case Dual.Dual: float * float -&gt; Dual<br /><br />--------------------<br />type Dual =<br />&#160;&#160;| Dual of float * float<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Acos : Dual -&gt; Dual<br />&#160;&#160;static member Asin : Dual -&gt; Dual<br />&#160;&#160;static member Atan : Dual -&gt; Dual<br />&#160;&#160;static member Cos : Dual -&gt; Dual<br />&#160;&#160;static member Cosh : Dual -&gt; Dual<br />&#160;&#160;static member DivideByInt : Dual * i:int -&gt; Dual<br />&#160;&#160;static member Exp : Dual -&gt; Dual<br />&#160;&#160;static member Log : Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:float * Dual -&gt; Dual<br />&#160;&#160;static member Pow : Dual * b:float -&gt; Dual<br />&#160;&#160;static member Pow : Dual * Dual -&gt; Dual<br />&#160;&#160;static member Sin : Dual -&gt; Dual<br />&#160;&#160;static member Sinh : Dual -&gt; Dual<br />&#160;&#160;static member Sqrt : Dual -&gt; Dual<br />&#160;&#160;static member Tan : Dual -&gt; Dual<br />&#160;&#160;static member Tanh : Dual -&gt; Dual<br />&#160;&#160;static member One : Dual<br />&#160;&#160;static member Zero : Dual<br />&#160;&#160;static member ( + ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member op_Explicit : Dual -&gt; float<br />&#160;&#160;static member op_Explicit : p:float -&gt; Dual<br />&#160;&#160;static member ( * ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( ~- ) : Dual -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.Dual</div>
+<div class="tip" id="fs17">val f : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f</div>
+<div class="tip" id="fs18">val dual : p:float -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
+<div class="tip" id="fs19">val g : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.g</div>
+<div class="tip" id="fs20">val h : x:Dual -&gt; y:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.h</div>
+<div class="tip" id="fs21">val y : Dual</div>
+<div class="tip" id="fs22">val dhx : float<br /><br />Full name: Gettingstarted-typeinference.dhx</div>
+<div class="tip" id="fs23">val tangent : Dual -&gt; float<br /><br />Full name: DiffSharp.AD.Forward.DualOps.tangent</div>
+<div class="tip" id="fs24">val dhy : float<br /><br />Full name: Gettingstarted-typeinference.dhy</div>
+<div class="tip" id="fs25">val sum : a:&#39;a -&gt; b:&#39;b -&gt; &#39;c (requires member ( + ))<br /><br />Full name: Gettingstarted-typeinference.sum</div>
+<div class="tip" id="fs26">val a : &#39;a (requires member ( + ))</div>
+<div class="tip" id="fs27">val b : &#39;b (requires member ( + ))</div>
+<div class="tip" id="fs28">val i1 : float<br /><br />Full name: Gettingstarted-typeinference.i1</div>
+<div class="tip" id="fs29">val i2 : int<br /><br />Full name: Gettingstarted-typeinference.i2</div>
+<div class="tip" id="fs30">val i3 : System.Numerics.BigInteger<br /><br />Full name: Gettingstarted-typeinference.i3</div>
+<div class="tip" id="fs31">val i4 : Dual<br /><br />Full name: Gettingstarted-typeinference.i4</div>
+<div class="tip" id="fs32">val cosine : x:&#39;a -&gt; &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)<br /><br />Full name: Gettingstarted-typeinference.cosine</div>
+<div class="tip" id="fs33">val x : &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)</div>
+<div class="tip" id="fs34">val one : &#39;a (requires member get_One and member ( * ) and member ( ~- ) and member ( * ) and member ( + ) and member get_Zero and member DivideByInt)</div>
+<div class="tip" id="fs35">module LanguagePrimitives<br /><br />from Microsoft.FSharp.Core</div>
+<div class="tip" id="fs36">val GenericOne&lt;&#39;T (requires member get_One)&gt; : &#39;T (requires member get_One)<br /><br />Full name: Microsoft.FSharp.Core.LanguagePrimitives.GenericOne</div>
+<div class="tip" id="fs37">module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs38">val initInfinite : initializer:(int -&gt; &#39;T) -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.initInfinite</div>
+<div class="tip" id="fs39">val i : int</div>
+<div class="tip" id="fs40">val DivideByInt : x:&#39;T -&gt; y:int -&gt; &#39;T (requires member DivideByInt)<br /><br />Full name: Microsoft.FSharp.Core.LanguagePrimitives.DivideByInt</div>
+<div class="tip" id="fs41">val scan : folder:(&#39;State -&gt; &#39;T -&gt; &#39;State) -&gt; state:&#39;State -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;State&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.scan</div>
+<div class="tip" id="fs42">val take : count:int -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.take</div>
+<div class="tip" id="fs43">val sum : source:seq&lt;&#39;T&gt; -&gt; &#39;T (requires member ( + ) and member get_Zero)<br /><br />Full name: Microsoft.FSharp.Collections.Seq.sum</div>
+<div class="tip" id="fs44">val j : float<br /><br />Full name: Gettingstarted-typeinference.j</div>
+          
+        </div>
+        <div class="span3">
+          <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
+            
+            <li class="nav-header">Reference</li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

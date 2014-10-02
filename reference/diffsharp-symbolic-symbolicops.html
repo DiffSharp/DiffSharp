@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SymbolicOps - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>SymbolicOps</h1>
+<div class="xmldoc">
+<p>Symbolic differentiation operations module (automatically opened)</p>
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '712', 712)" onmouseover="showTip(event, '712', 712)">
+            diff f x
+          </code>
+          <div class="tip" id="712">
+            <strong>Signature:</strong> f:Expr -&gt; x:float -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>First derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '713', 713)" onmouseover="showTip(event, '713', 713)">
+            diff&#39; f x
+          </code>
+          <div class="tip" id="713">
+            <strong>Signature:</strong> f:Expr&lt;(float -&gt; float)&gt; -&gt; x:float -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and first derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '714', 714)" onmouseover="showTip(event, '714', 714)">
+            diff2 f
+          </code>
+          <div class="tip" id="714">
+            <strong>Signature:</strong> f:Expr -&gt; float -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Second derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '715', 715)" onmouseover="showTip(event, '715', 715)">
+            diff2&#39; f x
+          </code>
+          <div class="tip" id="715">
+            <strong>Signature:</strong> f:Expr -&gt; x:float -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and second derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '716', 716)" onmouseover="showTip(event, '716', 716)">
+            diffn n f x
+          </code>
+          <div class="tip" id="716">
+            <strong>Signature:</strong> n:int -&gt; f:Expr -&gt; x:float -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p><code>n</code>-th derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '717', 717)" onmouseover="showTip(event, '717', 717)">
+            diffn&#39; n f x
+          </code>
+          <div class="tip" id="717">
+            <strong>Signature:</strong> n:int -&gt; f:Expr -&gt; x:float -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and <code>n</code>-th derivative of a scalar-to-scalar function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '718', 718)" onmouseover="showTip(event, '718', 718)">
+            grad f x
+          </code>
+          <div class="tip" id="718">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gradient of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '719', 719)" onmouseover="showTip(event, '719', 719)">
+            grad&#39; f x
+          </code>
+          <div class="tip" id="719">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float * float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and gradient of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '720', 720)" onmouseover="showTip(event, '720', 720)">
+            gradhessian f
+          </code>
+          <div class="tip" id="720">
+            <strong>Signature:</strong> f:Expr -&gt; float [] -&gt; float [] * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gradient and Hessian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '721', 721)" onmouseover="showTip(event, '721', 721)">
+            gradhessian&#39; f x
+          </code>
+          <div class="tip" id="721">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float * float [] * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value, gradient, and Hessian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '722', 722)" onmouseover="showTip(event, '722', 722)">
+            hessian f x
+          </code>
+          <div class="tip" id="722">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Hessian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '723', 723)" onmouseover="showTip(event, '723', 723)">
+            hessian&#39; f x
+          </code>
+          <div class="tip" id="723">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and Hessian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '724', 724)" onmouseover="showTip(event, '724', 724)">
+            jacobian f
+          </code>
+          <div class="tip" id="724">
+            <strong>Signature:</strong> f:Expr -&gt; float [] -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Jacobian of a vector-to-vector function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '725', 725)" onmouseover="showTip(event, '725', 725)">
+            jacobian&#39; f
+          </code>
+          <div class="tip" id="725">
+            <strong>Signature:</strong> f:Expr -&gt; float [] -&gt; float [] * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and Jacobian of a vector-to-vector function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '726', 726)" onmouseover="showTip(event, '726', 726)">
+            jacobianT f x
+          </code>
+          <div class="tip" id="726">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Transposed Jacobian of a vector-to-vector function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '727', 727)" onmouseover="showTip(event, '727', 727)">
+            jacobianT&#39; f x
+          </code>
+          <div class="tip" id="727">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float [] * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and transposed Jacobian of a vector-to-vector function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '728', 728)" onmouseover="showTip(event, '728', 728)">
+            laplacian f x
+          </code>
+          <div class="tip" id="728">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Laplacian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '729', 729)" onmouseover="showTip(event, '729', 729)">
+            laplacian&#39; f x
+          </code>
+          <div class="tip" id="729">
+            <strong>Signature:</strong> f:Expr -&gt; x:float [] -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and Laplacian of a vector-to-scalar function <code>f</code>. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+
+            <li class="nav-header">Reference</li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

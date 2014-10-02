@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DualV2Ops - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Atılım Güneş Baydin">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DualV2Ops</h1>
+<div class="xmldoc">
+<p>DualV2 operations module (automatically opened)</p>
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1657', 1657)" onmouseover="showTip(event, '1657', 1657)">
+            dualV2 p m
+          </code>
+          <div class="tip" id="1657">
+            <strong>Signature:</strong> p:float -&gt; m:int -&gt; DualV2<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make DualV2, with primal value <code>p</code>, gradient dimension <code>m</code>, and all gradient and Hessian components 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1659', 1659)" onmouseover="showTip(event, '1659', 1659)">
+            dualV2Act p m i
+          </code>
+          <div class="tip" id="1659">
+            <strong>Signature:</strong> p:float -&gt; m:int -&gt; i:int -&gt; DualV2<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make active DualV2 (i.e. variable of differentiation), with primal value <code>p</code>, gradient dimension <code>m</code>, the gradient component with index <code>i</code> having value 1, the rest of the gradient components 0, and Hessian components 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1660', 1660)" onmouseover="showTip(event, '1660', 1660)">
+            dualV2ActArray x
+          </code>
+          <div class="tip" id="1660">
+            <strong>Signature:</strong> x:float [] -&gt; DualV2 []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make an array of active DualV2, with primal values given in array <code>x</code>. For a DualV2 with index <em>i</em>, the gradient is the unit vector with 1 in the <em>i</em>th place, and the Hessian components are 0.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1661', 1661)" onmouseover="showTip(event, '1661', 1661)">
+            dualV2Set (p, g, h)
+          </code>
+          <div class="tip" id="1661">
+            <strong>Signature:</strong> (p:float * g:float [] * h:float [,]) -&gt; DualV2<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make DualV2, with primal value <code>p</code>, gradient array <code>g</code>, and Hessian 2d array <code>h</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1662', 1662)" onmouseover="showTip(event, '1662', 1662)">
+            gradient arg1
+          </code>
+          <div class="tip" id="1662">
+            <strong>Signature:</strong> DualV2 -&gt; float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the gradient array of a DualV2</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1663', 1663)" onmouseover="showTip(event, '1663', 1663)">
+            hessian arg1
+          </code>
+          <div class="tip" id="1663">
+            <strong>Signature:</strong> DualV2 -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the Hessian 2d array of a DualV2</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1664', 1664)" onmouseover="showTip(event, '1664', 1664)">
+            primal arg1
+          </code>
+          <div class="tip" id="1664">
+            <strong>Signature:</strong> DualV2 -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal value of a DualV2</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1665', 1665)" onmouseover="showTip(event, '1665', 1665)">
+            tuple arg1
+          </code>
+          <div class="tip" id="1665">
+            <strong>Signature:</strong> DualV2 -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal and the first gradient component of a DualV2, as a tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1666', 1666)" onmouseover="showTip(event, '1666', 1666)">
+            tupleG arg1
+          </code>
+          <div class="tip" id="1666">
+            <strong>Signature:</strong> DualV2 -&gt; float * float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal and the gradient array of a DualV2, as a tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1667', 1667)" onmouseover="showTip(event, '1667', 1667)">
+            tupleGH arg1
+          </code>
+          <div class="tip" id="1667">
+            <strong>Signature:</strong> DualV2 -&gt; float * float [] * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal, the gradient array, and the Hessian 2d array of a DualV2, as a tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1668', 1668)" onmouseover="showTip(event, '1668', 1668)">
+            tupleH arg1
+          </code>
+          <div class="tip" id="1668">
+            <strong>Signature:</strong> DualV2 -&gt; float * float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal and Hessian 2d array of a DualV2, as a tuple</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+
+            <li class="nav-header">Reference</li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
