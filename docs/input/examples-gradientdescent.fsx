@@ -56,7 +56,7 @@ Chart.Combine(List.append [for x in -2.2..0.4..2. -> c x]
              ).WithXAxis(Min = -1.6, Max = 1.4).WithYAxis(Min = 0., Max = 4.)
 
 (**
-This results in the following chart.
+This gives us the following chart.
 
 <div class="row">
     <div class="span6">
