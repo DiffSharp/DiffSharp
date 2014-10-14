@@ -53,6 +53,7 @@
     <None Include="Benchmarks.fsx" />
     <Content Include="packages.config" />
     <Content Include="app.config" />
+    <None Include="Test.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">

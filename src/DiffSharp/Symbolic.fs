@@ -234,7 +234,7 @@ module SymbolicOps =
                 let di = diffExpr args.[i] fe
                 for j = i to x.Length - 1 do
                     ret.[i, j] <- evalVS x (diffExpr args.[j] di)
-            symmetricFromUpperTriangular ret
+            copyupper ret
 
     /// Original value and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let hessian' f =

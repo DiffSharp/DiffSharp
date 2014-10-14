@@ -38,35 +38,38 @@
 /// Various utility functions used all over the library
 module DiffSharp.Util.General
 
+/// Tail of a 3-tuple
+let inline trd (_, _, t) = t
+
 /// First and third terms of a 3-tuple
-let fsttrd (f, _, t) = (f, t)
+let inline fsttrd (f, _, t) = (f, t)
 
 /// Second and third terms of a 3-tuple
-let sndtrd (_, s, t) = (s, t)
+let inline sndtrd (_, s, t) = (s, t)
 
-/// Tail of a 3-tuple
-let trd (_, _, t) = t
-    
-/// Fill the elements of a symmetric matrix from the upper triangular part given in 2d array `t`
-let symmetricFromUpperTriangular (t:float[,]) =
-    let m = t.GetLength 0
-    if m = t.GetLength 1 then 
-        if m = 1 then
-            Array2D.create 1 1 t.[0, 0]
-        else
-            for i = 1 to m - 1 do
-                for j = 0 to i - 1 do
-                    t.[i, j] <- t.[j, i]
-            Array2D.init m m (fun i j -> t.[i, j])
-    else failwith "Expecting a square 2d array."
-
-/// Apply function `f` to the numbers in the range `i0` to `i1` and sum the result
-let sum i0 i1 f = Array.sumBy f [|i0..i1|]
+/// Checks whether float[,] `m` has the same number of elements in both dimensions
+let (|Square|) (m:float[,]) =
+    match m with
+    | m when m.GetLength 0 = m.GetLength 1 -> m
+    | _ -> invalidArg "m" "Expecting a square float[,]"
 
 /// Transpose of float[,] `m`
-let transpose (m:float[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun x y -> m.[y,x])
+let inline transpose (m:float[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
 
-let trace (m:float[,]) = if m.GetLength 0 = m.GetLength 1 then sum 0 (m.GetLength 0 - 1) (fun i -> m.[i, i]) else failwith "Trace is not defined for a nonsquare matrix."
+/// float[] of the diagonal elements of float[,] `m`
+let inline diagonal (Square m:float[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
+
+/// Trace of the square matrix given in float[,] `m`
+let inline trace (m:float[,]) = Array.sum (diagonal m)
+
+/// Copy the upper triangular elements of the square matrix given in float[,] `m` to the lower triangular part
+let inline copyupper (Square m:float[,]) =
+    let rows = m.GetLength 0
+    if rows > 1 then
+        for i = 1 to rows - 1 do
+            for j = 0 to i - 1 do
+                m.[i, j] <- m.[j, i]
+    m
 
 /// Global step size for numerical approximations
 let eps = 0.00001

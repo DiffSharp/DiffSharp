@@ -141,7 +141,7 @@ type Matrix =
     /// Subtract Matrix `b` from Matrix `a`
     static member (-) (a:Matrix, b:Matrix) = Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] - b.[i, j]))
     /// Matrix product of Matrix `a` and Matrix `b`
-    static member (*) (a:Matrix, b:Matrix) = Matrix(Array2D.init a.Rows a.Cols (fun i j -> sum 0 (b.Rows - 1) (fun k -> a.[i, k] * b.[k, j])))
+    static member (*) (a:Matrix, b:Matrix) = Matrix(Array2D.init a.Rows a.Cols (fun i j -> Array.sumBy (fun k -> a.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] ))
     /// Multiply Matrix `a` by float `b`
     static member (*) (a:Matrix, b:float) = Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] * b))
     /// Multiply Matrix `b` by float `a`
