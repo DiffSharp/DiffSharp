@@ -1,9 +1,6 @@
 ﻿
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-open DiffSharp.Util.General
+open DiffSharp.AD.Forward2
 
-
-let m = array2D [[1.; 1.; 1.]; [2.; 2.; 2.]]
-
-let test = trace m
+let test = diff' (fun x -> x ** x) 2.8

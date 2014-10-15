@@ -7,8 +7,8 @@ The following tables present the result of an experiment measuring the running t
 
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg .tg-eugx{background-color:#e4ffb3;text-align:center}
 .tg .tg-5y5n{background-color:#ecf4ff}
 .tg .tg-a1rn{background-color:#ffffc7}
@@ -40,87 +40,87 @@ The following tables present the result of an experiment measuring the running t
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward</td>
-    <td class="tg-gkzk">1.71</td>
+    <td class="tg-gkzk">3.83</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">1.06</td>
-    <td class="tg-v6es">2.38</td>
+    <td class="tg-v6es">9.00</td>
+    <td class="tg-v6es">20.50</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-uy90">13.93</td>
+    <td class="tg-uy90">33.88</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward2</td>
-    <td class="tg-gkzk">2.71</td>
-    <td class="tg-gkzk">2.86</td>
+    <td class="tg-gkzk">5.00</td>
+    <td class="tg-gkzk">5.00</td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">1.31</td>
-    <td class="tg-v6es">3.38</td>
+    <td class="tg-v6es">11.00</td>
+    <td class="tg-v6es">27.00</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-v6es">3.42</td>
-    <td class="tg-uy90">16.00</td>
+    <td class="tg-v6es">27.50</td>
+    <td class="tg-uy90">36.25</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
-    <td class="tg-gkzk">2.71</td>
+    <td class="tg-gkzk">5.50</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-v6es">2.27</td>
+    <td class="tg-v6es">27.00</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-uy90">6.33</td>
+    <td class="tg-uy90">23.25</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
-    <td class="tg-gkzk">16.29</td>
+    <td class="tg-gkzk">21.67</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-v6es">12.62</td>
-    <td class="tg-v6es">14.96</td>
-    <td class="tg-v6es">13.50</td>
-    <td class="tg-v6es">14.65</td>
-    <td class="tg-uy90">20.53</td>
+    <td class="tg-v6es">130.00</td>
+    <td class="tg-v6es">130.00</td>
+    <td class="tg-v6es">135.50</td>
+    <td class="tg-v6es">138.50</td>
+    <td class="tg-uy90">70.00</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
-    <td class="tg-tfw5">9.86</td>
-    <td class="tg-tfw5">27.71</td>
-    <td class="tg-tfw5">28.57</td>
-    <td class="tg-eugx">4.85</td>
-    <td class="tg-eugx">14.85</td>
+    <td class="tg-tfw5">19.67</td>
+    <td class="tg-tfw5">52.33</td>
+    <td class="tg-tfw5">55.50</td>
+    <td class="tg-eugx">66.00</td>
+    <td class="tg-eugx">191.50</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">38.42</td>
-    <td class="tg-ci37">30.13</td>
+    <td class="tg-eugx">490.00</td>
+    <td class="tg-ci37">114.38</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Reverse</td>
-    <td class="tg-gkzk">4.29</td>
+    <td class="tg-gkzk">9.50</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es"></td>
-    <td class="tg-v6es">1.73</td>
-    <td class="tg-v6es">21.58</td>
-    <td class="tg-v6es">17.58</td>
-    <td class="tg-v6es">20.19</td>
-    <td class="tg-uy90">8.80</td>
+    <td class="tg-v6es">18.00</td>
+    <td class="tg-v6es">215.00</td>
+    <td class="tg-v6es">232.00</td>
+    <td class="tg-v6es">235.00</td>
+    <td class="tg-uy90">40.25</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Numerical</td>
-    <td class="tg-gkzk">1.06</td>
-    <td class="tg-gkzk">1.14</td>
+    <td class="tg-gkzk">2.17</td>
+    <td class="tg-gkzk">3.00</td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">1.04</td>
-    <td class="tg-v6es">2.65</td>
-    <td class="tg-v6es">25.92</td>
-    <td class="tg-v6es">21.27</td>
-    <td class="tg-v6es">23.42</td>
-    <td class="tg-uy90">21.33</td>
+    <td class="tg-v6es">10.5</td>
+    <td class="tg-v6es">27.00</td>
+    <td class="tg-v6es">310.00</td>
+    <td class="tg-v6es">265.00</td>
+    <td class="tg-v6es">266.5</td>
+    <td class="tg-uy90">46.13</td>
   </tr>
   <tr style="visibility:hidden">
     <td class="tg-031e"></td>
@@ -148,95 +148,95 @@ The following tables present the result of an experiment measuring the running t
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Forward</td>
-    <td class="tg-tfw5">1.43</td>
+    <td class="tg-tfw5">3.83</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">1.03</td>
-    <td class="tg-eugx">2.12</td>
+    <td class="tg-eugx">5.50</td>
+    <td class="tg-eugx">18.00</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-ci37">13.8</td>
+    <td class="tg-ci37">33.38</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Forward2</td>
-    <td class="tg-tfw5">3.29</td>
-    <td class="tg-tfw5">2.71</td>
+    <td class="tg-tfw5">5.67</td>
+    <td class="tg-tfw5">4.83</td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">1.08</td>
-    <td class="tg-eugx">3.19</td>
+    <td class="tg-eugx">8.50</td>
+    <td class="tg-eugx">24.00</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">3.19</td>
-    <td class="tg-ci37">15.6</td>
+    <td class="tg-eugx">24.50</td>
+    <td class="tg-ci37">37.13</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardG</td>
-    <td class="tg-tfw5">2.86</td>
+    <td class="tg-tfw5">6.00</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">2.19</td>
+    <td class="tg-eugx">26.50</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-ci37">5.93</td>
+    <td class="tg-ci37">22.75</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardGH</td>
-    <td class="tg-tfw5">15.14</td>
+    <td class="tg-tfw5">20.50</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">12.85</td>
-    <td class="tg-eugx">12.96</td>
-    <td class="tg-eugx">13.12</td>
-    <td class="tg-eugx">14.42</td>
-    <td class="tg-ci37">19.93</td>
+    <td class="tg-eugx">130.50</td>
+    <td class="tg-eugx">129.50</td>
+    <td class="tg-eugx">128.50</td>
+    <td class="tg-eugx">136.00</td>
+    <td class="tg-ci37">69.38</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
-    <td class="tg-tfw5">10.29</td>
-    <td class="tg-tfw5">28.00</td>
-    <td class="tg-tfw5">29.00</td>
-    <td class="tg-eugx">4.54</td>
-    <td class="tg-eugx">14.19</td>
+    <td class="tg-tfw5">20.33</td>
+    <td class="tg-tfw5">53.17</td>
+    <td class="tg-tfw5">54.00</td>
+    <td class="tg-eugx">60.00</td>
+    <td class="tg-eugx">188.00</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">37.46</td>
-    <td class="tg-ci37">30.47</td>
+    <td class="tg-eugx">478.00</td>
+    <td class="tg-ci37">113.88</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Reverse</td>
-    <td class="tg-tfw5">3.43</td>
+    <td class="tg-tfw5">8.67</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
     <td class="tg-eugx"></td>
-    <td class="tg-eugx">1.35</td>
-    <td class="tg-eugx">17.62</td>
-    <td class="tg-eugx">17.08</td>
-    <td class="tg-eugx">19.31</td>
-    <td class="tg-ci37">8.4</td>
+    <td class="tg-eugx">15.00</td>
+    <td class="tg-eugx">215.00</td>
+    <td class="tg-eugx">221.00</td>
+    <td class="tg-eugx">229.50</td>
+    <td class="tg-ci37">39.75</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.Numerical</td>
-    <td class="tg-tfw5">1.29</td>
-    <td class="tg-tfw5">1.57</td>
+    <td class="tg-tfw5">3.17</td>
+    <td class="tg-tfw5">4.67</td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">1.15</td>
-    <td class="tg-eugx">2.19</td>
-    <td class="tg-eugx">22.19</td>
-    <td class="tg-eugx">20.92</td>
-    <td class="tg-eugx">23.38</td>
+    <td class="tg-eugx">10.50</td>
+    <td class="tg-eugx">22.50</td>
+    <td class="tg-eugx">256.00</td>
+    <td class="tg-eugx">259.50</td>
+    <td class="tg-eugx">262.50</td>
     <td class="tg-ci37">39.50</td>
   </tr>
 </table>
 
 <br>
 
-The values are normalized with respect to the running time of the original function corresponding to each column.
+The values are normalized with respect to the running time of the original function corresponding to each column. Operations **diffn** and **diffn'** are used with $n=2$.
 
-The used functions were $ f(x) = (\sin \sqrt{x - 2}) ^ 3$ as the scalar-to-scalar, $ f(x,y,z) = (x\;\sqrt{y - z}\;\log z) ^ y $ as the vector-to-scalar, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y - 2}, \log{xz}) $ as the vector-to-vector.
+The used functions were $ f(x) = (\sin \sqrt{x + 2}) ^ 3$ as the scalar-to-scalar, $ f(x,y,z) = (x\;\sqrt{y + z}\;\log z) ^ y $ as the vector-to-scalar, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y + 2}, \log{xz}) $ as the vector-to-vector.
 
 The running times were measured using [**Process.TotalProcessorTime**](http://msdn.microsoft.com/en-us/library/system.diagnostics.process.totalprocessortime(v=vs.110).aspx), averaged over a million calls to each operation, on a PC with an Intel Core i7-4510U 2.0 GHz CPU and 16 GB RAM, running Windows 8.1 and .NET Framework 4.5.1.
 *)

@@ -112,6 +112,17 @@ type Matrix =
             if i <> m.Rows - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
+    /// Get a string representation of this Matrix that can be pasted into MATLAB
+    member m.ToMatlabString() = 
+        let sb = System.Text.StringBuilder()
+        sb.Append("[") |> ignore
+        for i = 0 to m.Rows - 1 do
+            for j = 0 to m.Cols - 1 do
+                sb.Append(sprintf "%.2f" m.M.[i, j]) |> ignore
+                if j < m.Cols - 1 then sb.Append(" ") |> ignore
+            if i < m.Rows - 1 then sb.Append("; ") |> ignore
+        sb.Append("]") |> ignore
+        sb.ToString()
     /// Get the trace of this Matrix
     member m.GetTrace() = trace m.M
     /// Get the transpose of this Matrix
@@ -134,6 +145,13 @@ type Matrix =
     static member Create(v:Vector[]) = Matrix.Create(v.Length, fun i -> v.[i])
     /// Create Matrix with `m` rows and all rows equal to float[] `v`
     static member Create(m, (v:float[])) = Matrix.Create(m, fun i -> v)
+    /// Create symmetric Matrix with `m` rows and columns and a generator function `f` to compute the elements
+    static member CreateSymmetric(m, f) =
+        let s = Array2D.zeroCreate<float> m m
+        for i = 0 to m - 1 do
+            for j = i to m - 1 do
+                s.[i, j] <- f i j
+        Matrix(copyupper s)
     /// Create zero Matrix
     static member Zero = Matrix.Create(0, 0, 0.)
     /// Add Matrix `a` to Matrix `b`
