@@ -47,31 +47,24 @@ let (=~) x y =
     abs (x - y) < 1e-1
 
 
-let fss_Dual = fun (x:DiffSharp.AD.Forward.Dual) -> (sin x) * (cos (exp x))
-let fss_Dual2 = fun (x:DiffSharp.AD.Forward2.Dual2) -> (sin x) * (cos (exp x))
-let fss_DualN = fun (x:DiffSharp.AD.ForwardN.DualN) -> (sin x) * (cos (exp x))
-let fss_DualG = fun (x:DiffSharp.AD.ForwardG.DualG) -> (sin x) * (cos (exp x))
-let fss_DualGH = fun (x:DiffSharp.AD.ForwardGH.DualGH) -> (sin x) * (cos (exp x))
-let qss =  <@ fun x -> (sin x) * (cos (exp x)) @>
-
 [<Property(Verbose = true)>]
 let ``AD.Forward diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.Forward.ForwardOps.diff fss_Dual x) =~ (DiffSharp.Symbolic.SymbolicOps.diff qss x))
+    (``is valid float`` x) ==> ((DiffSharp.AD.Forward.ForwardOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
 
 [<Property(Verbose = true)>]
 let ``AD.Forward2 diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.Forward2.Forward2Ops.diff fss_Dual2 x) =~ (DiffSharp.Symbolic.SymbolicOps.diff qss x))
+    (``is valid float`` x) ==> ((DiffSharp.AD.Forward2.Forward2Ops.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
 
 [<Property(Verbose = true)>]
 let ``AD.ForwardN diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardN.ForwardNOps.diff fss_DualN x) =~ (DiffSharp.Symbolic.SymbolicOps.diff qss x))
+    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardN.ForwardNOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
 
 [<Property(Verbose = true)>]
 let ``AD.ForwardG diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardG.ForwardGOps.diff fss_DualG x) =~ (DiffSharp.Symbolic.SymbolicOps.diff qss x))
+    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardG.ForwardGOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
 
 [<Property(Verbose = true)>]
 let ``AD.ForwardGH diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardGH.ForwardGHOps.diff fss_DualGH x) =~ (DiffSharp.Symbolic.SymbolicOps.diff qss x))
+    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardGH.ForwardGHOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
 
 
