@@ -129,9 +129,9 @@ module Dual2Ops =
 /// Forward2 differentiation operations module (automatically opened)
 [<AutoOpen>]
 module Forward2Ops =
-    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value and first derivative of a scalar-to-scalar function `f`
     let inline diff' f =
-        dual2Act >> f >> tupleAll
+        dual2Act >> f >> tuple
 
     /// First derivative of a scalar-to-scalar function `f`
     let inline diff f =
@@ -144,7 +144,11 @@ module Forward2Ops =
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f =
         dual2Act >> f >> tangent2
-        
+    
+    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f =
+        dual2Act >> f >> tupleAll
+
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f =
         fun x -> Array.zip x r |> Array.map dual2Set |> f |> tuple
@@ -202,6 +206,8 @@ module Vector =
     let inline diff2' f = Forward2Ops.diff2' f
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f = Forward2Ops.diff2 f
+    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f = Forward2Ops.diff2'' f
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f = array >> Forward2Ops.diffdir' (array r) f
     /// Directional derivative of a vector-to-scalar function `f`, with direction `r`

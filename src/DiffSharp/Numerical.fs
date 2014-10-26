@@ -69,6 +69,10 @@ module NumericalOps =
     let inline diff2' f =
         fun x -> (f x, diff2 f x)
 
+    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f =
+        fun x -> (f x, diff f x, diff2 f x)
+
     /// Original value and gradient of a vector-to-scalar function `f`
     let inline grad' (f:float[]->float) =
         fun x ->

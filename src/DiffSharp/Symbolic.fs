@@ -176,6 +176,10 @@ module SymbolicOps =
     let diff2' f =
         fun x -> (evalSS x f, diff2 f x)
 
+    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f =
+        fun x -> (evalSS x f, diff f x, diff2 f x)
+
     /// Gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let grad (f:Expr) =
         fun x ->

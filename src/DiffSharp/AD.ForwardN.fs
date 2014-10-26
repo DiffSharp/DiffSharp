@@ -151,6 +151,10 @@ module ForwardNOps =
     let inline diff2 f =
         dualNAct >> f >> tangent2
 
+    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f =
+        dualNAct >> f >> fun a -> (primal a, tangent a, tangent2 a)
+
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
     let inline diffn' n f =
         dualNAct >> f >> diffLazy n >> tuple
