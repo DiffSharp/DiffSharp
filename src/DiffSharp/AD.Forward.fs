@@ -51,21 +51,37 @@ type Dual =
     static member DivideByInt(Dual(p, t), i:int) = Dual(p / float i, t / float i)
     static member Zero = Dual(0., 0.)
     static member One = Dual(1., 0.)
+    // Dual - Dual binary operations
     static member (+) (Dual(a, at), Dual(b, bt)) = Dual(a + b, at + bt)
     static member (-) (Dual(a, at), Dual(b, bt)) = Dual(a - b, at - bt)
     static member (*) (Dual(a, at), Dual(b, bt)) = Dual(a * b, at * b + a * bt)
     static member (/) (Dual(a, at), Dual(b, bt)) = Dual(a / b, (at * b - a * bt) / (b * b))
     static member Pow (Dual(a, at), Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * ((b * at / a) + ((log a) * bt)))
+    // Dual - float binary operations
     static member (+) (Dual(a, at), b) = Dual(a + b, at)
     static member (-) (Dual(a, at), b) = Dual(a - b, at)
     static member (*) (Dual(a, at), b) = Dual(a * b, at * b)
     static member (/) (Dual(a, at), b) = Dual(a / b, at / b)
     static member Pow (Dual(a, at), b) = Dual(a ** b, b * (a ** (b - 1.)) * at)
+    // float - Dual binary operations
     static member (+) (a, Dual(b, bt)) = Dual(b + a, bt)
     static member (-) (a, Dual(b, bt)) = Dual(a - b, -bt)
     static member (*) (a, Dual(b, bt)) = Dual(b * a, bt * a)
     static member (/) (a, Dual(b, bt)) = Dual(a / b, -a * bt / (b * b))
     static member Pow (a, Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * (log a) * bt)
+    // Dual - int binary operations
+    static member (+) (a:Dual, b:int) = a + float b
+    static member (-) (a:Dual, b:int) = a - float b
+    static member (*) (a:Dual, b:int) = a * float b
+    static member (/) (a:Dual, b:int) = a / float b
+    static member Pow (a:Dual, b:int) = Dual.Pow(a, float b)
+    // int - Dual binary operations
+    static member (+) (a:int, b:Dual) = (float a) + b
+    static member (-) (a:int, b:Dual) = (float a) - b
+    static member (*) (a:int, b:Dual) = (float a) * b
+    static member (/) (a:int, b:Dual) = (float a) / b
+    static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
+    // Dual unary operations
     static member Log (Dual(a, at)) = Dual(log a, at / a)
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
     static member Sin (Dual(a, at)) = Dual(sin a, at * cos a)

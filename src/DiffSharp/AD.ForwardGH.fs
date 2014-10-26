@@ -55,21 +55,37 @@ type DualGH =
     static member DivideByInt(DualGH(p, g, m), i:int) = DualGH(p / float i, g / float i, m / float i)
     static member Zero = DualGH(0., Vector.Zero, Matrix.Zero)
     static member One = DualGH(1., Vector.Zero, Matrix.Zero)
+    // DualGH - DualGH binary operations
     static member (+) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a + b, ag + bg, Matrix.CreateSymmetric(ah.Rows, fun i j -> ah.[i, j] + bh.[i, j]))
     static member (-) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a - b, ag - bg, Matrix.CreateSymmetric(ah.Rows, fun i j -> ah.[i, j] - bh.[i, j]))
     static member (*) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a * b, ag * b + a * bg, Matrix.CreateSymmetric(ah.Rows, fun i j -> ag.[j] * bg.[i] + a * bh.[i, j] + bg.[j] * ag.[i] + b * ah.[i, j]))
     static member (/) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let bsq, atimes2, oneoverbcube = b * b, a * 2., 1. / (b * b * b) in DualGH(a / b, (ag * b - a * bg) / bsq, Matrix.CreateSymmetric(ah.Rows, fun i j -> (atimes2 * bg.[j] * bg.[i] + bsq * ah.[i, j] - b * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + a * bh.[i, j])) * oneoverbcube))
     static member Pow (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let apowb, loga, apowbminus2, bsq = a ** b, log a, a ** (b - 2.), b * b in DualGH(apowb, apowb * ((b * ag / a) + (loga * bg)), Matrix.CreateSymmetric(ah.Rows, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (ag.[j] * (-ag.[i] + loga * a * bg.[i]) + a * (loga * bg.[j] * ag.[i] + ah.[i, j])) + a * (ag.[j] * bg.[i] + bg.[j] * (ag.[i] + loga * loga * a * bg.[i]) + loga * a * bh.[i, j]))))
+    // DualGH - float binary operations
     static member (+) (DualGH(a, ag, ah), b) = DualGH(a + b, ag, ah)
     static member (-) (DualGH(a, ag, ah), b) = DualGH(a - b, ag, ah)
     static member (*) (DualGH(a, ag, ah), b) = DualGH(a * b, ag * b, Matrix.CreateSymmetric(ah.Rows, fun i j -> ah.[i, j] * b))
     static member (/) (DualGH(a, ag, ah), b) = DualGH(a / b, ag / b, Matrix.CreateSymmetric(ah.Rows, fun i j -> ah.[i, j] / b))
     static member Pow (DualGH(a, ag, ah), b) = let apowb, bsq, apowbminus2 = a ** b, b * b, a ** (b - 2.) in DualGH(apowb, apowb * (b * ag / a), Matrix.CreateSymmetric(ah.Rows, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (a * ah.[i, j] - ag.[j] * ag.[i]))))
+    // float - DualGH binary operations
     static member (+) (a, DualGH(b, bg, bh)) = DualGH(a + b, bg, bh)
     static member (-) (a, DualGH(b, bg, bh)) = DualGH(a - b, -bg, -bh)
     static member (*) (a, DualGH(b, bg, bh)) = DualGH(a * b, a * bg, Matrix.Create(bh.Rows, bh.Cols, fun i j -> a * bh.[i, j]))
     static member (/) (a, DualGH(b, bg, bh)) = let aoverbcube = a / (b * b * b) in DualGH(a / b, -aoverbcube * b * bg, Matrix.Create(bh.Rows, bh.Cols, fun i j -> (2. * bg.[j] * bg.[i] - b * bh.[i, j]) * aoverbcube))
     static member Pow (a, DualGH(b, bg, bh)) = let apowb, loga, term = a ** b, log a, (a ** (b - 2.)) * a * log a in DualGH(apowb, apowb * loga * bg, Matrix.Create(bh.Rows, bh.Cols, fun i j -> term * (bg.[j] * loga * a * bg.[i] + a * bh.[i, j])))
+    // DualGH - int binary operations
+    static member (+) (a:DualGH, b:int) = a + float b
+    static member (-) (a:DualGH, b:int) = a - float b
+    static member (*) (a:DualGH, b:int) = a * float b
+    static member (/) (a:DualGH, b:int) = a / float b
+    static member Pow (a:DualGH, b:int) = DualGH.Pow(a, float b)
+    // int - DualGH binary operations
+    static member (+) (a:int, b:DualGH) = (float a) + b
+    static member (-) (a:int, b:DualGH) = (float a) - b
+    static member (*) (a:int, b:DualGH) = (float a) * b
+    static member (/) (a:int, b:DualGH) = (float a) / b
+    static member Pow (a:int, b:DualGH) = DualGH.Pow(float a, b)
+    // DualGH unary operations
     static member Log (DualGH(a, ag, ah)) = let asq = a * a in DualGH(log a, ag / a, Matrix.CreateSymmetric(ah.Rows, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
     static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.CreateSymmetric(ah.Rows, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
     static member Sin (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(sina, cosa * ag, Matrix.CreateSymmetric(ah.Rows, fun i j -> -sina * ag.[i] * ag.[j] + cosa * ah.[i, j]))

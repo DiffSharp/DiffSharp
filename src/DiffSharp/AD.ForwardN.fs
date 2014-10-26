@@ -54,21 +54,37 @@ type DualN =
     member d.T = let (DualN(_, t)) = d in t.Value
     static member Zero = DualN(0., Lazy<DualN>(fun () -> DualN.Zero))
     static member One = DualN(1., Lazy<DualN>(fun () -> DualN.Zero))
+    // DualN - DualN binary operations
     static member (+) (a:DualN, b:DualN) = DualN(a.P + b.P, Lazy<DualN>(fun () -> a.T + b.T))
     static member (-) (a:DualN, b:DualN) = DualN(a.P - b.P, Lazy<DualN>(fun () -> a.T - b.T))
     static member (*) (a:DualN, b:DualN) = DualN(a.P * b.P, Lazy<DualN>(fun () -> a.T * b + a * b.T))
     static member (/) (a:DualN, b:DualN) = DualN(a.P / b.P, Lazy<DualN>(fun () -> (a.T * b - a * b.T) / (b * b)))
     static member Pow (a:DualN, b:DualN) = DualN(a.P ** b.P, Lazy<DualN>(fun () -> (a ** b) * ((b * a.T / a) + ((log a) * b.T))))
+    // DualN - float binary operations
     static member (+) (a:DualN, b) = DualN(a.P + b, Lazy<DualN>(fun () -> a.T))
     static member (-) (a:DualN, b) = DualN(a.P - b, Lazy<DualN>(fun () -> a.T))
     static member (*) (a:DualN, b) = DualN(a.P * b, Lazy<DualN>(fun () -> a.T * b))
     static member (/) (a:DualN, b) = DualN(a.P / b, Lazy<DualN>(fun () -> a.T / b))
     static member Pow (a:DualN, b) = DualN(a.P ** b, Lazy<DualN>(fun () -> b * (a ** (b - 1.)) * a.T))
+    // float - DualN binary operations
     static member (+) (a, b:DualN) = DualN(b.P + a, Lazy<DualN>(fun () -> b.T))
     static member (-) (a, b:DualN) = DualN(a - b.P, Lazy<DualN>(fun () -> -b.T))
     static member (*) (a, b:DualN) = DualN(b.P * a, Lazy<DualN>(fun () -> b.T * a))
     static member (/) (a, b:DualN) = DualN(a / b.P, Lazy<DualN>(fun () -> -a * b.T / (b * b)))
     static member Pow (a, b:DualN) = DualN(a ** b.P, Lazy<DualN>(fun () -> (DualN.Create(a) ** b) * (log a) * b.T))
+    // DualN - int binary operations
+    static member (+) (a:DualN, b:int) = a + float b
+    static member (-) (a:DualN, b:int) = a - float b
+    static member (*) (a:DualN, b:int) = a * float b
+    static member (/) (a:DualN, b:int) = a / float b
+    static member Pow (a:DualN, b:int) = DualN.Pow(a, float b)
+    // int - DualN binary operations
+    static member (+) (a:int, b:DualN) = (float a) + b
+    static member (-) (a:int, b:DualN) = (float a) - b
+    static member (*) (a:int, b:DualN) = (float a) * b
+    static member (/) (a:int, b:DualN) = (float a) / b
+    static member Pow (a:int, b:DualN) = DualN.Pow(float a, b)
+    // DualN unary operations
     static member Log (a:DualN) = DualN(log a.P, Lazy<DualN>(fun () -> a.T / a))
     static member Exp (a:DualN) = DualN(exp a.P, Lazy<DualN>(fun () -> a.T * exp a))
     static member Sin (a:DualN) = DualN(sin a.P, Lazy<DualN>(fun () -> a.T * cos a))
