@@ -57,11 +57,11 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">
-      <HintPath>..\..\packages\FsCheck.1.0.0\lib\net45\FsCheck.dll</HintPath>
+      <HintPath>..\..\packages\FsCheck.1.0.1\lib\net45\FsCheck.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsCheck.Xunit">
-      <HintPath>..\..\packages\FsCheck.Xunit.1.0.0\lib\net45\FsCheck.Xunit.dll</HintPath>
+      <HintPath>..\..\packages\FsCheck.Xunit.1.0.1\lib\net45\FsCheck.Xunit.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
