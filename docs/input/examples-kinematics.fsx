@@ -21,12 +21,13 @@ Plot $x(t)$ between $t=0$ and $t=4$.
 open FSharp.Charting
 
 // Plot x(t) between t = 0 and t = 4
-Chart.Line [for t in 0.0..0.01..4.0 -> (t, x t)]
+Chart.Line([for t in 0.0..0.01..4.0 -> (t, x t)]).WithXAxis(Title="t").WithYAxis(Title="x")
+
 
 (**
 <div class="row">
     <div class="span6">
-        <img src="img/examples-kinematics-plot1.png" alt="Chart" style="width:500px"/>
+        <img src="img/examples-kinematics-plot1.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
 
@@ -39,7 +40,7 @@ open DiffSharp.AD.Forward2
 let xva = diff2'' (fun t -> t * t * t - 6 * t * t + 10 * t)
 
 (**
-The following gives us a combined plot of $x(t)$ (blue), $v(t)$ (orange), and $a(t)$ (red).
+The following gives us a combined plot of $x(t)$, $v(t)$, and $a(t)$.
 *)
 
 // Functions for extracting the position, velocity, acceleration values from a 3-tuple
@@ -51,11 +52,12 @@ let acc (_, _, a) = a
 Chart.Combine([Chart.Line([for t in 0.0..0.01..4.0 -> (t, pos (xva t))], Name="x(t)")
                Chart.Line([for t in 0.0..0.01..4.0 -> (t, vel (xva t))], Name="v(t)")
                Chart.Line([for t in 0.0..0.01..4.0 -> (t, acc (xva t))], Name="a(t)")])
+               .WithLegend().WithXAxis(Title = "t")
 
 (**
 <div class="row">
     <div class="span6">
-        <img src="img/examples-kinematics-plot2.png" alt="Chart" style="width:500px"/>
+        <img src="img/examples-kinematics-plot2.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
 *)

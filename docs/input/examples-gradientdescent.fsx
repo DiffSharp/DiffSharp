@@ -33,13 +33,13 @@ Let us compute $\; \underset{x,\;y}{\operatorname{argmin}} (\sin x + \cos y) $.
 let xmin, xseq =
     argmin (fun x -> (sin x.[0]) + cos x.[1]) (vector [|1.; 1.|]) 0.01 0.00001
 
-(** *)
-
-// The local minimum is found at (-1.570787495, 3.141587987)
-// val xmin : Vector = Vector [|-1.570787495; 3.141587987|]
-// val xseq : seq<Vector>
+(*** hide, define-output: o ***)
+printf "val xmin : Vector = Vector [|-1.570787495; 3.141587987|]\nval xseq : seq<Vector>"
+(*** include-output: o ***)
 
 (**
+A minimum is found at $(x, y) = (-1.570787495, 3.141587987)$.
+
 We can draw some contours of $ \sin x + \cos y $ and show the trajectory of gradient descent, using the [F# Charting](http://fsharp.github.io/FSharp.Charting/index.html) library.
 *)
 
@@ -53,14 +53,15 @@ let c v = Chart.Line(List.append [for x in -1.6..0.01..1.4->(x,acos(v-sin x))]
 // Draw some contours and combine with the graph of the descent xseq
 Chart.Combine(List.append [for x in -2.2..0.4..2. -> c x]
                           [Chart.Line(Seq.map (fun (x:Vector)->(x.[0],x.[1])) xseq)]
-             ).WithXAxis(Min = -1.6, Max = 1.4).WithYAxis(Min = 0., Max = 4.)
+             ).WithXAxis(Min = -1.6, Max = 1.4, Title="x")
+             .WithYAxis(Min = 0., Max = 4., Title="y")
 
 (**
 This gives us the following chart.
 
 <div class="row">
     <div class="span6">
-        <img src="img/examples-gradientdescent-chart.png" alt="Chart" style="width:500px"/>
+        <img src="img/examples-gradientdescent-chart.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
 *)

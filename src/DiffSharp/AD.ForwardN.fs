@@ -122,10 +122,10 @@ module DualNOps =
     /// Compute the `n`-th derivative of a DualN
     let rec diffLazy n =
         match n with
-        | a when a < 0 -> failwith "Order of derivative cannot be negative."
+        | a when a < 0 -> invalidArg "n" "Order of derivative cannot be negative."
         | 0 -> fun (x:DualN) -> x
         | 1 -> fun x -> x.T
-        | _ -> fun x -> diffLazy (n - 1) x
+        | _ -> fun x -> diffLazy (n - 1) x.T
 
     /// Custom operator (/^) for differentiation. Usage: `x` /^ `n`, value of the `n`-th order derivative of `x`.
     let ( /^ ) x n =
@@ -155,13 +155,16 @@ module ForwardNOps =
     let inline diff2'' f =
         dualNAct >> f >> fun a -> (primal a, tangent a, tangent2 a)
 
-    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
-    let inline diffn' n f =
-        dualNAct >> f >> diffLazy n >> tuple
-
     /// `n`-th derivative of a scalar-to-scalar function `f`
     let inline diffn n f =
-        diffn' n f >> snd
+        dualNAct >> f >> diffLazy n >> primal
+
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
+    let inline diffn' n f =
+        fun x ->
+            let orig = x |> dualNAct |> f
+            let d = orig |> diffLazy n
+            (primal orig, primal d)
 
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f =
