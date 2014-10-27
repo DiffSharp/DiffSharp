@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- 
+      The l'Hôpital's Rule
+ parameters will be replaced with the 
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>l'Hôpital's Rule
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    
+    <link type="text/css" rel="stylesheet" href="misc/style.css" />
+    <script src="misc/tips.js" type="text/javascript"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          <h1>l'Hôpital's Rule</h1>
+
+<p><a href="http://en.wikipedia.org/wiki/L'H%C3%B4pital's_rule">l'Hôpital's rule</a> is a method for evaluating <a href="http://en.wikipedia.org/wiki/Limit_of_a_function">limits</a> involving <a href="http://en.wikipedia.org/wiki/Indeterminate_form">indeterminate forms</a>. The rule states that, under some conditions, the indeterminate limits</p>
+
+<p><span class="math">\[ \begin{eqnarray*}
+ \lim_{x \to c} \frac{f(x)}{g(x)} &amp;=&amp; \frac{0}{0} ,\\
+ \lim_{x \to c} \frac{f(x)}{g(x)} &amp;=&amp; \frac{\pm\infty}{\pm\infty}
+ \end{eqnarray*}\]</span></p>
+
+<p>can be found by differentiating the numerator and the denominator and taking the limit, that is</p>
+
+<p><span class="math">\[ \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} .\]</span></p>
+
+<p>Let us try to find</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x}\]</span></p>
+
+<p>which involves the indeterminate form <span class="math">\(0 / 0\)</span>.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// Define f(x)</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">f</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">x</span> <span class="o">=</span> <span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs2', 4)" onmouseover="showTip(event, 'fs2', 4)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 5)" onmouseover="showTip(event, 'fs3', 5)" class="i">sin</span> (<span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 6)" onmouseover="showTip(event, 'fs2', 6)" class="i">x</span>)
+
+<span class="c">// Define g(x)</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 7)" onmouseover="showTip(event, 'fs4', 7)" class="i">g</span> <span onmouseout="hideTip(event, 'fs2', 8)" onmouseover="showTip(event, 'fs2', 8)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs2', 9)" onmouseover="showTip(event, 'fs2', 9)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 10)" onmouseover="showTip(event, 'fs3', 10)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs2', 11)" onmouseover="showTip(event, 'fs2', 11)" class="i">x</span>
+
+<span class="c">// Try to evaluate the limit at x = 0</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs5', 12)" onmouseover="showTip(event, 'fs5', 12)" class="i">lim</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs1', 13)" onmouseover="showTip(event, 'fs1', 13)" class="i">f</span> <span class="n">0.</span> <span class="o">/</span> <span onmouseout="hideTip(event, 'fs4', 14)" onmouseover="showTip(event, 'fs4', 14)" class="i">g</span> <span class="n">0.</span></pre>
+</td>
+</tr>
+</table>
+
+<p>As expected, we get a <a href="http://msdn.microsoft.com/en-us/library/system.double.nan.aspx">nan</a> as a result, meaning the result of this operations is undefined.</p>
+
+<table class="pre"><tr><td><pre><code>val lim : float = nan
+</code></pre></td></tr></table>
+
+<p>Using the DiffSharp library, we can generate a sequence of repeated applications of l'Hôpital's rule.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs7', 16)" onmouseover="showTip(event, 'fs7', 16)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 17)" onmouseover="showTip(event, 'fs8', 17)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs9', 18)" onmouseover="showTip(event, 'fs9', 18)" class="i">ForwardN</span>
+
+<span class="c">// Differentiate f(x) and g(x) n times and evaluate the division</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 19)" onmouseover="showTip(event, 'fs10', 19)" class="i">lhopital</span> <span onmouseout="hideTip(event, 'fs11', 20)" onmouseover="showTip(event, 'fs11', 20)" class="i">f</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">g</span> <span onmouseout="hideTip(event, 'fs13', 22)" onmouseover="showTip(event, 'fs13', 22)" class="i">n</span> <span onmouseout="hideTip(event, 'fs2', 23)" onmouseover="showTip(event, 'fs2', 23)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 24)" onmouseover="showTip(event, 'fs14', 24)" class="i">diffn</span> <span onmouseout="hideTip(event, 'fs13', 25)" onmouseover="showTip(event, 'fs13', 25)" class="i">n</span> <span onmouseout="hideTip(event, 'fs11', 26)" onmouseover="showTip(event, 'fs11', 26)" class="i">f</span> <span onmouseout="hideTip(event, 'fs2', 27)" onmouseover="showTip(event, 'fs2', 27)" class="i">x</span> <span class="o">/</span> <span onmouseout="hideTip(event, 'fs14', 28)" onmouseover="showTip(event, 'fs14', 28)" class="i">diffn</span> <span onmouseout="hideTip(event, 'fs13', 29)" onmouseover="showTip(event, 'fs13', 29)" class="i">n</span> <span onmouseout="hideTip(event, 'fs12', 30)" onmouseover="showTip(event, 'fs12', 30)" class="i">g</span> <span onmouseout="hideTip(event, 'fs2', 31)" onmouseover="showTip(event, 'fs2', 31)" class="i">x</span>
+
+<span class="c">// Generate an infinite sequence of lhopital applications,</span>
+<span class="c">// starting from the undifferentiated limit (n = 0)</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs15', 32)" onmouseover="showTip(event, 'fs15', 32)" class="i">lhseq</span> <span onmouseout="hideTip(event, 'fs11', 33)" onmouseover="showTip(event, 'fs11', 33)" class="i">f</span> <span onmouseout="hideTip(event, 'fs12', 34)" onmouseover="showTip(event, 'fs12', 34)" class="i">g</span> <span onmouseout="hideTip(event, 'fs2', 35)" onmouseover="showTip(event, 'fs2', 35)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs16', 36)" onmouseover="showTip(event, 'fs16', 36)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 37)" onmouseover="showTip(event, 'fs17', 37)" class="i">initInfinite</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs13', 38)" onmouseover="showTip(event, 'fs13', 38)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs10', 39)" onmouseover="showTip(event, 'fs10', 39)" class="i">lhopital</span> <span onmouseout="hideTip(event, 'fs11', 40)" onmouseover="showTip(event, 'fs11', 40)" class="i">f</span> <span onmouseout="hideTip(event, 'fs12', 41)" onmouseover="showTip(event, 'fs12', 41)" class="i">g</span> <span onmouseout="hideTip(event, 'fs13', 42)" onmouseover="showTip(event, 'fs13', 42)" class="i">n</span> <span onmouseout="hideTip(event, 'fs2', 43)" onmouseover="showTip(event, 'fs2', 43)" class="i">x</span>)
+
+<span class="c">// Use lhseq with f(x) and g(x), at x = 0</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs18', 44)" onmouseover="showTip(event, 'fs18', 44)" class="i">l</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 45)" onmouseover="showTip(event, 'fs15', 45)" class="i">lhseq</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 46)" onmouseover="showTip(event, 'fs19', 46)" class="i">x</span> <span class="k">-&gt;</span> <span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs3', 47)" onmouseover="showTip(event, 'fs3', 47)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs19', 48)" onmouseover="showTip(event, 'fs19', 48)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 49)" onmouseover="showTip(event, 'fs3', 49)" class="i">sin</span> (<span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 50)" onmouseover="showTip(event, 'fs19', 50)" class="i">x</span>)) (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 51)" onmouseover="showTip(event, 'fs19', 51)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 52)" onmouseover="showTip(event, 'fs19', 52)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 53)" onmouseover="showTip(event, 'fs3', 53)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs19', 54)" onmouseover="showTip(event, 'fs19', 54)" class="i">x</span>) <span class="n">0.</span></pre>
+</td>
+</tr>
+</table>
+
+<p>The first four elements (<span class="math">\(n = 0,\dots,4\)</span>) of this infinite sequence are</p>
+
+<table class="pre"><tr><td><pre><code>val l : seq [nan; nan; nan; 6.0; ...]
+</code></pre></td></tr></table>
+
+<p>For <span class="math">\(n = 0\)</span>, we have the original indeterminate value of the limit (since the 0-th derivative of a function is itself). For <span class="math">\(n = 3\)</span>, we have the value of this limit as</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 ,\]</span></p>
+
+<p>after 3 applications of l'Hôpital's rule. We can check this by manually differentiating</p>
+
+<p><span class="math">\[ \begin{eqnarray*}
+ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} &amp;=&amp; \lim_{x \to 0} \frac{2\cos x - 2\cos 2x}{1 - \cos x}\\
+ &amp;=&amp; \lim_{x \to 0} \frac{-2 \sin x + 4 \sin 2x}{\sin x}\\
+ &amp;=&amp; \lim_{x \to 0} \frac{-2 \cos x + 8 \cos 2x}{\cos x}\\
+ &amp;=&amp; \frac{-2 + 8}{1}\\
+ &amp;=&amp; 6 .
+ \end{eqnarray*}\]</span></p>
+
+<p>We can go further and automate this process by searching for the first element of the sequence that is not indeterminate.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// Check if x is not indeterminate</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs20', 56)" onmouseover="showTip(event, 'fs20', 56)" class="i">isdeterminate</span> <span onmouseout="hideTip(event, 'fs2', 57)" onmouseover="showTip(event, 'fs2', 57)" class="i">x</span> <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs21', 58)" onmouseover="showTip(event, 'fs21', 58)" class="i">not</span> (<span onmouseout="hideTip(event, 'fs22', 59)" onmouseover="showTip(event, 'fs22', 59)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 60)" onmouseover="showTip(event, 'fs23', 60)" class="i">Double</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs24', 61)" onmouseover="showTip(event, 'fs24', 61)" class="i">IsInfinity</span>(<span onmouseout="hideTip(event, 'fs2', 62)" onmouseover="showTip(event, 'fs2', 62)" class="i">x</span>)
+    <span class="o">||</span> <span onmouseout="hideTip(event, 'fs22', 63)" onmouseover="showTip(event, 'fs22', 63)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 64)" onmouseover="showTip(event, 'fs23', 64)" class="i">Double</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 65)" onmouseover="showTip(event, 'fs25', 65)" class="i">IsNegativeInfinity</span>(<span onmouseout="hideTip(event, 'fs2', 66)" onmouseover="showTip(event, 'fs2', 66)" class="i">x</span>)
+    <span class="o">||</span> <span onmouseout="hideTip(event, 'fs22', 67)" onmouseover="showTip(event, 'fs22', 67)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 68)" onmouseover="showTip(event, 'fs23', 68)" class="i">Double</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs26', 69)" onmouseover="showTip(event, 'fs26', 69)" class="i">IsPositiveInfinity</span>(<span onmouseout="hideTip(event, 'fs2', 70)" onmouseover="showTip(event, 'fs2', 70)" class="i">x</span>)
+    <span class="o">||</span> <span onmouseout="hideTip(event, 'fs22', 71)" onmouseover="showTip(event, 'fs22', 71)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 72)" onmouseover="showTip(event, 'fs23', 72)" class="i">Double</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 73)" onmouseover="showTip(event, 'fs27', 73)" class="i">IsNaN</span>(<span onmouseout="hideTip(event, 'fs2', 74)" onmouseover="showTip(event, 'fs2', 74)" class="i">x</span>))
+
+<span class="c">// Find the limit of f(x) / g(x) at a given point</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs28', 75)" onmouseover="showTip(event, 'fs28', 75)" class="i">findlim</span> <span onmouseout="hideTip(event, 'fs11', 76)" onmouseover="showTip(event, 'fs11', 76)" class="i">f</span> <span onmouseout="hideTip(event, 'fs12', 77)" onmouseover="showTip(event, 'fs12', 77)" class="i">g</span> <span onmouseout="hideTip(event, 'fs2', 78)" onmouseover="showTip(event, 'fs2', 78)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs16', 79)" onmouseover="showTip(event, 'fs16', 79)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs29', 80)" onmouseover="showTip(event, 'fs29', 80)" class="i">find</span> <span onmouseout="hideTip(event, 'fs20', 81)" onmouseover="showTip(event, 'fs20', 81)" class="i">isdeterminate</span> (<span onmouseout="hideTip(event, 'fs15', 82)" onmouseover="showTip(event, 'fs15', 82)" class="i">lhseq</span> <span onmouseout="hideTip(event, 'fs11', 83)" onmouseover="showTip(event, 'fs11', 83)" class="i">f</span> <span onmouseout="hideTip(event, 'fs12', 84)" onmouseover="showTip(event, 'fs12', 84)" class="i">g</span> <span onmouseout="hideTip(event, 'fs2', 85)" onmouseover="showTip(event, 'fs2', 85)" class="i">x</span>)
+
+<span class="c">// Find the limit of f(x) / g(x) at x = 0</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs30', 86)" onmouseover="showTip(event, 'fs30', 86)" class="i">lim2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs28', 87)" onmouseover="showTip(event, 'fs28', 87)" class="i">findlim</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 88)" onmouseover="showTip(event, 'fs19', 88)" class="i">x</span> <span class="k">-&gt;</span> <span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs3', 89)" onmouseover="showTip(event, 'fs3', 89)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs19', 90)" onmouseover="showTip(event, 'fs19', 90)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 91)" onmouseover="showTip(event, 'fs3', 91)" class="i">sin</span> (<span class="n">2.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 92)" onmouseover="showTip(event, 'fs19', 92)" class="i">x</span>)) (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 93)" onmouseover="showTip(event, 'fs19', 93)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 94)" onmouseover="showTip(event, 'fs19', 94)" class="i">x</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs3', 95)" onmouseover="showTip(event, 'fs3', 95)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs19', 96)" onmouseover="showTip(event, 'fs19', 96)" class="i">x</span>) <span class="n">0.</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val lim2 : float = 6.0
+</code></pre></td></tr></table>
+
+<p>Let us use our function to evaluate some other limits.</p>
+
+<p>The limit</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{\sin \pi x}{\pi x}\]</span></p>
+
+<p>has indeterminate form <span class="math">\(0 / 0\)</span> and can be evaluated by</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 .\]</span></p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs31', 98)" onmouseover="showTip(event, 'fs31', 98)" class="i">lim3</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs28', 99)" onmouseover="showTip(event, 'fs28', 99)" class="i">findlim</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 100)" onmouseover="showTip(event, 'fs19', 100)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs3', 101)" onmouseover="showTip(event, 'fs3', 101)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs22', 102)" onmouseover="showTip(event, 'fs22', 102)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs32', 103)" onmouseover="showTip(event, 'fs32', 103)" class="i">Math</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs33', 104)" onmouseover="showTip(event, 'fs33', 104)" class="i">PI</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 105)" onmouseover="showTip(event, 'fs19', 105)" class="i">x</span>)) (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 106)" onmouseover="showTip(event, 'fs19', 106)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs22', 107)" onmouseover="showTip(event, 'fs22', 107)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs32', 108)" onmouseover="showTip(event, 'fs32', 108)" class="i">Math</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs33', 109)" onmouseover="showTip(event, 'fs33', 109)" class="i">PI</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 110)" onmouseover="showTip(event, 'fs19', 110)" class="i">x</span>) <span class="n">0.</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val lim3 : float = 1.0
+</code></pre></td></tr></table>
+
+<p>The limit</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{e^x - 1 - x}{x^2}\]</span></p>
+
+<p>has indeterminate form <span class="math">\(0 / 0\)</span> and can be evaluated by</p>
+
+<p><span class="math">\[ \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} .\]</span></p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs34', 112)" onmouseover="showTip(event, 'fs34', 112)" class="i">lim4</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs28', 113)" onmouseover="showTip(event, 'fs28', 113)" class="i">findlim</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 114)" onmouseover="showTip(event, 'fs19', 114)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs35', 115)" onmouseover="showTip(event, 'fs35', 115)" class="i">exp</span> <span onmouseout="hideTip(event, 'fs19', 116)" onmouseover="showTip(event, 'fs19', 116)" class="i">x</span> <span class="o">-</span> <span class="n">1</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs19', 117)" onmouseover="showTip(event, 'fs19', 117)" class="i">x</span>) (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 118)" onmouseover="showTip(event, 'fs19', 118)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 119)" onmouseover="showTip(event, 'fs19', 119)" class="i">x</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 120)" onmouseover="showTip(event, 'fs19', 120)" class="i">x</span>) <span class="n">0.</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val lim4 : float = 0.5
+</code></pre></td></tr></table>
+
+<p>It should be noted that there are cases where repeated applications of l'Hôpital's rule do not lead to an answer, without a transformation of variables.</p>
+
+          <div class="tip" id="fs1">val f : x:float -&gt; float<br /><br />Full name: Examples-lhopitalsrule.f</div>
+<div class="tip" id="fs2">val x : float</div>
+<div class="tip" id="fs3">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
+<div class="tip" id="fs4">val g : x:float -&gt; float<br /><br />Full name: Examples-lhopitalsrule.g</div>
+<div class="tip" id="fs5">val lim : float<br /><br />Full name: Examples-lhopitalsrule.lim</div>
+<div class="tip" id="fs6">val printf : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printf</div>
+<div class="tip" id="fs7">namespace DiffSharp</div>
+<div class="tip" id="fs8">namespace DiffSharp.AD</div>
+<div class="tip" id="fs9">module ForwardN<br /><br />from DiffSharp.AD</div>
+<div class="tip" id="fs10">val lhopital : f:(DualN -&gt; DualN) -&gt; g:(DualN -&gt; DualN) -&gt; n:int -&gt; x:float -&gt; float<br /><br />Full name: Examples-lhopitalsrule.lhopital</div>
+<div class="tip" id="fs11">val f : (DualN -&gt; DualN)</div>
+<div class="tip" id="fs12">val g : (DualN -&gt; DualN)</div>
+<div class="tip" id="fs13">val n : int</div>
+<div class="tip" id="fs14">val diffn : n:int -&gt; f:(DualN -&gt; DualN) -&gt; (float -&gt; float)<br /><br />Full name: DiffSharp.AD.ForwardN.ForwardNOps.diffn</div>
+<div class="tip" id="fs15">val lhseq : f:(DualN -&gt; DualN) -&gt; g:(DualN -&gt; DualN) -&gt; x:float -&gt; seq&lt;float&gt;<br /><br />Full name: Examples-lhopitalsrule.lhseq</div>
+<div class="tip" id="fs16">module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs17">val initInfinite : initializer:(int -&gt; &#39;T) -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.initInfinite</div>
+<div class="tip" id="fs18">val l : seq&lt;float&gt;<br /><br />Full name: Examples-lhopitalsrule.l</div>
+<div class="tip" id="fs19">val x : DualN</div>
+<div class="tip" id="fs20">val isdeterminate : x:float -&gt; bool<br /><br />Full name: Examples-lhopitalsrule.isdeterminate</div>
+<div class="tip" id="fs21">val not : value:bool -&gt; bool<br /><br />Full name: Microsoft.FSharp.Core.Operators.not</div>
+<div class="tip" id="fs22">namespace System</div>
+<div class="tip" id="fs23">type Double =<br />&#160;&#160;struct<br />&#160;&#160;&#160;&#160;member CompareTo : value:obj -&gt; int + 1 overload<br />&#160;&#160;&#160;&#160;member Equals : obj:obj -&gt; bool + 1 overload<br />&#160;&#160;&#160;&#160;member GetHashCode : unit -&gt; int<br />&#160;&#160;&#160;&#160;member GetTypeCode : unit -&gt; TypeCode<br />&#160;&#160;&#160;&#160;member ToString : unit -&gt; string + 3 overloads<br />&#160;&#160;&#160;&#160;static val MinValue : float<br />&#160;&#160;&#160;&#160;static val MaxValue : float<br />&#160;&#160;&#160;&#160;static val Epsilon : float<br />&#160;&#160;&#160;&#160;static val NegativeInfinity : float<br />&#160;&#160;&#160;&#160;static val PositiveInfinity : float<br />&#160;&#160;&#160;&#160;...<br />&#160;&#160;end<br /><br />Full name: System.Double</div>
+<div class="tip" id="fs24">System.Double.IsInfinity(d: float) : bool</div>
+<div class="tip" id="fs25">System.Double.IsNegativeInfinity(d: float) : bool</div>
+<div class="tip" id="fs26">System.Double.IsPositiveInfinity(d: float) : bool</div>
+<div class="tip" id="fs27">System.Double.IsNaN(d: float) : bool</div>
+<div class="tip" id="fs28">val findlim : f:(DualN -&gt; DualN) -&gt; g:(DualN -&gt; DualN) -&gt; x:float -&gt; float<br /><br />Full name: Examples-lhopitalsrule.findlim</div>
+<div class="tip" id="fs29">val find : predicate:(&#39;T -&gt; bool) -&gt; source:seq&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Collections.Seq.find</div>
+<div class="tip" id="fs30">val lim2 : float<br /><br />Full name: Examples-lhopitalsrule.lim2</div>
+<div class="tip" id="fs31">val lim3 : float<br /><br />Full name: Examples-lhopitalsrule.lim3</div>
+<div class="tip" id="fs32">type Math =<br />&#160;&#160;static val PI : float<br />&#160;&#160;static val E : float<br />&#160;&#160;static member Abs : value:sbyte -&gt; sbyte + 6 overloads<br />&#160;&#160;static member Acos : d:float -&gt; float<br />&#160;&#160;static member Asin : d:float -&gt; float<br />&#160;&#160;static member Atan : d:float -&gt; float<br />&#160;&#160;static member Atan2 : y:float * x:float -&gt; float<br />&#160;&#160;static member BigMul : a:int * b:int -&gt; int64<br />&#160;&#160;static member Ceiling : d:decimal -&gt; decimal + 1 overload<br />&#160;&#160;static member Cos : d:float -&gt; float<br />&#160;&#160;...<br /><br />Full name: System.Math</div>
+<div class="tip" id="fs33">field System.Math.PI = 3.14159265359</div>
+<div class="tip" id="fs34">val lim4 : float<br /><br />Full name: Examples-lhopitalsrule.lim4</div>
+<div class="tip" id="fs35">val exp : value:&#39;T -&gt; &#39;T (requires member Exp)<br /><br />Full name: Microsoft.FSharp.Core.Operators.exp</div>
+          
+        </div>
+        <div class="span3">
+          <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+            <li class="nav-header">DiffSharp</li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+            
+            <li class="nav-header">Benchmarks</li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
+            
+            <li class="nav-header">Reference</li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>
