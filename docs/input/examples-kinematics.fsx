@@ -6,7 +6,7 @@
 Kinematics
 ==========
 
-Let us use the DiffSharp library for describing the [kinematics](http://en.wikipedia.org/wiki/Kinematics) of a point-particle moving in one dimension.
+Let us use the DiffSharp library for describing the [kinematics](http://en.wikipedia.org/wiki/Kinematics) of a point particle moving in one dimension.
 
 Take the function $ x(t) = t^3 - 6 t^2 + 10t $, giving the position $x$ of a particle at time $t$.
 *)

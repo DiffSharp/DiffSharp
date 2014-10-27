@@ -176,7 +176,7 @@ module SymbolicOps =
     let diff2' f =
         fun x -> (evalSS x f, diff2 f x)
 
-    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f =
         fun x -> (evalSS x f, diff f x, diff2 f x)
 

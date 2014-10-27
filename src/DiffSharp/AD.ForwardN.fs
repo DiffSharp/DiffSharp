@@ -151,7 +151,7 @@ module ForwardNOps =
     let inline diff2 f =
         dualNAct >> f >> tangent2
 
-    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f =
         dualNAct >> f >> fun a -> (primal a, tangent a, tangent2 a)
 

@@ -145,7 +145,7 @@ module Forward2Ops =
     let inline diff2 f =
         dual2Act >> f >> tangent2
     
-    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f =
         dual2Act >> f >> tupleAll
 

@@ -61,6 +61,8 @@ type Vector =
     member v.GetNorm() = sqrt (Array.sumBy (fun x -> x * x) v.V)
     /// Builds a new Vector whose elements are the results of applying function `f` to each of the elements of Vector `v`
     static member map f (v:Vector) = Vector.Create(Array.map f v.V)
+    /// Returns the sum of all the elements in vector `v`
+    static member sum (v:Vector) = Array.sum v.V
     /// Create Vector from array `v`
     static member Create(v) = Vector(v)
     /// Create Vector with dimension `n` and a generator function `f` to compute the elements 

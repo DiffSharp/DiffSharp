@@ -181,6 +181,7 @@ Currently, the library provides the following operations:
 - **diff'**: Original value and first derivative of a scalar-to-scalar function
 - **diff2**: Second derivative of a scalar-to-scalar function
 - **diff2'**: Original value and second derivative of a scalar-to-scalar function
+- **diff2''**: Original value, first derivative, and second derivative of a scalar-to-scalar function
 - **diffn**: N-th derivative of a scalar-to-scalar function
 - **diffn'**: Original value and n-th derivative of a scalar-to-scalar function
 - **diffdir**: Directional derivative of a vector-to-scalar function
