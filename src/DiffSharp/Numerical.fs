@@ -69,7 +69,7 @@ module NumericalOps =
     let inline diff2' f =
         fun x -> (f x, diff2 f x)
 
-    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f =
         fun x -> (f x, diff f x, diff2 f x)
 
@@ -147,6 +147,8 @@ module Vector =
     let inline diff2' f = NumericalOps.diff2' f
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f = NumericalOps.diff2 f
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f = NumericalOps.diff2'' f
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f = array >> NumericalOps.diffdir' (array r) f
     /// Directional derivative of a vector-to-scalar function `f`, with direction `r`

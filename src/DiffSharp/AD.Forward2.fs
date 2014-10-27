@@ -206,7 +206,7 @@ module Vector =
     let inline diff2' f = Forward2Ops.diff2' f
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f = Forward2Ops.diff2 f
-    // Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f = Forward2Ops.diff2'' f
     /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
     let inline diffdir' r f = array >> Forward2Ops.diffdir' (array r) f

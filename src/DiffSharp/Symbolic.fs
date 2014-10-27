@@ -264,6 +264,8 @@ module Vector =
     let inline diff2' f = SymbolicOps.diff2' f
     /// Second derivative of a scalar-to-scalar function `f`
     let inline diff2 f = SymbolicOps.diff2 f
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
+    let inline diff2'' f = SymbolicOps.diff2'' f
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
     let inline diffn' n f = SymbolicOps.diffn' n f
     /// `n`-th derivative of a scalar-to-scalar function `f`
