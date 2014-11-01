@@ -5,7 +5,7 @@
 Symbolic Differentiation
 ========================
 
-In addition to AD, DiffSharp also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of mathematical expressions using rules of differential calculus.
+In addition to AD, the DiffSharp library also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of mathematical expressions using rules of differential calculus.
 
 For a complete list of available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 

@@ -28,7 +28,7 @@ let g (x:Adj[]) = sin (x.[0] * x.[1] * x.[2])
 let ga = grad g
 
 (**
-Alternatively, we can use a lambda expression to alleviate the need to explicitly define the type **x:Adj[]**, as it will be automatically inferred.
+Alternatively, we can use a lambda expression to alleviate the need to explicitly state the **Adj[]** type, as it will be automatically inferred.
 *)
 
 // The same gradient

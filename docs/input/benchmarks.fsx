@@ -236,7 +236,7 @@ The following tables present the result of an experiment measuring the running t
 
 The values are normalized with respect to the running time of the original function corresponding to each column. Operations **diffn** and **diffn'** are used with $n=2$.
 
-The used functions were $ f(x) = (\sin \sqrt{x + 2}) ^ 3$ as the scalar-to-scalar, $ f(x,y,z) = (x\;\sqrt{y + z}\;\log z) ^ y $ as the vector-to-scalar, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y + 2}, \log{xz}) $ as the vector-to-vector.
+The used functions were $ f(x) = (\sin \sqrt{x + 2}) ^ 3$ for the scalar-to-scalar case, $ f(x,y,z) = (x\;\sqrt{y + z}\;\log z) ^ y $ for the vector-to-scalar case, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y + 2}, \log{xz}) $ for the vector-to-vector case.
 
 The running times were measured using [**Process.TotalProcessorTime**](http://msdn.microsoft.com/en-us/library/system.diagnostics.process.totalprocessortime(v=vs.110).aspx), averaged over a million calls to each operation, on a PC with an Intel Core i7-4510U 2.0 GHz CPU and 16 GB RAM, running Windows 8.1 and .NET Framework 4.5.1.
 *)

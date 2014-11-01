@@ -53,7 +53,7 @@ let dc = diff c
 "Injecting" AD-enabled Types
 ----------------------------
 
-Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer **float** or **int** arithmetic.
+Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer other numeric types (such as 3. for **float** or 3 for **int** arithmetic).
 *)
 
 // d: float -> float

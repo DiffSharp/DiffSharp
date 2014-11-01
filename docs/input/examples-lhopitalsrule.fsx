@@ -77,7 +77,7 @@ For $n = 0$, we have the original indeterminate value of the limit (since the 0-
 $$$
  \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 ,
 
-after 3 applications of l'Hôpital's rule. We can check this by manually differentiating
+after 3 applications of l'Hôpital's rule. We can check this by manually differentiating:
 
 $$$
  \begin{eqnarray*}
