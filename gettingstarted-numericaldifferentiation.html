@@ -40,16 +40,30 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="http://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
           <h1>Numerical Differentiation</h1>
 
-<p>In addition to AD, DiffSharp also implements <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>.</p>
+<p>In addition to AD, the DiffSharp library also implements <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>.</p>
 
 <p>Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.</p>
+
+<p>Currently the library uses the 1st order central difference</p>
+
+<p><span class="math">\[  \frac{df(x)}{dx} \approx \frac{f(x + h) - f(x - h)}{2h}\]</span></p>
+
+<p>for the <strong>diff</strong> and <strong>diffdir</strong> operations; the 2nd order central difference</p>
+
+<p><span class="math">\[  \frac{d^2 f(x)}{dx^2} \approx \frac{f(x + h) - 2f(x) + f(x - h)}{h^2}\]</span></p>
+
+<p>for the <strong>diff2</strong> operation; and the 1st order forward difference</p>
+
+<p><span class="math">\[  \frac{df(x)}{dx} \approx \frac{f(x + h) - f(x)}{h}\]</span></p>
+
+<p>for the <strong>grad</strong>, <strong>hessian</strong>, <strong>laplacian</strong>, and <strong>jacobian</strong> operations, where <span class="math">\(0 &lt; h \ll 1\)</span>. The default step size is taken as <span class="math">\(h = 10^{-5}\)</span> and in future releases this will be replaced by adaptive methods for choosing the optimal step size for each operation.</p>
 
 <p>For a complete list of available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
 
@@ -126,11 +140,11 @@
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
 
           <ul class="nav nav-list" id="menu">
-            <li class="nav-header">{project-name}</li>
+            <li class="nav-header">DiffSharp</li>
             <li><a href="index.html">Home Page</a></li>
-            <li><a href="{project-nuget}">Get DiffSharp via NuGet</a></li>
-            <li><a href="{project-github}">GitHub Page</a></li>
-            <li><a href="{project-github}/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/blob/master/RELEASE-NOTES.md">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
