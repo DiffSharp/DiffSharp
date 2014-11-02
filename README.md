@@ -1,5 +1,5 @@
 
-DiffSharp -- F# Automatic Differentiation Library
+DiffSharp: Automatic Differentiation Library
 =================================================
 
 Copyright 2014, National University of Ireland Maynooth.
