@@ -13,20 +13,22 @@ Using the DiffSharp library, derivative calculations can be incorporated with mi
 
 The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
 
-Installation
-------------
+How to Get
+----------
 You can download and install the library via NuGet.
 
 <div class="row">
     <div class="span1"></div>
     <div class="span6">
     <div class="well well-small" id="nuget">
-        The DiffSharp library can be <a href="https://nuget.org/packages/DiffSharp">installed from NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
+        The DiffSharp library <a href="https://nuget.org/packages/DiffSharp">is available on NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
         <pre>PM> Install-Package DiffSharp</pre>
     </div>
     </div>
     <div class="span1"></div>
 </div>
+
+You can also download the source code or the binaries of the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
 
 Future Releases
 ---------------
