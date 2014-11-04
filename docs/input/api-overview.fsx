@@ -193,12 +193,12 @@ Currently, the library provides the following operations:
 - **hessian'**: Original value and Hessian of a vector-to-scalar function
 - **gradhessian**: Gradient and Hessian of a vector-to-scalar function
 - **gradhessian'**: Original value, gradient, and Hessian of a vector-to-scalar function
+- **laplacian**: Laplacian of a vector-to-scalar function
+- **laplacian'**: Original value and Laplacian of a vector-to-scalar function
 - **jacobian**: Jacobian of a vector-to-vector function
 - **jacobian'**: Original value and Jacobian of a vector-to-vector function
 - **jacobianT**: Transposed Jacobian of a vector-to-vector function
 - **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
-- **laplacian**: Laplacian of a vector-to-scalar function
-- **laplacian'**: Original value and Laplacian of a vector-to-scalar function
 
 Vector and Matrix versus float[] and float[,]
 ---------------------------------------------
