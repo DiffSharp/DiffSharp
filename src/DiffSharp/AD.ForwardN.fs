@@ -166,11 +166,11 @@ module ForwardNOps =
         let d = orig |> diffLazy n
         (primal orig, primal d)
 
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         Array.zip x v |> Array.map dualNSet |> f |> tuple
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
@@ -209,6 +209,13 @@ module ForwardNOps =
     let inline jacobian f x =
         jacobian' f x |> snd
 
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v = 
+        Array.zip x v |> Array.map dualNSet |> f |> Array.map tuple |> Array.unzip
+
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv f x v = 
+        jacobianv' f x v |> snd
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -226,9 +233,9 @@ module Vector =
     let inline diffn' n f x = ForwardNOps.diffn' n f x 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn n f x = ForwardNOps.diffn n f x
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v = ForwardNOps.gradv' f (array x) (array v)
-    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v = ForwardNOps.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = ForwardNOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
@@ -246,3 +253,7 @@ module Vector =
     let inline jacobian' f x = ForwardNOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x = ForwardNOps.jacobian f (array x) |> matrix
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v = ForwardNOps.jacobianv' f (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv f x v = ForwardNOps.jacobianv f (array x) (array v) |> vector

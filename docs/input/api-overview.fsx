@@ -12,6 +12,7 @@ The following table gives an overview of the differentiation API provided by the
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg .tg-eugx{background-color:#e4ffb3;text-align:center}
+.tg .tg-5y5n{background-color:#ecf4ff}
 .tg .tg-e3zv{font-weight:bold}
 .tg .tg-tfw5{background-color:#ffffc7;text-align:center}
 .tg .tg-a0td{font-size:100%}
@@ -37,6 +38,7 @@ The following table gives an overview of the differentiation API provided by the
     <th class="tg-u986">gradhessian</th>
     <th class="tg-u986">laplacian</th>
     <th class="tg-40di">jacobian</th>
+    <th class="tg-5y5n">jacobianv</th>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward</td>
@@ -49,6 +51,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward2</td>
@@ -61,6 +64,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
@@ -73,6 +77,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
@@ -85,6 +90,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
@@ -96,6 +102,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx">X</td>
+    <td class="tg-ci37">X</td>
     <td class="tg-ci37">X</td>
   </tr>
   <tr>
@@ -109,6 +116,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es">XA</td>
     <td class="tg-v6es">A</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Numerical</td>
@@ -121,6 +129,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-uy90">A</td>
+    <td class="tg-ci37">A</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Symbolic</td>
@@ -133,6 +142,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
 </table>
 
@@ -199,6 +209,8 @@ Currently, the library provides the following operations:
 - **jacobian'**: Original value and Jacobian of a vector-to-vector function
 - **jacobianT**: Transposed Jacobian of a vector-to-vector function
 - **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
+- **jacobianv**: Jacobian-vector product of a vector-to-vector function
+- **jacobianv'**: Original value and Jacobian-vector product of a vector-to-vector function
 
 Vector and Matrix versus float[] and float[,]
 ---------------------------------------------

@@ -50,13 +50,13 @@ module NumericalOps =
     let inline diff' f x =
         (f x, diff f x)
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv (f:float[]->float) x v =
         let veps = eps * Vector.Create(v)
         let xv = Vector.Create(x)
-        ((f ((xv + veps).V)) - (f ((xv - veps).V))) / deps
+        ((f (array (xv + veps))) - (f (array (xv - veps)))) / deps
 
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         (f x, gradv f x v)
 
@@ -77,7 +77,7 @@ module NumericalOps =
         let xv = Vector.Create(x)
         let fx = f x
         let g = Vector.Create(x.Length, fx)
-        let gg = Vector.Create(x.Length, fun i -> f (xv + Vector.Create(x.Length, i, eps)).V)
+        let gg = Vector.Create(x.Length, fun i -> f (array (xv + Vector.Create(x.Length, i, eps))))
         (fx, ((gg - g) / eps).V)
     
     /// Gradient of a vector-to-scalar function `f`, at point `x`
@@ -89,8 +89,8 @@ module NumericalOps =
         let xv = Vector(x)
         let (fx, g) = grad' f x
         let h = Matrix.Create(x.Length, g)
-        let hh = Matrix.Create(x.Length, fun i -> grad f (xv + Vector.Create(x.Length, i, eps)).V)
-        (fx, g, ((hh - h) / eps).M)
+        let hh = Matrix.Create(x.Length, fun i -> grad f (array (xv + Vector.Create(x.Length, i, eps))))
+        (fx, g, array2d ((hh - h) / eps))
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
@@ -117,8 +117,8 @@ module NumericalOps =
         let xv = Vector(x)
         let fx = f x
         let j = Matrix.Create(x.Length, fx)
-        let jj = Matrix.Create(x.Length, fun i -> f (xv + Vector.Create(x.Length, i, eps)).V)
-        (fx, ((jj - j) / eps).M)
+        let jj = Matrix.Create(x.Length, fun i -> f (array (xv + Vector.Create(x.Length, i, eps))))
+        (fx, array2d ((jj - j) / eps))
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
@@ -131,6 +131,16 @@ module NumericalOps =
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
         jacobian' f x |> snd
+
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv (f:float[]->float[]) x v =
+        let veps = eps * Vector.Create(v)
+        let xv = Vector.Create(x)
+        array ((vector (f (array (xv + veps))) - vector (f (array (xv - veps)))) / deps)
+
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v =
+        (f x, jacobianv f x v)
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
@@ -145,9 +155,9 @@ module Vector =
     let inline diff2 f x = NumericalOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f x = NumericalOps.diff2'' f x
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v = NumericalOps.gradv' f (array x) (array v)
-    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v = NumericalOps.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = NumericalOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
@@ -173,3 +183,7 @@ module Vector =
     let inline gradhessian' f x = NumericalOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x = NumericalOps.gradhessian f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v = NumericalOps.jacobianv' f (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv f x v = NumericalOps.jacobianv f (array x) (array v) |> vector

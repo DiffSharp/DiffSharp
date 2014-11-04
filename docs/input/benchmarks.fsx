@@ -7,13 +7,14 @@ The following tables present the result of an experiment measuring the running t
 
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg .tg-eugx{background-color:#e4ffb3;text-align:center}
 .tg .tg-5y5n{background-color:#ecf4ff}
 .tg .tg-a1rn{background-color:#ffffc7}
 .tg .tg-e3zv{font-weight:bold}
 .tg .tg-tfw5{background-color:#ffffc7;text-align:center}
+.tg .tg-7nfe{background-color:#ecf4ff;text-align:right}
 .tg .tg-a0td{font-size:100%}
 .tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
 .tg .tg-u986{font-size:100%;background-color:#e4ffb3}
@@ -37,6 +38,7 @@ The following tables present the result of an experiment measuring the running t
     <th class="tg-u986">gradhessian </th>
     <th class="tg-u986">laplacian </th>
     <th class="tg-40di">jacobian </th>
+    <th class="tg-5y5n">jacobianv</th>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward</td>
@@ -49,6 +51,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">33.88</td>
+    <td class="tg-ci37">5.10</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward2</td>
@@ -61,6 +64,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es"></td>
     <td class="tg-v6es">27.50</td>
     <td class="tg-uy90">36.25</td>
+    <td class="tg-ci37">6.10</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
@@ -73,6 +77,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">23.25</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
@@ -85,6 +90,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es">135.50</td>
     <td class="tg-v6es">138.50</td>
     <td class="tg-uy90">70.00</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
@@ -97,6 +103,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx"></td>
     <td class="tg-eugx">490.00</td>
     <td class="tg-ci37">114.38</td>
+    <td class="tg-ci37">32.80</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Reverse</td>
@@ -109,6 +116,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es">232.00</td>
     <td class="tg-v6es">235.00</td>
     <td class="tg-uy90">40.25</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Numerical</td>
@@ -121,6 +129,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-v6es">265.00</td>
     <td class="tg-v6es">266.5</td>
     <td class="tg-uy90">46.13</td>
+    <td class="tg-ci37">6.30</td>
   </tr>
   <tr style="visibility:hidden">
     <td class="tg-031e"></td>
@@ -133,6 +142,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-2sn5"></td>
     <td class="tg-2sn5"></td>
     <td class="tg-5y5n"></td>
+    <td class="tg-7nfe"></td>
   </tr>
   <tr>
     <td class="tg-031e"></td>
@@ -145,6 +155,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-2sn5">gradhessian'</td>
     <td class="tg-2sn5">laplacian'</td>
     <td class="tg-5y5n">jacobian'</td>
+    <td class="tg-7nfe">jacobianv'</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Forward</td>
@@ -157,6 +168,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-ci37">33.38</td>
+    <td class="tg-ci37">5.00</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Forward2</td>
@@ -169,6 +181,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx"></td>
     <td class="tg-eugx">24.50</td>
     <td class="tg-ci37">37.13</td>
+    <td class="tg-ci37">6.10</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardG</td>
@@ -181,6 +194,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-ci37">22.75</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardGH</td>
@@ -193,6 +207,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx">128.50</td>
     <td class="tg-eugx">136.00</td>
     <td class="tg-ci37">69.38</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
@@ -205,6 +220,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx"></td>
     <td class="tg-eugx">478.00</td>
     <td class="tg-ci37">113.88</td>
+    <td class="tg-ci37">33.80</td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.Reverse</td>
@@ -217,6 +233,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx">221.00</td>
     <td class="tg-eugx">229.50</td>
     <td class="tg-ci37">39.75</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.Numerical</td>
@@ -229,6 +246,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-eugx">259.50</td>
     <td class="tg-eugx">262.50</td>
     <td class="tg-ci37">39.50</td>
+    <td class="tg-ci37">7.50</td>
   </tr>
 </table>
 
