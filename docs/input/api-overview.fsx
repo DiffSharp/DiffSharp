@@ -150,24 +150,6 @@ The following table gives an overview of the differentiation API provided by the
 
 **X**: Exact value; **A**: Numerical approximation; **XA**: Exact gradient, approximated Hessian
 
-Implemented Techniques
-----------------------
-
-The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
-
-Currently, the library provides the following implementations in different modules:
-
-- DiffSharp.AD.Forward
-- DiffSharp.AD.Forward2
-- DiffSharp.AD.ForwardG
-- DiffSharp.AD.ForwardGH
-- DiffSharp.AD.ForwardN
-- DiffSharp.AD.Reverse
-- DiffSharp.Numerical
-- DiffSharp.Symbolic
-
-For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
-
 Operations and Variants
 -----------------------
 
@@ -211,6 +193,24 @@ Currently, the library provides the following operations:
 - **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
 - **jacobianv**: Jacobian-vector product of a vector-to-vector function
 - **jacobianv'**: Original value and Jacobian-vector product of a vector-to-vector function
+
+Implemented Differentiation Techniques
+----------------------
+
+The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
+
+Currently, the library provides the following implementations in separate modules:
+
+- **DiffSharp.AD.Forward**: Forward AD 
+- **DiffSharp.AD.Forward2**: Forward AD, 2nd order
+- **DiffSharp.AD.ForwardG**: Forward AD, keeping vectors of gradient components
+- **DiffSharp.AD.ForwardGH**: Forward AD, keeping vectors of gradient components and matrices of Hessian components
+- **DiffSharp.AD.ForwardN**: Forward AD, lazy higher-order
+- **DiffSharp.AD.Reverse**: Reverse AD
+- **DiffSharp.Numerical**: Numerical differentiation
+- **DiffSharp.Symbolic**: Symbolic differentiation
+
+For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
 
 Vector and Matrix versus float[] and float[,]
 ---------------------------------------------
