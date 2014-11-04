@@ -54,11 +54,13 @@
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg .tg-eugx{background-color:#e4ffb3;text-align:center}
+.tg .tg-5y5n{background-color:#ecf4ff}
 .tg .tg-e3zv{font-weight:bold}
 .tg .tg-tfw5{background-color:#ffffc7;text-align:center}
 .tg .tg-a0td{font-size:100%}
 .tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
 .tg .tg-u986{font-size:100%;background-color:#e4ffb3}
+.tg .tg-2sn5{background-color:#e4ffb3}
 .tg .tg-40di{font-size:100%;background-color:#ecf4ff;color:#000000}
 .tg .tg-dyge{font-weight:bold;font-size:100%}
 .tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
@@ -72,12 +74,13 @@
     <th class="tg-lgsi">diff</th>
     <th class="tg-lgsi">diff2</th>
     <th class="tg-lgsi">diffn</th>
-    <th class="tg-u986">diffdir</th>
     <th class="tg-u986">grad</th>
+    <th class="tg-2sn5">gradv</th>
     <th class="tg-u986">hessian</th>
     <th class="tg-u986">gradhessian</th>
     <th class="tg-u986">laplacian</th>
     <th class="tg-40di">jacobian</th>
+    <th class="tg-5y5n">jacobianv</th>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward</td>
@@ -85,11 +88,12 @@
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
+    <td class="tg-eugx">X</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Forward2</td>
@@ -97,35 +101,38 @@
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
+    <td class="tg-eugx">X</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
@@ -138,18 +145,20 @@
     <td class="tg-eugx"></td>
     <td class="tg-eugx">X</td>
     <td class="tg-ci37">X</td>
+    <td class="tg-ci37">X</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.AD.Reverse</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">XA</td>
     <td class="tg-v6es">A</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Numerical</td>
@@ -157,27 +166,29 @@
     <td class="tg-gkzk">A</td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">A</td>
-    <td class="tg-v6es">A</td>
+    <td class="tg-eugx">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-uy90">A</td>
+    <td class="tg-ci37">A</td>
   </tr>
   <tr>
     <td class="tg-dyge">DiffSharp.Symbolic</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-uy90">X</td>
+    <td class="tg-ci37"></td>
   </tr>
 </table>
 
-<p><strong>Yellow</strong>: Scalar-to-scalar functions; <strong>Green</strong>: Vector-to-scalar functions; <strong>Blue</strong>: Vector-to-vector functions</p>
+<p><strong>Yellow</strong>: For scalar-to-scalar functions; <strong>Green</strong>: For vector-to-scalar functions; <strong>Blue</strong>: For vector-to-vector functions</p>
 
 <p><strong>X</strong>: Exact value; <strong>A</strong>: Numerical approximation; <strong>XA</strong>: Exact gradient, approximated Hessian</p>
 
@@ -240,20 +251,22 @@
 <li><strong>diff2''</strong>: Original value, first derivative, and second derivative of a scalar-to-scalar function</li>
 <li><strong>diffn</strong>: N-th derivative of a scalar-to-scalar function</li>
 <li><strong>diffn'</strong>: Original value and n-th derivative of a scalar-to-scalar function</li>
-<li><strong>diffdir</strong>: Directional derivative of a vector-to-scalar function</li>
-<li><strong>diffdir'</strong>: Original value and directional derivative of a vector-to-scalar function</li>
 <li><strong>grad</strong>: Gradient of a vector-to-scalar function</li>
 <li><strong>grad'</strong>: Original value and gradient of a vector-to-scalar function</li>
+<li><strong>gradv</strong>: Gradient-vector product (directional derivative) of a vector-to-scalar function</li>
+<li><strong>gradv'</strong>: Original value and gradient-vector product (directional derivative) of a vector-to-scalar function</li>
 <li><strong>hessian</strong>: Hessian of a vector-to-scalar function</li>
 <li><strong>hessian'</strong>: Original value and Hessian of a vector-to-scalar function</li>
 <li><strong>gradhessian</strong>: Gradient and Hessian of a vector-to-scalar function</li>
 <li><strong>gradhessian'</strong>: Original value, gradient, and Hessian of a vector-to-scalar function</li>
+<li><strong>laplacian</strong>: Laplacian of a vector-to-scalar function</li>
+<li><strong>laplacian'</strong>: Original value and Laplacian of a vector-to-scalar function</li>
 <li><strong>jacobian</strong>: Jacobian of a vector-to-vector function</li>
 <li><strong>jacobian'</strong>: Original value and Jacobian of a vector-to-vector function</li>
 <li><strong>jacobianT</strong>: Transposed Jacobian of a vector-to-vector function</li>
 <li><strong>jacobianT'</strong>: Original value and transposed Jacobian of a vector-to-vector function</li>
-<li><strong>laplacian</strong>: Laplacian of a vector-to-scalar function</li>
-<li><strong>laplacian'</strong>: Original value and Laplacian of a vector-to-scalar function</li>
+<li><strong>jacobianv</strong>: Jacobian-vector product of a vector-to-vector function</li>
+<li><strong>jacobianv'</strong>: Original value and Jacobian-vector product of a vector-to-vector function</li>
 </ul>
 
 <h2>Vector and Matrix versus float[] and float[,]</h2>
@@ -306,19 +319,19 @@
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
 <div class="tip" id="fs3">module Forward<br /><br />from DiffSharp.AD</div>
 <div class="tip" id="fs4">val a : float<br /><br />Full name: Api-overview.a</div>
-<div class="tip" id="fs5">val diff : f:(Dual -&gt; Dual) -&gt; (float -&gt; float)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
+<div class="tip" id="fs5">val diff : f:(Dual -&gt; Dual) -&gt; x:float -&gt; float<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
 <div class="tip" id="fs6">val x : Dual</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs8">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
 <div class="tip" id="fs9">val b : float<br /><br />Full name: Api-overview.b</div>
 <div class="tip" id="fs10">val c : float<br /><br />Full name: Api-overview.c</div>
-<div class="tip" id="fs11">val diff&#39; : f:(Dual -&gt; Dual) -&gt; (float -&gt; float * float)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff&#39;</div>
+<div class="tip" id="fs11">val diff&#39; : f:(Dual -&gt; Dual) -&gt; x:float -&gt; float * float<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff&#39;</div>
 <div class="tip" id="fs12">val g1 : (float [] -&gt; float [])<br /><br />Full name: Api-overview.g1</div>
-<div class="tip" id="fs13">val grad : f:(Dual [] -&gt; Dual) -&gt; (float [] -&gt; float [])<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.grad</div>
+<div class="tip" id="fs13">val grad : f:(Dual [] -&gt; Dual) -&gt; x:float [] -&gt; float []<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.grad</div>
 <div class="tip" id="fs14">val x : Dual []</div>
 <div class="tip" id="fs15">module Vector<br /><br />from DiffSharp.AD.Forward</div>
 <div class="tip" id="fs16">val g2 : (DiffSharp.Util.LinearAlgebra.Vector -&gt; DiffSharp.Util.LinearAlgebra.Vector)<br /><br />Full name: Api-overview.g2</div>
-<div class="tip" id="fs17">val grad : f:(Dual [] -&gt; Dual) -&gt; (DiffSharp.Util.LinearAlgebra.Vector -&gt; DiffSharp.Util.LinearAlgebra.Vector)<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
+<div class="tip" id="fs17">val grad : f:(Dual [] -&gt; Dual) -&gt; x:DiffSharp.Util.LinearAlgebra.Vector -&gt; DiffSharp.Util.LinearAlgebra.Vector<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
           
         </div>
         <div class="span3">

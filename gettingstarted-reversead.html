@@ -103,7 +103,7 @@
 <div class="tip" id="fs6">Multiple items<br />type Adj =<br />&#160;&#160;new : p:float -&gt; Adj<br />&#160;&#160;new : p:float * a:float -&gt; Adj<br />&#160;&#160;val P: float<br />&#160;&#160;val mutable A: float<br />&#160;&#160;member AddAdj : a:float -&gt; unit<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Acos : x:Adj -&gt; Adj<br />&#160;&#160;static member Asin : x:Adj -&gt; Adj<br />&#160;&#160;static member Atan : x:Adj -&gt; Adj<br />&#160;&#160;static member Cos : x:Adj -&gt; Adj<br />&#160;&#160;...<br /><br />Full name: DiffSharp.AD.Reverse.Adj<br /><br />--------------------<br />new : p:float -&gt; Adj<br />new : p:float * a:float -&gt; Adj</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs8">val ga : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.ga</div>
-<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; (float [] -&gt; float [])<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
+<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; x:float [] -&gt; float []<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
 <div class="tip" id="fs10">val gb : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.gb</div>
           
         </div>

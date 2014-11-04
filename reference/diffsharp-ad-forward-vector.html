@@ -58,150 +58,180 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1504', 1504)" onmouseover="showTip(event, '1504', 1504)">
-            diff f
+          <code onmouseout="hideTip(event, '130', 130)" onmouseover="showTip(event, '130', 130)">
+            diff f x
           </code>
-          <div class="tip" id="1504">
-            <strong>Signature:</strong> f:(Dual -&gt; Dual) -&gt; float -&gt; float<br />
+          <div class="tip" id="130">
+            <strong>Signature:</strong> f:(Dual -&gt; Dual) -&gt; x:float -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>First derivative of a scalar-to-scalar function <code>f</code></p>
+          <p>First derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1505', 1505)" onmouseover="showTip(event, '1505', 1505)">
-            diff&#39; f
+          <code onmouseout="hideTip(event, '131', 131)" onmouseover="showTip(event, '131', 131)">
+            diff&#39; f x
           </code>
-          <div class="tip" id="1505">
-            <strong>Signature:</strong> f:(Dual -&gt; Dual) -&gt; float -&gt; float * float<br />
+          <div class="tip" id="131">
+            <strong>Signature:</strong> f:(Dual -&gt; Dual) -&gt; x:float -&gt; float * float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Original value and first derivative of a scalar-to-scalar function <code>f</code></p>
+          <p>Original value and first derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1506', 1506)" onmouseover="showTip(event, '1506', 1506)">
-            diffdir r f
+          <code onmouseout="hideTip(event, '132', 132)" onmouseover="showTip(event, '132', 132)">
+            grad f x
           </code>
-          <div class="tip" id="1506">
-            <strong>Signature:</strong> r:Vector -&gt; f:(Dual [] -&gt; Dual) -&gt; Vector -&gt; float<br />
+          <div class="tip" id="132">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; x:Vector -&gt; Vector<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Directional derivative of a vector-to-scalar function <code>f</code>, with direction <code>r</code></p>
+          <p>Gradient of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1507', 1507)" onmouseover="showTip(event, '1507', 1507)">
-            diffdir&#39; r f
+          <code onmouseout="hideTip(event, '133', 133)" onmouseover="showTip(event, '133', 133)">
+            grad&#39; f x
           </code>
-          <div class="tip" id="1507">
-            <strong>Signature:</strong> r:Vector -&gt; f:(Dual [] -&gt; Dual) -&gt; Vector -&gt; float * float<br />
+          <div class="tip" id="133">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; x:Vector -&gt; float * Vector<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Original value and directional derivative of a vector-to-scalar function <code>f</code>, with direction <code>r</code></p>
+          <p>Original value and gradient of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1508', 1508)" onmouseover="showTip(event, '1508', 1508)">
-            grad f
+          <code onmouseout="hideTip(event, '134', 134)" onmouseover="showTip(event, '134', 134)">
+            gradv f x v
           </code>
-          <div class="tip" id="1508">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; Vector -&gt; Vector<br />
+          <div class="tip" id="134">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; x:Vector -&gt; v:Vector -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Gradient of a vector-to-scalar function <code>f</code></p>
+          <p>Gradient-vector product (directional derivative) of a vector-to-scalar function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1509', 1509)" onmouseover="showTip(event, '1509', 1509)">
-            grad&#39; f
+          <code onmouseout="hideTip(event, '135', 135)" onmouseover="showTip(event, '135', 135)">
+            gradv&#39; f x v
           </code>
-          <div class="tip" id="1509">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; Vector -&gt; float * Vector<br />
+          <div class="tip" id="135">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual) -&gt; x:Vector -&gt; v:Vector -&gt; float * float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Original value and gradient of a vector-to-scalar function <code>f</code></p>
+          <p>Original value and gradient-vector product (directional derivative) of a vector-to-scalar function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1510', 1510)" onmouseover="showTip(event, '1510', 1510)">
-            jacobian f
+          <code onmouseout="hideTip(event, '136', 136)" onmouseover="showTip(event, '136', 136)">
+            jacobian f x
           </code>
-          <div class="tip" id="1510">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; Vector -&gt; Matrix<br />
+          <div class="tip" id="136">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; Matrix<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Jacobian of a vector-to-vector function <code>f</code></p>
+          <p>Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1511', 1511)" onmouseover="showTip(event, '1511', 1511)">
-            jacobian&#39; f
+          <code onmouseout="hideTip(event, '137', 137)" onmouseover="showTip(event, '137', 137)">
+            jacobian&#39; f x
           </code>
-          <div class="tip" id="1511">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; Vector -&gt; Vector * Matrix<br />
+          <div class="tip" id="137">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; Vector * Matrix<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Original value and Jacobian of a vector-to-vector function <code>f</code></p>
+          <p>Original value and Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1512', 1512)" onmouseover="showTip(event, '1512', 1512)">
-            jacobianT f
+          <code onmouseout="hideTip(event, '138', 138)" onmouseover="showTip(event, '138', 138)">
+            jacobianT f x
           </code>
-          <div class="tip" id="1512">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; Vector -&gt; Matrix<br />
+          <div class="tip" id="138">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; Matrix<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Transposed Jacobian of a vector-to-vector function <code>f</code></p>
+          <p>Transposed Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1513', 1513)" onmouseover="showTip(event, '1513', 1513)">
-            jacobianT&#39; f
+          <code onmouseout="hideTip(event, '139', 139)" onmouseover="showTip(event, '139', 139)">
+            jacobianT&#39; f x
           </code>
-          <div class="tip" id="1513">
-            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; Vector -&gt; Vector * Matrix<br />
+          <div class="tip" id="139">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; Vector * Matrix<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Original value and transposed Jacobian of a vector-to-vector function <code>f</code></p>
+          <p>Original value and transposed Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '140', 140)" onmouseover="showTip(event, '140', 140)">
+            jacobianv f x v
+          </code>
+          <div class="tip" id="140">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; v:Vector -&gt; Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '141', 141)" onmouseover="showTip(event, '141', 141)">
+            jacobianv&#39; f x v
+          </code>
+          <div class="tip" id="141">
+            <strong>Signature:</strong> f:(Dual [] -&gt; Dual []) -&gt; x:Vector -&gt; v:Vector -&gt; Vector * Vector<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
 
         </td>
       </tr>

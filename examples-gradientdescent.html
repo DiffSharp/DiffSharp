@@ -167,7 +167,7 @@ val xseq : seq&lt;Vector&gt;
 <div class="tip" id="fs18">union case Option.None: Option&lt;&#39;T&gt;</div>
 <div class="tip" id="fs19">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
 <div class="tip" id="fs20">val fst : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T1<br /><br />Full name: Microsoft.FSharp.Core.Operators.fst</div>
-<div class="tip" id="fs21">val grad : f:(DiffSharp.AD.Forward.Dual [] -&gt; DiffSharp.AD.Forward.Dual) -&gt; (Vector -&gt; Vector)<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
+<div class="tip" id="fs21">val grad : f:(DiffSharp.AD.Forward.Dual [] -&gt; DiffSharp.AD.Forward.Dual) -&gt; x:Vector -&gt; Vector<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
 <div class="tip" id="fs22">val last : source:seq&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Collections.Seq.last</div>
 <div class="tip" id="fs23">val xmin : Vector<br /><br />Full name: Examples-gradientdescent.xmin</div>
 <div class="tip" id="fs24">val xseq : seq&lt;Vector&gt;<br /><br />Full name: Examples-gradientdescent.xseq</div>
@@ -195,7 +195,7 @@ val xseq : seq&lt;Vector&gt;
 <div class="tip" id="fs46">static member Chart.Combine : charts:seq&lt;ChartTypes.GenericChart&gt; -&gt; ChartTypes.GenericChart</div>
 <div class="tip" id="fs47">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;U&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.map</div>
 <div class="tip" id="fs48">val x : Vector</div>
-<div class="tip" id="fs49">Multiple items<br />type Vector =<br />&#160;&#160;interface IComparable<br />&#160;&#160;new : v:float [] -&gt; Vector<br />&#160;&#160;val V: float []<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;member GetNorm : unit -&gt; float<br />&#160;&#160;member Item : i:int -&gt; float<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;member Length : int<br />&#160;&#160;static member Create : v:float [] -&gt; Vector<br />&#160;&#160;...<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector<br /><br />--------------------<br />new : v:float [] -&gt; Vector</div>
+<div class="tip" id="fs49">Multiple items<br />type Vector =<br />&#160;&#160;interface IComparable<br />&#160;&#160;new : v:float [] -&gt; Vector<br />&#160;&#160;val V: float []<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;member GetNorm : unit -&gt; float<br />&#160;&#160;member GetUnitVector : unit -&gt; Vector<br />&#160;&#160;member Item : i:int -&gt; float<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;member Length : int<br />&#160;&#160;...<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector<br /><br />--------------------<br />new : v:float [] -&gt; Vector</div>
           
         </div>
         <div class="span3">
