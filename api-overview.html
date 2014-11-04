@@ -192,25 +192,6 @@
 
 <p><strong>X</strong>: Exact value; <strong>A</strong>: Numerical approximation; <strong>XA</strong>: Exact gradient, approximated Hessian</p>
 
-<h2>Implemented Techniques</h2>
-
-<p>The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.</p>
-
-<p>Currently, the library provides the following implementations in different modules:</p>
-
-<ul>
-<li>DiffSharp.AD.Forward</li>
-<li>DiffSharp.AD.Forward2</li>
-<li>DiffSharp.AD.ForwardG</li>
-<li>DiffSharp.AD.ForwardGH</li>
-<li>DiffSharp.AD.ForwardN</li>
-<li>DiffSharp.AD.Reverse</li>
-<li>DiffSharp.Numerical</li>
-<li>DiffSharp.Symbolic</li>
-</ul>
-
-<p>For brief explanations of these implementations, please refer to the <a href="gettingstarted-forwardad.html">Forward AD</a>, <a href="gettingstarted-reversead.html">Reverse AD</a>, <a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a>, and <a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a> pages.</p>
-
 <h2>Operations and Variants</h2>
 
 <p>The operations summarized in the above table have <em>prime-suffixed</em> variants (e.g. <strong>diff</strong> and <strong>diff'</strong> ) that return tuples of (<em>the value of the original function</em>, <em>the value of the desired operation</em>). This is advantageous in the majority of AD operations, since the original function value would have been already computed as a by-product of AD computations, providing a performance advantage.</p>
@@ -268,6 +249,25 @@
 <li><strong>jacobianv</strong>: Jacobian-vector product of a vector-to-vector function</li>
 <li><strong>jacobianv'</strong>: Original value and Jacobian-vector product of a vector-to-vector function</li>
 </ul>
+
+<h2>Implemented Differentiation Techniques</h2>
+
+<p>The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.</p>
+
+<p>Currently, the library provides the following implementations in separate modules:</p>
+
+<ul>
+<li><strong>DiffSharp.AD.Forward</strong>: Forward AD</li>
+<li><strong>DiffSharp.AD.Forward2</strong>: Forward AD, 2nd order</li>
+<li><strong>DiffSharp.AD.ForwardG</strong>: Forward AD, keeping vectors of gradient components</li>
+<li><strong>DiffSharp.AD.ForwardGH</strong>: Forward AD, keeping vectors of gradient components and matrices of Hessian components</li>
+<li><strong>DiffSharp.AD.ForwardN</strong>: Forward AD, lazy higher-order</li>
+<li><strong>DiffSharp.AD.Reverse</strong>: Reverse AD</li>
+<li><strong>DiffSharp.Numerical</strong>: Numerical differentiation</li>
+<li><strong>DiffSharp.Symbolic</strong>: Symbolic differentiation</li>
+</ul>
+
+<p>For brief explanations of these implementations, please refer to the <a href="gettingstarted-forwardad.html">Forward AD</a>, <a href="gettingstarted-reversead.html">Reverse AD</a>, <a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a>, and <a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a> pages.</p>
 
 <h2>Vector and Matrix versus float[] and float[,]</h2>
 
