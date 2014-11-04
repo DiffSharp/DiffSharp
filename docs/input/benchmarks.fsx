@@ -7,8 +7,8 @@ The following tables present the result of an experiment measuring the running t
 
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg .tg-eugx{background-color:#e4ffb3;text-align:center}
 .tg .tg-5y5n{background-color:#ecf4ff}
 .tg .tg-a1rn{background-color:#ffffc7}
@@ -17,13 +17,13 @@ The following tables present the result of an experiment measuring the running t
 .tg .tg-a0td{font-size:100%}
 .tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
 .tg .tg-u986{font-size:100%;background-color:#e4ffb3}
+.tg .tg-2sn5{background-color:#e4ffb3}
 .tg .tg-40di{font-size:100%;background-color:#ecf4ff;color:#000000}
 .tg .tg-dyge{font-weight:bold;font-size:100%}
 .tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
 .tg .tg-v6es{font-size:100%;background-color:#e4ffb3;text-align:center}
 .tg .tg-uy90{font-size:100%;background-color:#ecf4ff;color:#000000;text-align:center}
 .tg .tg-ci37{background-color:#ecf4ff;text-align:center}
-.tg .tg-2sn5{background-color:#e4ffb3}
 </style>
 <table class="tg">
   <tr>
@@ -31,8 +31,8 @@ The following tables present the result of an experiment measuring the running t
     <th class="tg-lgsi">diff </th>
     <th class="tg-lgsi">diff2 </th>
     <th class="tg-lgsi">diffn </th>
-    <th class="tg-u986">diffdir </th>
     <th class="tg-u986">grad </th>
+    <th class="tg-2sn5">gradv</th>
     <th class="tg-u986">hessian </th>
     <th class="tg-u986">gradhessian </th>
     <th class="tg-u986">laplacian </th>
@@ -43,8 +43,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">3.83</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">9.00</td>
     <td class="tg-v6es">20.50</td>
+    <td class="tg-eugx">9.00</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
@@ -55,8 +55,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">5.00</td>
     <td class="tg-gkzk">5.00</td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">11.00</td>
     <td class="tg-v6es">27.00</td>
+    <td class="tg-eugx">11.00</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es">27.50</td>
@@ -67,8 +67,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">5.50</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">27.00</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
@@ -79,8 +79,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">21.67</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">130.00</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">130.00</td>
     <td class="tg-v6es">135.50</td>
     <td class="tg-v6es">138.50</td>
@@ -91,8 +91,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">19.67</td>
     <td class="tg-tfw5">52.33</td>
     <td class="tg-tfw5">55.50</td>
-    <td class="tg-eugx">66.00</td>
     <td class="tg-eugx">191.50</td>
+    <td class="tg-eugx">66.00</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx">490.00</td>
@@ -103,8 +103,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">9.50</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">18.00</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">215.00</td>
     <td class="tg-v6es">232.00</td>
     <td class="tg-v6es">235.00</td>
@@ -115,8 +115,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-gkzk">2.17</td>
     <td class="tg-gkzk">3.00</td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es">10.5</td>
     <td class="tg-v6es">27.00</td>
+    <td class="tg-eugx">10.50</td>
     <td class="tg-v6es">310.00</td>
     <td class="tg-v6es">265.00</td>
     <td class="tg-v6es">266.5</td>
@@ -128,7 +128,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-a1rn"></td>
     <td class="tg-a1rn"></td>
     <td class="tg-2sn5"></td>
-    <td class="tg-2sn5"></td>
+    <td class="tg-eugx"></td>
     <td class="tg-2sn5"></td>
     <td class="tg-2sn5"></td>
     <td class="tg-2sn5"></td>
@@ -139,8 +139,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-a1rn">diff'</td>
     <td class="tg-a1rn">diff2'</td>
     <td class="tg-a1rn">diffn'</td>
-    <td class="tg-2sn5">diffdir'</td>
     <td class="tg-2sn5">grad'</td>
+    <td class="tg-eugx">gradv'</td>
     <td class="tg-2sn5">hessian'</td>
     <td class="tg-2sn5">gradhessian'</td>
     <td class="tg-2sn5">laplacian'</td>
@@ -151,8 +151,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">3.83</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">5.50</td>
     <td class="tg-eugx">18.00</td>
+    <td class="tg-eugx">5.50</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
@@ -163,8 +163,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">5.67</td>
     <td class="tg-tfw5">4.83</td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">8.50</td>
     <td class="tg-eugx">24.00</td>
+    <td class="tg-eugx">8.50</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx">24.50</td>
@@ -175,8 +175,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">6.00</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx"></td>
     <td class="tg-eugx">26.50</td>
+    <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
@@ -187,8 +187,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">20.50</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx"></td>
     <td class="tg-eugx">130.50</td>
+    <td class="tg-eugx"></td>
     <td class="tg-eugx">129.50</td>
     <td class="tg-eugx">128.50</td>
     <td class="tg-eugx">136.00</td>
@@ -199,8 +199,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">20.33</td>
     <td class="tg-tfw5">53.17</td>
     <td class="tg-tfw5">54.00</td>
-    <td class="tg-eugx">60.00</td>
     <td class="tg-eugx">188.00</td>
+    <td class="tg-eugx">60.00</td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx"></td>
     <td class="tg-eugx">478.00</td>
@@ -211,8 +211,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">8.67</td>
     <td class="tg-tfw5"></td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx"></td>
     <td class="tg-eugx">15.00</td>
+    <td class="tg-eugx"></td>
     <td class="tg-eugx">215.00</td>
     <td class="tg-eugx">221.00</td>
     <td class="tg-eugx">229.50</td>
@@ -223,8 +223,8 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-tfw5">3.17</td>
     <td class="tg-tfw5">4.67</td>
     <td class="tg-tfw5"></td>
-    <td class="tg-eugx">10.50</td>
     <td class="tg-eugx">22.50</td>
+    <td class="tg-eugx">10.50</td>
     <td class="tg-eugx">256.00</td>
     <td class="tg-eugx">259.50</td>
     <td class="tg-eugx">262.50</td>

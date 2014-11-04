@@ -17,6 +17,7 @@ The following table gives an overview of the differentiation API provided by the
 .tg .tg-a0td{font-size:100%}
 .tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
 .tg .tg-u986{font-size:100%;background-color:#e4ffb3}
+.tg .tg-2sn5{background-color:#e4ffb3}
 .tg .tg-40di{font-size:100%;background-color:#ecf4ff;color:#000000}
 .tg .tg-dyge{font-weight:bold;font-size:100%}
 .tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
@@ -30,8 +31,8 @@ The following table gives an overview of the differentiation API provided by the
     <th class="tg-lgsi">diff</th>
     <th class="tg-lgsi">diff2</th>
     <th class="tg-lgsi">diffn</th>
-    <th class="tg-u986">diffdir</th>
     <th class="tg-u986">grad</th>
+    <th class="tg-2sn5">gradv</th>
     <th class="tg-u986">hessian</th>
     <th class="tg-u986">gradhessian</th>
     <th class="tg-u986">laplacian</th>
@@ -43,7 +44,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
+    <td class="tg-eugx">X</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
@@ -55,7 +56,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
+    <td class="tg-eugx">X</td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
@@ -66,8 +67,8 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
     <td class="tg-v6es"></td>
@@ -78,8 +79,8 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
@@ -102,8 +103,8 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk"></td>
     <td class="tg-gkzk"></td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">XA</td>
     <td class="tg-v6es">A</td>
@@ -115,7 +116,7 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">A</td>
     <td class="tg-gkzk"></td>
     <td class="tg-v6es">A</td>
-    <td class="tg-v6es">A</td>
+    <td class="tg-eugx">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">A</td>
     <td class="tg-v6es">A</td>
@@ -126,8 +127,8 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
     <td class="tg-gkzk">X</td>
-    <td class="tg-v6es"></td>
     <td class="tg-v6es">X</td>
+    <td class="tg-eugx"></td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
     <td class="tg-v6es">X</td>
@@ -135,7 +136,7 @@ The following table gives an overview of the differentiation API provided by the
   </tr>
 </table>
 
-**Yellow**: Scalar-to-scalar functions; **Green**: Vector-to-scalar functions; **Blue**: Vector-to-vector functions
+**Yellow**: For scalar-to-scalar functions; **Green**: For vector-to-scalar functions; **Blue**: For vector-to-vector functions
 
 **X**: Exact value; **A**: Numerical approximation; **XA**: Exact gradient, approximated Hessian
 
@@ -184,10 +185,10 @@ Currently, the library provides the following operations:
 - **diff2''**: Original value, first derivative, and second derivative of a scalar-to-scalar function
 - **diffn**: N-th derivative of a scalar-to-scalar function
 - **diffn'**: Original value and n-th derivative of a scalar-to-scalar function
-- **diffdir**: Directional derivative of a vector-to-scalar function
-- **diffdir'**: Original value and directional derivative of a vector-to-scalar function
 - **grad**: Gradient of a vector-to-scalar function
 - **grad'**: Original value and gradient of a vector-to-scalar function
+- **gradv**: Gradient-vector product (directional derivative) of a vector-to-scalar function
+- **gradv'**: Original value and gradient-vector product (directional derivative) of a vector-to-scalar function
 - **hessian**: Hessian of a vector-to-scalar function
 - **hessian'**: Original value and Hessian of a vector-to-scalar function
 - **gradhessian**: Gradient and Hessian of a vector-to-scalar function
