@@ -144,153 +144,146 @@ module ExprOps =
 /// Symbolic differentiation operations module (automatically opened)
 [<AutoOpen>]
 module SymbolicOps =
-    /// First derivative of a scalar-to-scalar function `f`
-    let diff (f:Expr) =
-        fun x ->
-            let fe = expand f
-            let args = getExprArgs fe
-            diffExpr args.[0] fe
-            |> evalSS x
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let diff (f:Expr) x =
+        let fe = expand f
+        let args = getExprArgs fe
+        diffExpr args.[0] fe
+        |> evalSS x
 
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let diff' (f:Expr<float->float>) =
-        fun x -> (evalSS x f, diff f x)
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let diff' f x =
+        (evalSS x f, diff f x)
 
-    /// `n`-th derivative of a scalar-to-scalar function `f`
-    let diffn n (f:Expr) =
-        fun x -> 
-            let fe = expand f
-            let args = getExprArgs fe
-            diffExprN args.[0] n fe
-            |> evalSS x
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let diffn n (f:Expr) x =
+        let fe = expand f
+        let args = getExprArgs fe
+        diffExprN args.[0] n fe
+        |> evalSS x
 
-    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`
-    let diffn' n f =
-        fun x -> (evalSS x f, diffn n f x)
+    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let diffn' n f x =
+        (evalSS x f, diffn n f x)
     
-    /// Second derivative of a scalar-to-scalar function `f`
-    let diff2 (f:Expr) =
-        diffn 2 f
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let diff2 f x =
+        diffn 2 f x
 
-    /// Original value and second derivative of a scalar-to-scalar function `f`
-    let diff2' f =
-        fun x -> (evalSS x f, diff2 f x)
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let diff2' f x =
+        (evalSS x f, diff2 f x)
 
-    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
-    let inline diff2'' f =
-        fun x -> (evalSS x f, diff f x, diff2 f x)
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x =
+        (evalSS x f, diff f x, diff2 f x)
 
-    /// Gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let grad (f:Expr) =
-        fun x ->
-            let fe = expand f
-            fe
-            |> getExprArgs
-            |> Array.map (fun a -> diffExpr a fe)
-            |> Array.map (evalVS x)
+    /// Gradient of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let grad (f:Expr) x =
+        let fe = expand f
+        fe
+        |> getExprArgs
+        |> Array.map (fun a -> diffExpr a fe)
+        |> Array.map (evalVS x)
     
-    /// Original value and gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let grad' f =
-        fun x -> (evalVS x f, grad f x)
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let grad' f x =
+        (evalVS x f, grad f x)
 
-    /// Transposed Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let jacobianT (f:Expr) =
-        fun x ->
-            let fe = expand f
-            fe
-            |> getExprArgs
-            |> Array.map (fun a -> diffExpr a fe)
-            |> Array.map (evalVV x)
-            |> array2D
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let jacobianT (f:Expr) x =
+        let fe = expand f
+        fe
+        |> getExprArgs
+        |> Array.map (fun a -> diffExpr a fe)
+        |> Array.map (evalVV x)
+        |> array2D
 
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let jacobianT' f =
-        fun x -> (evalVV x f, jacobianT f x)
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let jacobianT' f x =
+        (evalVV x f, jacobianT f x)
 
-    /// Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let jacobian f =
-        jacobianT f >> transpose
+    /// Jacobian of a vector-to-vector function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let jacobian f x =
+        jacobianT f x |> transpose
 
-    /// Original value and Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let jacobian' f =
-        jacobianT' f >> fun (r, j) -> (r, transpose j)
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let jacobian' f x =
+        jacobianT' f x |> fun (r, j) -> (r, transpose j)
 
-    /// Laplacian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let laplacian (f:Expr) =
-        fun x ->
-            let fe = expand f
-            fe
-            |> getExprArgs
-            |> Array.map (fun a -> diffExpr a (diffExpr a fe))
-            |> Array.sumBy (evalVS x)
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let laplacian (f:Expr) x =
+        let fe = expand f
+        fe
+        |> getExprArgs
+        |> Array.map (fun a -> diffExpr a (diffExpr a fe))
+        |> Array.sumBy (evalVS x)
 
-    /// Original value and Laplacian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let laplacian' f =
-        fun x -> (evalVS x f, laplacian f x)
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let laplacian' f x =
+        (evalVS x f, laplacian f x)
 
-    /// Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let hessian (f:Expr) =
-        fun (x:float[]) ->
-            let fe = expand f
-            let args = getExprArgs fe
-            let ret:float[,] = Array2D.create x.Length x.Length 0.
-            for i = 0 to x.Length - 1 do
-                let di = diffExpr args.[i] fe
-                for j = i to x.Length - 1 do
-                    ret.[i, j] <- evalVS x (diffExpr args.[j] di)
-            copyupper ret
+    /// Hessian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let hessian (f:Expr) (x:float[]) =
+        let fe = expand f
+        let args = getExprArgs fe
+        let ret:float[,] = Array2D.create x.Length x.Length 0.
+        for i = 0 to x.Length - 1 do
+            let di = diffExpr args.[i] fe
+            for j = i to x.Length - 1 do
+                ret.[i, j] <- evalVS x (diffExpr args.[j] di)
+        copyupper ret
 
-    /// Original value and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let hessian' f =
-        fun x -> (evalVS x f, hessian f x)
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let hessian' f x =
+        (evalVS x f, hessian f x)
 
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let gradhessian' f =
-        fun x ->
-            let (v, g) = grad' f x in (v, g, hessian f x)
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let gradhessian' f x =
+        let (v, g) = grad' f x in (v, g, hessian f x)
 
-    /// Gradient and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
-    let gradhessian f =
-        gradhessian' f >> sndtrd
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
+    let gradhessian f x =
+        gradhessian' f x |> sndtrd
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f = SymbolicOps.diff' f
-    /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f = SymbolicOps.diff f
-    /// Original value and second derivative of a scalar-to-scalar function `f`
-    let inline diff2' f = SymbolicOps.diff2' f
-    /// Second derivative of a scalar-to-scalar function `f`
-    let inline diff2 f = SymbolicOps.diff2 f
-    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
-    let inline diff2'' f = SymbolicOps.diff2'' f
-    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
-    let inline diffn' n f = SymbolicOps.diffn' n f
-    /// `n`-th derivative of a scalar-to-scalar function `f`
-    let inline diffn n f = SymbolicOps.diffn n f
-    /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f = array >> SymbolicOps.grad' f >> fun (a, b) -> (a, vector b)
-    /// Gradient of a vector-to-scalar function `f`
-    let inline grad f = array >> SymbolicOps.grad f >> vector
-    /// Original value and Laplacian of a vector-to-scalar function `f`
-    let inline laplacian' f = array >> SymbolicOps.laplacian' f
-    /// Laplacian of a vector-to-scalar function `f`
-    let inline laplacian f = array >> SymbolicOps.laplacian f
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f = array >> SymbolicOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
-    /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f = array >> SymbolicOps.jacobianT f >> matrix
-    /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f = array >> SymbolicOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
-    /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f = array >> SymbolicOps.jacobian f >> matrix
-    /// Original value and Hessian of a vector-to-scalar function `f`
-    let inline hessian' f = array >> SymbolicOps.hessian' f >> fun (a, b) -> (a, matrix b)
-    /// Hessian of a vector-to-scalar function `f`
-    let inline hessian f = array >> SymbolicOps.hessian f >> matrix
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian' f = array >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, matrix c)
-    /// Gradient and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian f = array >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, matrix b)
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff' f x = SymbolicOps.diff' f x
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff f x = SymbolicOps.diff f x
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' f x = SymbolicOps.diff2' f x
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 f x = SymbolicOps.diff2 f x
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x = SymbolicOps.diff2'' f x
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn' n f x = SymbolicOps.diffn' n f x
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn n f x = SymbolicOps.diffn n f x
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad' f x = SymbolicOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad f x = SymbolicOps.grad f (array x) |> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f x = SymbolicOps.laplacian' f (array x)
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x = SymbolicOps.laplacian f (array x)
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT' f x = SymbolicOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT f x = SymbolicOps.jacobianT f (array x) |> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian' f x = SymbolicOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian f x = SymbolicOps.jacobian f (array x) |> matrix
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian' f x = SymbolicOps.hessian' f (array x) |> fun (a, b) -> (a, matrix b)
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian f x = SymbolicOps.hessian f (array x) |> matrix
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' f x = SymbolicOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian f x = SymbolicOps.gradhessian f (array x) |> fun (a, b) -> (vector a, matrix b)

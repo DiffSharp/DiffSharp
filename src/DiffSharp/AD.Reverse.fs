@@ -180,117 +180,113 @@ module AdjOps =
 /// Reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
 module ReverseOps =
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f =
-        fun x ->
-            Trace.Clear()
-            let xa = adj x
-            let z:Adj = f xa
-            z.A <- 1.
-            Trace.ReverseSweep()
-            (primal z, adjoint xa)
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff' f x =
+        Trace.Clear()
+        let xa = adj x
+        let z:Adj = f xa
+        z.A <- 1.
+        Trace.ReverseSweep()
+        (primal z, adjoint xa)
 
-    /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f =
-        diff' f >> snd
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff f x =
+        diff' f x |> snd
 
-    /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f =
-        fun x ->
-            Trace.Clear()
-            let xa = Array.map adj x
-            let z:Adj = f xa
-            z.A <- 1.
-            Trace.ReverseSweep()
-            (primal z, Array.map adjoint xa)
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad' f x =
+        Trace.Clear()
+        let xa = Array.map adj x
+        let z:Adj = f xa
+        z.A <- 1.
+        Trace.ReverseSweep()
+        (primal z, Array.map adjoint xa)
 
-    /// Original value of a vector-to-scalar function `f`
-    let inline grad f =
-        grad' f >> snd
+    /// Original value of a vector-to-scalar function `f`, at point `x`
+    let inline grad f x =
+        grad' f x |> snd
 
-    /// Original value and Jacobian of a vector-to-vector function `f`, using one forward sweep and several reverse sweeps
-    let inline jacobian' f =
-        fun x ->
-            Trace.Clear()
-            let xa = Array.map adj x
-            let z:Adj[] = f xa
-            let forwardTrace = Trace.Copy()
-            let jac = Array.init z.Length (fun i ->
-                                            if i > 0 then Trace.SetClean(forwardTrace)
-                                            z.[i].A <- 1.
-                                            Trace.ReverseSweep()
-                                            Array.map adjoint xa)
-            (Array.map primal z, array2D jac)
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`, using one forward sweep and several reverse sweeps
+    let inline jacobian' f x =
+        Trace.Clear()
+        let xa = Array.map adj x
+        let z:Adj[] = f xa
+        let forwardTrace = Trace.Copy()
+        let jac = Array.init z.Length (fun i ->
+                                        if i > 0 then Trace.SetClean(forwardTrace)
+                                        z.[i].A <- 1.
+                                        Trace.ReverseSweep()
+                                        Array.map adjoint xa)
+        (Array.map primal z, array2D jac)
 
-    /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f =
-        jacobian' f >> snd
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian f x =
+        jacobian' f x |> snd
 
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f =
-        fun x -> let (v, j) = jacobian' f x in (v, transpose j)
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT' f x =
+        let (v, j) = jacobian' f x in (v, transpose j)
     
-    /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f =
-        jacobianT' f >> snd
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT f x =
+        jacobianT' f x |> snd
 
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline gradhessian' f =
-        fun x ->
-            let xv = Vector(x)
-            let (v, g) = grad' f x
-            let h = Matrix.Create(x.Length, g)
-            let hh = Matrix.Create(x.Length, fun i -> grad f (xv + Vector.Create(x.Length, i, eps)).V)
-            (v, g, ((hh - h) / eps).M)
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline gradhessian' f x =
+        let xv = Vector(x)
+        let (v, g) = grad' f x
+        let h = Matrix.Create(x.Length, g)
+        let hh = Matrix.Create(x.Length, fun i -> grad f (xv + Vector.Create(x.Length, i, eps)).V)
+        (v, g, ((hh - h) / eps).M)
 
-    /// Gradient and Hessian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline gradhessian f =
-        gradhessian' f >> sndtrd
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline gradhessian f x =
+        gradhessian' f x |> sndtrd
     
-    /// Original valuea and Hessian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline hessian' f =
-        gradhessian' f >> fsttrd
+    /// Original valuea and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline hessian' f x =
+        gradhessian' f x |> fsttrd
 
-    /// Hessian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline hessian f =
-        gradhessian' f >> trd
+    /// Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline hessian f x =
+        gradhessian' f x |> trd
 
-    /// Original value and Laplacian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline laplacian' f =
-        fun x -> let (v, h) = hessian' f x in (v, trace h)
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline laplacian' f x =
+        let (v, h) = hessian' f x in (v, trace h)
 
-    /// Laplacian of a vector-to-scalar function `f`, using finite differences over reverse mode gradient
-    let inline laplacian f =
-        laplacian' f >> snd
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    let inline laplacian f x =
+        laplacian' f x |> snd
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f = ReverseOps.diff' f
-    /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f = ReverseOps.diff f
-    /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f = array >> ReverseOps.grad' f >> fun (a, b) -> (a, vector b)
-    /// Gradient of a vector-to-scalar function `f`
-    let inline grad f = array >> ReverseOps.grad f >> vector
-    /// Original value and Laplacian of a vector-to-scalar function `f`
-    let inline laplacian' f = array >> ReverseOps.laplacian' f
-    /// Laplacian of a vector-to-scalar function `f`
-    let inline laplacian f = array >> ReverseOps.laplacian f
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f = array >> ReverseOps.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
-    /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f = array >> ReverseOps.jacobianT f >> matrix
-    /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f = array >> ReverseOps.jacobian' f >> fun (a, b) -> (vector a, matrix b)
-    /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f = array >> ReverseOps.jacobian f >> matrix
-    /// Original value and Hessian of a vector-to-scalar function `f`
-    let inline hessian' f = array >> ReverseOps.hessian' f >> fun (a, b) -> (a, matrix b)
-    /// Hessian of a vector-to-scalar function `f`
-    let inline hessian f = array >> ReverseOps.hessian f >> matrix
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian' f = array >> ReverseOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, matrix c)
-    /// Gradient and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian f = array >> ReverseOps.gradhessian f >> fun (a, b) -> (vector a, matrix b)
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff' f x = ReverseOps.diff' f x
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff f x = ReverseOps.diff f x
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad' f x = ReverseOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad f x = ReverseOps.grad f (array x) |> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f x = ReverseOps.laplacian' f (array x)
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x = ReverseOps.laplacian f (array x)
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT' f x = ReverseOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT f x = ReverseOps.jacobianT f (array x) |> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian' f x = ReverseOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian f x = ReverseOps.jacobian f (array x) |> matrix
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian' f x = ReverseOps.hessian' f (array x) |> fun (a, b) -> (a, matrix b)
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian f x = ReverseOps.hessian f (array x) |> matrix
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' f x = ReverseOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian f x = ReverseOps.gradhessian f (array x) |> fun (a, b) -> (vector a, matrix b)

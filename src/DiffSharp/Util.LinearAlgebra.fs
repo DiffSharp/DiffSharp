@@ -57,8 +57,10 @@ type Vector =
         | _ -> false
     override v.GetHashCode() = v.V.GetHashCode()
     override v.ToString() = sprintf "Vector %A" v.V
-    /// Get the Euclidean norm of the Vector
+    /// Get the Euclidean norm of this vector
     member v.GetNorm() = sqrt (Array.sumBy (fun x -> x * x) v.V)
+    /// Get the unit vector codirectional with this vector
+    member v.GetUnitVector() = let n = v.GetNorm() in Vector.Create(Array.init v.Length (fun i -> v.[i] / n))
     /// Builds a new Vector whose elements are the results of applying function `f` to each of the elements of Vector `v`
     static member map f (v:Vector) = Vector.Create(Array.map f v.V)
     /// Returns the sum of all the elements in vector `v`
@@ -176,6 +178,8 @@ type Matrix =
 let vector v = Vector.Create(v)
 /// Get the Euclidean norm of Vector `v`
 let norm (v:Vector) = v.GetNorm()
+/// Get the unit vector codirectional with Vector `v`
+let unitVector (v:Vector) = v.GetUnitVector()
 /// Convert Vector `v` into float[]
 let array (v:Vector) = v.V
 /// Convert float[,] `m` into Matrix

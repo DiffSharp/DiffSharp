@@ -44,6 +44,7 @@ open DiffSharp.Util.General
 /// Dual2 numeric type, keeping primal, tangent, and tangent-of-tangent values
 // UNOPTIMIZED
 type Dual2 =
+    // Primal, tangent, tangent-of-tangent
     | Dual2 of float * float * float
     override d.ToString() = let (Dual2(p, t, t2)) = d in sprintf "Dual2(%f, %f, %f)" p t t2
     static member op_Explicit(p) = Dual2(p, 0. , 0.)
@@ -129,102 +130,99 @@ module Dual2Ops =
 /// Forward2 differentiation operations module (automatically opened)
 [<AutoOpen>]
 module Forward2Ops =
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f =
-        dual2Act >> f >> tuple
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff' f x =
+        dual2Act x |> f |> tuple
 
-    /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f =
-        dual2Act >> f >> tangent
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff f x =
+        dual2Act x |> f |> tangent
 
-    /// Original value and second derivative of a scalar-to-scalar function `f`
-    let inline diff2' f =
-        dual2Act >> f >> tuple2
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' f x =
+        dual2Act x |> f |> tuple2
 
-    /// Second derivative of a scalar-to-scalar function `f`
-    let inline diff2 f =
-        dual2Act >> f >> tangent2
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 f x =
+        dual2Act x |> f |> tangent2
     
-    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
-    let inline diff2'' f =
-        dual2Act >> f >> tupleAll
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x =
+        dual2Act x |> f |> tupleAll
 
-    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
-    let inline diffdir' r f =
-        fun x -> Array.zip x r |> Array.map dual2Set |> f |> tuple
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    let inline gradv' f x v =
+        Array.zip x v |> Array.map dual2Set |> f |> tuple
 
-    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
-    let inline diffdir r f =
-        diffdir' r f >> snd
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    let inline gradv f x v =
+        gradv' f x v |> snd
 
-    /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f =
-        fun x ->
-            let a = Array.map f (dual2ActArrayArray x)
-            (primal a.[0], Array.map tangent a)
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad' f x =
+        let a = Array.map f (dual2ActArrayArray x)
+        (primal a.[0], Array.map tangent a)
 
-    /// Gradient of a vector-to-scalar function `f`
-    let inline grad f =
-        grad' f >> snd
+    /// Gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad f x =
+        grad' f x |> snd
 
-    /// Original value and Laplacian of a vector-to-scalar function `f`
-    let inline laplacian' f =
-        fun x ->
-            let a = Array.map f (dual2ActArrayArray x)
-            (let (Dual2(p, _, _)) = a.[0] in p, Array.sumBy tangent2 a)
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f x =
+        let a = Array.map f (dual2ActArrayArray x)
+        (let (Dual2(p, _, _)) = a.[0] in p, Array.sumBy tangent2 a)
 
-    /// Laplacian of a vector-to-scalar function `f`
-    let inline laplacian f =
-        laplacian' f >> snd
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x =
+        laplacian' f x |> snd
 
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f =
-        fun x ->
-            let a = Array.map f (dual2ActArrayArray x)
-            (Array.map primal a.[0], Array2D.map tangent (array2D a))
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT' f x =
+        let a = Array.map f (dual2ActArrayArray x)
+        (Array.map primal a.[0], Array2D.map tangent (array2D a))
 
-    /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f =
-        jacobianT' f >> snd
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT f x =
+        jacobianT' f x |> snd
 
-    /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f =
-        jacobianT' f >> fun (r, j) -> (r, transpose j)
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian' f x =
+        jacobianT' f x |> fun (r, j) -> (r, transpose j)
 
-    /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f =
-        jacobian' f >> snd
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian f x =
+        jacobian' f x |> snd
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
-    /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f = Forward2Ops.diff' f
-    /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f = Forward2Ops.diff f
-    /// Original value and second derivative of a scalar-to-scalar function `f`
-    let inline diff2' f = Forward2Ops.diff2' f
-    /// Second derivative of a scalar-to-scalar function `f`
-    let inline diff2 f = Forward2Ops.diff2 f
-    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
-    let inline diff2'' f = Forward2Ops.diff2'' f
-    /// Original value and directional derivative of a vector-to-scalar function `f`, with direction `r`
-    let inline diffdir' r f = array >> Forward2Ops.diffdir' (array r) f
-    /// Directional derivative of a vector-to-scalar function `f`, with direction `r`
-    let inline diffdir r f = array >> Forward2Ops.diffdir (array r) f
-    /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f = array >> Forward2Ops.grad' f >> fun (a, b) -> (a, vector b)
-    /// Gradient of a vector-to-scalar function `f`
-    let inline grad f = array >> Forward2Ops.grad f >> vector
-    /// Original value and Laplacian of a vector-to-scalar function `f`
-    let inline laplacian' f = array >> Forward2Ops.laplacian' f
-    /// Laplacian of a vector-to-scalar function `f`
-    let inline laplacian f = array >> Forward2Ops.laplacian f
-    /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f = array >> Forward2Ops.jacobianT' f >> fun (a, b) -> (vector a, matrix b)
-    /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f = array >> Forward2Ops.jacobianT f >> matrix
-    /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f = array >> Forward2Ops.jacobian' f >> fun (a, b) -> (vector a, matrix b)
-    /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f = array >> Forward2Ops.jacobian f >> matrix
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff' f x = Forward2Ops.diff' f x
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff f x = Forward2Ops.diff f x
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' f x = Forward2Ops.diff2' f x
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 f x = Forward2Ops.diff2 f x
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x = Forward2Ops.diff2'' f x
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    let inline gradv' f x v = Forward2Ops.gradv' f (array x) (array v)
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    let inline gradv f x v = Forward2Ops.gradv f (array x) (array v)
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad' f x = Forward2Ops.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    /// Gradient of a vector-to-scalar function `f`, at point `x`
+    let inline grad f x = Forward2Ops.grad f (array x) |> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f x = Forward2Ops.laplacian' f (array x)
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x = Forward2Ops.laplacian f (array x)
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT' f x =Forward2Ops.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobianT f x = Forward2Ops.jacobianT f (array x) |> matrix
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian' f x = Forward2Ops.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian f x = Forward2Ops.jacobian f (array x) |> matrix

@@ -38,13 +38,13 @@
 /// Various utility functions used all over the library
 module DiffSharp.Util.General
 
-/// Tail of a 3-tuple
+/// Get the tail of a 3-tuple
 let inline trd (_, _, t) = t
 
-/// First and third terms of a 3-tuple
+/// Get the first and third terms of a 3-tuple
 let inline fsttrd (f, _, t) = (f, t)
 
-/// Second and third terms of a 3-tuple
+/// Get the second and third terms of a 3-tuple
 let inline sndtrd (_, s, t) = (s, t)
 
 /// Checks whether float[,] `m` has the same number of elements in both dimensions
@@ -53,13 +53,13 @@ let (|Square|) (m:float[,]) =
     | m when m.GetLength 0 = m.GetLength 1 -> m
     | _ -> invalidArg "m" "Expecting a square float[,]"
 
-/// Transpose of float[,] `m`
+/// Get the transpose of float[,] `m`
 let inline transpose (m:float[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
 
-/// float[] of the diagonal elements of float[,] `m`
+/// Get a float[] containing the diagonal elements of float[,] `m`
 let inline diagonal (Square m:float[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
 
-/// Trace of the square matrix given in float[,] `m`
+/// Get the trace of the square matrix given in float[,] `m`
 let inline trace (m:float[,]) = Array.sum (diagonal m)
 
 /// Copy the upper triangular elements of the square matrix given in float[,] `m` to the lower triangular part
