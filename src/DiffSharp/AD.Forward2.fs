@@ -150,11 +150,11 @@ module Forward2Ops =
     let inline diff2'' f x =
         dual2Act x |> f |> tupleAll
 
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v =
         Array.zip x v |> Array.map dual2Set |> f |> tuple
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
@@ -206,9 +206,9 @@ module Vector =
     let inline diff2 f x = Forward2Ops.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f x = Forward2Ops.diff2'' f x
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v = Forward2Ops.gradv' f (array x) (array v)
-    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v = Forward2Ops.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = Forward2Ops.grad' f (array x) |> fun (a, b) -> (a, vector b)

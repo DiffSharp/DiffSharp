@@ -128,11 +128,11 @@ module ForwardOps =
     let inline diff f x =
         dualAct x |> f |> tangent
        
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v =
         Array.zip x v |> Array.map dualSet |> f |> tuple
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
@@ -161,7 +161,7 @@ module ForwardOps =
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
         jacobian' f x |> snd
-
+      
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -169,9 +169,9 @@ module Vector =
     let inline diff' f x = ForwardOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x = ForwardOps.diff f x
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v = ForwardOps.gradv' f (array x) (array v)
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v = ForwardOps.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = ForwardOps.grad' f (array x) |> fun (a, b) -> (a, vector b)

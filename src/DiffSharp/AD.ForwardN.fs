@@ -166,11 +166,11 @@ module ForwardNOps =
         let d = orig |> diffLazy n
         (primal orig, primal d)
 
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v =
         Array.zip x v |> Array.map dualNSet |> f |> tuple
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
@@ -226,9 +226,9 @@ module Vector =
     let inline diffn' n f x = ForwardNOps.diffn' n f x 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn n f x = ForwardNOps.diffn n f x
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v = ForwardNOps.gradv' f (array x) (array v)
-    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v = ForwardNOps.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = ForwardNOps.grad' f (array x) |> fun (a, b) -> (a, vector b)

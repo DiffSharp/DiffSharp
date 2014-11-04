@@ -50,13 +50,13 @@ module NumericalOps =
     let inline diff' f x =
         (f x, diff f x)
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv (f:float[]->float) x v =
         let veps = eps * Vector.Create(v)
         let xv = Vector.Create(x)
         ((f ((xv + veps).V)) - (f ((xv - veps).V))) / deps
 
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v =
         (f x, gradv f x v)
 
@@ -145,9 +145,9 @@ module Vector =
     let inline diff2 f x = NumericalOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f x = NumericalOps.diff2'' f x
-    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv' f x v = NumericalOps.gradv' f (array x) (array v)
-    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, with direction `v`
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along the vector `v`
     let inline gradv f x v = NumericalOps.gradv f (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x = NumericalOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
