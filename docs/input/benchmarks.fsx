@@ -295,7 +295,7 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-71xk">241k</td>
     <td class="tg-71xk"></td>
     <td class="tg-71xk">2.08M</td>
-    <td class="tg-71xk">2.307M</td>
+    <td class="tg-71xk">2.30M</td>
     <td class="tg-71xk">1.14M</td>
     <td class="tg-5nhg">369k</td>
     <td class="tg-5nhg"></td>
