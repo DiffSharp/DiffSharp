@@ -829,6 +829,12 @@ Generate a rank 1 array.
 A collection of default generators.
 </summary>
 </member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
 <member name="M:FsCheck.Arb.mapFilter``1(Microsoft.FSharp.Core.FSharpFunc{``0,``0},Microsoft.FSharp.Core.FSharpFunc{``0,System.Boolean},FsCheck.Arbitrary{``0})">
 <summary>
  Return an Arbitrary instance that is a mapped and filtered version of an existing arbitrary instance.

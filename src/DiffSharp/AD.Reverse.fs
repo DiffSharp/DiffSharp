@@ -259,6 +259,19 @@ module ReverseOps =
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianTv' f x (v:float[]) =
+        Trace.Clear()
+        let xa = Array.map adj x
+        let z:Adj[] = f xa
+        for i = 0 to z.Length - 1 do z.[i].A <- v.[i]
+        Trace.ReverseSweep()
+        (Array.map primal z, Array.map adjoint xa)
+
+    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianTv f x v =
+        jacobianTv' f x v |> snd
+
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =

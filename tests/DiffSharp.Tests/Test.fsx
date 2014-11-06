@@ -1,13 +1,13 @@
 ﻿
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Reverse
 
-let f (x:Dual[]) =
-    [| sin (x.[0] * 5. * tan x.[1]) ; cos (x.[1] - x.[0] / x.[1]) |]
+let f (x:Adj[]) =
+    [| sin (x.[0] * 5. * tan x.[2]) ; cos (x.[1] - x.[2] / x.[1]) |]
 
-let x = [| 1.2; 3.2 |]
+let x = [| 1.2; 3.2; 2. |]
 
-let v = [| 3.; 4.|]
+let v = [| 3.; 4. |]
 
-let test = jacobianv f x v
+let test = jacobianTv' f x v

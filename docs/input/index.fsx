@@ -21,7 +21,7 @@ You can download and install the library via NuGet.
     <div class="span1"></div>
     <div class="span6">
     <div class="well well-small" id="nuget">
-        The DiffSharp library <a href="https://nuget.org/packages/DiffSharp">is available on NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
+        The DiffSharp library <a href="https://www.nuget.org/packages/diffsharp">is available on NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
         <pre>PM> Install-Package DiffSharp</pre>
     </div>
     </div>

@@ -11,138 +11,148 @@ The following table gives an overview of the differentiation API provided by the
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg .tg-eugx{background-color:#e4ffb3;text-align:center}
-.tg .tg-5y5n{background-color:#ecf4ff}
-.tg .tg-e3zv{font-weight:bold}
-.tg .tg-tfw5{background-color:#ffffc7;text-align:center}
-.tg .tg-a0td{font-size:100%}
-.tg .tg-lgsi{font-size:100%;background-color:#ffffc7}
-.tg .tg-u986{font-size:100%;background-color:#e4ffb3}
-.tg .tg-2sn5{background-color:#e4ffb3}
-.tg .tg-40di{font-size:100%;background-color:#ecf4ff;color:#000000}
-.tg .tg-dyge{font-weight:bold;font-size:100%}
-.tg .tg-gkzk{font-size:100%;background-color:#ffffc7;text-align:center}
-.tg .tg-v6es{font-size:100%;background-color:#e4ffb3;text-align:center}
-.tg .tg-uy90{font-size:100%;background-color:#ecf4ff;color:#000000;text-align:center}
-.tg .tg-ci37{background-color:#ecf4ff;text-align:center}
+.tg .tg-5nhg{font-size:11px;background-color:#ecf4ff;text-align:center}
+.tg .tg-0e45{font-size:11px}
+.tg .tg-sgic{font-size:11px;background-color:#ffffc7;text-align:center}
+.tg .tg-71xk{font-size:11px;background-color:#e4ffb3;text-align:center}
+.tg .tg-sfug{font-size:11px;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-nl5m{font-weight:bold;font-size:11px}
 </style>
 <table class="tg">
   <tr>
-    <th class="tg-a0td"></th>
-    <th class="tg-lgsi">diff</th>
-    <th class="tg-lgsi">diff2</th>
-    <th class="tg-lgsi">diffn</th>
-    <th class="tg-u986">grad</th>
-    <th class="tg-2sn5">gradv</th>
-    <th class="tg-u986">hessian</th>
-    <th class="tg-u986">gradhessian</th>
-    <th class="tg-u986">laplacian</th>
-    <th class="tg-40di">jacobian</th>
-    <th class="tg-5y5n">jacobianv</th>
+    <th class="tg-0e45"></th>
+    <th class="tg-sgic">diff</th>
+    <th class="tg-sgic">diff2</th>
+    <th class="tg-sgic">diffn</th>
+    <th class="tg-71xk">grad</th>
+    <th class="tg-71xk">gradv</th>
+    <th class="tg-71xk">hessian</th>
+    <th class="tg-71xk">gradhessian</th>
+    <th class="tg-71xk">laplacian</th>
+    <th class="tg-sfug">jacobian</th>
+    <th class="tg-5nhg">jacobianv</th>
+    <th class="tg-5nhg">jacobianT</th>
+    <th class="tg-5nhg">jacobianTv</th>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.Forward</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx">X</td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37">X</td>
+    <td class="tg-nl5m">DiffSharp.AD.Forward</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.Forward2</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx">X</td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37">X</td>
+    <td class="tg-nl5m">DiffSharp.AD.Forward2</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.ForwardG</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-v6es"></td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37"></td>
+    <td class="tg-nl5m">DiffSharp.AD.ForwardG</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.ForwardGH</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37"></td>
+    <td class="tg-nl5m">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-e3zv">DiffSharp.AD.ForwardN</td>
-    <td class="tg-tfw5">X</td>
-    <td class="tg-tfw5">X</td>
-    <td class="tg-tfw5">X</td>
-    <td class="tg-eugx">X</td>
-    <td class="tg-eugx">X</td>
-    <td class="tg-eugx"></td>
-    <td class="tg-eugx"></td>
-    <td class="tg-eugx">X</td>
-    <td class="tg-ci37">X</td>
-    <td class="tg-ci37">X</td>
+    <td class="tg-nl5m">DiffSharp.AD.ForwardN</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.AD.Reverse</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx"></td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-v6es">XA</td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37"></td>
+    <td class="tg-nl5m">DiffSharp.AD.Reverse</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-71xk">XA</td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg">X</td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.Numerical</td>
-    <td class="tg-gkzk">A</td>
-    <td class="tg-gkzk">A</td>
-    <td class="tg-gkzk"></td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-eugx">A</td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-v6es">A</td>
-    <td class="tg-uy90">A</td>
-    <td class="tg-ci37">A</td>
+    <td class="tg-nl5m">DiffSharp.Numerical</td>
+    <td class="tg-sgic">A</td>
+    <td class="tg-sgic">A</td>
+    <td class="tg-sgic"></td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-71xk">A</td>
+    <td class="tg-sfug">A</td>
+    <td class="tg-5nhg">A</td>
+    <td class="tg-5nhg">A</td>
+    <td class="tg-5nhg"></td>
   </tr>
   <tr>
-    <td class="tg-dyge">DiffSharp.Symbolic</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-gkzk">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-eugx"></td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-v6es">X</td>
-    <td class="tg-uy90">X</td>
-    <td class="tg-ci37"></td>
+    <td class="tg-nl5m">DiffSharp.Symbolic</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-sgic">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-71xk">X</td>
+    <td class="tg-sfug">X</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">X</td>
+    <td class="tg-5nhg"></td>
   </tr>
 </table>
 
@@ -166,7 +176,6 @@ let a = diff (fun x -> sin (sqrt x)) 2.
 let b, c = diff' (fun x -> sin (sqrt x)) 2.
 
 (**
-In addition to these, **jacobian** operations have _T-suffixed_ variants returning the transposed version of the Jacobian matrix.
 
 Currently, the library provides the following operations:
 
@@ -189,10 +198,12 @@ Currently, the library provides the following operations:
 - **laplacian'**: Original value and Laplacian of a vector-to-scalar function
 - **jacobian**: Jacobian of a vector-to-vector function
 - **jacobian'**: Original value and Jacobian of a vector-to-vector function
-- **jacobianT**: Transposed Jacobian of a vector-to-vector function
-- **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
 - **jacobianv**: Jacobian-vector product of a vector-to-vector function
 - **jacobianv'**: Original value and Jacobian-vector product of a vector-to-vector function
+- **jacobianT**: Transposed Jacobian of a vector-to-vector function
+- **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
+- **jacobianTv**: Transposed Jacobian-vector product of a vector-to-vector function
+- **jacobianTv'**: Original value and transposed Jacobian-vector product of a vector-to-vector function
 
 Implemented Differentiation Techniques
 ----------------------
