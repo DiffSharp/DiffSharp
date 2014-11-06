@@ -137,6 +137,21 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-5nhg">30.00</td>
     <td class="tg-5nhg"></td>
   </tr>
+  <tr>
+    <td class="tg-nl5m">DiffSharp.Symbolic</td>
+    <td class="tg-sgic">33k</td>
+    <td class="tg-sgic">141k</td>
+    <td class="tg-sgic">141k</td>
+    <td class="tg-71xk">231k</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">1.99M</td>
+    <td class="tg-71xk">2.24M</td>
+    <td class="tg-71xk">1.14M</td>
+    <td class="tg-5nhg">369k</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">291k</td>
+    <td class="tg-5nhg"></td>
+  </tr>
   <tr style="visibility:hidden">
     <td class="tg-0e45"></td>
     <td class="tg-sgic"></td>
@@ -270,6 +285,21 @@ The following tables present the result of an experiment measuring the running t
     <td class="tg-5nhg">35.00</td>
     <td class="tg-5nhg">6.00</td>
     <td class="tg-5nhg">31.00</td>
+    <td class="tg-5nhg"></td>
+  </tr>
+  <tr>
+    <td class="tg-nl5m">DiffSharp.Symbolic</td>
+    <td class="tg-sgic">33k</td>
+    <td class="tg-sgic">144k</td>
+    <td class="tg-sgic">144k</td>
+    <td class="tg-71xk">241k</td>
+    <td class="tg-71xk"></td>
+    <td class="tg-71xk">2.08M</td>
+    <td class="tg-71xk">2.307M</td>
+    <td class="tg-71xk">1.14M</td>
+    <td class="tg-5nhg">369k</td>
+    <td class="tg-5nhg"></td>
+    <td class="tg-5nhg">291k</td>
     <td class="tg-5nhg"></td>
   </tr>
 </table>
