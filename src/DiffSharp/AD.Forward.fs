@@ -43,6 +43,7 @@ open DiffSharp.Util.General
 
 /// Dual numeric type, keeping primal and tangent values
 // UNOPTIMIZED
+[<CustomEquality; CustomComparison>]
 type Dual =
     // Primal, tangent
     | Dual of float * float
@@ -52,6 +53,16 @@ type Dual =
     static member DivideByInt(Dual(p, t), i:int) = Dual(p / float i, t / float i)
     static member Zero = Dual(0., 0.)
     static member One = Dual(1., 0.)
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? Dual as d2 -> let Dual(a, _), Dual(b, _) = d, d2 in compare a b
+            | _ -> failwith "Cannot compare this Dual with another type of object."
+    override d.Equals(other) = 
+        match other with
+        | :? Dual as d2 -> compare d d2 = 0
+        | _ -> false
+    override d.GetHashCode() = let (Dual(a, b)) = d in hash [|a; b|]
     // Dual - Dual binary operations
     static member (+) (Dual(a, at), Dual(b, bt)) = Dual(a + b, at + bt)
     static member (-) (Dual(a, at), Dual(b, bt)) = Dual(a - b, at - bt)

@@ -43,6 +43,7 @@ open DiffSharp.Util.General
 
 /// Dual2 numeric type, keeping primal, tangent, and tangent-of-tangent values
 // UNOPTIMIZED
+[<CustomEquality; CustomComparison>]
 type Dual2 =
     // Primal, tangent, tangent-of-tangent
     | Dual2 of float * float * float
@@ -52,6 +53,16 @@ type Dual2 =
     static member DivideByInt(Dual2(p, t, t2), i:int) = Dual2(p / float i, t / float i, t2 / float i)
     static member Zero = Dual2(0., 0., 0.)
     static member One = Dual2(1., 0., 0.)
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? Dual2 as d2 -> let Dual2(a, _, _), Dual2(b, _, _) = d, d2 in compare a b
+            | _ -> failwith "Cannot compare this Dual2 with another type of object."
+    override d.Equals(other) = 
+        match other with
+        | :? Dual2 as d2 -> compare d d2 = 0
+        | _ -> false
+    override d.GetHashCode() = let (Dual2(a, b, c)) = d in hash [|a; b; c|]
     // Dual2 - Dual2 binary operations
     static member (+) (Dual2(a, at, at2), Dual2(b, bt, bt2)) = Dual2(a + b, at + bt, at2 + bt2)
     static member (-) (Dual2(a, at, at2), Dual2(b, bt, bt2)) = Dual2(a - b, at - bt, at2 - bt2)

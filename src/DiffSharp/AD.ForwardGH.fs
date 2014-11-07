@@ -47,6 +47,7 @@ open DiffSharp.Util.General
 
 /// DualGH numeric type, keeping a triplet of primal value, a vector of gradient components, and a matrix of Hessian components
 // NOT FULLY OPTIMIZED
+[<CustomEquality; CustomComparison>]
 type DualGH =
     // Primal, vector of gradient components, matrix of Hessian components
     | DualGH of float * Vector * Matrix
@@ -55,7 +56,17 @@ type DualGH =
     static member op_Explicit(DualGH(p, _, _)) = p
     static member DivideByInt(DualGH(p, g, m), i:int) = DualGH(p / float i, g / float i, m / float i)
     static member Zero = DualGH(0., ZeroVector(), ZeroMatrix())
-    //static member One = DualGH(1., Vector.Zero, Matrix.Zero)
+    static member One = DualGH(1., ZeroVector(), ZeroMatrix())
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? DualGH as d2 -> let DualGH(a, _, _), DualGH(b, _, _) = d, d2 in compare a b
+            | _ -> failwith "Cannot compare this DualGH with another type of object."
+    override d.Equals(other) = 
+        match other with
+        | :? DualGH as d2 -> compare d d2 = 0
+        | _ -> false
+    override d.GetHashCode() = let (DualGH(a, b, c)) = d in hash [|a; b; c|]
     // DualGH - DualGH binary operations
     static member (+) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a + b, ag + bg, Matrix.SymmetricOp(ah, bh, fun i j -> ah.[i, j] + bh.[i, j]))
     static member (-) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a - b, ag - bg, Matrix.SymmetricOp(ah, bh, fun i j -> ah.[i, j] - bh.[i, j]))

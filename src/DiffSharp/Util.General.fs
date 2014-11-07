@@ -71,6 +71,11 @@ let inline copyupper (Square m:float[,]) =
                 m.[i, j] <- m.[j, i]
     m
 
+/// Compute a combined hash code for the objects in array `o`
+let inline hash (o:obj[]) =
+    Array.map (fun a -> a.GetHashCode()) o
+    |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
+
 /// Global step size for numerical approximations
 let eps = 0.00001
 

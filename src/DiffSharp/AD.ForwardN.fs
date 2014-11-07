@@ -43,6 +43,7 @@ open DiffSharp.Util.General
 
 /// DualN numeric type, where the tangent value is another DualN, forming a lazy chain of higher-order derivatives
 // UNOPTIMIZED
+[<CustomEquality; CustomComparison>]
 type DualN =
     // Primal, tangent
     | DualN of float * Lazy<DualN>
@@ -55,6 +56,16 @@ type DualN =
     member d.T = let (DualN(_, t)) = d in t.Value
     static member Zero = DualN(0., Lazy<DualN>(fun () -> DualN.Zero))
     static member One = DualN(1., Lazy<DualN>(fun () -> DualN.Zero))
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? DualN as d2 -> let DualN(a, _), DualN(b, _) = d, d2 in compare a b
+            | _ -> failwith "Cannot compare this DualN with another type of object."
+    override d.Equals(other) = 
+        match other with
+        | :? DualN as d2 -> compare d d2 = 0
+        | _ -> false
+    override d.GetHashCode() = let (DualN(a, b)) = d in hash [|a; b|]
     // DualN - DualN binary operations
     static member (+) (a:DualN, b:DualN) = DualN(a.P + b.P, Lazy<DualN>(fun () -> a.T + b.T))
     static member (-) (a:DualN, b:DualN) = DualN(a.P - b.P, Lazy<DualN>(fun () -> a.T - b.T))

@@ -47,6 +47,7 @@ open DiffSharp.Util.General
 
 /// DualG numeric type, keeping a doublet of primal value and a vector of gradient components
 // UNOPTIMIZED
+[<CustomEquality; CustomComparison>]
 type DualG =
     // Primal, vector of gradient components
     | DualG of float * Vector
@@ -55,6 +56,17 @@ type DualG =
     static member op_Explicit(DualG(p, _)) = p
     static member DivideByInt(DualG(p, g), i:int) = DualG(p / float i, g / float i)
     static member Zero = DualG(0., ZeroVector())
+    static member One = DualG(1., ZeroVector())
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? DualG as d2 -> let DualG(a, _), DualG(b, _) = d, d2 in compare a b
+            | _ -> failwith "Cannot compare this DualG with another type of object."
+    override d.Equals(other) = 
+        match other with
+        | :? DualG as d2 -> compare d d2 = 0
+        | _ -> false
+    override d.GetHashCode() = let (DualG(a, b)) = d in hash [|a; b|]
     // DualG - DualG binary operations
     static member (+) (DualG(a, ag), DualG(b, bg)) = DualG(a + b, ag + bg)
     static member (-) (DualG(a, ag), DualG(b, bg)) = DualG(a - b, ag - bg)
