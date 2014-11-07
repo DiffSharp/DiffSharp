@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>DualNOps - DiffSharp</title>
+    <title>ZeroMatrix - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
@@ -42,167 +42,50 @@
 
 
 
-<h1>DualNOps</h1>
+<h1>ZeroMatrix</h1>
 <div class="xmldoc">
-<p>DualN operations module (automatically opened)</p>
+<p>A matrix with infinite dimensions and all elements 0</p>
 </div>
-
-<!-- Render nested types and modules, if there are any -->
-
-  <h3>Functions and values</h3>
+  <h3>Constructors</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Function or value</td><td>Description</td></tr>
+      <tr><td>Constructor</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '252', 252)" onmouseover="showTip(event, '252', 252)">
-            ( /^ ) x n
+          <code onmouseout="hideTip(event, '730', 730)" onmouseover="showTip(event, '730', 730)">
+            new()
           </code>
-          <div class="tip" id="252">
-            <strong>Signature:</strong> x:DualN -&gt; n:int -&gt; float<br />
+          <div class="tip" id="730">
+            <strong>Signature:</strong> unit -&gt; ZeroMatrix<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Custom operator (/^) for differentiation. Usage: <code>x</code> /^ <code>n</code>, value of the <code>n</code>-th order derivative of <code>x</code>.</p>
-
+          
         </td>
       </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '253', 253)" onmouseover="showTip(event, '253', 253)">
-            diffLazy n
+          <code onmouseout="hideTip(event, '731', 731)" onmouseover="showTip(event, '731', 731)">
+            ToString()
           </code>
-          <div class="tip" id="253">
-            <strong>Signature:</strong> n:int -&gt; DualN -&gt; DualN<br />
+          <div class="tip" id="731">
+            <strong>Signature:</strong> unit -&gt; string<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Compute the <code>n</code>-th derivative of a DualN</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '254', 254)" onmouseover="showTip(event, '254', 254)">
-            dualN p
-          </code>
-          <div class="tip" id="254">
-            <strong>Signature:</strong> p:float -&gt; DualN<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Make DualN, with primal value <code>p</code> and tangent 0</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '255', 255)" onmouseover="showTip(event, '255', 255)">
-            dualNAct p
-          </code>
-          <div class="tip" id="255">
-            <strong>Signature:</strong> p:float -&gt; DualN<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Make active DualN (i.e. variable of differentiation), with primal value <code>p</code> and tangent 1</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '256', 256)" onmouseover="showTip(event, '256', 256)">
-            dualNActArrayArray x
-          </code>
-          <div class="tip" id="256">
-            <strong>Signature:</strong> x:float [] -&gt; DualN [] []<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Make an array of arrays of DualN, with primal values given in array <code>x</code>. The tangent values along the diagonal are 1, the rest are 0.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '257', 257)" onmouseover="showTip(event, '257', 257)">
-            dualNSet (p, t)
-          </code>
-          <div class="tip" id="257">
-            <strong>Signature:</strong> (p:float * t:float) -&gt; DualN<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Make DualN, with primal value <code>p</code> and tangent value <code>t</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '258', 258)" onmouseover="showTip(event, '258', 258)">
-            primal arg1
-          </code>
-          <div class="tip" id="258">
-            <strong>Signature:</strong> DualN -&gt; float<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the primal value of a DualN</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '259', 259)" onmouseover="showTip(event, '259', 259)">
-            tangent arg1
-          </code>
-          <div class="tip" id="259">
-            <strong>Signature:</strong> DualN -&gt; float<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the tangent value of a DualN</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '260', 260)" onmouseover="showTip(event, '260', 260)">
-            tangent2 d
-          </code>
-          <div class="tip" id="260">
-            <strong>Signature:</strong> d:DualN -&gt; float<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the tangent-of-tangent value of a DualN</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '261', 261)" onmouseover="showTip(event, '261', 261)">
-            tuple arg1
-          </code>
-          <div class="tip" id="261">
-            <strong>Signature:</strong> DualN -&gt; float * float<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the primal and tangent value of a DualN, as a tuple</p>
-
+          
         </td>
       </tr>
     </tbody>
