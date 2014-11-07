@@ -42,11 +42,19 @@ let duration n f =
     let after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime.Ticks
     f(), (float (after - before)) / (float n)
 
+let printarray (s:System.IO.StreamWriter) (o:obj[]) =
+    for a in o do
+        match a with
+        | :? (float[]) as f -> s.WriteLine((vector f).ToString())
+        | :? (float[,]) as f -> s.WriteLine((matrix f).ToString())
+        | _ -> s.WriteLine(a.ToString())
+        
+
 [<EntryPoint>]
 let main argv = 
 
     let benchmarkver = "1.0.0"
-    let n = 100000 // n > 100000 seems to work fine
+    let n = 1000 // n > 100000 seems to work fine
     let nsymbolic = n / 1000
     let noriginal = n * 100
     let file = sprintf "DiffSharpBenchmark%A.txt" System.DateTime.Now.Ticks
@@ -373,7 +381,6 @@ let main argv =
     let row_Numerical = Vector.Create([| dur_diff_Numerical; dur_diff2_Numerical; dur_diffn_Numerical; dur_grad_Numerical; dur_gradv_Numerical; dur_hessian_Numerical; dur_gradhessian_Numerical; dur_laplacian_Numerical; dur_jacobian_Numerical; dur_jacobianv_Numerical; dur_jacobianT_Numerical; dur_jacobianTv_Numerical |]) / row_originals
     let row_Symbolic = Vector.Create([| dur_diff_Symbolic; dur_diff2_Symbolic; dur_diffn_Symbolic; dur_grad_Symbolic; dur_gradv_Symbolic; dur_hessian_Symbolic; dur_gradhessian_Symbolic; dur_laplacian_Symbolic; dur_jacobian_Symbolic; dur_jacobianv_Symbolic; dur_jacobianT_Symbolic; dur_jacobianTv_Symbolic |]) / row_originals
 
-    //let benchmark = Matrix.Create([| row_AD_Forward; row_AD_Forward2; row_AD_ForwardG; row_AD_ForwardGH; row_AD_ForwardN; row_AD_Reverse; row_Numerical |])
     let benchmark = Matrix.Create([| row_AD_Forward; row_AD_Forward2; row_AD_ForwardG; row_AD_ForwardGH; row_AD_ForwardN; row_AD_Reverse; row_Numerical; row_Symbolic |])
 
     let row_originals' = Vector.Create([| dur_fss; dur_fss; dur_fss; dur_fvs; dur_fvs; dur_fvs; dur_fvs; dur_fvs; dur_fvv; dur_fvv; dur_fvv; dur_fvv |])
@@ -386,8 +393,26 @@ let main argv =
     let row_Numerical' = Vector.Create([| dur_diff'_Numerical; dur_diff2'_Numerical; dur_diffn'_Numerical; dur_grad'_Numerical; dur_gradv'_Numerical; dur_hessian'_Numerical; dur_gradhessian'_Numerical; dur_laplacian'_Numerical; dur_jacobian'_Numerical; dur_jacobianv'_Numerical; dur_jacobianT'_Numerical; dur_jacobianTv'_Numerical |]) / row_originals'
     let row_Symbolic' = Vector.Create([| dur_diff'_Symbolic; dur_diff2'_Symbolic; dur_diffn'_Symbolic; dur_grad'_Symbolic; dur_gradv'_Symbolic; dur_hessian'_Symbolic; dur_gradhessian'_Symbolic; dur_laplacian'_Symbolic; dur_jacobian'_Symbolic; dur_jacobianv'_Symbolic; dur_jacobianT'_Symbolic; dur_jacobianTv'_Symbolic |]) / row_originals'
 
-    //let benchmark' = Matrix.Create([| row_AD_Forward'; row_AD_Forward2'; row_AD_ForwardG'; row_AD_ForwardGH'; row_AD_ForwardN'; row_AD_Reverse'; row_Numerical' |])
     let benchmark' = Matrix.Create([| row_AD_Forward'; row_AD_Forward2'; row_AD_ForwardG'; row_AD_ForwardGH'; row_AD_ForwardN'; row_AD_Reverse'; row_Numerical'; row_Symbolic' |])
+
+    let res_AD_Forward:obj[] = [| res_diff_AD_Forward; res_diff2_AD_Forward; res_diffn_AD_Forward; res_grad_AD_Forward; res_gradv_AD_Forward; res_hessian_AD_Forward; res_gradhessian_AD_Forward; res_laplacian_AD_Forward; res_jacobian_AD_Forward; res_jacobianv_AD_Forward; res_jacobianT_AD_Forward; res_jacobianTv_AD_Forward |]
+    let res_AD_Forward2:obj[] = [| res_diff_AD_Forward2; res_diff2_AD_Forward2; res_diffn_AD_Forward2; res_grad_AD_Forward2; res_gradv_AD_Forward2; res_hessian_AD_Forward2; res_gradhessian_AD_Forward2; res_laplacian_AD_Forward2; res_jacobian_AD_Forward2; res_jacobianv_AD_Forward2; res_jacobianT_AD_Forward2; res_jacobianTv_AD_Forward2 |]
+    let res_AD_ForwardG:obj[] = [| res_diff_AD_ForwardG; res_diff2_AD_ForwardG; res_diffn_AD_ForwardG; res_grad_AD_ForwardG; res_gradv_AD_ForwardG; res_hessian_AD_ForwardG; res_gradhessian_AD_ForwardG; res_laplacian_AD_ForwardG; res_jacobian_AD_ForwardG; res_jacobianv_AD_ForwardG; res_jacobianT_AD_ForwardG; res_jacobianTv_AD_ForwardG |]
+    let res_AD_ForwardGH:obj[] = [| res_diff_AD_ForwardGH; res_diff2_AD_ForwardGH; res_diffn_AD_ForwardGH; res_grad_AD_ForwardGH; res_gradv_AD_ForwardGH; res_hessian_AD_ForwardGH; res_gradhessian_AD_ForwardGH; res_laplacian_AD_ForwardGH; res_jacobian_AD_ForwardGH; res_jacobianv_AD_ForwardGH; res_jacobianT_AD_ForwardGH; res_jacobianTv_AD_ForwardGH |]
+    let res_AD_ForwardN:obj[] = [| res_diff_AD_ForwardN; res_diff2_AD_ForwardN; res_diffn_AD_ForwardN; res_grad_AD_ForwardN; res_gradv_AD_ForwardN; res_hessian_AD_ForwardN; res_gradhessian_AD_ForwardN; res_laplacian_AD_ForwardN; res_jacobian_AD_ForwardN; res_jacobianv_AD_ForwardN; res_jacobianT_AD_ForwardN; res_jacobianTv_AD_ForwardN |]
+    let res_AD_Reverse:obj[] = [| res_diff_AD_Reverse; res_diff2_AD_Reverse; res_diffn_AD_Reverse; res_grad_AD_Reverse; res_gradv_AD_Reverse; res_hessian_AD_Reverse; res_gradhessian_AD_Reverse; res_laplacian_AD_Reverse; res_jacobian_AD_Reverse; res_jacobianv_AD_Reverse; res_jacobianT_AD_Reverse; res_jacobianTv_AD_Reverse |]
+    let res_Numerical:obj[] = [| res_diff_Numerical; res_diff2_Numerical; res_diffn_Numerical; res_grad_Numerical; res_gradv_Numerical; res_hessian_Numerical; res_gradhessian_Numerical; res_laplacian_Numerical; res_jacobian_Numerical; res_jacobianv_Numerical; res_jacobianT_Numerical; res_jacobianTv_Numerical |]
+    let res_Symbolic:obj[] = [| res_diff_Symbolic; res_diff2_Symbolic; res_diffn_Symbolic; res_grad_Symbolic; res_gradv_Symbolic; res_hessian_Symbolic; res_gradhessian_Symbolic; res_laplacian_Symbolic; res_jacobian_Symbolic; res_jacobianv_Symbolic; res_jacobianT_Symbolic; res_jacobianTv_Symbolic |]
+
+    let res_AD_Forward':obj[] = [| res_diff'_AD_Forward; res_diff2'_AD_Forward; res_diffn'_AD_Forward; res_grad'_AD_Forward; res_gradv'_AD_Forward; res_hessian'_AD_Forward; res_gradhessian'_AD_Forward; res_laplacian'_AD_Forward; res_jacobian'_AD_Forward; res_jacobianv'_AD_Forward; res_jacobianT'_AD_Forward; res_jacobianTv'_AD_Forward |]
+    let res_AD_Forward2':obj[] = [| res_diff'_AD_Forward2; res_diff2'_AD_Forward2; res_diffn'_AD_Forward2; res_grad'_AD_Forward2; res_gradv'_AD_Forward2; res_hessian'_AD_Forward2; res_gradhessian'_AD_Forward2; res_laplacian'_AD_Forward2; res_jacobian'_AD_Forward2; res_jacobianv'_AD_Forward2; res_jacobianT'_AD_Forward2; res_jacobianTv'_AD_Forward2 |]
+    let res_AD_ForwardG':obj[] = [| res_diff'_AD_ForwardG; res_diff2'_AD_ForwardG; res_diffn'_AD_ForwardG; res_grad'_AD_ForwardG; res_gradv'_AD_ForwardG; res_hessian'_AD_ForwardG; res_gradhessian'_AD_ForwardG; res_laplacian'_AD_ForwardG; res_jacobian'_AD_ForwardG; res_jacobianv'_AD_ForwardG; res_jacobianT'_AD_ForwardG; res_jacobianTv'_AD_ForwardG |]
+    let res_AD_ForwardGH':obj[] = [| res_diff'_AD_ForwardGH; res_diff2'_AD_ForwardGH; res_diffn'_AD_ForwardGH; res_grad'_AD_ForwardGH; res_gradv'_AD_ForwardGH; res_hessian'_AD_ForwardGH; res_gradhessian'_AD_ForwardGH; res_laplacian'_AD_ForwardGH; res_jacobian'_AD_ForwardGH; res_jacobianv'_AD_ForwardGH; res_jacobianT'_AD_ForwardGH; res_jacobianTv'_AD_ForwardGH |]
+    let res_AD_ForwardN':obj[] = [| res_diff'_AD_ForwardN; res_diff2'_AD_ForwardN; res_diffn'_AD_ForwardN; res_grad'_AD_ForwardN; res_gradv'_AD_ForwardN; res_hessian'_AD_ForwardN; res_gradhessian'_AD_ForwardN; res_laplacian'_AD_ForwardN; res_jacobian'_AD_ForwardN; res_jacobianv'_AD_ForwardN; res_jacobianT'_AD_ForwardN; res_jacobianTv'_AD_ForwardN |]
+    let res_AD_Reverse':obj[] = [| res_diff'_AD_Reverse; res_diff2'_AD_Reverse; res_diffn'_AD_Reverse; res_grad'_AD_Reverse; res_gradv'_AD_Reverse; res_hessian'_AD_Reverse; res_gradhessian'_AD_Reverse; res_laplacian'_AD_Reverse; res_jacobian'_AD_Reverse; res_jacobianv'_AD_Reverse; res_jacobianT'_AD_Reverse; res_jacobianTv'_AD_Reverse |]
+    let res_Numerical':obj[] = [| res_diff'_Numerical; res_diff2'_Numerical; res_diffn'_Numerical; res_grad'_Numerical; res_gradv'_Numerical; res_hessian'_Numerical; res_gradhessian'_Numerical; res_laplacian'_Numerical; res_jacobian'_Numerical; res_jacobianv'_Numerical; res_jacobianT'_Numerical; res_jacobianTv'_Numerical |]
+    let res_Symbolic':obj[] = [| res_diff'_Symbolic; res_diff2'_Symbolic; res_diffn'_Symbolic; res_grad'_Symbolic; res_gradv'_Symbolic; res_hessian'_Symbolic; res_gradhessian'_Symbolic; res_laplacian'_Symbolic; res_jacobian'_Symbolic; res_jacobianv'_Symbolic; res_jacobianT'_Symbolic; res_jacobianTv'_Symbolic |]
+
 
     let stream = new System.IO.StreamWriter(file, false)
     stream.WriteLine("DiffSharp\r\n")
@@ -411,6 +436,25 @@ let main argv =
     stream.WriteLine("Columns: {diff', diff2', diffn', grad', gradv', hessian', gradhessian', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
     stream.WriteLine("Rows: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
     stream.WriteLine(benchmark'.ToMathematicaString())
+
+//    stream.WriteLine("\r\nResults of operations")
+//    stream.WriteLine("\r\nDiffSharp.AD.Forward\r\n")
+//    printarray stream res_AD_Forward
+//    stream.WriteLine("\r\nDiffSharp.AD.Forward2\r\n")
+//    printarray stream res_AD_Forward2
+//    stream.WriteLine("\r\nDiffSharp.AD.ForwardG\r\n")
+//    printarray stream res_AD_ForwardG
+//    stream.WriteLine("\r\nDiffSharp.AD.ForwardGH\r\n")
+//    printarray stream res_AD_ForwardGH
+//    stream.WriteLine("\r\nDiffSharp.AD.ForwardN\r\n")
+//    printarray stream res_AD_ForwardN
+//    stream.WriteLine("\r\nDiffSharp.AD.Reverse\r\n")
+//    printarray stream res_AD_Reverse
+//    stream.WriteLine("\r\nDiffSharp.Numerical\r\n")
+//    printarray stream res_Numerical
+//    stream.WriteLine("\r\nDiffSharp.Symbolic\r\n")
+//    printarray stream res_Symbolic
+
     stream.Flush()
     stream.Close()
 

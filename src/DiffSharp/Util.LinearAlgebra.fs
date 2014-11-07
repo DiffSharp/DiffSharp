@@ -57,6 +57,24 @@ type Vector(v:float[]) =
         | _ -> false
     override v.GetHashCode() = v.V.GetHashCode()
     override v.ToString() = sprintf "Vector %A" v.V
+    /// Get a string representation of this Vector that can be pasted into a Mathematica notebook
+    member v.ToMathematicaString() = 
+        let sb = System.Text.StringBuilder()
+        sb.Append("{") |> ignore
+        for i = 0 to v.Length - 1 do
+            sb.Append(sprintf "%.2f" v.[i]) |> ignore
+            if i <> v.Length - 1 then sb.Append(", ") |> ignore
+        sb.Append("}") |> ignore
+        sb.ToString()
+    /// Get a string representation of this Vector that can be pasted into MATLAB
+    member v.ToMatlabString() = 
+        let sb = System.Text.StringBuilder()
+        sb.Append("[") |> ignore
+        for i = 0 to v.Length - 1 do
+            sb.Append(sprintf "%.2f" v.[i]) |> ignore
+            if i < v.Length - 1 then sb.Append(" ") |> ignore
+        sb.Append("]") |> ignore
+        sb.ToString()
     /// Get the Euclidean norm of this vector
     member v.GetNorm() = if Vector.IsZero(v) then 0. else sqrt (Array.sumBy (fun x -> x * x) v.V)
     /// Get the unit vector codirectional with this vector
