@@ -179,31 +179,203 @@ let b, c = diff' (fun x -> sin (sqrt x)) 2.
 
 Currently, the library provides the following operations:
 
-- **diff**: First derivative of a scalar-to-scalar function
-- **diff'**: Original value and first derivative of a scalar-to-scalar function
-- **diff2**: Second derivative of a scalar-to-scalar function
-- **diff2'**: Original value and second derivative of a scalar-to-scalar function
-- **diff2''**: Original value, first derivative, and second derivative of a scalar-to-scalar function
-- **diffn**: N-th derivative of a scalar-to-scalar function
-- **diffn'**: Original value and n-th derivative of a scalar-to-scalar function
-- **grad**: Gradient of a vector-to-scalar function
-- **grad'**: Original value and gradient of a vector-to-scalar function
-- **gradv**: Gradient-vector product (directional derivative) of a vector-to-scalar function
-- **gradv'**: Original value and gradient-vector product (directional derivative) of a vector-to-scalar function
-- **hessian**: Hessian of a vector-to-scalar function
-- **hessian'**: Original value and Hessian of a vector-to-scalar function
-- **gradhessian**: Gradient and Hessian of a vector-to-scalar function
-- **gradhessian'**: Original value, gradient, and Hessian of a vector-to-scalar function
-- **laplacian**: Laplacian of a vector-to-scalar function
-- **laplacian'**: Original value and Laplacian of a vector-to-scalar function
-- **jacobian**: Jacobian of a vector-to-vector function
-- **jacobian'**: Original value and Jacobian of a vector-to-vector function
-- **jacobianv**: Jacobian-vector product of a vector-to-vector function
-- **jacobianv'**: Original value and Jacobian-vector product of a vector-to-vector function
-- **jacobianT**: Transposed Jacobian of a vector-to-vector function
-- **jacobianT'**: Original value and transposed Jacobian of a vector-to-vector function
-- **jacobianTv**: Transposed Jacobian-vector product of a vector-to-vector function
-- **jacobianTv'**: Original value and transposed Jacobian-vector product of a vector-to-vector function
+##### diff : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
+
+**`diff f x`**
+
+First derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diff' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
+
+**`diff' f x`**
+
+Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diff2 : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
+
+**`diff2 f x`**
+
+Second derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diff2' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
+
+**`diff2' f x`**
+
+Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diff2'' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R} \times \mathbb{R})$
+
+**`diff2'' f x`**
+
+Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diffn : $\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
+
+**`diffn n f x`**
+
+`n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### diffn' : $\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
+
+**`diffn' n f x`**
+
+Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### grad : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n$
+
+**`grad f x`**
+
+[Gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### grad' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n)$
+
+**`grad' f x`**
+
+Original value and gradient of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### gradv : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}$
+
+**`gradv f x v`**
+
+[Gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at point `x`, along `v`
+
+----------------------
+
+##### gradv' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})$
+
+**`gradv' f x v`**
+
+Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along `v`
+
+----------------------
+
+##### hessian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^{n \times n}$
+
+**`hessian f x`**
+
+[Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### hessian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^{n \times n})$
+
+**`hessian' f x`**
+
+Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### gradhessian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R}^n \times \mathbb{R}^{n \times n})$
+
+**`gradhessian f x`**
+
+Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### gradhessian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})$
+
+**`gradhessian' f x`**
+
+Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### laplacian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}$
+
+**`laplacian f x`**
+
+[Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### laplacian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})$
+
+**`laplacian' f x`**
+
+Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+
+----------------------
+
+##### jacobian : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{m \times n}$
+
+**`jacobian f x`**
+
+[Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at point `x`
+
+----------------------
+
+##### jacobian' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{m \times n})$
+
+**`jacobian' f x`**
+
+Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+
+----------------------
+
+##### jacobianv : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m$
+
+**`jacobianv f x v`**
+
+Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+
+----------------------
+
+##### jacobianv' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^m)$
+
+**`jacobianv' f x v`**
+
+Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+
+----------------------
+
+##### jacobianT : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{n \times m}$
+
+**`jacobianT f x`**
+
+Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+
+----------------------
+
+##### jacobianT' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{n \times m})$
+
+**`jacobianT' f x`**
+
+Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+
+----------------------
+
+##### jacobianTv : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to \mathbb{R}^n$
+
+**`jacobianTv f x v`**
+
+Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+
+----------------------
+
+##### jacobianTv' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to (\mathbb{R}^m \times \mathbb{R}^n)$
+
+**`jacobianTv' f x v`**
+
+Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
 
 Implemented Differentiation Techniques
 ----------------------

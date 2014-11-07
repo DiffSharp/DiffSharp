@@ -144,7 +144,7 @@ type Vector(v:float[]) =
     /// Create Vector whose elements are float `a` divided by the elements of Vector `b`
     static member (/) (a:float, b:Vector) =
         match Vector.IsZero(b) with
-        | true -> raise (new System.DivideByZeroException("Attempted to divide by a ZeroVector."))
+        | true -> raise (new System.DivideByZeroException("Attempted division by a ZeroVector."))
         | false -> Vector(Array.init b.Length (fun i -> a / b.[i]))
     /// Negative of Vector `a`
     static member (~-) (a:Vector) =
@@ -276,7 +276,7 @@ type Matrix(m:float[,]) =
     /// Create Matrix whose elements are float `a` divided by the element of Matrix `b`
     static member (/) (a:float, b:Matrix) =
         match Matrix.IsZero(b) with
-        | true ->  raise (new System.DivideByZeroException("Attempted to divide by a zero matrix."))
+        | true ->  raise (new System.DivideByZeroException("Attempted division by a zero matrix."))
         | false -> Matrix(Array2D.init b.Rows b.Cols (fun i j -> a / b.[i, j]))
     /// Negative of Matrix `a`
     static member (~-) (a:Matrix) =
