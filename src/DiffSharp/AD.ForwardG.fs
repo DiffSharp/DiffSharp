@@ -51,11 +51,10 @@ type DualG =
     // Primal, vector of gradient components
     | DualG of float * Vector
     override d.ToString() = let (DualG(p, g)) = d in sprintf "DualG (%f, %A)" p g
-    static member op_Explicit(p) = DualG(p, Vector.Zero)
+    static member op_Explicit(p) = DualG(p, ZeroVector())
     static member op_Explicit(DualG(p, _)) = p
     static member DivideByInt(DualG(p, g), i:int) = DualG(p / float i, g / float i)
-    static member Zero = DualG(0., Vector.Zero)
-    static member One = DualG(1., Vector.Zero)
+    static member Zero = DualG(0., ZeroVector())
     // DualG - DualG binary operations
     static member (+) (DualG(a, ag), DualG(b, bg)) = DualG(a + b, ag + bg)
     static member (-) (DualG(a, ag), DualG(b, bg)) = DualG(a - b, ag - bg)
@@ -117,9 +116,9 @@ module DualGOps =
     /// Get the gradient array of a DualG
     let inline gradient (DualG(_, g)) = g.V
     /// Get the first gradient component of a DualG
-    let inline tangent (DualG(_, g)) = g.V.[0]
+    let inline tangent (DualG(_, g)) = g.FirstItem
     /// Get the primal value and the first gradient component of a DualG, as a tuple
-    let inline tuple (DualG(p, g)) = (p, g.V.[0])
+    let inline tuple (DualG(p, g)) = (p, g.FirstItem)
     /// Get the primal value and the gradient array of a DualG, as a tuple
     let inline tupleG (DualG(p, g)) = (p, g.V)
 
