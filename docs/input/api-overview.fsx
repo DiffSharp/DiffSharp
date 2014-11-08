@@ -281,7 +281,7 @@ For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mat
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} = \left. \begin{bmatrix}
                                            \frac{\partial ^2 f}{\partial a_1^2} & \frac{\partial ^2 f}{\partial a_1 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_1 \partial a_n} \\
-                                           \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
+                                           \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2^2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
                                            \vdots  & \vdots  & \ddots & \vdots  \\
                                            \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
