@@ -181,201 +181,229 @@ Currently, the library provides the following operations:
 
 ##### diff : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
 
-**`diff f x`**
+**`diff f x`** returns the first derivative of a scalar-to-scalar function `f`, at the point `x`.
 
-First derivative of a scalar-to-scalar function `f`, at point `x`
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the derivative evaluated at $x$
+
+$$$
+  \left. \frac{d}{da} f(a) \right|_{a\; =\; x} .
 
 ----------------------
 
 ##### diff' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
 
-**`diff' f x`**
-
-Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
+**`diff' f x`** returns the original value and the first derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diff2 : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
 
-**`diff2 f x`**
+**`diff2 f x`** returns the second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
-Second derivative of a scalar-to-scalar function `f`, at point `x`
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the second derivative evaluated at $x$
+
+$$$
+  \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} .
 
 ----------------------
 
 ##### diff2' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
 
-**`diff2' f x`**
-
-Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+**`diff2' f x`** returns the original value and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diff2'' : $(\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R} \times \mathbb{R})$
 
-**`diff2'' f x`**
-
-Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+**`diff2'' f x`** returns the original value, the first derivative, and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diffn : $\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}$
 
-**`diffn n f x`**
+**`diffn n f x`** returns the `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
 
-`n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the n-th derivative evaluated at $x$
+
+$$$
+  \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} .
 
 ----------------------
 
 ##### diffn' : $\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})$
 
-**`diffn' n f x`**
-
-Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+**`diffn' n f x`** returns the original value and the `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### grad : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n$
 
-**`grad f x`**
+**`grad f x`** returns the [gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
 
-[Gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at point `x`
+For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
+
+$$$
+  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{df}{{da}_1}, \frac{df}{{da}_2}, \dots, \frac{df}{{da}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
 
 ##### grad' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n)$
 
-**`grad' f x`**
-
-Original value and gradient of a vector-to-scalar function `f`, at point `x`
+**`grad' f x`** returns the original value and the gradient of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradv : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}$
 
-**`gradv f x v`**
+**`gradv f x v`** returns the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
-[Gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at point `x`, along `v`
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \nabla f \right)_\mathbf{x} \cdot \mathbf{v} \; .
+
+This value can be computed by the **DiffSharp.AD.Forward** module in an efficient way.
 
 ----------------------
 
 ##### gradv' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})$
 
-**`gradv' f x v`**
-
-Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along `v`
+**`gradv' f x v`** returns the original value and the gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### hessian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^{n \times n}$
 
-**`hessian f x`**
+**`hessian f x`** returns the [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
 
-[Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at point `x`
+For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{H}_f \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                           \frac{\partial ^2 f}{\partial a_1^2} & \frac{\partial ^2 f}{\partial a_1 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_1 \partial a_n} \\
+                                           \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
+                                           \vdots  & \vdots  & \ddots & \vdots  \\
+                                           \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
+                                          \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
 
 ##### hessian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^{n \times n})$
 
-**`hessian' f x`**
-
-Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+**`hessian' f x`** returns the original value and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradhessian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R}^n \times \mathbb{R}^{n \times n})$
 
-**`gradhessian f x`**
-
-Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+**`gradhessian f x`** returns the gradient and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradhessian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})$
 
-**`gradhessian' f x`**
-
-Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+**`gradhessian' f x`** returns the original value, the gradient, and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### laplacian : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}$
 
-**`laplacian f x`**
+**`laplacian f x`** returns the [Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
 
-[Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at point `x`
+For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+
+$$$
+  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \frac{\partial ^2 f}{\partial a_2^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} ,
+
+which is the trace of the Hessian matrix.
+
+This value can be computed by the **DiffSharp.AD.Forward2** module in a matrix-free and efficient way.
 
 ----------------------
 
 ##### laplacian' : $(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})$
 
-**`laplacian' f x`**
-
-Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+**`laplacian' f x`** returns the original value and the Laplacian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobian : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{m \times n}$
 
-**`jacobian f x`**
+**`jacobian f x`** returns the [Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
 
-[Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at point `x`
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                                            \frac{\partial F_1}{\partial x_1} & \cdots & \frac{\partial F_1}{\partial x_n} \\
+                                                            \vdots & \ddots & \vdots  \\
+                                                            \frac{\partial F_m}{\partial x_1} & \cdots & \frac{\partial F_m}{\partial x_n}
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
 
 ##### jacobian' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{m \times n})$
 
-**`jacobian' f x`**
-
-Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+**`jacobian' f x`** returns the original value and the Jacobian of a vector-to-vector function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobianv : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m$
 
-**`jacobianv f x v`**
+**`jacobianv f x v`** returns the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
-Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} \mathbf{v} \; .
+  
+This value can be computed by the **DiffSharp.AD.Forward** module in a matrix-free and efficient way.
 
 ----------------------
 
 ##### jacobianv' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^m)$
 
-**`jacobianv' f x v`**
-
-Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+**`jacobianv' f x v`** returns the original value and the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### jacobianT : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{n \times m}$
 
-**`jacobianT f x`**
+**`jacobianT f x`** returns the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
 
-Transposed Jacobian of a vector-to-vector function `f`, at point `x`
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                                            \frac{\partial F_1}{\partial x_1} & \cdots & \frac{\partial F_m}{\partial x_1} \\
+                                                            \vdots & \ddots & \vdots  \\
+                                                            \frac{\partial F_1}{\partial x_n} & \cdots & \frac{\partial F_m}{\partial x_n}
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
 
 ##### jacobianT' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{n \times m})$
 
-**`jacobianT' f x`**
-
-Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
+**`jacobianT' f x`** returns the original value and the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobianTv : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to \mathbb{R}^n$
 
-**`jacobianTv f x v`**
+**`jacobianTv f x v`** returns the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
-Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this gives matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} \mathbf{v} \; .
+  
+This value can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and efficient way.
 
 ----------------------
 
 ##### jacobianTv' : $(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to (\mathbb{R}^m \times \mathbb{R}^n)$
 
-**`jacobianTv' f x v`**
-
-Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along `v`
+**`jacobianTv' f x v`** returns the original value and the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 Implemented Differentiation Techniques
 ----------------------

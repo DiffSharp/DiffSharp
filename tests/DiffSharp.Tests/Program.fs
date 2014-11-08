@@ -54,7 +54,7 @@ let printarray (s:System.IO.StreamWriter) (o:obj[]) =
 let main argv = 
 
     let benchmarkver = "1.0.0"
-    let n = 1000 // n > 100000 seems to work fine
+    let n = 100000 // n > 100000 seems to work fine
     let nsymbolic = n / 1000
     let noriginal = n * 100
     let file = sprintf "DiffSharpBenchmark%A.txt" System.DateTime.Now.Ticks
