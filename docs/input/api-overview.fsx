@@ -335,9 +335,9 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 
 
 $$$
   \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
-                                                            \frac{\partial F_1}{\partial x_1} & \cdots & \frac{\partial F_1}{\partial x_n} \\
+                                                            \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_1}{\partial a_n} \\
                                                             \vdots & \ddots & \vdots  \\
-                                                            \frac{\partial F_m}{\partial x_1} & \cdots & \frac{\partial F_m}{\partial x_n}
+                                                            \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
@@ -375,9 +375,9 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 
 
 $$$
   \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
-                                                            \frac{\partial F_1}{\partial x_1} & \cdots & \frac{\partial F_m}{\partial x_1} \\
+                                                            \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_1} \\
                                                             \vdots & \ddots & \vdots  \\
-                                                            \frac{\partial F_1}{\partial x_n} & \cdots & \frac{\partial F_m}{\partial x_n}
+                                                            \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
