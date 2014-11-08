@@ -380,9 +380,9 @@
 <p>For a function <span class="math">\(\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m\)</span> with components <span class="math">\(F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the <span class="math">\(m\)</span>-by-<span class="math">\(n\)</span> Jacobian matrix evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
 <p><span class="math">\[  \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
-                                                            \frac{\partial F_1}{\partial x_1} &amp; \cdots &amp; \frac{\partial F_1}{\partial x_n} \\
+                                                            \frac{\partial F_1}{\partial a_1} &amp; \cdots &amp; \frac{\partial F_1}{\partial a_n} \\
                                                             \vdots &amp; \ddots &amp; \vdots  \\
-                                                            \frac{\partial F_m}{\partial x_1} &amp; \cdots &amp; \frac{\partial F_m}{\partial x_n}
+                                                            \frac{\partial F_m}{\partial a_1} &amp; \cdots &amp; \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .\]</span></p>
 
 <hr />
@@ -418,9 +418,9 @@
 <p>For a function <span class="math">\(\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m\)</span> with components <span class="math">\(F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the <span class="math">\(n\)</span>-by-<span class="math">\(m\)</span> transposed Jacobian matrix evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
 <p><span class="math">\[  \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
-                                                            \frac{\partial F_1}{\partial x_1} &amp; \cdots &amp; \frac{\partial F_m}{\partial x_1} \\
+                                                            \frac{\partial F_1}{\partial a_1} &amp; \cdots &amp; \frac{\partial F_m}{\partial a_1} \\
                                                             \vdots &amp; \ddots &amp; \vdots  \\
-                                                            \frac{\partial F_1}{\partial x_n} &amp; \cdots &amp; \frac{\partial F_m}{\partial x_n}
+                                                            \frac{\partial F_1}{\partial a_n} &amp; \cdots &amp; \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .\]</span></p>
 
 <hr />
