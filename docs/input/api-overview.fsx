@@ -243,7 +243,7 @@ $$$
 For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
 
 $$$
-  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{df}{{da}_1}, \frac{df}{{da}_2}, \dots, \frac{df}{{da}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} .
+  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \frac{\partial f}{{\partial a}_2}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} .
 
 ----------------------
 
