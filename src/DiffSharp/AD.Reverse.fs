@@ -141,17 +141,17 @@ and Adj =
     static member (/) (x:float, y:Adj) = Adj(x) / y
     static member Pow (x:float, y:Adj) = Adj(x) ** y
     // Adj - int binary operations
-    static member (+) (a:Adj, b:int) = a + float b
-    static member (-) (a:Adj, b:int) = a - float b
-    static member (*) (a:Adj, b:int) = a * float b
-    static member (/) (a:Adj, b:int) = a / float b
-    static member Pow (a:Adj, b:int) = Adj.Pow(a, float b)
+    static member (+) (x:Adj, y:int) = x + Adj(float y)
+    static member (-) (x:Adj, y:int) = x - Adj(float y)
+    static member (*) (x:Adj, y:int) = x * Adj(float y)
+    static member (/) (x:Adj, y:int) = x / Adj(float y)
+    static member Pow (x:Adj, y:int) = x ** Adj(float y)
     // int - Adj binary operations
-    static member (+) (a:int, b:Adj) = (float a) + b
-    static member (-) (a:int, b:Adj) = (float a) - b
-    static member (*) (a:int, b:Adj) = (float a) * b
-    static member (/) (a:int, b:Adj) = (float a) / b
-    static member Pow (a:int, b:Adj) = Adj.Pow(float a, b)
+    static member (+) (x:int, y:Adj) = Adj(float x) + y
+    static member (-) (x:int, y:Adj) = Adj(float x) - y
+    static member (*) (x:int, y:Adj) = Adj(float x) * y
+    static member (/) (x:int, y:Adj) = Adj(float x) / y
+    static member Pow (x:int, y:Adj) = Adj(float x) ** y
     // Adj unary operations
     static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
     static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
