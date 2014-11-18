@@ -70,6 +70,8 @@ type options = {
     changed : bool;
     }
 
+let minRepetitions = 10000
+
 let defaultOptions = {
     repetitions = 50000; // > 100000 seems to work fine
     fileName = sprintf "DiffSharpBenchmark%A.txt" System.DateTime.Now.Ticks
@@ -86,23 +88,23 @@ let rec parseArgsRec args optionsSoFar =
         | f::xss -> 
             parseArgsRec xss {optionsSoFar with fileName = f; changed = true}
         | _ ->
-            eprintfn "Option /f needs to be followed by a file name."
+            eprintfn "Option -f needs to be followed by a file name."
             parseArgsRec xs optionsSoFar
     | "/r"::xs | "-r"::xs ->
         match xs with
         | r::xss ->
             let couldparse, reps = System.Int32.TryParse r
             if couldparse then
-                if reps < defaultOptions.repetitions then
-                    eprintfn "Given value for /r was too small, using the default: %i." defaultOptions.repetitions
-                    parseArgsRec xss {optionsSoFar with changed = true}
+                if reps < minRepetitions then
+                    eprintfn "Given value for -r was too small, using the minimum: %i." minRepetitions
+                    parseArgsRec xss {optionsSoFar with repetitions = minRepetitions; changed = true}
                 else
                     parseArgsRec xss {optionsSoFar with repetitions = reps; changed = true}
             else
-                eprintfn "Option /r was followed by an invalid input."
+                eprintfn "Option -r was followed by an invalid input."
                 parseArgsRec xs optionsSoFar
         | _ ->
-            eprintfn "Option /r needs to be followed by a number."
+            eprintfn "Option -r needs to be followed by a number."
             parseArgsRec xs optionsSoFar
     | x::xs ->
         eprintfn "Option \"%s\" is unrecognized." x
@@ -117,7 +119,7 @@ let main argv =
 
     let benchmarkver = "1.0.1"
 
-    printfn "DiffSharp benchmarks"
+    printfn "DiffSharp Benchmarks"
 
     printfn "Copyright (c) 2014, National University of Ireland Maynooth."
     printfn "Written by: Atilim Gunes Baydin, Barak A. Pearlmutter\n"
@@ -129,8 +131,8 @@ let main argv =
         printfn "dsbench [-r repetitions] [-f filename]\n"
         printfn "  -r repetitions  Specifies the number of repetitions."
         printfn "                  Higher values give more accurate results, through averaging."
-        printfn "                  Default: 100000"
-        printfn "                  Minimum:  10000"
+        printfn "                  Default: %i" defaultOptions.repetitions
+        printfn "                  Minimum:  %i" minRepetitions
         printfn "  -f filename     Specifies the name of the output file."
         printfn "                  If the file exists, it will be overwritten."
         printfn "                  Default: DiffSharpBenchmark + current time + .txt"
@@ -528,7 +530,7 @@ let main argv =
         printfn "Writing results to file: %s" fileName
 
         let stream = new System.IO.StreamWriter(fileName, false)
-        stream.WriteLine("DiffSharp")
+        stream.WriteLine("DiffSharp Benchmarks")
         stream.WriteLine("Copyright (c) 2014, National University of Ireland Maynooth.")
         stream.WriteLine("Written by: Atilim Gunes Baydin, Barak A. Pearlmutter\r\n")
         stream.WriteLine(sprintf "Benchmarking module version: %s" benchmarkver)
@@ -543,14 +545,14 @@ let main argv =
         stream.WriteLine(sprintf "Total duration: %A\r\n" duration)
         stream.WriteLine(sprintf "Benchmark score: %A\r\n" score)
     
-        stream.WriteLine("Benchmark A\r\n")
-        stream.WriteLine("Columns: {diff, diff2, diffn, grad, gradv, hessian, gradhessian, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
-        stream.WriteLine("Rows: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
+        stream.WriteLine("Benchmark matrix A\r\n")
+        stream.WriteLine("Column labels: {diff, diff2, diffn, grad, gradv, hessian, gradhessian, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
         stream.WriteLine(benchmark.ToMathematicaString())
 
-        stream.WriteLine("\r\nBenchmark B\r\n")
-        stream.WriteLine("Columns: {diff', diff2', diffn', grad', gradv', hessian', gradhessian', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
-        stream.WriteLine("Rows: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
+        stream.WriteLine("\r\nBenchmark matrix B\r\n")
+        stream.WriteLine("Column labels: {diff', diff2', diffn', grad', gradv', hessian', gradhessian', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
         stream.WriteLine(benchmark'.ToMathematicaString())
 
     //    stream.WriteLine("\r\nResults of operations")
