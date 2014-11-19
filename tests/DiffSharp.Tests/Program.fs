@@ -72,9 +72,12 @@ type options = {
 
 let minRepetitions = 10000
 
+let dateTimeString (d:System.DateTime) =
+    sprintf "%s%s%s%s%s%s" (d.Year.ToString()) (d.Month.ToString()) (d.Day.ToString()) (d.Hour.ToString()) (d.Minute.ToString()) (d.Second.ToString())
+
 let defaultOptions = {
     repetitions = 50000; // > 100000 seems to work fine
-    fileName = sprintf "DiffSharpBenchmark%A.txt" System.DateTime.Now.Ticks
+    fileName = sprintf "DiffSharpBenchmark%s.txt" (dateTimeString System.DateTime.Now)
     help = false;
     changed = false;
     }
@@ -547,13 +550,13 @@ let main argv =
     
         stream.WriteLine("Benchmark matrix A\r\n")
         stream.WriteLine("Column labels: {diff, diff2, diffn, grad, gradv, hessian, gradhessian, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
-        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
-        stream.WriteLine(benchmark.ToMathematicaString())
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}")
+        stream.WriteLine(sprintf "Values: %s" (benchmark.ToMathematicaString()))
 
         stream.WriteLine("\r\nBenchmark matrix B\r\n")
         stream.WriteLine("Column labels: {diff', diff2', diffn', grad', gradv', hessian', gradhessian', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
-        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}\r\n")
-        stream.WriteLine(benchmark'.ToMathematicaString())
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}")
+        stream.WriteLine(sprintf "Values: %s" (benchmark'.ToMathematicaString()))
 
     //    stream.WriteLine("\r\nResults of operations")
     //    stream.WriteLine("\r\nDiffSharp.AD.Forward\r\n")
