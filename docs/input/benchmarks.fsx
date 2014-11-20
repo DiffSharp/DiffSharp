@@ -311,4 +311,16 @@ The values are normalized with respect to the running time of the original funct
 The used functions were $ f(x) = (\sin \sqrt{x + 2}) ^ 3$ for the scalar-to-scalar case, $ f(x,y,z) = (x\;\sqrt{y + z}\;\log z) ^ y $ for the vector-to-scalar case, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y + 2}, \log{xz}) $ for the vector-to-vector case.
 
 The running times were measured using [**Process.TotalProcessorTime**](http://msdn.microsoft.com/en-us/library/system.diagnostics.process.totalprocessortime(v=vs.110).aspx), averaged over a million calls to each operation, on a PC with an Intel Core i7-4510U 2.0 GHz CPU and 16 GB RAM, running Windows 8.1 and .NET Framework 4.5.1.
+
+Running Benchmarks on Your Machine
+----------------------------------
+
+If you would like to run the benchmarks on your own machine, you can use the command line **_DiffSharp Benchmarks_** tool distributed together with the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
+
+<div class="row">
+    <div class="span6">
+        <img src="img/benchmarks.png" alt="Chart" style="width:600px"/>
+    </div>
+</div>
 *)
+
