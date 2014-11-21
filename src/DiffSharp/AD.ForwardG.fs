@@ -52,11 +52,11 @@ type DualG =
     // Primal, vector of gradient components
     | DualG of float * Vector
     override d.ToString() = let (DualG(p, g)) = d in sprintf "DualG (%f, %A)" p g
-    static member op_Explicit(p) = DualG(p, ZeroVector())
+    static member op_Explicit(p) = DualG(p, ZeroVector)
     static member op_Explicit(DualG(p, _)) = p
     static member DivideByInt(DualG(p, g), i:int) = DualG(p / float i, g / float i)
-    static member Zero = DualG(0., ZeroVector())
-    static member One = DualG(1., ZeroVector())
+    static member Zero = DualG(0., ZeroVector)
+    static member One = DualG(1., ZeroVector)
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -126,13 +126,13 @@ module DualGOps =
     /// Get the primal value of a DualG
     let inline primal (DualG(p, _)) = p
     /// Get the gradient array of a DualG
-    let inline gradient (DualG(_, g)) = g.V
+    let inline gradient (DualG(_, g)) = array g
     /// Get the first gradient component of a DualG
     let inline tangent (DualG(_, g)) = g.FirstItem
     /// Get the primal value and the first gradient component of a DualG, as a tuple
     let inline tuple (DualG(p, g)) = (p, g.FirstItem)
     /// Get the primal value and the gradient array of a DualG, as a tuple
-    let inline tupleG (DualG(p, g)) = (p, g.V)
+    let inline tupleG (DualG(p, g)) = (p, array g)
 
 
 /// ForwardG differentiation operations module (automatically opened)
@@ -157,7 +157,7 @@ module ForwardGOps =
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f x =
         let a = dualGActArray x |> f
-        (Array.map primal a, Matrix.Create(a.Length, fun i -> gradient a.[i]).M)
+        (Array.map primal a, array2d (Matrix.Create(a.Length, fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =

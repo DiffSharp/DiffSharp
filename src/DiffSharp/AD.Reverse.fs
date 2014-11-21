@@ -236,8 +236,8 @@ module ReverseOps =
         let xv = Vector(x)
         let (v, g) = grad' f x
         let h = Matrix.Create(x.Length, g)
-        let hh = Matrix.Create(x.Length, fun i -> grad f (xv + Vector.Create(x.Length, i, eps)).V)
-        (v, g, ((hh - h) / eps).M)
+        let hh = Matrix.Create(x.Length, fun i -> grad f (array (xv + Vector.Create(x.Length, i, eps))))
+        (v, g, array2d ((hh - h) / eps))
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
     let inline gradhessian f x =

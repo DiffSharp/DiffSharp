@@ -41,268 +41,309 @@ module DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// Lightweight vector type
-type Vector(v:float[]) =
-    member this.V = v
-    member v.Length = v.V.Length
-    member v.Item i = if Vector.IsZero(v) then 0. else v.V.[i]
-    member v.FirstItem = if Vector.IsZero(v) then 0. else v.V.[0]
-    interface System.IComparable with
-        override v.CompareTo(other) =
-            match other with
-            | :? Vector as v2 -> compare (v.GetNorm()) (v2.GetNorm())
-            | _ -> failwith "Cannot compare this Vector with another type of object."
-    override v.Equals(other) = 
-        match other with
-        | :? Vector as v2 -> v.GetNorm() = v2.GetNorm()
-        | _ -> false
-    override v.GetHashCode() = v.V.GetHashCode()
-    override v.ToString() = sprintf "Vector %A" v.V
+[<NoEquality; NoComparison>]
+type Vector =
+    | ZeroVector
+    | Vector of float[]
+    with
+    member v.Item i =
+        match v with
+        | ZeroVector -> 0.
+        | Vector v -> v.[i]
+    member v.FirstItem =
+        match v with
+        | ZeroVector -> 0.
+        | Vector v -> v.[0]
+    member v.Length =
+        match v with
+        | ZeroVector -> 0
+        | Vector v -> v.Length
+    /// Get the Euclidean norm of this vector
+    member v.GetNorm() =
+        match v with
+        | ZeroVector -> 0.
+        | Vector v -> sqrt (Array.sumBy (fun x -> x * x) v)
+    /// Get the unit vector codirectional with this vector
+    member v.GetUnitVector() =
+        match v with
+        | ZeroVector -> ZeroVector
+        | Vector vv -> let n = v.GetNorm() in Vector (Array.init vv.Length (fun i -> vv.[i] / n))
+    override v.ToString() =
+        match v with
+        | ZeroVector -> "ZeroVector"
+        | Vector v -> sprintf "Vector %A" v
     /// Get a string representation of this Vector that can be pasted into a Mathematica notebook
     member v.ToMathematicaString() = 
-        let sb = System.Text.StringBuilder()
-        sb.Append("{") |> ignore
-        for i = 0 to v.Length - 1 do
-            sb.Append(sprintf "%.2f" v.[i]) |> ignore
-            if i <> v.Length - 1 then sb.Append(", ") |> ignore
-        sb.Append("}") |> ignore
-        sb.ToString()
+        match v with
+        | ZeroVector -> MathematicaVector (Array.zeroCreate 0)
+        | Vector v -> MathematicaVector v
     /// Get a string representation of this Vector that can be pasted into MATLAB
     member v.ToMatlabString() = 
-        let sb = System.Text.StringBuilder()
-        sb.Append("[") |> ignore
-        for i = 0 to v.Length - 1 do
-            sb.Append(sprintf "%.2f" v.[i]) |> ignore
-            if i < v.Length - 1 then sb.Append(" ") |> ignore
-        sb.Append("]") |> ignore
-        sb.ToString()
-    /// Get the Euclidean norm of this vector
-    member v.GetNorm() = if Vector.IsZero(v) then 0. else sqrt (Array.sumBy (fun x -> x * x) v.V)
-    /// Get the unit vector codirectional with this vector
-    member v.GetUnitVector() = if Vector.IsZero(v) then v else let n = v.GetNorm() in Vector.Create(Array.init v.Length (fun i -> v.[i] / n))
-    /// Builds a new Vector whose elements are the results of applying function `f` to each of the elements of Vector `v`
-    static member map f (v:Vector) = Vector.Create(Array.map f v.V)
-    /// Returns the sum of all the elements in vector `v`
-    static member sum (v:Vector) = Array.sum v.V
+        match v with
+        | ZeroVector -> MatlabVector (Array.zeroCreate 0)
+        | Vector v -> MatlabVector v
     /// Create Vector from array `v`
-    static member Create(v) = Vector(v)
+    static member Create(v) = Vector v
     /// Create Vector with dimension `n` and a generator function `f` to compute the elements
-    static member Create(n, f) = Vector(Array.init n f)
+    static member Create(n, f) = Vector (Array.init n f)
     /// Create Vector with dimension `n` and all elements having value `v`
-    static member Create(n, v) = Vector(Array.create n v)
+    static member Create(n, v) = Vector (Array.create n v)
     /// Create Vector with dimension `n`, the element with index `i` having value `v`, and the rest of the elements 0
-    static member Create(n, i, v) = Vector.Create(n, (fun j -> if j = i then v else 0.))
+    static member Create(n, i, v) = Vector.Create(n, fun j -> if j = i then v else 0.)
+    /// Returns the sum of all the elements in vector `v`
+    static member sum v = 
+        match v with
+        | ZeroVector -> 0.
+        | Vector v -> Array.sum v
+    /// Builds a new Vector whose elements are the results of applying function `f` to each of the elements of Vector `v`
+    static member map f v =
+        match v with
+        | ZeroVector -> ZeroVector
+        | Vector v -> Vector (Array.map f v)
     /// Vector with infinite dimension and all elements 0
-    static member Zero = ZeroVector()
-    /// Check whether Vector `a` is an instance of ZeroVector
-    static member IsZero(a:Vector) =
-        match a with
-        | :? ZeroVector -> true
-        | _ -> false
+    static member Zero = ZeroVector
+    /// Convert Vector `v` to float[]
+    static member op_Explicit(v:Vector) =
+        match v with
+        | ZeroVector -> [|0.|]
+        | Vector v -> v
     /// Add Vector `a` to Vector `b`
-    static member (+) (a:Vector, b:Vector) = 
-        match Vector.IsZero(a), ZeroVector.IsZero(b) with
-        | true, true -> a
-        | true, false -> b
-        | false, true -> a
-        | false, false -> Vector(Array.init a.Length (fun i -> a.[i] + b.[i]))
+    static member (+) (a, b) =
+        match a, b with
+        | ZeroVector, ZeroVector -> ZeroVector
+        | ZeroVector, Vector vb -> Vector vb
+        | Vector va, ZeroVector -> Vector va
+        | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] + vb.[i])
     /// Subtract Vector `b` from Vector `a`
-    static member (-) (a:Vector, b:Vector) =
-        match Vector.IsZero(a), ZeroVector.IsZero(b) with
-        | true, true -> a
-        | true, false -> -b
-        | false, true -> a
-        | false, false -> Vector(Array.init a.Length (fun i -> a.[i] - b.[i]))
+    static member (-) (a, b) =
+        match a, b with
+        | ZeroVector, ZeroVector -> ZeroVector
+        | ZeroVector, Vector vb -> Vector.Create(vb.Length, fun i -> -vb.[i])
+        | Vector va, ZeroVector -> Vector va
+        | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] - vb.[i])
     /// Multiply Vector `a` and Vector `b` element-wise (Hadamard product)
-    static member (*) (a:Vector, b:Vector) =
-        match Vector.IsZero(a), ZeroVector.IsZero(b) with
-        | true, true -> a
-        | true, false -> a
-        | false, true -> b
-        | false, false -> Vector(Array.init a.Length (fun i -> a.[i] * b.[i]))
+    static member (*) (a, b) =
+        match a, b with
+        | ZeroVector, ZeroVector -> ZeroVector
+        | ZeroVector, Vector _ -> ZeroVector
+        | Vector _, ZeroVector -> ZeroVector
+        | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] * vb.[i])
     /// Divide Vector `a` by Vector `b` element-wise
-    static member (/) (a:Vector, b:Vector) =
-        match Vector.IsZero(a), ZeroVector.IsZero(b) with
-        | true, true -> raise (new System.DivideByZeroException("Attempted to divide a ZeroVector by a ZeroVector."))
-        | true, false -> a
-        | false, true -> raise (new System.DivideByZeroException("Attempted to divide a Vector by a ZeroVector."))
-        | false, false -> Vector(Array.init a.Length (fun i -> a.[i] / b.[i]))
+    static member (/) (a, b) =
+        match a, b with
+        | ZeroVector, ZeroVector -> raise (new System.DivideByZeroException("Attempted to divide a ZeroVector by a ZeroVector."))
+        | ZeroVector, Vector _ -> ZeroVector
+        | Vector _, ZeroVector -> raise (new System.DivideByZeroException("Attempted to divide a Vector by a ZeroVector."))
+        | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] / vb.[i])
     /// Multiply Vector `a` by float `b`
-    static member (*) (a:Vector, b:float) =
-        match Vector.IsZero(a) with
-        | true -> a
-        | false -> Vector(Array.init a.Length (fun i -> a.[i] * b))
+    static member (*) (a, b) =
+        match a with
+        | ZeroVector -> ZeroVector
+        | Vector va -> Vector.Create(va.Length, fun i -> va.[i] * b)
     /// Multiply Vector `b` by float `a`
-    static member (*) (a:float, b:Vector) =
-        match Vector.IsZero(b) with
-        | true -> b
-        | false -> Vector(Array.init b.Length (fun i -> a * b.[i]))
+    static member (*) (a, b) =
+        match b with
+        | ZeroVector -> ZeroVector
+        | Vector vb -> Vector.Create(vb.Length, fun i -> a * vb.[i])
     /// Divide Vector `a` by float `b`
-    static member (/) (a:Vector, b:float) =
-        match Vector.IsZero(a) with
-        | true -> a
-        | false -> Vector(Array.init a.Length (fun i -> a.[i] / b))
+    static member (/) (a, b) =
+        match a with
+        | ZeroVector -> ZeroVector
+        | Vector va -> Vector.Create(va.Length, fun i -> va.[i] / b)
     /// Create Vector whose elements are float `a` divided by the elements of Vector `b`
-    static member (/) (a:float, b:Vector) =
-        match Vector.IsZero(b) with
-        | true -> raise (new System.DivideByZeroException("Attempted division by a ZeroVector."))
-        | false -> Vector(Array.init b.Length (fun i -> a / b.[i]))
+    static member (/) (a, b) =
+        match b with
+        | ZeroVector -> raise (new System.DivideByZeroException("Attempted division by a ZeroVector."))
+        | Vector vb -> Vector.Create(vb.Length, fun i -> a / vb.[i])
     /// Negative of Vector `a`
-    static member (~-) (a:Vector) =
-        match Vector.IsZero(a) with
-        | true -> a
-        | false -> Vector(Array.init a.Length (fun i -> -a.[i]))
-
-/// A vector with infinite length and all elements 0
-and ZeroVector() =
-    inherit Vector([||])
-    override v.ToString() = "ZeroVector"
-
+    static member (~-) a =
+        match a with
+        | ZeroVector -> ZeroVector
+        | Vector va -> Vector.Create(va.Length, fun i -> -va.[i])
 
 
 /// Lightweight matrix type
-type Matrix(m:float[,]) =
-    member this.M = m
-    member m.Rows = m.M.GetLength 0
-    member m.Cols = m.M.GetLength 1
-    member m.Item(i, j) = if Matrix.IsZero(m) then 0. else m.M.[i, j]
-    override m.ToString() = sprintf "Matrix %A" m.M
+[<NoEquality; NoComparison>]
+type Matrix =
+    | ZeroMatrix
+    | Matrix of float[,]
+    | SymmetricMatrix of float[,]
+    with
+    member m.Item(i, j) =
+        match m with
+        | ZeroMatrix -> 0.
+        | Matrix m -> m.[i, j]
+        | SymmetricMatrix m -> if j >= i then m.[i, j] else m.[j, i]
+    member m.Rows =
+        match m with
+        | ZeroMatrix -> 0
+        | Matrix m -> m.GetLength 0
+        | SymmetricMatrix m -> m.GetLength 0
+    member m.Cols =
+        match m with
+        | ZeroMatrix -> 0
+        | Matrix m -> m.GetLength 1
+        | SymmetricMatrix m -> m.GetLength 1
+    override m.ToString() =
+        match m with
+        | ZeroMatrix -> "ZeroMatrix"
+        | Matrix m -> sprintf "Matrix %A" m
+        | SymmetricMatrix m -> sprintf "SymmetricMatrix %A" (copyupper m)
     /// Get a string representation of this Matrix that can be pasted into a Mathematica notebook
     member m.ToMathematicaString() = 
-        let sb = System.Text.StringBuilder()
-        sb.Append("{") |> ignore
-        for i = 0 to m.Rows - 1 do
-            sb.Append("{") |> ignore
-            for j = 0 to m.Cols - 1 do
-                sb.Append(sprintf "%.2f" m.M.[i, j]) |> ignore
-                if j <> m.Cols - 1 then sb.Append(", ") |> ignore
-            sb.Append("}") |> ignore
-            if i <> m.Rows - 1 then sb.Append(", ") |> ignore
-        sb.Append("}") |> ignore
-        sb.ToString()
+        match m with
+        | ZeroMatrix -> MathematicaMatrix (Array2D.zeroCreate 0 0)
+        | Matrix m -> MathematicaMatrix m
+        | SymmetricMatrix m -> MathematicaMatrix (copyupper m)
     /// Get a string representation of this Matrix that can be pasted into MATLAB
-    member m.ToMatlabString() = 
-        let sb = System.Text.StringBuilder()
-        sb.Append("[") |> ignore
-        for i = 0 to m.Rows - 1 do
-            for j = 0 to m.Cols - 1 do
-                sb.Append(sprintf "%.2f" m.M.[i, j]) |> ignore
-                if j < m.Cols - 1 then sb.Append(" ") |> ignore
-            if i < m.Rows - 1 then sb.Append("; ") |> ignore
-        sb.Append("]") |> ignore
-        sb.ToString()
+    member m.ToMatlabString() =
+        match m with
+        | ZeroMatrix -> MatlabMatrix (Array2D.zeroCreate 0 0)
+        | Matrix m -> MatlabMatrix m
+        | SymmetricMatrix m -> MatlabMatrix (copyupper m)
     /// Get the trace of this Matrix
-    member m.GetTrace() = if Matrix.IsZero(m) then 0. else trace m.M
+    member m.GetTrace() =
+        match m with
+        | ZeroMatrix -> 0.
+        | Matrix m -> trace m
+        | SymmetricMatrix m -> trace m
     /// Get the transpose of this Matrix
-    member m.GetTranspose() = if Matrix.IsZero(m) then m else Matrix(transpose m.M)
-    /// Builds a new Matrix whose elements are the results of applying function `f` to each of the elements of Matrix `m`
-    static member map f (m:Matrix) = Matrix(Array2D.map f m.M)
-    /// Create Matrix from given 2d array `m`
-    static member Create(m) = Matrix(m)
+    member m.GetTranspose() =
+        match m with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix m -> Matrix (transpose m)
+        | SymmetricMatrix m -> SymmetricMatrix m
+    /// Create Matrix from given float[,] `m`
+    static member Create(m) = Matrix m
+    /// Create Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
+    static member Create(m, n, v) = if m = n then SymmetricMatrix (Array2D.create m m v) else Matrix (Array2D.create m n v)
     /// Create Matrix with `m` rows, `n` columns, and a generator function `f` to compute the elements
-    static member Create(m, n, f) = Matrix(Array2D.init m n f)
-    /// Create Matrix with `m` rows, `n` columns, and all elements having value `v`
-    static member Create(m, n, v) = Matrix(Array2D.create m n v)
+    static member Create(m, n, f) = Matrix (Array2D.init m n f)
+    /// Create Matrix with `m` rows and all rows equal to float[] `v`
+    static member Create(m, v:float[]) = Matrix.Create(m, fun _ -> v)
     /// Create Matrix with `m` rows and a generator function `f` that gives each row as a float[]
-    static member Create(m, (f:int->float[])) = Matrix(array2D (Array.init m f))
+    static member Create(m, f:int->float[]) = Matrix (array2D (Array.init m f))
     /// Create Matrix with `m` rows and a generator function `f` that gives each row as a Vector
-    static member Create(m, (f:int->Vector)) =
+    static member Create(m, f:int->Vector) =
         let a = Array.init m f
-        Matrix(Array2D.init m (a.[0].Length) (fun i j -> a.[i].V.[j]))
+        Matrix (Array2D.init m (a.[0].Length) (fun i j -> a.[i].[j]))
     /// Create Matrix with rows given in Vector[] `v`
     static member Create(v:Vector[]) = Matrix.Create(v.Length, fun i -> v.[i])
-    /// Create Matrix with `m` rows and all rows equal to float[] `v`
-    static member Create(m, (v:float[])) = Matrix.Create(m, fun i -> v)
-    /// Create symmetric Matrix with `m` rows and columns and a generator function `f` to compute the elements
-    static member SymmetricCreate(m, f) =
+    /// Create SymmetricMatrix with `m` rows and columns and a generator function `f` to compute the elements
+    static member CreateSymmetric(m, f) =
         let s = Array2D.zeroCreate<float> m m
         for i = 0 to m - 1 do
             for j = i to m - 1 do
                 s.[i, j] <- f i j
-        Matrix(copyupper s)
-    static member Zero = ZeroMatrix()
-    /// Check whether Matrix `a` is an instance of ZeroMatrix
-    static member IsZero(a:Matrix) =
-        match a with
-        | :? ZeroMatrix -> true
-        | _ -> false
-    /// Symmetric binary operation `f` on Matrix `a` and Matrix `b`
-    static member SymmetricOp (a:Matrix, b:Matrix, f) =
-        match Matrix.IsZero(a), Matrix.IsZero(b) with
-        | true, true -> a
-        | true, false -> Matrix.SymmetricCreate(b.Rows, f)
-        | false, true -> Matrix.SymmetricCreate(a.Rows, f)
-        | false, false -> Matrix.SymmetricCreate(a.Rows, f)
+        SymmetricMatrix s
+    /// Matrix with infinite number of rows and columns and all entries 0
+    static member Zero = ZeroMatrix
+    /// Convert Matrix `m` to float[,]
+    static member op_Explicit(m:Matrix) =
+        match m with
+        | ZeroMatrix -> Array2D.zeroCreate 0 0
+        | Matrix m -> m
+        | SymmetricMatrix m -> copyupper m
     /// Symmetric unary operation `f` on Matrix `a`
-    static member SymmetricOp (a:Matrix, f) =
-        match Matrix.IsZero(a) with
-        | true -> a
-        | false -> Matrix.SymmetricCreate(a.Rows, f)
+    static member SymmetricOp(a, f:int->int->float) =
+        match a with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
+        | SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
+    /// Symmetric binary operation `f` on Matrix `a` and Matrix `b`
+    static member SymmetricOp(a, b, f:int->int->float) =
+        match a, b with
+        | ZeroMatrix, ZeroMatrix -> ZeroMatrix
+        | ZeroMatrix, Matrix _ -> Matrix.CreateSymmetric(b.Rows, f)
+        | ZeroMatrix, SymmetricMatrix _ -> Matrix.CreateSymmetric(b.Rows, f)
+        | Matrix _, ZeroMatrix -> Matrix.CreateSymmetric(a.Rows, f)
+        | Matrix _, Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
+        | Matrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
+        | SymmetricMatrix _, ZeroMatrix -> Matrix.CreateSymmetric(a.Rows, f)
+        | SymmetricMatrix _, Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
+        | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
     /// Add Matrix `a` to Matrix `b`
-    static member (+) (a:Matrix, b:Matrix) =
-        match Matrix.IsZero(a), Matrix.IsZero(b) with
-        | true, true -> a
-        | true, false -> b
-        | false, true -> a
-        | false, false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] + b.[i, j]))
+    static member (+) (a, b) =
+        match a, b with
+        | ZeroMatrix, ZeroMatrix -> ZeroMatrix
+        | ZeroMatrix, Matrix bm -> Matrix bm
+        | ZeroMatrix, SymmetricMatrix bm -> SymmetricMatrix bm
+        | Matrix am, ZeroMatrix -> Matrix am
+        | Matrix am, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] + bm.[i, j])
+        | Matrix am, SymmetricMatrix _ -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] + b.[i, j])
+        | SymmetricMatrix a, ZeroMatrix -> SymmetricMatrix a
+        | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> a.[i, j] + bm.[i, j])
+        | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, fun i j -> a.[i, j] + b.[i, j])
     /// Subtract Matrix `b` from Matrix `a`
-    static member (-) (a:Matrix, b:Matrix) =
-        match Matrix.IsZero(a), Matrix.IsZero(b) with
-        | true, true -> a
-        | true, false -> -b
-        | false, true -> a
-        | false, false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] - b.[i, j]))  
+    static member (-) (a, b) =
+        match a, b with
+        | ZeroMatrix, ZeroMatrix -> ZeroMatrix
+        | ZeroMatrix, Matrix bm -> Matrix.Create(b.Rows, b.Cols, fun i j -> -bm.[i ,j])
+        | ZeroMatrix, SymmetricMatrix _ -> Matrix.CreateSymmetric(b.Rows, fun i j -> -b.[i ,j])
+        | Matrix am, ZeroMatrix -> Matrix am
+        | Matrix am, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] - bm.[i, j])
+        | Matrix am, SymmetricMatrix _ -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] - b.[i, j])
+        | SymmetricMatrix a, ZeroMatrix -> SymmetricMatrix a
+        | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> a.[i, j] - bm.[i, j])
+        | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, fun i j -> a.[i, j] - b.[i, j])
     /// Matrix product of Matrix `a` and Matrix `b`
-    static member (*) (a:Matrix, b:Matrix) =
-        match Matrix.IsZero(a), Matrix.IsZero(b) with
-        | true, true -> a
-        | true, false -> a
-        | false, true -> b
-        | false, false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> Array.sumBy (fun k -> a.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] ))
+    static member (*) (a, b) =
+        match a, b with
+        | ZeroMatrix, ZeroMatrix -> ZeroMatrix
+        | ZeroMatrix, Matrix bm -> ZeroMatrix
+        | ZeroMatrix, SymmetricMatrix bm -> ZeroMatrix
+        | Matrix am, ZeroMatrix -> ZeroMatrix
+        | Matrix am, Matrix bm -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> am.[i, k] * bm.[k, j]) [|0..(b.Rows - 1)|] )
+        | Matrix am, SymmetricMatrix _ -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> am.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] )
+        | SymmetricMatrix a, ZeroMatrix -> ZeroMatrix
+        | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * bm.[k, j]) [|0..(b.Rows - 1)|] )
+        | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] )
     /// Multiply Matrix `a` by float `b`
-    static member (*) (a:Matrix, b:float) =
-        match Matrix.IsZero(a) with
-        | true -> a
-        | false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] * b))
+    static member (*) (a, b) =
+        match a with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix am -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] * b)
+        | SymmetricMatrix am -> Matrix.CreateSymmetric(a.Rows, fun i j -> am.[i, j] * b)
     /// Multiply Matrix `b` by float `a`
-    static member (*) (a:float, b:Matrix) =
-        match Matrix.IsZero(b) with
-        | true -> b
-        | false -> Matrix(Array2D.init b.Rows b.Cols (fun i j -> a * b.[i, j]))
+    static member (*) (a, b) =
+        match b with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix bm -> Matrix.Create(b.Rows, b.Cols, fun i j -> a * bm.[i, j])
+        | SymmetricMatrix bm -> Matrix.CreateSymmetric(b.Rows, fun i j -> a * bm.[i, j])
     /// Divide Matrix `a` by float `b`
-    static member (/) (a:Matrix, b:float) =
-        match Matrix.IsZero(a) with
-        | true -> a
-        | false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> a.[i, j] / b))
+    static member (/) (a, b) =
+        match a with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix am -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] / b)
+        | SymmetricMatrix am -> Matrix.CreateSymmetric(a.Rows, fun i j -> am.[i, j] / b)
     /// Create Matrix whose elements are float `a` divided by the element of Matrix `b`
-    static member (/) (a:float, b:Matrix) =
-        match Matrix.IsZero(b) with
-        | true ->  raise (new System.DivideByZeroException("Attempted division by a zero matrix."))
-        | false -> Matrix(Array2D.init b.Rows b.Cols (fun i j -> a / b.[i, j]))
+    static member (/) (a, b) =
+        match b with
+        | ZeroMatrix -> raise (new System.DivideByZeroException("Attempted division by a ZeroMatrix."))
+        | Matrix bm -> Matrix.Create(b.Rows, b.Cols, fun i j -> a / bm.[i, j])
+        | SymmetricMatrix bm -> Matrix.CreateSymmetric(b.Rows, fun i j -> a / bm.[i, j])
     /// Negative of Matrix `a`
-    static member (~-) (a:Matrix) =
-        match Matrix.IsZero(a) with
-        | true -> a
-        | false -> Matrix(Array2D.init a.Rows a.Cols (fun i j -> -a.[i, j]))
-
-/// A matrix with infinite dimensions and all elements 0
-and ZeroMatrix() =
-    inherit Matrix(Array2D.zeroCreate 0 0)
-    override m.ToString() = "ZeroMatrix"
+    static member (~-) a =
+        match a with
+        | ZeroMatrix -> ZeroMatrix
+        | Matrix am -> Matrix.Create(a.Rows, a.Cols, fun i j -> -am.[i, j])
+        | SymmetricMatrix am -> Matrix.CreateSymmetric(a.Rows, fun i j -> -am.[i, j])
 
 
 /// Convert float[] `v` into Vector
-let vector v = Vector.Create(v)
+let vector v = Vector v
 /// Get the Euclidean norm of Vector `v`
 let norm (v:Vector) = v.GetNorm()
 /// Get the unit vector codirectional with Vector `v`
 let unitVector (v:Vector) = v.GetUnitVector()
 /// Convert Vector `v` into float[]
-let array (v:Vector) = v.V
+let array v = Vector.op_Explicit(v)
 /// Convert float[,] `m` into Matrix
 let matrix (m:float[,]) = Matrix.Create(m)
-/// Convert Matrix m into float[,]
-let array2d (m:Matrix) = m.M
+/// Convert Matrix `m` into float[,]
+let array2d m = Matrix.op_Explicit(m)
 /// Get the trace of Matrix `m`
 let trace (m:Matrix) = m.GetTrace()
 /// Get the transpose of Matrix `m`
 let transpose (m:Matrix) = m.GetTranspose()
+

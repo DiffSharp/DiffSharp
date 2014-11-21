@@ -78,7 +78,7 @@ module NumericalOps =
         let fx = f x
         let g = Vector.Create(x.Length, fx)
         let gg = Vector.Create(x.Length, fun i -> f (array (xv + Vector.Create(x.Length, i, eps))))
-        (fx, ((gg - g) / eps).V)
+        (fx, array ((gg - g) / eps))
     
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let grad f x =

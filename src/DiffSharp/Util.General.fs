@@ -64,12 +64,57 @@ let inline trace (m:float[,]) = Array.sum (diagonal m)
 
 /// Copy the upper triangular elements of the square matrix given in float[,] `m` to the lower triangular part
 let inline copyupper (Square m:float[,]) =
-    let rows = m.GetLength 0
+    let r = Array2D.copy m
+    let rows = r.GetLength 0
     if rows > 1 then
         for i = 1 to rows - 1 do
             for j = 0 to i - 1 do
-                m.[i, j] <- m.[j, i]
-    m
+                r.[i, j] <- r.[j, i]
+    r
+
+/// Get a string representation of a float[] that can be pasted into a Mathematica notebook
+let MathematicaVector (v:float[]) =
+    let sb = System.Text.StringBuilder()
+    sb.Append("{") |> ignore
+    for i = 0 to v.Length - 1 do
+        sb.Append(sprintf "%.2f" v.[i]) |> ignore
+        if i < v.Length - 1 then sb.Append(", ") |> ignore
+    sb.Append("}") |> ignore
+    sb.ToString()
+
+///Get a string representation of a float[] that can be pasted into MATLAB
+let MatlabVector (v:float[]) =
+    let sb = System.Text.StringBuilder()
+    sb.Append("[") |> ignore
+    for i = 0 to v.Length - 1 do
+        sb.Append(sprintf "%.2f" v.[i]) |> ignore
+        if i < v.Length - 1 then sb.Append(" ") |> ignore
+    sb.Append("]") |> ignore
+    sb.ToString()
+
+/// Get a string representation of a float[,] than can be pasted into a Mathematica notebook
+let MathematicaMatrix (m:float[,]) =
+    let rows = m.GetLength 0
+    let cols = m.GetLength 1
+    let sb = System.Text.StringBuilder()
+    sb.Append("{") |> ignore
+    for i = 0 to rows - 1 do
+        sb.Append(MathematicaVector(Array.init cols (fun j -> m.[i, j]))) |> ignore
+        if i < rows - 1 then sb.Append(", ") |> ignore
+    sb.Append("}") |> ignore
+    sb.ToString()
+
+/// Get a string representation of a float[,] that can be pasted into MATLAB
+let MatlabMatrix (m:float[,]) =
+    let rows = m.GetLength 0
+    let cols = m.GetLength 1
+    let sb = System.Text.StringBuilder()
+    sb.Append("[") |> ignore
+    for i = 0 to rows - 1 do
+        sb.Append(MatlabVector(Array.init cols (fun j -> m.[i, j]))) |> ignore
+        if i < rows - 1 then sb.Append("; ") |> ignore
+    sb.Append("]") |> ignore
+    sb.ToString()
 
 /// Compute a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =

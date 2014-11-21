@@ -52,11 +52,11 @@ type DualGH =
     // Primal, vector of gradient components, matrix of Hessian components
     | DualGH of float * Vector * Matrix
     override d.ToString() = let (DualGH(p, g, h)) = d in sprintf "DualGH (%f, %A, %A)" p g h
-    static member op_Explicit(p) = DualGH(p, ZeroVector(), ZeroMatrix())
+    static member op_Explicit(p) = DualGH(p, ZeroVector, ZeroMatrix)
     static member op_Explicit(DualGH(p, _, _)) = p
     static member DivideByInt(DualGH(p, g, m), i:int) = DualGH(p / float i, g / float i, m / float i)
-    static member Zero = DualGH(0., ZeroVector(), ZeroMatrix())
-    static member One = DualGH(1., ZeroVector(), ZeroMatrix())
+    static member Zero = DualGH(0., ZeroVector, ZeroMatrix)
+    static member One = DualGH(1., ZeroVector, ZeroMatrix)
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -127,17 +127,17 @@ module DualGHOps =
     /// Get the primal value of a DualGH
     let inline primal (DualGH(p, _, _)) = p
     /// Get the gradient array of a DualGH
-    let inline gradient (DualGH(_, g, _)) = g.V
+    let inline gradient (DualGH(_, g, _)) = array g
     /// Get the Hessian 2d array of a DualGH
-    let inline hessian (DualGH(_, _, h)) = h.M
+    let inline hessian (DualGH(_, _, h)) = array2d h
     /// Get the primal and the first gradient component of a DualGH, as a tuple
     let inline tuple (DualGH(p, g, _)) = (p, g.FirstItem)
     /// Get the primal and the gradient array of a DualGH, as a tuple
-    let inline tupleG (DualGH(p, g, _)) = (p, g.V)
+    let inline tupleG (DualGH(p, g, _)) = (p, array g)
     /// Get the primal and Hessian 2d array of a DualGH, as a tuple
-    let inline tupleH (DualGH(p, _, h)) = (p, h.M)
+    let inline tupleH (DualGH(p, _, h)) = (p, array2d h)
     /// Get the primal, the gradient array, and the Hessian 2d array of a DualGH, as a tuple
-    let inline tupleGH (DualGH(p, g, h)) = (p, g.V, h.M)
+    let inline tupleGH (DualGH(p, g, h)) = (p, array g, array2d h)
 
 
 /// ForwardGH differentiation operations module (automatically opened)
@@ -162,7 +162,7 @@ module ForwardGHOps =
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f x =
         let a = dualGHActArray x |> f
-        (Array.map primal a, Matrix.Create(a.Length, fun i -> gradient a.[i]).M)
+        (Array.map primal a, array2d (Matrix.Create(a.Length, fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
