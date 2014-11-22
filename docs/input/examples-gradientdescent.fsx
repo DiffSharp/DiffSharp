@@ -16,7 +16,7 @@ open DiffSharp.AD.Forward.Vector
 open DiffSharp.Util.LinearAlgebra
 
 // Gradient descent, with function f, starting at x0, step size a, threshold t
-let argmin f x0 a t =
+let argmin f x0 (a:float) t =
     // Descending sequence, with state s (current x, gradient of f at current x)
     let gd = Seq.unfold (fun s -> 
                          if norm (snd s) < t then None 
@@ -52,7 +52,7 @@ let c v = Chart.Line(List.append [for x in -1.6..0.01..1.4->(x,acos(v-sin x))]
 
 // Draw some contours and combine with the graph of the descent xseq
 Chart.Combine(List.append [for x in -2.2..0.4..2. -> c x]
-                          [Chart.Line(Seq.map (fun (x:Vector)->(x.[0],x.[1])) xseq)]
+                          [Chart.Line(Seq.map (fun (x:Vector<float>)->(x.[0],x.[1])) xseq)]
              ).WithXAxis(Min = -1.6, Max = 1.4, Title="x")
              .WithYAxis(Min = 0., Max = 4., Title="y")
 

@@ -276,30 +276,30 @@ module ReverseOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x = ReverseOps.diff' f x
+    let inline diff' (f:Adj->Adj) (x:float) = ReverseOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x = ReverseOps.diff f x
+    let inline diff (f:Adj->Adj) (x:float) = ReverseOps.diff f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x = ReverseOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad f x = ReverseOps.grad f (array x) |> vector
+    let inline grad (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.grad (vector >> f) (array x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' f x = ReverseOps.laplacian' f (array x)
+    let inline laplacian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.laplacian' (vector >> f) (array x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian f x = ReverseOps.laplacian f (array x)
+    let inline laplacian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x = ReverseOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT f x = ReverseOps.jacobianT f (array x) |> matrix
+    let inline jacobianT (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT (vector >> f >> array) (array x) |> matrix
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x = ReverseOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian f x = ReverseOps.jacobian f (array x) |> matrix
+    let inline jacobian (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian (vector >> f >> array) (array x) |> matrix
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' f x = ReverseOps.hessian' f (array x) |> fun (a, b) -> (a, matrix b)
+    let inline hessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, matrix b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian f x = ReverseOps.hessian f (array x) |> matrix
+    let inline hessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian (vector >> f) (array x) |> matrix
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' f x = ReverseOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
+    let inline gradhessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian f x = ReverseOps.gradhessian f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline gradhessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, matrix b)

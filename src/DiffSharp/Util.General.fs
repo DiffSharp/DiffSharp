@@ -47,23 +47,23 @@ let inline fsttrd (f, _, t) = (f, t)
 /// Get the second and third terms of a 3-tuple
 let inline sndtrd (_, s, t) = (s, t)
 
-/// Checks whether float[,] `m` has the same number of elements in both dimensions
-let (|Square|) (m:float[,]) =
+/// Checks whether 'a[,] `m` has the same number of elements in both dimensions
+let (|Square|) (m:'a[,]) =
     match m with
     | m when m.GetLength 0 = m.GetLength 1 -> m
     | _ -> invalidArg "m" "Expecting a square float[,]"
 
-/// Get the transpose of float[,] `m`
-let inline transpose (m:float[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
+/// Get the transpose of 'a[,] `m`
+let inline transpose (m:'a[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
 
-/// Get a float[] containing the diagonal elements of float[,] `m`
-let inline diagonal (Square m:float[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
+/// Get a 'a[] containing the diagonal elements of 'a[,] `m`
+let inline diagonal (Square m:'a[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
 
-/// Get the trace of the square matrix given in float[,] `m`
-let inline trace (m:float[,]) = Array.sum (diagonal m)
+/// Get the trace of the square matrix given in 'a[,] `m`
+let inline trace (m:'a[,]) = Array.sum (diagonal m)
 
-/// Copy the upper triangular elements of the square matrix given in float[,] `m` to the lower triangular part
-let inline copyupper (Square m:float[,]) =
+/// Copy the upper triangular elements of the square matrix given in 'a[,] `m` to the lower triangular part
+let inline copyupper (Square m:'a[,]) =
     let r = Array2D.copy m
     let rows = r.GetLength 0
     if rows > 1 then

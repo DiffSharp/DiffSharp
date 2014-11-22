@@ -1,11 +1,11 @@
 ﻿
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-open DiffSharp.AD.Reverse
+open DiffSharp.AD.Forward
 
 
 let g = 
-    hessian (fun theta ->
+    grad (fun theta ->
         let n = (Array.length theta - 1) / 2
         let weights = theta.[0 .. n-1]
         let lambdas = theta.[n .. 2*n-1]

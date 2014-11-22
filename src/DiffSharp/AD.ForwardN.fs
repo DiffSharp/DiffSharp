@@ -231,40 +231,40 @@ module ForwardNOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x = ForwardNOps.diff' f x
+    let inline diff' (f:DualN->DualN) (x:float) = ForwardNOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x = ForwardNOps.diff f x
+    let inline diff (f:DualN->DualN) (x:float) = ForwardNOps.diff f x
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' f x = ForwardNOps.diff2' f x
+    let inline diff2' (f:DualN->DualN) (x:float) = ForwardNOps.diff2' f x
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 f x = ForwardNOps.diff2 f x
+    let inline diff2 (f:DualN->DualN) (x:float) = ForwardNOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' f x = ForwardNOps.diff2'' f x
+    let inline diff2'' (f:DualN->DualN) (x:float) = ForwardNOps.diff2'' f x
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diffn' n f x = ForwardNOps.diffn' n f x 
+    let inline diffn' (n:int) (f:DualN->DualN) (x:float) = ForwardNOps.diffn' n f x 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diffn n f x = ForwardNOps.diffn n f x
+    let inline diffn (n:int) (f:DualN->DualN) (x:float) = ForwardNOps.diffn n f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' f x v = ForwardNOps.gradv' f (array x) (array v)
+    let inline gradv' (f:Vector<DualN>->DualN) (x:Vector<float>) (v:Vector<float>) = ForwardNOps.gradv' (vector >> f) (array x) (array v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv f x v = ForwardNOps.gradv f (array x) (array v)
+    let inline gradv (f:Vector<DualN>->DualN) (x:Vector<float>) (v:Vector<float>) = ForwardNOps.gradv (vector >> f) (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x = ForwardNOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualN>->DualN) (x:Vector<float>) = ForwardNOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad f x = ForwardNOps.grad f (array x) |> vector
+    let inline grad (f:Vector<DualN>->DualN) (x:Vector<float>) = ForwardNOps.grad (vector >> f) (array x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' f x = ForwardNOps.laplacian' f (array x)
+    let inline laplacian' (f:Vector<DualN>->DualN) (x:Vector<float>) = ForwardNOps.laplacian' (vector >> f) (array x)
     /// Laplacian of a vector-to-scalar function `f`, at point x
-    let inline laplacian f x = ForwardNOps.laplacian f (array x)
+    let inline laplacian (f:Vector<DualN>->DualN) (x:Vector<float>) = ForwardNOps.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x = ForwardNOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT f x = ForwardNOps.jacobianT f (array x) |> matrix
+    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT (vector >> f >> array) (array x) |> matrix
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x = ForwardNOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian f x = ForwardNOps.jacobian f (array x) |> matrix
+    let inline jacobian (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian (vector >> f >> array) (array x) |> matrix
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f x v = ForwardNOps.jacobianv' f (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) (v:Vector<float>) = ForwardNOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv f x v = ForwardNOps.jacobianv f (array x) (array v) |> vector
+    let inline jacobianv (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) (v:Vector<float>) = ForwardNOps.jacobianv (vector >> f >> array) (array x) (array v) |> vector

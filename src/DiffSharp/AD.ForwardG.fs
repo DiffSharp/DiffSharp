@@ -50,13 +50,13 @@ open DiffSharp.Util.General
 [<CustomEquality; CustomComparison>]
 type DualG =
     // Primal, vector of gradient components
-    | DualG of float * Vector
+    | DualG of float * Vector<float>
     override d.ToString() = let (DualG(p, g)) = d in sprintf "DualG (%f, %A)" p g
-    static member op_Explicit(p) = DualG(p, ZeroVector)
+    static member op_Explicit(p) = DualG(p, Vector.Zero)
     static member op_Explicit(DualG(p, _)) = p
     static member DivideByInt(DualG(p, g), i:int) = DualG(p / float i, g / float i)
-    static member Zero = DualG(0., ZeroVector)
-    static member One = DualG(1., ZeroVector)
+    static member Zero = DualG(0., Vector.Zero)
+    static member One = DualG(1., Vector.Zero)
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -175,18 +175,18 @@ module ForwardGOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x = ForwardGOps.diff' f x
+    let inline diff' (f:DualG->DualG) (x:float) = ForwardGOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x = ForwardGOps.diff f x
+    let inline diff (f:DualG->DualG) (x:float) = ForwardGOps.diff f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x = ForwardGOps.grad' f (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad f x = ForwardGOps.grad f (array x) |> vector
+    let inline grad (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad (vector >> f) (array x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x = ForwardGOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT f x = ForwardGOps.jacobianT f (array x) |> matrix
+    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> matrix
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x = ForwardGOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian f x = ForwardGOps.jacobian f (array x) |> matrix
+    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> matrix
