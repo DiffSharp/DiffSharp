@@ -272,6 +272,20 @@ module ReverseOps =
     let inline jacobianTv f x v =
         jacobianTv' f x v |> snd
 
+    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
+    let inline jacobianTv'' f x =
+        Trace.Clear()
+        let xa = Array.map adj x
+        let z:Adj[] = f xa
+        let forwardTrace = Trace.Copy()
+        let r1 = Array.map primal z
+        let r2 =
+            fun (v:float[]) ->
+                Trace.SetClean(forwardTrace)
+                for i = 0 to z.Length - 1 do z.[i].A <- v.[i]
+                Trace.ReverseSweep()
+                Array.map adjoint xa
+        (r1, r2)
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -307,3 +321,5 @@ module Vector =
     let inline jacobianTv (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) (v:Vector<float>) = ReverseOps.jacobianTv (vector >> f >> array) (array x) (array v) |> vector
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianTv' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) (v:Vector<float>) = ReverseOps.jacobianTv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
+    let inline jacobianTv'' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianTv'' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, array >> b >> vector)
