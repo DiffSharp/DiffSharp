@@ -29,7 +29,7 @@ let df = diff f 2.
 let g (x:Dual[]) = sin (x.[0] * x.[1])
 
 // Directional derivative of g at (2, 3) with direction (4, 1)
-let ddg = diffdir [|4.; 1.|] g [|2.; 3.|]
+let ddg = gradv g [|2.; 3.|] [|4.; 1.|]
 
 // Gradient of g at (2, 3)
 let gg = grad g [|2.; 3.|]
