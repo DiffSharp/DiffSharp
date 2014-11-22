@@ -1,11 +1,11 @@
 ﻿
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-open DiffSharp.AD.Forward
-
+open DiffSharp.AD.ForwardGH.Vector
 
 let g = 
-    grad (fun theta ->
+    hessian (fun x ->
+        let theta = array x
         let n = (Array.length theta - 1) / 2
         let weights = theta.[0 .. n-1]
         let lambdas = theta.[n .. 2*n-1]
@@ -16,4 +16,4 @@ let g =
             count * log(parameters |> Array.sumBy(fun (w,l) -> w * (exp(-l*low) - exp(-l*high))))
         -(bins |> Array.sumBy binValue) - kappa * (1. - Array.sum weights))     
 
-let test =  g [| 0.8; 0.2; 1./10000.; 1./100000.; 336. |]
+let test =  g (vector [| 0.8; 0.2; 1./10000.; 1./100000.; 336. |])

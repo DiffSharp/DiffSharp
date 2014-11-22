@@ -40,6 +40,7 @@ module DiffSharp.Util.LinearAlgebra
 
 open DiffSharp.Util.General
 
+
 /// Lightweight vector type
 [<NoEquality; NoComparison>]
 type Vector<'T when 'T : (static member Zero : 'T)
@@ -50,36 +51,42 @@ type Vector<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
                 and 'T : (static member op_Explicit : 'T -> float)> =
+    /// Vector with infinite dimension whose elements are all 0
     | ZeroVector of 'T
+    /// Vector with finite dimension
     | Vector of 'T[]
     with
+    /// Gets the element of this Vector at the given position `i`
     member inline v.Item i =
         match v with
         | ZeroVector z -> z
         | Vector v -> v.[i]
+    /// Gets the first element of this Vector
     member inline v.FirstItem =
         match v with
         | ZeroVector z -> z
         | Vector v -> v.[0]
+    /// Gets the total number of elements of this Vector
     member inline v.Length =
         match v with
         | ZeroVector _ -> 0
         | Vector v -> v.Length
+    /// Converts this Vector to an array, e.g. from Vector<float> to float[]
     member inline v.ToArray() =
         match v with
         | ZeroVector _ -> [||]
         | Vector v -> v
-    /// Get the Euclidean norm of this vector
+    /// Gets the Euclidean norm of this Vector
     member inline v.GetNorm() =
         match v with
         | ZeroVector z -> z
         | Vector v -> sqrt (Array.sumBy (fun x -> x * x) v)
-    /// Get the unit vector codirectional with this vector    
+    /// Gets the unit Vector codirectional with this Vector    
     member inline v.GetUnitVector() =
         match v with
         | ZeroVector z -> ZeroVector z
         | Vector vv -> let n = v.GetNorm() in Vector (Array.init vv.Length (fun i -> vv.[i] / n))
-    /// Get a string representation of this Vector that can be pasted into a Mathematica notebook
+    /// Gets a string representation of this Vector that can be pasted into a Mathematica notebook
     member inline v.ToMathematicaString() = 
         let sb = System.Text.StringBuilder()
         sb.Append("{") |> ignore
@@ -88,7 +95,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
             if i < v.Length - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
-    /// Get a string representation of this Vector that can be pasted into MATLAB
+    /// Gets a string representation of this Vector that can be pasted into MATLAB
     member inline v.ToMatlabString() =
         let sb = System.Text.StringBuilder()
         sb.Append("[") |> ignore
@@ -97,77 +104,77 @@ type Vector<'T when 'T : (static member Zero : 'T)
             if i < v.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
-    /// Create Vector from array `v`
+    /// Creates a Vector from the array `v`
     static member inline Create(v) : Vector<'T> = Vector v
-    /// Create Vector with dimension `n` and a generator function `f` to compute the elements
+    /// Creates a Vector with dimension `n` and a generator function `f` to compute the elements
     static member inline Create(n, f) : Vector<'T> = Vector (Array.init n f)
-    /// Create Vector with dimension `n` and all elements having value `v`
+    /// Creates a Vector with dimension `n` whose elements are all initally the given value `v`
     static member inline Create(n, v) : Vector<'T> = Vector (Array.create n v)
-    /// Create Vector with dimension `n`, the element with index `i` having value `v`, and the rest of the elements 0
+    /// Creates a Vector with dimension `n` where the element with index `i` has value `v` and the rest of the elements have value 0
     static member inline Create(n, i, v) : Vector<'T> = Vector.Create(n, fun j -> if j = i then v else LanguagePrimitives.GenericZero<'T>)
-    /// Returns the sum of all the elements in vector `v`
+    /// Returns the sum of all the elements in Vector `v`
     static member inline sum (v:Vector<'T>) = 
         match v with
         | ZeroVector z -> z
         | Vector v -> Array.sum v
-    /// Create Vector with dimension `n` and a generator function `f` to compute the eleements
+    /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
     static member inline init (n:int) (f:int->'T) = Vector.Create(n, f)
-    /// Vector with infinite dimension and all elements 0
+    /// ZeroVector
     static member inline Zero = ZeroVector LanguagePrimitives.GenericZero<'T>
-    /// Convert Vector `v` to float[]
+    /// Converts Vector `v` to float[]
     static member inline op_Explicit(v:Vector<'T>) =
         match v with
         | ZeroVector _ -> [||]
         | Vector v -> Array.map float v
-    /// Add Vector `a` to Vector `b`
+    /// Adds Vector `a` to Vector `b`
     static member inline (+) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> Vector.Zero
         | ZeroVector _, Vector vb -> Vector vb
         | Vector va, ZeroVector _ -> Vector va
         | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] + vb.[i])
-    /// Subtract Vector `b` from Vector `a`
+    /// Subtracts Vector `b` from Vector `a`
     static member inline (-) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> Vector.Zero
         | ZeroVector _, Vector vb -> Vector.Create(vb.Length, fun i -> -vb.[i])
         | Vector va, ZeroVector _ -> Vector va
         | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] - vb.[i])
-    /// Multiply Vector `a` and Vector `b` element-wise (Hadamard product)
+    /// Multiplies Vector `a` and Vector `b` element-wise (Hadamard product)
     static member inline (*) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> Vector.Zero
         | ZeroVector _, Vector _ -> Vector.Zero
         | Vector _, ZeroVector _ -> Vector.Zero
         | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] * vb.[i])
-    /// Divide Vector `a` by Vector `b` element-wise
+    /// Divides Vector `a` by Vector `b` element-wise
     static member inline (/) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> raise (new System.DivideByZeroException("Attempted to divide a ZeroVector by a ZeroVector."))
         | ZeroVector _, Vector _ -> Vector.Zero
         | Vector _, ZeroVector _-> raise (new System.DivideByZeroException("Attempted to divide a Vector by a ZeroVector."))
         | Vector va, Vector vb -> Vector.Create(va.Length, fun i -> va.[i] / vb.[i])
-    /// Multiply Vector `a` by number `b`
+    /// Multiplies Vector `a` by number `b`
     static member inline (*) (a, b) =
         match a with
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] * b)
-    /// Multiply Vector `b` by number `a`
+    /// Multiples Vector `b` by number `a`
     static member inline (*) (a, b) =
         match b with
         | ZeroVector _ -> Vector.Zero
         | Vector vb -> Vector.Create(vb.Length, fun i -> a * vb.[i])
-    /// Divide Vector `a` by number `b`
+    /// Divides Vector `a` by number `b`
     static member inline (/) (a, b) =
         match a with
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] / b)
-    /// Create Vector whose elements are number `a` divided by the elements of Vector `b`
+    /// Creates a Vector whose elements are number `a` divided by the elements of Vector `b`
     static member inline (/) (a, b) =
         match b with
         | ZeroVector _ -> raise (new System.DivideByZeroException("Attempted division by a ZeroVector."))
         | Vector vb -> Vector.Create(vb.Length, fun i -> a / vb.[i])
-    /// Negative of Vector `a`
+    /// Gets the negative of Vector `a`
     static member inline (~-) (a:Vector<'T>) =
         match a with
         | ZeroVector _ -> Vector.Zero
@@ -183,31 +190,38 @@ type Matrix<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
                 and 'T : (static member op_Explicit : 'T -> float)> =
+    /// Matrix with infinite number of rows and columns whose entries are all 0
     | ZeroMatrix of 'T
+    /// Matrix with finite number of rows and columns
     | Matrix of 'T[,]
+    /// Symmetric square matrix that is equal to its transpose
     | SymmetricMatrix of 'T[,]
     with
+    /// Gets the entry of this Matrix at row `i` and column `j`
     member inline m.Item(i, j) =
         match m with
         | ZeroMatrix z -> z
         | Matrix m -> m.[i, j]
         | SymmetricMatrix m -> if j >= i then m.[i, j] else m.[j, i]
+    /// Gets the number of rows of this Matrix
     member inline m.Rows =
         match m with
         | ZeroMatrix _ -> 0
         | Matrix m -> m.GetLength 0
         | SymmetricMatrix m -> m.GetLength 0
+    /// Gets the number of columns of thisMatrix
     member inline m.Cols =
         match m with
         | ZeroMatrix _ -> 0
         | Matrix m -> m.GetLength 1
         | SymmetricMatrix m -> m.GetLength 1
+    /// Converts this Matrix to a 2d array, e.g. from Matrix<float> to float[,]
     member inline m.ToArray2d() =
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> m
         | SymmetricMatrix m -> copyupper m
-    /// Get a string representation of this Matrix that can be pasted into a Mathematica notebook
+    /// Gets a string representation of this Matrix that can be pasted into a Mathematica notebook
     member inline m.ToMathematicaString() =
         let sb = System.Text.StringBuilder()
         sb.Append("{") |> ignore
@@ -220,7 +234,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if i <> m.Rows - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
-    /// Get a string representation of this Matrix that can be pasted into MATLAB
+    /// Gets a string representation of this Matrix that can be pasted into MATLAB
     member inline m.ToMatlabString() =
         let sb = System.Text.StringBuilder()
         sb.Append("[") |> ignore
@@ -231,61 +245,56 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if i < m.Rows - 1 then sb.Append("; ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
-    /// Get the trace of this Matrix
+    /// Gets the trace of this Matrix
     member inline m.GetTrace() =
         match m with
         | ZeroMatrix z -> z
         | Matrix m -> trace m
         | SymmetricMatrix m -> trace m
-    /// Get the transpose of this Matrix
+    /// Gets the transpose of this Matrix
     member inline m.GetTranspose() =
         match m with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix m -> Matrix (transpose m)
         | SymmetricMatrix m -> SymmetricMatrix m
-    /// Create Matrix from given 2d array `m`
+    /// Creates a Matrix from the given 2d array `m`
     static member inline Create(m):Matrix<'T> = Matrix m
-    /// Create Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
+    /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
     static member inline Create(m, n, v):Matrix<'T> = if m = n then SymmetricMatrix (Array2D.create m m v) else Matrix (Array2D.create m n v)
-    /// Create Matrix with `m` rows, `n` columns, and a generator function `f` to compute the elements
+    /// Creates a Matrix with `m` rows, `n` columns, and a generator function `f` to compute the elements
     static member inline Create(m, n, f):Matrix<'T> = Matrix (Array2D.init m n f)
-    /// Create Matrix with `m` rows and a generator function `f` that gives each row as a an array
+    /// Creates a Matrix with `m` rows and a generator function `f` that gives each row as a an array
     static member inline Create(m, f:int->'T[]):Matrix<'T> = Matrix (array2D (Array.init m f))
-    /// Create Matrix with `m` rows and all rows equal to array `v`
+    /// Creates a Matrix with `m` rows and all rows equal to array `v`
     static member inline Create(m, v:'T[]):Matrix<'T> = Matrix.Create(m, fun _ -> v)
-    /// Create Matrix with `m` rows and a generator function `f` that gives each row as a Vector
+    /// Creates a Matrix with `m` rows and a generator function `f` that gives each row as a Vector
     static member inline Create(m, f:int->Vector<'T>):Matrix<'T> =
         let a = Array.init m f
         Matrix (Array2D.init m (a.[0].Length) (fun i j -> a.[i].[j]))
-    /// Create Matrix with rows given in Vector[] `v`
+    /// Creates a Matrix with rows given in Vector[] `v`
     static member inline Create(v:Vector<'T>[]):Matrix<'T> = Matrix.Create(v.Length, fun i -> v.[i])
-    /// Create SymmetricMatrix with `m` rows and columns and a generator function `f` to compute the elements
+    /// Creates a SymmetricMatrix with `m` rows and `m` columns and a generator function `f` to compute the elements. Function `f` is used only for populating the upper triangular part of the Matrix, the lower triangular part will be the reflection.
     static member inline CreateSymmetric(m, f):Matrix<'T> =
         let s = Array2D.zeroCreate<'T> m m
         for i = 0 to m - 1 do
             for j = i to m - 1 do
                 s.[i, j] <- f i j
         SymmetricMatrix s
-    static member inline map (f:'a->'b) (m:Matrix<'a>) : Matrix<'b> =
-        match m with
-        | ZeroMatrix _ -> ZeroMatrix LanguagePrimitives.GenericZero<'b>
-        | Matrix m -> Matrix.Create(Array2D.map f m)
-        | SymmetricMatrix mm -> Matrix.CreateSymmetric(m.Rows, fun i j -> f mm.[i, j])
-    /// Matrix with infinite number of rows and columns and all entries 0
+    /// ZeroMatrix
     static member inline Zero = ZeroMatrix LanguagePrimitives.GenericZero<'T>
-    /// Convert Matrix `m` to float[,]
+    /// Converts Matrix `m` to float[,]
     static member inline op_Explicit(m:Matrix<'T>) =
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> Array2D.map float m
         | SymmetricMatrix m -> copyupper (Array2D.map float m)
-    /// Symmetric unary operation `f` on Matrix `a`
+    /// Perfomrs a symmetric unary operation `f` on Matrix `a`
     static member inline SymmetricOp(a:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
         | SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
-    /// Symmetric binary operation `f` on Matrix `a` and Matrix `b`
+    /// Performs a symmetric binary operation `f` on Matrix `a` and Matrix `b`
     static member inline SymmetricOp(a:Matrix<'T>, b:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a, b with
         | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
@@ -297,7 +306,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | SymmetricMatrix _, ZeroMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
         | SymmetricMatrix _, Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
         | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
-    /// Add Matrix `a` to Matrix `b`
+    /// Adds Matrix `a` to Matrix `b`
     static member inline (+) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
         | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
@@ -309,7 +318,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | SymmetricMatrix a, ZeroMatrix _ -> SymmetricMatrix a
         | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> a.[i, j] + bm.[i, j])
         | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, fun i j -> a.[i, j] + b.[i, j])
-    /// Subtract Matrix `b` from Matrix `a`
+    /// Subtracts Matrix `b` from Matrix `a`
     static member inline (-) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
         | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
@@ -321,7 +330,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | SymmetricMatrix a, ZeroMatrix _ -> SymmetricMatrix a
         | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, a.Cols, fun i j -> a.[i, j] - bm.[i, j])
         | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, fun i j -> a.[i, j] - b.[i, j])
-    /// Matrix product of Matrix `a` and Matrix `b`
+    /// Calculates the matrix product of Matrix `a` and Matrix `b`
     static member inline (*) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
         | ZeroMatrix z, ZeroMatrix _ -> ZeroMatrix z
@@ -333,31 +342,31 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | SymmetricMatrix _, ZeroMatrix z -> ZeroMatrix z
         | SymmetricMatrix _, Matrix bm -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * bm.[k, j]) [|0..(b.Rows - 1)|] )
         | SymmetricMatrix _, SymmetricMatrix _ -> Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] )
-    /// Multiply Matrix `a` by number `b`
+    /// Multiplies Matrix `a` by number `b`
     static member inline (*) (a, b) =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix am -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] * b)
         | SymmetricMatrix am -> Matrix.CreateSymmetric(a.Rows, fun i j -> am.[i, j] * b)
-    /// Multiply Matrix `b` by number `a`
+    /// Multiplies Matrix `b` by number `a`
     static member inline (*) (a, b) =
         match b with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix bm -> Matrix.Create(b.Rows, b.Cols, fun i j -> a * bm.[i, j])
         | SymmetricMatrix bm -> Matrix.CreateSymmetric(b.Rows, fun i j -> a * bm.[i, j])
-    /// Divide Matrix `a` by number `b`
+    /// Divides Matrix `a` by number `b`
     static member inline (/) (a, b) =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix am -> Matrix.Create(a.Rows, a.Cols, fun i j -> am.[i, j] / b)
         | SymmetricMatrix am -> Matrix.CreateSymmetric(a.Rows, fun i j -> am.[i, j] / b)
-    /// Create Matrix whose elements are number `a` divided by the element of Matrix `b`
+    /// Creates a Matrix whose elements are number `a` divided by the element of Matrix `b`
     static member inline (/) (a, b) =
         match b with
         | ZeroMatrix _ -> raise (new System.DivideByZeroException("Attempted division by a ZeroMatrix."))
         | Matrix bm -> Matrix.Create(b.Rows, b.Cols, fun i j -> a / bm.[i, j])
         | SymmetricMatrix bm -> Matrix.CreateSymmetric(b.Rows, fun i j -> a / bm.[i, j])
-    /// Negative of Matrix `a`
+    /// Gets the negative of Matrix `a`
     static member inline (~-) (a:Matrix<'T>) =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
@@ -366,19 +375,19 @@ type Matrix<'T when 'T : (static member Zero : 'T)
 
 
 
-/// Convert array `v` into Vector
+/// Converts array `v` into a Vector
 let inline vector v = Vector v
-/// Get the Euclidean norm of Vector `v`
+/// Gets the Euclidean norm of Vector `v`
 let inline norm (v:Vector<'T>) = v.GetNorm()
-/// Get the unit vector codirectional with Vector `v`
+/// Gets the unit vector codirectional with Vector `v`
 let inline unitVector (v:Vector<'T>) = v.GetUnitVector()
-/// Convert Vector `v` into array
+/// Converts Vector `v` into array
 let inline array (v:Vector<'T>) = v.ToArray()
-/// Convert 2d array `m` into Matrix
+/// Converts 2d array `m` into a Matrix
 let inline matrix (m:'T[,]) = Matrix.Create(m)
-/// Convert Matrix `m` into 2d array
+/// Converts Matrix `m` into a 2d array
 let inline array2d (m:Matrix<'T>) = m.ToArray2d()
-/// Get the trace of Matrix `m`
+/// Gets the trace of Matrix `m`
 let inline trace (m:Matrix<'T>) = m.GetTrace()
-/// Get the transpose of Matrix `m`
+/// Gets the transpose of Matrix `m`
 let inline transpose (m:Matrix<'T>) = m.GetTranspose()

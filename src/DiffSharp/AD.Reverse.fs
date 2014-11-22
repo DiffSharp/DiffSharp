@@ -303,3 +303,7 @@ module Vector =
     let inline gradhessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, matrix b)
+    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianTv (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) (v:Vector<float>) = ReverseOps.jacobianTv (vector >> f >> array) (array x) (array v) |> vector
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianTv' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) (v:Vector<float>) = ReverseOps.jacobianTv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)

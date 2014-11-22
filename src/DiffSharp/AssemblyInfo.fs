@@ -39,4 +39,6 @@ open System.Runtime.InteropServices;
 [<assembly: AssemblyVersion("0.5.4")>]
 [<assembly: AssemblyInformationalVersion("0.5.4")>]
 [<assembly: AssemblyFileVersion("0.5.4.*")>]
+
+[<assembly: AutoOpen("DiffSharp.Util.LinearAlgebra")>]
 ()
