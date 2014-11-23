@@ -319,7 +319,7 @@ If you would like to run the benchmarks on your own machine, you can use the com
 
 <div class="row">
     <div class="span6">
-        <img src="img/benchmarks.png" alt="Chart" style="width:600px"/>
+        <img src="img/benchmarks.png" alt="Chart" style="width:569px"/>
     </div>
 </div>
 *)
