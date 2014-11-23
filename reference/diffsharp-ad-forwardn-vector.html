@@ -167,7 +167,7 @@
             grad f x
           </code>
           <div class="tip" id="288">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; Vector<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -182,7 +182,7 @@
             grad&#39; f x
           </code>
           <div class="tip" id="289">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; float * Vector<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; float * Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -197,7 +197,7 @@
             gradv f x v
           </code>
           <div class="tip" id="290">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; v:Vector -&gt; float<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -212,7 +212,7 @@
             gradv&#39; f x v
           </code>
           <div class="tip" id="291">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; v:Vector -&gt; float * float<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; float * float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -227,7 +227,7 @@
             jacobian f x
           </code>
           <div class="tip" id="292">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; Matrix<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -242,7 +242,7 @@
             jacobian&#39; f x
           </code>
           <div class="tip" id="293">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; Vector * Matrix<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -257,7 +257,7 @@
             jacobianT f x
           </code>
           <div class="tip" id="294">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; Matrix<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -272,7 +272,7 @@
             jacobianT&#39; f x
           </code>
           <div class="tip" id="295">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; Vector * Matrix<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -287,7 +287,7 @@
             jacobianv f x v
           </code>
           <div class="tip" id="296">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; v:Vector -&gt; Vector<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -302,7 +302,7 @@
             jacobianv&#39; f x v
           </code>
           <div class="tip" id="297">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN []) -&gt; x:Vector -&gt; v:Vector -&gt; Vector * Vector<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; Vector&lt;DualN&gt;) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -317,7 +317,7 @@
             laplacian f x
           </code>
           <div class="tip" id="298">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; float<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -332,7 +332,7 @@
             laplacian&#39; f x
           </code>
           <div class="tip" id="299">
-            <strong>Signature:</strong> f:(DualN [] -&gt; DualN) -&gt; x:Vector -&gt; float * float<br />
+            <strong>Signature:</strong> f:(Vector&lt;DualN&gt; -&gt; DualN) -&gt; x:Vector&lt;float&gt; -&gt; float * float<br />
                       </div>
         </td>
         <td class="xmldoc">

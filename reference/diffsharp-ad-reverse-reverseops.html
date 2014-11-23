@@ -269,9 +269,24 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '317', 317)" onmouseover="showTip(event, '317', 317)">
-            laplacian f x
+            jacobianTv&#39;&#39; f x
           </code>
           <div class="tip" id="317">
+            <strong>Signature:</strong> f:(Adj [] -&gt; Adj []) -&gt; x:float [] -&gt; float [] * (float [] -&gt; float [])<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>. Of the returned pair, the first is the original value of function <code>f</code> at point <code>x</code> (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '318', 318)" onmouseover="showTip(event, '318', 318)">
+            laplacian f x
+          </code>
+          <div class="tip" id="318">
             <strong>Signature:</strong> f:(Adj [] -&gt; Adj) -&gt; x:float [] -&gt; float<br />
                       </div>
         </td>
@@ -283,10 +298,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '318', 318)" onmouseover="showTip(event, '318', 318)">
+          <code onmouseout="hideTip(event, '319', 319)" onmouseover="showTip(event, '319', 319)">
             laplacian&#39; f x
           </code>
-          <div class="tip" id="318">
+          <div class="tip" id="319">
             <strong>Signature:</strong> f:(Adj [] -&gt; Adj) -&gt; x:float [] -&gt; float * float<br />
                       </div>
         </td>

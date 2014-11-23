@@ -202,7 +202,7 @@
 
 <p><strong>X</strong>: Exact value; <strong>A</strong>: Numerical approximation; <strong>XA</strong>: Exact gradient, approximated Hessian</p>
 
-<h2>Operations and Variants</h2>
+<h2>Differentiation Operations and Variants</h2>
 
 <p>The operations summarized in the above table have <em>prime-suffixed</em> variants (e.g. <strong>diff</strong> and <strong>diff'</strong> ) that return tuples of (<em>the value of the original function</em>, <em>the value of the desired operation</em>). This is advantageous in the majority of AD operations, since the original function value would have been already computed as a by-product of AD computations, providing a performance advantage.</p>
 
@@ -232,7 +232,7 @@
 
 <p>Currently, the library provides the following operations:</p>
 
-<h5>diff : <span class="math">\((\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}\)</span></h5>
+<h5>diff : <span class="math">\(\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <p><strong><code>diff f x</code></strong> returns the first derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -242,13 +242,13 @@
 
 <hr />
 
-<h5>diff' : <span class="math">\((\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>diff' : <span class="math">\(\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>diff' f x</code></strong> returns the original value and the first derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>diff2 : <span class="math">\((\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}\)</span></h5>
+<h5>diff2 : <span class="math">\(\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <p><strong><code>diff2 f x</code></strong> returns the second derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -258,19 +258,19 @@
 
 <hr />
 
-<h5>diff2' : <span class="math">\((\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>diff2' : <span class="math">\(\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>diff2' f x</code></strong> returns the original value and the second derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>diff2'' : <span class="math">\((\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>diff2'' : <span class="math">\(\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>diff2'' f x</code></strong> returns the original value, the first derivative, and the second derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>diffn : <span class="math">\(\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to \mathbb{R}\)</span></h5>
+<h5>diffn : <span class="math">\(\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <p><strong><code>diffn n f x</code></strong> returns the <code>n</code>-th derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -280,13 +280,13 @@
 
 <hr />
 
-<h5>diffn' : <span class="math">\(\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R} \to (\mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>diffn' : <span class="math">\(\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>diffn' n f x</code></strong> returns the original value and the <code>n</code>-th derivative of a scalar-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>grad : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n\)</span></h5>
+<h5>grad : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}\)</span></h5>
 
 <p><strong><code>grad f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Gradient">gradient</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -296,13 +296,13 @@
 
 <hr />
 
-<h5>grad' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n)\)</span></h5>
+<h5>grad' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}\)</span></h5>
 
 <p><strong><code>grad' f x</code></strong> returns the original value and the gradient of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>gradv : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}\)</span></h5>
+<h5>gradv : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <p><strong><code>gradv f x v</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Directional_derivative">gradient-vector product</a> (directional derivative) of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
@@ -314,13 +314,13 @@
 
 <hr />
 
-<h5>gradv' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>gradv' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>gradv' f x v</code></strong> returns the original value and the gradient-vector product (directional derivative) of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
 <hr />
 
-<h5>hessian : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^{n \times n}\)</span></h5>
+<h5>hessian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times n}}\)</span></h5>
 
 <p><strong><code>hessian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Hessian_matrix">Hessian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -335,25 +335,25 @@
 
 <hr />
 
-<h5>hessian' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^{n \times n})\)</span></h5>
+<h5>hessian' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^{n \times n})}\)</span></h5>
 
 <p><strong><code>hessian' f x</code></strong> returns the original value and the Hessian of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>gradhessian : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R}^n \times \mathbb{R}^{n \times n})\)</span></h5>
+<h5>gradhessian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^n \times \mathbb{R}^{n \times n})}\)</span></h5>
 
 <p><strong><code>gradhessian f x</code></strong> returns the gradient and the Hessian of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>gradhessian' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})\)</span></h5>
+<h5>gradhessian' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})}\)</span></h5>
 
 <p><strong><code>gradhessian' f x</code></strong> returns the original value, the gradient, and the Hessian of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>laplacian : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}\)</span></h5>
+<h5>laplacian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <p><strong><code>laplacian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator">Laplacian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -367,13 +367,13 @@
 
 <hr />
 
-<h5>laplacian' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to (\mathbb{R} \times \mathbb{R})\)</span></h5>
+<h5>laplacian' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <p><strong><code>laplacian' f x</code></strong> returns the original value and the Laplacian of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>jacobian : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{m \times n}\)</span></h5>
+<h5>jacobian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{m \times n}}\)</span></h5>
 
 <p><strong><code>jacobian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -387,13 +387,13 @@
 
 <hr />
 
-<h5>jacobian' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{m \times n})\)</span></h5>
+<h5>jacobian' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^{m \times n})}\)</span></h5>
 
 <p><strong><code>jacobian' f x</code></strong> returns the original value and the Jacobian of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>jacobianv : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m\)</span></h5>
+<h5>jacobianv : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^m}\)</span></h5>
 
 <p><strong><code>jacobianv f x v</code></strong> returns the Jacobian-vector product of a vector-to-vector function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
@@ -405,13 +405,13 @@
 
 <hr />
 
-<h5>jacobianv' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^m)\)</span></h5>
+<h5>jacobianv' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m)}\)</span></h5>
 
 <p><strong><code>jacobianv' f x v</code></strong> returns the original value and the Jacobian-vector product of a vector-to-vector function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
 <hr />
 
-<h5>jacobianT : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^{n \times m}\)</span></h5>
+<h5>jacobianT : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times m}}\)</span></h5>
 
 <p><strong><code>jacobianT f x</code></strong> returns the transposed Jacobian of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
@@ -425,13 +425,13 @@
 
 <hr />
 
-<h5>jacobianT' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to (\mathbb{R}^m \times \mathbb{R}^{n \times m})\)</span></h5>
+<h5>jacobianT' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^{n \times m})}\)</span></h5>
 
 <p><strong><code>jacobianT' f x</code></strong> returns the original value and the transposed Jacobian of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
 <hr />
 
-<h5>jacobianTv : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to \mathbb{R}^n\)</span></h5>
+<h5>jacobianTv : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{\mathbb{R}^n}\)</span></h5>
 
 <p><strong><code>jacobianTv f x v</code></strong> returns the transposed Jacobian-vector product of a vector-to-vector function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
@@ -443,9 +443,21 @@
 
 <hr />
 
-<h5>jacobianTv' : <span class="math">\((\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m \to (\mathbb{R}^m \times \mathbb{R}^n)\)</span></h5>
+<h5>jacobianTv' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^n)}\)</span></h5>
 
 <p><strong><code>jacobianTv' f x v</code></strong> returns the original value and the transposed Jacobian-vector product of a vector-to-vector function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
+
+<p>This can be computed by the <strong>DiffSharp.AD.Reverse</strong> module in a matrix-free and efficient way.</p>
+
+<hr />
+
+<h5>jacobianTv'' : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}\)</span></h5>
+
+<p><strong><code>jacobianTv'' f x</code></strong> returns the original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>.</p>
+
+<p>Of the returned pair, the first is the original value of function <code>f</code> at point <code>x</code> (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).</p>
+
+<p>This can be computed by the <strong>DiffSharp.AD.Reverse</strong> module in a matrix-free and efficient way.</p>
 
 <h2>Implemented Differentiation Techniques</h2>
 
@@ -477,6 +489,7 @@
 <span class="l">4: </span>
 <span class="l">5: </span>
 <span class="l">6: </span>
+<span class="l">7: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
@@ -484,6 +497,7 @@
 
 <span class="c">// Gradient of a vector-to-scalar function</span>
 <span class="c">// g1: float[] -&gt; float[]</span>
+<span class="c">// Inner lambda expression: Dual[] -&gt; Dual</span>
 <span class="c">// i.e. take the function arguments as a float[] and return the gradient as a float[]</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs12', 20)" onmouseover="showTip(event, 'fs12', 20)" class="i">g1</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 21)" onmouseover="showTip(event, 'fs13', 21)" class="i">grad</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 22)" onmouseover="showTip(event, 'fs14', 22)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 23)" onmouseover="showTip(event, 'fs7', 23)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs14', 24)" onmouseover="showTip(event, 'fs14', 24)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs14', 25)" onmouseover="showTip(event, 'fs14', 25)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]))</pre>
 </td>
@@ -499,15 +513,17 @@
 <span class="l">4: </span>
 <span class="l">5: </span>
 <span class="l">6: </span>
+<span class="l">7: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
 <span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 26)" onmouseover="showTip(event, 'fs1', 26)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 27)" onmouseover="showTip(event, 'fs2', 27)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 28)" onmouseover="showTip(event, 'fs3', 28)" class="i">Forward</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 29)" onmouseover="showTip(event, 'fs15', 29)" class="i">Vector</span>
 
 <span class="c">// Gradient of a vector-to-scalar function</span>
-<span class="c">// g2: Vector -&gt; Vector</span>
-<span class="c">// i.e. take the function arguments as a Vector and return the gradient as a Vector</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 30)" onmouseover="showTip(event, 'fs16', 30)" class="i">g2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs17', 31)" onmouseover="showTip(event, 'fs17', 31)" class="i">grad</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 32)" onmouseover="showTip(event, 'fs14', 32)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 33)" onmouseover="showTip(event, 'fs7', 33)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs14', 34)" onmouseover="showTip(event, 'fs14', 34)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs14', 35)" onmouseover="showTip(event, 'fs14', 35)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]))</pre>
+<span class="c">// g2: Vector&lt;float&gt; -&gt; Vector&lt;float&gt;</span>
+<span class="c">// Inner lambda expression: Vector&lt;Dual&gt; -&gt; Dual</span>
+<span class="c">// i.e. take the function arguments as a Vector&lt;float&gt; and return the gradient as a Vector&lt;float&gt;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 30)" onmouseover="showTip(event, 'fs16', 30)" class="i">g2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs17', 31)" onmouseover="showTip(event, 'fs17', 31)" class="i">grad</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 33)" onmouseover="showTip(event, 'fs7', 33)" class="i">sin</span> (<span onmouseout="hideTip(event, 'fs18', 34)" onmouseover="showTip(event, 'fs18', 34)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs18', 35)" onmouseover="showTip(event, 'fs18', 35)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]))</pre>
 </td>
 </tr>
 </table>
@@ -527,8 +543,9 @@
 <div class="tip" id="fs13">val grad : f:(Dual [] -&gt; Dual) -&gt; x:float [] -&gt; float []<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.grad</div>
 <div class="tip" id="fs14">val x : Dual []</div>
 <div class="tip" id="fs15">module Vector<br /><br />from DiffSharp.AD.Forward</div>
-<div class="tip" id="fs16">val g2 : (DiffSharp.Util.LinearAlgebra.Vector -&gt; DiffSharp.Util.LinearAlgebra.Vector)<br /><br />Full name: Api-overview.g2</div>
-<div class="tip" id="fs17">val grad : f:(Dual [] -&gt; Dual) -&gt; x:DiffSharp.Util.LinearAlgebra.Vector -&gt; DiffSharp.Util.LinearAlgebra.Vector<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
+<div class="tip" id="fs16">val g2 : (Vector&lt;float&gt; -&gt; Vector&lt;float&gt;)<br /><br />Full name: Api-overview.g2</div>
+<div class="tip" id="fs17">val grad : f:(Vector&lt;Dual&gt; -&gt; Dual) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
+<div class="tip" id="fs18">val x : Vector&lt;Dual&gt;</div>
           
         </div>
         <div class="span3">

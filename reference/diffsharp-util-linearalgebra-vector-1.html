@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Vector - DiffSharp</title>
+    <title>Vector<'T> - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
@@ -42,7 +42,7 @@
 
 
 
-<h1>Vector</h1>
+<h1>Vector<'T></h1>
 <div class="xmldoc">
 <p>Lightweight vector type</p>
 </div>
@@ -55,29 +55,31 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '705', 705)" onmouseover="showTip(event, '705', 705)">
-            Vector(float [])
+          <code onmouseout="hideTip(event, '709', 709)" onmouseover="showTip(event, '709', 709)">
+            Vector(^T [])
           </code>
-          <div class="tip" id="705">
-            <strong>Signature:</strong> float []<br />
+          <div class="tip" id="709">
+            <strong>Signature:</strong> ^T []<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Vector with finite dimension</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '706', 706)" onmouseover="showTip(event, '706', 706)">
-            ZeroVector
+          <code onmouseout="hideTip(event, '710', 710)" onmouseover="showTip(event, '710', 710)">
+            ZeroVector(^T)
           </code>
-          <div class="tip" id="706">
-            <strong>Signature:</strong> <br />
+          <div class="tip" id="710">
+            <strong>Signature:</strong> ^T<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Vector with infinite dimension whose elements are all 0</p>
+
         </td>
       </tr>
     </tbody>
@@ -91,87 +93,30 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '707', 707)" onmouseover="showTip(event, '707', 707)">
+          <code onmouseout="hideTip(event, '711', 711)" onmouseover="showTip(event, '711', 711)">
             FirstItem
           </code>
-          <div class="tip" id="707">
-            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '708', 708)" onmouseover="showTip(event, '708', 708)">
-            GetNorm()
-          </code>
-          <div class="tip" id="708">
-            <strong>Signature:</strong> unit -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the Euclidean norm of this vector</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '709', 709)" onmouseover="showTip(event, '709', 709)">
-            GetUnitVector()
-          </code>
-          <div class="tip" id="709">
-            <strong>Signature:</strong> unit -&gt; Vector<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the unit vector codirectional with this vector</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '710', 710)" onmouseover="showTip(event, '710', 710)">
-            [i]
-          </code>
-          <div class="tip" id="710">
-            <strong>Signature:</strong> i:int -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '711', 711)" onmouseover="showTip(event, '711', 711)">
-            Length
-          </code>
           <div class="tip" id="711">
-            <strong>Signature:</strong> int<br />
+            <strong>Signature:</strong> ^T<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Gets the first element of this Vector</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '712', 712)" onmouseover="showTip(event, '712', 712)">
-            ToMathematicaString()
+            GetNorm()
           </code>
           <div class="tip" id="712">
-            <strong>Signature:</strong> unit -&gt; string<br />
+            <strong>Signature:</strong> unit -&gt; ^T<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Get a string representation of this Vector that can be pasted into a Mathematica notebook</p>
+          <p>Gets the Euclidean norm of this Vector</p>
 
         </td>
       </tr>
@@ -179,14 +124,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '713', 713)" onmouseover="showTip(event, '713', 713)">
-            ToMatlabString()
+            GetUnitVector()
           </code>
           <div class="tip" id="713">
-            <strong>Signature:</strong> unit -&gt; string<br />
+            <strong>Signature:</strong> unit -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Get a string representation of this Vector that can be pasted into MATLAB</p>
+          <p>Gets the unit Vector codirectional with this Vector</p>
 
         </td>
       </tr>
@@ -194,14 +139,75 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '714', 714)" onmouseover="showTip(event, '714', 714)">
-            ToString()
+            [i]
           </code>
           <div class="tip" id="714">
+            <strong>Signature:</strong> i:int -&gt; ^T<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the element of this Vector at the given position <code>i</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '715', 715)" onmouseover="showTip(event, '715', 715)">
+            Length
+          </code>
+          <div class="tip" id="715">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the total number of elements of this Vector</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '716', 716)" onmouseover="showTip(event, '716', 716)">
+            ToArray()
+          </code>
+          <div class="tip" id="716">
+            <strong>Signature:</strong> unit -&gt; ^T []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts this Vector to an array, e.g. from Vector<float> to float[]</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '717', 717)" onmouseover="showTip(event, '717', 717)">
+            ToMathematicaString()
+          </code>
+          <div class="tip" id="717">
             <strong>Signature:</strong> unit -&gt; string<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Gets a string representation of this Vector that can be pasted into a Mathematica notebook</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '718', 718)" onmouseover="showTip(event, '718', 718)">
+            ToMatlabString()
+          </code>
+          <div class="tip" id="718">
+            <strong>Signature:</strong> unit -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets a string representation of this Vector that can be pasted into MATLAB</p>
+
         </td>
       </tr>
     </tbody>
@@ -215,75 +221,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '715', 715)" onmouseover="showTip(event, '715', 715)">
+          <code onmouseout="hideTip(event, '719', 719)" onmouseover="showTip(event, '719', 719)">
             ( - )(a, b)
           </code>
-          <div class="tip" id="715">
-            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Subtract Vector <code>b</code> from Vector <code>a</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '716', 716)" onmouseover="showTip(event, '716', 716)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="716">
-            <strong>Signature:</strong> (a:float * b:Vector) -&gt; Vector<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Multiply Vector <code>b</code> by float <code>a</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '717', 717)" onmouseover="showTip(event, '717', 717)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="717">
-            <strong>Signature:</strong> (a:Vector * b:float) -&gt; Vector<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Multiply Vector <code>a</code> by float <code>b</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '718', 718)" onmouseover="showTip(event, '718', 718)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="718">
-            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Multiply Vector <code>a</code> and Vector <code>b</code> element-wise (Hadamard product)</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '719', 719)" onmouseover="showTip(event, '719', 719)">
-            ( / )(a, b)
-          </code>
           <div class="tip" id="719">
-            <strong>Signature:</strong> (a:float * b:Vector) -&gt; Vector<br />
+            <strong>Signature:</strong> (a:Vector&lt;^T&gt; * b:Vector&lt;^T&gt;) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Vector whose elements are float <code>a</code> divided by the elements of Vector <code>b</code></p>
+          <p>Subtracts Vector <code>b</code> from Vector <code>a</code></p>
 
         </td>
       </tr>
@@ -291,14 +237,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '720', 720)" onmouseover="showTip(event, '720', 720)">
-            ( / )(a, b)
+            ( * )(a, b)
           </code>
           <div class="tip" id="720">
-            <strong>Signature:</strong> (a:Vector * b:float) -&gt; Vector<br />
-                      </div>
+            <strong>Signature:</strong> (a:^?161456 * b:Vector&lt;^?161457&gt;) -&gt; Vector&lt;^?161458&gt;<br />
+                          <strong>Type parameters:</strong> ^?161457, ^?161458          </div>
         </td>
         <td class="xmldoc">
-          <p>Divide Vector <code>a</code> by float <code>b</code></p>
+          <p>Multiples Vector <code>b</code> by number <code>a</code></p>
 
         </td>
       </tr>
@@ -306,14 +252,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '721', 721)" onmouseover="showTip(event, '721', 721)">
-            ( / )(a, b)
+            ( * )(a, b)
           </code>
           <div class="tip" id="721">
-            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
-                      </div>
+            <strong>Signature:</strong> (a:Vector&lt;^?161451&gt; * b:^?161452) -&gt; Vector&lt;^?161453&gt;<br />
+                          <strong>Type parameters:</strong> ^?161452, ^?161453          </div>
         </td>
         <td class="xmldoc">
-          <p>Divide Vector <code>a</code> by Vector <code>b</code> element-wise</p>
+          <p>Multiplies Vector <code>a</code> by number <code>b</code></p>
 
         </td>
       </tr>
@@ -321,14 +267,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '722', 722)" onmouseover="showTip(event, '722', 722)">
-            ( ~- )(a)
+            ( * )(a, b)
           </code>
           <div class="tip" id="722">
-            <strong>Signature:</strong> a:Vector -&gt; Vector<br />
+            <strong>Signature:</strong> (a:Vector&lt;^T&gt; * b:Vector&lt;^T&gt;) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Negative of Vector <code>a</code></p>
+          <p>Multiplies Vector <code>a</code> and Vector <code>b</code> element-wise (Hadamard product)</p>
 
         </td>
       </tr>
@@ -336,14 +282,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '723', 723)" onmouseover="showTip(event, '723', 723)">
-            ( + )(a, b)
+            ( / )(a, b)
           </code>
           <div class="tip" id="723">
-            <strong>Signature:</strong> (a:Vector * b:Vector) -&gt; Vector<br />
-                      </div>
+            <strong>Signature:</strong> (a:^?161466 * b:Vector&lt;^?161467&gt;) -&gt; Vector&lt;^?161468&gt;<br />
+                          <strong>Type parameters:</strong> ^?161467, ^?161468          </div>
         </td>
         <td class="xmldoc">
-          <p>Add Vector <code>a</code> to Vector <code>b</code></p>
+          <p>Creates a Vector whose elements are number <code>a</code> divided by the elements of Vector <code>b</code></p>
 
         </td>
       </tr>
@@ -351,14 +297,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '724', 724)" onmouseover="showTip(event, '724', 724)">
-            Create(n, i, v)
+            ( / )(a, b)
           </code>
           <div class="tip" id="724">
-            <strong>Signature:</strong> (n:int * i:int * v:float&lt;MeasureOne&gt;) -&gt; Vector<br />
-                      </div>
+            <strong>Signature:</strong> (a:Vector&lt;^?161461&gt; * b:^?161462) -&gt; Vector&lt;^?161463&gt;<br />
+                          <strong>Type parameters:</strong> ^?161462, ^?161463          </div>
         </td>
         <td class="xmldoc">
-          <p>Create Vector with dimension <code>n</code>, the element with index <code>i</code> having value <code>v</code>, and the rest of the elements 0</p>
+          <p>Divides Vector <code>a</code> by number <code>b</code></p>
 
         </td>
       </tr>
@@ -366,14 +312,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '725', 725)" onmouseover="showTip(event, '725', 725)">
-            Create(n, v)
+            ( / )(a, b)
           </code>
           <div class="tip" id="725">
-            <strong>Signature:</strong> (n:int * v:float) -&gt; Vector<br />
+            <strong>Signature:</strong> (a:Vector&lt;^T&gt; * b:Vector&lt;^T&gt;) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Vector with dimension <code>n</code> and all elements having value <code>v</code></p>
+          <p>Divides Vector <code>a</code> by Vector <code>b</code> element-wise</p>
 
         </td>
       </tr>
@@ -381,14 +327,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '726', 726)" onmouseover="showTip(event, '726', 726)">
-            Create(n, f)
+            ( ~- )(a)
           </code>
           <div class="tip" id="726">
-            <strong>Signature:</strong> (n:int * f:(int -&gt; float)) -&gt; Vector<br />
+            <strong>Signature:</strong> a:Vector&lt;^T&gt; -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Vector with dimension <code>n</code> and a generator function <code>f</code> to compute the elements</p>
+          <p>Gets the negative of Vector <code>a</code></p>
 
         </td>
       </tr>
@@ -396,14 +342,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '727', 727)" onmouseover="showTip(event, '727', 727)">
-            Create(v)
+            ( + )(a, b)
           </code>
           <div class="tip" id="727">
-            <strong>Signature:</strong> (v:float []) -&gt; Vector<br />
+            <strong>Signature:</strong> (a:Vector&lt;^T&gt; * b:Vector&lt;^T&gt;) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Vector from array <code>v</code></p>
+          <p>Adds Vector <code>a</code> to Vector <code>b</code></p>
 
         </td>
       </tr>
@@ -411,14 +357,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '728', 728)" onmouseover="showTip(event, '728', 728)">
-            map(f v)
+            Create(n, i, v)
           </code>
           <div class="tip" id="728">
-            <strong>Signature:</strong> (f:(float -&gt; float)) -&gt; v:Vector -&gt; Vector<br />
+            <strong>Signature:</strong> (n:int * i:int * v:^T) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Builds a new Vector whose elements are the results of applying function <code>f</code> to each of the elements of Vector <code>v</code></p>
+          <p>Creates a Vector with dimension <code>n</code> where the element with index <code>i</code> has value <code>v</code> and the rest of the elements have value 0</p>
 
         </td>
       </tr>
@@ -426,14 +372,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '729', 729)" onmouseover="showTip(event, '729', 729)">
-            op_Explicit(v)
+            Create(n, v)
           </code>
           <div class="tip" id="729">
-            <strong>Signature:</strong> v:Vector -&gt; float&lt;MeasureOne&gt; []<br />
+            <strong>Signature:</strong> (n:int * v:^T) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Convert Vector <code>v</code> to float[]</p>
+          <p>Creates a Vector with dimension <code>n</code> whose elements are all initally the given value <code>v</code></p>
 
         </td>
       </tr>
@@ -441,14 +387,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '730', 730)" onmouseover="showTip(event, '730', 730)">
-            sum(v)
+            Create(n, f)
           </code>
           <div class="tip" id="730">
-            <strong>Signature:</strong> v:Vector -&gt; float&lt;MeasureOne&gt;<br />
+            <strong>Signature:</strong> (n:int * f:(int -&gt; ^T)) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Returns the sum of all the elements in vector <code>v</code></p>
+          <p>Creates a Vector with dimension <code>n</code> and a generator function <code>f</code> to compute the elements</p>
 
         </td>
       </tr>
@@ -456,14 +402,74 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '731', 731)" onmouseover="showTip(event, '731', 731)">
-            Zero
+            Create(v)
           </code>
           <div class="tip" id="731">
-            <strong>Signature:</strong> Vector<br />
+            <strong>Signature:</strong> (v:^T []) -&gt; Vector&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Vector with infinite dimension and all elements 0</p>
+          <p>Creates a Vector from the array <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '732', 732)" onmouseover="showTip(event, '732', 732)">
+            init(n f)
+          </code>
+          <div class="tip" id="732">
+            <strong>Signature:</strong> n:int -&gt; (f:(int -&gt; ^T)) -&gt; Vector&lt;^T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a Vector with dimension <code>n</code> and a generator function <code>f</code> to compute the eleements</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '733', 733)" onmouseover="showTip(event, '733', 733)">
+            op_Explicit(v)
+          </code>
+          <div class="tip" id="733">
+            <strong>Signature:</strong> v:Vector&lt;^T&gt; -&gt; float []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts Vector <code>v</code> to float[]</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '734', 734)" onmouseover="showTip(event, '734', 734)">
+            sum(v)
+          </code>
+          <div class="tip" id="734">
+            <strong>Signature:</strong> v:Vector&lt;^T&gt; -&gt; ^T<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Returns the sum of all the elements in Vector <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '735', 735)" onmouseover="showTip(event, '735', 735)">
+            Zero
+          </code>
+          <div class="tip" id="735">
+            <strong>Signature:</strong> Vector&lt;^T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>ZeroVector</p>
 
         </td>
       </tr>

@@ -57,30 +57,16 @@
     <tbody>
         <tr>
           <td class="type-name">
-            <a href="diffsharp-util-linearalgebra-matrix.html">Matrix</a>
+            <a href="diffsharp-util-linearalgebra-matrix-1.html">Matrix<'T></a>
           </td>
           <td class="xmldoc"><p>Lightweight matrix type</p>
 </td>
         </tr>
         <tr>
           <td class="type-name">
-            <a href="diffsharp-util-linearalgebra-vector.html">Vector</a>
+            <a href="diffsharp-util-linearalgebra-vector-1.html">Vector<'T></a>
           </td>
           <td class="xmldoc"><p>Lightweight vector type</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="diffsharp-util-linearalgebra-zeromatrix.html">ZeroMatrix</a>
-          </td>
-          <td class="xmldoc"><p>A matrix with infinite dimensions and all elements 0</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="diffsharp-util-linearalgebra-zerovector.html">ZeroVector</a>
-          </td>
-          <td class="xmldoc"><p>A vector with infinite length and all elements 0</p>
 </td>
         </tr>
     </tbody>
@@ -97,120 +83,120 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '345', 345)" onmouseover="showTip(event, '345', 345)">
+          <code onmouseout="hideTip(event, '353', 353)" onmouseover="showTip(event, '353', 353)">
             array v
           </code>
-          <div class="tip" id="345">
-            <strong>Signature:</strong> v:Vector -&gt; float []<br />
-                      </div>
+          <div class="tip" id="353">
+            <strong>Signature:</strong> v:Vector&lt;^T&gt; -&gt; ^T []<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Convert Vector <code>v</code> into float[]</p>
+          <p>Converts Vector <code>v</code> into array</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '346', 346)" onmouseover="showTip(event, '346', 346)">
+          <code onmouseout="hideTip(event, '354', 354)" onmouseover="showTip(event, '354', 354)">
             array2d m
           </code>
-          <div class="tip" id="346">
-            <strong>Signature:</strong> m:Matrix -&gt; float [,]<br />
-                      </div>
+          <div class="tip" id="354">
+            <strong>Signature:</strong> m:Matrix&lt;^T&gt; -&gt; ^T [,]<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Convert Matrix m into float[,]</p>
+          <p>Converts Matrix <code>m</code> into a 2d array</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '347', 347)" onmouseover="showTip(event, '347', 347)">
+          <code onmouseout="hideTip(event, '355', 355)" onmouseover="showTip(event, '355', 355)">
             matrix m
           </code>
-          <div class="tip" id="347">
-            <strong>Signature:</strong> m:float [,] -&gt; Matrix<br />
-                      </div>
+          <div class="tip" id="355">
+            <strong>Signature:</strong> m:^T [,] -&gt; Matrix&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Convert float[,] <code>m</code> into Matrix</p>
+          <p>Converts 2d array <code>m</code> into a Matrix</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '348', 348)" onmouseover="showTip(event, '348', 348)">
+          <code onmouseout="hideTip(event, '356', 356)" onmouseover="showTip(event, '356', 356)">
             norm v
           </code>
-          <div class="tip" id="348">
-            <strong>Signature:</strong> v:Vector -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
+          <div class="tip" id="356">
+            <strong>Signature:</strong> v:Vector&lt;^T&gt; -&gt; ^T<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Get the Euclidean norm of Vector <code>v</code></p>
+          <p>Gets the Euclidean norm of Vector <code>v</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '349', 349)" onmouseover="showTip(event, '349', 349)">
+          <code onmouseout="hideTip(event, '357', 357)" onmouseover="showTip(event, '357', 357)">
             trace m
           </code>
-          <div class="tip" id="349">
-            <strong>Signature:</strong> m:Matrix -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
+          <div class="tip" id="357">
+            <strong>Signature:</strong> m:Matrix&lt;^T&gt; -&gt; ^T<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Get the trace of Matrix <code>m</code></p>
+          <p>Gets the trace of Matrix <code>m</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '350', 350)" onmouseover="showTip(event, '350', 350)">
+          <code onmouseout="hideTip(event, '358', 358)" onmouseover="showTip(event, '358', 358)">
             transpose m
           </code>
-          <div class="tip" id="350">
-            <strong>Signature:</strong> m:Matrix -&gt; Matrix<br />
-                      </div>
+          <div class="tip" id="358">
+            <strong>Signature:</strong> m:Matrix&lt;^T&gt; -&gt; Matrix&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Get the transpose of Matrix <code>m</code></p>
+          <p>Gets the transpose of Matrix <code>m</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '351', 351)" onmouseover="showTip(event, '351', 351)">
+          <code onmouseout="hideTip(event, '359', 359)" onmouseover="showTip(event, '359', 359)">
             unitVector v
           </code>
-          <div class="tip" id="351">
-            <strong>Signature:</strong> v:Vector -&gt; Vector<br />
-                      </div>
+          <div class="tip" id="359">
+            <strong>Signature:</strong> v:Vector&lt;^T&gt; -&gt; Vector&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
         </td>
         <td class="xmldoc">
-          <p>Get the unit vector codirectional with Vector <code>v</code></p>
+          <p>Gets the unit vector codirectional with Vector <code>v</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '352', 352)" onmouseover="showTip(event, '352', 352)">
+          <code onmouseout="hideTip(event, '360', 360)" onmouseover="showTip(event, '360', 360)">
             vector v
           </code>
-          <div class="tip" id="352">
-            <strong>Signature:</strong> v:float&lt;MeasureOne&gt; [] -&gt; Vector<br />
-                      </div>
+          <div class="tip" id="360">
+            <strong>Signature:</strong> v:^?161537 [] -&gt; Vector&lt;^?161537&gt;<br />
+                          <strong>Type parameters:</strong> ^?161537          </div>
         </td>
         <td class="xmldoc">
-          <p>Convert float[] <code>v</code> into Vector</p>
+          <p>Converts array <code>v</code> into a Vector</p>
 
         </td>
       </tr>

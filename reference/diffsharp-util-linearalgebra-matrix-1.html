@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Matrix - DiffSharp</title>
+    <title>Matrix<'T> - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
@@ -42,7 +42,7 @@
 
 
 
-<h1>Matrix</h1>
+<h1>Matrix<'T></h1>
 <div class="xmldoc">
 <p>Lightweight matrix type</p>
 </div>
@@ -55,43 +55,46 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '674', 674)" onmouseover="showTip(event, '674', 674)">
-            Matrix(float [,])
+          <code onmouseout="hideTip(event, '678', 678)" onmouseover="showTip(event, '678', 678)">
+            Matrix(^T [,])
           </code>
-          <div class="tip" id="674">
-            <strong>Signature:</strong> float [,]<br />
+          <div class="tip" id="678">
+            <strong>Signature:</strong> ^T [,]<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Matrix with finite number of rows and columns</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '675', 675)" onmouseover="showTip(event, '675', 675)">
-            SymmetricMatrix(float [,])
+          <code onmouseout="hideTip(event, '679', 679)" onmouseover="showTip(event, '679', 679)">
+            SymmetricMatrix(^T [,])
           </code>
-          <div class="tip" id="675">
-            <strong>Signature:</strong> float [,]<br />
+          <div class="tip" id="679">
+            <strong>Signature:</strong> ^T [,]<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Symmetric square matrix that is equal to its transpose</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '676', 676)" onmouseover="showTip(event, '676', 676)">
-            ZeroMatrix
+          <code onmouseout="hideTip(event, '680', 680)" onmouseover="showTip(event, '680', 680)">
+            ZeroMatrix(^T)
           </code>
-          <div class="tip" id="676">
-            <strong>Signature:</strong> <br />
+          <div class="tip" id="680">
+            <strong>Signature:</strong> ^T<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Matrix with infinite number of rows and columns whose entries are all 0</p>
+
         </td>
       </tr>
     </tbody>
@@ -105,87 +108,30 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '677', 677)" onmouseover="showTip(event, '677', 677)">
-            Cols
-          </code>
-          <div class="tip" id="677">
-            <strong>Signature:</strong> int<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '678', 678)" onmouseover="showTip(event, '678', 678)">
-            GetTrace()
-          </code>
-          <div class="tip" id="678">
-            <strong>Signature:</strong> unit -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the trace of this Matrix</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '679', 679)" onmouseover="showTip(event, '679', 679)">
-            GetTranspose()
-          </code>
-          <div class="tip" id="679">
-            <strong>Signature:</strong> unit -&gt; Matrix<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the transpose of this Matrix</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '680', 680)" onmouseover="showTip(event, '680', 680)">
-            [i, j]
-          </code>
-          <div class="tip" id="680">
-            <strong>Signature:</strong> i:int * j:int -&gt; float&lt;MeasureOne&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
           <code onmouseout="hideTip(event, '681', 681)" onmouseover="showTip(event, '681', 681)">
-            Rows
+            Cols
           </code>
           <div class="tip" id="681">
             <strong>Signature:</strong> int<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Gets the number of columns of thisMatrix</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '682', 682)" onmouseover="showTip(event, '682', 682)">
-            ToMathematicaString()
+            GetTrace()
           </code>
           <div class="tip" id="682">
-            <strong>Signature:</strong> unit -&gt; string<br />
+            <strong>Signature:</strong> unit -&gt; ^T<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Get a string representation of this Matrix that can be pasted into a Mathematica notebook</p>
+          <p>Gets the trace of this Matrix</p>
 
         </td>
       </tr>
@@ -193,14 +139,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '683', 683)" onmouseover="showTip(event, '683', 683)">
-            ToMatlabString()
+            GetTranspose()
           </code>
           <div class="tip" id="683">
-            <strong>Signature:</strong> unit -&gt; string<br />
+            <strong>Signature:</strong> unit -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Get a string representation of this Matrix that can be pasted into MATLAB</p>
+          <p>Gets the transpose of this Matrix</p>
 
         </td>
       </tr>
@@ -208,14 +154,75 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '684', 684)" onmouseover="showTip(event, '684', 684)">
-            ToString()
+            [i, j]
           </code>
           <div class="tip" id="684">
+            <strong>Signature:</strong> i:int * j:int -&gt; ^T<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the entry of this Matrix at row <code>i</code> and column <code>j</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '685', 685)" onmouseover="showTip(event, '685', 685)">
+            Rows
+          </code>
+          <div class="tip" id="685">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the number of rows of this Matrix</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '686', 686)" onmouseover="showTip(event, '686', 686)">
+            ToArray2d()
+          </code>
+          <div class="tip" id="686">
+            <strong>Signature:</strong> unit -&gt; ^T [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts this Matrix to a 2d array, e.g. from Matrix<float> to float[,]</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '687', 687)" onmouseover="showTip(event, '687', 687)">
+            ToMathematicaString()
+          </code>
+          <div class="tip" id="687">
             <strong>Signature:</strong> unit -&gt; string<br />
                       </div>
         </td>
         <td class="xmldoc">
-          
+          <p>Gets a string representation of this Matrix that can be pasted into a Mathematica notebook</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '688', 688)" onmouseover="showTip(event, '688', 688)">
+            ToMatlabString()
+          </code>
+          <div class="tip" id="688">
+            <strong>Signature:</strong> unit -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets a string representation of this Matrix that can be pasted into MATLAB</p>
+
         </td>
       </tr>
     </tbody>
@@ -229,75 +236,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '685', 685)" onmouseover="showTip(event, '685', 685)">
+          <code onmouseout="hideTip(event, '689', 689)" onmouseover="showTip(event, '689', 689)">
             ( - )(a, b)
           </code>
-          <div class="tip" id="685">
-            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Subtract Matrix <code>b</code> from Matrix <code>a</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '686', 686)" onmouseover="showTip(event, '686', 686)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="686">
-            <strong>Signature:</strong> (a:float * b:Matrix) -&gt; Matrix<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Multiply Matrix <code>b</code> by float <code>a</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '687', 687)" onmouseover="showTip(event, '687', 687)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="687">
-            <strong>Signature:</strong> (a:Matrix * b:float) -&gt; Matrix<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Multiply Matrix <code>a</code> by float <code>b</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '688', 688)" onmouseover="showTip(event, '688', 688)">
-            ( * )(a, b)
-          </code>
-          <div class="tip" id="688">
-            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Matrix product of Matrix <code>a</code> and Matrix <code>b</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '689', 689)" onmouseover="showTip(event, '689', 689)">
-            ( / )(a, b)
-          </code>
           <div class="tip" id="689">
-            <strong>Signature:</strong> (a:float * b:Matrix) -&gt; Matrix<br />
+            <strong>Signature:</strong> (a:Matrix&lt;^T&gt; * b:Matrix&lt;^T&gt;) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix whose elements are float <code>a</code> divided by the element of Matrix <code>b</code></p>
+          <p>Subtracts Matrix <code>b</code> from Matrix <code>a</code></p>
 
         </td>
       </tr>
@@ -305,14 +252,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '690', 690)" onmouseover="showTip(event, '690', 690)">
-            ( / )(a, b)
+            ( * )(a, b)
           </code>
           <div class="tip" id="690">
-            <strong>Signature:</strong> (a:Matrix * b:float) -&gt; Matrix<br />
-                      </div>
+            <strong>Signature:</strong> (a:^?161523 * b:Matrix&lt;^?161524&gt;) -&gt; Matrix&lt;^?161524&gt;<br />
+                          <strong>Type parameters:</strong> ^?161524          </div>
         </td>
         <td class="xmldoc">
-          <p>Divide Matrix <code>a</code> by float <code>b</code></p>
+          <p>Multiplies Matrix <code>b</code> by number <code>a</code></p>
 
         </td>
       </tr>
@@ -320,14 +267,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '691', 691)" onmouseover="showTip(event, '691', 691)">
-            ( ~- )(a)
+            ( * )(a, b)
           </code>
           <div class="tip" id="691">
-            <strong>Signature:</strong> a:Matrix -&gt; Matrix<br />
-                      </div>
+            <strong>Signature:</strong> (a:Matrix&lt;^?161519&gt; * b:^?161520) -&gt; Matrix&lt;^?161519&gt;<br />
+                          <strong>Type parameters:</strong> ^?161520          </div>
         </td>
         <td class="xmldoc">
-          <p>Negative of Matrix <code>a</code></p>
+          <p>Multiplies Matrix <code>a</code> by number <code>b</code></p>
 
         </td>
       </tr>
@@ -335,14 +282,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '692', 692)" onmouseover="showTip(event, '692', 692)">
-            ( + )(a, b)
+            ( * )(a, b)
           </code>
           <div class="tip" id="692">
-            <strong>Signature:</strong> (a:Matrix * b:Matrix) -&gt; Matrix<br />
+            <strong>Signature:</strong> (a:Matrix&lt;^T&gt; * b:Matrix&lt;^T&gt;) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Add Matrix <code>a</code> to Matrix <code>b</code></p>
+          <p>Calculates the matrix product of Matrix <code>a</code> and Matrix <code>b</code></p>
 
         </td>
       </tr>
@@ -350,14 +297,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '693', 693)" onmouseover="showTip(event, '693', 693)">
-            Create(v)
+            ( / )(a, b)
           </code>
           <div class="tip" id="693">
-            <strong>Signature:</strong> (v:Vector []) -&gt; Matrix<br />
-                      </div>
+            <strong>Signature:</strong> (a:^?161531 * b:Matrix&lt;^?161532&gt;) -&gt; Matrix&lt;^?161533&gt;<br />
+                          <strong>Type parameters:</strong> ^?161532, ^?161533          </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with rows given in Vector[] <code>v</code></p>
+          <p>Creates a Matrix whose elements are number <code>a</code> divided by the element of Matrix <code>b</code></p>
 
         </td>
       </tr>
@@ -365,14 +312,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '694', 694)" onmouseover="showTip(event, '694', 694)">
-            Create(m, f)
+            ( / )(a, b)
           </code>
           <div class="tip" id="694">
-            <strong>Signature:</strong> (m:int * f:(int -&gt; Vector)) -&gt; Matrix<br />
-                      </div>
+            <strong>Signature:</strong> (a:Matrix&lt;^?161527&gt; * b:^?161528) -&gt; Matrix&lt;^?161527&gt;<br />
+                          <strong>Type parameters:</strong> ^?161528          </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a Vector</p>
+          <p>Divides Matrix <code>a</code> by number <code>b</code></p>
 
         </td>
       </tr>
@@ -380,14 +327,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '695', 695)" onmouseover="showTip(event, '695', 695)">
-            Create(m, f)
+            ( ~- )(a)
           </code>
           <div class="tip" id="695">
-            <strong>Signature:</strong> (m:int * f:(int -&gt; float [])) -&gt; Matrix<br />
+            <strong>Signature:</strong> a:Matrix&lt;^T&gt; -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a float[]</p>
+          <p>Gets the negative of Matrix <code>a</code></p>
 
         </td>
       </tr>
@@ -395,14 +342,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '696', 696)" onmouseover="showTip(event, '696', 696)">
-            Create(m, v)
+            ( + )(a, b)
           </code>
           <div class="tip" id="696">
-            <strong>Signature:</strong> (m:int * v:float []) -&gt; Matrix<br />
+            <strong>Signature:</strong> (a:Matrix&lt;^T&gt; * b:Matrix&lt;^T&gt;) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with <code>m</code> rows and all rows equal to float[] <code>v</code></p>
+          <p>Adds Matrix <code>a</code> to Matrix <code>b</code></p>
 
         </td>
       </tr>
@@ -410,14 +357,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '697', 697)" onmouseover="showTip(event, '697', 697)">
-            Create(m, n, f)
+            Create(v)
           </code>
           <div class="tip" id="697">
-            <strong>Signature:</strong> (m:int * n:int * f:(int -&gt; int -&gt; float)) -&gt; Matrix<br />
+            <strong>Signature:</strong> (v:Vector&lt;^T&gt; []) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with <code>m</code> rows, <code>n</code> columns, and a generator function <code>f</code> to compute the elements</p>
+          <p>Creates a Matrix with rows given in Vector[] <code>v</code></p>
 
         </td>
       </tr>
@@ -425,14 +372,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '698', 698)" onmouseover="showTip(event, '698', 698)">
-            Create(m, n, v)
+            Create(m, f)
           </code>
           <div class="tip" id="698">
-            <strong>Signature:</strong> (m:int * n:int * v:float) -&gt; Matrix<br />
+            <strong>Signature:</strong> (m:int * f:(int -&gt; Vector&lt;^T&gt;)) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix with <code>m</code> rows, <code>n</code> columns, and all elements having value <code>v</code>. If m = n, a SymmetricMatrix is created.</p>
+          <p>Creates a Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a Vector</p>
 
         </td>
       </tr>
@@ -440,14 +387,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '699', 699)" onmouseover="showTip(event, '699', 699)">
-            Create(m)
+            Create(m, v)
           </code>
           <div class="tip" id="699">
-            <strong>Signature:</strong> (m:float [,]) -&gt; Matrix<br />
+            <strong>Signature:</strong> (m:int * v:^T []) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create Matrix from given float[,] <code>m</code></p>
+          <p>Creates a Matrix with <code>m</code> rows and all rows equal to array <code>v</code></p>
 
         </td>
       </tr>
@@ -455,14 +402,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '700', 700)" onmouseover="showTip(event, '700', 700)">
-            CreateSymmetric(m, f)
+            Create(m, f)
           </code>
           <div class="tip" id="700">
-            <strong>Signature:</strong> (m:int * f:(int -&gt; int -&gt; float)) -&gt; Matrix<br />
+            <strong>Signature:</strong> (m:int * f:(int -&gt; ^T [])) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Create SymmetricMatrix with <code>m</code> rows and columns and a generator function <code>f</code> to compute the elements</p>
+          <p>Creates a Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a an array</p>
 
         </td>
       </tr>
@@ -470,14 +417,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '701', 701)" onmouseover="showTip(event, '701', 701)">
-            op_Explicit(m)
+            Create(m, n, f)
           </code>
           <div class="tip" id="701">
-            <strong>Signature:</strong> m:Matrix -&gt; float [,]<br />
+            <strong>Signature:</strong> (m:int * n:int * f:(int -&gt; int -&gt; ^T)) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Convert Matrix <code>m</code> to float[,]</p>
+          <p>Creates a Matrix with <code>m</code> rows, <code>n</code> columns, and a generator function <code>f</code> to compute the elements</p>
 
         </td>
       </tr>
@@ -485,14 +432,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '702', 702)" onmouseover="showTip(event, '702', 702)">
-            SymmetricOp(a, b, f)
+            Create(m, n, v)
           </code>
           <div class="tip" id="702">
-            <strong>Signature:</strong> (a:Matrix * b:Matrix * f:(int -&gt; int -&gt; float)) -&gt; Matrix<br />
+            <strong>Signature:</strong> (m:int * n:int * v:^T) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Symmetric binary operation <code>f</code> on Matrix <code>a</code> and Matrix <code>b</code></p>
+          <p>Creates a Matrix with <code>m</code> rows, <code>n</code> columns, and all elements having value <code>v</code>. If m = n, a SymmetricMatrix is created.</p>
 
         </td>
       </tr>
@@ -500,14 +447,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '703', 703)" onmouseover="showTip(event, '703', 703)">
-            SymmetricOp(a, f)
+            Create(m)
           </code>
           <div class="tip" id="703">
-            <strong>Signature:</strong> (a:Matrix * f:(int -&gt; int -&gt; float)) -&gt; Matrix<br />
+            <strong>Signature:</strong> (m:^T [,]) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Symmetric unary operation <code>f</code> on Matrix <code>a</code></p>
+          <p>Creates a Matrix from the given 2d array <code>m</code></p>
 
         </td>
       </tr>
@@ -515,14 +462,74 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '704', 704)" onmouseover="showTip(event, '704', 704)">
-            Zero
+            CreateSymmetric(m, f)
           </code>
           <div class="tip" id="704">
-            <strong>Signature:</strong> Matrix<br />
+            <strong>Signature:</strong> (m:int * f:(int -&gt; int -&gt; ^T)) -&gt; Matrix&lt;^T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Matrix with infinite number of rows and columns and all entries 0</p>
+          <p>Creates a SymmetricMatrix with <code>m</code> rows and <code>m</code> columns and a generator function <code>f</code> to compute the elements. Function <code>f</code> is used only for populating the upper triangular part of the Matrix, the lower triangular part will be the reflection.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '705', 705)" onmouseover="showTip(event, '705', 705)">
+            op_Explicit(m)
+          </code>
+          <div class="tip" id="705">
+            <strong>Signature:</strong> m:Matrix&lt;^T&gt; -&gt; float [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts Matrix <code>m</code> to float[,]</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '706', 706)" onmouseover="showTip(event, '706', 706)">
+            SymmetricOp(a, b, f)
+          </code>
+          <div class="tip" id="706">
+            <strong>Signature:</strong> (a:Matrix&lt;^T&gt; * b:Matrix&lt;^T&gt; * f:(int -&gt; int -&gt; ^T)) -&gt; Matrix&lt;^T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Performs a symmetric binary operation <code>f</code> on Matrix <code>a</code> and Matrix <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '707', 707)" onmouseover="showTip(event, '707', 707)">
+            SymmetricOp(a, f)
+          </code>
+          <div class="tip" id="707">
+            <strong>Signature:</strong> (a:Matrix&lt;^T&gt; * f:(int -&gt; int -&gt; ^T)) -&gt; Matrix&lt;^T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Perfomrs a symmetric unary operation <code>f</code> on Matrix <code>a</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '708', 708)" onmouseover="showTip(event, '708', 708)">
+            Zero
+          </code>
+          <div class="tip" id="708">
+            <strong>Signature:</strong> Matrix&lt;^T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>ZeroMatrix</p>
 
         </td>
       </tr>
