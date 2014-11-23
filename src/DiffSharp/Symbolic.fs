@@ -46,93 +46,96 @@
 /// Symbolic differentiation module
 module DiffSharp.Symbolic
 
+open System.Reflection
+open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.ExprShape
+open FSharp.Quotations.Evaluator
 open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 open DiffSharp.Util.Quotations
-open Swensen.Unquote
 
 /// Symbolic differentiation expression operations module (automatically opened)
 [<AutoOpen>]
 module ExprOps =
-    // We need to get MethodInfo information for operators on float type
-    // Because we should be able to recursively compute higher order derivatives, this is better than
-    // using static methods on a custom type implementing math operators, as used in other examples elsewhere
-    let floatAdd = methInf <@@ 1. + 1. @@>  // MethodInfo for Double op_Addition
-    let floatSub = methInf <@@ 1. - 1. @@>  // MethodInfo for Double op_Subtraction
-    let floatMul = methInf <@@ 1. * 1. @@>  // MethodInfo for Double op_Multiply
-    let floatDiv = methInf <@@ 1. / 1. @@>  // MethodInfo for Double op_Division
-    let floatNeg = methInf <@@ - (1.) @@>   // MethodInfo for Double op_UnaryNegation
-    let floatPow = methInf <@@ 1. ** 1. @@> // MethodInfo for Double op_Exponentiation
-    let floatLog = methInf <@@ log 1. @@>   // MethodInfo for Double log
-    let floatExp = methInf <@@ exp 1. @@>   // MethodInfo for Double exp
-    let floatSin = methInf <@@ sin 1. @@>   // MethodInfo for Double sin
-    let floatCos = methInf <@@ cos 1. @@>   // MethodInfo for Double cos
-    let floatTan = methInf <@@ tan 1. @@>   // MethodInfo for Double tan
-    let floatSqrt = methInf <@@ sqrt 1. @@> // MethodInfo for Double sqrt
-    let floatSinh = methInf <@@ sinh 1. @@> // MethodInfo for Double sinh
-    let floatCosh = methInf <@@ cosh 1. @@> // MethodInfo for Double cosh
-    let floatTanh = methInf <@@ tanh 1. @@> // MethodInfo for Double tanh
-    let floatAsin = methInf <@@ asin 1. @@> // MethodInfo for Double asin
-    let floatAcos = methInf <@@ acos 1. @@> // MethodInfo for Double acos
-    let floatAtan = methInf <@@ atan 1. @@> // MethodInfo for Double atan
+
+    let coreass = typeof<unit>.Assembly
+    let coremod = coreass.GetModule("FSharp.Core.dll")
+    let coreops = coremod.GetType("Microsoft.FSharp.Core.Operators")
+    let coreprim = coremod.GetType("Microsoft.FSharp.Core.LanguagePrimitives")
+
+    let opAdd = coreops.GetMethod("op_Addition")
+    let opSub = coreops.GetMethod("op_Subtraction")
+    let opMul = coreops.GetMethod("op_Multiply")
+    let opDiv = coreops.GetMethod("op_Division")
+    let opPow = coreops.GetMethod("op_Exponentiation")
+    let opNeg = coreops.GetMethod("op_UnaryNegation")
+    let opLog = coreops.GetMethod("Log")
+    let opExp = coreops.GetMethod("Exp")
+    let opSin = coreops.GetMethod("Sin")
+    let opCos = coreops.GetMethod("Cos")
+    let opTan = coreops.GetMethod("Tan")
+    let opSqrt = coreops.GetMethod("Sqrt")
+    let opSinh = coreops.GetMethod("Sinh")
+    let opCosh = coreops.GetMethod("Cosh")
+    let opTanh = coreops.GetMethod("Tanh")
+    let opAsin = coreops.GetMethod("Asin")
+    let opAcos = coreops.GetMethod("Acos")
+    let opAtan = coreops.GetMethod("Atan")
+    let primGen0 = coreprim.GetMethod("GenericZero")
+    let primGen1 = coreprim.GetMethod("GenericOne")
+
+    let call(genmi:MethodInfo, types, args) =
+        Expr.Call(genmi.MakeGenericMethod(Array.ofList types), args)
+
+    let callGen0(t) =
+        call(primGen0, [t], [])
+
+    let callGen1(t) =
+        call(primGen1, [t], [])
+
+    let callGen2(t) =
+        call(opAdd, [t; t; t], [callGen1(t); callGen1(t)])
 
     /// Recursively traverse and differentiate Expr `expr` with respect to Var `v`
     // UNOPTIMIZED
-    let rec diffExpr v expr =
+    let rec diffExpr (v:Var) expr =
         match expr with
-        | Value(_) -> Expr.Value(0.)
-        | SpecificCall <@ (+) @> (_, _, [f; g]) -> Expr.Call(floatAdd, [diffExpr v f; diffExpr v g])
-        | SpecificCall <@ (-) @> (_, _, [f; g]) -> Expr.Call(floatSub, [diffExpr v f; diffExpr v g])
-        | SpecificCall <@ (*) @> (_, _, [f; g]) -> Expr.Call(floatAdd, [Expr.Call(floatMul, [diffExpr v f; g]); Expr.Call(floatMul, [f; diffExpr v g])])
-        | SpecificCall <@ (/) @> (_, _, [f; g]) -> Expr.Call(floatDiv, [Expr.Call(floatSub, [Expr.Call(floatMul, [diffExpr v f; g]); Expr.Call(floatMul, [f; diffExpr v g])]); Expr.Call(floatMul, [g; g])])
-        | SpecificCall <@ (~-) @> (_, _, [f]) -> Expr.Call(floatNeg, [diffExpr v f])
-        | SpecificCall <@ op_Exponentiation @> (_, _, [f; g]) -> Expr.Call(floatMul, [Expr.Call(floatPow, [f; Expr.Call(floatSub, [g; Expr.Value(1.)])]); Expr.Call(floatAdd, [Expr.Call(floatMul, [g; diffExpr v f]); Expr.Call(floatMul, [Expr.Call(floatMul, [f; Expr.Call(floatLog, [f])]); diffExpr v g])])]) // This should cover all cases: (f(x) ^ (g(x) - 1))(g(x) * f'(x) + f(x) * log(f(x)) * g'(x))
-        | SpecificCall <@ log @> (_, _, [f]) -> Expr.Call(floatDiv, [diffExpr v f; f])
-        | SpecificCall <@ exp @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatExp, [f])])
-        | SpecificCall <@ sin @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatCos, [f])])
-        | SpecificCall <@ cos @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatNeg, [Expr.Call(floatSin, [f])])])
-        | SpecificCall <@ tan @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatPow, [Expr.Call(floatDiv, [Expr.Value(1.); Expr.Call(floatCos, [f])]); Expr.Value(2.)])])
-        | SpecificCall <@ sqrt @> (_, _, [f]) -> Expr.Call(floatDiv, [diffExpr v f; Expr.Call(floatMul, [Expr.Value(2.); Expr.Call(floatSqrt, [f])])])
-        | SpecificCall <@ sinh @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatCosh, [f])])
-        | SpecificCall <@ cosh @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatSinh, [f])])
-        | SpecificCall <@ tanh @> (_, _, [f]) -> Expr.Call(floatMul, [diffExpr v f; Expr.Call(floatPow, [Expr.Call(floatDiv, [Expr.Value(1.); Expr.Call(floatCosh, [f])]); Expr.Value(2.)])])
-        | SpecificCall <@ asin @> (_, _, [f]) -> Expr.Call(floatDiv, [diffExpr v f; Expr.Call(floatSqrt, [Expr.Call(floatSub, [Expr.Value(1.); Expr.Call(floatMul, [f; f])])])])
-        | SpecificCall <@ acos @> (_, _, [f]) -> Expr.Call(floatDiv, [diffExpr v f; Expr.Call(floatNeg, [Expr.Call(floatSqrt, [Expr.Call(floatSub, [Expr.Value(1.); Expr.Call(floatMul, [f; f])])])])])
-        | SpecificCall <@ atan @> (_, _, [f]) -> Expr.Call(floatDiv, [diffExpr v f; Expr.Call(floatAdd, [Expr.Value(1.); Expr.Call(floatMul, [f; f])])])
-        | ShapeVar(var) -> if var = v then Expr.Value(1.) else Expr.Value(0.)
+        | Value(v, vt) -> callGen0(vt)
+        | SpecificCall <@ (+) @> (_, ts, [f; g]) -> call(opAdd, ts, [diffExpr v f; diffExpr v g])
+        | SpecificCall <@ (-) @> (_, ts, [f; g]) -> call(opSub, ts, [diffExpr v f; diffExpr v g])
+        | SpecificCall <@ (*) @> (_, ts, [f; g]) -> call(opAdd, ts, [call(opMul, ts, [diffExpr v f; g]); call(opMul, ts, [f; diffExpr v g])])
+        | SpecificCall <@ (/) @> (_, ts, [f; g]) -> call(opDiv, ts, [call(opSub, ts, [call(opMul, ts, [diffExpr v f; g]); call(opMul, ts, [f; diffExpr v g])]); call(opMul, ts, [g; g])])
+        //This should cover all the cases: (f(x) ^ (g(x) - 1))(g(x) * f'(x) + f(x) * log(f(x)) * g'(x))
+        | SpecificCall <@ op_Exponentiation @> (_, [t1; t2], [f; g]) -> call(opMul, [t1; t1; t1], [call(opPow, [t1; t1], [f; call(opSub, [t1; t1; t1], [g; callGen1(t1)])]); call(opAdd, [t1; t1; t1], [call(opMul, [t1; t1; t1], [g; diffExpr v f]); call(opMul, [t1; t1; t1], [call(opMul, [t1; t1; t1], [f; call(opLog, [t1], [f])]); diffExpr v g])])])
+        | SpecificCall <@ (~-) @> (_, ts, [f]) -> call(opNeg, ts, [diffExpr v f])
+        | SpecificCall <@ log @> (_, [t], [f]) -> call(opDiv, [t; t; t], [diffExpr v f; f])
+        | SpecificCall <@ exp @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opExp, [t], [f])])
+        | SpecificCall <@ sin @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opCos, [t], [f])])
+        | SpecificCall <@ cos @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opNeg, [t], [call(opSin, [t], [f])])])
+        | SpecificCall <@ tan @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opPow, [t; t], [call(opDiv, [t; t; t], [callGen1(t); call(opCos, [t], [f])]); callGen2(t)])])
+        | SpecificCall <@ sqrt @> (_, [t1; t2], [f]) -> call(opDiv, [t1; t1; t1], [diffExpr v f; call(opMul, [t1; t1; t1], [callGen2(t1); call(opSqrt, [t1; t1], [f])])])
+        | SpecificCall <@ sinh @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opCosh, [t], [f])])
+        | SpecificCall <@ cosh @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opSinh, [t], [f])])
+        | SpecificCall <@ tanh @> (_, [t], [f]) -> call(opMul, [t; t; t], [diffExpr v f; call(opPow, [t; t], [call(opDiv, [t; t; t], [callGen1(t); call(opCosh, [t], [f])]); callGen2(t)])])
+        | SpecificCall <@ asin @> (_, [t], [f]) -> call(opDiv, [t; t; t], [diffExpr v f; call(opSqrt, [t; t], [call(opSub, [t; t; t], [callGen1(t); call(opMul, [t; t; t], [f; f])])])])
+        | SpecificCall <@ acos @> (_, [t], [f]) -> call(opDiv, [t; t; t], [diffExpr v f; call(opNeg, [t], [call(opSqrt, [t; t], [call(opSub, [t; t; t], [callGen1(t); call(opMul, [t; t; t], [f; f])])])])])
+        | SpecificCall <@ atan @> (_, [t], [f]) -> call(opDiv, [t; t; t], [diffExpr v f; call(opAdd, [t; t; t], [callGen1(t); call(opMul, [t; t; t], [f; f])])])
+        | ShapeVar(var) -> if var = v then callGen1(var.Type) else callGen0(var.Type)
         | ShapeLambda(arg, body) -> Expr.Lambda(arg, diffExpr v body)
         | ShapeCombination(shape, args) -> RebuildShapeCombination(shape, List.map (diffExpr v) args)
-
+    
     /// Symbolically differentiate Expr `expr` with respect to variable name `vname`
     let diffSym vname expr =
-        let eexpr = expand expr
+        let eexpr = expr
         let args = getExprArgs eexpr
         let xvar = Array.tryFind (fun (a:Var) -> a.Name = vname) args
         match xvar with
         | Some(v) -> eexpr |> diffExpr v
-        | None -> failwith "Given expression is not a function of a variable with the given name."
-
-    /// Evaluate scalar-to-scalar Expr `expr`, at point `x`
-    let evalSS (x:float) expr =
-        Expr.Application(expr, Expr.Value(x))
-        |> evalRaw<float>
-
-    /// Evaluate vector-to-scalar Expr `expr`, at point `x`
-    let evalVS (x:float[]) expr =
-        let args = List.ofArray x |> List.map (fun a -> [Expr.Value(a, typeof<float>)])
-        Expr.Applications(expr, args)
-        |> evalRaw<float>
+        | None -> eexpr |> diffExpr (Var(vname, args.[0].Type))
     
-    /// Evaluate vector-to-vector Expr `expr`, at point `x`
-    let evalVV (x:float[]) expr =
-        let args = List.ofArray x |> List.map (fun a -> [Expr.Value(a, typeof<float>)])
-        Expr.Applications(expr, args)
-        |> evalRaw<float[]>
-
     /// Compute the `n`-th derivative of an Expr, with respect to Var `v`
     let rec diffExprN v n =
         match n with
@@ -141,11 +144,32 @@ module ExprOps =
         | 1 -> fun x -> diffExpr v x
         | _ -> fun x -> diffExprN v (n - 1) (diffExpr v x)
 
+    /// Evaluate scalar-to-scalar Expr `expr`, at point `x`
+    let evalSS (x:float) expr =
+        Expr.Application(expr, Expr.Value(x))
+        |> QuotationEvaluator.CompileUntyped
+        :?> float
+
+    /// Evaluate vector-to-scalar Expr `expr`, at point `x`
+    let evalVS (x:float[]) expr =
+        let args = List.ofArray x |> List.map (fun a -> [Expr.Value(a, typeof<float>)])
+        Expr.Applications(expr, args)
+        |> QuotationEvaluator.CompileUntyped
+        :?> float
+    
+    /// Evaluate vector-to-vector Expr `expr`, at point `x`
+    let evalVV (x:float[]) expr =
+        let args = List.ofArray x |> List.map (fun a -> [Expr.Value(a, typeof<float>)])
+        Expr.Applications(expr, args)
+        |> QuotationEvaluator.CompileUntyped
+        :?> float[]
+
+
 /// Symbolic differentiation operations module (automatically opened)
 [<AutoOpen>]
 module SymbolicOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let diff (f:Expr) x =
+    let diff (f:Expr<float->float>) x =
         let fe = expand f
         let args = getExprArgs fe
         diffExpr args.[0] fe
@@ -156,7 +180,7 @@ module SymbolicOps =
         (evalSS x f, diff f x)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let diffn n (f:Expr) x =
+    let diffn n (f:Expr<float->float>) x =
         let fe = expand f
         let args = getExprArgs fe
         diffExprN args.[0] n fe
