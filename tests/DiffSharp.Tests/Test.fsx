@@ -19,4 +19,12 @@ open DiffSharp.Symbolic
 //let test =  g (vector [| 0.8; 0.2; 1./10000.; 1./100000.; 336. |])
 
 
-let test = grad <@ fun x y z -> sin (2. * x / y - z) @> [|2.; 2.; 2.|]
+let test = hessian <@ fun x y -> atan2 x y @> [|0.3; 0.2|]
+
+//let test = diffn 2 <@ fun x -> x @> 2.3
+
+open DiffSharp.AD.Reverse
+
+let test2 = hessian (fun x -> atan2 x.[0] x.[1]) [|0.3; 0.2|]
+
+//let test2 = diff2 (fun x -> x) 2.3

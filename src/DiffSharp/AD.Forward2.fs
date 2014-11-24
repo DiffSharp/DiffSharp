@@ -69,30 +69,35 @@ type Dual2 =
     static member (*) (Dual2(a, at, at2), Dual2(b, bt, bt2)) = Dual2(a * b, at * b + a * bt, 2. * at * bt + b * at2 + a * bt2)
     static member (/) (Dual2(a, at, at2), Dual2(b, bt, bt2)) = let bsq = b * b in Dual2(a / b, (at * b - a * bt) / bsq, (2. * a * bt * bt + bsq * at2 - b * (2. * at * bt + a * bt2)) / (bsq * b))
     static member Pow (Dual2(a, at, at2), Dual2(b, bt, bt2)) = let apowb, loga, btimesat = a ** b, log a, b * at in Dual2(apowb, apowb * ((btimesat / a) + (loga * bt)), apowb * (((b - 1.) * btimesat * at) / (a * a) + (b * at2 + 2. * at * bt * (b * loga + 1.)) / a + loga * (loga * bt * bt + bt2)))
+    static member Atan2 (Dual2(a, at, at2), Dual2(b, bt, bt2)) = let asq, bsq = a * a, b * b in Dual2(atan2 a b, (at * b - a * bt) / (asq + bsq), (bsq * (-2. * at * bt + b * at2) + asq * (2. * at * bt + b * at2) - (asq * a) * bt2 - a * b * (2. * (at * at) - 2. * (bt * bt) + b * bt2)) / (asq + bsq) ** 2.)
     // Dual2 - float binary operations
     static member (+) (Dual2(a, at, at2), b) = Dual2(a + b, at, at2)
     static member (-) (Dual2(a, at, at2), b) = Dual2(a - b, at, at2)
     static member (*) (Dual2(a, at, at2), b) = Dual2(a * b, at * b, at2 * b)
     static member (/) (Dual2(a, at, at2), b) = Dual2(a / b, at / b, at2 / b)
     static member Pow (Dual2(a, at, at2), b) = Dual2(a ** b, b * (a ** (b - 1.)) * at, b * (a ** (b - 2.)) * ((b - 1.) * at * at + a * at2))
+    static member Atan2 (Dual2(a, at, at2), b) = let asq, bsq = a * a, b * b in Dual2(atan2 a b, (b * at) / (bsq + asq), (b * (-2. * a * (at * at) + bsq * at2 + asq * at2)) / (bsq + asq)**2.)
     // float - Dual2 binary operations
     static member (+) (a, Dual2(b, bt, bt2)) = Dual2(b + a, bt, bt2)
     static member (-) (a, Dual2(b, bt, bt2)) = Dual2(a - b, -bt, -bt2)
     static member (*) (a, Dual2(b, bt, bt2)) = Dual2(b * a, bt * a, bt2 * a)
     static member (/) (a, Dual2(b, bt, bt2)) = let atimesa = a * a in Dual2(a / b, -a * bt / (b * b), a * ((2. * bt * bt / (atimesa * a)) - (bt2 / atimesa)))
     static member Pow (a, Dual2(b, bt, bt2)) = let apowb, loga = a ** b, log a in Dual2(apowb, apowb * loga * bt, apowb * loga * (loga * bt * bt + bt2))
+    static member Atan2 (a, Dual2(b, bt, bt2)) = let asq, bsq = a * a, b * b in Dual2(atan2 a b, -(a * bt) / (asq + bsq), -((a * (-2. * b * (bt * bt) + asq * bt2 + bsq * bt2)) / (asq + bsq) ** 2.))
     // Dual2 - int binary operations
     static member (+) (a:Dual2, b:int) = a + float b
     static member (-) (a:Dual2, b:int) = a - float b
     static member (*) (a:Dual2, b:int) = a * float b
     static member (/) (a:Dual2, b:int) = a / float b
     static member Pow (a:Dual2, b:int) = Dual2.Pow(a, float b)
+    static member Atan2 (a:Dual2, b:int) = Dual2.Atan2(a, float b)
     // int - Dual2 binary operations
     static member (+) (a:int, b:Dual2) = (float a) + b
     static member (-) (a:int, b:Dual2) = (float a) - b
     static member (*) (a:int, b:Dual2) = (float a) * b
     static member (/) (a:int, b:Dual2) = (float a) / b
     static member Pow (a:int, b:Dual2) = Dual2.Pow(float a, b)
+    static member Atan2 (a:int, b:Dual2) = Dual2.Atan2(float a, b)
     // Dual2 unary operations
     static member Log (Dual2(a, at, at2)) = Dual2(log a, at / a, (-at * at + a * at2) / (a * a))
     static member Exp (Dual2(a, at, at2)) = let expa = exp a in Dual2(expa, at * expa, expa * (at * at + at2))

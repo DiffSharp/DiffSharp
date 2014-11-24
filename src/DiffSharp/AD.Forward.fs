@@ -69,30 +69,35 @@ type Dual =
     static member (*) (Dual(a, at), Dual(b, bt)) = Dual(a * b, at * b + a * bt)
     static member (/) (Dual(a, at), Dual(b, bt)) = Dual(a / b, (at * b - a * bt) / (b * b))
     static member Pow (Dual(a, at), Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * ((b * at / a) + ((log a) * bt)))
+    static member Atan2 (Dual(a, at), Dual(b, bt)) = Dual(atan2 a b, (at * b - a * bt) / (a * a + b * b))
     // Dual - float binary operations
     static member (+) (Dual(a, at), b) = Dual(a + b, at)
     static member (-) (Dual(a, at), b) = Dual(a - b, at)
     static member (*) (Dual(a, at), b) = Dual(a * b, at * b)
     static member (/) (Dual(a, at), b) = Dual(a / b, at / b)
     static member Pow (Dual(a, at), b) = Dual(a ** b, b * (a ** (b - 1.)) * at)
+    static member Atan2 (Dual(a, at), b) = Dual(atan2 a b, (b * at) / (b * b + a * a))
     // float - Dual binary operations
     static member (+) (a, Dual(b, bt)) = Dual(b + a, bt)
     static member (-) (a, Dual(b, bt)) = Dual(a - b, -bt)
     static member (*) (a, Dual(b, bt)) = Dual(b * a, bt * a)
     static member (/) (a, Dual(b, bt)) = Dual(a / b, -a * bt / (b * b))
     static member Pow (a, Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * (log a) * bt)
+    static member Atan2 (a, Dual(b, bt)) = Dual(atan2 a b, -(a * bt) / (a * a + b * b))
     // Dual - int binary operations
     static member (+) (a:Dual, b:int) = a + float b
     static member (-) (a:Dual, b:int) = a - float b
     static member (*) (a:Dual, b:int) = a * float b
     static member (/) (a:Dual, b:int) = a / float b
     static member Pow (a:Dual, b:int) = Dual.Pow(a, float b)
+    static member Atan2 (a:Dual, b:int) = Dual.Atan2(a, float b)
     // int - Dual binary operations
     static member (+) (a:int, b:Dual) = (float a) + b
     static member (-) (a:int, b:Dual) = (float a) - b
     static member (*) (a:int, b:Dual) = (float a) * b
     static member (/) (a:int, b:Dual) = (float a) / b
     static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
+    static member Atan2 (a:int, b:Dual) = Dual.Atan2(float a, b)
     // Dual unary operations
     static member Log (Dual(a, at)) = Dual(log a, at / a)
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)

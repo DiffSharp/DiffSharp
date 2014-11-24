@@ -73,30 +73,35 @@ type DualGH =
     static member (*) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a * b, ag * b + a * bg, Matrix.SymmetricOp(ah, bh, fun i j -> ag.[j] * bg.[i] + a * bh.[i, j] + bg.[j] * ag.[i] + b * ah.[i, j]))
     static member (/) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let bsq, atimes2, oneoverbcube = b * b, a * 2., 1. / (b * b * b) in DualGH(a / b, (ag * b - a * bg) / bsq, Matrix.SymmetricOp(ah, bh, fun i j -> (atimes2 * bg.[j] * bg.[i] + bsq * ah.[i, j] - b * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + a * bh.[i, j])) * oneoverbcube))
     static member Pow (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let apowb, loga, apowbminus2, bsq = a ** b, log a, a ** (b - 2.), b * b in DualGH(apowb, apowb * ((b * ag / a) + (loga * bg)), Matrix.SymmetricOp(ah, bh, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (ag.[j] * (-ag.[i] + loga * a * bg.[i]) + a * (loga * bg.[j] * ag.[i] + ah.[i, j])) + a * (ag.[j] * bg.[i] + bg.[j] * (ag.[i] + loga * loga * a * bg.[i]) + loga * a * bh.[i, j]))))
+    static member Atan2 (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (ag * b - a * bg) / (asq + bsq), Matrix.SymmetricOp(ah, bh, fun i j -> (bsq * (-bg.[j] * ag.[i] - ag.[j] * bg.[i] + b * ah.[i, j]) + asq * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + b * ah.[i,j]) - (asq * a) * bh.[i, j] - a * b * (2. * ag.[j] * ag.[i] - 2. * bg.[j] * bg.[i] + b * bh.[i, j])) / (asq + bsq) ** 2.))
     // DualGH - float binary operations
     static member (+) (DualGH(a, ag, ah), b) = DualGH(a + b, ag, ah)
     static member (-) (DualGH(a, ag, ah), b) = DualGH(a - b, ag, ah)
     static member (*) (DualGH(a, ag, ah), b) = DualGH(a * b, ag * b, Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * b))
     static member (/) (DualGH(a, ag, ah), b) = DualGH(a / b, ag / b, Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] / b))
     static member Pow (DualGH(a, ag, ah), b) = let apowb, bsq, apowbminus2 = a ** b, b * b, a ** (b - 2.) in DualGH(apowb, apowb * (b * ag / a), Matrix.SymmetricOp(ah, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (a * ah.[i, j] - ag.[j] * ag.[i]))))
+    static member Atan2 (DualGH(a, ag, ah), b) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (b * ag) / (bsq + asq), Matrix.SymmetricOp(ah, fun i j -> (b * (-2. * a * ag.[j] * ag.[i] + bsq * ah.[i,j] + asq * ah.[i, j])) / (bsq + asq) ** 2.))
     // float - DualGH binary operations
     static member (+) (a, DualGH(b, bg, bh)) = DualGH(a + b, bg, bh)
     static member (-) (a, DualGH(b, bg, bh)) = DualGH(a - b, -bg, -bh)
     static member (*) (a, DualGH(b, bg, bh)) = DualGH(a * b, a * bg, Matrix.SymmetricOp(bh, fun i j -> a * bh.[i, j]))
     static member (/) (a, DualGH(b, bg, bh)) = let aoverbcube = a / (b * b * b) in DualGH(a / b, -aoverbcube * b * bg, Matrix.SymmetricOp(bh, fun i j -> (2. * bg.[j] * bg.[i] - b * bh.[i, j]) * aoverbcube))
     static member Pow (a, DualGH(b, bg, bh)) = let apowb, loga, term = a ** b, log a, (a ** (b - 2.)) * a * log a in DualGH(apowb, apowb * loga * bg, Matrix.SymmetricOp(bh, fun i j -> term * (bg.[j] * loga * a * bg.[i] + a * bh.[i, j])))
+    static member Atan2 (a, DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, -(a * bg) / (asq + bsq), Matrix.SymmetricOp(bh, fun i j -> -((a *(-2. * b * bg.[j] * bg.[i] + asq * bh.[i, j] + bsq * bh.[i, j])) / (asq + bsq) ** 2.)))
     // DualGH - int binary operations
     static member (+) (a:DualGH, b:int) = a + float b
     static member (-) (a:DualGH, b:int) = a - float b
     static member (*) (a:DualGH, b:int) = a * float b
     static member (/) (a:DualGH, b:int) = a / float b
     static member Pow (a:DualGH, b:int) = DualGH.Pow(a, float b)
+    static member Atan2 (a:DualGH, b:int) = DualGH.Atan2(a, float b)
     // int - DualGH binary operations
     static member (+) (a:int, b:DualGH) = (float a) + b
     static member (-) (a:int, b:DualGH) = (float a) - b
     static member (*) (a:int, b:DualGH) = (float a) * b
     static member (/) (a:int, b:DualGH) = (float a) / b
     static member Pow (a:int, b:DualGH) = DualGH.Pow(float a, b)
+    static member Atan2 (a:int, b:DualGH) = DualGH.Atan2(float a, b)
     // DualGH unary operations
     static member Log (DualGH(a, ag, ah)) = let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
     static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.SymmetricOp(ah, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))

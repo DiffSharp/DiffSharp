@@ -73,30 +73,35 @@ type DualG =
     static member (*) (DualG(a, ag), DualG(b, bg)) = DualG(a * b, ag * b + a * bg)
     static member (/) (DualG(a, ag), DualG(b, bg)) = DualG(a / b, (ag * b - a * bg) / (b * b))
     static member Pow (DualG(a, ag), DualG(b, bg)) = let apowb = a ** b in DualG(apowb, apowb * ((b * ag / a) + ((log a) * bg)))
+    static member Atan2 (DualG(a, ag), DualG(b, bg)) = DualG(atan2 a b, (ag * b - a * bg) / (a * a + b * b))
     // DualG - float binary operations
     static member (+) (DualG(a, ag), b) = DualG(a + b, ag)
     static member (-) (DualG(a, ag), b) = DualG(a - b, ag)
     static member (*) (DualG(a, ag), b) = DualG(a * b, ag * b)
     static member (/) (DualG(a, ag), b) = DualG(a / b, ag / b)
     static member Pow (DualG(a, ag), b) = DualG(a ** b, b * (a ** (b - 1.)) * ag)
+    static member Atan2 (DualG(a, ag), b) = DualG(atan2 a b, (b * ag) / (b * b + a * a))
     // float - DualG binary operations
     static member (+) (a, DualG(b, bg)) = DualG(b + a, bg)
     static member (-) (a, DualG(b, bg)) = DualG(a - b, -bg)
     static member (*) (a, DualG(b, bg)) = DualG(b * a, bg * a)
     static member (/) (a, DualG(b, bg)) = DualG(a / b, -a * bg / (b * b))
     static member Pow (a, DualG(b, bg)) = let apowb = a ** b in DualG(apowb, apowb * (log a) * bg)
+    static member Atan2 (a, DualG(b, bg)) = DualG(atan2 a b, -(a * bg) / (a * a + b * b))
     // DualG - int binary operations
     static member (+) (a:DualG, b:int) = a + float b
     static member (-) (a:DualG, b:int) = a - float b
     static member (*) (a:DualG, b:int) = a * float b
     static member (/) (a:DualG, b:int) = a / float b
     static member Pow (a:DualG, b:int) = DualG.Pow(a, float b)
+    static member Atan2 (a:DualG, b:int) = DualG.Atan2(a, float b)
     // int - DualG binary operations
     static member (+) (a:int, b:DualG) = (float a) + b
     static member (-) (a:int, b:DualG) = (float a) - b
     static member (*) (a:int, b:DualG) = (float a) * b
     static member (/) (a:int, b:DualG) = (float a) / b
     static member Pow (a:int, b:DualG) = DualG.Pow(float a, b)
+    static member Atan2 (a:int, b:DualG) = DualG.Atan2(float a, b)
     // DualG unary operations
     static member Log (DualG(a, ag)) = DualG(log a, ag / a)
     static member Exp (DualG(a, ag)) = let expa = exp a in DualG(expa, ag * expa)
