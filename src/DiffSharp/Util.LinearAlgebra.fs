@@ -314,43 +314,52 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if m.Rows <> m.Cols then failwith "Cannot get the diagonal entries of a nonsquare matrix."
             Array.init m.Rows (fun i -> mm.[i, i])
         | SymmetricMatrix mm -> Array.init m.Rows (fun i -> mm.[i, i])
+    /// Returns the LU decomposition of this Matrix
     member inline m.GetLUDecomposition():(Matrix<'T>*Matrix<'T>) =
         match m with
         | ZeroMatrix z -> (ZeroMatrix z, ZeroMatrix z)
-        | Matrix ma ->
+        | Matrix mm ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the LU decomposition of a nonsquare matrix."
             let l = Array2D.zeroCreate m.Rows m.Rows
-            for i = 0 to m.Rows - 1 do l.[i, i] <- LanguagePrimitives.GenericOne<'T>
             let u = Array2D.zeroCreate m.Rows m.Rows
             for i = 0 to m.Rows - 1 do
+                l.[i, i] <- LanguagePrimitives.GenericOne<'T>
                 for j = i to m.Rows - 1 do
-                    u.[i, j] <- ma.[i, j]
+                    u.[i, j] <- mm.[i, j]
                     for k = 0 to i - 1 do
                         u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
                 for j = i + 1 to m.Rows - 1 do
-                    l.[j, i] <- ma.[j, i]
-                    for k = 1 to i - 1 do
+                    l.[j, i] <- mm.[j, i]
+                    for k = 0 to i - 1 do
                         l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
                     l.[j, i] <- l.[j, i] / u.[i, i]
             (Matrix l, Matrix u)
         | SymmetricMatrix _ ->
             let l = Array2D.zeroCreate m.Rows m.Rows
-            for i = 0 to m.Rows - 1 do l.[i, i] <- LanguagePrimitives.GenericOne<'T>
             let u = Array2D.zeroCreate m.Rows m.Rows
             for i = 0 to m.Rows - 1 do
+                l.[i, i] <- LanguagePrimitives.GenericOne<'T>
                 for j = i to m.Rows - 1 do
                     u.[i, j] <- m.[i, j]
                     for k = 0 to i - 1 do
                         u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
                 for j = i + 1 to m.Rows - 1 do
                     l.[j, i] <- m.[j, i]
-                    for k = 1 to i - 1 do
+                    for k = 0 to i - 1 do
                         l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
                     l.[j, i] <- l.[j, i] / u.[i, i]
             (Matrix l, Matrix u)
+    /// Gets the determinant of this Matrix
     member inline m.GetDeterminant() =
-        let _, u = m.GetLUDecomposition()
-        Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
+        match m with
+        | ZeroMatrix z -> z
+        | Matrix _ ->
+            if (m.Rows <> m.Cols) then failwith "Cannot compute the determinant of a nonsquare matrix."
+            let _, u = m.GetLUDecomposition()
+            Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
+        | SymmetricMatrix _ ->
+            let _, u = m.GetLUDecomposition()
+            Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
     /// Creates a Matrix from the given 2d array `m`
     static member inline Create(m):Matrix<'T> = Matrix m
     /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
