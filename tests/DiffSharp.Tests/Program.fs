@@ -470,14 +470,14 @@ let main argv =
         let row_Numerical = Vector.Create([| dur_diff_Numerical; dur_diff2_Numerical; dur_diffn_Numerical; dur_grad_Numerical; dur_gradv_Numerical; dur_hessian_Numerical; dur_gradhessian_Numerical; dur_laplacian_Numerical; dur_jacobian_Numerical; dur_jacobianv_Numerical; dur_jacobianT_Numerical; dur_jacobianTv_Numerical |])
         let row_Symbolic = Vector.Create([| dur_diff_Symbolic; dur_diff2_Symbolic; dur_diffn_Symbolic; dur_grad_Symbolic; dur_gradv_Symbolic; dur_hessian_Symbolic; dur_gradhessian_Symbolic; dur_laplacian_Symbolic; dur_jacobian_Symbolic; dur_jacobianv_Symbolic; dur_jacobianT_Symbolic; dur_jacobianTv_Symbolic |])
 
-        let benchmark = Matrix.Create([| row_AD_Forward / row_originals
-                                         row_AD_Forward2 / row_originals
-                                         row_AD_ForwardG / row_originals
-                                         row_AD_ForwardGH / row_originals
-                                         row_AD_ForwardN / row_originals
-                                         row_AD_Reverse / row_originals
-                                         row_Numerical / row_originals
-                                         row_Symbolic / row_originals |])
+        let benchmark = Matrix.Create([| row_AD_Forward ./ row_originals
+                                         row_AD_Forward2 ./ row_originals
+                                         row_AD_ForwardG ./ row_originals
+                                         row_AD_ForwardGH ./ row_originals
+                                         row_AD_ForwardN ./ row_originals
+                                         row_AD_Reverse ./ row_originals
+                                         row_Numerical ./ row_originals
+                                         row_Symbolic ./ row_originals |])
 
         let row_AD_Forward' = Vector.Create([| dur_diff'_AD_Forward; dur_diff2'_AD_Forward; dur_diffn'_AD_Forward; dur_grad'_AD_Forward; dur_gradv'_AD_Forward; dur_hessian'_AD_Forward; dur_gradhessian'_AD_Forward; dur_laplacian'_AD_Forward; dur_jacobian'_AD_Forward; dur_jacobianv'_AD_Forward; dur_jacobianT'_AD_Forward; dur_jacobianTv'_AD_Forward |])
         let row_AD_Forward2' = Vector.Create([| dur_diff'_AD_Forward2; dur_diff2'_AD_Forward2; dur_diffn'_AD_Forward2; dur_grad'_AD_Forward2; dur_gradv'_AD_Forward2; dur_hessian'_AD_Forward2; dur_gradhessian'_AD_Forward2; dur_laplacian'_AD_Forward2; dur_jacobian'_AD_Forward2; dur_jacobianv'_AD_Forward2; dur_jacobianT'_AD_Forward2; dur_jacobianTv'_AD_Forward2 |])
@@ -488,14 +488,14 @@ let main argv =
         let row_Numerical' = Vector.Create([| dur_diff'_Numerical; dur_diff2'_Numerical; dur_diffn'_Numerical; dur_grad'_Numerical; dur_gradv'_Numerical; dur_hessian'_Numerical; dur_gradhessian'_Numerical; dur_laplacian'_Numerical; dur_jacobian'_Numerical; dur_jacobianv'_Numerical; dur_jacobianT'_Numerical; dur_jacobianTv'_Numerical |])
         let row_Symbolic' = Vector.Create([| dur_diff'_Symbolic; dur_diff2'_Symbolic; dur_diffn'_Symbolic; dur_grad'_Symbolic; dur_gradv'_Symbolic; dur_hessian'_Symbolic; dur_gradhessian'_Symbolic; dur_laplacian'_Symbolic; dur_jacobian'_Symbolic; dur_jacobianv'_Symbolic; dur_jacobianT'_Symbolic; dur_jacobianTv'_Symbolic |])
 
-        let benchmark' = Matrix.Create([| row_AD_Forward' / row_originals
-                                          row_AD_Forward2' / row_originals
-                                          row_AD_ForwardG' / row_originals
-                                          row_AD_ForwardGH' / row_originals
-                                          row_AD_ForwardN' / row_originals
-                                          row_AD_Reverse' / row_originals
-                                          row_Numerical' / row_originals
-                                          row_Symbolic' / row_originals |])
+        let benchmark' = Matrix.Create([| row_AD_Forward' ./ row_originals
+                                          row_AD_Forward2' ./ row_originals
+                                          row_AD_ForwardG' ./ row_originals
+                                          row_AD_ForwardGH' ./ row_originals
+                                          row_AD_ForwardN' ./ row_originals
+                                          row_AD_Reverse' ./ row_originals
+                                          row_Numerical' ./ row_originals
+                                          row_Symbolic' ./ row_originals |])
 
     //    let res_AD_Forward:obj[] = [| res_diff_AD_Forward; res_diff2_AD_Forward; res_diffn_AD_Forward; res_grad_AD_Forward; res_gradv_AD_Forward; res_hessian_AD_Forward; res_gradhessian_AD_Forward; res_laplacian_AD_Forward; res_jacobian_AD_Forward; res_jacobianv_AD_Forward; res_jacobianT_AD_Forward; res_jacobianTv_AD_Forward |]
     //    let res_AD_Forward2:obj[] = [| res_diff_AD_Forward2; res_diff2_AD_Forward2; res_diffn_AD_Forward2; res_grad_AD_Forward2; res_gradv_AD_Forward2; res_hessian_AD_Forward2; res_gradhessian_AD_Forward2; res_laplacian_AD_Forward2; res_jacobian_AD_Forward2; res_jacobianv_AD_Forward2; res_jacobianT_AD_Forward2; res_jacobianTv_AD_Forward2 |]
