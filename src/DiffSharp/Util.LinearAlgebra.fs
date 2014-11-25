@@ -44,7 +44,6 @@ open DiffSharp.Util.General
 /// Lightweight vector type
 [<NoEquality; NoComparison>]
 type Vector<'T when 'T : (static member Zero : 'T)
-                and 'T : (static member One : 'T)
                 and 'T : (static member (+) : 'T * 'T -> 'T)
                 and 'T : (static member (-) : 'T * 'T -> 'T)
                 and 'T : (static member (*) : 'T * 'T -> 'T)
@@ -63,10 +62,6 @@ type Vector<'T when 'T : (static member Zero : 'T)
             match v with
             | ZeroVector z -> z
             | Vector v -> v.[i]
-        and set i x =
-            match v with
-            | ZeroVector z -> ()
-            | Vector v -> v.[i] <- x
     /// Gets the first element of this Vector
     member inline v.FirstItem =
         match v with
@@ -150,7 +145,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | Vector va, Vector vb -> 
             if va.Length <> vb.Length then invalidArg "b" "Cannot subtract two Vectors with different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] - vb.[i])
-    /// Computes the inner product between Vector `a` and Vector `b` (scalar product)
+    /// Computes the inner product of Vector `a` and Vector `b` (dot / scalar product)
     static member inline (*) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> LanguagePrimitives.GenericZero<'T>
@@ -159,6 +154,15 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | Vector va, Vector vb ->
             if va.Length <> vb.Length then invalidArg "b" "Cannot multiply two Vectors with different dimensions."
             Array.sumBy (fun (x, y) -> x * y) (Array.zip va vb)
+    /// Computes the cross product of Vector `a` and Vector `b` (three-dimensional)
+    static member inline (%*) (a:Vector<'T>, b:Vector<'T>) =
+        match a, b with
+        | ZeroVector z, ZeroVector _ -> ZeroVector z
+        | ZeroVector z, Vector _ -> ZeroVector z
+        | Vector _, ZeroVector z -> ZeroVector z
+        | Vector va, Vector vb ->
+            if (a.Length <> 3) || (b.Length <> 3) then invalidArg "b" "The cross product is only defined for three-dimensional vectors."
+            Vector [|va.[1] * vb.[2] - va.[2] * vb.[1]; va.[2] * vb.[0] - va.[0] * vb.[2]; va.[0] * vb.[1] - va.[1] * vb.[0]|]
     /// Multiplies Vector `a` and Vector `b` element-wise (Hadamard product)
     static member inline (.*) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
@@ -248,11 +252,6 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             | ZeroMatrix z -> z
             | Matrix m -> m.[i, j]
             | SymmetricMatrix m -> if j >= i then m.[i, j] else m.[j, i]
-        and set (i, j) x =
-            match m with
-            | ZeroMatrix z -> ()
-            | Matrix m -> m.[i, j] <- x
-            | SymmetricMatrix m -> m.[i, j] <- x; m.[j, i] <- x
     /// Gets the number of rows of this Matrix
     member inline m.Rows =
         match m with
@@ -307,6 +306,51 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix m -> Matrix (transpose m)
         | SymmetricMatrix m -> SymmetricMatrix m
+    /// Gets the array of the diagonal elements of this Matrix
+    member inline m.GetDiagonal() =
+        match m with
+        | ZeroMatrix z -> [||]
+        | Matrix mm -> 
+            if m.Rows <> m.Cols then failwith "Cannot get the diagonal entries of a nonsquare matrix."
+            Array.init m.Rows (fun i -> mm.[i, i])
+        | SymmetricMatrix mm -> Array.init m.Rows (fun i -> mm.[i, i])
+    member inline m.GetLUDecomposition():(Matrix<'T>*Matrix<'T>) =
+        match m with
+        | ZeroMatrix z -> (ZeroMatrix z, ZeroMatrix z)
+        | Matrix ma ->
+            if (m.Rows <> m.Cols) then failwith "Cannot compute the LU decomposition of a nonsquare matrix."
+            let l = Array2D.zeroCreate m.Rows m.Rows
+            for i = 0 to m.Rows - 1 do l.[i, i] <- LanguagePrimitives.GenericOne<'T>
+            let u = Array2D.zeroCreate m.Rows m.Rows
+            for i = 0 to m.Rows - 1 do
+                for j = i to m.Rows - 1 do
+                    u.[i, j] <- ma.[i, j]
+                    for k = 0 to i - 1 do
+                        u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
+                for j = i + 1 to m.Rows - 1 do
+                    l.[j, i] <- ma.[j, i]
+                    for k = 1 to i - 1 do
+                        l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
+                    l.[j, i] <- l.[j, i] / u.[i, i]
+            (Matrix l, Matrix u)
+        | SymmetricMatrix _ ->
+            let l = Array2D.zeroCreate m.Rows m.Rows
+            for i = 0 to m.Rows - 1 do l.[i, i] <- LanguagePrimitives.GenericOne<'T>
+            let u = Array2D.zeroCreate m.Rows m.Rows
+            for i = 0 to m.Rows - 1 do
+                for j = i to m.Rows - 1 do
+                    u.[i, j] <- m.[i, j]
+                    for k = 0 to i - 1 do
+                        u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
+                for j = i + 1 to m.Rows - 1 do
+                    l.[j, i] <- m.[j, i]
+                    for k = 1 to i - 1 do
+                        l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
+                    l.[j, i] <- l.[j, i] / u.[i, i]
+            (Matrix l, Matrix u)
+    member inline m.GetDeterminant() =
+        let _, u = m.GetLUDecomposition()
+        Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
     /// Creates a Matrix from the given 2d array `m`
     static member inline Create(m):Matrix<'T> = Matrix m
     /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
