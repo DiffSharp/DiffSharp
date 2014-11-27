@@ -105,6 +105,10 @@ type Vector<'T when 'T : (static member Zero : 'T)
             if i < v.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+    member inline v.Convert(f:'T->'a):Vector<'a> =
+        match v with
+        | ZeroVector z -> ZeroVector LanguagePrimitives.GenericZero<'a>
+        | Vector v -> Vector (Array.map f v)
     /// Creates a Vector from the array `v`
     static member inline Create(v) : Vector<'T> = Vector v
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the elements
@@ -133,7 +137,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, ZeroVector _ -> Vector.Zero
         | ZeroVector _, Vector vb -> Vector vb
         | Vector va, ZeroVector _ -> Vector va
-        | Vector va, Vector vb -> 
+        | Vector va, Vector vb ->
             if va.Length <> vb.Length then invalidArg "b" "Cannot add two Vectors with different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] + vb.[i])
     /// Subtracts Vector `b` from Vector `a`
