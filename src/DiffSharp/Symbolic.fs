@@ -41,6 +41,10 @@
 // - Can compute higher order derivatives and all combinations of partial derivatives
 //
 
+//
+// TODO: Add support for abs
+//
+
 #light
 
 /// Symbolic differentiation module
@@ -72,6 +76,7 @@ module ExprOps =
     let opDiv = coreops.GetMethod("op_Division")
     let opPow = coreops.GetMethod("op_Exponentiation")
     let opNeg = coreops.GetMethod("op_UnaryNegation")
+    let opAbs = coreops.GetMethod("Abs")
     let opLog = coreops.GetMethod("Log")
     let opExp = coreops.GetMethod("Exp")
     let opSin = coreops.GetMethod("Sin")
@@ -298,18 +303,18 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x = SymbolicOps.laplacian f (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x = SymbolicOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' f x = SymbolicOps.jacobianT' f (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT f x = SymbolicOps.jacobianT f (array x) |> matrix
+    let inline jacobianT f x = SymbolicOps.jacobianT f (array x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x = SymbolicOps.jacobian' f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' f x = SymbolicOps.jacobian' f (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian f x = SymbolicOps.jacobian f (array x) |> matrix
+    let inline jacobian f x = SymbolicOps.jacobian f (array x) |> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' f x = SymbolicOps.hessian' f (array x) |> fun (a, b) -> (a, matrix b)
+    let inline hessian' f x = SymbolicOps.hessian' f (array x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian f x = SymbolicOps.hessian f (array x) |> matrix
+    let inline hessian f x = SymbolicOps.hessian f (array x) |> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' f x = SymbolicOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
+    let inline gradhessian' f x = SymbolicOps.gradhessian' f (array x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian f x = SymbolicOps.gradhessian f (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline gradhessian f x = SymbolicOps.gradhessian f (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)

@@ -99,6 +99,9 @@ type Dual =
     static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
     static member Atan2 (a:int, b:Dual) = Dual.Atan2(float a, b)
     // Dual unary operations
+    static member Abs (Dual(a, at)) = 
+        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        Dual(abs a, at * float (sign a))
     static member Log (Dual(a, at)) = Dual(log a, at / a)
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
     static member Sin (Dual(a, at)) = Dual(sin a, at * cos a)
@@ -201,13 +204,13 @@ module Vector =
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad (f:Vector<Dual>->Dual) (x:Vector<float>) = ForwardOps.grad (vector >> f) (array x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobianT (vector >> f >> array) (array x) |> matrix
+    let inline jacobianT (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobian (vector >> f >> array) (array x) |> matrix
+    let inline jacobian (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) = ForwardOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' (f:Vector<Dual>->Vector<Dual>) (x:Vector<float>) (v:Vector<float>) = ForwardOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`

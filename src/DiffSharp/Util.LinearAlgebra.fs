@@ -50,7 +50,9 @@ type Vector<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (/) : 'T * 'T -> 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
-                and 'T : (static member op_Explicit : 'T -> float)> =
+                and 'T : (static member Abs : 'T -> 'T)
+                and 'T : (static member op_Explicit : 'T -> float)
+                and 'T : comparison> =
     /// Vector with infinite dimension whose elements are all 0
     | ZeroVector of 'T
     /// Vector with finite dimension
@@ -117,6 +119,8 @@ type Vector<'T when 'T : (static member Zero : 'T)
     static member inline Create(n, v) : Vector<'T> = Vector (Array.create n v)
     /// Creates a Vector with dimension `n` where the element with index `i` has value `v` and the rest of the elements have value 0
     static member inline Create(n, i, v) : Vector<'T> = Vector.Create(n, fun j -> if j = i then v else LanguagePrimitives.GenericZero<'T>)
+    /// Creates a Vector from sequence `s`
+    static member inline ofSeq(s:seq<'T>) = Vector.Create(Array.ofSeq s)
     /// Returns the sum of all the elements in Vector `v`
     static member inline sum (v:Vector<'T>) = 
         match v with
@@ -241,7 +245,9 @@ type Matrix<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (/) : 'T * 'T -> 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
-                and 'T : (static member op_Explicit : 'T -> float)> =
+                and 'T : (static member Abs : 'T -> 'T)
+                and 'T : (static member op_Explicit : 'T -> float)
+                and 'T : comparison> =
     /// Matrix with infinite number of rows and columns whose entries are all 0
     | ZeroMatrix of 'T
     /// Matrix with finite number of rows and columns
@@ -274,6 +280,9 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> m
         | SymmetricMatrix m -> copyupper m
+    member inline m.ToArray() =
+        let a = m.ToArray2d()
+        [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
     /// Gets a string representation of this Matrix that can be pasted into a Mathematica notebook
     member inline m.ToMathematicaString() =
         let sb = System.Text.StringBuilder()
@@ -318,52 +327,77 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if m.Rows <> m.Cols then failwith "Cannot get the diagonal entries of a nonsquare matrix."
             Array.init m.Rows (fun i -> mm.[i, i])
         | SymmetricMatrix mm -> Array.init m.Rows (fun i -> mm.[i, i])
-    /// Returns the LU decomposition of this Matrix
-    member inline m.GetLUDecomposition():(Matrix<'T>*Matrix<'T>) =
+    /// Returns the LU decomposition and pivot indices of this Matrix
+    member inline m.GetLUDecomposition() =
         match m with
-        | ZeroMatrix z -> (ZeroMatrix z, ZeroMatrix z)
-        | Matrix mm ->
+        | ZeroMatrix z -> ZeroMatrix z, [||]
+        | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the LU decomposition of a nonsquare matrix."
-            let l = Array2D.zeroCreate m.Rows m.Rows
-            let u = Array2D.zeroCreate m.Rows m.Rows
-            for i = 0 to m.Rows - 1 do
-                l.[i, i] <- LanguagePrimitives.GenericOne<'T>
-                for j = i to m.Rows - 1 do
-                    u.[i, j] <- mm.[i, j]
-                    for k = 0 to i - 1 do
-                        u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
-                for j = i + 1 to m.Rows - 1 do
-                    l.[j, i] <- mm.[j, i]
-                    for k = 0 to i - 1 do
-                        l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
-                    l.[j, i] <- l.[j, i] / u.[i, i]
-            (Matrix l, Matrix u)
-        | SymmetricMatrix _ ->
-            let l = Array2D.zeroCreate m.Rows m.Rows
-            let u = Array2D.zeroCreate m.Rows m.Rows
-            for i = 0 to m.Rows - 1 do
-                l.[i, i] <- LanguagePrimitives.GenericOne<'T>
-                for j = i to m.Rows - 1 do
-                    u.[i, j] <- m.[i, j]
-                    for k = 0 to i - 1 do
-                        u.[i, j] <- u.[i, j] - l.[i, k] * u.[k, j]
-                for j = i + 1 to m.Rows - 1 do
-                    l.[j, i] <- m.[j, i]
-                    for k = 0 to i - 1 do
-                        l.[j, i] <- l.[j, i] - l.[j, k] * u.[k, i]
-                    l.[j, i] <- l.[j, i] / u.[i, i]
-            (Matrix l, Matrix u)
+            let res = Array2D.copy (m.ToArray2d())
+            let perm = Array.init m.Rows (fun i -> i)
+            for j = 0 to m.Rows - 2 do
+                let mutable colmax:'T = abs res.[j, j]
+                let mutable prow = j
+                for i = j + 1 to m.Rows - 1 do
+                    let absresij = abs res.[i, j]
+                    if absresij > colmax then
+                        colmax <- absresij
+                        prow <- i
+                if prow <> j then
+                    let tmprow = res.[prow, 0..]
+                    res.[prow, 0..] <- res.[j, 0..]
+                    res.[j, 0..] <- tmprow
+                    let tmp = perm.[prow]
+                    perm.[prow] <- perm.[j]
+                    perm.[j] <- tmp
+                for i = j + 1 to m.Rows - 1 do
+                    res.[i, j] <- res.[i, j] / res.[j, j]
+                    for k = j + 1 to m.Rows - 1 do
+                        res.[i, k] <- res.[i, k] - res.[i, j] * res.[j, k]
+            Matrix res, perm
     /// Gets the determinant of this Matrix
     member inline m.GetDeterminant() =
         match m with
         | ZeroMatrix z -> z
-        | Matrix _ ->
+        | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the determinant of a nonsquare matrix."
-            let _, u = m.GetLUDecomposition()
-            Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
-        | SymmetricMatrix _ ->
-            let _, u = m.GetLUDecomposition()
-            Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (u.GetDiagonal())
+            let lu, perm = m.GetLUDecomposition()
+            let p = Array.mapi (fun i x -> if i = x then LanguagePrimitives.GenericOne<'T> else LanguagePrimitives.GenericOne<'T>) perm
+            let pp = Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> p
+            pp * Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (lu.GetDiagonal())
+    /// Gets the inverse of this Matrix
+    member inline m.GetInverse() =
+        match m with
+        | ZeroMatrix z -> ZeroMatrix z
+        | Matrix _ | SymmetricMatrix _ ->
+            let hs (lu:'T[,]) (b:'T[]) =
+                let n = m.Rows
+                let x = Array.copy b
+                for i = 1 to n - 1 do
+                    let mutable sum = x.[i]
+                    for j = 0 to i - 1 do
+                        sum <- sum - lu.[i, j] * x.[j]
+                    x.[i] <- sum
+                x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
+                for i in (n - 2) .. -1 .. 0 do
+                    let mutable sum = x.[i]
+                    for j = i + 1 to n - 1 do
+                        sum <- sum - lu.[i, j] * x.[j]
+                    x.[i] <- sum / lu.[i, i]
+                x
+            let n = m.Rows
+            let res = Array2D.copy (m.ToArray2d())
+            let lu, perm = m.GetLUDecomposition()
+            let b:'T[] = Array.zeroCreate n
+            for i = 0 to n - 1 do
+                for j = 0 to n - 1 do
+                    if i = perm.[j] then
+                        b.[j] <- LanguagePrimitives.GenericOne<'T>
+                    else
+                        b.[j] <- LanguagePrimitives.GenericZero<'T>
+                let x = hs (lu.ToArray2d()) b
+                res.[0.., i] <- x
+            Matrix res
     /// Creates a Matrix from the given 2d array `m`
     static member inline Create(m):Matrix<'T> = Matrix m
     /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
@@ -392,6 +426,12 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         let s = Array2D.zeroCreate<'T> m m
         for i = 0 to m - 1 do s.[i, i] <- LanguagePrimitives.GenericOne<'T>
         SymmetricMatrix s
+    static member inline ofSeq(s:seq<seq<'T>>) =
+        let a = Array.ofSeq s
+        let b = Array.ofSeq a
+        let c = array2D b
+        Matrix.Create(c)
+    static member inline ofArray2D(m:'T[,]) = Matrix.Create(m)
     /// ZeroMatrix
     static member inline Zero = ZeroMatrix LanguagePrimitives.GenericZero<'T>
     /// Converts Matrix `m` to float[,]
@@ -617,18 +657,22 @@ type Matrix<'T when 'T : (static member Zero : 'T)
 
 
 /// Converts array, list, or sequence `v` into a Vector
-let inline vector v = Vector (Array.ofSeq v)
+let inline vector v = Vector.ofSeq v
 /// Gets the Euclidean norm of Vector `v`
-let inline norm (v:Vector<'T>) = v.GetNorm()
+let inline norm (v:Vector<_>) = v.GetNorm()
 /// Gets the unit vector codirectional with Vector `v`
-let inline unitVector (v:Vector<'T>) = v.GetUnitVector()
-/// Converts Vector `v` into array
-let inline array (v:Vector<'T>) = v.ToArray()
+let inline unitVector (v:Vector<_>) = v.GetUnitVector()
 /// Converts 2d array `m` into a Matrix
-let inline matrix (m:'T[,]) = Matrix.Create(m)
+let inline matrix m = Matrix.ofSeq m
+/// Converts Vector `v` into array
+let inline array (v:Vector<_>) = v.ToArray()
 /// Converts Matrix `m` into a 2d array
-let inline array2d (m:Matrix<'T>) = m.ToArray2d()
+let inline array2d (m:Matrix<_>) = m.ToArray2d()
 /// Gets the trace of Matrix `m`
-let inline trace (m:Matrix<'T>) = m.GetTrace()
+let inline trace (m:Matrix<_>) = m.GetTrace()
 /// Gets the transpose of Matrix `m`
-let inline transpose (m:Matrix<'T>) = m.GetTranspose()
+let inline transpose (m:Matrix<_>) = m.GetTranspose()
+/// Gets the determinant of Matrix `m`
+let inline det (m:Matrix<_>) = m.GetDeterminant()
+/// Gets the inverse of Matrix `m`
+let inline inverse (m:Matrix<_>) = m.GetInverse()

@@ -103,6 +103,9 @@ type DualG =
     static member Pow (a:int, b:DualG) = DualG.Pow(float a, b)
     static member Atan2 (a:int, b:DualG) = DualG.Atan2(float a, b)
     // DualG unary operations
+    static member Abs (DualG(a, ag)) = 
+        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        DualG(abs a, ag * float (sign a))
     static member Log (DualG(a, ag)) = DualG(log a, ag / a)
     static member Exp (DualG(a, ag)) = let expa = exp a in DualG(expa, ag * expa)
     static member Sin (DualG(a, ag)) = DualG(sin a, ag * cos a)
@@ -188,10 +191,10 @@ module Vector =
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad (vector >> f) (array x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> matrix
+    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> matrix
+    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D

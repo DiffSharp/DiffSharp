@@ -63,7 +63,7 @@ type Trace() =
         for op in t do
             match op with
             | Add(x, y, z) | Sub(x, y, z) | Mul(x, y, z) | Div(x, y, z) | Pow (x, y, z) | Atan2 (x, y, z) -> x.A <- 0.; y.A <- 0.; z.A <- 0.
-            | Neg(x, z) | Log(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) -> x.A <- 0.; z.A <- 0.;
+            | Neg(x, z) | Abs(x, z) | Log(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) -> x.A <- 0.; z.A <- 0.;
             ret.Push(op)
         ret
     static member ReverseSweep() =
@@ -75,6 +75,7 @@ type Trace() =
             | Div(x, y, z) -> x.AddAdj(z.A * (1. / y.P)); y.AddAdj(z.A * (-x.P / (y.P * y.P)))
             | Pow(x, y, z) -> x.AddAdj(z.A * (x.P ** (y.P - 1.)) * y.P); y.AddAdj(z.A * (x.P ** y.P) * log x.P)
             | Atan2(x, y, z) -> x.AddAdj(z.A * y.P / (x.P * x.P + y.P * y.P)); y.AddAdj(z.A * (-x.P) / (x.P * x.P + y.P * y.P))
+            | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
             | Log(x, z) -> x.AddAdj(z.A / x.P)
             | Exp(x, z) -> x.AddAdj(z.A * z.P)
             | Sin(x, z) -> x.AddAdj(z.A * cos x.P)
@@ -97,6 +98,7 @@ and Op =
     | Div of Adj * Adj * Adj
     | Pow of Adj * Adj * Adj
     | Atan2 of Adj * Adj * Adj
+    | Abs of Adj * Adj
     | Log of Adj * Adj
     | Exp of Adj * Adj
     | Sin of Adj * Adj
@@ -160,6 +162,9 @@ and Adj =
     static member Pow (x:int, y:Adj) = Adj(float x) ** y
     static member Atan2 (x:int, y:Adj) = atan2 (Adj(float x)) y
     // Adj unary operations
+    static member Abs (x:Adj) = 
+        if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
     static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
     static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
     static member Sin (x:Adj) = let z = Adj(sin x.P) in Trace.Push(Sin(x, z)); z
@@ -309,21 +314,21 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobianT' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT (vector >> f >> array) (array x) |> matrix
+    let inline jacobianT (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline jacobian' (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian (vector >> f >> array) (array x) |> matrix
+    let inline jacobian (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) = ReverseOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, matrix b)
+    let inline hessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian (vector >> f) (array x) |> matrix
+    let inline hessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.hessian (vector >> f) (array x) |> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, matrix c)
+    let inline gradhessian' (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, matrix b)
+    let inline gradhessian (f:Vector<Adj>->Adj) (x:Vector<float>) = ReverseOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianTv (f:Vector<Adj>->Vector<Adj>) (x:Vector<float>) (v:Vector<float>) = ReverseOps.jacobianTv (vector >> f >> array) (array x) (array v) |> vector
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
