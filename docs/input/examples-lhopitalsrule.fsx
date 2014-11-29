@@ -72,12 +72,16 @@ printf "val l : seq [nan; nan; nan; 6.0; ...]"
 (*** include-output: o2 ***)
 
 (**
-For $n = 0$, we have the original indeterminate value of the limit (since the 0-th derivative of a function is itself). For $n = 3$, we have the value of this limit as
+For $n = 0$, we have the original indeterminate value of the limit (since the 0-th derivative of a function is itself). 
+
+For $n = 3$, we have the value of this limit as
 
 $$$
  \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 ,
 
-after 3 applications of l'Hôpital's rule. We can check this by manually differentiating:
+after 3 applications of l'Hôpital's rule. 
+
+We can check this by manually differentiating:
 
 $$$
  \begin{eqnarray*}

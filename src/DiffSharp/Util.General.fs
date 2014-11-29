@@ -72,6 +72,23 @@ let inline copyupper (Square m:'a[,]) =
                 r.[i, j] <- r.[j, i]
     r
 
+/// Find an array that, when multiplied by an LU matrix `lu`, gives array `b`
+let inline matrixSolveHelper (lu:'a[,]) (b:'a[]) =
+    let n = lu.GetLength 0
+    let x = Array.copy b
+    for i = 1 to n - 1 do
+        let mutable sum = x.[i]
+        for j = 0 to i - 1 do
+            sum <- sum - lu.[i, j] * x.[j]
+        x.[i] <- sum
+    x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
+    for i in (n - 2) .. -1 .. 0 do
+        let mutable sum = x.[i]
+        for j = i + 1 to n - 1 do
+            sum <- sum - lu.[i, j] * x.[j]
+        x.[i] <- sum / lu.[i, i]
+    x
+
 /// Get a string representation of a float[] that can be pasted into a Mathematica notebook
 let MathematicaVector (v:float[]) =
     let sb = System.Text.StringBuilder()

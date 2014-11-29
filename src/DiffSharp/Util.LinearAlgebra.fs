@@ -327,14 +327,15 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if m.Rows <> m.Cols then failwith "Cannot get the diagonal entries of a nonsquare matrix."
             Array.init m.Rows (fun i -> mm.[i, i])
         | SymmetricMatrix mm -> Array.init m.Rows (fun i -> mm.[i, i])
-    /// Returns the LU decomposition and pivot indices of this Matrix
+    /// Returns the LU decomposition of this Matrix. The return values are the LU matrix, pivot indices, and a toggle value indicating the number of row exchanges during the decomposition, which is +1 if the number of exchanges were even, -1 if odd.
     member inline m.GetLUDecomposition() =
         match m with
-        | ZeroMatrix z -> ZeroMatrix z, [||]
+        | ZeroMatrix z -> ZeroMatrix z, [||], LanguagePrimitives.GenericZero<'T>
         | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the LU decomposition of a nonsquare matrix."
             let res = Array2D.copy (m.ToArray2d())
             let perm = Array.init m.Rows (fun i -> i)
+            let mutable toggle = LanguagePrimitives.GenericOne<'T>
             for j = 0 to m.Rows - 2 do
                 let mutable colmax:'T = abs res.[j, j]
                 let mutable prow = j
@@ -350,52 +351,36 @@ type Matrix<'T when 'T : (static member Zero : 'T)
                     let tmp = perm.[prow]
                     perm.[prow] <- perm.[j]
                     perm.[j] <- tmp
+                    toggle <- -toggle
                 for i = j + 1 to m.Rows - 1 do
                     res.[i, j] <- res.[i, j] / res.[j, j]
                     for k = j + 1 to m.Rows - 1 do
                         res.[i, k] <- res.[i, k] - res.[i, j] * res.[j, k]
-            Matrix res, perm
+            Matrix res, perm, toggle
     /// Gets the determinant of this Matrix
     member inline m.GetDeterminant() =
         match m with
         | ZeroMatrix z -> z
         | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the determinant of a nonsquare matrix."
-            let lu, perm = m.GetLUDecomposition()
-            let p = Array.mapi (fun i x -> if i = x then LanguagePrimitives.GenericOne<'T> else LanguagePrimitives.GenericOne<'T>) perm
-            let pp = Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> p
-            pp * Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (lu.GetDiagonal())
+            let lu, _, toggle = m.GetLUDecomposition()
+            toggle * Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (lu.GetDiagonal())
     /// Gets the inverse of this Matrix
     member inline m.GetInverse() =
         match m with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix _ | SymmetricMatrix _ ->
-            let hs (lu:'T[,]) (b:'T[]) =
-                let n = m.Rows
-                let x = Array.copy b
-                for i = 1 to n - 1 do
-                    let mutable sum = x.[i]
-                    for j = 0 to i - 1 do
-                        sum <- sum - lu.[i, j] * x.[j]
-                    x.[i] <- sum
-                x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
-                for i in (n - 2) .. -1 .. 0 do
-                    let mutable sum = x.[i]
-                    for j = i + 1 to n - 1 do
-                        sum <- sum - lu.[i, j] * x.[j]
-                    x.[i] <- sum / lu.[i, i]
-                x
-            let n = m.Rows
+            if (m.Rows <> m.Cols) then failwith "Cannot compute the inverse of a nonsquare matrix."
             let res = Array2D.copy (m.ToArray2d())
-            let lu, perm = m.GetLUDecomposition()
-            let b:'T[] = Array.zeroCreate n
-            for i = 0 to n - 1 do
-                for j = 0 to n - 1 do
+            let lu, perm, _ = m.GetLUDecomposition()
+            let b:'T[] = Array.zeroCreate m.Rows
+            for i = 0 to m.Rows - 1 do
+                for j = 0 to m.Rows - 1 do
                     if i = perm.[j] then
                         b.[j] <- LanguagePrimitives.GenericOne<'T>
                     else
                         b.[j] <- LanguagePrimitives.GenericZero<'T>
-                let x = hs (lu.ToArray2d()) b
+                let x = matrixSolveHelper (lu.ToArray2d()) b
                 res.[0.., i] <- x
             Matrix res
     /// Creates a Matrix from the given 2d array `m`
@@ -440,6 +425,12 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> Array2D.map float m
         | SymmetricMatrix m -> copyupper (Array2D.map float m)
+    /// Solves a system of linear equations ax = b, where the coefficients are given in Matrix `a` and the result vector is Vector `b`
+    static member inline Solve(a:Matrix<'T>, b:Vector<'T>) =
+        if a.Cols <> b.Length then invalidArg "b" "Cannot solve the system of equations using a matrix and a vector of incompatible sizes."
+        let lu, perm, _ = a.GetLUDecomposition()
+        let bp = Array.init a.Rows (fun i -> b.[perm.[i]])
+        Vector (matrixSolveHelper (lu.ToArray2d()) bp)
     /// Perfomrs a symmetric unary operation `f` on Matrix `a`
     static member inline SymmetricOp(a:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a with
