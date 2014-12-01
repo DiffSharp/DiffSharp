@@ -47,11 +47,11 @@ type Vector<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (+) : 'T * 'T -> 'T)
                 and 'T : (static member (-) : 'T * 'T -> 'T)
                 and 'T : (static member (*) : 'T * 'T -> 'T)
-                and 'T : (static member (/) : 'T * 'T -> 'T)
+                and ^T : (static member (/) : ^T * ^T -> ^T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
                 and 'T : (static member Abs : 'T -> 'T)
-                and 'T : (static member op_Explicit : 'T -> float)
+                and ^T : (static member op_Explicit : ^T -> float)
                 and 'T : comparison> =
     /// Vector with infinite dimension whose elements are all 0
     | ZeroVector of 'T
@@ -190,42 +190,42 @@ type Vector<'T when 'T : (static member Zero : 'T)
             if va.Length <> vb.Length then invalidArg "b" "Cannot divide two Vectors with different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] / vb.[i])
     /// Adds scalar `b` to each element of Vector `a`
-    static member inline (+) (a, b) =
+    static member inline (+) (a:Vector<'T>, b:'T) =
         match a with
         | ZeroVector _ -> invalidArg "a" "Unsupported operation. Cannot add a scalar to a ZeroVector."
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] + b)
     /// Adds scalar `a` to each element of Vector `b`
-    static member inline (+) (a, b) =
+    static member inline (+) (a:'T, b:Vector<'T>) =
         match b with
         | ZeroVector _ -> invalidArg "b" "Unsupported operation. Cannot add a scalar to a ZeroVector."
         | Vector vb -> Vector.Create(vb.Length, fun i -> a + vb.[i])
     /// Subtracts scalar `b` from each element of Vector `a`
-    static member inline (-) (a, b) =
+    static member inline (-) (a:Vector<'T>, b:'T) =
         match a with
         | ZeroVector _ -> invalidArg "a" "Unsupported operation. Cannot subtract a scalar from a ZeroVector."
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] - b)
     /// Subtracts each element of Vector `b` from scalar `a`
-    static member inline (-) (a, b) =
+    static member inline (-) (a:'T, b:Vector<'T>) =
         match b with
         | ZeroVector _ -> invalidArg "b" "Unsupported operation. Cannot add subtract a ZeroVector from a scalar."
         | Vector vb -> Vector.Create(vb.Length, fun i -> a - vb.[i])
     /// Multiplies each element of Vector `a` by scalar `b`
-    static member inline (*) (a, b) =
+    static member inline (*) (a:Vector<'T>, b:'T) =
         match a with
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] * b)
     /// Multiples each element of Vector `b` by scalar `a`
-    static member inline (*) (a, b) =
+    static member inline (*) (a:'T, b:Vector<'T>) =
         match b with
         | ZeroVector _ -> Vector.Zero
         | Vector vb -> Vector.Create(vb.Length, fun i -> a * vb.[i])
     /// Divides each element of Vector `a` by scalar `b`
-    static member inline (/) (a, b) =
+    static member inline (/) (a:Vector<'T>, b:'T) =
         match a with
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] / b)
     /// Creates a Vector whose elements are scalar `a` divided by each element of Vector `b`
-    static member inline (/) (a, b) =
+    static member inline (/) (a:'T, b:Vector<'T>) =
         match b with
         | ZeroVector _ -> raise (new System.DivideByZeroException("Attempted division by a ZeroVector."))
         | Vector vb -> Vector.Create(vb.Length, fun i -> a / vb.[i])
@@ -591,49 +591,49 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if (a.Length <> b.Rows) then invalidArg "b" "Cannot compute the vector-matrix product of a vector and matrix with incompatible sizes."
             Vector.Create(b.Cols, fun i -> Array.sumBy (fun j -> va.[j] * b.[j, i]) [|0..(a.Length - 1)|])
     /// Adds scalar `b` to each element of Matrix `a`
-    static member inline (+) (a, b) =
+    static member inline (+) (a:Matrix<'T>, b:'T) =
         match a with
         | ZeroMatrix z -> invalidArg "a" "Unsupported operation. Cannot add a scalar to a ZeroMatrix."
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] + b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] + b)
     /// Adds scalar `a` to each element of Matrix `b`
-    static member inline (+) (a, b) =
+    static member inline (+) (a:'T, b:Matrix<'T>) =
         match b with
         | ZeroMatrix z -> invalidArg "a" "Unsupported operation. Cannot add a scalar to a ZeroMatrix."
         | Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> a + mb.[i, j])
         | SymmetricMatrix mb -> Matrix.CreateSymmetric(b.Rows, fun i j -> a + mb.[i, j])
     /// Subtracts scalar `b` from each element of Matrix `a`
-    static member inline (-) (a, b) =
+    static member inline (-) (a:Matrix<'T>, b:'T) =
         match a with
         | ZeroMatrix z -> invalidArg "a" "Unsupported operation. Cannot subtract a scalar from a ZeroMatrix."
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] - b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] - b)
     /// Subtracts each element of of Matrix `b` from scalar `a`
-    static member inline (-) (a, b) =
+    static member inline (-) (a:'T, b:Matrix<'T>) =
         match b with
         | ZeroMatrix z -> invalidArg "a" "Unsupported operation. Cannot subtract a ZeroMatrix from a scalar."
         | Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> a - mb.[i, j])
         | SymmetricMatrix mb -> Matrix.CreateSymmetric(b.Rows, fun i j -> a - mb.[i, j])
     /// Multiplies each element of Matrix `a` by scalar `b`
-    static member inline (*) (a, b) =
+    static member inline (*) (a:Matrix<'T>, b:'T) =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] * b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] * b)
     /// Multiplies each element of Matrix `b` by scalar `a`
-    static member inline (*) (a, b) =
+    static member inline (*) (a:'T, b:Matrix<'T>) =
         match b with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> a * mb.[i, j])
         | SymmetricMatrix mb -> Matrix.CreateSymmetric(b.Rows, fun i j -> a * mb.[i, j])
     /// Divides each element of Matrix `a` by scalar `b`
-    static member inline (/) (a, b) =
+    static member inline (/) (a:Matrix<'T>, b:'T) =
         match a with
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] / b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] / b)
     /// Creates a Matrix whose elements are scalar `a` divided by each element of Matrix `b`
-    static member inline (/) (a, b) =
+    static member inline (/) (a:'T, b:Matrix<'T>) =
         match b with
         | ZeroMatrix _ -> raise (new System.DivideByZeroException("Attempted division by a ZeroMatrix."))
         | Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> a / mb.[i, j])
