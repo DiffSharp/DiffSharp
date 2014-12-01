@@ -71,7 +71,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Quotations.Evaluator">
-      <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.3\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
+      <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.4\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
