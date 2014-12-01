@@ -125,6 +125,16 @@ and Adj =
     static member DivideByInt(x:Adj, i:int) = Adj(x.P / float i, x.A / float i)
     static member Zero = Adj(0., 0.)
     static member One = Adj(1., 0.)
+    interface System.IComparable with
+        override a.CompareTo(other) =
+            match other with
+            | :? Adj as a2 -> compare a.P a2.P
+            | _ -> failwith "Cannot compare this Adj with another type of object."
+    override a.Equals(other) = 
+        match other with
+        | :? Adj as a2 -> compare a.P a2.P = 0
+        | _ -> false
+    override a.GetHashCode() = hash [|a.P; a.A|]
     member this.AddAdj(a) = this.A <- this.A + a
     // Adj - Adj binary operations
     static member (+) (x:Adj, y:Adj) = let z = Adj(x.P + y.P) in Trace.Push(Add(x, y, z)); z
