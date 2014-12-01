@@ -25,6 +25,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\DiffSharp.Tests.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
+    <OtherFlags>
+    </OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -56,7 +58,6 @@
   <ItemGroup>
     <Compile Include="UnitTests.fs" />
     <Compile Include="Program.fs" />
-    <None Include="Benchmarks.fsx" />
     <None Include="Test.fsx" />
     <None Include="App.config" />
     <Content Include="packages.config" />
