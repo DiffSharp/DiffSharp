@@ -107,6 +107,7 @@ type DualG =
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         DualG(abs a, ag * float (sign a))
     static member Log (DualG(a, ag)) = DualG(log a, ag / a)
+    static member Log10 (DualG(a, ag)) = DualG(log10 a, ag / (a * log10val))
     static member Exp (DualG(a, ag)) = let expa = exp a in DualG(expa, ag * expa)
     static member Sin (DualG(a, ag)) = DualG(sin a, ag * cos a)
     static member Cos (DualG(a, ag)) = DualG(cos a, -ag * sin a)

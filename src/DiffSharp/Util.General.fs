@@ -138,6 +138,9 @@ let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
+/// Value of log 10.
+let log10val = log 10.
+
 /// Global step size for numerical approximations
 let eps = 0.00001
 

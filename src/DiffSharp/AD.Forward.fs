@@ -103,6 +103,7 @@ type Dual =
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         Dual(abs a, at * float (sign a))
     static member Log (Dual(a, at)) = Dual(log a, at / a)
+    static member Log10 (Dual(a, at)) = Dual(log10 a, at / (a * log10val))
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
     static member Sin (Dual(a, at)) = Dual(sin a, at * cos a)
     static member Cos (Dual(a, at)) = Dual(cos a, -at * sin a)

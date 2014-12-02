@@ -47,15 +47,15 @@ open DiffSharp.Util.General
 type DualN =
     // Primal, tangent
     | DualN of float * Lazy<DualN>
-    static member Create(p) = DualN(p, Lazy<DualN>(fun () -> DualN.Zero))
-    static member Create(p, t) = DualN(p, Lazy<DualN>(fun () -> DualN.Create(t)))
+    static member Create(p) = DualN(p, lazy (DualN.Zero))
+    static member Create(p, t) = DualN(p, lazy (DualN.Create(t)))
     static member op_Explicit(p) = DualN.Create(p)
     static member op_Explicit(DualN(p, _)) = p
     override d.ToString() = let (DualN(p, t)) = d in sprintf "DualN (%f, %f)" p (float t.Value)
     member d.P = let (DualN(p, _)) = d in p
     member d.T = let (DualN(_, t)) = d in t.Value
-    static member Zero = DualN(0., Lazy<DualN>(fun () -> DualN.Zero))
-    static member One = DualN(1., Lazy<DualN>(fun () -> DualN.Zero))
+    static member Zero = DualN(0., lazy (DualN.Zero))
+    static member One = DualN(1., lazy (DualN.Zero))
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -67,26 +67,26 @@ type DualN =
         | _ -> false
     override d.GetHashCode() = let (DualN(a, b)) = d in hash [|a; b|]
     // DualN - DualN binary operations
-    static member (+) (a:DualN, b:DualN) = DualN(a.P + b.P, Lazy<DualN>(fun () -> a.T + b.T))
-    static member (-) (a:DualN, b:DualN) = DualN(a.P - b.P, Lazy<DualN>(fun () -> a.T - b.T))
-    static member (*) (a:DualN, b:DualN) = DualN(a.P * b.P, Lazy<DualN>(fun () -> a.T * b + a * b.T))
-    static member (/) (a:DualN, b:DualN) = DualN(a.P / b.P, Lazy<DualN>(fun () -> (a.T * b - a * b.T) / (b * b)))
-    static member Pow (a:DualN, b:DualN) = DualN(a.P ** b.P, Lazy<DualN>(fun () -> (a ** b) * ((b * a.T / a) + ((log a) * b.T))))
-    static member Atan2 (a:DualN, b:DualN) = DualN(atan2 a.P b.P, Lazy<DualN>(fun () -> (a.T * b - a * b.T) / (a * a + b * b)))
+    static member (+) (a:DualN, b:DualN) = DualN(a.P + b.P, lazy (a.T + b.T))
+    static member (-) (a:DualN, b:DualN) = DualN(a.P - b.P, lazy (a.T - b.T))
+    static member (*) (a:DualN, b:DualN) = DualN(a.P * b.P, lazy (a.T * b + a * b.T))
+    static member (/) (a:DualN, b:DualN) = DualN(a.P / b.P, lazy ((a.T * b - a * b.T) / (b * b)))
+    static member Pow (a:DualN, b:DualN) = DualN(a.P ** b.P, lazy ((a ** b) * ((b * a.T / a) + ((log a) * b.T))))
+    static member Atan2 (a:DualN, b:DualN) = DualN(atan2 a.P b.P, lazy ((a.T * b - a * b.T) / (a * a + b * b)))
     // DualN - float binary operations
-    static member (+) (a:DualN, b) = DualN(a.P + b, Lazy<DualN>(fun () -> a.T))
-    static member (-) (a:DualN, b) = DualN(a.P - b, Lazy<DualN>(fun () -> a.T))
-    static member (*) (a:DualN, b) = DualN(a.P * b, Lazy<DualN>(fun () -> a.T * b))
-    static member (/) (a:DualN, b) = DualN(a.P / b, Lazy<DualN>(fun () -> a.T / b))
-    static member Pow (a:DualN, b) = DualN(a.P ** b, Lazy<DualN>(fun () -> b * (a ** (b - 1.)) * a.T))
-    static member Atan2 (a:DualN, b) = DualN(atan2 a.P b, Lazy<DualN>(fun () -> (b * a.T) / (b * b + a * a)))
+    static member (+) (a:DualN, b) = DualN(a.P + b, lazy (a.T))
+    static member (-) (a:DualN, b) = DualN(a.P - b, lazy (a.T))
+    static member (*) (a:DualN, b) = DualN(a.P * b, lazy (a.T * b))
+    static member (/) (a:DualN, b) = DualN(a.P / b, lazy (a.T / b))
+    static member Pow (a:DualN, b) = DualN(a.P ** b, lazy (b * (a ** (b - 1.)) * a.T))
+    static member Atan2 (a:DualN, b) = DualN(atan2 a.P b, lazy ((b * a.T) / (b * b + a * a)))
     // float - DualN binary operations
-    static member (+) (a, b:DualN) = DualN(b.P + a, Lazy<DualN>(fun () -> b.T))
-    static member (-) (a, b:DualN) = DualN(a - b.P, Lazy<DualN>(fun () -> -b.T))
-    static member (*) (a, b:DualN) = DualN(b.P * a, Lazy<DualN>(fun () -> b.T * a))
-    static member (/) (a, b:DualN) = DualN(a / b.P, Lazy<DualN>(fun () -> -a * b.T / (b * b)))
-    static member Pow (a, b:DualN) = DualN(a ** b.P, Lazy<DualN>(fun () -> (DualN.Create(a) ** b) * (log a) * b.T))
-    static member Atan2 (a, b:DualN) = DualN(atan2 a b.P, Lazy<DualN>(fun () -> -(a * b.T) / (a * a + b * b)))
+    static member (+) (a, b:DualN) = DualN(b.P + a, lazy (b.T))
+    static member (-) (a, b:DualN) = DualN(a - b.P, lazy (-b.T))
+    static member (*) (a, b:DualN) = DualN(b.P * a, lazy (b.T * a))
+    static member (/) (a, b:DualN) = DualN(a / b.P, lazy (-a * b.T / (b * b)))
+    static member Pow (a, b:DualN) = DualN(a ** b.P, lazy ((DualN.Create(a) ** b) * (log a) * b.T))
+    static member Atan2 (a, b:DualN) = DualN(atan2 a b.P, lazy (-(a * b.T) / (a * a + b * b)))
     // DualN - int binary operations
     static member (+) (a:DualN, b:int) = a + float b
     static member (-) (a:DualN, b:int) = a - float b
@@ -104,20 +104,21 @@ type DualN =
     // DualN unary operations
     static member Abs (a:DualN) = 
         if a.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        DualN(abs a.P, Lazy<DualN>(fun () -> a.T * float (sign a.P)))
-    static member Log (a:DualN) = DualN(log a.P, Lazy<DualN>(fun () -> a.T / a))
-    static member Exp (a:DualN) = DualN(exp a.P, Lazy<DualN>(fun () -> a.T * exp a))
-    static member Sin (a:DualN) = DualN(sin a.P, Lazy<DualN>(fun () -> a.T * cos a))
-    static member Cos (a:DualN) = DualN(cos a.P, Lazy<DualN>(fun () -> -a.T * sin a))
-    static member Tan (a:DualN) = DualN(tan a.P, Lazy<DualN>(fun () -> a.T / ((cos a) * (cos a))))
-    static member (~-) (a:DualN) = DualN(-a.P, Lazy<DualN>(fun () -> -a.T))
-    static member Sqrt (a:DualN) = DualN(sqrt a.P, Lazy<DualN>(fun () -> a.T / (2. * sqrt a)))
-    static member Sinh (a:DualN) = DualN(sinh a.P, Lazy<DualN>(fun () -> a.T * cosh a))
-    static member Cosh (a:DualN) = DualN(cosh a.P, Lazy<DualN>(fun () -> a.T * sinh a))
-    static member Tanh (a:DualN) = DualN(tanh a.P, Lazy<DualN>(fun () -> a.T / ((cosh a) * (cosh a))))
-    static member Asin (a:DualN) = DualN(asin a.P, Lazy<DualN>(fun () -> a.T / sqrt (1. - a * a)))
-    static member Acos (a:DualN) = DualN(acos a.P, Lazy<DualN>(fun () -> -a.T / sqrt (1. - a * a)))
-    static member Atan (a:DualN) = DualN(atan a.P, Lazy<DualN>(fun () -> a.T / (1. + a * a)))
+        DualN(abs a.P, lazy (a.T * float (sign a.P)))
+    static member Log (a:DualN) = DualN(log a.P, lazy (a.T / a))
+    static member Log10 (a:DualN) = DualN(log10 a.P, lazy (a.T / (a * log10val)))
+    static member Exp (a:DualN) = DualN(exp a.P, lazy (a.T * exp a))
+    static member Sin (a:DualN) = DualN(sin a.P, lazy (a.T * cos a))
+    static member Cos (a:DualN) = DualN(cos a.P, lazy (-a.T * sin a))
+    static member Tan (a:DualN) = DualN(tan a.P, lazy (a.T / ((cos a) * (cos a))))
+    static member (~-) (a:DualN) = DualN(-a.P, lazy (-a.T))
+    static member Sqrt (a:DualN) = DualN(sqrt a.P, lazy (a.T / (2. * sqrt a)))
+    static member Sinh (a:DualN) = DualN(sinh a.P, lazy (a.T * cosh a))
+    static member Cosh (a:DualN) = DualN(cosh a.P, lazy (a.T * sinh a))
+    static member Tanh (a:DualN) = DualN(tanh a.P, lazy (a.T / ((cosh a) * (cosh a))))
+    static member Asin (a:DualN) = DualN(asin a.P, lazy (a.T / sqrt (1. - a * a)))
+    static member Acos (a:DualN) = DualN(acos a.P, lazy (-a.T / sqrt (1. - a * a)))
+    static member Atan (a:DualN) = DualN(atan a.P, lazy (a.T / (1. + a * a)))
 
 /// DualN operations module (automatically opened)
 [<AutoOpen>]

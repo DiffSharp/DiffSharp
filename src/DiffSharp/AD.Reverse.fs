@@ -63,7 +63,7 @@ type Trace() =
         for op in t do
             match op with
             | Add(x, y, z) | Sub(x, y, z) | Mul(x, y, z) | Div(x, y, z) | Pow (x, y, z) | Atan2 (x, y, z) -> x.A <- 0.; y.A <- 0.; z.A <- 0.
-            | Neg(x, z) | Abs(x, z) | Log(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) -> x.A <- 0.; z.A <- 0.;
+            | Neg(x, z) | Abs(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) -> x.A <- 0.; z.A <- 0.;
             ret.Push(op)
         ret
     static member ReverseSweep() =
@@ -77,6 +77,7 @@ type Trace() =
             | Atan2(x, y, z) -> x.AddAdj(z.A * y.P / (x.P * x.P + y.P * y.P)); y.AddAdj(z.A * (-x.P) / (x.P * x.P + y.P * y.P))
             | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
             | Log(x, z) -> x.AddAdj(z.A / x.P)
+            | Log10(x, z) -> x.AddAdj(z.A / (x.P * log10val))
             | Exp(x, z) -> x.AddAdj(z.A * z.P)
             | Sin(x, z) -> x.AddAdj(z.A * cos x.P)
             | Cos(x, z) -> x.AddAdj(z.A * (-sin x.P))
@@ -100,6 +101,7 @@ and Op =
     | Atan2 of Adj * Adj * Adj
     | Abs of Adj * Adj
     | Log of Adj * Adj
+    | Log10 of Adj * Adj
     | Exp of Adj * Adj
     | Sin of Adj * Adj
     | Cos of Adj * Adj
@@ -176,6 +178,7 @@ and Adj =
         if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
     static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
+    static member Log10 (x:Adj) = let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
     static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
     static member Sin (x:Adj) = let z = Adj(sin x.P) in Trace.Push(Sin(x, z)); z
     static member Cos (x:Adj) = let z = Adj(cos x.P) in Trace.Push(Cos(x, z)); z

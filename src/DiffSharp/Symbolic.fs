@@ -42,7 +42,7 @@
 //
 
 //
-// TODO: Add support for abs
+// TODO: Add support for abs, log10
 //
 
 #light
