@@ -42,7 +42,7 @@
 //
 
 //
-// TODO: Add support for abs, log10
+// TO DO: Add support for abs, log10, floor, ceiling, round
 //
 
 #light

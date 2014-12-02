@@ -99,9 +99,6 @@ type Dual =
     static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
     static member Atan2 (a:int, b:Dual) = Dual.Atan2(float a, b)
     // Dual unary operations
-    static member Abs (Dual(a, at)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        Dual(abs a, at * float (sign a))
     static member Log (Dual(a, at)) = Dual(log a, at / a)
     static member Log10 (Dual(a, at)) = Dual(log10 a, at / (a * log10val))
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
@@ -116,7 +113,18 @@ type Dual =
     static member Asin (Dual(a, at)) = Dual(asin a, at / sqrt (1. - a * a))
     static member Acos (Dual(a, at)) = Dual(acos a, -at / sqrt (1. - a * a))
     static member Atan (Dual(a, at)) = Dual(atan a, at / (1. + a * a))
-
+    static member Abs (Dual(a, at)) = 
+        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        Dual(abs a, at * float (sign a))
+    static member Floor (Dual(a, _)) =
+        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        Dual(floor a, 0.)
+    static member Ceiling (Dual(a, _)) =
+        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        Dual(ceil a, 0.)
+    static member Round (Dual(a, _)) =
+        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        Dual(round a, 0.)
 
 /// Dual operations module (automatically opened)
 [<AutoOpen>]

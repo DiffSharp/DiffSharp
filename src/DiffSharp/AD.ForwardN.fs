@@ -102,9 +102,6 @@ type DualN =
     static member Pow (a:int, b:DualN) = DualN.Pow(float a, b)
     static member Atan2 (a:int, b:DualN) = DualN.Atan2(float a, b)
     // DualN unary operations
-    static member Abs (a:DualN) = 
-        if a.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        DualN(abs a.P, lazy (a.T * float (sign a.P)))
     static member Log (a:DualN) = DualN(log a.P, lazy (a.T / a))
     static member Log10 (a:DualN) = DualN(log10 a.P, lazy (a.T / (a * log10val)))
     static member Exp (a:DualN) = DualN(exp a.P, lazy (a.T * exp a))
@@ -119,6 +116,18 @@ type DualN =
     static member Asin (a:DualN) = DualN(asin a.P, lazy (a.T / sqrt (1. - a * a)))
     static member Acos (a:DualN) = DualN(acos a.P, lazy (-a.T / sqrt (1. - a * a)))
     static member Atan (a:DualN) = DualN(atan a.P, lazy (a.T / (1. + a * a)))
+    static member Abs (a:DualN) = 
+        if a.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        DualN(abs a.P, lazy (a.T * float (sign a.P)))
+    static member Floor (a:DualN) =
+        if isInteger a.P then invalidArg "" "The derivative of floor is not defined for integer values."
+        DualN(floor a.P, lazy (DualN.Zero))
+    static member Ceiling (a:DualN) =
+        if isInteger a.P then invalidArg "" "The derivative of ceil is not defined for integer values."
+        DualN(ceil a.P, lazy (DualN.Zero))
+    static member Round (a:DualN) =
+        if isHalfway a.P then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        DualN(round a.P, lazy (DualN.Zero))
 
 /// DualN operations module (automatically opened)
 [<AutoOpen>]

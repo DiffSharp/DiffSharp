@@ -63,7 +63,7 @@ type Trace() =
         for op in t do
             match op with
             | Add(x, y, z) | Sub(x, y, z) | Mul(x, y, z) | Div(x, y, z) | Pow (x, y, z) | Atan2 (x, y, z) -> x.A <- 0.; y.A <- 0.; z.A <- 0.
-            | Neg(x, z) | Abs(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) -> x.A <- 0.; z.A <- 0.;
+            | Neg(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) | Abs(x, z) | Floor(x, z) | Ceil(x, z) | Round(x, z) -> x.A <- 0.; z.A <- 0.;
             ret.Push(op)
         ret
     static member ReverseSweep() =
@@ -75,7 +75,6 @@ type Trace() =
             | Div(x, y, z) -> x.AddAdj(z.A * (1. / y.P)); y.AddAdj(z.A * (-x.P / (y.P * y.P)))
             | Pow(x, y, z) -> x.AddAdj(z.A * (x.P ** (y.P - 1.)) * y.P); y.AddAdj(z.A * (x.P ** y.P) * log x.P)
             | Atan2(x, y, z) -> x.AddAdj(z.A * y.P / (x.P * x.P + y.P * y.P)); y.AddAdj(z.A * (-x.P) / (x.P * x.P + y.P * y.P))
-            | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
             | Log(x, z) -> x.AddAdj(z.A / x.P)
             | Log10(x, z) -> x.AddAdj(z.A / (x.P * log10val))
             | Exp(x, z) -> x.AddAdj(z.A * z.P)
@@ -90,6 +89,10 @@ type Trace() =
             | Asin(x, z) -> x.AddAdj(z.A / sqrt (1. - x.P * x.P))
             | Acos(x, z) -> x.AddAdj(-z.A / sqrt (1. - x.P * x.P))
             | Atan(x, z) -> x.AddAdj(z.A / (1. + x.P * x.P))
+            | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
+            | Floor(x, z) -> ()
+            | Ceil(x, z) -> ()
+            | Round(x, z) -> ()
 
 /// Discriminated union of operations for recording the trace
 and Op =
@@ -99,7 +102,6 @@ and Op =
     | Div of Adj * Adj * Adj
     | Pow of Adj * Adj * Adj
     | Atan2 of Adj * Adj * Adj
-    | Abs of Adj * Adj
     | Log of Adj * Adj
     | Log10 of Adj * Adj
     | Exp of Adj * Adj
@@ -114,7 +116,11 @@ and Op =
     | Asin of Adj * Adj
     | Acos of Adj * Adj
     | Atan of Adj * Adj
-
+    | Abs of Adj * Adj
+    | Floor of Adj * Adj
+    | Ceil of Adj * Adj
+    | Round of Adj * Adj
+    
 /// Adj numeric type, keeping primal and adjoint values
 and Adj =
     val P:float // Primal
@@ -174,9 +180,6 @@ and Adj =
     static member Pow (x:int, y:Adj) = Adj(float x) ** y
     static member Atan2 (x:int, y:Adj) = atan2 (Adj(float x)) y
     // Adj unary operations
-    static member Abs (x:Adj) = 
-        if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
     static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
     static member Log10 (x:Adj) = let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
     static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
@@ -191,6 +194,18 @@ and Adj =
     static member Asin (x:Adj) = let z = Adj(asin x.P) in Trace.Push(Asin(x, z)); z
     static member Acos (x:Adj) = let z = Adj(acos x.P) in Trace.Push(Acos(x, z)); z
     static member Atan (x:Adj) = let z = Adj(atan x.P) in Trace.Push(Atan(x, z)); z
+    static member Abs (x:Adj) = 
+        if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
+    static member Floor (x:Adj) =
+        if isInteger x.P then invalidArg "" "The derivative of floor is not defined for integer values."
+        let z = Adj(floor x.P) in Trace.Push(Floor(x, z)); z
+    static member Ceiling (x:Adj) =
+        if isInteger x.P then invalidArg "" "The derivative of ceil is not defined for integer values."
+        let z = Adj(ceil x.P) in Trace.Push(Ceil(x, z)); z
+    static member Round (x:Adj) =
+        if isHalfway x.P then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        let z = Adj(round x.P) in Trace.Push(Round(x, z)); z
 
 /// Adj operations module (automatically opened)
 [<AutoOpen>]

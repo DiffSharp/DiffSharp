@@ -103,9 +103,6 @@ type DualGH =
     static member Pow (a:int, b:DualGH) = DualGH.Pow(float a, b)
     static member Atan2 (a:int, b:DualGH) = DualGH.Atan2(float a, b)
     // DualGH unary operations
-    static member Abs (DualGH(a, ag, ah)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
     static member Log (DualGH(a, ag, ah)) = let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
     static member Log10 (DualGH(a, ag, ah)) = let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
     static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.SymmetricOp(ah, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
@@ -120,7 +117,18 @@ type DualGH =
     static member Asin (DualGH(a, ag, ah)) = let term, term2 = 1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(asin a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Acos (DualGH(a, ag, ah)) = let term, term2 = -1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(acos a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Atan (DualGH(a, ag, ah)) = let term, term2 = 1. / (1. + a * a), (-2. * a / (1. + a * a)) in DualGH(atan a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
-
+    static member Abs (DualGH(a, ag, ah)) = 
+        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
+    static member Floor (DualGH(a, ag, ah)) =
+        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        DualGH(floor a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
+    static member Ceiling (DualGH(a, ag, ah)) =
+        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        DualGH(ceil a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
+    static member Round (DualGH(a, ag, ah)) =
+        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        DualGH(round a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
 
 /// DualGH operations module (automatically opened)
 [<AutoOpen>]

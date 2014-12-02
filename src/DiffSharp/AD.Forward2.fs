@@ -99,9 +99,6 @@ type Dual2 =
     static member Pow (a:int, b:Dual2) = Dual2.Pow(float a, b)
     static member Atan2 (a:int, b:Dual2) = Dual2.Atan2(float a, b)
     // Dual2 unary operations
-    static member Abs (Dual2(a, at, at2)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        Dual2(abs a, at * float (sign a), 0.)
     static member Log (Dual2(a, at, at2)) = Dual2(log a, at / a, (-at * at + a * at2) / (a * a))
     static member Log10 (Dual2(a, at, at2)) = let alog10 = a * log10val in Dual2(log10 a, at / alog10, (-at * at + a * at2) / (a * alog10))
     static member Exp (Dual2(a, at, at2)) = let expa = exp a in Dual2(expa, at * expa, expa * (at * at + at2))
@@ -116,7 +113,18 @@ type Dual2 =
     static member Asin (Dual2(a, at, at2)) = let asq = a * a in Dual2(asin a, at / sqrt (1. - asq), (a * at * at - (asq - 1.) * at2) / (1. - asq) ** 1.5)
     static member Acos (Dual2(a, at, at2)) = let asq = a * a in Dual2(acos a, -at / sqrt (1. - asq), -((a * at * at + at2 - asq * at2) / (1. - asq) ** 1.5))
     static member Atan (Dual2(a, at, at2)) = let asq = a * a in Dual2(atan a, at / (1. + asq), (-2. * a * at * at + (1. + asq) * at2) / (1. + asq) ** 2.)
-
+    static member Abs (Dual2(a, at, at2)) = 
+        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        Dual2(abs a, at * float (sign a), 0.)
+    static member Floor (Dual2(a, _, _)) =
+        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        Dual2(floor a, 0., 0.)
+    static member Ceiling (Dual2(a, _, _)) =
+        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        Dual2(ceil a, 0., 0.)
+    static member Round (Dual2(a, _, _)) =
+        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        Dual2(round a, 0., 0.)
 
 /// Dual2 operations module (automatically opened)
 [<AutoOpen>]

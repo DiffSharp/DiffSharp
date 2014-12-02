@@ -138,6 +138,12 @@ let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
+/// Check whether a float contains an integer value
+let isInteger a = a = float (int a)
+
+/// Check whether a float is halfway between two integers
+let isHalfway a = abs (a % 1.) = 0.5
+
 /// Value of log 10.
 let log10val = log 10.
 
