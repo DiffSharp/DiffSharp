@@ -1,5 +1,5 @@
 ﻿#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.ForwardGH
 
-let test = diff (fun x -> Dual.Sign x) 0.
+let test = hessian (fun x -> abs (x.[0] + sin x.[1])) [|0.; 0.|]

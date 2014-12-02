@@ -105,7 +105,7 @@ type DualGH =
     // DualGH unary operations
     static member Abs (DualGH(a, ag, ah)) = 
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
-        DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> 0.))
+        DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
     static member Log (DualGH(a, ag, ah)) = let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
     static member Log10 (DualGH(a, ag, ah)) = let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
     static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.SymmetricOp(ah, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
