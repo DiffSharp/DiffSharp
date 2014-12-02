@@ -275,13 +275,13 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point x
     let inline laplacian (f:Vector<DualN>->DualN) (x:Vector<float>) = ForwardNOps.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) = ForwardNOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) (x:Vector<float>) (v:Vector<float>) = ForwardNOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`

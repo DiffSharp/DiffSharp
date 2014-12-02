@@ -1,10 +1,13 @@
-﻿//#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-//
-//open DiffSharp.AD.ForwardGH
-//
-//let test = hessian (fun x -> abs (x.[0] + sin x.[1])) [|0.; 0.|]
+﻿#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#load "../../packages/FSharp.Charting.0.90.7/FSharp.Charting.fsx"
 
 
-let isHalfway (a:float) = abs (a % 1.) = 0.5
+open DiffSharp.AD.Reverse
+open DiffSharp.AD.Reverse.Vector
 
-let test = isHalfway -10.51
+let sigm (x:Adj) = 1. / (1. + exp -x)
+
+let neuron (x:Vector<Adj>) (w:Vector<Adj>) = Vector.sum x
+
+
+let test = [| 2. |]

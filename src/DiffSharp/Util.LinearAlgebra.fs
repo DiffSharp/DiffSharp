@@ -74,17 +74,12 @@ type Vector<'T when 'T : (static member Zero : 'T)
         match v with
         | ZeroVector _ -> 0
         | Vector v -> v.Length
-    /// Converts this Vector to an array, e.g. from Vector<float> to float[]
-    member inline v.ToArray() =
-        match v with
-        | ZeroVector _ -> [||]
-        | Vector v -> v
     /// Gets the Euclidean norm of this Vector
     member inline v.GetNorm() =
         match v with
         | ZeroVector z -> z
         | Vector v -> sqrt (Array.sumBy (fun x -> x * x) v)
-    /// Gets the unit Vector codirectional with this Vector    
+    /// Gets the unit Vector codirectional with this Vector
     member inline v.GetUnitVector() =
         match v with
         | ZeroVector z -> ZeroVector z
@@ -107,6 +102,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
             if i < v.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+    /// Converts the elements of this Vector to another type, using the given conversion function `f`
     member inline v.Convert(f:'T->'a):Vector<'a> =
         match v with
         | ZeroVector z -> ZeroVector LanguagePrimitives.GenericZero<'a>
@@ -119,15 +115,6 @@ type Vector<'T when 'T : (static member Zero : 'T)
     static member inline Create(n, v) : Vector<'T> = Vector (Array.create n v)
     /// Creates a Vector with dimension `n` where the element with index `i` has value `v` and the rest of the elements have value 0
     static member inline Create(n, i, v) : Vector<'T> = Vector.Create(n, fun j -> if j = i then v else LanguagePrimitives.GenericZero<'T>)
-    /// Creates a Vector from sequence `s`
-    static member inline ofSeq(s:seq<'T>) = Vector.Create(Array.ofSeq s)
-    /// Returns the sum of all the elements in Vector `v`
-    static member inline sum (v:Vector<'T>) = 
-        match v with
-        | ZeroVector z -> z
-        | Vector v -> Array.sum v
-    /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
-    static member inline init (n:int) (f:int->'T) = Vector.Create(n, f)
     /// ZeroVector
     static member inline Zero = ZeroVector LanguagePrimitives.GenericZero<'T>
     /// Converts Vector `v` to float[]
@@ -165,9 +152,9 @@ type Vector<'T when 'T : (static member Zero : 'T)
     /// Computes the cross product of Vector `a` and Vector `b` (three-dimensional)
     static member inline (%*) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
-        | ZeroVector z, ZeroVector _ -> ZeroVector z
-        | ZeroVector z, Vector _ -> ZeroVector z
-        | Vector _, ZeroVector z -> ZeroVector z
+        | ZeroVector _, ZeroVector _ -> Vector.Zero
+        | ZeroVector _, Vector _ -> Vector.Zero
+        | Vector _, ZeroVector _ -> Vector.Zero
         | Vector va, Vector vb ->
             if (a.Length <> 3) || (b.Length <> 3) then invalidArg "b" "The cross product is only defined for three-dimensional vectors."
             Vector [|va.[1] * vb.[2] - va.[2] * vb.[1]; va.[2] * vb.[0] - va.[0] * vb.[2]; va.[0] * vb.[1] - va.[1] * vb.[0]|]
@@ -274,15 +261,6 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _ -> 0
         | Matrix m -> m.GetLength 1
         | SymmetricMatrix m -> m.GetLength 1
-    /// Converts this Matrix to a 2d array, e.g. from Matrix<float> to float[,]
-    member inline m.ToArray2d() =
-        match m with
-        | ZeroMatrix _ -> Array2D.zeroCreate 0 0
-        | Matrix m -> m
-        | SymmetricMatrix m -> copyupper m
-    member inline m.ToArray() =
-        let a = m.ToArray2d()
-        [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
     /// Gets a string representation of this Matrix that can be pasted into a Mathematica notebook
     member inline m.ToMathematicaString() =
         let sb = System.Text.StringBuilder()
@@ -307,6 +285,12 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             if i < m.Rows - 1 then sb.Append("; ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+    /// Converts this Matrix into a 2d array
+    member inline m.ToArray2d() =
+        match m with
+        | ZeroMatrix _ -> Array2D.zeroCreate 0 0
+        | Matrix m -> m
+        | SymmetricMatrix m -> copyupper m
     /// Gets the trace of this Matrix
     member inline m.GetTrace() =
         match m with
@@ -411,12 +395,6 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         let s = Array2D.zeroCreate<'T> m m
         for i = 0 to m - 1 do s.[i, i] <- LanguagePrimitives.GenericOne<'T>
         SymmetricMatrix s
-    static member inline ofSeq(s:seq<seq<'T>>) =
-        let a = Array.ofSeq s
-        let b = Array.ofSeq a
-        let c = array2D b
-        Matrix.Create(c)
-    static member inline ofArray2D(m:'T[,]) = Matrix.Create(m)
     /// ZeroMatrix
     static member inline Zero = ZeroMatrix LanguagePrimitives.GenericZero<'T>
     /// Converts Matrix `m` to float[,]
@@ -434,13 +412,13 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Perfomrs a symmetric unary operation `f` on Matrix `a`
     static member inline SymmetricOp(a:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a with
-        | ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _ -> Matrix.Zero
         | Matrix _ -> Matrix.CreateSymmetric(a.Rows, f)
         | SymmetricMatrix _ -> Matrix.CreateSymmetric(a.Rows, f)
     /// Performs a symmetric binary operation `f` on Matrix `a` and Matrix `b`
     static member inline SymmetricOp(a:Matrix<'T>, b:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a, b with
-        | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _, ZeroMatrix _ -> Matrix.Zero
         | ZeroMatrix _, Matrix _ -> 
             if (b.Rows <> b.Cols) then invalidArg "b" "Cannot perform symmetric binary operation with a nonsquare matrix."
             Matrix.CreateSymmetric(b.Rows, f)
@@ -467,7 +445,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Adds Matrix `a` to Matrix `b`
     static member inline (+) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
-        | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _, ZeroMatrix _ -> Matrix.Zero
         | ZeroMatrix _, Matrix mb -> Matrix mb
         | ZeroMatrix _, SymmetricMatrix mb -> SymmetricMatrix mb
         | Matrix ma, ZeroMatrix _ -> Matrix ma
@@ -487,7 +465,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Subtracts Matrix `b` from Matrix `a`
     static member inline (-) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
-        | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _, ZeroMatrix _ -> Matrix.Zero
         | ZeroMatrix _, Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> -mb.[i ,j])
         | ZeroMatrix _, SymmetricMatrix _ -> Matrix.CreateSymmetric(b.Rows, fun i j -> -b.[i ,j])
         | Matrix ma, ZeroMatrix _ -> Matrix ma
@@ -507,10 +485,10 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Multiplies Matrix `a` and Matrix `b` (matrix product)
     static member inline (*) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
-        | ZeroMatrix z, ZeroMatrix _ -> ZeroMatrix z
-        | ZeroMatrix z, Matrix _ -> ZeroMatrix z
-        | ZeroMatrix z, SymmetricMatrix _ -> ZeroMatrix z
-        | Matrix ma, ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _, ZeroMatrix _ -> Matrix.Zero
+        | ZeroMatrix _, Matrix _ -> Matrix.Zero
+        | ZeroMatrix _, SymmetricMatrix _ -> Matrix.Zero
+        | Matrix _, ZeroMatrix _ -> Matrix.Zero
         | Matrix ma, Matrix mb ->
             if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices with incompatible sizes."
             Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> ma.[i, k] * mb.[k, j]) [|0..(b.Rows - 1)|] )
@@ -527,10 +505,10 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Multiplies Matrix `a` and Matrix `b` element-wise (Hadamard product)
     static member inline (.*) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
-        | ZeroMatrix _, ZeroMatrix z -> ZeroMatrix z
-        | ZeroMatrix z, Matrix mb -> ZeroMatrix z
-        | ZeroMatrix z, SymmetricMatrix _ -> ZeroMatrix z
-        | Matrix _, ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _, ZeroMatrix _ -> Matrix.Zero
+        | ZeroMatrix _, Matrix _ -> Matrix.Zero
+        | ZeroMatrix _, SymmetricMatrix _ -> Matrix.Zero
+        | Matrix _, ZeroMatrix _ -> Matrix.Zero
         | Matrix ma, Matrix mb -> 
             if (a.Rows <> b.Rows) || (a.Cols <> b.Cols) then invalidArg "b" "Cannot multiply matrices of different size."
             Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] * mb.[i, j])
@@ -548,8 +526,8 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     static member inline (./) (a:Matrix<'T>, b:Matrix<'T>) =
         match a, b with
         | ZeroMatrix _, ZeroMatrix z -> raise (new System.DivideByZeroException("Attempted division by a ZeroMatrix."))
-        | ZeroMatrix z, Matrix mb -> ZeroMatrix z
-        | ZeroMatrix z, SymmetricMatrix _ -> ZeroMatrix z
+        | ZeroMatrix _, Matrix _ -> Matrix.Zero
+        | ZeroMatrix _, SymmetricMatrix _ -> Matrix.Zero
         | Matrix _, ZeroMatrix z -> raise (new System.DivideByZeroException("Attempted division by a ZeroMatrix."))
         | Matrix ma, Matrix mb -> 
             if (a.Rows <> b.Rows) || (a.Cols <> b.Cols) then invalidArg "b" "Cannot divide matrices of different size."
@@ -617,19 +595,19 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Multiplies each element of Matrix `a` by scalar `b`
     static member inline (*) (a:Matrix<'T>, b:'T) =
         match a with
-        | ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _ -> Matrix.Zero
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] * b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] * b)
     /// Multiplies each element of Matrix `b` by scalar `a`
     static member inline (*) (a:'T, b:Matrix<'T>) =
         match b with
-        | ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _ -> Matrix.Zero
         | Matrix mb -> Matrix.Create(b.Rows, b.Cols, fun i j -> a * mb.[i, j])
         | SymmetricMatrix mb -> Matrix.CreateSymmetric(b.Rows, fun i j -> a * mb.[i, j])
     /// Divides each element of Matrix `a` by scalar `b`
     static member inline (/) (a:Matrix<'T>, b:'T) =
         match a with
-        | ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _ -> Matrix.Zero
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> ma.[i, j] / b)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> ma.[i, j] / b)
     /// Creates a Matrix whose elements are scalar `a` divided by each element of Matrix `b`
@@ -641,29 +619,74 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Gets the negative of Matrix `a`
     static member inline (~-) (a:Matrix<'T>) =
         match a with
-        | ZeroMatrix z -> ZeroMatrix z
+        | ZeroMatrix _ -> Matrix.Zero
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> -ma.[i, j])
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> -ma.[i, j])
 
+/// Provides basic operations on Vector types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array)
+module Vector =
+    let inline create (n:int) (v:'T) = Vector.Create(n, v)
+    /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
+    let inline init (n:int) (f:int->'T) = Vector.Create(n, f)
+    let inline length (v:Vector<_>) = v.Length
+    /// Creates a Vector from sequence `s`
+    let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
+    /// Returns the sum of all the elements in Vector `v`
+    let inline sum (v:Vector<_>) = 
+        match v with
+        | ZeroVector z -> z
+        | Vector v -> Array.sum v
+    /// Converts Vector `v` to an array, e.g. from Vector<float> to float[]
+    let inline toArray (v:Vector<_>) =
+        match v with
+        | ZeroVector _ -> [||]
+        | Vector v -> v
+
+/// Provides basic operations on Matrix types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array2D)
+module Matrix =
+    let inline create (m:int) (n:int) (v:'T) = Matrix.Create(m, n, v)
+    let inline init (m:int) (n:int) (f:int->int->'T) = Matrix.Create(m, n, f)
+    let inline length1 (m:Matrix<_>) = m.Rows
+    let inline length2 (m:Matrix<_>) = m.Cols
+    /// Creates a Matrix from 2d array `m`
+    let inline ofArray2d (m:'T[,]) = Matrix.Create(m)
+    /// Creates a Matrix from sequence `s`
+    let inline ofSeq (s:seq<seq<'T>>) =
+        let a = Array.ofSeq s
+        let b = Array.ofSeq a
+        let c = array2D b
+        Matrix.Create(c)
+    /// Converts Matrix `m` to a 2d array, e.g. from Matrix<float> to float[,]
+    let inline toArray2d (m:Matrix<_>) =
+        match m with
+        | ZeroMatrix _ -> Array2D.zeroCreate 0 0
+        | Matrix m -> m
+        | SymmetricMatrix m -> copyupper m    /// Converts Matrix `m` to a jagged array, e.g. from Matrix<float> to float[][]
+    let inline toArray (m:Matrix<_>) =
+        let a = toArray2d m
+        [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
 
 
-/// Converts array, list, or sequence `v` into a Vector
-let inline vector v = Vector.ofSeq v
-/// Gets the Euclidean norm of Vector `v`
-let inline norm (v:Vector<_>) = v.GetNorm()
-/// Gets the unit vector codirectional with Vector `v`
-let inline unitVector (v:Vector<_>) = v.GetUnitVector()
-/// Converts 2d array `m` into a Matrix
-let inline matrix m = Matrix.ofSeq m
-/// Converts Vector `v` into array
-let inline array (v:Vector<_>) = v.ToArray()
-/// Converts Matrix `m` into a 2d array
-let inline array2d (m:Matrix<_>) = m.ToArray2d()
-/// Gets the trace of Matrix `m`
-let inline trace (m:Matrix<_>) = m.GetTrace()
-/// Gets the transpose of Matrix `m`
-let inline transpose (m:Matrix<_>) = m.GetTranspose()
-/// Gets the determinant of Matrix `m`
-let inline det (m:Matrix<_>) = m.GetDeterminant()
-/// Gets the inverse of Matrix `m`
-let inline inverse (m:Matrix<_>) = m.GetInverse()
+/// Linear algebra operations module (automatically opened)
+[<AutoOpen>]
+module LinearAlgebraOps =
+    /// Converts array, list, or sequence `v` into a Vector
+    let inline vector v = Vector.ofSeq v
+    /// Gets the Euclidean norm of Vector `v`
+    let inline norm (v:Vector<_>) = v.GetNorm()
+    /// Gets the unit vector codirectional with Vector `v`
+    let inline unitVector (v:Vector<_>) = v.GetUnitVector()
+    /// Converts 2d array `m` into a Matrix
+    let inline matrix m = Matrix.ofSeq m
+    /// Converts Vector `v` into array
+    let inline array (v:Vector<_>) = Vector.toArray v
+    /// Converts Matrix `m` into a 2d array
+    let inline array2d (m:Matrix<_>) = Matrix.toArray2d m
+    /// Gets the trace of Matrix `m`
+    let inline trace (m:Matrix<_>) = m.GetTrace()
+    /// Gets the transpose of Matrix `m`
+    let inline transpose (m:Matrix<_>) = m.GetTranspose()
+    /// Gets the determinant of Matrix `m`
+    let inline det (m:Matrix<_>) = m.GetDeterminant()
+    /// Gets the inverse of Matrix `m`
+    let inline inverse (m:Matrix<_>) = m.GetInverse()

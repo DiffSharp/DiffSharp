@@ -201,10 +201,10 @@ module Vector =
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad (vector >> f) (array x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d

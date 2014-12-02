@@ -254,13 +254,13 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian (f:Vector<Dual2>->Dual2) (x:Vector<float>) = Forward2Ops.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) (v:Vector<float>) = Forward2Ops.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`

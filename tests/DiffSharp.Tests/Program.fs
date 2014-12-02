@@ -57,7 +57,7 @@ let printArray (s:System.IO.StreamWriter) (o:obj[]) =
     for a in o do
         match a with
         | :? (float[]) as f -> s.WriteLine((vector f).ToString())
-        | :? (float[,]) as f -> s.WriteLine((Matrix.ofArray2D f).ToString())
+        | :? (float[,]) as f -> s.WriteLine((Matrix.ofArray2d f).ToString())
         | _ -> s.WriteLine(a.ToString())
 
 let printb i t name =
