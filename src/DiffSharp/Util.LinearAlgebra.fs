@@ -624,11 +624,18 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> -ma.[i, j])
 
 /// Provides basic operations on Vector types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array)
+[<RequireQualifiedAccess>]
 module Vector =
+    let inline copy (v:Vector<_>) =
+        match v with
+        | ZeroVector _ -> Vector.Zero
+        | Vector v -> Vector (Array.copy v)
     let inline create (n:int) (v:'T) = Vector.Create(n, v)
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
     let inline init (n:int) (f:int->'T) = Vector.Create(n, f)
     let inline length (v:Vector<_>) = v.Length
+    let inline map f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f v.[i])
+    let inline mapi f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f i v.[i])
     /// Creates a Vector from sequence `s`
     let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
     /// Returns the sum of all the elements in Vector `v`
@@ -643,11 +650,25 @@ module Vector =
         | Vector v -> v
 
 /// Provides basic operations on Matrix types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array2D)
+[<RequireQualifiedAccess>]
 module Matrix =
+    let inline copy (m:Matrix<_>) = 
+        match m with
+        | ZeroMatrix _ -> Matrix.Zero
+        | Matrix m -> Matrix (Array2D.copy m)
+        | SymmetricMatrix m -> SymmetricMatrix (Array2D.copy m)
     let inline create (m:int) (n:int) (v:'T) = Matrix.Create(m, n, v)
     let inline init (m:int) (n:int) (f:int->int->'T) = Matrix.Create(m, n, f)
     let inline length1 (m:Matrix<_>) = m.Rows
     let inline length2 (m:Matrix<_>) = m.Cols
+    let inline map f (m:Matrix<_>) = 
+        match m with
+        | ZeroMatrix _ -> Matrix.Zero
+        | Matrix _ | SymmetricMatrix _ -> Matrix.Create(m.Rows, m.Cols, fun i j -> f m.[i, j])
+    let inline mapi f (m:Matrix<_>) = 
+        match m with
+        | ZeroMatrix _ -> Matrix.Zero
+        | Matrix _ | SymmetricMatrix _ -> Matrix.Create(m.Rows, m.Cols, fun i j -> f i m.[i, j])
     /// Creates a Matrix from 2d array `m`
     let inline ofArray2d (m:'T[,]) = Matrix.Create(m)
     /// Creates a Matrix from sequence `s`
@@ -661,7 +682,8 @@ module Matrix =
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> m
-        | SymmetricMatrix m -> copyupper m    /// Converts Matrix `m` to a jagged array, e.g. from Matrix<float> to float[][]
+        | SymmetricMatrix m -> copyupper m
+    /// Converts Matrix `m` to a jagged array, e.g. from Matrix<float> to float[][]
     let inline toArray (m:Matrix<_>) =
         let a = toArray2d m
         [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]

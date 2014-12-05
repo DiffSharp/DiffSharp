@@ -134,13 +134,13 @@ type DualG =
 [<AutoOpen>]
 module DualGOps =
     /// Make DualG, with primal value `p`, gradient dimension `m`, and all gradient components 0
-    let inline dualG p m = DualG(p, Vector.Create(m, 0.))
+    let inline dualG p m = DualG(float p, Vector.Create(m, 0.))
     /// Make DualG, with primal value `p` and gradient array `g`
-    let inline dualGSet (p, g) = DualG(p, Vector.Create(g))
+    let inline dualGSet (p, g) = DualG(float p, Vector.Create(g))
     /// Make active DualG (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the component with index `i` having value 1, and the rest of the components 0
-    let inline dualGAct p m i = DualG(p, Vector.Create(m, i, 1.))
+    let inline dualGAct p m i = DualG(float p, Vector.Create(m, i, 1.))
     /// Make an array of active DualG, with primal values given in array `x`. For a DualG with index _i_, the gradient is the unit vector with 1 in the _i_th place.
-    let inline dualGActArray (x:float[]) = Array.init x.Length (fun i -> dualGAct x.[i] x.Length i)
+    let inline dualGActArray (x:_[]) = Array.init x.Length (fun i -> dualGAct x.[i] x.Length i)
     /// Get the primal value of a DualG
     let inline primal (DualG(p, _)) = p
     /// Get the gradient array of a DualG
@@ -193,18 +193,18 @@ module ForwardGOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:DualG->DualG) (x:float) = ForwardGOps.diff' f x
+    let inline diff' (f:DualG->DualG) x = ForwardGOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:DualG->DualG) (x:float) = ForwardGOps.diff f x
+    let inline diff (f:DualG->DualG) x = ForwardGOps.diff f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualG>->DualG) x = ForwardGOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<DualG>->DualG) (x:Vector<float>) = ForwardGOps.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<DualG>->DualG) x = ForwardGOps.grad (vector >> f) (array x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualG>->Vector<DualG>) (x:Vector<float>) = ForwardGOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d

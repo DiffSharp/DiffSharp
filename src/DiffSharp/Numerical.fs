@@ -146,44 +146,44 @@ module NumericalOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:float->float) (x:float) = NumericalOps.diff' f x
+    let inline diff' (f:float->float) x = NumericalOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:float->float) (x:float) = NumericalOps.diff f x
+    let inline diff (f:float->float) x = NumericalOps.diff f x
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' (f:float->float) (x:float) = NumericalOps.diff2' f x
+    let inline diff2' (f:float->float) x = NumericalOps.diff2' f x
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 (f:float->float) (x:float) = NumericalOps.diff2 f x
+    let inline diff2 (f:float->float) x = NumericalOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' (f:float->float) (x:float) = NumericalOps.diff2'' f x
+    let inline diff2'' (f:float->float) x = NumericalOps.diff2'' f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<float>->float) (x:Vector<float>) (v:Vector<float>) = NumericalOps.gradv' (vector >> f) (array x) (array v)
+    let inline gradv' (f:Vector<float>->float) x v = NumericalOps.gradv' (vector >> f) (array x) (array v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<float>->float) (x:Vector<float>) (v:Vector<float>) = NumericalOps.gradv (vector >> f) (array x) (array v)
+    let inline gradv (f:Vector<float>->float) x v = NumericalOps.gradv (vector >> f) (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<float>->float) x = NumericalOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<float>->float) x = NumericalOps.grad (vector >> f) (array x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.laplacian' (vector >> f) (array x)
+    let inline laplacian' (f:Vector<float>->float) x = NumericalOps.laplacian' (vector >> f) (array x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.laplacian (vector >> f) (array x)
+    let inline laplacian (f:Vector<float>->float) x = NumericalOps.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<float>->Vector<float>) (x:Vector<float>) = NumericalOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<float>->Vector<float>) x = NumericalOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<float>->Vector<float>) (x:Vector<float>) = NumericalOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<float>->Vector<float>) x = NumericalOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<float>->Vector<float>) (x:Vector<float>) = NumericalOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<float>->Vector<float>) x = NumericalOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<float>->Vector<float>) (x:Vector<float>) = NumericalOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<float>->Vector<float>) x = NumericalOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, Matrix.ofArray2d b)
+    let inline hessian' (f:Vector<float>->float) x = NumericalOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, Matrix.ofArray2d b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.hessian (vector >> f) (array x) |> Matrix.ofArray2d
+    let inline hessian (f:Vector<float>->float) x = NumericalOps.hessian (vector >> f) (array x) |> Matrix.ofArray2d
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
+    let inline gradhessian' (f:Vector<float>->float) x = NumericalOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<float>->float) (x:Vector<float>) = NumericalOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline gradhessian (f:Vector<float>->float) x = NumericalOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<float>->Vector<float>) (x:Vector<float>) (v:Vector<float>) = NumericalOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<float>->Vector<float>) (x:Vector<float>) (v:Vector<float>) = NumericalOps.jacobianv (vector >> f >> array) (array x) (array v) |> vector
+    let inline jacobianv (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv (vector >> f >> array) (array x) (array v) |> vector

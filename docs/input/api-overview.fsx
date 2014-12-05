@@ -450,16 +450,51 @@ open DiffSharp.AD.Forward
 // i.e. take the function arguments as a float[] and return the gradient as a float[]
 let g1 = grad (fun x -> sin (x.[0] * x.[1]))
 
+// Compute the gradient at (1, 2)
+// g1val: float[]
+let g1val = g1 [|1.; 2.|]
+
 (**
 
 In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**.
 
+This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](gettingstarted-forwardad.html).
+
+Please refer to [API Reference](reference/index.html) for a complete list of operations currently supported by the **DiffSharp.Util.LinearAlgebra** module.
+
 *)
 
+open DiffSharp.AD.Forward
 open DiffSharp.AD.Forward.Vector
+open DiffSharp.Util.LinearAlgebra
 
 // Gradient of a vector-to-scalar function
 // g2: Vector<float> -> Vector<float>
-// Inner lambda expression: Vector<Dual> -> Dual
 // i.e. take the function arguments as a Vector<float> and return the gradient as a Vector<float>
+// Inner lambda expression: Vector<Dual> -> Dual
 let g2 = grad (fun x -> sin (x.[0] * x.[1]))
+
+// Compute the gradient at (1, 2)
+// g2val: Vector<float>
+let g2val = g2 (vector [1.; 2.])
+
+// Compute the negative of the gradient vector
+let g2valb = -g2val
+
+// Scale the gradient vector
+let g2valc = 0.2 * g2val
+
+// Get the norm of the gradient vector
+let g2vald = norm g2val
+
+// Jacobian of a vector-to-vector function
+// j: Vector<float> -> Matrix<float>
+// i.e. take the function arguments as a Vector<float> and return the Jacobian as a Matrix<float>
+// Inner lambda expression: Vector<Dual> -> Vector<Dual>
+let j = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
+
+// Compute the Jacobian at (1, 2)
+let jval = j (vector[1.; 2.])
+
+// Compute the determinant of the Jacobian matrix
+let jvalb = det jval

@@ -130,15 +130,15 @@ type Dual2 =
 [<AutoOpen>]
 module Dual2Ops =
     /// Make Dual2, with primal value `p`, tangent 0, and tangent-of-tangent 0
-    let inline dual2 p = Dual2(p, 0., 0.)
+    let inline dual2 p = Dual2(float p, 0., 0.)
     /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent 0
-    let inline dual2Set (p, t) = Dual2(p, t, 0.)
+    let inline dual2Set (p, t) = Dual2(float p, float t, 0.)
     /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent value `t2`
-    let inline dual2Set2 (p, t, t2) = Dual2(p, t, t2)
+    let inline dual2Set2 (p, t, t2) = Dual2(float p, float t, float t2)
     /// Make active Dual2 (i.e. variable of differentiation), with primal value `p`, tangent 1, and tangent-of-tangent 0
-    let inline dual2Act p = Dual2(p, 1., 0.)
+    let inline dual2Act p = Dual2(float p, 1., 0.)
     /// Make an array of arrays of Dual2, with primal values given in array `x`. The tangent values along the diagonal are 1, the rest are 0.
-    let inline dual2ActArrayArray (x:float[]) = Array.init x.Length (fun i -> (Array.init x.Length (fun j -> if i = j then dual2Act x.[j] else dual2 x.[j])))
+    let inline dual2ActArrayArray (x:_[]) = Array.init x.Length (fun i -> (Array.init x.Length (fun j -> if i = j then dual2Act x.[j] else dual2 x.[j])))
     /// Make a list of Dual2, given a list of primal values `p`
     let inline dual2List p = List.map dual2 p
     /// Get the primal value of a Dual2
@@ -232,36 +232,36 @@ module Forward2Ops =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:Dual2->Dual2) (x:float) = Forward2Ops.diff' f x
+    let inline diff' (f:Dual2->Dual2) x = Forward2Ops.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:Dual2->Dual2) (x:float) = Forward2Ops.diff f x
+    let inline diff (f:Dual2->Dual2) x = Forward2Ops.diff f x
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' (f:Dual2->Dual2) (x:float) = Forward2Ops.diff2' f x
+    let inline diff2' (f:Dual2->Dual2) x = Forward2Ops.diff2' f x
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 (f:Dual2->Dual2) (x:float) = Forward2Ops.diff2 f x
+    let inline diff2 (f:Dual2->Dual2) x = Forward2Ops.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' (f:Dual2->Dual2) (x:float) = Forward2Ops.diff2'' f x
+    let inline diff2'' (f:Dual2->Dual2) x = Forward2Ops.diff2'' f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<Dual2>->Dual2) (x:Vector<float>) (v:Vector<float>) = Forward2Ops.gradv' (vector >> f) (array x) (array v)
+    let inline gradv' (f:Vector<Dual2>->Dual2) x v = Forward2Ops.gradv' (vector >> f) (array x) (array v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<Dual2>->Dual2) (x:Vector<float>) (v:Vector<float>) = Forward2Ops.gradv (vector >> f) (array x) (array v)
+    let inline gradv (f:Vector<Dual2>->Dual2) x v = Forward2Ops.gradv (vector >> f) (array x) (array v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<Dual2>->Dual2) (x:Vector<float>) = Forward2Ops.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<Dual2>->Dual2) x = Forward2Ops.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<Dual2>->Dual2) (x:Vector<float>) = Forward2Ops.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<Dual2>->Dual2) x = Forward2Ops.grad (vector >> f) (array x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<Dual2>->Dual2) (x:Vector<float>) = Forward2Ops.laplacian' (vector >> f) (array x)
+    let inline laplacian' (f:Vector<Dual2>->Dual2) x = Forward2Ops.laplacian' (vector >> f) (array x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<Dual2>->Dual2) (x:Vector<float>) = Forward2Ops.laplacian (vector >> f) (array x)
+    let inline laplacian (f:Vector<Dual2>->Dual2) x = Forward2Ops.laplacian (vector >> f) (array x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<Dual2>->Vector<Dual2>) x = Forward2Ops.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<Dual2>->Vector<Dual2>) x = Forward2Ops.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<Dual2>->Vector<Dual2>) x = Forward2Ops.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) = Forward2Ops.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<Dual2>->Vector<Dual2>) x = Forward2Ops.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) (v:Vector<float>) = Forward2Ops.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<Dual2>->Vector<Dual2>) x v = Forward2Ops.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<Dual2>->Vector<Dual2>) (x:Vector<float>) (v:Vector<float>) = Forward2Ops.jacobianv (vector >> f >> array) (array x) (array v) |> vector
+    let inline jacobianv (f:Vector<Dual2>->Vector<Dual2>) x v = Forward2Ops.jacobianv (vector >> f >> array) (array x) (array v) |> vector

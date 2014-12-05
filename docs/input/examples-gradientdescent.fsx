@@ -12,6 +12,7 @@ Using the DiffSharp library, the following code implements gradient descent with
 
 *)
 
+open DiffSharp.AD.Forward
 open DiffSharp.AD.Forward.Vector
 open DiffSharp.Util.LinearAlgebra
 
