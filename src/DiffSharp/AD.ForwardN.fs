@@ -51,7 +51,7 @@ type DualN =
     static member Create(p, t) = DualN(p, lazy (DualN.Create(t)))
     static member op_Explicit(p) = DualN.Create(p)
     static member op_Explicit(DualN(p, _)) = p
-    override d.ToString() = let (DualN(p, t)) = d in sprintf "DualN (%f, %f)" p (float t.Value)
+    override d.ToString() = let (DualN(p, t)) = d in sprintf "DualN (%A, %A)" p (float t.Value)
     member d.P = let (DualN(p, _)) = d in p
     member d.T = let (DualN(_, t)) = d in t.Value
     static member Zero = DualN(0., lazy (DualN.Zero))
@@ -263,26 +263,26 @@ module Vector =
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn (n:int) (f:DualN->DualN) x = ForwardNOps.diffn n f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv' (vector >> f) (array x) (array v)
+    let inline gradv' (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv (vector >> f) (array x) (array v)
+    let inline gradv (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<DualN>->DualN) x = ForwardNOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualN>->DualN) x = ForwardNOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<DualN>->DualN) x = ForwardNOps.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<DualN>->DualN) x = ForwardNOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian' (vector >> f) (array x)
+    let inline laplacian' (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian' (vector >> f) (Vector.toArray x)
     /// Laplacian of a vector-to-scalar function `f`, at point x
-    let inline laplacian (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian (vector >> f) (array x)
+    let inline laplacian (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv (vector >> f >> array) (array x) (array v) |> vector
+    let inline jacobianv (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector

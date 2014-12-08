@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{CD409EFB-0AE4-41E5-9987-C99C5F061588}"
 EndProject
@@ -12,8 +12,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\api-overview.fsx = docs\input\api-overview.fsx
 		docs\input\benchmarks.fsx = docs\input\benchmarks.fsx
 		docs\input\examples-gradientdescent.fsx = docs\input\examples-gradientdescent.fsx
+		docs\input\examples-inversekinematics.fsx = docs\input\examples-inversekinematics.fsx
 		docs\input\examples-kinematics.fsx = docs\input\examples-kinematics.fsx
 		docs\input\examples-lhopitalsrule.fsx = docs\input\examples-lhopitalsrule.fsx
+		docs\input\examples-neuralnetworks.fsx = docs\input\examples-neuralnetworks.fsx
 		docs\input\gettingstarted-forwardad.fsx = docs\input\gettingstarted-forwardad.fsx
 		docs\input\gettingstarted-numericaldifferentiation.fsx = docs\input\gettingstarted-numericaldifferentiation.fsx
 		docs\input\gettingstarted-reversead.fsx = docs\input\gettingstarted-reversead.fsx

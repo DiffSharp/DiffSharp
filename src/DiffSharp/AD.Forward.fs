@@ -46,7 +46,7 @@ open DiffSharp.Util.General
 type Dual =
     // Primal, tangent
     | Dual of float * float
-    override d.ToString() = let (Dual(p, t)) = d in sprintf "Dual(%f, %f)" p t
+    override d.ToString() = let (Dual(p, t)) = d in sprintf "Dual(%A, %A)" p t
     static member op_Explicit(p) = Dual(p, 0.)
     static member op_Explicit(Dual(p, _)) = p
     static member DivideByInt(Dual(p, t), i:int) = Dual(p / float i, t / float i)
@@ -204,25 +204,25 @@ module Vector =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff (f:Dual->Dual) x = ForwardOps.diff f x
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<Dual>->Dual) x v = ForwardOps.gradv' (vector >> f) (array x) (array v)
+    let inline gradv' (f:Vector<Dual>->Dual) x v = ForwardOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<Dual>->Dual) x v = ForwardOps.gradv (vector >> f) (array x) (array v)
+    let inline gradv (f:Vector<Dual>->Dual) x v = ForwardOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<Dual>->Dual) x = ForwardOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<Dual>->Dual) x = ForwardOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<Dual>->Dual) x = ForwardOps.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<Dual>->Dual) x = ForwardOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv' (vector >> f >> array) (array x) (array v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv (vector >> f >> array) (array x) (array v) |> vector
+    let inline jacobianv (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
 
 /// Numeric literal for a Dual with tangent 0
 module NumericLiteralQ = // (Allowed literals : Q, R, Z, I, N, G)

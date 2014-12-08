@@ -51,7 +51,7 @@ open DiffSharp.Util.General
 type DualGH =
     // Primal, vector of gradient components, matrix of Hessian components
     | DualGH of float * Vector<float> * Matrix<float>
-    override d.ToString() = let (DualGH(p, g, h)) = d in sprintf "DualGH (%f, %A, %A)" p g h
+    override d.ToString() = let (DualGH(p, g, h)) = d in sprintf "DualGH (%A, %A, %A)" p g h
     static member op_Explicit(p) = DualGH(p, Vector.Zero, Matrix.Zero)
     static member op_Explicit(DualGH(p, _, _)) = p
     static member DivideByInt(DualGH(p, g, m), i:int) = DualGH(p / float i, g / float i, m / float i)
@@ -144,17 +144,17 @@ module DualGHOps =
     /// Get the primal value of a DualGH
     let inline primal (DualGH(p, _, _)) = p
     /// Get the gradient array of a DualGH
-    let inline gradient (DualGH(_, g, _)) = array g
+    let inline gradient (DualGH(_, g, _)) = Vector.toArray g
     /// Get the Hessian 2d array of a DualGH
-    let inline hessian (DualGH(_, _, h)) = array2d h
+    let inline hessian (DualGH(_, _, h)) = Matrix.toArray2D h
     /// Get the primal and the first gradient component of a DualGH, as a tuple
     let inline tuple (DualGH(p, g, _)) = (p, g.FirstItem)
     /// Get the primal and the gradient array of a DualGH, as a tuple
-    let inline tupleG (DualGH(p, g, _)) = (p, array g)
+    let inline tupleG (DualGH(p, g, _)) = (p, Vector.toArray g)
     /// Get the primal and Hessian 2d array of a DualGH, as a tuple
-    let inline tupleH (DualGH(p, _, h)) = (p, array2d h)
+    let inline tupleH (DualGH(p, _, h)) = (p, Matrix.toArray2D h)
     /// Get the primal, the gradient array, and the Hessian 2d array of a DualGH, as a tuple
-    let inline tupleGH (DualGH(p, g, h)) = (p, array g, array2d h)
+    let inline tupleGH (DualGH(p, g, h)) = (p, Vector.toArray g, Matrix.toArray2D h)
 
 
 /// ForwardGH differentiation operations module (automatically opened)
@@ -179,7 +179,7 @@ module ForwardGHOps =
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f x =
         let a = dualGHActArray x |> f
-        (Array.map primal a, array2d (Matrix.Create(a.Length, fun i -> gradient a.[i])))
+        (Array.map primal a, Matrix.toArray2D (Matrix.Create(a.Length, fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
@@ -225,26 +225,26 @@ module Vector =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff (f:DualGH->DualGH) x = ForwardGHOps.diff f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad' (vector >> f) (array x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad (vector >> f) (array x) |> vector
+    let inline grad (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian' (vector >> f) (array x)
+    let inline laplacian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian' (vector >> f) (Vector.toArray x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian (vector >> f) (array x)
+    let inline laplacian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian' (vector >> f >> array) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian (vector >> f >> array) (array x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian' (vector >> f) (array x) |> fun (a, b) -> (a, Matrix.ofArray2d b)
+    let inline hessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2d b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian (vector >> f) (array x) |> Matrix.ofArray2d
+    let inline hessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2d
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (array x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
+    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (array x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)

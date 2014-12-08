@@ -20,7 +20,7 @@ open DiffSharp.Util.LinearAlgebra
 let argmin f x0 (a:float) t =
     // Descending sequence, with state s (current x, gradient of f at current x)
     let gd = Seq.unfold (fun s -> 
-                         if norm (snd s) < t then None 
+                         if Vector.norm (snd s) < t then None 
                          else Some(fst s, (fst s - a * snd s, grad f (fst s))))
                         (x0, grad f x0)
     (Seq.last gd, gd)

@@ -626,16 +626,23 @@ type Matrix<'T when 'T : (static member Zero : 'T)
 /// Provides basic operations on Vector types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array)
 [<RequireQualifiedAccess>]
 module Vector =
+    /// Creates a copy of Vector `v`
     let inline copy (v:Vector<_>) =
         match v with
         | ZeroVector _ -> Vector.Zero
         | Vector v -> Vector (Array.copy v)
+    /// Creates a Vector with `n` elements having value `v`
     let inline create (n:int) (v:'T) = Vector.Create(n, v)
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
     let inline init (n:int) (f:int->'T) = Vector.Create(n, f)
+    /// Returns the length of Vector `v`
     let inline length (v:Vector<_>) = v.Length
+    /// Creates a Vector whose elements are the results of applying function `f` to each element of Vector `v`
     let inline map f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f v.[i])
+    /// Creates a Vector whose elements are the results of applying function `f` to each element of Vector `v`. An element index is also supplied to function `f`.
     let inline mapi f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f i v.[i])
+    /// Gets the Euclidean norm of Vector `v`
+    let inline norm (v:Vector<_>) = v.GetNorm()
     /// Creates a Vector from sequence `s`
     let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
     /// Returns the sum of all the elements in Vector `v`
@@ -648,23 +655,38 @@ module Vector =
         match v with
         | ZeroVector _ -> [||]
         | Vector v -> v
+    /// Gets the unit vector codirectional with Vector `v`
+    let inline unitVector (v:Vector<_>) = v.GetUnitVector()
 
 /// Provides basic operations on Matrix types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array2D)
 [<RequireQualifiedAccess>]
 module Matrix =
+    /// Creates a copy of Matrix `m`
     let inline copy (m:Matrix<_>) = 
         match m with
         | ZeroMatrix _ -> Matrix.Zero
         | Matrix m -> Matrix (Array2D.copy m)
         | SymmetricMatrix m -> SymmetricMatrix (Array2D.copy m)
+    /// Creates a Matrix with `m` rows, `n` columns, and all entries having value `v`
     let inline create (m:int) (n:int) (v:'T) = Matrix.Create(m, n, v)
+    /// Gets the determinant of Matrix `m`
+    let inline det (m:Matrix<_>) = m.GetDeterminant()
+    /// Creates a Matrix with `m` rows, `n` columns and a generator function `f` to compute the entries
     let inline init (m:int) (n:int) (f:int->int->'T) = Matrix.Create(m, n, f)
+    /// Gets the inverse of Matrix `m`
+    let inline inverse (m:Matrix<_>) = m.GetInverse()
+    /// Returns the number of rows in Matrix `m`
+    let inline rows (m:Matrix<_>) = m.Rows
     let inline length1 (m:Matrix<_>) = m.Rows
+    /// Returns the number of columns in Matrix `m`
+    let inline cols (m:Matrix<_>) = m.Cols
     let inline length2 (m:Matrix<_>) = m.Cols
+    /// Creates a Matrix whose entries are the results of applying function `f` to each entry of Matrix `m`
     let inline map f (m:Matrix<_>) = 
         match m with
         | ZeroMatrix _ -> Matrix.Zero
         | Matrix _ | SymmetricMatrix _ -> Matrix.Create(m.Rows, m.Cols, fun i j -> f m.[i, j])
+    /// Creates a Matrix whose entries are the results of applying function `f` to each entry of Matrix `m`. An element index is also supplied to function `f`.
     let inline mapi f (m:Matrix<_>) = 
         match m with
         | ZeroMatrix _ -> Matrix.Zero
@@ -678,15 +700,19 @@ module Matrix =
         let c = array2D b
         Matrix.Create(c)
     /// Converts Matrix `m` to a 2d array, e.g. from Matrix<float> to float[,]
-    let inline toArray2d (m:Matrix<_>) =
+    let inline toArray2D (m:Matrix<_>) =
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> m
         | SymmetricMatrix m -> copyupper m
     /// Converts Matrix `m` to a jagged array, e.g. from Matrix<float> to float[][]
     let inline toArray (m:Matrix<_>) =
-        let a = toArray2d m
+        let a = toArray2D m
         [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
+    /// Gets the trace of Matrix `m`
+    let inline trace (m:Matrix<_>) = m.GetTrace()
+    /// Gets the transpose of Matrix `m`
+    let inline transpose (m:Matrix<_>) = m.GetTranspose()
 
 
 /// Linear algebra operations module (automatically opened)
@@ -694,21 +720,5 @@ module Matrix =
 module LinearAlgebraOps =
     /// Converts array, list, or sequence `v` into a Vector
     let inline vector v = Vector.ofSeq v
-    /// Gets the Euclidean norm of Vector `v`
-    let inline norm (v:Vector<_>) = v.GetNorm()
-    /// Gets the unit vector codirectional with Vector `v`
-    let inline unitVector (v:Vector<_>) = v.GetUnitVector()
     /// Converts 2d array `m` into a Matrix
     let inline matrix m = Matrix.ofSeq m
-    /// Converts Vector `v` into array
-    let inline array (v:Vector<_>) = Vector.toArray v
-    /// Converts Matrix `m` into a 2d array
-    let inline array2d (m:Matrix<_>) = Matrix.toArray2d m
-    /// Gets the trace of Matrix `m`
-    let inline trace (m:Matrix<_>) = m.GetTrace()
-    /// Gets the transpose of Matrix `m`
-    let inline transpose (m:Matrix<_>) = m.GetTranspose()
-    /// Gets the determinant of Matrix `m`
-    let inline det (m:Matrix<_>) = m.GetDeterminant()
-    /// Gets the inverse of Matrix `m`
-    let inline inverse (m:Matrix<_>) = m.GetInverse()
