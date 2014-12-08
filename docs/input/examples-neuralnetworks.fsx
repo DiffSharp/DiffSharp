@@ -1,12 +1,16 @@
-﻿#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+﻿(*** hide ***)
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.7/FSharp.Charting.fsx"
 
 (**
 Neural Networks
 ===============
+
+link to reverse ad page for an explanation of the usage of adjoints in code.
+
+linear separability of or
 *)
 
-open System
 open DiffSharp.AD.Reverse
 open DiffSharp.AD.Reverse.Vector
 open DiffSharp.Util.LinearAlgebra
@@ -23,11 +27,11 @@ type Network =
     {l:Layer[]} // The layers forming this network
 
 
-let r = new Random()
+let r = new System.Random()
 let rs = r.Next()
 //let rnd = new Random(1082061959)
 //let rnd = new Random(622422388)
-let rnd = new Random()
+let rnd = new System.Random()
 
 let createNetwork (inputs:int) (layers:int[]) =
     {l = Array.init layers.Length (fun i -> 
@@ -53,9 +57,11 @@ let runNetwork (x:Vector<Adj>) (n:Network) =
 
 let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (n:Network) =
     let ta = Array.map (fun x -> Vector.map adj (fst x), Vector.map adj (snd x)) t
-    seq {for i in 0 .. 10000 do
+    seq {for i in 0 .. 10000 do // An arbitrary timeout
             Trace.Clear()
-            let error = (1. / float t.Length) * Array.sumBy (fun t -> norm ((snd t) - runNetwork (fst t) n)) ta
+            let error = 
+                (1. / float t.Length) * Array.sumBy 
+                    (fun t -> Vector.norm ((snd t) - runNetwork (fst t) n)) ta
             error.A <- 1.
             Trace.ReverseSweep()
             for l in n.l do
@@ -70,12 +76,17 @@ let net = createNetwork 2 [|3; 1|]
 
 //let test2 = runNetwork (Vector.create 2 (adj (rnd.NextDouble()))) test
 
-let trainingSet = [|vector [0.; 0.], vector [0.]
-                    vector [0.; 1.], vector [1.]
-                    vector [1.; 0.], vector [1.]
-                    vector [1.; 1.], vector [0.]|]
+let trainOR = [|vector [0.; 0.], vector [0.]
+                vector [0.; 1.], vector [1.]
+                vector [1.; 0.], vector [1.]
+                vector [1.; 1.], vector [1.]|]
 
-let test = backprop trainingSet 0.9 net
+let trainXOR = [|vector [0.; 0.], vector [0.]
+                 vector [0.; 1.], vector [1.]
+                 vector [1.; 0.], vector [1.]
+                 vector [1.; 1.], vector [0.]|]
+
+let test = backprop trainXOR 0.9 net
 
 
 open FSharp.Charting

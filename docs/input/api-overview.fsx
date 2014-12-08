@@ -456,9 +456,7 @@ let g1val = g1 [|1.; 2.|]
 
 (**
 
-In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**.
-
-This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](gettingstarted-forwardad.html).
+In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**. This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](gettingstarted-forwardad.html).
 
 Please refer to [API Reference](reference/index.html) for a complete list of operations currently supported by the **DiffSharp.Util.LinearAlgebra** module.
 
