@@ -40,7 +40,7 @@ Using the Reverse AD Trace
 
 In addition to using the differentiation API provided by the reverse AD module (such as **diff**, **grad**, **jacobian** ), you can make use of the exposed [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. For code using the **Adj** numeric type, **DiffSharp.AD.Reverse.Trace** builds a trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating adjoint values in reverse. 
 
-The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse AD. You can see an implementation of the backpropagation algorithm, making use of the reverse AD trace, in the [neural networks](http://en.wikipedia.org/wiki/Backpropagation) example.
+The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse AD. You can see an implementation of the backpropagation algorithm, making use of the reverse AD trace, in the [neural networks](examples-neuralnetworks.html) example.
 
 For example, consider the computation
 
@@ -71,7 +71,7 @@ the dependencies between which can be represented by the graph below.
 
 (**
 
-Reverse AD works by propagating adjoint values from the output (e.g. $\bar{e} = \frac{\partial e}{\partial e}$) towards the inputs (e.g. $\bar{a} = \frac{\partial e}{\partial a}$ and $\bar{b} = \frac{\partial e}{\partial b}$), using adjoint propagation rules derived from the computational graph:
+Reverse AD works by propagating adjoint values from the output (e.g. $\bar{e} = \frac{\partial e}{\partial e}$) towards the inputs (e.g. $\bar{a} = \frac{\partial e}{\partial a}$ and $\bar{b} = \frac{\partial e}{\partial b}$), using adjoint propagation rules dictated by the dependencies in the computational graph:
 
 $$$
  \begin{eqnarray*}
