@@ -61,7 +61,7 @@ Chart.Combine(List.append [for x in -2.2..0.4..2. -> c x]
 This gives us the following chart.
 
 <div class="row">
-    <div class="span6">
+    <div class="span6 offset1">
         <img src="img/examples-gradientdescent-chart.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
