@@ -26,7 +26,7 @@ Chart.Line([for t in 0.0..0.01..4.0 -> (t, x t)]).WithXAxis(Title="t").WithYAxis
 
 (**
 <div class="row">
-    <div class="span6">
+    <div class="span6 offset1">
         <img src="img/examples-kinematics-plot1.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
@@ -56,7 +56,7 @@ Chart.Combine([Chart.Line([for t in 0.0..0.01..4.0 -> (t, pos (xva t))], Name="x
 
 (**
 <div class="row">
-    <div class="span6">
+    <div class="span6 offset1">
         <img src="img/examples-kinematics-plot2.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
