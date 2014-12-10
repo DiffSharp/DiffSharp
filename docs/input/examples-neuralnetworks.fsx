@@ -70,7 +70,7 @@ let runLayer (x:Vector<Adj>) (l:Layer) =
 let runNetwork (x:Vector<Adj>) (n:Network) =
     Seq.fold (fun o l -> runLayer o l) x n.l
 
-let rnd = new System.Random()
+let rnd = System.Random()
 
 // Initialize a fully connected feedforward neural network
 // Weights and biases between -0.5 and 0.5

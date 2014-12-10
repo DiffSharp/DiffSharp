@@ -635,26 +635,69 @@ module Vector =
     let inline create (n:int) (v:'T) = Vector.Create(n, v)
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
     let inline init (n:int) (f:int->'T) = Vector.Create(n, f)
+    /// Creates a Vector from sequence `s`
+    let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
+    /// Converts Vector `v` to an array
+    let inline toArray (v:Vector<_>) =
+        match v with
+        | ZeroVector _ -> [||]
+        | Vector v -> v
+    /// Returns Vector `v` as a sequence
+    let inline toSeq (v:Vector<_>) =
+        match v with
+        | ZeroVector z -> Seq.empty
+        | Vector v -> Array.toSeq v
+    /// Tests if any element of Vector `v` satisfies predicate `p`
+    let inline exists p (v:Vector<_>) = v |> toArray |> Array.exists p
+    /// Returns the first element of Vector `v` for which predicate `p` is true
+    let inline find p (v:Vector<_>) = v |> toArray |> Array.find p
+    /// Returns the index of the first element of Vector `v` for which predicate `p` is true
+    let inline findIndex p (v:Vector<_>) = v |> toArray |> Array.findIndex p
+    /// Applies function `f` to each element of Vector `v`, threading an accumulator (with initial state `s`) through the computation. If the input function is f and the elements are i0...iN then computes f (... (f s i0)...) iN.
+    let inline fold f s (v:Vector<_>) = v |> toArray |> Array.fold f s
+    /// Applies function `f` to each element of Vector `v`, threading an accumulator (with initial state `s`) through the computation. If the input function is f and the elements are i0...iN then computes f i0 (...(f iN s)).
+    let inline foldBack f s (v:Vector<_>) = v |> toArray |> Array.foldBack f s
+    /// Tests if all elements of Vector `v` satisfy predicate `p`
+    let inline forall p (v:Vector<_>) = v |> toArray |> Array.forall p
+    /// Applies function `f` to each element of Vector `v`
+    let inline iter f (v:Vector<_>) = v |> toArray |> Array.iter f
+    /// Applies function `f` to each element of Vector `v`. The integer passed to function `f` indicates the index of element.
+    let inline iteri f (v:Vector<_>) = v |> toArray |> Array.iteri f
     /// Returns the length of Vector `v`
     let inline length (v:Vector<_>) = v.Length
     /// Creates a Vector whose elements are the results of applying function `f` to each element of Vector `v`
     let inline map f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f v.[i])
     /// Creates a Vector whose elements are the results of applying function `f` to each element of Vector `v`. An element index is also supplied to function `f`.
     let inline mapi f (v:Vector<_>) = Vector.Create(v.Length, fun i -> f i v.[i])
-    /// Gets the Euclidean norm of Vector `v`
-    let inline norm (v:Vector<_>) = v.GetNorm()
-    /// Creates a Vector from sequence `s`
-    let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
-    /// Returns the sum of all the elements in Vector `v`
-    let inline sum (v:Vector<_>) = 
+    /// Returns the maximum of all elements of Vector `v`
+    let inline max (v:Vector<_>) =
         match v with
         | ZeroVector z -> z
-        | Vector v -> Array.sum v
-    /// Converts Vector `v` to an array, e.g. from Vector<float> to float[]
-    let inline toArray (v:Vector<_>) =
+        | Vector v -> Array.max v
+    /// Returns the minimum of all elements of Vector `v`
+    let inline min (v:Vector<_>) =
         match v with
-        | ZeroVector _ -> [||]
-        | Vector v -> v
+        | ZeroVector z -> z
+        | Vector v -> Array.min v
+    /// Gets the Euclidean norm of Vector `v`
+    let inline norm (v:Vector<_>) = v.GetNorm()
+    /// Applies function `f` to each element of Vector `v`, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN, then computes f (... (f i0 i1)...) iN.
+    let inline reduce f (v:Vector<_>) = v |> toArray |> Array.reduce f
+    /// Applies function `f` to each element of Vector `v`, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN then computes f i0 (...(f iN-1 iN)).
+    let inline reduceBack f (v:Vector<_>) = v |> toArray |> Array.reduceBack f
+    /// Like Vector.fold, but returns the intermediate and final results
+    let inline scan f s (v:Vector<_>) = v |> toArray |> Array.scan f s
+    /// Like Vector.foldBack, but returns both the intermediate and final results
+    let inline scanBack f s (v:Vector<_>) = v |> toArray |> Array.scanBack f s
+    /// Creates a new Vector that contains the given subrange of Vector `v`, specified by start index `s` and count `c`
+    let inline sub (v:Vector<_>) s c =
+        match v with
+        | ZeroVector _ -> Vector.Zero
+        | Vector v -> Vector.Create(Array.sub v s c)
+    /// Returns the sum of all the elements in Vector `v`
+    let inline sum (v:Vector<_>) = v |> toArray |> Array.sum
+    /// Returns the sum of the results generated by applying function `f` to each element of Vector `v`
+    let inline sumBy f (v:Vector<_>) = v |> toArray |> Array.sumBy f
     /// Gets the unit vector codirectional with Vector `v`
     let inline unitVector (v:Vector<_>) = v.GetUnitVector()
 
@@ -677,9 +720,11 @@ module Matrix =
     let inline inverse (m:Matrix<_>) = m.GetInverse()
     /// Returns the number of rows in Matrix `m`
     let inline rows (m:Matrix<_>) = m.Rows
+    /// Returns the number of rows in Matrix `m`
     let inline length1 (m:Matrix<_>) = m.Rows
     /// Returns the number of columns in Matrix `m`
     let inline cols (m:Matrix<_>) = m.Cols
+    /// Returns the number of columns in Matrix `m`
     let inline length2 (m:Matrix<_>) = m.Cols
     /// Creates a Matrix whose entries are the results of applying function `f` to each entry of Matrix `m`
     let inline map f (m:Matrix<_>) = 
@@ -709,6 +754,8 @@ module Matrix =
     let inline toArray (m:Matrix<_>) =
         let a = toArray2D m
         [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
+
+
     /// Gets the trace of Matrix `m`
     let inline trace (m:Matrix<_>) = m.GetTrace()
     /// Gets the transpose of Matrix `m`

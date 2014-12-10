@@ -100,6 +100,12 @@ let movement1 = inverseK (vector [5.0; 0.0]) 0.025 100000
 let movement2 = inverseK (vector [3.5; -4.0]) 0.025 100000
 let movement3 = inverseK (vector [4.5; 4.5]) 0.025 100000
 
+(*** hide, define-output: o ***)
+printf "val movement1 : seq<Vector<float>>
+val movement2 : seq<Vector<float>>
+val movement3 : seq<Vector<float>>"
+(*** include-output: o ***)
+
 (**
 
 The following code draws the movement of the arm.
