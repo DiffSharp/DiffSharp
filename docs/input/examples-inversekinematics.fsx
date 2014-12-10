@@ -7,13 +7,47 @@
 Inverse Kinematics
 ==================
 
-[Inverse kinematics](http://en.wikipedia.org/wiki/Inverse_kinematics)
+[Inverse kinematics](http://en.wikipedia.org/wiki/Inverse_kinematics) is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints, to take the hand to that position?"
+
+For example, take the system drawn below, attached to a stationary structure on the left. This "arm" has two links of length $L_1$ and $L_2$, two joints at points $(0,0)$ and $(x_1,x_2)$, and the end point at $(x_2,y_2)$. 
 
 <div class="row">
-    <div class="span6 offset2">
+    <div class="span6 offset3">
         <img src="img/examples-inversekinematics.png" alt="Chart" style="width:300px;"/>
     </div>
 </div>
+
+It is straightforward to write the equations describing the forward kinematics of this mechanism, providing the coordinates of its parts for given angles of joints $a_1$ and $a_2$.
+
+$$$
+ \begin{eqnarray*}
+ x_1 &=& L_1 \cos a_1\\
+ y_1 &=& L_1 \sin a_1\\
+ x_2 &=& x_1 + L_2 \cos (a_1 + a_2)\\
+ y_2 &=& y_1 + L_2 \sin (a_1 + a_2)\\
+ \end{eqnarray*}
+
+A common approach to the inverse kinematics problem involves the use of Jacobian matrices for linearizing the system describing the position of the end point, in this example, $(x_2,y_2)$. This defines how the position of the end point changes relative to instantaneous changes in the joint angles.
+
+$$$
+ \mathbf{J} = \begin{bmatrix}
+              \frac{\partial x_2}{\partial a_1} & \frac{\partial x_2}{\partial a_2} \\
+              \frac{\partial y_2}{\partial a_1} & \frac{\partial y_2}{\partial a_2} \\
+              \end{bmatrix}
+
+The Jacobian $\mathbf{J}$ approximates the movement of the end point $\mathbf{x} = (x_2, y_2)$ with respect to changes in joint angles $\mathbf{a} = (a_1, a_2)$:
+
+$$$
+ \Delta \mathbf{x} \approx \mathbf{J} \Delta \mathbf{a} \; .
+
+Starting from a given position of the end point $\mathbf{x} = \mathbf{x_0}$ and given a target position $\mathbf{x_T}$, we can use the inverse of the Jacobian to compute small updates in the angles $\mathbf{a}$ using
+
+$$$
+ \Delta \mathbf{a} = \eta \, (\mathbf{J^{-1}} \mathbf{e}) \; ,
+
+where $\mathbf{e} = \mathbf{x_T} - \mathbf{x}$ is the current position error and $\eta > 0$ is a small coefficient. Computing the new position $\mathbf{x}$ with the updated angles $\mathbf{a}$ and repeating this process until the error $\mathbf{e}$ gets near zero takes the end point of the mechanism to the target point $\mathbf{x_T}$.
+
+We will make use of the **DiffSharp.AD.Reverse** module for calculating the Jacobian of the system.
 
 *)
 
@@ -26,7 +60,7 @@ let l1 = 4.5
 let l2 = 2.5
 
 // Set the initial angles
-let mutable a = vector [0.3; 1.01]
+let mutable a = vector [1.1; -0.9]
 
 // Transform angles into (x1, y1) and (x2, y2) positions
 let transform (a:Vector<Adj>) =
@@ -39,22 +73,11 @@ let inline forwardK (a:Vector<Adj>) =
     let t = transform a
     vector [t.[2]; t.[3]]
 
-(**
-    
-*)
-
+// Inverse kinematics using inverse Jacobian-vector product
+// target is the target position of the tip (x2, y2)
+// eta is the update coefficient
+// timeout is the maximum number of iterations
 let inverseK (target:Vector<float>) (eta:float) (timeout:int) =
-    seq {for i in 0 .. timeout do
-            let pos, jTv = jacobianTv'' forwardK a
-            let error = target - pos
-            let da = jTv error
-            a <- a + eta * da
-            yield (Vector.norm error, a)
-            }
-    |> Seq.takeWhile (fun x -> fst x > 0.4)
-    |> Seq.map snd
-
-let inverseK' (target:Vector<float>) (eta:float) (timeout:int) =
     seq {for i in 0 .. timeout do
             let pos, j = jacobian' forwardK a
             let error = target - pos
@@ -65,15 +88,22 @@ let inverseK' (target:Vector<float>) (eta:float) (timeout:int) =
     |> Seq.takeWhile (fun x -> fst x > 0.4)
     |> Seq.map snd
 
-let movement1 = inverseK (vector [6.0; 1.0]) 0.008 10000
-let pos1 = a |> Vector.map adj |> forwardK |> Vector.copy
-let movement2 = inverseK (vector [4.1; -3.0]) 0.01 10000
-let pos2 = a |> Vector.map adj |> forwardK |> Vector.copy
-let movement3 = inverseK (vector [4.7; 3.8]) 0.01 10000
-let pos3 = a |> Vector.map adj |> forwardK |> Vector.copy
+(**
+
+The given link sizes $L_1 = 4.5$, $L_2 = 2.5$ and initial angles $a_1 = 1.1$, $a_2 = -0.9$ put the starting position approximately at $(x_2, y_2) = (4.5, 4.5)$.
+
+Let us take the end point of the robot arm to positions $(4.5, 4.5) \to (5.0, 0.0) \to (3.5, -4.0)$ and then back to $(4.5, 4.5)$.
+
+*)
+
+let movement1 = inverseK (vector [5.0; 0.0]) 0.025 100000
+let movement2 = inverseK (vector [3.5; -4.0]) 0.025 100000
+let movement3 = inverseK (vector [4.5; 4.5]) 0.025 100000
 
 (**
-    
+
+The following code draws the movement of the arm.
+
 *)
 
 open FSharp.Charting
@@ -86,11 +116,11 @@ let drawArmLive (aa:seq<Vector<float>>) =
     let pp = aa |> Array.ofSeq |> Array.map armPoints
     let pp2 = Array.copy pp
     Chart.Combine(
-            [ LiveChart.Line(Event.cycle 10 pp)
-              LiveChart.Point(Event.cycle 10 pp2, MarkerSize = 10) ])
+            [ LiveChart.Line(Event.cycle 10 pp, Color = System.Drawing.Color.Purple)
+              LiveChart.Point(Event.cycle 10 pp2, MarkerSize = 20) ])
               .WithXAxis(Min = 0.0, Max = 10.0, 
                     LabelStyle = ChartTypes.LabelStyle(Interval = 2.), 
-                    MajorGrid = ChartTypes.Grid(Interval = 2.), 
+                    MajorGrid = ChartTypes.Grid(Interval = 2.),
                     MajorTickMark = ChartTypes.TickMark(Enabled = false))
               .WithYAxis(Min = -5.0, Max = 5.0, 
                     LabelStyle = ChartTypes.LabelStyle(Interval = 2.), 
@@ -99,12 +129,43 @@ let drawArmLive (aa:seq<Vector<float>>) =
 
 drawArmLive (movement3 |> Seq.append movement2 |> Seq.append movement1)
 
+
 (**
-    
+
 <div class="row">
     <div class="span6 offset2">
-        <img src="img/examples-inversekinematics.gif" alt="Chart" style="width:450px;"/>
+        <img src="img/examples-inversekinematics-inverse.gif" alt="Chart" style="width:450px;"/>
     </div>
 </div>
 
+It is known that one can use the Jacobian transpose $\mathbf{J^T}$ instead of the inverse $\mathbf{J^{-1}}$ and obtain similar results, albeit with slightly different behavior.
+
+The **DiffSharp.AD.Reverse** module provides the operation **jacobianTv** making use of reverse automatic differentiation to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the [API Overview](api-overview.html) and [Benchmarks](benchmarks.html) pages for a comparison of these operations.)
+
+Using this method with the same arm positions gives us the following result:
+*)
+
+
+// Inverse kinematics using transposed Jacobian-vector product
+let inverseK' (target:Vector<float>) (eta:float) (timeout:int) =
+    seq {for i in 0 .. timeout do
+            let pos, jTv = jacobianTv'' forwardK a
+            let error = target - pos
+            let da = jTv error
+            a <- a + eta * da
+            yield (Vector.norm error, a)
+            }
+    |> Seq.takeWhile (fun x -> fst x > 0.4)
+    |> Seq.map snd
+
+(**
+ 
+    
+<div class="row">
+    <div class="span6 offset2">
+        <img src="img/examples-inversekinematics-transpose.gif" alt="Chart" style="width:450px;"/>
+    </div>
+</div>
+
+   
 *)

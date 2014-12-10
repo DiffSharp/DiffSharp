@@ -120,6 +120,7 @@ It is important to note that the backpropagation algorithm is just a special cas
 // The backpropagation algorithm
 // t is the training set consisting of input and output vectors
 // eta is the learning rate
+// timeout is the maximum number of iterations
 // n is the network to be trained
 let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (timeout:int) (n:Network) =
     let ta = Array.map (fun x -> Vector.map adj (fst x), Vector.map adj (snd x)) t
