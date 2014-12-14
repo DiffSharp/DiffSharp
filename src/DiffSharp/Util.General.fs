@@ -63,7 +63,7 @@ let inline diagonal (Square m:'a[,]) = Array.init (m.GetLength 0) (fun i -> m.[i
 let inline trace (m:'a[,]) = Array.sum (diagonal m)
 
 /// Copy the upper triangular elements of the square matrix given in 'a[,] `m` to the lower triangular part
-let inline copyupper (Square m:'a[,]) =
+let inline copyUpperToLower (Square m:'a[,]) =
     let r = Array2D.copy m
     let rows = r.GetLength 0
     if rows > 1 then

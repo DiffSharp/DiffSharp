@@ -107,6 +107,11 @@ type Vector<'T when 'T : (static member Zero : 'T)
         match v with
         | ZeroVector z -> ZeroVector LanguagePrimitives.GenericZero<'a>
         | Vector v -> Vector (Array.map f v)
+    /// Creates a copy of this Vector
+    member inline v.Copy() =
+        match v with
+        | ZeroVector z -> ZeroVector z
+        | Vector v -> Vector (Array.copy v)
     /// Creates a Vector from the array `v`
     static member inline Create(v) : Vector<'T> = Vector v
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the elements
@@ -122,6 +127,11 @@ type Vector<'T when 'T : (static member Zero : 'T)
         match v with
         | ZeroVector _ -> [||]
         | Vector v -> Array.map float v
+    /// Converts this Vector to an array
+    member inline v.ToArray() =
+        match v with
+        | ZeroVector _ -> [||]
+        | Vector v -> v
     /// Adds Vector `a` to Vector `b`
     static member inline (+) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
@@ -242,13 +252,6 @@ type Matrix<'T when 'T : (static member Zero : 'T)
     /// Symmetric square matrix that is equal to its transpose
     | SymmetricMatrix of 'T[,]
     with
-    /// Gets the entry of this Matrix at row `i` and column `j`
-    member inline m.Item
-        with get (i, j) =
-            match m with
-            | ZeroMatrix z -> z
-            | Matrix m -> m.[i, j]
-            | SymmetricMatrix m -> if j >= i then m.[i, j] else m.[j, i]
     /// Gets the number of rows of this Matrix
     member inline m.Rows =
         match m with
@@ -261,6 +264,56 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _ -> 0
         | Matrix m -> m.GetLength 1
         | SymmetricMatrix m -> m.GetLength 1
+    /// Gets the entry of this Matrix at row `i` and column `j`
+    member inline m.Item
+        with get (i, j) =
+            match m with
+            | ZeroMatrix z -> z
+            | Matrix m -> m.[i, j]
+            | SymmetricMatrix m -> if j >= i then m.[i, j] else m.[j, i]
+    /// Gets a submatrix of this Matrix with the bounds given in `rowStart`, `rowFinish`, `colStart`, `colFinish`
+    member inline m.GetSlice(rowStart, rowFinish, colStart, colFinish) =
+        match m with
+        | ZeroMatrix z -> failwith "Cannot get slice of a ZeroMatrix."
+        | Matrix mm ->
+            let rowStart = defaultArg rowStart 0
+            let rowFinish = defaultArg rowFinish (m.Rows - 1)
+            let colStart = defaultArg colStart 0
+            let colFinish = defaultArg colFinish (m.Cols - 1)
+            Matrix mm.[rowStart..rowFinish, colStart..colFinish]
+        | SymmetricMatrix mm ->
+            let rowStart = defaultArg rowStart 0
+            let rowFinish = defaultArg rowFinish (m.Rows - 1)
+            let colStart = defaultArg colStart 0
+            let colFinish = defaultArg colFinish (m.Cols - 1)
+            let smm = copyUpperToLower mm
+            Matrix smm.[rowStart..rowFinish, colStart..colFinish]
+    /// Gets a row subvector of this Matrix with the given row index `row` and column bounds `colStart` and `colFinish`
+    member inline m.GetSlice(row, colStart, colFinish) =
+        match m with
+        | ZeroMatrix z -> failwith "Cannot get slice of a ZeroMatrix."
+        | Matrix mm ->
+            let colStart = defaultArg colStart 0
+            let colFinish = defaultArg colFinish (m.Cols - 1)
+            Vector mm.[row, colStart..colFinish]
+        | SymmetricMatrix mm ->
+            let colStart = defaultArg colStart 0
+            let colFinish = defaultArg colFinish (m.Cols - 1)
+            let smm = copyUpperToLower mm
+            Vector smm.[row, colStart..colFinish]
+    /// Gets a column subvector of this Matrix with the given column index `col` and row bounds `rowStart` and `rowFinish`
+    member inline m.GetSlice(rowStart, rowFinish, col) =
+        match m with
+        | ZeroMatrix z -> failwith "Cannot get slice of a ZeroMatrix."
+        | Matrix mm ->
+            let rowStart = defaultArg rowStart 0
+            let rowFinish = defaultArg rowFinish (m.Rows - 1)
+            Vector mm.[rowStart..rowFinish, col]
+        | SymmetricMatrix mm ->
+            let rowStart = defaultArg rowStart 0
+            let rowFinish = defaultArg rowFinish (m.Rows - 1)
+            let smm = copyUpperToLower mm
+            Vector smm.[rowStart..rowFinish, col]
     /// Gets a string representation of this Matrix that can be pasted into a Mathematica notebook
     member inline m.ToMathematicaString() =
         let sb = System.Text.StringBuilder()
@@ -286,11 +339,21 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         sb.Append("]") |> ignore
         sb.ToString()
     /// Converts this Matrix into a 2d array
-    member inline m.ToArray2d() =
+    member inline m.ToArray2D() =
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> m
-        | SymmetricMatrix m -> copyupper m
+        | SymmetricMatrix m -> copyUpperToLower m
+    /// Converts this Matrix into a jagged array, e.g. from Matrix<float> to float[][]
+    member inline m.ToArray() =
+        let a = m.ToArray2D()
+        [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
+    /// Creates a copy of this Matrix
+    member inline m.Copy() = 
+        match m with
+        | ZeroMatrix z -> ZeroMatrix z
+        | Matrix m -> Matrix (Array2D.copy m)
+        | SymmetricMatrix m -> SymmetricMatrix (Array2D.copy m)
     /// Gets the trace of this Matrix
     member inline m.GetTrace() =
         match m with
@@ -303,7 +366,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix m -> Matrix (transpose m)
         | SymmetricMatrix m -> SymmetricMatrix m
-    /// Gets the array of the diagonal elements of this Matrix
+    /// Gets a Vector of the diagonal elements of this Matrix
     member inline m.GetDiagonal() =
         match m with
         | ZeroMatrix z -> [||]
@@ -317,7 +380,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix z -> ZeroMatrix z, [||], LanguagePrimitives.GenericZero<'T>
         | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the LU decomposition of a nonsquare matrix."
-            let res = Array2D.copy (m.ToArray2d())
+            let res = Array2D.copy (m.ToArray2D())
             let perm = Array.init m.Rows (fun i -> i)
             let mutable toggle = LanguagePrimitives.GenericOne<'T>
             for j = 0 to m.Rows - 2 do
@@ -355,7 +418,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix z -> ZeroMatrix z
         | Matrix _ | SymmetricMatrix _ ->
             if (m.Rows <> m.Cols) then failwith "Cannot compute the inverse of a nonsquare matrix."
-            let res = Array2D.copy (m.ToArray2d())
+            let res = Array2D.copy (m.ToArray2D())
             let lu, perm, _ = m.GetLUDecomposition()
             let b:'T[] = Array.zeroCreate m.Rows
             for i = 0 to m.Rows - 1 do
@@ -364,13 +427,13 @@ type Matrix<'T when 'T : (static member Zero : 'T)
                         b.[j] <- LanguagePrimitives.GenericOne<'T>
                     else
                         b.[j] <- LanguagePrimitives.GenericZero<'T>
-                let x = matrixSolveHelper (lu.ToArray2d()) b
+                let x = matrixSolveHelper (lu.ToArray2D()) b
                 res.[0.., i] <- x
             Matrix res
     /// Creates a Matrix from the given 2d array `m`
     static member inline Create(m):Matrix<'T> = Matrix m
-    /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`. If m = n, a SymmetricMatrix is created.
-    static member inline Create(m, n, v:'T):Matrix<'T> = if m = n then SymmetricMatrix (Array2D.create m m v) else Matrix (Array2D.create m n v)
+    /// Creates a Matrix with `m` rows, `n` columns, and all elements having value `v`
+    static member inline Create(m, n, v:'T):Matrix<'T> = Matrix (Array2D.create m n v)
     /// Creates a Matrix with `m` rows, `n` columns, and a generator function `f` to compute the elements
     static member inline Create(m:int, n:int, f:int->int->'T):Matrix<'T> = Matrix (Array2D.init m n f)
     /// Creates a Matrix with `m` rows and a generator function `f` that gives each row as a an array
@@ -402,13 +465,13 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         match m with
         | ZeroMatrix _ -> Array2D.zeroCreate 0 0
         | Matrix m -> Array2D.map float m
-        | SymmetricMatrix m -> copyupper (Array2D.map float m)
+        | SymmetricMatrix m -> copyUpperToLower (Array2D.map float m)
     /// Solves a system of linear equations ax = b, where the coefficients are given in Matrix `a` and the result vector is Vector `b`
     static member inline Solve(a:Matrix<'T>, b:Vector<'T>) =
         if a.Cols <> b.Length then invalidArg "b" "Cannot solve the system of equations using a matrix and a vector of incompatible sizes."
         let lu, perm, _ = a.GetLUDecomposition()
         let bp = Array.init a.Rows (fun i -> b.[perm.[i]])
-        Vector (matrixSolveHelper (lu.ToArray2d()) bp)
+        Vector (matrixSolveHelper (lu.ToArray2D()) bp)
     /// Perfomrs a symmetric unary operation `f` on Matrix `a`
     static member inline SymmetricOp(a:Matrix<'T>, f:int->int->'T):Matrix<'T> =
         match a with
@@ -622,15 +685,48 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _ -> Matrix.Zero
         | Matrix ma -> Matrix.Create(a.Rows, a.Cols, fun i j -> -ma.[i, j])
         | SymmetricMatrix ma -> Matrix.CreateSymmetric(a.Rows, fun i j -> -ma.[i, j])
+    /// Returns the QR decomposition of this Matrix
+    member inline m.GetQRDecomposition() =
+        match m with
+        | ZeroMatrix z -> failwith "Cannot compute the QR decomposition of ZeroMatrix."
+        | Matrix mm ->
+            let minor (m:'a[,]) (d) =
+                let rows = Array2D.length1 m
+                let cols = Array2D.length2 m
+                let ret = Array2D.zeroCreate rows cols
+                for i = 0 to d - 1 do
+                    ret.[i, i] <- LanguagePrimitives.GenericOne
+                Array2D.blit m d d ret d d (rows - d) (cols - d)
+                ret
+            // Householder
+            let kmax = -1 + min (m.Rows - 1) m.Cols
+            let mutable z = m.Copy()
+            let q = Array.create m.Rows Matrix.Zero
+            for k = 0 to kmax do
+                z <- Matrix.Create(minor (z.ToArray2D()) k)
+                let x = z.[*, k]
+                let mutable a = x.GetNorm()
+                if mm.[k, k] > LanguagePrimitives.GenericZero then a <- -a
+                let e = (x + Vector.Create(m.Rows, k, a)).GetUnitVector()
+                q.[k] <- Matrix.CreateIdentity(m.Rows) + Matrix.Create(m.Rows, m.Rows, fun i j -> -(e.[i] * e.[j] + e.[i] * e.[j]))
+                z <- q.[k] * z
+            let mutable q' = q.[0]
+            for i = 1 to kmax do
+                q' <- q.[i] * q'
+            q'.GetTranspose(), q' * m
+    /// Returns the eigenvalues of this Matrix. (Experimental code, complex eigenvalues are not supported.)
+    member inline m.GetEigenvalues() =
+        let mutable m' = m.Copy()
+        for i = 0 to 20 do
+            let q, r = m'.GetQRDecomposition()
+            m' <- r * q
+        m'.GetDiagonal()
 
 /// Provides basic operations on Vector types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array)
 [<RequireQualifiedAccess>]
 module Vector =
     /// Creates a copy of Vector `v`
-    let inline copy (v:Vector<_>) =
-        match v with
-        | ZeroVector _ -> Vector.Zero
-        | Vector v -> Vector (Array.copy v)
+    let inline copy (v:Vector<_>) = v.Copy()
     /// Creates a Vector with `n` elements having value `v`
     let inline create (n:int) (v:'T) = Vector.Create(n, v)
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
@@ -638,10 +734,7 @@ module Vector =
     /// Creates a Vector from sequence `s`
     let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
     /// Converts Vector `v` to an array
-    let inline toArray (v:Vector<_>) =
-        match v with
-        | ZeroVector _ -> [||]
-        | Vector v -> v
+    let inline toArray (v:Vector<_>) = v.ToArray()
     /// Returns Vector `v` as a sequence
     let inline toSeq (v:Vector<_>) =
         match v with
@@ -705,15 +798,13 @@ module Vector =
 [<RequireQualifiedAccess>]
 module Matrix =
     /// Creates a copy of Matrix `m`
-    let inline copy (m:Matrix<_>) = 
-        match m with
-        | ZeroMatrix _ -> Matrix.Zero
-        | Matrix m -> Matrix (Array2D.copy m)
-        | SymmetricMatrix m -> SymmetricMatrix (Array2D.copy m)
+    let inline copy (m:Matrix<_>) = m.Copy()
     /// Creates a Matrix with `m` rows, `n` columns, and all entries having value `v`
     let inline create (m:int) (n:int) (v:'T) = Matrix.Create(m, n, v)
     /// Gets the determinant of Matrix `m`
     let inline det (m:Matrix<_>) = m.GetDeterminant()
+    /// Gets the eigenvalues of Matrix `m`
+    let inline eigenvalues (m:Matrix<_>) = m.GetEigenvalues()
     /// Creates a Matrix with `m` rows, `n` columns and a generator function `f` to compute the entries
     let inline init (m:int) (n:int) (f:int->int->'T) = Matrix.Create(m, n, f)
     /// Gets the inverse of Matrix `m`
@@ -745,17 +836,9 @@ module Matrix =
         let c = array2D b
         Matrix.Create(c)
     /// Converts Matrix `m` to a 2d array, e.g. from Matrix<float> to float[,]
-    let inline toArray2D (m:Matrix<_>) =
-        match m with
-        | ZeroMatrix _ -> Array2D.zeroCreate 0 0
-        | Matrix m -> m
-        | SymmetricMatrix m -> copyupper m
+    let inline toArray2D (m:Matrix<_>) = m.ToArray2D()
     /// Converts Matrix `m` to a jagged array, e.g. from Matrix<float> to float[][]
-    let inline toArray (m:Matrix<_>) =
-        let a = toArray2D m
-        [|for i = 0 to m.Rows - 1 do yield [|for j = 0 to m.Cols - 1 do yield a.[i, j]|]|]
-
-
+    let inline toArray (m:Matrix<_>) = m.ToArray2D()
     /// Gets the trace of Matrix `m`
     let inline trace (m:Matrix<_>) = m.GetTrace()
     /// Gets the transpose of Matrix `m`

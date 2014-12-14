@@ -48,7 +48,6 @@ let duration n f =
     s.Start() |> ignore
     for i in 1..n do
         f() |> ignore
-    let after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime.Ticks
     s.Stop() |> ignore
     let dur = s.ElapsedTicks
     f(), (float dur) / (float n)
