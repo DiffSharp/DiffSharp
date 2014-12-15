@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>DualNOps - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
@@ -58,10 +61,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1722', 1722)" onmouseover="showTip(event, '1722', 1722)">
+          <code onmouseout="hideTip(event, '263', 263)" onmouseover="showTip(event, '263', 263)">
             ( /^ ) x n
           </code>
-          <div class="tip" id="1722">
+          <div class="tip" id="263">
             <strong>Signature:</strong> x:DualN -&gt; n:int -&gt; float<br />
                       </div>
         </td>
@@ -73,10 +76,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1723', 1723)" onmouseover="showTip(event, '1723', 1723)">
+          <code onmouseout="hideTip(event, '264', 264)" onmouseover="showTip(event, '264', 264)">
             diffLazy n
           </code>
-          <div class="tip" id="1723">
+          <div class="tip" id="264">
             <strong>Signature:</strong> n:int -&gt; DualN -&gt; DualN<br />
                       </div>
         </td>
@@ -88,12 +91,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1724', 1724)" onmouseover="showTip(event, '1724', 1724)">
+          <code onmouseout="hideTip(event, '265', 265)" onmouseover="showTip(event, '265', 265)">
             dualN p
           </code>
-          <div class="tip" id="1724">
-            <strong>Signature:</strong> p:float -&gt; DualN<br />
-                      </div>
+          <div class="tip" id="265">
+            <strong>Signature:</strong> p:^?444597 -&gt; DualN<br />
+                          <strong>Type parameters:</strong> ^?444597          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualN, with primal value <code>p</code> and tangent 0</p>
@@ -103,12 +106,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1725', 1725)" onmouseover="showTip(event, '1725', 1725)">
+          <code onmouseout="hideTip(event, '266', 266)" onmouseover="showTip(event, '266', 266)">
             dualNAct p
           </code>
-          <div class="tip" id="1725">
-            <strong>Signature:</strong> p:float -&gt; DualN<br />
-                      </div>
+          <div class="tip" id="266">
+            <strong>Signature:</strong> p:^?444602 -&gt; DualN<br />
+                          <strong>Type parameters:</strong> ^?444602          </div>
         </td>
         <td class="xmldoc">
           <p>Make active DualN (i.e. variable of differentiation), with primal value <code>p</code> and tangent 1</p>
@@ -118,12 +121,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1726', 1726)" onmouseover="showTip(event, '1726', 1726)">
+          <code onmouseout="hideTip(event, '267', 267)" onmouseover="showTip(event, '267', 267)">
             dualNActArrayArray x
           </code>
-          <div class="tip" id="1726">
-            <strong>Signature:</strong> x:float [] -&gt; DualN [] []<br />
-                      </div>
+          <div class="tip" id="267">
+            <strong>Signature:</strong> x:^?444604 [] -&gt; DualN [] []<br />
+                          <strong>Type parameters:</strong> ^?444604          </div>
         </td>
         <td class="xmldoc">
           <p>Make an array of arrays of DualN, with primal values given in array <code>x</code>. The tangent values along the diagonal are 1, the rest are 0.</p>
@@ -133,12 +136,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1727', 1727)" onmouseover="showTip(event, '1727', 1727)">
+          <code onmouseout="hideTip(event, '268', 268)" onmouseover="showTip(event, '268', 268)">
             dualNSet (p, t)
           </code>
-          <div class="tip" id="1727">
-            <strong>Signature:</strong> (p:float * t:float) -&gt; DualN<br />
-                      </div>
+          <div class="tip" id="268">
+            <strong>Signature:</strong> (p:^?444599 * t:^?444600) -&gt; DualN<br />
+                          <strong>Type parameters:</strong> ^?444599, ^?444600          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualN, with primal value <code>p</code> and tangent value <code>t</code></p>
@@ -148,10 +151,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1728', 1728)" onmouseover="showTip(event, '1728', 1728)">
+          <code onmouseout="hideTip(event, '269', 269)" onmouseover="showTip(event, '269', 269)">
             primal arg1
           </code>
-          <div class="tip" id="1728">
+          <div class="tip" id="269">
             <strong>Signature:</strong> DualN -&gt; float<br />
                       </div>
         </td>
@@ -163,10 +166,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1729', 1729)" onmouseover="showTip(event, '1729', 1729)">
+          <code onmouseout="hideTip(event, '270', 270)" onmouseover="showTip(event, '270', 270)">
             tangent arg1
           </code>
-          <div class="tip" id="1729">
+          <div class="tip" id="270">
             <strong>Signature:</strong> DualN -&gt; float<br />
                       </div>
         </td>
@@ -178,10 +181,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1730', 1730)" onmouseover="showTip(event, '1730', 1730)">
+          <code onmouseout="hideTip(event, '271', 271)" onmouseover="showTip(event, '271', 271)">
             tangent2 d
           </code>
-          <div class="tip" id="1730">
+          <div class="tip" id="271">
             <strong>Signature:</strong> d:DualN -&gt; float<br />
                       </div>
         </td>
@@ -193,10 +196,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1731', 1731)" onmouseover="showTip(event, '1731', 1731)">
+          <code onmouseout="hideTip(event, '272', 272)" onmouseover="showTip(event, '272', 272)">
             tuple arg1
           </code>
-          <div class="tip" id="1731">
+          <div class="tip" id="272">
             <strong>Signature:</strong> DualN -&gt; float * float<br />
                       </div>
         </td>
@@ -215,29 +218,57 @@
           <ul class="nav nav-list" id="menu">
 
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
             <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="../benchmarks.html">Benchmarks</a></li>
 
             <li class="nav-header">Reference</li>
-            <li><a href="../api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>

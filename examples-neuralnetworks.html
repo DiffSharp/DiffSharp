@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- 
+      The Neural Networks
+ parameters will be replaced with the 
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>Neural Networks
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    
+    <link type="text/css" rel="stylesheet" href="misc/style.css" />
+    <script src="misc/tips.js" type="text/javascript"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          <h1>Neural Networks</h1>
+
+<p><a href="http://en.wikipedia.org/wiki/Artificial_neural_network">Artificial neural networks</a> are computational architectures based on the properties of biological neural systems, capable of learning and pattern recognition.</p>
+
+<p>Let us create a <a href="http://en.wikipedia.org/wiki/Feedforward_neural_network">feedforward neural network</a> model and use the DiffSharp library for implementing the <a href="http://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> algorithm for training it.</p>
+
+<p>We start by defining our neural network structure.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">Reverse</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 4)" onmouseover="showTip(event, 'fs1', 4)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 5)" onmouseover="showTip(event, 'fs2', 5)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 6)" onmouseover="showTip(event, 'fs3', 6)" class="i">Reverse</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 7)" onmouseover="showTip(event, 'fs4', 7)" class="i">Vector</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 8)" onmouseover="showTip(event, 'fs1', 8)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs5', 9)" onmouseover="showTip(event, 'fs5', 9)" class="i">Util</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 10)" onmouseover="showTip(event, 'fs6', 10)" class="i">LinearAlgebra</span>
+
+<span class="c">// A neuron</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs7', 11)" onmouseover="showTip(event, 'fs7', 11)" class="i">Neuron</span> <span class="o">=</span>
+    {<span class="k">mutable</span> <span onmouseout="hideTip(event, 'fs8', 12)" onmouseover="showTip(event, 'fs8', 12)" class="i">w</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs9', 13)" onmouseover="showTip(event, 'fs9', 13)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs10', 14)" onmouseover="showTip(event, 'fs10', 14)" class="i">Adj</span><span class="o">&gt;</span> <span class="c">// Weight vector of this neuron</span>
+     <span class="k">mutable</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">b</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs10', 16)" onmouseover="showTip(event, 'fs10', 16)" class="i">Adj</span>} <span class="c">// Bias of this neuron</span>
+ 
+<span class="c">// A layer of neurons</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs12', 17)" onmouseover="showTip(event, 'fs12', 17)" class="i">Layer</span> <span class="o">=</span>
+    {<span onmouseout="hideTip(event, 'fs13', 18)" onmouseover="showTip(event, 'fs13', 18)" class="i">n</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs7', 19)" onmouseover="showTip(event, 'fs7', 19)" class="i">Neuron</span>[]} <span class="c">// The neurons forming this layer</span>
+
+<span class="c">// A feedforward network of neuron layers</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs14', 20)" onmouseover="showTip(event, 'fs14', 20)" class="i">Network</span> <span class="o">=</span>
+    {<span onmouseout="hideTip(event, 'fs15', 21)" onmouseover="showTip(event, 'fs15', 21)" class="i">l</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs12', 22)" onmouseover="showTip(event, 'fs12', 22)" class="i">Layer</span>[]} <span class="c">// The layers forming this network</span></pre>
+</td>
+</tr>
+</table>
+
+<p>Each neuron works by taking inputs <span class="math">\(x_1, \dots, x_n\)</span> and calculating the activation (output)</p>
+
+<p><span class="math">\[  a = \sigma \left(\sum_{i} w_i x_i + b\right) \; ,\]</span></p>
+
+<p>where <span class="math">\(w_i\)</span> are synapse weights associated with each input, <span class="math">\(b\)</span> is a bias, and <span class="math">\(\sigma\)</span> is an <a href="http://en.wikipedia.org/wiki/Activation_function">activation function</a> representing the rate of <a href="http://en.wikipedia.org/wiki/Action_potential">action potential</a> firing in the neuron.</p>
+
+<div class="row">
+    <div class="span6 offset2">
+        <img src="img/examples-neuralnetworks-neuron.png" alt="Chart" style="width:400px;"/>
+    </div>
+</div>
+
+<p>The activation function is commonly taken as the <a href="http://en.wikipedia.org/wiki/Sigmoid_function">sigmoid function</a></p>
+
+<p><span class="math">\[ \sigma (z) = \frac{1}{1 + e^{-z}} \; ,\]</span></p>
+
+<p>due to its "nice" and simple derivative and gain control properties.</p>
+
+<p>Now let us write the network evaluation code and a function for creating a given network configuration and initializing the weights and biases with small random values.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 23)" onmouseover="showTip(event, 'fs16', 23)" class="i">sigmoid</span> (<span onmouseout="hideTip(event, 'fs17', 24)" onmouseover="showTip(event, 'fs17', 24)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs10', 25)" onmouseover="showTip(event, 'fs10', 25)" class="i">Adj</span>) <span class="o">=</span> <span class="n">1.</span> <span class="o">/</span> (<span class="n">1.</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs18', 26)" onmouseover="showTip(event, 'fs18', 26)" class="i">exp</span> <span class="o">-</span><span onmouseout="hideTip(event, 'fs17', 27)" onmouseover="showTip(event, 'fs17', 27)" class="i">x</span>)
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs19', 28)" onmouseover="showTip(event, 'fs19', 28)" class="i">runNeuron</span> (<span onmouseout="hideTip(event, 'fs20', 29)" onmouseover="showTip(event, 'fs20', 29)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs9', 30)" onmouseover="showTip(event, 'fs9', 30)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs10', 31)" onmouseover="showTip(event, 'fs10', 31)" class="i">Adj</span><span class="o">&gt;</span>) (<span onmouseout="hideTip(event, 'fs21', 32)" onmouseover="showTip(event, 'fs21', 32)" class="i">n</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs7', 33)" onmouseover="showTip(event, 'fs7', 33)" class="i">Neuron</span>) <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">x</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs21', 35)" onmouseover="showTip(event, 'fs21', 35)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 36)" onmouseover="showTip(event, 'fs8', 36)" class="i">w</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs21', 37)" onmouseover="showTip(event, 'fs21', 37)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 38)" onmouseover="showTip(event, 'fs11', 38)" class="i">b</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs16', 39)" onmouseover="showTip(event, 'fs16', 39)" class="i">sigmoid</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 40)" onmouseover="showTip(event, 'fs22', 40)" class="i">runLayer</span> (<span onmouseout="hideTip(event, 'fs20', 41)" onmouseover="showTip(event, 'fs20', 41)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs9', 42)" onmouseover="showTip(event, 'fs9', 42)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs10', 43)" onmouseover="showTip(event, 'fs10', 43)" class="i">Adj</span><span class="o">&gt;</span>) (<span onmouseout="hideTip(event, 'fs23', 44)" onmouseover="showTip(event, 'fs23', 44)" class="i">l</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs12', 45)" onmouseover="showTip(event, 'fs12', 45)" class="i">Layer</span>) <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs24', 46)" onmouseover="showTip(event, 'fs24', 46)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 47)" onmouseover="showTip(event, 'fs25', 47)" class="i">map</span> (<span onmouseout="hideTip(event, 'fs19', 48)" onmouseover="showTip(event, 'fs19', 48)" class="i">runNeuron</span> <span onmouseout="hideTip(event, 'fs20', 49)" onmouseover="showTip(event, 'fs20', 49)" class="i">x</span>) <span onmouseout="hideTip(event, 'fs23', 50)" onmouseover="showTip(event, 'fs23', 50)" class="i">l</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 51)" onmouseover="showTip(event, 'fs13', 51)" class="i">n</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs26', 52)" onmouseover="showTip(event, 'fs26', 52)" class="i">vector</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs27', 53)" onmouseover="showTip(event, 'fs27', 53)" class="i">runNetwork</span> (<span onmouseout="hideTip(event, 'fs20', 54)" onmouseover="showTip(event, 'fs20', 54)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs9', 55)" onmouseover="showTip(event, 'fs9', 55)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs10', 56)" onmouseover="showTip(event, 'fs10', 56)" class="i">Adj</span><span class="o">&gt;</span>) (<span onmouseout="hideTip(event, 'fs28', 57)" onmouseover="showTip(event, 'fs28', 57)" class="i">n</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs14', 58)" onmouseover="showTip(event, 'fs14', 58)" class="i">Network</span>) <span class="o">=</span>
+    <span onmouseout="hideTip(event, 'fs29', 59)" onmouseover="showTip(event, 'fs29', 59)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 60)" onmouseover="showTip(event, 'fs30', 60)" class="i">fold</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs31', 61)" onmouseover="showTip(event, 'fs31', 61)" class="i">o</span> <span onmouseout="hideTip(event, 'fs23', 62)" onmouseover="showTip(event, 'fs23', 62)" class="i">l</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs22', 63)" onmouseover="showTip(event, 'fs22', 63)" class="i">runLayer</span> <span onmouseout="hideTip(event, 'fs31', 64)" onmouseover="showTip(event, 'fs31', 64)" class="i">o</span> <span onmouseout="hideTip(event, 'fs23', 65)" onmouseover="showTip(event, 'fs23', 65)" class="i">l</span>) <span onmouseout="hideTip(event, 'fs20', 66)" onmouseover="showTip(event, 'fs20', 66)" class="i">x</span> <span onmouseout="hideTip(event, 'fs28', 67)" onmouseover="showTip(event, 'fs28', 67)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 68)" onmouseover="showTip(event, 'fs15', 68)" class="i">l</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs32', 69)" onmouseover="showTip(event, 'fs32', 69)" class="i">rnd</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs33', 70)" onmouseover="showTip(event, 'fs33', 70)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs34', 71)" onmouseover="showTip(event, 'fs34', 71)" class="i">Random</span>()
+
+<span class="c">// Initialize a fully connected feedforward neural network</span>
+<span class="c">// Weights and biases between -0.5 and 0.5</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs35', 72)" onmouseover="showTip(event, 'fs35', 72)" class="i">createNetwork</span> (<span onmouseout="hideTip(event, 'fs36', 73)" onmouseover="showTip(event, 'fs36', 73)" class="i">inputs</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs37', 74)" onmouseover="showTip(event, 'fs37', 74)" class="i">int</span>) (<span onmouseout="hideTip(event, 'fs38', 75)" onmouseover="showTip(event, 'fs38', 75)" class="i">layers</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs37', 76)" onmouseover="showTip(event, 'fs37', 76)" class="i">int</span>[]) <span class="o">=</span>
+    {<span onmouseout="hideTip(event, 'fs15', 77)" onmouseover="showTip(event, 'fs15', 77)" class="i">l</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 78)" onmouseover="showTip(event, 'fs24', 78)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 79)" onmouseover="showTip(event, 'fs39', 79)" class="i">init</span> <span onmouseout="hideTip(event, 'fs38', 80)" onmouseover="showTip(event, 'fs38', 80)" class="i">layers</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 81)" onmouseover="showTip(event, 'fs40', 81)" class="i">Length</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs41', 82)" onmouseover="showTip(event, 'fs41', 82)" class="i">i</span> <span class="k">-&gt;</span> 
+        {<span onmouseout="hideTip(event, 'fs13', 83)" onmouseover="showTip(event, 'fs13', 83)" class="i">n</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 84)" onmouseover="showTip(event, 'fs24', 84)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 85)" onmouseover="showTip(event, 'fs39', 85)" class="i">init</span> <span onmouseout="hideTip(event, 'fs38', 86)" onmouseover="showTip(event, 'fs38', 86)" class="i">layers</span><span class="o">.</span>[<span onmouseout="hideTip(event, 'fs41', 87)" onmouseover="showTip(event, 'fs41', 87)" class="i">i</span>] (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs42', 88)" onmouseover="showTip(event, 'fs42', 88)" class="i">j</span> <span class="k">-&gt;</span> 
+            {<span onmouseout="hideTip(event, 'fs8', 89)" onmouseover="showTip(event, 'fs8', 89)" class="i">w</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 90)" onmouseover="showTip(event, 'fs9', 90)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 91)" onmouseover="showTip(event, 'fs43', 91)" class="i">init</span>
+                     (<span class="k">if</span> <span onmouseout="hideTip(event, 'fs41', 92)" onmouseover="showTip(event, 'fs41', 92)" class="i">i</span> <span class="o">=</span> <span class="n">0</span> <span class="k">then</span> <span onmouseout="hideTip(event, 'fs36', 93)" onmouseover="showTip(event, 'fs36', 93)" class="i">inputs</span> <span class="k">else</span> <span onmouseout="hideTip(event, 'fs38', 94)" onmouseover="showTip(event, 'fs38', 94)" class="i">layers</span><span class="o">.</span>[<span onmouseout="hideTip(event, 'fs41', 95)" onmouseover="showTip(event, 'fs41', 95)" class="i">i</span> <span class="o">-</span> <span class="n">1</span>])
+                     (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs44', 96)" onmouseover="showTip(event, 'fs44', 96)" class="i">k</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs45', 97)" onmouseover="showTip(event, 'fs45', 97)" class="i">adj</span> (<span class="o">-</span><span class="n">0.5</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs32', 98)" onmouseover="showTip(event, 'fs32', 98)" class="i">rnd</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs46', 99)" onmouseover="showTip(event, 'fs46', 99)" class="i">NextDouble</span>()))
+             <span onmouseout="hideTip(event, 'fs11', 100)" onmouseover="showTip(event, 'fs11', 100)" class="i">b</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs45', 101)" onmouseover="showTip(event, 'fs45', 101)" class="i">adj</span> (<span class="o">-</span><span class="n">0.5</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs32', 102)" onmouseover="showTip(event, 'fs32', 102)" class="i">rnd</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs46', 103)" onmouseover="showTip(event, 'fs46', 103)" class="i">NextDouble</span>())})})}</pre>
+</td>
+</tr>
+</table>
+
+<p>This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers we want. The network is fully connected, meaning that each neuron in a layer receives as input all the outputs of the previous layer.</p>
+
+<p>For example, using the code</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs47', 104)" onmouseover="showTip(event, 'fs47', 104)" class="i">net1</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 105)" onmouseover="showTip(event, 'fs35', 105)" class="i">createNetwork</span> <span class="n">3</span> [|<span class="n">4</span>; <span class="n">2</span>|]</pre>
+</td>
+</tr>
+</table>
+
+<p>would give us the following network with 3 inputs, a hidden layer with 4 neurons, and an output layer with 2 neurons:</p>
+
+<div class="row">
+    <div class="span6 offset2">
+        <img src="img/examples-neuralnetworks-network.png" alt="Chart" style="width:400px;"/>
+    </div>
+</div>
+
+<p>We can also have more than one hidden layer.</p>
+
+<p>For training networks, we will make use of reverse automatic differentiation (the <strong>DiffSharp.AD.Reverse</strong> module) for propagating the error at the output backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight <span class="math">\(w_i\)</span> and bias <span class="math">\(b_i\)</span> in the network, which we will use in an update rule</p>
+
+<p><span class="math">\[ \begin{eqnarray*}
+ \Delta w_i &amp;=&amp; -\eta \frac{\partial E}{\partial w_i} \; ,\\
+ \Delta b_i &amp;=&amp; -\eta \frac{\partial E}{\partial b_i} \; ,\\
+ \end{eqnarray*}\]</span></p>
+
+<p>where <span class="math">\(E\)</span> is the error at the output and <span class="math">\(\eta\)</span> is the learning rate.</p>
+
+<p>It is important to note that the backpropagation algorithm is just a special case of reverse AD, with which it shares a common history. Please see the <a href="gettingstarted-reversead.html">Reverse AD</a> page for an explanation of the usage of adjoints and their backwards propagation.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// The backpropagation algorithm</span>
+<span class="c">// t is the training set consisting of input and output vectors</span>
+<span class="c">// eta is the learning rate</span>
+<span class="c">// timeout is the maximum number of iterations</span>
+<span class="c">// n is the network to be trained</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs48', 106)" onmouseover="showTip(event, 'fs48', 106)" class="i">backprop</span> (<span onmouseout="hideTip(event, 'fs49', 107)" onmouseover="showTip(event, 'fs49', 107)" class="i">t</span><span class="o">:</span>(<span onmouseout="hideTip(event, 'fs9', 108)" onmouseover="showTip(event, 'fs9', 108)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs50', 109)" onmouseover="showTip(event, 'fs50', 109)" class="i">float</span><span class="o">&gt;</span><span class="o">*</span><span onmouseout="hideTip(event, 'fs9', 110)" onmouseover="showTip(event, 'fs9', 110)" class="i">Vector</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs50', 111)" onmouseover="showTip(event, 'fs50', 111)" class="i">float</span><span class="o">&gt;</span>)[]) (<span onmouseout="hideTip(event, 'fs51', 112)" onmouseover="showTip(event, 'fs51', 112)" class="i">eta</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs50', 113)" onmouseover="showTip(event, 'fs50', 113)" class="i">float</span>) (<span onmouseout="hideTip(event, 'fs52', 114)" onmouseover="showTip(event, 'fs52', 114)" class="i">timeout</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs37', 115)" onmouseover="showTip(event, 'fs37', 115)" class="i">int</span>) (<span onmouseout="hideTip(event, 'fs28', 116)" onmouseover="showTip(event, 'fs28', 116)" class="i">n</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs14', 117)" onmouseover="showTip(event, 'fs14', 117)" class="i">Network</span>) <span class="o">=</span>
+    <span class="k">let</span> <span onmouseout="hideTip(event, 'fs53', 118)" onmouseover="showTip(event, 'fs53', 118)" class="i">ta</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 119)" onmouseover="showTip(event, 'fs24', 119)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 120)" onmouseover="showTip(event, 'fs25', 120)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs54', 121)" onmouseover="showTip(event, 'fs54', 121)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs9', 122)" onmouseover="showTip(event, 'fs9', 122)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs55', 123)" onmouseover="showTip(event, 'fs55', 123)" class="i">map</span> <span onmouseout="hideTip(event, 'fs45', 124)" onmouseover="showTip(event, 'fs45', 124)" class="i">adj</span> (<span onmouseout="hideTip(event, 'fs56', 125)" onmouseover="showTip(event, 'fs56', 125)" class="i">fst</span> <span onmouseout="hideTip(event, 'fs54', 126)" onmouseover="showTip(event, 'fs54', 126)" class="i">x</span>), <span onmouseout="hideTip(event, 'fs9', 127)" onmouseover="showTip(event, 'fs9', 127)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs55', 128)" onmouseover="showTip(event, 'fs55', 128)" class="i">map</span> <span onmouseout="hideTip(event, 'fs45', 129)" onmouseover="showTip(event, 'fs45', 129)" class="i">adj</span> (<span onmouseout="hideTip(event, 'fs57', 130)" onmouseover="showTip(event, 'fs57', 130)" class="i">snd</span> <span onmouseout="hideTip(event, 'fs54', 131)" onmouseover="showTip(event, 'fs54', 131)" class="i">x</span>)) <span onmouseout="hideTip(event, 'fs49', 132)" onmouseover="showTip(event, 'fs49', 132)" class="i">t</span>
+    <span onmouseout="hideTip(event, 'fs58', 133)" onmouseover="showTip(event, 'fs58', 133)" class="i">seq</span> {<span class="k">for</span> <span onmouseout="hideTip(event, 'fs41', 134)" onmouseover="showTip(event, 'fs41', 134)" class="i">i</span> <span class="k">in</span> <span class="n">0</span> <span class="o">..</span> <span onmouseout="hideTip(event, 'fs52', 135)" onmouseover="showTip(event, 'fs52', 135)" class="i">timeout</span> <span class="k">do</span> <span class="c">// A timeout value</span>
+            <span onmouseout="hideTip(event, 'fs59', 136)" onmouseover="showTip(event, 'fs59', 136)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs60', 137)" onmouseover="showTip(event, 'fs60', 137)" class="i">Clear</span>()
+            <span class="k">let</span> <span onmouseout="hideTip(event, 'fs61', 138)" onmouseover="showTip(event, 'fs61', 138)" class="i">error</span> <span class="o">=</span> 
+                (<span class="n">1.</span> <span class="o">/</span> <span onmouseout="hideTip(event, 'fs50', 139)" onmouseover="showTip(event, 'fs50', 139)" class="i">float</span> <span onmouseout="hideTip(event, 'fs49', 140)" onmouseover="showTip(event, 'fs49', 140)" class="i">t</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 141)" onmouseover="showTip(event, 'fs40', 141)" class="i">Length</span>) <span class="o">*</span> <span onmouseout="hideTip(event, 'fs24', 142)" onmouseover="showTip(event, 'fs24', 142)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs62', 143)" onmouseover="showTip(event, 'fs62', 143)" class="i">sumBy</span> 
+                    (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs63', 144)" onmouseover="showTip(event, 'fs63', 144)" class="i">t</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs9', 145)" onmouseover="showTip(event, 'fs9', 145)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs64', 146)" onmouseover="showTip(event, 'fs64', 146)" class="i">norm</span> ((<span onmouseout="hideTip(event, 'fs57', 147)" onmouseover="showTip(event, 'fs57', 147)" class="i">snd</span> <span onmouseout="hideTip(event, 'fs63', 148)" onmouseover="showTip(event, 'fs63', 148)" class="i">t</span>) <span class="o">-</span> <span onmouseout="hideTip(event, 'fs27', 149)" onmouseover="showTip(event, 'fs27', 149)" class="i">runNetwork</span> (<span onmouseout="hideTip(event, 'fs56', 150)" onmouseover="showTip(event, 'fs56', 150)" class="i">fst</span> <span onmouseout="hideTip(event, 'fs63', 151)" onmouseover="showTip(event, 'fs63', 151)" class="i">t</span>) <span onmouseout="hideTip(event, 'fs28', 152)" onmouseover="showTip(event, 'fs28', 152)" class="i">n</span>)) <span onmouseout="hideTip(event, 'fs53', 153)" onmouseover="showTip(event, 'fs53', 153)" class="i">ta</span>
+            <span onmouseout="hideTip(event, 'fs61', 154)" onmouseover="showTip(event, 'fs61', 154)" class="i">error</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs65', 155)" onmouseover="showTip(event, 'fs65', 155)" class="i">A</span> <span class="o">&lt;-</span> <span class="n">1.</span>
+            <span onmouseout="hideTip(event, 'fs59', 156)" onmouseover="showTip(event, 'fs59', 156)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs66', 157)" onmouseover="showTip(event, 'fs66', 157)" class="i">ReverseSweep</span>()
+            <span class="k">for</span> <span onmouseout="hideTip(event, 'fs23', 158)" onmouseover="showTip(event, 'fs23', 158)" class="i">l</span> <span class="k">in</span> <span onmouseout="hideTip(event, 'fs28', 159)" onmouseover="showTip(event, 'fs28', 159)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 160)" onmouseover="showTip(event, 'fs15', 160)" class="i">l</span> <span class="k">do</span>
+                <span class="k">for</span> <span onmouseout="hideTip(event, 'fs21', 161)" onmouseover="showTip(event, 'fs21', 161)" class="i">n</span> <span class="k">in</span> <span onmouseout="hideTip(event, 'fs23', 162)" onmouseover="showTip(event, 'fs23', 162)" class="i">l</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 163)" onmouseover="showTip(event, 'fs13', 163)" class="i">n</span> <span class="k">do</span>
+                    <span onmouseout="hideTip(event, 'fs21', 164)" onmouseover="showTip(event, 'fs21', 164)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 165)" onmouseover="showTip(event, 'fs11', 165)" class="i">b</span> <span class="o">&lt;-</span> <span onmouseout="hideTip(event, 'fs21', 166)" onmouseover="showTip(event, 'fs21', 166)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 167)" onmouseover="showTip(event, 'fs11', 167)" class="i">b</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs51', 168)" onmouseover="showTip(event, 'fs51', 168)" class="i">eta</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs21', 169)" onmouseover="showTip(event, 'fs21', 169)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 170)" onmouseover="showTip(event, 'fs11', 170)" class="i">b</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs65', 171)" onmouseover="showTip(event, 'fs65', 171)" class="i">A</span> <span class="c">// Update neuron bias</span>
+                    <span onmouseout="hideTip(event, 'fs21', 172)" onmouseover="showTip(event, 'fs21', 172)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 173)" onmouseover="showTip(event, 'fs8', 173)" class="i">w</span> <span class="o">&lt;-</span> <span onmouseout="hideTip(event, 'fs9', 174)" onmouseover="showTip(event, 'fs9', 174)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs55', 175)" onmouseover="showTip(event, 'fs55', 175)" class="i">map</span> (<span class="k">fun</span> (<span onmouseout="hideTip(event, 'fs67', 176)" onmouseover="showTip(event, 'fs67', 176)" class="i">w</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs10', 177)" onmouseover="showTip(event, 'fs10', 177)" class="i">Adj</span>) <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs67', 178)" onmouseover="showTip(event, 'fs67', 178)" class="i">w</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs51', 179)" onmouseover="showTip(event, 'fs51', 179)" class="i">eta</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs67', 180)" onmouseover="showTip(event, 'fs67', 180)" class="i">w</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs65', 181)" onmouseover="showTip(event, 'fs65', 181)" class="i">A</span>) <span onmouseout="hideTip(event, 'fs21', 182)" onmouseover="showTip(event, 'fs21', 182)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 183)" onmouseover="showTip(event, 'fs8', 183)" class="i">w</span> <span class="c">// Update neuron weights</span>
+            <span class="k">if</span> <span onmouseout="hideTip(event, 'fs41', 184)" onmouseover="showTip(event, 'fs41', 184)" class="i">i</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs52', 185)" onmouseover="showTip(event, 'fs52', 185)" class="i">timeout</span> <span class="k">then</span> <span onmouseout="hideTip(event, 'fs68', 186)" onmouseover="showTip(event, 'fs68', 186)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Failed</span><span class="s"> </span><span class="s">to</span><span class="s"> </span><span class="s">converge</span><span class="s"> </span><span class="s">within</span><span class="s"> </span><span class="s">%</span><span class="s">i</span><span class="s"> </span><span class="s">steps</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs52', 187)" onmouseover="showTip(event, 'fs52', 187)" class="i">timeout</span>
+            <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs69', 188)" onmouseover="showTip(event, 'fs69', 188)" class="i">primal</span> <span onmouseout="hideTip(event, 'fs61', 189)" onmouseover="showTip(event, 'fs61', 189)" class="i">error</span>}
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs29', 190)" onmouseover="showTip(event, 'fs29', 190)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs70', 191)" onmouseover="showTip(event, 'fs70', 191)" class="i">takeWhile</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs71', 192)" onmouseover="showTip(event, 'fs71', 192)" class="i">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs71', 193)" onmouseover="showTip(event, 'fs71', 193)" class="i">x</span> <span class="o">&gt;</span> <span class="n">0.005</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>Using reverse AD here has two big advantages: it makes the backpropagation code succint and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.</p>
+
+<p>We can now test the algorithm by training some networks.</p>
+
+<p>It is known that <a href="http://en.wikipedia.org/wiki/Linear_separability">linearly separable</a> rules such as <a href="http://en.wikipedia.org/wiki/Logical_disjunction">logical disjunction</a> can be learned by a single neuron.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs72', 194)" onmouseover="showTip(event, 'fs72', 194)" class="i">FSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs73', 195)" onmouseover="showTip(event, 'fs73', 195)" class="i">Charting</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs74', 196)" onmouseover="showTip(event, 'fs74', 196)" class="i">trainOR</span> <span class="o">=</span> [|<span onmouseout="hideTip(event, 'fs26', 197)" onmouseover="showTip(event, 'fs26', 197)" class="i">vector</span> [<span class="n">0.</span>; <span class="n">0.</span>], <span onmouseout="hideTip(event, 'fs26', 198)" onmouseover="showTip(event, 'fs26', 198)" class="i">vector</span> [<span class="n">0.</span>]
+                <span onmouseout="hideTip(event, 'fs26', 199)" onmouseover="showTip(event, 'fs26', 199)" class="i">vector</span> [<span class="n">0.</span>; <span class="n">1.</span>], <span onmouseout="hideTip(event, 'fs26', 200)" onmouseover="showTip(event, 'fs26', 200)" class="i">vector</span> [<span class="n">1.</span>]
+                <span onmouseout="hideTip(event, 'fs26', 201)" onmouseover="showTip(event, 'fs26', 201)" class="i">vector</span> [<span class="n">1.</span>; <span class="n">0.</span>], <span onmouseout="hideTip(event, 'fs26', 202)" onmouseover="showTip(event, 'fs26', 202)" class="i">vector</span> [<span class="n">1.</span>]
+                <span onmouseout="hideTip(event, 'fs26', 203)" onmouseover="showTip(event, 'fs26', 203)" class="i">vector</span> [<span class="n">1.</span>; <span class="n">1.</span>], <span onmouseout="hideTip(event, 'fs26', 204)" onmouseover="showTip(event, 'fs26', 204)" class="i">vector</span> [<span class="n">1.</span>]|]
+
+<span class="c">// 2 inputs, one layer with one neuron</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs75', 205)" onmouseover="showTip(event, 'fs75', 205)" class="i">net2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 206)" onmouseover="showTip(event, 'fs35', 206)" class="i">createNetwork</span> <span class="n">2</span> [|<span class="n">1</span>|]
+
+<span class="c">// Train</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs76', 207)" onmouseover="showTip(event, 'fs76', 207)" class="i">train2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs48', 208)" onmouseover="showTip(event, 'fs48', 208)" class="i">backprop</span> <span onmouseout="hideTip(event, 'fs74', 209)" onmouseover="showTip(event, 'fs74', 209)" class="i">trainOR</span> <span class="n">0.9</span> <span class="n">10000</span> <span onmouseout="hideTip(event, 'fs75', 210)" onmouseover="showTip(event, 'fs75', 210)" class="i">net2</span>
+
+<span class="c">// Plot the error during training</span>
+<span onmouseout="hideTip(event, 'fs77', 211)" onmouseover="showTip(event, 'fs77', 211)" class="i">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs78', 212)" onmouseover="showTip(event, 'fs78', 212)" class="i">Line</span> <span onmouseout="hideTip(event, 'fs76', 213)" onmouseover="showTip(event, 'fs76', 213)" class="i">train2</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val net2 : Network =
+  {l =
+    [|{n =
+        [|{w =
+            Vector
+              [|Adj(0.3039949223, -0.120172164);
+                Adj(-0.1498002706, -0.1234536468)|];
+           b = Adj(0.1627550189, -0.120581615);}|];}|];}
+val train2 : seq&lt;float&gt;
+</code></pre></td></tr></table>
+
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-neuralnetworks-chart1.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
+
+<p>Linearly inseparable problems such as <a href="http://en.wikipedia.org/wiki/Exclusive_or">exclusive or</a> require one or more hidden layers to learn.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs80', 215)" onmouseover="showTip(event, 'fs80', 215)" class="i">trainXOR</span> <span class="o">=</span> [|<span onmouseout="hideTip(event, 'fs26', 216)" onmouseover="showTip(event, 'fs26', 216)" class="i">vector</span> [<span class="n">0.</span>; <span class="n">0.</span>], <span onmouseout="hideTip(event, 'fs26', 217)" onmouseover="showTip(event, 'fs26', 217)" class="i">vector</span> [<span class="n">0.</span>]
+                 <span onmouseout="hideTip(event, 'fs26', 218)" onmouseover="showTip(event, 'fs26', 218)" class="i">vector</span> [<span class="n">0.</span>; <span class="n">1.</span>], <span onmouseout="hideTip(event, 'fs26', 219)" onmouseover="showTip(event, 'fs26', 219)" class="i">vector</span> [<span class="n">1.</span>]
+                 <span onmouseout="hideTip(event, 'fs26', 220)" onmouseover="showTip(event, 'fs26', 220)" class="i">vector</span> [<span class="n">1.</span>; <span class="n">0.</span>], <span onmouseout="hideTip(event, 'fs26', 221)" onmouseover="showTip(event, 'fs26', 221)" class="i">vector</span> [<span class="n">1.</span>]
+                 <span onmouseout="hideTip(event, 'fs26', 222)" onmouseover="showTip(event, 'fs26', 222)" class="i">vector</span> [<span class="n">1.</span>; <span class="n">1.</span>], <span onmouseout="hideTip(event, 'fs26', 223)" onmouseover="showTip(event, 'fs26', 223)" class="i">vector</span> [<span class="n">0.</span>]|]
+
+<span class="c">// 2 inputs, 3 neurons in a hidden layer, 1 neuron in the output layer</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs81', 224)" onmouseover="showTip(event, 'fs81', 224)" class="i">net3</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 225)" onmouseover="showTip(event, 'fs35', 225)" class="i">createNetwork</span> <span class="n">2</span> [|<span class="n">3</span>; <span class="n">1</span>|]
+
+<span class="c">// Train</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs82', 226)" onmouseover="showTip(event, 'fs82', 226)" class="i">train3</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs48', 227)" onmouseover="showTip(event, 'fs48', 227)" class="i">backprop</span> <span onmouseout="hideTip(event, 'fs80', 228)" onmouseover="showTip(event, 'fs80', 228)" class="i">trainXOR</span> <span class="n">0.9</span> <span class="n">10000</span> <span onmouseout="hideTip(event, 'fs81', 229)" onmouseover="showTip(event, 'fs81', 229)" class="i">net3</span>
+
+<span class="c">// Plot the error during training</span>
+<span onmouseout="hideTip(event, 'fs77', 230)" onmouseover="showTip(event, 'fs77', 230)" class="i">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs78', 231)" onmouseover="showTip(event, 'fs78', 231)" class="i">Line</span> <span onmouseout="hideTip(event, 'fs82', 232)" onmouseover="showTip(event, 'fs82', 232)" class="i">train3</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val net3 : Network =
+  {l =
+    [|{n =
+        [|{w =
+            Vector
+              [|Adj(-0.3990952149, 7.481450298e-05);
+                Adj(0.2626295973, -0.0005625556545)|];
+           b = Adj(0.4077099938, -0.0002455469757);};
+          {w =
+            Vector
+              [|Adj(0.3472105762, -0.0003902540939);
+                Adj(0.2698220153, -0.0004052317731)|];
+           b = Adj(0.03246956809, -0.000286118247);};
+          {w =
+            Vector
+              [|Adj(0.1914881005, -0.0001046784245);
+                Adj(-0.1030110692, -7.688368233e-05)|];
+           b = Adj(0.05589360816, -5.863152837e-05);}|];};
+      {n =
+        [|{w =
+            Vector
+              [|Adj(-0.3930620788, 0.0002184686632);
+                Adj(0.4657231793, -0.0001747499928);
+                Adj(-0.4974639057, -3.725300124e-05)|];
+           b = Adj(-0.4166501578, -8.108279605e-05);}|];}|];}
+val train3 : seq&lt;float&gt;
+</code></pre></td></tr></table>
+
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-neuralnetworks-chart2.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
+
+          <div class="tip" id="fs1">namespace DiffSharp</div>
+<div class="tip" id="fs2">namespace DiffSharp.AD</div>
+<div class="tip" id="fs3">module Reverse<br /><br />from DiffSharp.AD</div>
+<div class="tip" id="fs4">module Vector<br /><br />from DiffSharp.AD.Reverse</div>
+<div class="tip" id="fs5">namespace DiffSharp.Util</div>
+<div class="tip" id="fs6">module LinearAlgebra<br /><br />from DiffSharp.Util</div>
+<div class="tip" id="fs7">type Neuron =<br />&#160;&#160;{mutable w: Vector&lt;Adj&gt;;<br />&#160;&#160;&#160;mutable b: Adj;}<br /><br />Full name: Examples-neuralnetworks.Neuron</div>
+<div class="tip" id="fs8">Neuron.w: Vector&lt;Adj&gt;</div>
+<div class="tip" id="fs9">Multiple items<br />union case Vector.Vector: &#39;T [] -&gt; Vector&lt;&#39;T&gt;<br /><br />--------------------<br />module Vector<br /><br />from DiffSharp.Util.LinearAlgebra<br /><br />--------------------<br />module Vector<br /><br />from DiffSharp.AD.Reverse<br /><br />--------------------<br />type Vector&lt;&#39;T (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)&gt; =<br />&#160;&#160;| ZeroVector of &#39;T<br />&#160;&#160;| Vector of &#39;T []<br />&#160;&#160;member Convert : f:(&#39;T -&gt; &#39;a) -&gt; Vector&lt;&#39;a&gt; (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)<br />&#160;&#160;member Copy : unit -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;member GetNorm : unit -&gt; &#39;T<br />&#160;&#160;member GetUnitVector : unit -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;member ToArray : unit -&gt; &#39;T []<br />&#160;&#160;member ToMathematicaString : unit -&gt; string<br />&#160;&#160;member ToMatlabString : unit -&gt; string<br />&#160;&#160;member FirstItem : &#39;T<br />&#160;&#160;member Item : i:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;static member Create : v:&#39;T [] -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member Create : n:int * v:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member Create : n:int * f:(int -&gt; &#39;T) -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member Create : n:int * i:int * v:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member Zero : Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( + ) : a:&#39;T * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( + ) : a:Vector&lt;&#39;T&gt; * b:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( + ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( / ) : a:&#39;T * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( / ) : a:Vector&lt;&#39;T&gt; * b:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( ./ ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( .* ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member op_Explicit : v:Vector&lt;&#39;T&gt; -&gt; float []<br />&#160;&#160;static member ( * ) : a:&#39;T * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( * ) : a:Vector&lt;&#39;T&gt; * b:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( * ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; &#39;T<br />&#160;&#160;static member ( %* ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( - ) : a:&#39;T * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( - ) : a:Vector&lt;&#39;T&gt; * b:&#39;T -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( - ) : a:Vector&lt;&#39;T&gt; * b:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br />&#160;&#160;static member ( ~- ) : a:Vector&lt;&#39;T&gt; -&gt; Vector&lt;&#39;T&gt;<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector&lt;_&gt;</div>
+<div class="tip" id="fs10">Multiple items<br />type Adj =<br />&#160;&#160;interface IComparable<br />&#160;&#160;new : p:float -&gt; Adj<br />&#160;&#160;new : p:float * a:float -&gt; Adj<br />&#160;&#160;val P: float<br />&#160;&#160;val mutable A: float<br />&#160;&#160;member AddAdj : a:float -&gt; unit<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Abs : x:Adj -&gt; Adj<br />&#160;&#160;...<br /><br />Full name: DiffSharp.AD.Reverse.Adj<br /><br />--------------------<br />new : p:float -&gt; Adj<br />new : p:float * a:float -&gt; Adj</div>
+<div class="tip" id="fs11">Neuron.b: Adj</div>
+<div class="tip" id="fs12">type Layer =<br />&#160;&#160;{n: Neuron [];}<br /><br />Full name: Examples-neuralnetworks.Layer</div>
+<div class="tip" id="fs13">Layer.n: Neuron []</div>
+<div class="tip" id="fs14">type Network =<br />&#160;&#160;{l: Layer [];}<br /><br />Full name: Examples-neuralnetworks.Network</div>
+<div class="tip" id="fs15">Network.l: Layer []</div>
+<div class="tip" id="fs16">val sigmoid : x:Adj -&gt; Adj<br /><br />Full name: Examples-neuralnetworks.sigmoid</div>
+<div class="tip" id="fs17">val x : Adj</div>
+<div class="tip" id="fs18">val exp : value:&#39;T -&gt; &#39;T (requires member Exp)<br /><br />Full name: Microsoft.FSharp.Core.Operators.exp</div>
+<div class="tip" id="fs19">val runNeuron : x:Vector&lt;Adj&gt; -&gt; n:Neuron -&gt; Adj<br /><br />Full name: Examples-neuralnetworks.runNeuron</div>
+<div class="tip" id="fs20">val x : Vector&lt;Adj&gt;</div>
+<div class="tip" id="fs21">val n : Neuron</div>
+<div class="tip" id="fs22">val runLayer : x:Vector&lt;Adj&gt; -&gt; l:Layer -&gt; Vector&lt;Adj&gt;<br /><br />Full name: Examples-neuralnetworks.runLayer</div>
+<div class="tip" id="fs23">val l : Layer</div>
+<div class="tip" id="fs24">module Array<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs25">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; array:&#39;T [] -&gt; &#39;U []<br /><br />Full name: Microsoft.FSharp.Collections.Array.map</div>
+<div class="tip" id="fs26">val vector : v:seq&lt;&#39;a&gt; -&gt; Vector&lt;&#39;a&gt; (requires member op_Explicit and member Abs and member Sqrt and member ( ~- ) and member ( / ) and member ( * ) and member ( - ) and member ( + ) and member get_Zero and comparison)<br /><br />Full name: DiffSharp.Util.LinearAlgebra.LinearAlgebraOps.vector</div>
+<div class="tip" id="fs27">val runNetwork : x:Vector&lt;Adj&gt; -&gt; n:Network -&gt; Vector&lt;Adj&gt;<br /><br />Full name: Examples-neuralnetworks.runNetwork</div>
+<div class="tip" id="fs28">val n : Network</div>
+<div class="tip" id="fs29">module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs30">val fold : folder:(&#39;State -&gt; &#39;T -&gt; &#39;State) -&gt; state:&#39;State -&gt; source:seq&lt;&#39;T&gt; -&gt; &#39;State<br /><br />Full name: Microsoft.FSharp.Collections.Seq.fold</div>
+<div class="tip" id="fs31">val o : Vector&lt;Adj&gt;</div>
+<div class="tip" id="fs32">val rnd : System.Random<br /><br />Full name: Examples-neuralnetworks.rnd</div>
+<div class="tip" id="fs33">namespace System</div>
+<div class="tip" id="fs34">Multiple items<br />type Random =<br />&#160;&#160;new : unit -&gt; Random + 1 overload<br />&#160;&#160;member Next : unit -&gt; int + 2 overloads<br />&#160;&#160;member NextBytes : buffer:byte[] -&gt; unit<br />&#160;&#160;member NextDouble : unit -&gt; float<br /><br />Full name: System.Random<br /><br />--------------------<br />System.Random() : unit<br />System.Random(Seed: int) : unit</div>
+<div class="tip" id="fs35">val createNetwork : inputs:int -&gt; layers:int [] -&gt; Network<br /><br />Full name: Examples-neuralnetworks.createNetwork</div>
+<div class="tip" id="fs36">val inputs : int</div>
+<div class="tip" id="fs37">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.int<br /><br />--------------------<br />type int = int32<br /><br />Full name: Microsoft.FSharp.Core.int<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; = int<br /><br />Full name: Microsoft.FSharp.Core.int&lt;_&gt;</div>
+<div class="tip" id="fs38">val layers : int []</div>
+<div class="tip" id="fs39">val init : count:int -&gt; initializer:(int -&gt; &#39;T) -&gt; &#39;T []<br /><br />Full name: Microsoft.FSharp.Collections.Array.init</div>
+<div class="tip" id="fs40">property System.Array.Length: int</div>
+<div class="tip" id="fs41">val i : int</div>
+<div class="tip" id="fs42">val j : int</div>
+<div class="tip" id="fs43">val init : n:int -&gt; f:(int -&gt; &#39;T) -&gt; Vector&lt;&#39;T&gt; (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector.init</div>
+<div class="tip" id="fs44">val k : int</div>
+<div class="tip" id="fs45">val adj : p:&#39;a -&gt; Adj (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Reverse.AdjOps.adj</div>
+<div class="tip" id="fs46">System.Random.NextDouble() : float</div>
+<div class="tip" id="fs47">val net1 : Network<br /><br />Full name: Examples-neuralnetworks.net1</div>
+<div class="tip" id="fs48">val backprop : t:(Vector&lt;float&gt; * Vector&lt;float&gt;) [] -&gt; eta:float -&gt; timeout:int -&gt; n:Network -&gt; seq&lt;float&gt;<br /><br />Full name: Examples-neuralnetworks.backprop</div>
+<div class="tip" id="fs49">val t : (Vector&lt;float&gt; * Vector&lt;float&gt;) []</div>
+<div class="tip" id="fs50">Multiple items<br />val float : value:&#39;T -&gt; float (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.float<br /><br />--------------------<br />type float = System.Double<br /><br />Full name: Microsoft.FSharp.Core.float<br /><br />--------------------<br />type float&lt;&#39;Measure&gt; = float<br /><br />Full name: Microsoft.FSharp.Core.float&lt;_&gt;</div>
+<div class="tip" id="fs51">val eta : float</div>
+<div class="tip" id="fs52">val timeout : int</div>
+<div class="tip" id="fs53">val ta : (Vector&lt;Adj&gt; * Vector&lt;Adj&gt;) []</div>
+<div class="tip" id="fs54">val x : Vector&lt;float&gt; * Vector&lt;float&gt;</div>
+<div class="tip" id="fs55">val map : f:(&#39;a -&gt; &#39;b) -&gt; v:Vector&lt;&#39;a&gt; -&gt; Vector&lt;&#39;b&gt; (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison and member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector.map</div>
+<div class="tip" id="fs56">val fst : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T1<br /><br />Full name: Microsoft.FSharp.Core.Operators.fst</div>
+<div class="tip" id="fs57">val snd : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T2<br /><br />Full name: Microsoft.FSharp.Core.Operators.snd</div>
+<div class="tip" id="fs58">Multiple items<br />val seq : sequence:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Core.Operators.seq<br /><br />--------------------<br />type seq&lt;&#39;T&gt; = System.Collections.Generic.IEnumerable&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.seq&lt;_&gt;</div>
+<div class="tip" id="fs59">Multiple items<br />type Trace =<br />&#160;&#160;new : unit -&gt; Trace<br />&#160;&#160;static member CleanCopy : t:seq&lt;Op&gt; -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member Copy : unit -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member ReverseSweep : unit -&gt; unit<br />&#160;&#160;static member Set : t:Stack&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member SetClean : t:seq&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member Clear : (unit -&gt; unit)<br />&#160;&#160;static member Push : (Op -&gt; unit)<br />&#160;&#160;static member Stack : Stack&lt;Op&gt;<br />&#160;&#160;static member Stack : Stack&lt;Op&gt; with set<br /><br />Full name: DiffSharp.AD.Reverse.Trace<br /><br />--------------------<br />new : unit -&gt; Trace</div>
+<div class="tip" id="fs60">property Trace.Clear: unit -&gt; unit</div>
+<div class="tip" id="fs61">val error : Adj</div>
+<div class="tip" id="fs62">val sumBy : projection:(&#39;T -&gt; &#39;U) -&gt; array:&#39;T [] -&gt; &#39;U (requires member ( + ) and member get_Zero)<br /><br />Full name: Microsoft.FSharp.Collections.Array.sumBy</div>
+<div class="tip" id="fs63">val t : Vector&lt;Adj&gt; * Vector&lt;Adj&gt;</div>
+<div class="tip" id="fs64">val norm : v:Vector&lt;&#39;a&gt; -&gt; &#39;a (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)<br /><br />Full name: DiffSharp.Util.LinearAlgebra.Vector.norm</div>
+<div class="tip" id="fs65">Adj.A: float</div>
+<div class="tip" id="fs66">static member Trace.ReverseSweep : unit -&gt; unit</div>
+<div class="tip" id="fs67">val w : Adj</div>
+<div class="tip" id="fs68">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
+<div class="tip" id="fs69">val primal : x:Adj -&gt; float<br /><br />Full name: DiffSharp.AD.Reverse.AdjOps.primal</div>
+<div class="tip" id="fs70">val takeWhile : predicate:(&#39;T -&gt; bool) -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.takeWhile</div>
+<div class="tip" id="fs71">val x : float</div>
+<div class="tip" id="fs72">namespace FSharp</div>
+<div class="tip" id="fs73">namespace FSharp.Charting</div>
+<div class="tip" id="fs74">val trainOR : (Vector&lt;float&gt; * Vector&lt;float&gt;) []<br /><br />Full name: Examples-neuralnetworks.trainOR</div>
+<div class="tip" id="fs75">val net2 : Network<br /><br />Full name: Examples-neuralnetworks.net2</div>
+<div class="tip" id="fs76">val train2 : seq&lt;float&gt;<br /><br />Full name: Examples-neuralnetworks.train2</div>
+<div class="tip" id="fs77">type Chart =<br />&#160;&#160;static member Area : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Area : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Bar : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Bar : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member BoxPlotFromData : data:seq&lt;#key * #seq&lt;&#39;a2&gt;&gt; * ?Name:string * ?Title:string * ?Color:Color * ?XTitle:string * ?YTitle:string * ?Percentile:int * ?ShowAverage:bool * ?ShowMedian:bool * ?ShowUnusualValues:bool * ?WhiskerPercentile:int -&gt; GenericChart (requires &#39;a2 :&gt; value)<br />&#160;&#160;static member BoxPlotFromStatistics : data:seq&lt;#key * #value * #value * #value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?Percentile:int * ?ShowAverage:bool * ?ShowMedian:bool * ?ShowUnusualValues:bool * ?WhiskerPercentile:int -&gt; GenericChart<br />&#160;&#160;static member Bubble : data:seq&lt;#value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?BubbleMaxSize:int * ?BubbleMinSize:int * ?BubbleScaleMax:float * ?BubbleScaleMin:float * ?UseSizeForLabel:bool -&gt; GenericChart<br />&#160;&#160;static member Bubble : data:seq&lt;#key * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?BubbleMaxSize:int * ?BubbleMinSize:int * ?BubbleScaleMax:float * ?BubbleScaleMin:float * ?UseSizeForLabel:bool -&gt; GenericChart<br />&#160;&#160;static member Candlestick : data:seq&lt;#value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; CandlestickChart<br />&#160;&#160;static member Candlestick : data:seq&lt;#key * #value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; CandlestickChart<br />&#160;&#160;...<br /><br />Full name: FSharp.Charting.Chart</div>
+<div class="tip" id="fs78">static member Chart.Line : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart<br />static member Chart.Line : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart</div>
+<div class="tip" id="fs79">val printf : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printf</div>
+<div class="tip" id="fs80">val trainXOR : (Vector&lt;float&gt; * Vector&lt;float&gt;) []<br /><br />Full name: Examples-neuralnetworks.trainXOR</div>
+<div class="tip" id="fs81">val net3 : Network<br /><br />Full name: Examples-neuralnetworks.net3</div>
+<div class="tip" id="fs82">val train3 : seq&lt;float&gt;<br /><br />Full name: Examples-neuralnetworks.train3</div>
+          
+        </div>
+        <div class="span3">
+          <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
+            <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+            
+            <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
+            <li><a href="benchmarks.html">Benchmarks</a></li>
+            
+            <li class="nav-header">Reference</li>
+            <li class="divider"></li>
+            <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+  </html>

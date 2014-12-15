@@ -12,6 +12,9 @@
 </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
@@ -53,9 +56,9 @@
 
 <h2>DiffSharp.AD.Reverse</h2>
 
-<p>This is a reverse AD module that works by recording a trace of operations in forward evaluation and using this in the reverse sweep for backpropagating adjoints. The technique is essentially equivalent to the <a href="http://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> method for training artificial neural networks in machine learning, which is just a special case of reverse AD.</p>
+<p>This is a reverse AD module that works by recording a trace of operations in forward evaluation and using this in the reverse sweep for backpropagating adjoints.</p>
 
-<p>Reverse AD provides a performance advantage when computing gradients of vector-to-scalar functions.</p>
+<p>Reverse AD provides a performance advantage when computing gradients of vector-to-scalar functions, because it can calculate all partial derivatives in just one reverse sweep.</p>
 
 <p>This module is used with the <strong>Adj</strong> numeric type.</p>
 
@@ -95,16 +98,193 @@
 </tr>
 </table>
 
+<h1>Using the Reverse AD Trace</h1>
+
+<p>In addition to using the differentiation API provided by the reverse AD module (such as <strong>diff</strong>, <strong>grad</strong>, <strong>jacobian</strong> ), you can make use of the exposed <a href="http://en.wikipedia.org/wiki/Tracing_%28software%29">trace</a> functionality. For code using the <strong>Adj</strong> numeric type, <strong>DiffSharp.AD.Reverse.Trace</strong> builds a trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating adjoint values in reverse.</p>
+
+<p>The technique is equivalent to the <a href="http://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse AD. You can see an implementation of the backpropagation algorithm, making use of the reverse AD trace, in the <a href="examples-neuralnetworks.html">neural networks</a> example.</p>
+
+<p>For example, consider the computation</p>
+
+<p><span class="math">\[  e = (\sin a) (a + b) \; ,\]</span></p>
+
+<p>using the values <span class="math">\(a = 0.5\)</span> and <span class="math">\(b = 1.2\)</span>.</p>
+
+<p>During the execution of a program, this computation is carried out by the sequence of operations</p>
+
+<p><span class="math">\[ \begin{eqnarray*}
+ a &amp;=&amp; 0.5 \; ,\\
+ b &amp;=&amp; 1.2 \; , \\
+ c &amp;=&amp; \sin a \; , \\
+ d &amp;=&amp; a + b \; , \\
+ e &amp;=&amp; c \times d \; ,
+ \end{eqnarray*}\]</span></p>
+
+<p>the dependencies between which can be represented by the graph below.</p>
+
+<div class="row">
+    <div class="span6 offset2">
+        <img src="img/gettingstarted-reversead-graph.png" alt="Chart" style="width:350px;"/>
+    </div>
+</div>
+
+<p>Reverse AD works by propagating adjoint values from the output (e.g. <span class="math">\(\bar{e} = \frac{\partial e}{\partial e}\)</span>) towards the inputs (e.g. <span class="math">\(\bar{a} = \frac{\partial e}{\partial a}\)</span> and <span class="math">\(\bar{b} = \frac{\partial e}{\partial b}\)</span>), using adjoint propagation rules dictated by the dependencies in the computational graph:</p>
+
+<p><span class="math">\[ \begin{eqnarray*}
+ \bar{d} &amp;=&amp; \frac{\partial e}{\partial d} &amp;=&amp; \frac{\partial e}{\partial e} \frac{\partial e}{\partial d} &amp;=&amp; \bar{e} c\; , \\
+ \bar{c} &amp;=&amp; \frac{\partial e}{\partial c} &amp;=&amp; \frac{\partial e}{\partial e} \frac{\partial e}{\partial c} &amp;=&amp; \bar{e} d\; , \\
+ \bar{b} &amp;=&amp; \frac{\partial e}{\partial b} &amp;=&amp; \frac{\partial e}{\partial d} \frac{\partial d}{\partial b} &amp;=&amp; \bar{d} \; , \\
+ \bar{a} &amp;=&amp; \frac{\partial e}{\partial a} &amp;=&amp; \frac{\partial e}{\partial c} \frac{\partial c}{\partial a} + \frac{\partial e}{\partial d} \frac{\partial d}{\partial a} &amp;=&amp; \bar{c} (\cos a) + \bar{d} \; .\\
+ \end{eqnarray*}\]</span></p>
+
+<p>Using the DiffSharp library, we get access to these values as follows.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">// Reset the trace</span>
+<span onmouseout="hideTip(event, 'fs11', 21)" onmouseover="showTip(event, 'fs11', 21)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 22)" onmouseover="showTip(event, 'fs12', 22)" class="i">Clear</span>()
+
+<span class="c">// Perform a series of operations involving Adj type</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs13', 23)" onmouseover="showTip(event, 'fs13', 23)" class="i">a</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 24)" onmouseover="showTip(event, 'fs14', 24)" class="i">adj</span> <span class="n">0.5</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs15', 25)" onmouseover="showTip(event, 'fs15', 25)" class="i">b</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 26)" onmouseover="showTip(event, 'fs14', 26)" class="i">adj</span> <span class="n">1.2</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 27)" onmouseover="showTip(event, 'fs16', 27)" class="i">e</span> <span class="o">=</span> (<span onmouseout="hideTip(event, 'fs7', 28)" onmouseover="showTip(event, 'fs7', 28)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs13', 29)" onmouseover="showTip(event, 'fs13', 29)" class="i">a</span>) <span class="o">*</span> (<span onmouseout="hideTip(event, 'fs13', 30)" onmouseover="showTip(event, 'fs13', 30)" class="i">a</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs15', 31)" onmouseover="showTip(event, 'fs15', 31)" class="i">b</span>)
+
+<span class="c">// Set the adjoint value of z to 1 (dz/dz = 1)</span>
+<span class="c">// i.e. calculate partial derivatives of z with respect to other variables</span>
+<span onmouseout="hideTip(event, 'fs16', 32)" onmouseover="showTip(event, 'fs16', 32)" class="i">e</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 33)" onmouseover="showTip(event, 'fs17', 33)" class="i">A</span> <span class="o">&lt;-</span> <span class="n">1.</span>
+
+<span class="c">// Propagate the adjoint values in reverse</span>
+<span onmouseout="hideTip(event, 'fs11', 34)" onmouseover="showTip(event, 'fs11', 34)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 35)" onmouseover="showTip(event, 'fs18', 35)" class="i">ReverseSweep</span>()
+
+<span class="c">// Read the adjoint values of the inputs</span>
+<span class="c">// You can calculate all partial derivatives in just one reverse sweep!</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs19', 36)" onmouseover="showTip(event, 'fs19', 36)" class="i">deda</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 37)" onmouseover="showTip(event, 'fs13', 37)" class="i">a</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 38)" onmouseover="showTip(event, 'fs17', 38)" class="i">A</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs20', 39)" onmouseover="showTip(event, 'fs20', 39)" class="i">dedb</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 40)" onmouseover="showTip(event, 'fs15', 40)" class="i">b</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 41)" onmouseover="showTip(event, 'fs17', 41)" class="i">A</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val a : Adj = Adj(0.5, 1.971315894)
+val b : Adj = Adj(1.2, 0.4794255386)
+val e : Adj = Adj(0.8150234156, 1.0)
+val deda : float = 1.971315894
+val dedb : float = 0.4794255386
+</code></pre></td></tr></table>
+
+<p>In addition to the partial derivatives of <span class="math">\(e\)</span> with respect to the independent variables <span class="math">\(a\)</span> and <span class="math">\(b\)</span>, you can also extract the partial derivatives of <span class="math">\(e\)</span> with respect to any intermediate variable involved in this computation.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="c">//Reset the trace</span>
+<span onmouseout="hideTip(event, 'fs11', 43)" onmouseover="showTip(event, 'fs11', 43)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 44)" onmouseover="showTip(event, 'fs12', 44)" class="i">Clear</span>()
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 45)" onmouseover="showTip(event, 'fs22', 45)" class="i">a&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 46)" onmouseover="showTip(event, 'fs14', 46)" class="i">adj</span> <span class="n">0.5</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 47)" onmouseover="showTip(event, 'fs23', 47)" class="i">b&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 48)" onmouseover="showTip(event, 'fs14', 48)" class="i">adj</span> <span class="n">1.2</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 49)" onmouseover="showTip(event, 'fs24', 49)" class="i">c&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 50)" onmouseover="showTip(event, 'fs7', 50)" class="i">sin</span> <span onmouseout="hideTip(event, 'fs22', 51)" onmouseover="showTip(event, 'fs22', 51)" class="i">a&#39;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs25', 52)" onmouseover="showTip(event, 'fs25', 52)" class="i">d&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 53)" onmouseover="showTip(event, 'fs22', 53)" class="i">a&#39;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs23', 54)" onmouseover="showTip(event, 'fs23', 54)" class="i">b&#39;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 55)" onmouseover="showTip(event, 'fs26', 55)" class="i">e&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 56)" onmouseover="showTip(event, 'fs24', 56)" class="i">c&#39;</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs25', 57)" onmouseover="showTip(event, 'fs25', 57)" class="i">d&#39;</span> <span class="c">// e&#39; = (sin a&#39;) * (a&#39; + b&#39;)</span>
+
+<span class="c">// Set the adjoint of e&#39;</span>
+<span onmouseout="hideTip(event, 'fs26', 58)" onmouseover="showTip(event, 'fs26', 58)" class="i">e&#39;</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 59)" onmouseover="showTip(event, 'fs17', 59)" class="i">A</span> <span class="o">&lt;-</span> <span class="n">1.</span>
+
+<span class="c">// Propagate the adjoint values in reverse</span>
+<span onmouseout="hideTip(event, 'fs11', 60)" onmouseover="showTip(event, 'fs11', 60)" class="i">Trace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 61)" onmouseover="showTip(event, 'fs18', 61)" class="i">ReverseSweep</span>()
+
+<span class="c">// Read the adjoint values</span>
+<span class="c">// You can calculate all partial derivatives in just one reverse sweep!</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs27', 62)" onmouseover="showTip(event, 'fs27', 62)" class="i">de&#39;da&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 63)" onmouseover="showTip(event, 'fs22', 63)" class="i">a&#39;</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 64)" onmouseover="showTip(event, 'fs17', 64)" class="i">A</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs28', 65)" onmouseover="showTip(event, 'fs28', 65)" class="i">de&#39;db&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 66)" onmouseover="showTip(event, 'fs23', 66)" class="i">b&#39;</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 67)" onmouseover="showTip(event, 'fs17', 67)" class="i">A</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs29', 68)" onmouseover="showTip(event, 'fs29', 68)" class="i">de&#39;dc&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 69)" onmouseover="showTip(event, 'fs24', 69)" class="i">c&#39;</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 70)" onmouseover="showTip(event, 'fs17', 70)" class="i">A</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs30', 71)" onmouseover="showTip(event, 'fs30', 71)" class="i">de&#39;dd&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 72)" onmouseover="showTip(event, 'fs25', 72)" class="i">d&#39;</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 73)" onmouseover="showTip(event, 'fs17', 73)" class="i">A</span></pre>
+</td>
+</tr>
+</table>
+
+<table class="pre"><tr><td><pre><code>val a' : Adj = Adj(0.5, 1.971315894)
+val b' : Adj = Adj(1.2, 0.4794255386)
+val c' : Adj = Adj(0.4794255386, 1.7)
+val d' : Adj = Adj(1.7, 0.4794255386)
+val e' : Adj = Adj(0.8150234156, 1.0)
+val de'da' : float = 1.971315894
+val de'db' : float = 0.4794255386
+val de'dc' : float = 1.7
+val de'dd' : float = 0.4794255386
+</code></pre></td></tr></table>
+
           <div class="tip" id="fs1">namespace DiffSharp</div>
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
 <div class="tip" id="fs3">module Reverse<br /><br />from DiffSharp.AD</div>
 <div class="tip" id="fs4">val g : x:Adj [] -&gt; Adj<br /><br />Full name: Gettingstarted-reversead.g</div>
 <div class="tip" id="fs5">val x : Adj []</div>
-<div class="tip" id="fs6">Multiple items<br />type Adj =<br />&#160;&#160;new : p:float -&gt; Adj<br />&#160;&#160;new : p:float * a:float -&gt; Adj<br />&#160;&#160;val P: float<br />&#160;&#160;val mutable A: float<br />&#160;&#160;member AddAdj : a:float -&gt; unit<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Acos : x:Adj -&gt; Adj<br />&#160;&#160;static member Asin : x:Adj -&gt; Adj<br />&#160;&#160;static member Atan : x:Adj -&gt; Adj<br />&#160;&#160;static member Cos : x:Adj -&gt; Adj<br />&#160;&#160;...<br /><br />Full name: DiffSharp.AD.Reverse.Adj<br /><br />--------------------<br />new : p:float -&gt; Adj<br />new : p:float * a:float -&gt; Adj</div>
+<div class="tip" id="fs6">Multiple items<br />type Adj =<br />&#160;&#160;interface IComparable<br />&#160;&#160;new : p:float -&gt; Adj<br />&#160;&#160;new : p:float * a:float -&gt; Adj<br />&#160;&#160;val P: float<br />&#160;&#160;val mutable A: float<br />&#160;&#160;member AddAdj : a:float -&gt; unit<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Abs : x:Adj -&gt; Adj<br />&#160;&#160;...<br /><br />Full name: DiffSharp.AD.Reverse.Adj<br /><br />--------------------<br />new : p:float -&gt; Adj<br />new : p:float * a:float -&gt; Adj</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
-<div class="tip" id="fs8">val ga : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.ga</div>
-<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; x:float [] -&gt; float []<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
-<div class="tip" id="fs10">val gb : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.gb</div>
+<div class="tip" id="fs8">val ga : (int [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.ga</div>
+<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; x:&#39;a [] -&gt; float [] (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
+<div class="tip" id="fs10">val gb : (int [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.gb</div>
+<div class="tip" id="fs11">Multiple items<br />type Trace =<br />&#160;&#160;new : unit -&gt; Trace<br />&#160;&#160;static member CleanCopy : t:seq&lt;Op&gt; -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member Copy : unit -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member ReverseSweep : unit -&gt; unit<br />&#160;&#160;static member Set : t:Stack&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member SetClean : t:seq&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member Clear : (unit -&gt; unit)<br />&#160;&#160;static member Push : (Op -&gt; unit)<br />&#160;&#160;static member Stack : Stack&lt;Op&gt;<br />&#160;&#160;static member Stack : Stack&lt;Op&gt; with set<br /><br />Full name: DiffSharp.AD.Reverse.Trace<br /><br />--------------------<br />new : unit -&gt; Trace</div>
+<div class="tip" id="fs12">property Trace.Clear: unit -&gt; unit</div>
+<div class="tip" id="fs13">val a : Adj<br /><br />Full name: Gettingstarted-reversead.a</div>
+<div class="tip" id="fs14">val adj : p:&#39;a -&gt; Adj (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Reverse.AdjOps.adj</div>
+<div class="tip" id="fs15">val b : Adj<br /><br />Full name: Gettingstarted-reversead.b</div>
+<div class="tip" id="fs16">val e : Adj<br /><br />Full name: Gettingstarted-reversead.e</div>
+<div class="tip" id="fs17">Adj.A: float</div>
+<div class="tip" id="fs18">static member Trace.ReverseSweep : unit -&gt; unit</div>
+<div class="tip" id="fs19">val deda : float<br /><br />Full name: Gettingstarted-reversead.deda</div>
+<div class="tip" id="fs20">val dedb : float<br /><br />Full name: Gettingstarted-reversead.dedb</div>
+<div class="tip" id="fs21">val printf : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printf</div>
+<div class="tip" id="fs22">val a&#39; : Adj<br /><br />Full name: Gettingstarted-reversead.a&#39;</div>
+<div class="tip" id="fs23">val b&#39; : Adj<br /><br />Full name: Gettingstarted-reversead.b&#39;</div>
+<div class="tip" id="fs24">val c&#39; : Adj<br /><br />Full name: Gettingstarted-reversead.c&#39;</div>
+<div class="tip" id="fs25">val d&#39; : Adj<br /><br />Full name: Gettingstarted-reversead.d&#39;</div>
+<div class="tip" id="fs26">val e&#39; : Adj<br /><br />Full name: Gettingstarted-reversead.e&#39;</div>
+<div class="tip" id="fs27">val de&#39;da&#39; : float<br /><br />Full name: Gettingstarted-reversead.de&#39;da&#39;</div>
+<div class="tip" id="fs28">val de&#39;db&#39; : float<br /><br />Full name: Gettingstarted-reversead.de&#39;db&#39;</div>
+<div class="tip" id="fs29">val de&#39;dc&#39; : float<br /><br />Full name: Gettingstarted-reversead.de&#39;dc&#39;</div>
+<div class="tip" id="fs30">val de&#39;dd&#39; : float<br /><br />Full name: Gettingstarted-reversead.de&#39;dd&#39;</div>
           
         </div>
         <div class="span3">
@@ -112,29 +292,57 @@
 
           <ul class="nav nav-list" id="menu">
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
             
             <li class="nav-header">Reference</li>
-            <li><a href="api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>

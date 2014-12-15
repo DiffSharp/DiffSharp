@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>Vector - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
@@ -58,11 +61,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1492', 1492)" onmouseover="showTip(event, '1492', 1492)">
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
             diff f x
           </code>
-          <div class="tip" id="1492">
-            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float -&gt; float<br />
+          <div class="tip" id="22">
+            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float&lt;MeasureOne&gt; -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -73,10 +76,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1493', 1493)" onmouseover="showTip(event, '1493', 1493)">
+          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
             diff&#39; f x
           </code>
-          <div class="tip" id="1493">
+          <div class="tip" id="23">
             <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float -&gt; float * float<br />
                       </div>
         </td>
@@ -88,11 +91,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1494', 1494)" onmouseover="showTip(event, '1494', 1494)">
+          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
             diff2 f x
           </code>
-          <div class="tip" id="1494">
-            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float -&gt; float&lt;MeasureOne&gt;<br />
+          <div class="tip" id="24">
+            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float&lt;MeasureOne&gt; -&gt; float&lt;MeasureOne&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -103,11 +106,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1495', 1495)" onmouseover="showTip(event, '1495', 1495)">
+          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
             diff2&#39; f x
           </code>
-          <div class="tip" id="1495">
-            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float -&gt; float&lt;MeasureOne&gt; * float&lt;MeasureOne&gt;<br />
+          <div class="tip" id="25">
+            <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float&lt;MeasureOne&gt; -&gt; float&lt;MeasureOne&gt; * float&lt;MeasureOne&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -118,10 +121,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1496', 1496)" onmouseover="showTip(event, '1496', 1496)">
+          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
             diff2&#39;&#39; f x
           </code>
-          <div class="tip" id="1496">
+          <div class="tip" id="26">
             <strong>Signature:</strong> f:(float -&gt; float) -&gt; x:float -&gt; float * float * float&lt;MeasureOne&gt;<br />
                       </div>
         </td>
@@ -133,10 +136,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1497', 1497)" onmouseover="showTip(event, '1497', 1497)">
+          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
             grad f x
           </code>
-          <div class="tip" id="1497">
+          <div class="tip" id="27">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
                       </div>
         </td>
@@ -148,10 +151,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1498', 1498)" onmouseover="showTip(event, '1498', 1498)">
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
             grad&#39; f x
           </code>
-          <div class="tip" id="1498">
+          <div class="tip" id="28">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; float * Vector&lt;float&gt;<br />
                       </div>
         </td>
@@ -163,10 +166,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1499', 1499)" onmouseover="showTip(event, '1499', 1499)">
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
             gradhessian f x
           </code>
-          <div class="tip" id="1499">
+          <div class="tip" id="29">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -178,10 +181,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1500', 1500)" onmouseover="showTip(event, '1500', 1500)">
+          <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
             gradhessian&#39; f x
           </code>
-          <div class="tip" id="1500">
+          <div class="tip" id="30">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; float * Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -193,11 +196,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1501', 1501)" onmouseover="showTip(event, '1501', 1501)">
+          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
             gradv f x v
           </code>
-          <div class="tip" id="1501">
-            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; float<br />
+          <div class="tip" id="31">
+            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; v:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -208,11 +211,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1502', 1502)" onmouseover="showTip(event, '1502', 1502)">
+          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
             gradv&#39; f x v
           </code>
-          <div class="tip" id="1502">
-            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; float * float<br />
+          <div class="tip" id="32">
+            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; float * float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -223,10 +226,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1503', 1503)" onmouseover="showTip(event, '1503', 1503)">
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
             hessian f x
           </code>
-          <div class="tip" id="1503">
+          <div class="tip" id="33">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -238,10 +241,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1504', 1504)" onmouseover="showTip(event, '1504', 1504)">
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
             hessian&#39; f x
           </code>
-          <div class="tip" id="1504">
+          <div class="tip" id="34">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; float * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -253,10 +256,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1505', 1505)" onmouseover="showTip(event, '1505', 1505)">
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
             jacobian f x
           </code>
-          <div class="tip" id="1505">
+          <div class="tip" id="35">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -268,10 +271,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1506', 1506)" onmouseover="showTip(event, '1506', 1506)">
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
             jacobian&#39; f x
           </code>
-          <div class="tip" id="1506">
+          <div class="tip" id="36">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -283,10 +286,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1507', 1507)" onmouseover="showTip(event, '1507', 1507)">
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
             jacobianT f x
           </code>
-          <div class="tip" id="1507">
+          <div class="tip" id="37">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -298,10 +301,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1508', 1508)" onmouseover="showTip(event, '1508', 1508)">
+          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
             jacobianT&#39; f x
           </code>
-          <div class="tip" id="1508">
+          <div class="tip" id="38">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -313,11 +316,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1509', 1509)" onmouseover="showTip(event, '1509', 1509)">
+          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
             jacobianv f x v
           </code>
-          <div class="tip" id="1509">
-            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
+          <div class="tip" id="39">
+            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; v:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -328,11 +331,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1510', 1510)" onmouseover="showTip(event, '1510', 1510)">
+          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
             jacobianv&#39; f x v
           </code>
-          <div class="tip" id="1510">
-            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Vector&lt;float&gt;<br />
+          <div class="tip" id="40">
+            <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; Vector&lt;float&gt;) -&gt; x:Vector&lt;float&gt; -&gt; v:Vector&lt;float&lt;MeasureOne&gt;&gt; -&gt; Vector&lt;float&gt; * Vector&lt;float&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -343,10 +346,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1511', 1511)" onmouseover="showTip(event, '1511', 1511)">
+          <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
             laplacian f x
           </code>
-          <div class="tip" id="1511">
+          <div class="tip" id="41">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; float<br />
                       </div>
         </td>
@@ -358,10 +361,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1512', 1512)" onmouseover="showTip(event, '1512', 1512)">
+          <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
             laplacian&#39; f x
           </code>
-          <div class="tip" id="1512">
+          <div class="tip" id="42">
             <strong>Signature:</strong> f:(Vector&lt;float&gt; -&gt; float) -&gt; x:Vector&lt;float&gt; -&gt; float * float<br />
                       </div>
         </td>
@@ -380,29 +383,57 @@
           <ul class="nav nav-list" id="menu">
 
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
             <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="../benchmarks.html">Benchmarks</a></li>
 
             <li class="nav-header">Reference</li>
-            <li><a href="../api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>

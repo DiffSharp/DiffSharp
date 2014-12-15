@@ -12,6 +12,9 @@
 </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
@@ -305,7 +308,7 @@
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
 <div class="tip" id="fs3">module Forward<br /><br />from DiffSharp.AD</div>
 <div class="tip" id="fs4">val a : (float -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.a</div>
-<div class="tip" id="fs5">val diff : f:(Dual -&gt; Dual) -&gt; x:float -&gt; float<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
+<div class="tip" id="fs5">val diff : f:(Dual -&gt; Dual) -&gt; x:&#39;a -&gt; float (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Forward.ForwardOps.diff</div>
 <div class="tip" id="fs6">val x : Dual</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs8">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
@@ -313,12 +316,12 @@
 <div class="tip" id="fs10">val b : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.b</div>
 <div class="tip" id="fs11">val x : float</div>
 <div class="tip" id="fs12">val c : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.c</div>
-<div class="tip" id="fs13">val dc : (float -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.dc</div>
+<div class="tip" id="fs13">val dc : (int -&gt; float)<br /><br />Full name: Gettingstarted-typeinference.dc</div>
 <div class="tip" id="fs14">val d : x:float -&gt; float<br /><br />Full name: Gettingstarted-typeinference.d</div>
 <div class="tip" id="fs15">val e : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.e</div>
-<div class="tip" id="fs16">Multiple items<br />union case Dual.Dual: float * float -&gt; Dual<br /><br />--------------------<br />type Dual =<br />&#160;&#160;| Dual of float * float<br />&#160;&#160;interface IComparable<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Acos : Dual -&gt; Dual<br />&#160;&#160;static member Asin : Dual -&gt; Dual<br />&#160;&#160;static member Atan : Dual -&gt; Dual<br />&#160;&#160;static member Cos : Dual -&gt; Dual<br />&#160;&#160;static member Cosh : Dual -&gt; Dual<br />&#160;&#160;static member DivideByInt : Dual * i:int -&gt; Dual<br />&#160;&#160;static member Exp : Dual -&gt; Dual<br />&#160;&#160;static member Log : Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member Pow : a:float * Dual -&gt; Dual<br />&#160;&#160;static member Pow : Dual * b:float -&gt; Dual<br />&#160;&#160;static member Pow : Dual * Dual -&gt; Dual<br />&#160;&#160;static member Sin : Dual -&gt; Dual<br />&#160;&#160;static member Sinh : Dual -&gt; Dual<br />&#160;&#160;static member Sqrt : Dual -&gt; Dual<br />&#160;&#160;static member Tan : Dual -&gt; Dual<br />&#160;&#160;static member Tanh : Dual -&gt; Dual<br />&#160;&#160;static member One : Dual<br />&#160;&#160;static member Zero : Dual<br />&#160;&#160;static member ( + ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( + ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( / ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member op_Explicit : Dual -&gt; float<br />&#160;&#160;static member op_Explicit : p:float -&gt; Dual<br />&#160;&#160;static member ( * ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( * ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( - ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( ~- ) : Dual -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.Dual</div>
+<div class="tip" id="fs16">Multiple items<br />union case Dual.Dual: float * float -&gt; Dual<br /><br />--------------------<br />type Dual =<br />&#160;&#160;| Dual of float * float<br />&#160;&#160;interface IComparable<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Abs : Dual -&gt; Dual<br />&#160;&#160;static member Acos : Dual -&gt; Dual<br />&#160;&#160;static member Asin : Dual -&gt; Dual<br />&#160;&#160;static member Atan : Dual -&gt; Dual<br />&#160;&#160;static member Atan2 : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member Atan2 : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member Atan2 : a:float * Dual -&gt; Dual<br />&#160;&#160;static member Atan2 : Dual * b:float -&gt; Dual<br />&#160;&#160;static member Atan2 : Dual * Dual -&gt; Dual<br />&#160;&#160;static member Ceiling : Dual -&gt; Dual<br />&#160;&#160;static member Cos : Dual -&gt; Dual<br />&#160;&#160;static member Cosh : Dual -&gt; Dual<br />&#160;&#160;static member DivideByInt : Dual * i:int -&gt; Dual<br />&#160;&#160;static member Exp : Dual -&gt; Dual<br />&#160;&#160;static member Floor : Dual -&gt; Dual<br />&#160;&#160;static member Log : Dual -&gt; Dual<br />&#160;&#160;static member Log10 : Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member Pow : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member Pow : a:float * Dual -&gt; Dual<br />&#160;&#160;static member Pow : Dual * b:float -&gt; Dual<br />&#160;&#160;static member Pow : Dual * Dual -&gt; Dual<br />&#160;&#160;static member Round : Dual -&gt; Dual<br />&#160;&#160;static member Sin : Dual -&gt; Dual<br />&#160;&#160;static member Sinh : Dual -&gt; Dual<br />&#160;&#160;static member Sqrt : Dual -&gt; Dual<br />&#160;&#160;static member Tan : Dual -&gt; Dual<br />&#160;&#160;static member Tanh : Dual -&gt; Dual<br />&#160;&#160;static member One : Dual<br />&#160;&#160;static member Zero : Dual<br />&#160;&#160;static member ( + ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( + ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( + ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( / ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( / ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member op_Explicit : Dual -&gt; float<br />&#160;&#160;static member op_Explicit : p:float -&gt; Dual<br />&#160;&#160;static member ( * ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( * ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( * ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:int * b:Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : a:Dual * b:int -&gt; Dual<br />&#160;&#160;static member ( - ) : a:float * Dual -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * b:float -&gt; Dual<br />&#160;&#160;static member ( - ) : Dual * Dual -&gt; Dual<br />&#160;&#160;static member ( ~- ) : Dual -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.Dual</div>
 <div class="tip" id="fs17">val f : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.f</div>
-<div class="tip" id="fs18">val dual : p:float -&gt; Dual<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
+<div class="tip" id="fs18">val dual : p:&#39;a -&gt; Dual (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
 <div class="tip" id="fs19">val g : x:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.g</div>
 <div class="tip" id="fs20">val h : x:Dual -&gt; y:Dual -&gt; Dual<br /><br />Full name: Gettingstarted-typeinference.h</div>
 <div class="tip" id="fs21">val y : Dual</div>
@@ -352,29 +355,57 @@
 
           <ul class="nav nav-list" id="menu">
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
             
             <li class="nav-header">Reference</li>
-            <li><a href="api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>

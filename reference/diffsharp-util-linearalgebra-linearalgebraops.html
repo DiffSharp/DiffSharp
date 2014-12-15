@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>ForwardG - DiffSharp</title>
+    <title>LinearAlgebraOps - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
@@ -45,59 +45,51 @@
 
 
 
-<h1>ForwardG</h1>
+<h1>LinearAlgebraOps</h1>
 <div class="xmldoc">
-<p>Forward AD module, keeping vectors of gradient components</p>
+<p>Linear algebra operations module (automatically opened)</p>
 </div>
 
 <!-- Render nested types and modules, if there are any -->
-  <h2>Nested types and modules</h2>
-  <div>
-      <table class="table table-bordered type-list">
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Type</td><td>Description</td></tr>
+      <tr><td>Function or value</td><td>Description</td></tr>
     </thead>
     <tbody>
-        <tr>
-          <td class="type-name">
-            <a href="diffsharp-ad-forwardg-dualg.html">DualG</a>
-          </td>
-          <td class="xmldoc"><p>DualG numeric type, keeping a doublet of primal value and a vector of gradient components</p>
-</td>
-        </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '368', 368)" onmouseover="showTip(event, '368', 368)">
+            matrix m
+          </code>
+          <div class="tip" id="368">
+            <strong>Signature:</strong> m:seq&lt;seq&lt;^?444224&gt;&gt; -&gt; Matrix&lt;^?444224&gt;<br />
+                          <strong>Type parameters:</strong> ^?444224          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts 2d array <code>m</code> into a Matrix</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '369', 369)" onmouseover="showTip(event, '369', 369)">
+            vector v
+          </code>
+          <div class="tip" id="369">
+            <strong>Signature:</strong> v:seq&lt;^?444222&gt; -&gt; Vector&lt;^?444222&gt;<br />
+                          <strong>Type parameters:</strong> ^?444222          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts array, list, or sequence <code>v</code> into a Vector</p>
+
+        </td>
+      </tr>
     </tbody>
   </table>
-  <table class="table table-bordered module-list">
-    <thead>
-      <tr><td>Module</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td class="module-name">
-            <a href="diffsharp-ad-forwardg-dualgops.html">DualGOps</a>
-          </td>
-          <td class="xmldoc"><p>DualG operations module (automatically opened)</p>
-</td>
-        </tr>
-        <tr>
-          <td class="module-name">
-            <a href="diffsharp-ad-forwardg-forwardgops.html">ForwardGOps</a>
-          </td>
-          <td class="xmldoc"><p>ForwardG differentiation operations module (automatically opened)</p>
-</td>
-        </tr>
-        <tr>
-          <td class="module-name">
-            <a href="diffsharp-ad-forwardg-vector.html">Vector</a>
-          </td>
-          <td class="xmldoc"><p>Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]</p>
-</td>
-        </tr>
-    </tbody>
-  </table>
-
-  </div>
-
 
         </div>
         <div class="span3">

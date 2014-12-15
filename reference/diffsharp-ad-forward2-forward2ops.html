@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>Forward2Ops - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
@@ -58,12 +61,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1624', 1624)" onmouseover="showTip(event, '1624', 1624)">
+          <code onmouseout="hideTip(event, '165', 165)" onmouseover="showTip(event, '165', 165)">
             diff f x
           </code>
-          <div class="tip" id="1624">
-            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:float -&gt; float<br />
-                      </div>
+          <div class="tip" id="165">
+            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:^?445022 -&gt; float<br />
+                          <strong>Type parameters:</strong> ^?445022          </div>
         </td>
         <td class="xmldoc">
           <p>First derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -73,12 +76,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1625', 1625)" onmouseover="showTip(event, '1625', 1625)">
+          <code onmouseout="hideTip(event, '166', 166)" onmouseover="showTip(event, '166', 166)">
             diff&#39; f x
           </code>
-          <div class="tip" id="1625">
-            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:float -&gt; float * float<br />
-                      </div>
+          <div class="tip" id="166">
+            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:^?445020 -&gt; float * float<br />
+                          <strong>Type parameters:</strong> ^?445020          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and first derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -88,12 +91,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1626', 1626)" onmouseover="showTip(event, '1626', 1626)">
+          <code onmouseout="hideTip(event, '167', 167)" onmouseover="showTip(event, '167', 167)">
             diff2 f x
           </code>
-          <div class="tip" id="1626">
-            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:float -&gt; float<br />
-                      </div>
+          <div class="tip" id="167">
+            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:^?445026 -&gt; float<br />
+                          <strong>Type parameters:</strong> ^?445026          </div>
         </td>
         <td class="xmldoc">
           <p>Second derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -103,12 +106,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1627', 1627)" onmouseover="showTip(event, '1627', 1627)">
+          <code onmouseout="hideTip(event, '168', 168)" onmouseover="showTip(event, '168', 168)">
             diff2&#39; f x
           </code>
-          <div class="tip" id="1627">
-            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:float -&gt; float * float<br />
-                      </div>
+          <div class="tip" id="168">
+            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:^?445024 -&gt; float * float<br />
+                          <strong>Type parameters:</strong> ^?445024          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and second derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -118,12 +121,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1628', 1628)" onmouseover="showTip(event, '1628', 1628)">
+          <code onmouseout="hideTip(event, '169', 169)" onmouseover="showTip(event, '169', 169)">
             diff2&#39;&#39; f x
           </code>
-          <div class="tip" id="1628">
-            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:float -&gt; float * float * float<br />
-                      </div>
+          <div class="tip" id="169">
+            <strong>Signature:</strong> f:(Dual2 -&gt; Dual2) -&gt; x:^?445028 -&gt; float * float * float<br />
+                          <strong>Type parameters:</strong> ^?445028          </div>
         </td>
         <td class="xmldoc">
           <p>Original value, first derivative, and second derivative of a scalar-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -133,12 +136,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1629', 1629)" onmouseover="showTip(event, '1629', 1629)">
+          <code onmouseout="hideTip(event, '170', 170)" onmouseover="showTip(event, '170', 170)">
             grad f x
           </code>
-          <div class="tip" id="1629">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; float []<br />
-                      </div>
+          <div class="tip" id="170">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445038 [] -&gt; float []<br />
+                          <strong>Type parameters:</strong> ^?445038          </div>
         </td>
         <td class="xmldoc">
           <p>Gradient of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -148,12 +151,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1630', 1630)" onmouseover="showTip(event, '1630', 1630)">
+          <code onmouseout="hideTip(event, '171', 171)" onmouseover="showTip(event, '171', 171)">
             grad&#39; f x
           </code>
-          <div class="tip" id="1630">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; float * float []<br />
-                      </div>
+          <div class="tip" id="171">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445036 [] -&gt; float * float []<br />
+                          <strong>Type parameters:</strong> ^?445036          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and gradient of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -163,12 +166,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1631', 1631)" onmouseover="showTip(event, '1631', 1631)">
+          <code onmouseout="hideTip(event, '172', 172)" onmouseover="showTip(event, '172', 172)">
             gradv f x v
           </code>
-          <div class="tip" id="1631">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; v:float [] -&gt; float<br />
-                      </div>
+          <div class="tip" id="172">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445033 [] -&gt; v:^?445034 [] -&gt; float<br />
+                          <strong>Type parameters:</strong> ^?445033, ^?445034          </div>
         </td>
         <td class="xmldoc">
           <p>Gradient-vector product (directional derivative) of a vector-to-scalar function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
@@ -178,12 +181,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1632', 1632)" onmouseover="showTip(event, '1632', 1632)">
+          <code onmouseout="hideTip(event, '173', 173)" onmouseover="showTip(event, '173', 173)">
             gradv&#39; f x v
           </code>
-          <div class="tip" id="1632">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; v:float [] -&gt; float * float<br />
-                      </div>
+          <div class="tip" id="173">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445030 [] -&gt; v:^?445031 [] -&gt; float * float<br />
+                          <strong>Type parameters:</strong> ^?445030, ^?445031          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and gradient-vector product (directional derivative) of a vector-to-scalar function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
@@ -193,12 +196,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1633', 1633)" onmouseover="showTip(event, '1633', 1633)">
+          <code onmouseout="hideTip(event, '174', 174)" onmouseover="showTip(event, '174', 174)">
             jacobian f x
           </code>
-          <div class="tip" id="1633">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; float [,]<br />
-                      </div>
+          <div class="tip" id="174">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445050 [] -&gt; float [,]<br />
+                          <strong>Type parameters:</strong> ^?445050          </div>
         </td>
         <td class="xmldoc">
           <p>Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
@@ -208,12 +211,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1634', 1634)" onmouseover="showTip(event, '1634', 1634)">
+          <code onmouseout="hideTip(event, '175', 175)" onmouseover="showTip(event, '175', 175)">
             jacobian&#39; f x
           </code>
-          <div class="tip" id="1634">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; float [] * float [,]<br />
-                      </div>
+          <div class="tip" id="175">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445048 [] -&gt; float [] * float [,]<br />
+                          <strong>Type parameters:</strong> ^?445048          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
@@ -223,12 +226,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1635', 1635)" onmouseover="showTip(event, '1635', 1635)">
+          <code onmouseout="hideTip(event, '176', 176)" onmouseover="showTip(event, '176', 176)">
             jacobianT f x
           </code>
-          <div class="tip" id="1635">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; float [,]<br />
-                      </div>
+          <div class="tip" id="176">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445046 [] -&gt; float [,]<br />
+                          <strong>Type parameters:</strong> ^?445046          </div>
         </td>
         <td class="xmldoc">
           <p>Transposed Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
@@ -238,12 +241,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1636', 1636)" onmouseover="showTip(event, '1636', 1636)">
+          <code onmouseout="hideTip(event, '177', 177)" onmouseover="showTip(event, '177', 177)">
             jacobianT&#39; f x
           </code>
-          <div class="tip" id="1636">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; float [] * float [,]<br />
-                      </div>
+          <div class="tip" id="177">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445044 [] -&gt; float [] * float [,]<br />
+                          <strong>Type parameters:</strong> ^?445044          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and transposed Jacobian of a vector-to-vector function <code>f</code>, at point <code>x</code></p>
@@ -253,12 +256,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1637', 1637)" onmouseover="showTip(event, '1637', 1637)">
+          <code onmouseout="hideTip(event, '178', 178)" onmouseover="showTip(event, '178', 178)">
             jacobianv f x v
           </code>
-          <div class="tip" id="1637">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; v:float [] -&gt; float []<br />
-                      </div>
+          <div class="tip" id="178">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445055 [] -&gt; v:^?445056 [] -&gt; float []<br />
+                          <strong>Type parameters:</strong> ^?445055, ^?445056          </div>
         </td>
         <td class="xmldoc">
           <p>Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
@@ -268,12 +271,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1638', 1638)" onmouseover="showTip(event, '1638', 1638)">
+          <code onmouseout="hideTip(event, '179', 179)" onmouseover="showTip(event, '179', 179)">
             jacobianv&#39; f x v
           </code>
-          <div class="tip" id="1638">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:float [] -&gt; v:float [] -&gt; float [] * float []<br />
-                      </div>
+          <div class="tip" id="179">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2 []) -&gt; x:^?445052 [] -&gt; v:^?445053 [] -&gt; float [] * float []<br />
+                          <strong>Type parameters:</strong> ^?445052, ^?445053          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and Jacobian-vector product of a vector-to-vector function <code>f</code>, at point <code>x</code>, along vector <code>v</code></p>
@@ -283,12 +286,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1639', 1639)" onmouseover="showTip(event, '1639', 1639)">
+          <code onmouseout="hideTip(event, '180', 180)" onmouseover="showTip(event, '180', 180)">
             laplacian f x
           </code>
-          <div class="tip" id="1639">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; float<br />
-                      </div>
+          <div class="tip" id="180">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445042 [] -&gt; float<br />
+                          <strong>Type parameters:</strong> ^?445042          </div>
         </td>
         <td class="xmldoc">
           <p>Laplacian of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -298,12 +301,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1640', 1640)" onmouseover="showTip(event, '1640', 1640)">
+          <code onmouseout="hideTip(event, '181', 181)" onmouseover="showTip(event, '181', 181)">
             laplacian&#39; f x
           </code>
-          <div class="tip" id="1640">
-            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:float [] -&gt; float * float<br />
-                      </div>
+          <div class="tip" id="181">
+            <strong>Signature:</strong> f:(Dual2 [] -&gt; Dual2) -&gt; x:^?445040 [] -&gt; float * float<br />
+                          <strong>Type parameters:</strong> ^?445040          </div>
         </td>
         <td class="xmldoc">
           <p>Original value and Laplacian of a vector-to-scalar function <code>f</code>, at point <code>x</code></p>
@@ -320,29 +323,57 @@
           <ul class="nav nav-list" id="menu">
 
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
             <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="../benchmarks.html">Benchmarks</a></li>
 
             <li class="nav-header">Reference</li>
-            <li><a href="../api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>

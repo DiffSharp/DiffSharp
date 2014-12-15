@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>DualOps - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
 
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
@@ -58,12 +61,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1575', 1575)" onmouseover="showTip(event, '1575', 1575)">
+          <code onmouseout="hideTip(event, '116', 116)" onmouseover="showTip(event, '116', 116)">
             dual p
           </code>
-          <div class="tip" id="1575">
-            <strong>Signature:</strong> p:float -&gt; Dual<br />
-                      </div>
+          <div class="tip" id="116">
+            <strong>Signature:</strong> p:^?445157 -&gt; Dual<br />
+                          <strong>Type parameters:</strong> ^?445157          </div>
         </td>
         <td class="xmldoc">
           <p>Make Dual, with primal value <code>p</code> and tangent 0</p>
@@ -73,12 +76,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1576', 1576)" onmouseover="showTip(event, '1576', 1576)">
+          <code onmouseout="hideTip(event, '117', 117)" onmouseover="showTip(event, '117', 117)">
             dualAct p
           </code>
-          <div class="tip" id="1576">
-            <strong>Signature:</strong> p:float -&gt; Dual<br />
-                      </div>
+          <div class="tip" id="117">
+            <strong>Signature:</strong> p:^?445162 -&gt; Dual<br />
+                          <strong>Type parameters:</strong> ^?445162          </div>
         </td>
         <td class="xmldoc">
           <p>Make active Dual (i.e. variable of differentiation), with primal value <code>p</code> and tangent 1</p>
@@ -88,12 +91,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1577', 1577)" onmouseover="showTip(event, '1577', 1577)">
+          <code onmouseout="hideTip(event, '118', 118)" onmouseover="showTip(event, '118', 118)">
             dualActArrayArray x
           </code>
-          <div class="tip" id="1577">
-            <strong>Signature:</strong> x:float [] -&gt; Dual [] []<br />
-                      </div>
+          <div class="tip" id="118">
+            <strong>Signature:</strong> x:^?445164 [] -&gt; Dual [] []<br />
+                          <strong>Type parameters:</strong> ^?445164          </div>
         </td>
         <td class="xmldoc">
           <p>Make an array of arrays of Dual, with primal values given in array <code>x</code>. The tangent values along the diagonal are 1 and the rest are 0.</p>
@@ -103,12 +106,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1578', 1578)" onmouseover="showTip(event, '1578', 1578)">
+          <code onmouseout="hideTip(event, '119', 119)" onmouseover="showTip(event, '119', 119)">
             dualSet (p, t)
           </code>
-          <div class="tip" id="1578">
-            <strong>Signature:</strong> (p:float * t:float) -&gt; Dual<br />
-                      </div>
+          <div class="tip" id="119">
+            <strong>Signature:</strong> (p:^?445159 * t:^?445160) -&gt; Dual<br />
+                          <strong>Type parameters:</strong> ^?445159, ^?445160          </div>
         </td>
         <td class="xmldoc">
           <p>Make Dual, with primal value <code>p</code> and tangent value <code>t</code></p>
@@ -118,10 +121,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1579', 1579)" onmouseover="showTip(event, '1579', 1579)">
+          <code onmouseout="hideTip(event, '120', 120)" onmouseover="showTip(event, '120', 120)">
             primal arg1
           </code>
-          <div class="tip" id="1579">
+          <div class="tip" id="120">
             <strong>Signature:</strong> Dual -&gt; float<br />
                       </div>
         </td>
@@ -133,10 +136,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1580', 1580)" onmouseover="showTip(event, '1580', 1580)">
+          <code onmouseout="hideTip(event, '121', 121)" onmouseover="showTip(event, '121', 121)">
             tangent arg1
           </code>
-          <div class="tip" id="1580">
+          <div class="tip" id="121">
             <strong>Signature:</strong> Dual -&gt; float<br />
                       </div>
         </td>
@@ -148,10 +151,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1581', 1581)" onmouseover="showTip(event, '1581', 1581)">
+          <code onmouseout="hideTip(event, '122', 122)" onmouseover="showTip(event, '122', 122)">
             tuple arg1
           </code>
-          <div class="tip" id="1581">
+          <div class="tip" id="122">
             <strong>Signature:</strong> Dual -&gt; float * float<br />
                       </div>
         </td>
@@ -170,29 +173,57 @@
           <ul class="nav nav-list" id="menu">
 
             <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
             <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
             <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
             <li><a href="../gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="../gettingstarted-reversead.html">Reverse AD</a></li>
             <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
 
             <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Restricted Boltzmann Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
             <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
             <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Benchmarks</li>
+            <li class="divider"></li>
             <li><a href="../benchmarks.html">Benchmarks</a></li>
 
             <li class="nav-header">Reference</li>
-            <li><a href="../api-overview.html">API Overview</a></li>
+            <li class="divider"></li>
             <li><a href="index.html">API Reference</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
         </div>
       </div>
