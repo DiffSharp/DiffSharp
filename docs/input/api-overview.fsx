@@ -483,7 +483,7 @@ let g2valb = -g2val
 let g2valc = 0.2 * g2val
 
 // Get the norm of the gradient vector
-let g2vald = norm g2val
+let g2vald = Vector.norm g2val
 
 // Jacobian of a vector-to-vector function
 // j: Vector<float> -> Matrix<float>
@@ -495,4 +495,4 @@ let j = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
 let jval = j (vector[1.; 2.])
 
 // Compute the determinant of the Jacobian matrix
-let jvalb = det jval
+let jvalb = Matrix.det jval
