@@ -850,5 +850,9 @@ module Matrix =
 module LinearAlgebraOps =
     /// Converts array, list, or sequence `v` into a Vector
     let inline vector v = Vector.ofSeq v
+    /// Converts array, list, or sequence `v` into a Vector, first passing the elements through a conversion function `f`
+    let inline vector' f v = Vector.map f (Vector.ofSeq v)
     /// Converts 2d array `m` into a Matrix
     let inline matrix m = Matrix.ofSeq m
+    /// Converts 2d array `m` into a Vector, first passing the elements through a conversion function `f`
+    let inline matrix' f m = Matrix.map f (Matrix.ofSeq m)
