@@ -150,7 +150,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | Vector va, Vector vb -> 
             if va.Length <> vb.Length then invalidArg "b" "Cannot subtract two Vectors with different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] - vb.[i])
-    /// Computes the inner product of Vector `a` and Vector `b` (dot / scalar product)
+    /// Computes the inner product (dot / scalar product) of Vector `a` and Vector `b`
     static member inline (*) (a:Vector<'T>, b:Vector<'T>) =
         match a, b with
         | ZeroVector _, ZeroVector _ -> LanguagePrimitives.GenericZero<'T>
@@ -211,7 +211,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         match a with
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> va.[i] * b)
-    /// Multiples each element of Vector `b` by scalar `a`
+    /// Multiplies each element of Vector `b` by scalar `a`
     static member inline (*) (a:'T, b:Vector<'T>) =
         match b with
         | ZeroVector _ -> Vector.Zero
