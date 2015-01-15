@@ -6,7 +6,7 @@
 Newton's Method
 ===============
 
-In optimization, [Newton's method](http://en.wikipedia.org/wiki/Newton%27s_method_in_optimization) from numerical analysis, is used for finding the roots of the derivative of a function and thereby discovering its local optima.
+In optimization, [Newton's method](http://en.wikipedia.org/wiki/Newton%27s_method_in_optimization) from numerical analysis is used for finding the roots of the derivative of a function and thereby discovering its local optima.
 
 For a function $f(\mathbf{x}): \mathbb{R}^n \to \mathbb{R}$, starting from an initial point $\mathbf{x}_0$, the method works by computing succsessive points in the function domain
 
