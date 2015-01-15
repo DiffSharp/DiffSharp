@@ -65,8 +65,8 @@
             dualGH p m
           </code>
           <div class="tip" id="224">
-            <strong>Signature:</strong> p:^?444758 -&gt; m:int -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?444758          </div>
+            <strong>Signature:</strong> p:^?445436 -&gt; m:int -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?445436          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualGH, with primal value <code>p</code>, gradient dimension <code>m</code>, and all gradient and Hessian components 0</p>
@@ -80,8 +80,8 @@
             dualGHAct p m i
           </code>
           <div class="tip" id="225">
-            <strong>Signature:</strong> p:^?444762 -&gt; m:int -&gt; i:int -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?444762          </div>
+            <strong>Signature:</strong> p:^?445440 -&gt; m:int -&gt; i:int -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?445440          </div>
         </td>
         <td class="xmldoc">
           <p>Make active DualGH (i.e. variable of differentiation), with primal value <code>p</code>, gradient dimension <code>m</code>, the gradient component with index <code>i</code> having value 1, the rest of the gradient components 0, and Hessian components 0</p>
@@ -95,8 +95,8 @@
             dualGHActArray x
           </code>
           <div class="tip" id="226">
-            <strong>Signature:</strong> x:^?444764 [] -&gt; DualGH []<br />
-                          <strong>Type parameters:</strong> ^?444764          </div>
+            <strong>Signature:</strong> x:^?445442 [] -&gt; DualGH []<br />
+                          <strong>Type parameters:</strong> ^?445442          </div>
         </td>
         <td class="xmldoc">
           <p>Make an array of active DualGH, with primal values given in array <code>x</code>. For a DualGH with index <em>i</em>, the gradient is the unit vector with 1 in the <em>i</em>th place, and the Hessian components are 0.</p>
@@ -110,8 +110,8 @@
             dualGHSet (p, g, h)
           </code>
           <div class="tip" id="227">
-            <strong>Signature:</strong> (p:^?444760 * g:float [] * h:float [,]) -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?444760          </div>
+            <strong>Signature:</strong> (p:^?445438 * g:float [] * h:float [,]) -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?445438          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualGH, with primal value <code>p</code>, gradient array <code>g</code>, and Hessian 2d array <code>h</code></p>

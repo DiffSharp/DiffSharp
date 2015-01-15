@@ -65,8 +65,8 @@
             matrix m
           </code>
           <div class="tip" id="368">
-            <strong>Signature:</strong> m:seq&lt;seq&lt;^?444224&gt;&gt; -&gt; Matrix&lt;^?444224&gt;<br />
-                          <strong>Type parameters:</strong> ^?444224          </div>
+            <strong>Signature:</strong> m:seq&lt;seq&lt;^?444899&gt;&gt; -&gt; Matrix&lt;^?444899&gt;<br />
+                          <strong>Type parameters:</strong> ^?444899          </div>
         </td>
         <td class="xmldoc">
           <p>Converts 2d array <code>m</code> into a Matrix</p>
@@ -77,14 +77,44 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '369', 369)" onmouseover="showTip(event, '369', 369)">
-            vector v
+            matrix&#39; f m
           </code>
           <div class="tip" id="369">
-            <strong>Signature:</strong> v:seq&lt;^?444222&gt; -&gt; Vector&lt;^?444222&gt;<br />
-                          <strong>Type parameters:</strong> ^?444222          </div>
+            <strong>Signature:</strong> f:(^?444901 -&gt; ^?444902) -&gt; m:seq&lt;seq&lt;^?444901&gt;&gt; -&gt; Matrix&lt;^?444902&gt;<br />
+                          <strong>Type parameters:</strong> ^?444901, ^?444902          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts 2d array <code>m</code> into a Vector, first passing the elements through a conversion function <code>f</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '370', 370)" onmouseover="showTip(event, '370', 370)">
+            vector v
+          </code>
+          <div class="tip" id="370">
+            <strong>Signature:</strong> v:seq&lt;^?444894&gt; -&gt; Vector&lt;^?444894&gt;<br />
+                          <strong>Type parameters:</strong> ^?444894          </div>
         </td>
         <td class="xmldoc">
           <p>Converts array, list, or sequence <code>v</code> into a Vector</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '371', 371)" onmouseover="showTip(event, '371', 371)">
+            vector&#39; f v
+          </code>
+          <div class="tip" id="371">
+            <strong>Signature:</strong> f:(^?444896 -&gt; ^?444897) -&gt; v:seq&lt;^?444896&gt; -&gt; Vector&lt;^?444897&gt;<br />
+                          <strong>Type parameters:</strong> ^?444896, ^?444897          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts array, list, or sequence <code>v</code> into a Vector, first passing the elements through a conversion function <code>f</code></p>
 
         </td>
       </tr>
