@@ -9,7 +9,7 @@ Inverse Kinematics
 
 [Inverse kinematics](http://en.wikipedia.org/wiki/Inverse_kinematics) is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints, to take the hand to that position?"
 
-For example, take the system drawn below, attached to a stationary structure on the left. This "arm" has two links of length $L_1$ and $L_2$, two joints at points $(0,0)$ and $(x_1,x_2)$, and the end point at $(x_2,y_2)$. 
+For example, take the system drawn below, attached to a stationary structure on the left. This "arm" has two links of length $L_1$ and $L_2$, two joints at points $(0,0)$ and $(x_1,y_1)$, and the end point at $(x_2,y_2)$. 
 
 <div class="row">
     <div class="span6 offset3">
