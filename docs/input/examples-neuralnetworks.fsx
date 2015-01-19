@@ -141,7 +141,7 @@ let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (timeout:int) (n:Ne
 
 (**
 
-Using reverse AD here has two big advantages: it makes the backpropagation code succint and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
+Using reverse AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
 
 We can now test the algorithm by training some networks. 
 
