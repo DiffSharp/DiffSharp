@@ -179,25 +179,29 @@ module SymbolicOps =
     let diff (f:Expr<float->float>) =
         let fe = expand f
         let args = getExprArgs fe
-        let fd = diffExpr args.[0] fe
-        fun x -> evalSS x fd
+        diffExpr args.[0] fe
+        |> QuotationEvaluator.CompileUntyped
+        :?> (float->float)
 
     /// Original value and first derivative of a scalar-to-scalar function `f`
     let diff' f =
+        let fe = (QuotationEvaluator.CompileUntyped f) :?> (float->float)
         let fd = diff f
-        fun x -> (evalSS x f, fd x)
+        fun x -> (fe x, fd x)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`
-    let diffn n (f:Expr<float->float>) x =
+    let diffn n (f:Expr<float->float>) =
         let fe = expand f
         let args = getExprArgs fe
-        let fd = diffExprN args.[0] n fe
-        fun x -> evalSS x fd
+        diffExprN args.[0] n fe
+        |> QuotationEvaluator.CompileUntyped
+        :?> (float->float)
 
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`
     let diffn' n f =
+        let fe = (QuotationEvaluator.CompileUntyped f) :?> (float->float)
         let fd = diffn n f
-        fun x -> (evalSS x f, fd x)
+        fun x -> (fe x, fd x)
     
     /// Second derivative of a scalar-to-scalar function `f`
     let diff2 f =
@@ -205,14 +209,16 @@ module SymbolicOps =
 
     /// Original value and second derivative of a scalar-to-scalar function `f`
     let diff2' f =
+        let fe = (QuotationEvaluator.CompileUntyped f) :?> (float->float)
         let fd = diff2 f
-        fun x -> (evalSS x f, fd x)
+        fun x -> (fe x, fd x)
 
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
     let inline diff2'' f =
+        let fe = (QuotationEvaluator.CompileUntyped f) :?> (float->float)
         let fd = diff f
         let fd2 = diff2 f
-        fun x -> (evalSS x f, fd x, fd2 x)
+        fun x -> (fe, fd x, fd2 x)
 
     /// Gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let grad (f:Expr) =
