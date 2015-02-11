@@ -119,7 +119,7 @@ let parseArgs args =
 [<EntryPoint>]
 let main argv = 
 
-    let benchmarkver = "1.0.1"
+    let benchmarkver = "1.0.2"
 
     printfn "DiffSharp Benchmarks"
 
@@ -209,7 +209,9 @@ let main argv =
         let res_diff_AD_ForwardN, dur_diff_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diff (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff_AD_Reverse, dur_diff_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.diff (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff_Numerical, dur_diff_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.diff (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
-        let res_diff_Symbolic, dur_diff_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diff_SymbolicCompile, dur_diff_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diff_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diff_SymbolicUse, dur_diff_SymbolicUse = duration nsymbolic (fun () -> f_diff_Symbolic x)
 
         printb 3 25 "diff2"
         let res_diff2_AD_Forward, dur_diff2_AD_Forward = 0., 0.
@@ -219,7 +221,9 @@ let main argv =
         let res_diff2_AD_ForwardN, dur_diff2_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diff2 (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff2_AD_Reverse, dur_diff2_AD_Reverse = 0., 0.
         let res_diff2_Numerical, dur_diff2_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.diff2 (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
-        let res_diff2_Symbolic, dur_diff2_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diff2_SymbolicCompile, dur_diff2_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diff2_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diff2_SymbolicUse, dur_diff2_SymbolicUse = duration nsymbolic (fun () -> f_diff2_Symbolic x)
 
         printb 4 25 "diffn"
         let res_diffn_AD_Forward, dur_diffn_AD_Forward = 0., 0.
@@ -229,7 +233,9 @@ let main argv =
         let res_diffn_AD_ForwardN, dur_diffn_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diffn 2 (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diffn_AD_Reverse, dur_diffn_AD_Reverse = 0., 0.
         let res_diffn_Numerical, dur_diffn_Numerical = 0., 0.
-        let res_diffn_Symbolic, dur_diffn_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diffn 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diffn_SymbolicCompile, dur_diffn_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diffn 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diffn_Symbolic = DiffSharp.Symbolic.SymbolicOps.diffn 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diffn_SymbolicUse, dur_diffn_SymbolicUse = duration nsymbolic (fun () -> f_diffn_Symbolic x)
 
         printb 5 25 "grad"
         let res_grad_AD_Forward, dur_grad_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.grad (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
@@ -239,7 +245,9 @@ let main argv =
         let res_grad_AD_ForwardN, dur_grad_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.grad (fun x ->(x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_grad_AD_Reverse, dur_grad_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.grad (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_grad_Numerical, dur_grad_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.grad (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_grad_Symbolic, dur_grad_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.grad <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_grad_SymbolicCompile, dur_grad_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.grad <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_grad_Symbolic = DiffSharp.Symbolic.SymbolicOps.grad <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_grad_SymbolicUse, dur_grad_SymbolicUse = duration nsymbolic (fun () -> f_grad_Symbolic xv)
 
         printb 6 25 "gradv"
         let res_gradv_AD_Forward, dur_gradv_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.gradv (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
@@ -249,7 +257,8 @@ let main argv =
         let res_gradv_AD_ForwardN, dur_gradv_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.gradv (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
         let res_gradv_AD_Reverse, dur_gradv_AD_Reverse = 0., 0.
         let res_gradv_Numerical, dur_gradv_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.gradv (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
-        let res_gradv_Symbolic, dur_gradv_Symbolic = 0., 0.
+        let res_gradv_SymbolicCompile, dur_gradv_SymbolicCompile = 0., 0.
+        let res_gradv_SymbolicUse, dur_gradv_SymbolicUse = 0., 0.
 
         printb 7 25 "hessian"
         let res_hessian_AD_Forward, dur_hessian_AD_Forward = 0., 0.
@@ -259,7 +268,9 @@ let main argv =
         let res_hessian_AD_ForwardN, dur_hessian_AD_ForwardN = 0., 0.
         let res_hessian_AD_Reverse, dur_hessian_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.hessian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_hessian_Numerical, dur_hessian_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.hessian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_hessian_Symbolic, dur_hessian_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.hessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_hessian_SymbolicCompile, dur_hessian_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.hessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_hessian_Symbolic = DiffSharp.Symbolic.SymbolicOps.hessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_hessian_SymbolicUse, dur_hessian_SymbolicUse = duration nsymbolic (fun () -> f_hessian_Symbolic xv)
 
         printb 8 25 "gradhessian"
         let res_gradhessian_AD_Forward, dur_gradhessian_AD_Forward = 0., 0.
@@ -269,7 +280,9 @@ let main argv =
         let res_gradhessian_AD_ForwardN, dur_gradhessian_AD_ForwardN = 0., 0.
         let res_gradhessian_AD_Reverse, dur_gradhessian_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.gradhessian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_gradhessian_Numerical, dur_gradhessian_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.gradhessian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_gradhessian_Symbolic, dur_gradhessian_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.gradhessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_gradhessian_SymbolicCompile, dur_gradhessian_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.gradhessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_gradhessian_Symbolic = DiffSharp.Symbolic.SymbolicOps.gradhessian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_gradhessian_SymbolicUse, dur_gradhessian_SymbolicUse = duration nsymbolic (fun () -> f_gradhessian_Symbolic xv)
 
         printb 9 25 "laplacian"
         let res_laplacian_AD_Forward, dur_laplacian_AD_Forward = 0., 0.
@@ -279,7 +292,9 @@ let main argv =
         let res_laplacian_AD_ForwardN, dur_laplacian_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.laplacian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_laplacian_AD_Reverse, dur_laplacian_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.laplacian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_laplacian_Numerical, dur_laplacian_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.laplacian (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_laplacian_Symbolic, dur_laplacian_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.laplacian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_laplacian_SymbolicCompile, dur_laplacian_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.laplacian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_laplacian_Symbolic = DiffSharp.Symbolic.SymbolicOps.laplacian <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_laplacian_SymbolicUse, dur_laplacian_SymbolicUse = duration nsymbolic (fun () -> f_laplacian_Symbolic xv)
 
         printb 10 25 "jacobian"
         let res_jacobian_AD_Forward, dur_jacobian_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobian (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
@@ -289,7 +304,9 @@ let main argv =
         let res_jacobian_AD_ForwardN, dur_jacobian_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobian (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobian_AD_Reverse, dur_jacobian_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobian (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobian_Numerical, dur_jacobian_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobian (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
-        let res_jacobian_Symbolic, dur_jacobian_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobian <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @> xv)
+        let res_jacobian_SymbolicCompile, dur_jacobian_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobian <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>)
+        let f_jacobian_Symbolic = DiffSharp.Symbolic.SymbolicOps.jacobian <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>
+        let res_jacobian_SymbolicUse, dur_jacobian_SymbolicUse = duration nsymbolic (fun () -> f_jacobian_Symbolic xv)
 
         printb 11 25 "jacobianv"
         let res_jacobianv_AD_Forward, dur_jacobianv_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobianv (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
@@ -299,7 +316,8 @@ let main argv =
         let res_jacobianv_AD_ForwardN, dur_jacobianv_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobianv (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
         let res_jacobianv_AD_Reverse, dur_jacobianv_AD_Reverse = 0., 0.
         let res_jacobianv_Numerical, dur_jacobianv_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobianv (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
-        let res_jacobianv_Symbolic, dur_jacobianv_Symbolic =  0., 0.
+        let res_jacobianv_SymbolicCompile, dur_jacobianv_SymbolicCompile =  0., 0.
+        let res_jacobianv_SymbolicUse, dur_jacobianv_SymbolicUse =  0., 0.
 
         printb 12 25 "jacobianT"
         let res_jacobianT_AD_Forward, dur_jacobianT_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobianT (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
@@ -309,7 +327,9 @@ let main argv =
         let res_jacobianT_AD_ForwardN, dur_jacobianT_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobianT (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobianT_AD_Reverse, dur_jacobianT_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobianT (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobianT_Numerical, dur_jacobianT_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobianT (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
-        let res_jacobianT_Symbolic, dur_jacobianT_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobianT <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @> xv)
+        let res_jacobianT_SymbolicCompile, dur_jacobianT_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobianT <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>)
+        let f_jacobianT_Symbolic = DiffSharp.Symbolic.SymbolicOps.jacobianT <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>
+        let res_jacobianT_SymbolicUse, dur_jacobianT_SymbolicUse = duration nsymbolic (fun () -> f_jacobianT_Symbolic xv)
 
         printb 13 25 "jacobianTv"
         let res_jacobianTv_AD_Forward, dur_jacobianTv_AD_Forward = 0., 0.
@@ -319,7 +339,8 @@ let main argv =
         let res_jacobianTv_AD_ForwardN, dur_jacobianTv_AD_ForwardN = 0., 0.
         let res_jacobianTv_AD_Reverse, dur_jacobianTv_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobianTv (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv u)
         let res_jacobianTv_Numerical, dur_jacobianTv_Numerical = 0., 0.
-        let res_jacobianTv_Symbolic, dur_jacobianTv_Symbolic = 0., 0.
+        let res_jacobianTv_SymbolicCompile, dur_jacobianTv_SymbolicCompile = 0., 0.
+        let res_jacobianTv_SymbolicUse, dur_jacobianTv_SymbolicUse = 0., 0.
 
         //
         //
@@ -335,7 +356,9 @@ let main argv =
         let res_diff'_AD_ForwardN, dur_diff'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diff' (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff'_AD_Reverse, dur_diff'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.diff' (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff'_Numerical, dur_diff'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.diff' (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
-        let res_diff'_Symbolic, dur_diff'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diff'_SymbolicCompile, dur_diff'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diff'_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diff'_SymbolicUse, dur_diff'_SymbolicUse = duration nsymbolic (fun () -> f_diff'_Symbolic x)
 
         printb 15 25 "diff2'"
         let res_diff2'_AD_Forward, dur_diff2'_AD_Forward = 0., 0.
@@ -345,7 +368,9 @@ let main argv =
         let res_diff2'_AD_ForwardN, dur_diff2'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diff2' (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diff2'_AD_Reverse, dur_diff2'_AD_Reverse = 0., 0.
         let res_diff2'_Numerical, dur_diff2'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.diff2' (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
-        let res_diff2'_Symbolic, dur_diff2'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff2' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diff2'_SymbolicCompile, dur_diff2'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diff2' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diff2'_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff2' <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diff2'_SymbolicUse, dur_diff2'_SymbolicUse = duration nsymbolic (fun () -> f_diff2'_Symbolic x)
 
         printb 16 25 "diffn'"
         let res_diffn'_AD_Forward, dur_diffn'_AD_Forward = 0., 0.
@@ -355,7 +380,9 @@ let main argv =
         let res_diffn'_AD_ForwardN, dur_diffn'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.diffn' 2 (fun x -> (sin (sqrt (x + 2.))) ** 3.) x)
         let res_diffn'_AD_Reverse, dur_diffn'_AD_Reverse = 0., 0.
         let res_diffn'_Numerical, dur_diffn'_Numerical = 0., 0.
-        let res_diffn'_Symbolic, dur_diffn'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diffn' 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @> x)
+        let res_diffn'_SymbolicCompile, dur_diffn'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.diffn' 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>)
+        let f_diffn'_Symbolic = DiffSharp.Symbolic.SymbolicOps.diffn' 2 <@ (fun x -> (sin (sqrt (x + 2.))) ** 3.) @>
+        let res_diffn'_SymbolicUse, dur_diffn'_SymbolicUse = duration nsymbolic (fun () -> f_diffn'_Symbolic x)
 
         printb 17 25 "grad'"
         let res_grad'_AD_Forward, dur_grad'_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.grad' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
@@ -365,7 +392,9 @@ let main argv =
         let res_grad'_AD_ForwardN, dur_grad'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.grad' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_grad'_AD_Reverse, dur_grad'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.grad' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_grad'_Numerical, dur_grad'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.grad' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_grad'_Symbolic, dur_grad'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.grad' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_grad'_SymbolicCompile, dur_grad'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.grad' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_grad'_Symbolic = DiffSharp.Symbolic.SymbolicOps.grad' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_grad'_SymbolicUse, dur_grad'_SymbolicUse = duration nsymbolic (fun () -> f_grad'_Symbolic xv)
 
         printb 18 25 "gradv'"
         let res_gradv'_AD_Forward, dur_gradv'_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.gradv' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
@@ -375,7 +404,8 @@ let main argv =
         let res_gradv'_AD_ForwardN, dur_gradv'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.gradv' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
         let res_gradv'_AD_Reverse, dur_gradv'_AD_Reverse = 0., 0.
         let res_gradv'_Numerical, dur_gradv'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.gradv' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv v)
-        let res_gradv'_Symbolic, dur_gradv'_Symbolic = 0., 0.
+        let res_gradv'_SymbolicCompile, dur_gradv'_SymbolicCompile = 0., 0.
+        let res_gradv'_SymbolicUse, dur_gradv'_SymbolicUse = 0., 0.
 
         printb 19 25 "hessian'"
         let res_hessian'_AD_Forward, dur_hessian'_AD_Forward = 0., 0.
@@ -385,7 +415,9 @@ let main argv =
         let res_hessian'_AD_ForwardN, dur_hessian'_AD_ForwardN = 0., 0.
         let res_hessian'_AD_Reverse, dur_hessian'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.hessian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_hessian'_Numerical, dur_hessian'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.hessian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_hessian'_Symbolic, dur_hessian'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.hessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_hessian'_SymbolicCompile, dur_hessian'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.hessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_hessian'_Symbolic = DiffSharp.Symbolic.SymbolicOps.hessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_hessian'_SymbolicUse, dur_hessian'_SymbolicUse = duration nsymbolic (fun () -> f_hessian'_Symbolic xv)
 
         printb 20 25 "gradhessian'"
         let res_gradhessian'_AD_Forward, dur_gradhessian'_AD_Forward = 0., 0.
@@ -395,7 +427,9 @@ let main argv =
         let res_gradhessian'_AD_ForwardN, dur_gradhessian'_AD_ForwardN = 0., 0.
         let res_gradhessian'_AD_Reverse, dur_gradhessian'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.gradhessian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_gradhessian'_Numerical, dur_gradhessian'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.gradhessian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_gradhessian'_Symbolic, dur_gradhessian'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.gradhessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_gradhessian'_SymbolicCompile, dur_gradhessian'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.gradhessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_gradhessian'_Symbolic = DiffSharp.Symbolic.SymbolicOps.gradhessian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_gradhessian'_SymbolicUse, dur_gradhessian'_SymbolicUse = duration nsymbolic (fun () -> f_gradhessian'_Symbolic xv)
 
         printb 21 25 "laplacian'"
         let res_laplacian'_AD_Forward, dur_laplacian'_AD_Forward = 0., 0.
@@ -405,7 +439,9 @@ let main argv =
         let res_laplacian'_AD_ForwardN, dur_laplacian'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.laplacian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_laplacian'_AD_Reverse, dur_laplacian'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.laplacian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
         let res_laplacian'_Numerical, dur_laplacian'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.laplacian' (fun x -> (x.[0] * (sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]) xv)
-        let res_laplacian'_Symbolic, dur_laplacian'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.laplacian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @> xv)
+        let res_laplacian'_SymbolicCompile, dur_laplacian'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.laplacian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>)
+        let f_laplacian'_Symbolic = DiffSharp.Symbolic.SymbolicOps.laplacian' <@ fun x0 x1 x2 -> (x0 * (sqrt (x1 + x2)) * (log x2)) ** x1 @>
+        let res_laplacian'_SymbolicUse, dur_laplacian'_SymbolicUse = duration nsymbolic (fun () -> f_laplacian'_Symbolic xv)
 
         printb 22 25 "jacobian'"
         let res_jacobian'_AD_Forward, dur_jacobian'_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobian' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
@@ -415,7 +451,9 @@ let main argv =
         let res_jacobian'_AD_ForwardN, dur_jacobian'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobian' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobian'_AD_Reverse, dur_jacobian'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobian' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobian'_Numerical, dur_jacobian'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobian' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
-        let res_jacobian'_Symbolic, dur_jacobian'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobian' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @> xv)
+        let res_jacobian'_SymbolicCompile, dur_jacobian'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobian' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>)
+        let f_jacobian'_Symbolic = DiffSharp.Symbolic.SymbolicOps.jacobian' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>
+        let res_jacobian'_SymbolicUse, dur_jacobian'_SymbolicUse = duration nsymbolic (fun () -> f_jacobian'_Symbolic xv)
 
         printb 23 25 "jacobianv'"
         let res_jacobianv'_AD_Forward, dur_jacobianv'_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobianv' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
@@ -425,7 +463,8 @@ let main argv =
         let res_jacobianv'_AD_ForwardN, dur_jacobianv'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobianv' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
         let res_jacobianv'_AD_Reverse, dur_jacobianv'_AD_Reverse = 0., 0.
         let res_jacobianv'_Numerical, dur_jacobianv'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobianv' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv v)
-        let res_jacobianv'_Symbolic, dur_jacobianv'_Symbolic = 0., 0.
+        let res_jacobianv'_SymbolicCompile, dur_jacobianv'_SymbolicCompile = 0., 0.
+        let res_jacobianv'_SymbolicUse, dur_jacobianv'_SymbolicUse = 0., 0.
 
         printb 24 25 "jacobianT'"
         let res_jacobianT'_AD_Forward, dur_jacobianT'_AD_Forward = duration n (fun () -> DiffSharp.AD.Forward.ForwardOps.jacobianT' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
@@ -435,7 +474,9 @@ let main argv =
         let res_jacobianT'_AD_ForwardN, dur_jacobianT'_AD_ForwardN = duration n (fun () -> DiffSharp.AD.ForwardN.ForwardNOps.jacobianT' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobianT'_AD_Reverse, dur_jacobianT'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobianT' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
         let res_jacobianT'_Numerical, dur_jacobianT'_Numerical = duration n (fun () -> DiffSharp.Numerical.NumericalOps.jacobianT' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv)
-        let res_jacobianT'_Symbolic, dur_jacobianT'_Symbolic = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobianT' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @> xv)
+        let res_jacobianT'_SymbolicCompile, dur_jacobianT'_SymbolicCompile = duration nsymbolic (fun () -> DiffSharp.Symbolic.SymbolicOps.jacobianT' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>)
+        let f_jacobianT'_Symbolic = DiffSharp.Symbolic.SymbolicOps.jacobianT' <@ fun x0 x1 x2 -> [|(sin x0) ** x1; sqrt (x1 + x2); log (x0 * x2)|] @>
+        let res_jacobianT'_SymbolicUse, dur_jacobianT'_SymbolicUse = duration nsymbolic (fun () -> f_jacobianT'_Symbolic xv)
 
         printb 25 25 "jacobianTv'"
         let res_jacobianTv'_AD_Forward, dur_jacobianTv'_AD_Forward = 0., 0.
@@ -445,7 +486,8 @@ let main argv =
         let res_jacobianTv'_AD_ForwardN, dur_jacobianTv'_AD_ForwardN = 0., 0.
         let res_jacobianTv'_AD_Reverse, dur_jacobianTv'_AD_Reverse = duration n (fun () -> DiffSharp.AD.Reverse.ReverseOps.jacobianTv' (fun x -> [|(sin x.[0]) ** x.[1]; sqrt (x.[1] + x.[2]); log (x.[0] * x.[2])|]) xv u)
         let res_jacobianTv'_Numerical, dur_jacobianTv'_Numerical = 0., 0.
-        let res_jacobianTv'_Symbolic, dur_jacobianTv'_Symbolic = 0., 0.
+        let res_jacobianTv'_SymbolicCompile, dur_jacobianTv'_SymbolicCompile = 0., 0.
+        let res_jacobianTv'_SymbolicUse, dur_jacobianTv'_SymbolicUse = 0., 0.
 
         //
         //
@@ -467,7 +509,8 @@ let main argv =
         let row_AD_ForwardN = Vector.Create([| dur_diff_AD_ForwardN; dur_diff2_AD_ForwardN; dur_diffn_AD_ForwardN; dur_grad_AD_ForwardN; dur_gradv_AD_ForwardN; dur_hessian_AD_ForwardN; dur_gradhessian_AD_ForwardN; dur_laplacian_AD_ForwardN; dur_jacobian_AD_ForwardN; dur_jacobianv_AD_ForwardN; dur_jacobianT_AD_ForwardN; dur_jacobianTv_AD_ForwardN |])
         let row_AD_Reverse = Vector.Create([| dur_diff_AD_Reverse; dur_diff2_AD_Reverse; dur_diffn_AD_Reverse; dur_grad_AD_Reverse; dur_gradv_AD_Reverse; dur_hessian_AD_Reverse; dur_gradhessian_AD_Reverse; dur_laplacian_AD_Reverse; dur_jacobian_AD_Reverse; dur_jacobianv_AD_Reverse; dur_jacobianT_AD_Reverse; dur_jacobianTv_AD_Reverse |])
         let row_Numerical = Vector.Create([| dur_diff_Numerical; dur_diff2_Numerical; dur_diffn_Numerical; dur_grad_Numerical; dur_gradv_Numerical; dur_hessian_Numerical; dur_gradhessian_Numerical; dur_laplacian_Numerical; dur_jacobian_Numerical; dur_jacobianv_Numerical; dur_jacobianT_Numerical; dur_jacobianTv_Numerical |])
-        let row_Symbolic = Vector.Create([| dur_diff_Symbolic; dur_diff2_Symbolic; dur_diffn_Symbolic; dur_grad_Symbolic; dur_gradv_Symbolic; dur_hessian_Symbolic; dur_gradhessian_Symbolic; dur_laplacian_Symbolic; dur_jacobian_Symbolic; dur_jacobianv_Symbolic; dur_jacobianT_Symbolic; dur_jacobianTv_Symbolic |])
+        let row_SymbolicCompile = Vector.Create([| dur_diff_SymbolicCompile; dur_diff2_SymbolicCompile; dur_diffn_SymbolicCompile; dur_grad_SymbolicCompile; dur_gradv_SymbolicCompile; dur_hessian_SymbolicCompile; dur_gradhessian_SymbolicCompile; dur_laplacian_SymbolicCompile; dur_jacobian_SymbolicCompile; dur_jacobianv_SymbolicCompile; dur_jacobianT_SymbolicCompile; dur_jacobianTv_SymbolicCompile |])
+        let row_SymbolicUse = Vector.Create([| dur_diff_SymbolicUse; dur_diff2_SymbolicUse; dur_diffn_SymbolicUse; dur_grad_SymbolicUse; dur_gradv_SymbolicUse; dur_hessian_SymbolicUse; dur_gradhessian_SymbolicUse; dur_laplacian_SymbolicUse; dur_jacobian_SymbolicUse; dur_jacobianv_SymbolicUse; dur_jacobianT_SymbolicUse; dur_jacobianTv_SymbolicUse |])
 
         let benchmark = Matrix.Create([| row_AD_Forward ./ row_originals
                                          row_AD_Forward2 ./ row_originals
@@ -476,7 +519,8 @@ let main argv =
                                          row_AD_ForwardN ./ row_originals
                                          row_AD_Reverse ./ row_originals
                                          row_Numerical ./ row_originals
-                                         row_Symbolic ./ row_originals |])
+                                         row_SymbolicCompile ./ row_originals
+                                         row_SymbolicUse ./ row_originals |])
 
         let row_AD_Forward' = Vector.Create([| dur_diff'_AD_Forward; dur_diff2'_AD_Forward; dur_diffn'_AD_Forward; dur_grad'_AD_Forward; dur_gradv'_AD_Forward; dur_hessian'_AD_Forward; dur_gradhessian'_AD_Forward; dur_laplacian'_AD_Forward; dur_jacobian'_AD_Forward; dur_jacobianv'_AD_Forward; dur_jacobianT'_AD_Forward; dur_jacobianTv'_AD_Forward |])
         let row_AD_Forward2' = Vector.Create([| dur_diff'_AD_Forward2; dur_diff2'_AD_Forward2; dur_diffn'_AD_Forward2; dur_grad'_AD_Forward2; dur_gradv'_AD_Forward2; dur_hessian'_AD_Forward2; dur_gradhessian'_AD_Forward2; dur_laplacian'_AD_Forward2; dur_jacobian'_AD_Forward2; dur_jacobianv'_AD_Forward2; dur_jacobianT'_AD_Forward2; dur_jacobianTv'_AD_Forward2 |])
@@ -485,7 +529,8 @@ let main argv =
         let row_AD_ForwardN' = Vector.Create([| dur_diff'_AD_ForwardN; dur_diff2'_AD_ForwardN; dur_diffn'_AD_ForwardN; dur_grad'_AD_ForwardN; dur_gradv'_AD_ForwardN; dur_hessian'_AD_ForwardN; dur_gradhessian'_AD_ForwardN; dur_laplacian'_AD_ForwardN; dur_jacobian'_AD_ForwardN; dur_jacobianv'_AD_ForwardN; dur_jacobianT'_AD_ForwardN; dur_jacobianTv'_AD_ForwardN |])
         let row_AD_Reverse' = Vector.Create([| dur_diff'_AD_Reverse; dur_diff2'_AD_Reverse; dur_diffn'_AD_Reverse; dur_grad'_AD_Reverse; dur_gradv'_AD_Reverse; dur_hessian'_AD_Reverse; dur_gradhessian'_AD_Reverse; dur_laplacian'_AD_Reverse; dur_jacobian'_AD_Reverse; dur_jacobianv'_AD_Reverse; dur_jacobianT'_AD_Reverse; dur_jacobianTv'_AD_Reverse |])
         let row_Numerical' = Vector.Create([| dur_diff'_Numerical; dur_diff2'_Numerical; dur_diffn'_Numerical; dur_grad'_Numerical; dur_gradv'_Numerical; dur_hessian'_Numerical; dur_gradhessian'_Numerical; dur_laplacian'_Numerical; dur_jacobian'_Numerical; dur_jacobianv'_Numerical; dur_jacobianT'_Numerical; dur_jacobianTv'_Numerical |])
-        let row_Symbolic' = Vector.Create([| dur_diff'_Symbolic; dur_diff2'_Symbolic; dur_diffn'_Symbolic; dur_grad'_Symbolic; dur_gradv'_Symbolic; dur_hessian'_Symbolic; dur_gradhessian'_Symbolic; dur_laplacian'_Symbolic; dur_jacobian'_Symbolic; dur_jacobianv'_Symbolic; dur_jacobianT'_Symbolic; dur_jacobianTv'_Symbolic |])
+        let row_SymbolicCompile' = Vector.Create([| dur_diff'_SymbolicCompile; dur_diff2'_SymbolicCompile; dur_diffn'_SymbolicCompile; dur_grad'_SymbolicCompile; dur_gradv'_SymbolicCompile; dur_hessian'_SymbolicCompile; dur_gradhessian'_SymbolicCompile; dur_laplacian'_SymbolicCompile; dur_jacobian'_SymbolicCompile; dur_jacobianv'_SymbolicCompile; dur_jacobianT'_SymbolicCompile; dur_jacobianTv'_SymbolicCompile |])
+        let row_SymbolicUse' = Vector.Create([| dur_diff'_SymbolicUse; dur_diff2'_SymbolicUse; dur_diffn'_SymbolicUse; dur_grad'_SymbolicUse; dur_gradv'_SymbolicUse; dur_hessian'_SymbolicUse; dur_gradhessian'_SymbolicUse; dur_laplacian'_SymbolicUse; dur_jacobian'_SymbolicUse; dur_jacobianv'_SymbolicUse; dur_jacobianT'_SymbolicUse; dur_jacobianTv'_SymbolicUse |])
 
         let benchmark' = Matrix.Create([| row_AD_Forward' ./ row_originals
                                           row_AD_Forward2' ./ row_originals
@@ -494,7 +539,8 @@ let main argv =
                                           row_AD_ForwardN' ./ row_originals
                                           row_AD_Reverse' ./ row_originals
                                           row_Numerical' ./ row_originals
-                                          row_Symbolic' ./ row_originals |])
+                                          row_SymbolicCompile' ./ row_originals
+                                          row_SymbolicUse' ./ row_originals |])
 
     //    let res_AD_Forward:obj[] = [| res_diff_AD_Forward; res_diff2_AD_Forward; res_diffn_AD_Forward; res_grad_AD_Forward; res_gradv_AD_Forward; res_hessian_AD_Forward; res_gradhessian_AD_Forward; res_laplacian_AD_Forward; res_jacobian_AD_Forward; res_jacobianv_AD_Forward; res_jacobianT_AD_Forward; res_jacobianTv_AD_Forward |]
     //    let res_AD_Forward2:obj[] = [| res_diff_AD_Forward2; res_diff2_AD_Forward2; res_diffn_AD_Forward2; res_grad_AD_Forward2; res_gradv_AD_Forward2; res_hessian_AD_Forward2; res_gradhessian_AD_Forward2; res_laplacian_AD_Forward2; res_jacobian_AD_Forward2; res_jacobianv_AD_Forward2; res_jacobianT_AD_Forward2; res_jacobianTv_AD_Forward2 |]
@@ -521,7 +567,8 @@ let main argv =
                     + (Vector.sum row_AD_ForwardN)
                     + (Vector.sum row_AD_Reverse)
                     + (Vector.sum row_Numerical)
-                    + (Vector.sum row_Symbolic)
+                    + (Vector.sum row_SymbolicCompile)
+                    + (Vector.sum row_SymbolicUse)
     
         let score = score / (float System.TimeSpan.TicksPerSecond)
         let score = 1. / score
@@ -549,12 +596,12 @@ let main argv =
     
         stream.WriteLine("Benchmark matrix A\r\n")
         stream.WriteLine("Column labels: {diff, diff2, diffn, grad, gradv, hessian, gradhessian, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
-        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}")
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic (Compile), DiffSharp.Symbolic (Use)}")
         stream.WriteLine(sprintf "Values: %s" (benchmark.ToMathematicaString()))
 
         stream.WriteLine("\r\nBenchmark matrix B\r\n")
         stream.WriteLine("Column labels: {diff', diff2', diffn', grad', gradv', hessian', gradhessian', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
-        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic}")
+        stream.WriteLine("Row labels: {DiffSharp.AD.Forward, DiffSharp.AD.Forward2, DiffSharp.AD.ForwardG, DiffSharp.AD.ForwardGH, DiffSharp.AD.ForwardN, DiffSharp.AD.Reverse, DiffSharp.Numerical, DiffSharp.Symbolic (Compile), DiffSharp.Symbolic (Use)}")
         stream.WriteLine(sprintf "Values: %s" (benchmark'.ToMathematicaString()))
 
     //    stream.WriteLine("\r\nResults of operations")
