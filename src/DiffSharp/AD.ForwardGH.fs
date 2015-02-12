@@ -120,6 +120,9 @@ type DualGH =
     static member Abs (DualGH(a, ag, ah)) = 
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
+    static member Sign (DualGH(a, ag, ah)) =
+        if a = 0. then invalidArg "" "The derivative of sign is not defined at 0."
+        DualGH(float (sign a), Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
     static member Floor (DualGH(a, ag, ah)) =
         if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
         DualGH(floor a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))

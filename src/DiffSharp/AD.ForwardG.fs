@@ -119,6 +119,9 @@ type DualG =
     static member Abs (DualG(a, ag)) = 
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         DualG(abs a, ag * float (sign a))
+    static member Sign (DualG(a, ag)) =
+        if a = 0. then invalidArg "" "The derivative of sign is not defined at 0."
+        DualG(float (sign a), Vector.Create(ag.Length, 0.))
     static member Floor (DualG(a, ag)) =
         if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
         DualG(floor a, Vector.Create(ag.Length, 0.))

@@ -116,6 +116,9 @@ type Dual2 =
     static member Abs (Dual2(a, at, at2)) = 
         if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         Dual2(abs a, at * float (sign a), 0.)
+    static member Sign (Dual2(a, at, at2)) =
+        if a = 0. then invalidArg "" "The derivative of sign is not defined at 0."
+        Dual2(float (sign a), 0., 0.)
     static member Floor (Dual2(a, _, _)) =
         if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
         Dual2(floor a, 0., 0.)

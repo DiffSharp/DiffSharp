@@ -90,6 +90,7 @@ type Trace() =
             | Acos(x, z) -> x.AddAdj(-z.A / sqrt (1. - x.P * x.P))
             | Atan(x, z) -> x.AddAdj(z.A / (1. + x.P * x.P))
             | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
+            | Sign(x, z) -> ()
             | Floor(x, z) -> ()
             | Ceil(x, z) -> ()
             | Round(x, z) -> ()
@@ -117,6 +118,7 @@ and Op =
     | Acos of Adj * Adj
     | Atan of Adj * Adj
     | Abs of Adj * Adj
+    | Sign of Adj * Adj
     | Floor of Adj * Adj
     | Ceil of Adj * Adj
     | Round of Adj * Adj
@@ -197,6 +199,9 @@ and Adj =
     static member Abs (x:Adj) = 
         if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
+    static member Sign (x:Adj) =
+        if x.P = 0. then invalidArg "" "The derivative of sign is not defined at 0."
+        let z = Adj(float (sign x.P)) in Trace.Push(Sign(x, z)); z
     static member Floor (x:Adj) =
         if isInteger x.P then invalidArg "" "The derivative of floor is not defined for integer values."
         let z = Adj(floor x.P) in Trace.Push(Floor(x, z)); z
