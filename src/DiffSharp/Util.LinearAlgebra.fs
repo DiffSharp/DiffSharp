@@ -729,7 +729,7 @@ module Vector =
     let inline copy (v:Vector<_>) = v.Copy()
     /// Creates a Vector with `n` elements having value `v`
     let inline create (n:int) (v:'T) = Vector.Create(n, v)
-    /// Creates a Vector with dimension `n` and a generator function `f` to compute the eleements
+    /// Creates a Vector with dimension `n` and a generator function `f` to compute the elements
     let inline init (n:int) (f:int->'T) = Vector.Create(n, f)
     /// Creates a Vector from sequence `s`
     let inline ofSeq (s:seq<_>) = Vector.Create(Array.ofSeq s)
@@ -793,6 +793,8 @@ module Vector =
     let inline sumBy f (v:Vector<_>) = v |> toArray |> Array.sumBy f
     /// Gets the unit vector codirectional with Vector `v`
     let inline unitVector (v:Vector<_>) = v.GetUnitVector()
+    /// Creates a vector with `n` elements, where the `i`-th element is 1 and the rest of the elements are 0
+    let inline standardBasis (n:int) (i:int) =  Vector.Create(n, fun j -> if j = i then LanguagePrimitives.GenericOne else LanguagePrimitives.GenericZero) 
 
 /// Provides basic operations on Matrix types. (Implementing functionality similar to Microsoft.FSharp.Collections.Array2D)
 [<RequireQualifiedAccess>]

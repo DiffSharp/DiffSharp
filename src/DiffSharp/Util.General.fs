@@ -38,13 +38,19 @@
 /// Various utility functions used all over the library
 module DiffSharp.Util.General
 
-/// Get the tail of a 3-tuple
+/// Gets the first term of a 3-tuple
+let inline fst3 (f, _, _) = f
+
+/// Gets the second term of a 3-tuple
+let inline snd3 (_, s, _) = s
+
+/// Gets the tail of a 3-tuple
 let inline trd (_, _, t) = t
 
-/// Get the first and third terms of a 3-tuple
+/// Gets the first and third terms of a 3-tuple
 let inline fsttrd (f, _, t) = (f, t)
 
-/// Get the second and third terms of a 3-tuple
+/// Gets the second and third terms of a 3-tuple
 let inline sndtrd (_, s, t) = (s, t)
 
 /// Checks whether 'a[,] `m` has the same number of elements in both dimensions
@@ -53,16 +59,19 @@ let (|Square|) (m:'a[,]) =
     | m when m.GetLength 0 = m.GetLength 1 -> m
     | _ -> invalidArg "m" "Expecting a square float[,]"
 
-/// Get the transpose of 'a[,] `m`
+/// Gets the transpose of 'a[,] `m`
 let inline transpose (m:'a[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
 
-/// Get a 'a[] containing the diagonal elements of 'a[,] `m`
+/// Gets a 'a[] containing the diagonal elements of 'a[,] `m`
 let inline diagonal (Square m:'a[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
 
-/// Get the trace of the square matrix given in 'a[,] `m`
+/// Gets the trace of the square matrix given in 'a[,] `m`
 let inline trace (m:'a[,]) = Array.sum (diagonal m)
 
-/// Copy the upper triangular elements of the square matrix given in 'a[,] `m` to the lower triangular part
+/// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
+let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then 1. else 0.)
+
+/// Copies the upper triangular elements of the square matrix given in 'a[,] `m` to the lower triangular part
 let inline copyUpperToLower (Square m:'a[,]) =
     let r = Array2D.copy m
     let rows = r.GetLength 0
@@ -72,7 +81,7 @@ let inline copyUpperToLower (Square m:'a[,]) =
                 r.[i, j] <- r.[j, i]
     r
 
-/// Find an array that, when multiplied by an LU matrix `lu`, gives array `b`
+/// Finds an array that, when multiplied by an LU matrix `lu`, gives array `b`
 let inline matrixSolveHelper (lu:'a[,]) (b:'a[]) =
     let n = lu.GetLength 0
     let x = Array.copy b
@@ -89,7 +98,7 @@ let inline matrixSolveHelper (lu:'a[,]) (b:'a[]) =
         x.[i] <- sum / lu.[i, i]
     x
 
-/// Get a string representation of a float[] that can be pasted into a Mathematica notebook
+/// Gets a string representation of float[] `v` that can be pasted into a Mathematica notebook
 let MathematicaVector (v:float[]) =
     let sb = System.Text.StringBuilder()
     sb.Append("{") |> ignore
@@ -99,7 +108,7 @@ let MathematicaVector (v:float[]) =
     sb.Append("}") |> ignore
     sb.ToString()
 
-///Get a string representation of a float[] that can be pasted into MATLAB
+/// Gets a string representation of float[] `v` that can be pasted into MATLAB
 let MatlabVector (v:float[]) =
     let sb = System.Text.StringBuilder()
     sb.Append("[") |> ignore
@@ -109,7 +118,7 @@ let MatlabVector (v:float[]) =
     sb.Append("]") |> ignore
     sb.ToString()
 
-/// Get a string representation of a float[,] than can be pasted into a Mathematica notebook
+/// Gets a string representation of float[,] `m` than can be pasted into a Mathematica notebook
 let MathematicaMatrix (m:float[,]) =
     let rows = m.GetLength 0
     let cols = m.GetLength 1
@@ -121,7 +130,7 @@ let MathematicaMatrix (m:float[,]) =
     sb.Append("}") |> ignore
     sb.ToString()
 
-/// Get a string representation of a float[,] that can be pasted into MATLAB
+/// Gets a string representation of float[,] `m` that can be pasted into MATLAB
 let MatlabMatrix (m:float[,]) =
     let rows = m.GetLength 0
     let cols = m.GetLength 1
@@ -133,15 +142,15 @@ let MatlabMatrix (m:float[,]) =
     sb.Append("]") |> ignore
     sb.ToString()
 
-/// Compute a combined hash code for the objects in array `o`
+/// Computes a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
-/// Check whether a float contains an integer value
+/// Checks whether a float contains an integer value
 let isInteger a = a = float (int a)
 
-/// Check whether a float is halfway between two integers
+/// Checks whether a float is halfway between two integers
 let isHalfway a = abs (a % 1.) = 0.5
 
 /// Value of log 10.

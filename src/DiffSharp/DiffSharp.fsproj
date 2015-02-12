@@ -58,6 +58,7 @@
     <Compile Include="AD.ForwardGH.fs" />
     <Compile Include="AD.ForwardN.fs" />
     <Compile Include="AD.Reverse.fs" />
+    <Compile Include="AD.ForwardReverse.fs" />
     <Compile Include="Numerical.fs" />
     <Compile Include="Symbolic.fs" />
     <Content Include="app.config" />

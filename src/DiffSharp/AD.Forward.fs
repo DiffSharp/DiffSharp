@@ -197,6 +197,7 @@ module ForwardOps =
     let inline jacobianv f x v = 
         jacobianv' f x v |> snd
             
+
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
