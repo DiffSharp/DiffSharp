@@ -119,9 +119,6 @@ type DualN =
     static member Abs (a:DualN) = 
         if a.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
         DualN(abs a.P, lazy (a.T * float (sign a.P)))
-    static member Sign (a:DualN) =
-        if a.P = 0. then invalidArg "" "The derivative of sign is not defined at 0."
-        DualN(float (sign a.P), lazy (DualN.Zero))
     static member Floor (a:DualN) =
         if isInteger a.P then invalidArg "" "The derivative of floor is not defined for integer values."
         DualN(floor a.P, lazy (DualN.Zero))
