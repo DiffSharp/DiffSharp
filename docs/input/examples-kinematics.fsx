@@ -6,7 +6,7 @@
 Kinematics
 ==========
 
-Let us use the DiffSharp library for describing the [kinematics](http://en.wikipedia.org/wiki/Kinematics) of a point particle moving in one dimension.
+Let us use the DiffSharp library for describing the simple [kinematics](http://en.wikipedia.org/wiki/Kinematics) of a point particle moving in one dimension.
 
 Take the function $ x(t) = t^3 - 6 t^2 + 10t $, giving the position $x$ of a particle at time $t$.
 *)
@@ -31,7 +31,7 @@ Chart.Line([for t in 0.0..0.01..4.0 -> (t, x t)]).WithXAxis(Title="t").WithYAxis
     </div>
 </div>
 
-We can calculate the position $x(t)$, velocity $v(t)=\frac{\partial x(t)}{\partial t}$, and acceleration $a(t)=\frac{\partial ^ 2 x(t)}{\partial t ^ 2}$ of the particle at the same time, using the **diff2''** operation that returns the original value, first derivative, and second derivative of a given function.
+We can calculate the position $x(t)$, the velocity $v(t)=\frac{\partial x(t)}{\partial t}$, and the acceleration $a(t)=\frac{\partial ^ 2 x(t)}{\partial t ^ 2}$ of the particle at the same time, using the **diff2''** operation that returns the original value, the first derivative, and the second derivative of a given function.
 *)
 
 open DiffSharp.AD.Forward2

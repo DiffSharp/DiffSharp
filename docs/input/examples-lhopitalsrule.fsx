@@ -11,14 +11,14 @@ l'Hôpital's Rule
 
 $$$
  \begin{eqnarray*}
- \lim_{x \to c} \frac{f(x)}{g(x)} &=& \frac{0}{0} ,\\
+ \lim_{x \to c} \frac{f(x)}{g(x)} &=& \frac{0}{0} \; ,\\
  \lim_{x \to c} \frac{f(x)}{g(x)} &=& \frac{\pm\infty}{\pm\infty}
  \end{eqnarray*}
 
 can be found by differentiating the numerator and the denominator and taking the limit, that is
 
 $$$
- \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} .
+ \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} \; .
 
 Let us try to find
 
@@ -77,7 +77,7 @@ For $n = 0$, we have the original indeterminate value of the limit (since the 0-
 For $n = 3$, we have the value of this limit as
 
 $$$
- \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 ,
+ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 \; ,
 
 after 3 applications of l'Hôpital's rule. 
 
@@ -89,7 +89,7 @@ $$$
  &=& \lim_{x \to 0} \frac{-2 \sin x + 4 \sin 2x}{\sin x}\\
  &=& \lim_{x \to 0} \frac{-2 \cos x + 8 \cos 2x}{\cos x}\\
  &=& \frac{-2 + 8}{1}\\
- &=& 6 .
+ &=& 6 \; .
  \end{eqnarray*}
 
 We can go further and automate this process by searching for the first element of the sequence that is not indeterminate.
@@ -124,7 +124,7 @@ $$$
 has indeterminate form $0 / 0$ and can be evaluated by
 
 $$$
- \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 .
+ \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 \; .
 *)
 
 let lim3 = findlim (fun x -> sin (System.Math.PI * x)) (fun x -> System.Math.PI * x) 0.
@@ -142,7 +142,7 @@ $$$
 has indeterminate form $0 / 0$ and can be evaluated by
 
 $$$
- \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} .
+ \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} \; .
 *)
 
 let lim4 = findlim (fun x -> exp x - 1 - x) (fun x -> x * x) 0.

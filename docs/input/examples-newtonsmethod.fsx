@@ -15,9 +15,9 @@ $$$
 
 where $\gamma > 0$ is the step size, $\left(\mathbf{H}_f\right)_{\mathbf{x}_n}^{-1}$ is the inverse of the [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of $f$ evaluated at $\mathbf{x}_n$, and $\left( \nabla f \right)_{\mathbf{x}_n}$ is the [gradient](http://en.wikipedia.org/wiki/Gradient) of $f$ evaluated at $\mathbf{x}_n$.
 
-Newton's method converges faster than gradient descent, but this comes at the cost of computing the inverse of the Hessian of the function at each iteration. In practice, the Hessian is usually only approximated from the changes in the gradient, giving rise to [quasi-Netwon methods](http://en.wikipedia.org/wiki/Quasi-Newton_method) such as the [BFGS algorithm](http://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm).
+Newton's method converges faster than gradient descent, but this comes at the cost of computing the Hessian of the function at each iteration. In practice, the Hessian is usually only approximated from the changes in the gradient, giving rise to [quasi-Netwon methods](http://en.wikipedia.org/wiki/Quasi-Newton_method) such as the [BFGS algorithm](http://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm).
 
-Using the DiffSharp library, we can compute the exact Hessian matrix via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardGH** module, which provides the **gradhessian'** operation returning the value, gradient, and Hessian of a function at a given point using only one forward pass.
+Using the DiffSharp library, we can compute the exact Hessian via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardGH** module, which provides the **gradhessian'** operation returning the value, the gradient, and the Hessian of a function at a given point using only one forward evaluation.
 *)
 
 open DiffSharp.AD.ForwardGH
@@ -65,6 +65,6 @@ val numsteps : int = 4"
 
 (**
 
-The optimum is found in 4 iterations.
+The optimum is found as $f(0.7958861818, 1.203482609) = 1.797388803$ in 4 iterations.
    
 *)

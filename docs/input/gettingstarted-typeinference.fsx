@@ -3,9 +3,9 @@
 
 (**
 Type Inference
-===============
+==============
 
-F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **Diffsharp.AD.Forward.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number).
+F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **Diffsharp.AD.Forward.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number) for forward AD and the **DiffSharp.AD.Reverse.Adj** type implementing adjoints for reverse AD.
 
 There are several ways the F# type inference system can work together with the DiffSharp library.
 
@@ -113,7 +113,7 @@ let dhy = tangent (h 3Q 7R)
 Generic Functions
 -----------------
 
-F# supports [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that allow computations with a variety of numeric types without changing the code.
+F# supports [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that can work with multiple different numeric types.
 *)
 
 // A simple generic function
@@ -133,7 +133,7 @@ let i3 = sum 2I 2I
 let i4 = sum 2Q 2Q
 
 (** 
-DiffSharp can be used with generic numeric functions.
+Using a generic function with the DiffSharp library.
 *)
 
 // A generic implementation of cosine, 8-th degree approximation

@@ -13,7 +13,7 @@ $$$
 
 where $R$ is the universal gas constant, $T$ is the absolute temperature, $\mathbf{b} \in \mathbb{R}^n$ is a vector of constants, $\mathbf{A} \in \mathbb{R}^{n \times n}$ is a symmetric matrix of constants, and $\mathbf{x} \in \mathbb{R}^n$ is the vector of independent variables describing the system.
 
-In practice, gradients of formulae such as this need to be evaluated thousands of times for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.
+In practice, gradients of formulae such as this need to be evaluated at thousands of points for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.
 
 Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f(x): \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse automatic differentiation, which needs only one forward and one reverse evaluation of $f(x)$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
 *)

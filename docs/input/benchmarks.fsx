@@ -3,7 +3,7 @@
 Benchmarks
 ==========
 
-The following tables present benchmark results measuring the running times of the operations in the library. For descriptions of these operations, please refer to [API Overview](api-overview.html).
+The following tables present the running times of the operations in the library for a set of simple test cases. For descriptions of the differentiation operations, please refer to [API Overview](api-overview.html).
 
 The values are normalized with respect to the running time of the original function corresponding to each column. Operations **diffn** and **diffn'** are used with $n=2$, for enabling comparisons with **diff2** and **diff2'**. The used functions are $ f(x) = (\sin \sqrt{x + 2}) ^ 3$ for the scalar-to-scalar case, $ f(x,y,z) = (x\;\sqrt{y + z}\;\log z) ^ y $ for the vector-to-scalar case, and $f(x,y,z) = (\sin{x ^ y}, \sqrt{y + 2}, \log{xz}) $ for the vector-to-vector case.
 
@@ -442,7 +442,7 @@ The running times are averaged over half a million calls to each operation, on a
 Running Benchmarks on Your Machine
 ----------------------------------
 
-If you would like to run the benchmarks on your own machine, you can use the command line **_DiffSharp Benchmarks_** tool distributed together with the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
+If you would like to run the benchmarks on your own machine, you can use the **_DiffSharp Benchmarks_** command line tool distributed together with the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
 
 <div class="row">
     <div class="span6">

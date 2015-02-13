@@ -7,7 +7,7 @@
 Inverse Kinematics
 ==================
 
-[Inverse kinematics](http://en.wikipedia.org/wiki/Inverse_kinematics) is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints, to take the hand to that position?"
+[Inverse kinematics](http://en.wikipedia.org/wiki/Inverse_kinematics) is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints in the robot's body, to take the hand to that position?"
 
 For example, take the system drawn below, attached to a stationary structure on the left. This "arm" has two links of length $L_1$ and $L_2$, two joints at points $(0,0)$ and $(x_1,y_1)$, and the end point at $(x_2,y_2)$. 
 
@@ -27,7 +27,7 @@ $$$
  y_2 &=& y_1 + L_2 \sin (a_1 + a_2)\\
  \end{eqnarray*}
 
-A common approach to the inverse kinematics problem involves the use of Jacobian matrices for linearizing the system describing the position of the end point, in this example, $(x_2,y_2)$. This defines how the position of the end point changes relative to instantaneous changes in the joint angles.
+A common approach to the inverse kinematics problem involves the use of Jacobian matrices for linearizing the system describing the position of the end point, in this example, $(x_2,y_2)$. This defines how the position of the end point changes locally, relative to instantaneous changes in the joint angles.
 
 $$$
  \mathbf{J} = \begin{bmatrix}
@@ -45,7 +45,7 @@ Starting from a given position of the end point $\mathbf{x} = \mathbf{x_0}$ and 
 $$$
  \Delta \mathbf{a} = \eta \, (\mathbf{J^{-1}} \mathbf{e}) \; ,
 
-where $\mathbf{e} = \mathbf{x_T} - \mathbf{x}$ is the current position error and $\eta > 0$ is a small coefficient. Computing the new position $\mathbf{x}$ with the updated angles $\mathbf{a}$ and repeating this process until the error $\mathbf{e}$ gets near zero takes the end point of the mechanism to the target point $\mathbf{x_T}$.
+where $\mathbf{e} = \mathbf{x_T} - \mathbf{x}$ is the current position error and $\eta > 0$ is a small update coefficient. Computing the new position $\mathbf{x}$ with the updated angles $\mathbf{a}$ and repeating this process until the error $\mathbf{e}$ approaches zero takes the end point of the mechanism to the target point $\mathbf{x_T}$.
 
 We will make use of the **DiffSharp.AD.Reverse** module for calculating the Jacobian of the system.
 
@@ -144,7 +144,7 @@ drawArmLive (movement3 |> Seq.append movement2 |> Seq.append movement1)
     </div>
 </div>
 
-It is known that one can use the Jacobian transpose $\mathbf{J^T}$ instead of the inverse $\mathbf{J^{-1}}$ and obtain similar results, albeit with slightly different behavior.
+It is known that one can use the Jacobian transpose $\mathbf{J^T}$ instead of the inverse Jacobian $\mathbf{J^{-1}}$ and obtain similar results, albeit with slightly different behavior.
 
 The **DiffSharp.AD.Reverse** module provides the operation **jacobianTv** making use of reverse automatic differentiation to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the [API Overview](api-overview.html) and [Benchmarks](benchmarks.html) pages for a comparison of these operations.)
 

@@ -7,7 +7,14 @@ Numerical Differentiation
 
 In addition to AD, the DiffSharp library also implements [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation).
 
-Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.
+Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function evaluated at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.
+
+For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
+
+DiffSharp.Numerical
+-------------------
+
+This is a numerical differentiation module, used with the regular **float** numeric type.
 
 Currently the library uses the 1st order central difference
 
@@ -26,12 +33,6 @@ $$$
 
 for the **grad**, **hessian**, **laplacian**, and **jacobian** operations, where $ 0 < h \ll 1 $. The default step size is taken as $h = 10^{-5}$ and in future releases this will be replaced by adaptive methods for choosing the optimal step size for each operation.
 
-For a complete list of available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
-
-DiffSharp.Numerical
--------------------
-
-This is a numerical differentiation module, used with the regular **float** numeric type.
 *)
 
 open DiffSharp.Numerical

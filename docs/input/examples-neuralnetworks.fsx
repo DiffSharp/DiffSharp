@@ -83,7 +83,7 @@ let createNetwork (inputs:int) (layers:int[]) =
              b = adj (-0.5 + rnd.NextDouble())})})}
 (**
 
-This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers we want. The network is fully connected, meaning that each neuron in a layer receives as input all the outputs of the previous layer.
+This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers we want. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
 
 For example, using the code
 
@@ -93,7 +93,7 @@ let net1 = createNetwork 3 [|4; 2|]
 
 (**
 
-would give us the following network with 3 inputs, a hidden layer with 4 neurons, and an output layer with 2 neurons:
+would give us the following network with 3 input nodes, a hidden layer with 4 neurons, and an output layer with 2 neurons:
 
 <div class="row">
     <div class="span6 offset2">
@@ -103,7 +103,7 @@ would give us the following network with 3 inputs, a hidden layer with 4 neurons
 
 We can also have more than one hidden layer.
 
-For training networks, we will make use of reverse automatic differentiation (the **DiffSharp.AD.Reverse** module) for propagating the error at the output backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will use in an update rule
+For training networks, we will make use of reverse automatic differentiation (the **DiffSharp.AD.Reverse** module) for propagating the error at the output $E$ backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will then use in an update rule
 
 $$$
  \begin{eqnarray*}
@@ -111,7 +111,7 @@ $$$
  \Delta b_i &=& -\eta \frac{\partial E}{\partial b_i} \; ,\\
  \end{eqnarray*}
 
-where $E$ is the error at the output and $\eta$ is the learning rate.
+where $\eta$ is the learning rate.
 
 It is important to note that the backpropagation algorithm is just a special case of reverse AD, with which it shares a common history. Please see the [Reverse AD](gettingstarted-reversead.html) page for an explanation of the usage of adjoints and their backwards propagation.
 

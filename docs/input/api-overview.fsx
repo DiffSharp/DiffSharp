@@ -208,7 +208,7 @@ The following table gives an overview of the differentiation API provided by the
 Differentiation Operations and Variants
 ---------------------------------------
 
-The operations summarized in the above table have _prime-suffixed_ variants (e.g. **diff** and **diff'** ) that return tuples of (_the value of the original function_, _the value of the desired operation_). This is advantageous in the majority of AD operations, since the original function value would have been already computed as a by-product of AD computations, providing a performance advantage. 
+The operations summarized in the above table have _prime-suffixed_ variants (e.g. **diff** and **diff'** ) that return tuples containing the value of the original function together with the value of the desired operation. This is advantageous in the majority of AD operations, since the original function value is almost always already computed as a by-product of AD computations, providing a performance advantage. 
 *)
 
 // Use forward AD
@@ -231,7 +231,7 @@ Currently, the library provides the following operations:
 For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the derivative evaluated at $x$
 
 $$$
-  \left. \frac{d}{da} f(a) \right|_{a\; =\; x} .
+  \left. \frac{d}{da} f(a) \right|_{a\; =\; x} \; .
 
 ----------------------
 
@@ -248,7 +248,7 @@ $$$
 For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the second derivative evaluated at $x$
 
 $$$
-  \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} .
+  \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} \; .
 
 ----------------------
 
@@ -271,7 +271,7 @@ $$$
 For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the n-th derivative evaluated at $x$
 
 $$$
-  \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} .
+  \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} \; .
 
 ----------------------
 
@@ -288,7 +288,7 @@ $$$
 For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
 
 $$$
-  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \frac{\partial f}{{\partial a}_2}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} .
+  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \frac{\partial f}{{\partial a}_2}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ----------------------
 
@@ -307,7 +307,7 @@ For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in
 $$$
   \left( \nabla f \right)_\mathbf{x} \cdot \mathbf{v} \; .
 
-This value can be computed by the **DiffSharp.AD.Forward** module in an efficient way.
+This value can be computed efficiently by the **DiffSharp.AD.Forward** module in one forward evaluation of the function, without computing the full gradient.
 
 ----------------------
 
@@ -329,7 +329,7 @@ $$$
                                            \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2^2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
                                            \vdots  & \vdots  & \ddots & \vdots  \\
                                            \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
-                                          \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
+                                          \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ----------------------
 
@@ -348,7 +348,7 @@ For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} \; \mathbf{v} \; .
 
-This value can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+This value can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module using one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Hessian matrix).
 
 ----------------------
 
@@ -389,11 +389,11 @@ This value can be computed by the **DiffSharp.AD.ForwardReverse** module in a ma
 For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
 
 $$$
-  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \frac{\partial ^2 f}{\partial a_2^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} ,
+  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \frac{\partial ^2 f}{\partial a_2^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; ,
 
 which is the trace of the Hessian matrix.
 
-This value can be computed by the **DiffSharp.AD.Forward2** module in a matrix-free and efficient way.
+This value can be computed efficiently by the **DiffSharp.AD.Forward2** module, without computing the full Hessian matrix.
 
 ----------------------
 
@@ -414,7 +414,7 @@ $$$
                                                             \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_1}{\partial a_n} \\
                                                             \vdots & \ddots & \vdots  \\
                                                             \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
-                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ----------------------
 
@@ -433,15 +433,13 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \ma
 $$$
   \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} \mathbf{v} \; .
   
-This value can be computed by the **DiffSharp.AD.Forward** module in a matrix-free and efficient way.
+This value can be computed efficiently by the **DiffSharp.AD.Forward** module in one forward evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
 
 ----------------------
 
 ##### jacobianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m)}$
 
 **`jacobianv' f x v`** returns the original value and the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
-
-This can be computed by the **DiffSharp.AD.Forward** module in a matrix-free and efficient way.
 
 ----------------------
 
@@ -456,7 +454,7 @@ $$$
                                                             \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_1} \\
                                                             \vdots & \ddots & \vdots  \\
                                                             \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
-                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} .
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ----------------------
 
@@ -475,7 +473,7 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mat
 $$$
   \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} \mathbf{v} \; .
   
-This value can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and efficient way.
+This value can be computed efficiently by the **DiffSharp.AD.Reverse** module in one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
 
 ----------------------
 
@@ -483,47 +481,43 @@ This value can be computed by the **DiffSharp.AD.Reverse** module in a matrix-fr
 
 **`jacobianTv' f x v`** returns the original value and the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
-This can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and efficient way.
-
 ----------------------
 
 ##### jacobianTv'' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}$
 
 **`jacobianTv'' f x`** returns the original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. 
 
-Of the returned pair, the first is the original value of `f` at the point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
+Of the returned pair, the first is the original value of `f` at the point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can be used to compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
 
-This can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and efficient way.
+This can be computed efficiently by the **DiffSharp.AD.Reverse** module in a matrix-free way (without computing the full Jacobian matrix).
 
 ----------------------
 
 ##### jacobianvTv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^n)}$
 
-**`jacobianvTv f x v1 v2`** returns the Jacobian-vector product along vector `v1` and the transposed Jacobian-vector product along `v2` of a vector-to-vector function `f`, at point `x`.
+**`jacobianvTv f x v1 v2`** returns the Jacobian-vector product along the vector `v1`, and the transposed Jacobian-vector product along the vector`v2`, of a vector-to-vector function `f`, at the point `x`.
 
-This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module in one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
 
 ----------------------
 
 ##### jacobianvTv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times \mathbb{R}^n)}$
 
-**`jacobianvTv' f x v1 v2`** returns the original value, the Jacobian-vector product along vector `v1`, and the transposed Jacobian-vector product along `v2` of a vector-to-vector function `f`, at point `x`.
-
-This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+**`jacobianvTv' f x v1 v2`** returns the original value, the Jacobian-vector product along the vector `v1`, and the transposed Jacobian-vector product along the vector `v2` of a vector-to-vector function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobianvTv'' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}$
 
-**`jacobianvTv'' f x v1`** returns the original value, the Jacobian-vector product along vector `v1`, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`.
+**`jacobianvTv'' f x v1`** returns the original value, the Jacobian-vector product along the vector `v1`, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`.
 
-Of the returned 3-tuple, the first is the original value of `f` at the point `x`, the second is the Jacobian-vector product of `f` at the point `x` along the vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
+Of the returned 3-tuple, the first is the original value of `f` at the point `x`, the second is the Jacobian-vector product of `f` at the point `x` along the vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can be used to compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
 
-This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module in a matrix-free way (without computing the full Jacobian matrix).
 
 
 Implemented Differentiation Techniques
-----------------------
+--------------------------------------
 
 The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
 
@@ -552,8 +546,8 @@ open DiffSharp.AD.Forward
 
 // Gradient of a vector-to-scalar function
 // g1: float[] -> float[]
-// Inner lambda expression: Dual[] -> Dual
 // i.e. take the function arguments as a float[] and return the gradient as a float[]
+// Inner lambda expression: Dual[] -> Dual
 let g1 = grad (fun x -> sin (x.[0] * x.[1]))
 
 // Compute the gradient at (1, 2)
@@ -598,7 +592,7 @@ let g2vald = Vector.norm g2val
 let j = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
 
 // Compute the Jacobian at (1, 2)
-let jval = j (vector[1.; 2.])
+let jval = j (vector [1.; 2.])
 
 // Compute the determinant of the Jacobian matrix
 let jvalb = Matrix.det jval

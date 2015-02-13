@@ -7,18 +7,24 @@ Symbolic Differentiation
 
 In addition to AD, the DiffSharp library also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of mathematical expressions using rules of differential calculus.
 
-For a complete list of available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
+For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 DiffSharp.Symbolic
 ------------------
 
 This is a symbolic differentiation module, used with the [**Expr**](http://msdn.microsoft.com/en-us/library/ee370577.aspx) type representing F# code expressions. A common way of generating F# code expressions is to use [code quotations](http://msdn.microsoft.com/en-us/library/dd233212.aspx), with the <@ and @> symbols delimiting an expression.
+
+Symbolic differentiation operators construct the wanted derivative as a new expression and return this as a compiled function that can be used subsequently for evaluating the derivative. Once the compiled derivative function is returned, it is significantly faster to run it for computing the derivative at any point, compared to the initial time it takes to generate the function. You can see example compilation and running times on the [Benchmarks](benchmarks.html) page.
 *)
 
 open DiffSharp.Symbolic
 
-// Derivative of Sin(3 * Sqrt(x)) at x = 2
-let d = diff <@ fun x -> sin (3. * sqrt x) @> 2.
+// Derivative of Sin(3 * Sqrt(x))
+// This returns a compiled function that gives the derivative
+let d = diff <@ fun x -> sin (3. * sqrt x) @>
+
+// Compute the derivative at x = 2
+let d2 = d 2.
 
 (**
 Function definitions should be marked with the [**ReflectedDefinition**](http://msdn.microsoft.com/en-us/library/ee353643.aspx) attribute for allowing access to quotation expressions at runtime.
@@ -44,9 +50,9 @@ let gg = grad <@ g @> [|2.; 3.|]
 
 (**
 
-Functions can be marked with the **ReflectedDefinition** attribute one by one, or they can be put into a module marked with this attribute to make it apply to all recursively.
+Functions can be marked with the **ReflectedDefinition** attribute one by one, or they can be put into a module marked with this attribute to make it apply to all.
 
-Operations will delve into the definitions of other functions referenced from a given function (the referenced function will be _inlined_ into the body of the calling function), as long as they have the **ReflectedDefinition** attribute.
+Differentiation operations will delve into the definition of any other function referenced from a given function (the referenced function will be _inlined_ into the body of the calling function), as long as they have the **ReflectedDefinition** attribute.
 
 *)
 

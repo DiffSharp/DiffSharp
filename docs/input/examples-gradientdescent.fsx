@@ -45,7 +45,7 @@ let gradDesc f x0 (a:float) t =
     (Seq.last dseq, dseq)
 
 (**
-Let us find the minimum of $f(x, y) = (\sin x + \cos y)$.
+Let us find a minimum of $f(x, y) = (\sin x + \cos y)$.
 *)
 
 // Find the minimum of Sin(x) + Cos(y)

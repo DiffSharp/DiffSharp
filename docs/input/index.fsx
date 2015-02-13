@@ -7,15 +7,16 @@ DiffSharp: Automatic Differentiation Library
 
 DiffSharp (Diff#) is an [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language.
 
-AD allows exact and efficient calculation of derivatives, by systematically applying the chain rule of calculus at the elementary operator level. AD is different from _numerical differentiation_, which is prone to truncation and round-off errors, and _symbolic differentiation_, which is exact but not efficient for run-time calculations and can only handle closed-form mathematical expressions.
+AD allows exact and efficient calculation of derivatives, by systematically applying the chain rule of calculus at the elementary operator level. AD is different from [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation), which is prone to truncation and round-off errors, and [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which is exact but not efficient for run-time calculations and can only handle closed-form mathematical expressions.
 
-Using the DiffSharp library, derivative calculations can be incorporated with minimal change into existing algorithms.
+Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Please see the [API Overview](api-overview.html) page for a list of available operations.
 
 The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
 
 How to Get
 ----------
-You can download and install the library via NuGet.
+
+You can install the library via NuGet. You can also download the source code or the binaries of the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
 
 <div class="row">
     <div class="span1"></div>
@@ -27,8 +28,6 @@ You can download and install the library via NuGet.
     </div>
     <div class="span1"></div>
 </div>
-
-You can also download the source code or the binaries of the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
 
 Future Releases
 ---------------

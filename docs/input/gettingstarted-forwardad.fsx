@@ -5,14 +5,14 @@
 Forward AD
 ==========
 
-DiffSharp provides several implementations of forward AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.
+The DiffSharp library provides several implementations of forward AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.
 
-For a complete list of available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
+For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 DiffSharp.AD.Forward
 --------------------
   
-This is a forward AD module implemented using [dual numbers](http://en.wikipedia.org/wiki/Dual_number) of primal and tangent values. It provides a performance advantage when computing the first derivative of scalar-to-scalar functions. 
+This is a forward AD module implemented using [dual numbers](http://en.wikipedia.org/wiki/Dual_number) of primal and tangent values. It provides a performance advantage when computing derivatives of scalar-to-scalar functions, or vector-to-vector functions $f: \mathbb{R}^n \to \mathbb{R}^m$ where $n \ll m$.
 
 This module is used with the **Dual** numeric type.
 *)
