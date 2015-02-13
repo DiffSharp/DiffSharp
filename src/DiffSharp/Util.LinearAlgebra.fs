@@ -35,13 +35,12 @@
 
 #light
 
-/// Lightweight Vector and Matrix types
+/// Lightweight generic Vector and Matrix types
 module DiffSharp.Util.LinearAlgebra
 
 open DiffSharp.Util.General
 
-
-/// Lightweight vector type
+/// Lightweight generic vector type
 [<NoEquality; NoComparison>]
 type Vector<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (+) : 'T * 'T -> 'T)
@@ -232,7 +231,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _ -> Vector.Zero
         | Vector va -> Vector.Create(va.Length, fun i -> -va.[i])
 
-/// Lightweight matrix type
+/// Lightweight generic matrix type
 [<NoEquality; NoComparison>]
 type Matrix<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member One : 'T)
