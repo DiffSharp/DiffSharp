@@ -289,7 +289,7 @@ module ForwardReverseOps =
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using reverse mode AD.
     let inline jacobianTv' f x (v:float[]) =
-        let r1, r2= jacobianTv'' f x
+        let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
 
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using reverse mode AD.

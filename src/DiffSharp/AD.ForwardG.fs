@@ -162,7 +162,7 @@ module ForwardGOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
         dualGAct x 1 0 |> f |> tangent
-
+       
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x =
         dualGActArray x |> f |> tupleG

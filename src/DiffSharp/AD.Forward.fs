@@ -134,8 +134,6 @@ module DualOps =
     let inline dualSet (p, t) = Dual(float p, float t)
     /// Make active Dual (i.e. variable of differentiation), with primal value `p` and tangent 1
     let inline dualAct p = Dual(float p, 1.)
-    /// Make an array of arrays of Dual, with primal values given in array `x`. The tangent values along the diagonal are 1 and the rest are 0.
-    let inline dualActArrayArray (x:_[]) = Array.init x.Length (fun i -> (Array.init x.Length (fun j -> if i = j then dualAct x.[j] else dual x.[j])))
     /// Get the primal value of a Dual
     let inline primal (Dual(p, _)) = p
     /// Get the tangent value of a Dual
@@ -164,18 +162,26 @@ module ForwardOps =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x =
-        let a = Array.map f (dualActArrayArray x)
-        (primal a.[0], Array.map tangent a)
+    let inline grad' f (x:float[]) =
+        let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
+        (fst a.[0], Array.map snd a)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad f x =
         grad' f x |> snd
 
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v = 
+        Array.zip x v |> Array.map dualSet |> f |> Array.map tuple |> Array.unzip
+
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv f x v = 
+        jacobianv' f x v |> snd
+
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x =
-        let a = Array.map f (dualActArrayArray x)
-        (Array.map primal a.[0], Array2D.map tangent (array2D a))
+    let inline jacobianT' f (x:float[]) =
+        let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
+        (fst a.[0], array2D (Array.map snd a))
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
@@ -189,14 +195,6 @@ module ForwardOps =
     let inline jacobian f x =
         jacobian' f x |> snd
 
-    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f x v = 
-        Array.zip x v |> Array.map dualSet |> f |> Array.map tuple |> Array.unzip
-
-    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv f x v = 
-        jacobianv' f x v |> snd
-            
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -230,7 +228,6 @@ module NumericLiteralQ = // (Allowed literals : Q, R, Z, I, N, G)
     let FromZero () = dual 0.
     let FromOne () = dual 1.
     let FromInt32 p = dual (float p)
-
 
 /// Numeric literal for a Dual with tangent 1 (i.e. the variable of differentiation)
 module NumericLiteralR =    

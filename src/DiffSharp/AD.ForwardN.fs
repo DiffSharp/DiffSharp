@@ -138,8 +138,6 @@ module DualNOps =
     let inline dualNSet (p, t) = DualN.Create(float p, float t)
     /// Make active DualN (i.e. variable of differentiation), with primal value `p` and tangent 1
     let inline dualNAct p = DualN.Create(float p, 1.)
-    /// Make an array of arrays of DualN, with primal values given in array `x`. The tangent values along the diagonal are 1, the rest are 0.
-    let inline dualNActArrayArray (x:_[]) = Array.init x.Length (fun i -> (Array.init x.Length (fun j -> if i = j then dualNAct x.[j] else dualN x.[j])))
     /// Get the primal value of a DualN
     let inline primal (DualN(p, _)) = p
     /// Get the tangent value of a DualN
@@ -204,27 +202,39 @@ module ForwardNOps =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x =
-        let a = Array.map f (dualNActArrayArray x)
-        (primal a.[0], Array.map tangent a)
+    let inline grad' f (x:float[]) =
+        let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
+        (fst a.[0], Array.map snd a)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad f x =
         grad' f x |> snd
             
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' f x =
-        let a = Array.map f (dualNActArrayArray x)
-        (let (DualN(p, _)) = a.[0] in p, Array.sumBy tangent2 a)
+    let inline laplacian' f (x:float[]) =
+        let a = Array.init x.Length (fun i ->
+                                        standardBasis x.Length i
+                                        |> Array.zip x
+                                        |> Array.map dualNSet
+                                        |> f)
+        (primal a.[0], Array.sumBy tangent2 a)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv' f x v = 
+        Array.zip x v |> Array.map dualNSet |> f |> Array.map tuple |> Array.unzip
+
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianv f x v = 
+        jacobianv' f x v |> snd
+
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f x =
-        let a = Array.map f (dualNActArrayArray x)
-        (Array.map primal a.[0], Array2D.map tangent (array2D a))
+    let inline jacobianT' f (x:float[]) =
+        let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
+        (fst a.[0], array2D (Array.map snd a))
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
@@ -238,13 +248,6 @@ module ForwardNOps =
     let inline jacobian f x =
         jacobian' f x |> snd
 
-    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f x v = 
-        Array.zip x v |> Array.map dualNSet |> f |> Array.map tuple |> Array.unzip
-
-    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv f x v = 
-        jacobianv' f x v |> snd
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
