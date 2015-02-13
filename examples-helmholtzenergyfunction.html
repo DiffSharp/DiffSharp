@@ -56,7 +56,7 @@
 
 <p>where <span class="math">\(R\)</span> is the universal gas constant, <span class="math">\(T\)</span> is the absolute temperature, <span class="math">\(\mathbf{b} \in \mathbb{R}^n\)</span> is a vector of constants, <span class="math">\(\mathbf{A} \in \mathbb{R}^{n \times n}\)</span> is a symmetric matrix of constants, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span> is the vector of independent variables describing the system.</p>
 
-<p>In practice, gradients of formulae such as this need to be evaluated thousands of times for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.</p>
+<p>In practice, gradients of formulae such as this need to be evaluated at thousands of points for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.</p>
 
 <p>Let us compute the gradient of this function with the <strong>DiffSharp.AD.Reverse</strong> module. <span class="math">\(f(x): \mathbb{R}^n \to \mathbb{R}\)</span> being a scalar valued function of many variables, this is an ideal case for using reverse automatic differentiation, which needs only one forward and one reverse evaluation of <span class="math">\(f(x)\)</span> to compute all the partial derivatives <span class="math">\(\frac{\partial f}{\partial x_i}\)</span>.</p>
 
@@ -446,7 +446,7 @@
 <div class="tip" id="fs72">val a : Dual</div>
 <div class="tip" id="fs73">val testHelmholtzDual : n:int -&gt; Vector&lt;float&gt;<br /><br />Full name: Examples-helmholtzenergyfunction.testHelmholtzDual</div>
 <div class="tip" id="fs74">val dual : p:&#39;a -&gt; Dual (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Forward.DualOps.dual</div>
-<div class="tip" id="fs75">val grad : f:(Vector&lt;Dual&gt; -&gt; Dual) -&gt; x:Vector&lt;&#39;a&gt; -&gt; Vector&lt;float&gt; (requires member get_Zero and member ( + ) and member ( - ) and member ( * ) and member ( / ) and member ( ~- ) and member Sqrt and member Abs and member op_Explicit and comparison)<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
+<div class="tip" id="fs75">val grad : f:(Vector&lt;Dual&gt; -&gt; Dual) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br /><br />Full name: DiffSharp.AD.Forward.Vector.grad</div>
 <div class="tip" id="fs76">module ForwardG<br /><br />from DiffSharp.AD</div>
 <div class="tip" id="fs77">module Vector<br /><br />from DiffSharp.AD.ForwardG</div>
 <div class="tip" id="fs78">val helmholtzDualG : R:&#39;a -&gt; T:&#39;b -&gt; b:Vector&lt;DualG&gt; -&gt; A:Matrix&lt;DualG&gt; -&gt; x:Vector&lt;DualG&gt; -&gt; DualG<br /><br />Full name: Examples-helmholtzenergyfunction.helmholtzDualG</div>
@@ -485,31 +485,9 @@
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-forwardreversead.html">Reverse-on-Forward AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li class="divider"></li>
-
-            <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
-            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
-            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
-            <li>Restricted Boltzmann Machines (to come)</li>
-            <li>Probabilistic Programming<br>(to come)</li>
-
-            <li class="nav-header">Dynamical Systems</li>
-            <li>Stability Analysis (to come)</li>
-
-            <li class="nav-header">Control</li>
-            <li><a href="examples-kinematics.html">Kinematics</a></li>
-            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
-
-            <li class="nav-header">Physics</li>
-            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
-
-            <li class="nav-header">Math</li>
-            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
             <li class="divider"></li>
@@ -518,6 +496,30 @@
             <li class="nav-header">Reference</li>
             <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>

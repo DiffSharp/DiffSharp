@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Quotations - DiffSharp</title>
+    <title>ForwardReverse - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
@@ -45,66 +45,59 @@
 
 
 
-<h1>Quotations</h1>
+<h1>ForwardReverse</h1>
 <div class="xmldoc">
-<p>Utility functions used for handling quotations</p>
+<p>Reverse-on-forward AD module</p>
 </div>
 
 <!-- Render nested types and modules, if there are any -->
-
-  <h3>Functions and values</h3>
-  <table class="table table-bordered member-list">
+  <h2>Nested types and modules</h2>
+  <div>
+      <table class="table table-bordered type-list">
     <thead>
-      <tr><td>Function or value</td><td>Description</td></tr>
+      <tr><td>Type</td><td>Description</td></tr>
     </thead>
     <tbody>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '493', 493)" onmouseover="showTip(event, '493', 493)">
-            expand expr
-          </code>
-          <div class="tip" id="493">
-            <strong>Signature:</strong> expr:Expr -&gt; Expr<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Completely expand Expr <code>expr</code></p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '494', 494)" onmouseover="showTip(event, '494', 494)">
-            getExprArgs expr
-          </code>
-          <div class="tip" id="494">
-            <strong>Signature:</strong> expr:Expr -&gt; Var []<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get the arguments of a function given in Expr <code>expr</code>, as a Var array</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '495', 495)" onmouseover="showTip(event, '495', 495)">
-            methInf op
-          </code>
-          <div class="tip" id="495">
-            <strong>Signature:</strong> op:Expr -&gt; MethodInfo<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          <p>Get MethodInfo of an operation quoted in Expr <code>op</code></p>
-
-        </td>
-      </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-ad-forwardreverse-dualadj.html">DualAdj</a>
+          </td>
+          <td class="xmldoc"><p>DualAdj numeric type, keeping the primals and adjoints of primal and tangent values</p>
+</td>
+        </tr>
     </tbody>
   </table>
+  <table class="table table-bordered module-list">
+    <thead>
+      <tr><td>Module</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="module-name">
+            <a href="diffsharp-ad-forwardreverse-dualadjops.html">DualAdjOps</a>
+          </td>
+          <td class="xmldoc"><p>DualAdj operations module (automatically opened)</p>
+</td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="diffsharp-ad-forwardreverse-forwardreverseops.html">ForwardReverseOps</a>
+          </td>
+          <td class="xmldoc"><p>ForwardReverse differentiation operations module (automatically opened)</p>
+</td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="diffsharp-ad-forwardreverse-vector.html">Vector</a>
+          </td>
+          <td class="xmldoc"><p>Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]</p>
+</td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
 
         </div>
         <div class="span3">

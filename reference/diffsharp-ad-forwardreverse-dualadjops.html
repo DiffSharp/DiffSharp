@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Quotations - DiffSharp</title>
+    <title>DualAdjOps - DiffSharp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
@@ -45,9 +45,9 @@
 
 
 
-<h1>Quotations</h1>
+<h1>DualAdjOps</h1>
 <div class="xmldoc">
-<p>Utility functions used for handling quotations</p>
+<p>DualAdj operations module (automatically opened)</p>
 </div>
 
 <!-- Render nested types and modules, if there are any -->
@@ -61,45 +61,120 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '493', 493)" onmouseover="showTip(event, '493', 493)">
-            expand expr
+          <code onmouseout="hideTip(event, '312', 312)" onmouseover="showTip(event, '312', 312)">
+            adjoint arg1
           </code>
-          <div class="tip" id="493">
-            <strong>Signature:</strong> expr:Expr -&gt; Expr<br />
+          <div class="tip" id="312">
+            <strong>Signature:</strong> DualAdj -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Completely expand Expr <code>expr</code></p>
+          <p>Get the adjoint of the primal value of a DualAdj</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '494', 494)" onmouseover="showTip(event, '494', 494)">
-            getExprArgs expr
+          <code onmouseout="hideTip(event, '313', 313)" onmouseover="showTip(event, '313', 313)">
+            dualAdj p
           </code>
-          <div class="tip" id="494">
-            <strong>Signature:</strong> expr:Expr -&gt; Var []<br />
-                      </div>
+          <div class="tip" id="313">
+            <strong>Signature:</strong> p:^?502668 -&gt; DualAdj<br />
+                          <strong>Type parameters:</strong> ^?502668          </div>
         </td>
         <td class="xmldoc">
-          <p>Get the arguments of a function given in Expr <code>expr</code>, as a Var array</p>
+          <p>Make DualAdj, with primal value <code>p</code> and tangent 0</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '495', 495)" onmouseover="showTip(event, '495', 495)">
-            methInf op
+          <code onmouseout="hideTip(event, '314', 314)" onmouseover="showTip(event, '314', 314)">
+            dualAdjAct p
           </code>
-          <div class="tip" id="495">
-            <strong>Signature:</strong> op:Expr -&gt; MethodInfo<br />
+          <div class="tip" id="314">
+            <strong>Signature:</strong> p:^?502673 -&gt; DualAdj<br />
+                          <strong>Type parameters:</strong> ^?502673          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make active DualAdj (i.e. variable of differentiation), with primal value <code>p</code> and tangent 1</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '315', 315)" onmouseover="showTip(event, '315', 315)">
+            dualAdjSet (p, t)
+          </code>
+          <div class="tip" id="315">
+            <strong>Signature:</strong> (p:^?502670 * t:^?502671) -&gt; DualAdj<br />
+                          <strong>Type parameters:</strong> ^?502670, ^?502671          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Make DualAdj, with primal value <code>p</code> and tangent value <code>t</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '316', 316)" onmouseover="showTip(event, '316', 316)">
+            primal arg1
+          </code>
+          <div class="tip" id="316">
+            <strong>Signature:</strong> DualAdj -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
-          <p>Get MethodInfo of an operation quoted in Expr <code>op</code></p>
+          <p>Get the primal value of a DualAdj</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '317', 317)" onmouseover="showTip(event, '317', 317)">
+            tangent arg1
+          </code>
+          <div class="tip" id="317">
+            <strong>Signature:</strong> DualAdj -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the tangent value of a DualAdj</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '318', 318)" onmouseover="showTip(event, '318', 318)">
+            tangentAdjoint arg1
+          </code>
+          <div class="tip" id="318">
+            <strong>Signature:</strong> DualAdj -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the adjoint of the tangent value of a DualAdj</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '319', 319)" onmouseover="showTip(event, '319', 319)">
+            tuple arg1
+          </code>
+          <div class="tip" id="319">
+            <strong>Signature:</strong> DualAdj -&gt; float * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Get the primal and tangent values of a DualAdj, as a tuple</p>
 
         </td>
       </tr>

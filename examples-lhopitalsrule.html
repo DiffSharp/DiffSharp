@@ -53,13 +53,13 @@
 <p><a href="http://en.wikipedia.org/wiki/L'H%C3%B4pital's_rule">l'Hôpital's rule</a> is a method for evaluating <a href="http://en.wikipedia.org/wiki/Limit_of_a_function">limits</a> involving <a href="http://en.wikipedia.org/wiki/Indeterminate_form">indeterminate forms</a>. The rule states that, under some conditions, the indeterminate limits</p>
 
 <p><span class="math">\[ \begin{eqnarray*}
- \lim_{x \to c} \frac{f(x)}{g(x)} &amp;=&amp; \frac{0}{0} ,\\
+ \lim_{x \to c} \frac{f(x)}{g(x)} &amp;=&amp; \frac{0}{0} \; ,\\
  \lim_{x \to c} \frac{f(x)}{g(x)} &amp;=&amp; \frac{\pm\infty}{\pm\infty}
  \end{eqnarray*}\]</span></p>
 
 <p>can be found by differentiating the numerator and the denominator and taking the limit, that is</p>
 
-<p><span class="math">\[ \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} .\]</span></p>
+<p><span class="math">\[ \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} \; .\]</span></p>
 
 <p>Let us try to find</p>
 
@@ -137,7 +137,7 @@
 
 <p>For <span class="math">\(n = 3\)</span>, we have the value of this limit as</p>
 
-<p><span class="math">\[ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 ,\]</span></p>
+<p><span class="math">\[ \lim_{x \to 0} \frac{2 \sin x - \sin 2x}{x - \sin x} = 6 \; ,\]</span></p>
 
 <p>after 3 applications of l'Hôpital's rule.</p>
 
@@ -148,7 +148,7 @@
  &amp;=&amp; \lim_{x \to 0} \frac{-2 \sin x + 4 \sin 2x}{\sin x}\\
  &amp;=&amp; \lim_{x \to 0} \frac{-2 \cos x + 8 \cos 2x}{\cos x}\\
  &amp;=&amp; \frac{-2 + 8}{1}\\
- &amp;=&amp; 6 .
+ &amp;=&amp; 6 \; .
  \end{eqnarray*}\]</span></p>
 
 <p>We can go further and automate this process by searching for the first element of the sequence that is not indeterminate.</p>
@@ -196,7 +196,7 @@
 
 <p>has indeterminate form <span class="math">\(0 / 0\)</span> and can be evaluated by</p>
 
-<p><span class="math">\[ \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 .\]</span></p>
+<p><span class="math">\[ \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 \; .\]</span></p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -217,7 +217,7 @@
 
 <p>has indeterminate form <span class="math">\(0 / 0\)</span> and can be evaluated by</p>
 
-<p><span class="math">\[ \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} .\]</span></p>
+<p><span class="math">\[ \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} \; .\]</span></p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -288,31 +288,9 @@
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-forwardreversead.html">Reverse-on-Forward AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li class="divider"></li>
-
-            <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
-            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
-            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
-            <li>Restricted Boltzmann Machines (to come)</li>
-            <li>Probabilistic Programming<br>(to come)</li>
-
-            <li class="nav-header">Dynamical Systems</li>
-            <li>Stability Analysis (to come)</li>
-
-            <li class="nav-header">Control</li>
-            <li><a href="examples-kinematics.html">Kinematics</a></li>
-            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
-
-            <li class="nav-header">Physics</li>
-            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
-
-            <li class="nav-header">Math</li>
-            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
             <li class="divider"></li>
@@ -321,6 +299,30 @@
             <li class="nav-header">Reference</li>
             <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>

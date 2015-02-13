@@ -50,7 +50,7 @@
         <div class="span9" id="main">
           <h1>Inverse Kinematics</h1>
 
-<p><a href="http://en.wikipedia.org/wiki/Inverse_kinematics">Inverse kinematics</a> is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints, to take the hand to that position?"</p>
+<p><a href="http://en.wikipedia.org/wiki/Inverse_kinematics">Inverse kinematics</a> is a technique in robotics (and in computer graphics and animation) to find joint configurations of a structure that would put an end-effector in a desired position in space. In other words, it answers the question: "given the desired position of a robot's hand, what should be the angles of all the joints in the robot's body, to take the hand to that position?"</p>
 
 <p>For example, take the system drawn below, attached to a stationary structure on the left. This "arm" has two links of length <span class="math">\(L_1\)</span> and <span class="math">\(L_2\)</span>, two joints at points <span class="math">\((0,0)\)</span> and <span class="math">\((x_1,y_1)\)</span>, and the end point at <span class="math">\((x_2,y_2)\)</span>.</p>
 
@@ -69,7 +69,7 @@
  y_2 &amp;=&amp; y_1 + L_2 \sin (a_1 + a_2)\\
  \end{eqnarray*}\]</span></p>
 
-<p>A common approach to the inverse kinematics problem involves the use of Jacobian matrices for linearizing the system describing the position of the end point, in this example, <span class="math">\((x_2,y_2)\)</span>. This defines how the position of the end point changes relative to instantaneous changes in the joint angles.</p>
+<p>A common approach to the inverse kinematics problem involves the use of Jacobian matrices for linearizing the system describing the position of the end point, in this example, <span class="math">\((x_2,y_2)\)</span>. This defines how the position of the end point changes locally, relative to instantaneous changes in the joint angles.</p>
 
 <p><span class="math">\[ \mathbf{J} = \begin{bmatrix}
               \frac{\partial x_2}{\partial a_1} &amp; \frac{\partial x_2}{\partial a_2} \\
@@ -84,7 +84,7 @@
 
 <p><span class="math">\[ \Delta \mathbf{a} = \eta \, (\mathbf{J^{-1}} \mathbf{e}) \; ,\]</span></p>
 
-<p>where <span class="math">\(\mathbf{e} = \mathbf{x_T} - \mathbf{x}\)</span> is the current position error and <span class="math">\(\eta &gt; 0\)</span> is a small coefficient. Computing the new position <span class="math">\(\mathbf{x}\)</span> with the updated angles <span class="math">\(\mathbf{a}\)</span> and repeating this process until the error <span class="math">\(\mathbf{e}\)</span> gets near zero takes the end point of the mechanism to the target point <span class="math">\(\mathbf{x_T}\)</span>.</p>
+<p>where <span class="math">\(\mathbf{e} = \mathbf{x_T} - \mathbf{x}\)</span> is the current position error and <span class="math">\(\eta &gt; 0\)</span> is a small update coefficient. Computing the new position <span class="math">\(\mathbf{x}\)</span> with the updated angles <span class="math">\(\mathbf{a}\)</span> and repeating this process until the error <span class="math">\(\mathbf{e}\)</span> approaches zero takes the end point of the mechanism to the target point <span class="math">\(\mathbf{x_T}\)</span>.</p>
 
 <p>We will make use of the <strong>DiffSharp.AD.Reverse</strong> module for calculating the Jacobian of the system.</p>
 
@@ -251,7 +251,7 @@ val movement3 : seq&lt;Vector&lt;float&gt;&gt;
     </div>
 </div>
 
-<p>It is known that one can use the Jacobian transpose <span class="math">\(\mathbf{J^T}\)</span> instead of the inverse <span class="math">\(\mathbf{J^{-1}}\)</span> and obtain similar results, albeit with slightly different behavior.</p>
+<p>It is known that one can use the Jacobian transpose <span class="math">\(\mathbf{J^T}\)</span> instead of the inverse Jacobian <span class="math">\(\mathbf{J^{-1}}\)</span> and obtain similar results, albeit with slightly different behavior.</p>
 
 <p>The <strong>DiffSharp.AD.Reverse</strong> module provides the operation <strong>jacobianTv</strong> making use of reverse automatic differentiation to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the <a href="api-overview.html">API Overview</a> and <a href="benchmarks.html">Benchmarks</a> pages for a comparison of these operations.)</p>
 
@@ -395,31 +395,9 @@ val movement3 : seq&lt;Vector&lt;float&gt;&gt;
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-forwardreversead.html">Reverse-on-Forward AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li class="divider"></li>
-
-            <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
-            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
-            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
-            <li>Restricted Boltzmann Machines (to come)</li>
-            <li>Probabilistic Programming<br>(to come)</li>
-
-            <li class="nav-header">Dynamical Systems</li>
-            <li>Stability Analysis (to come)</li>
-
-            <li class="nav-header">Control</li>
-            <li><a href="examples-kinematics.html">Kinematics</a></li>
-            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
-
-            <li class="nav-header">Physics</li>
-            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
-
-            <li class="nav-header">Math</li>
-            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
             <li class="divider"></li>
@@ -428,6 +406,30 @@ val movement3 : seq&lt;Vector&lt;float&gt;&gt;
             <li class="nav-header">Reference</li>
             <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>

@@ -52,7 +52,13 @@
 
 <p>In addition to AD, the DiffSharp library also implements <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>.</p>
 
-<p>Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.</p>
+<p>Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function evaluated at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.</p>
+
+<p>For a complete list of the available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
+
+<h2>DiffSharp.Numerical</h2>
+
+<p>This is a numerical differentiation module, used with the regular <strong>float</strong> numeric type.</p>
 
 <p>Currently the library uses the 1st order central difference</p>
 
@@ -67,12 +73,6 @@
 <p><span class="math">\[  \frac{df(x)}{dx} \approx \frac{f(x + h) - f(x)}{h}\]</span></p>
 
 <p>for the <strong>grad</strong>, <strong>hessian</strong>, <strong>laplacian</strong>, and <strong>jacobian</strong> operations, where <span class="math">\(0 &lt; h \ll 1\)</span>. The default step size is taken as <span class="math">\(h = 10^{-5}\)</span> and in future releases this will be replaced by adaptive methods for choosing the optimal step size for each operation.</p>
-
-<p>For a complete list of available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
-
-<h2>DiffSharp.Numerical</h2>
-
-<p>This is a numerical differentiation module, used with the regular <strong>float</strong> numeric type.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -156,31 +156,9 @@
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-forwardad.html">Forward AD</a></li>
             <li><a href="gettingstarted-reversead.html">Reverse AD</a></li>
+            <li><a href="gettingstarted-forwardreversead.html">Reverse-on-Forward AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
-
-            <li class="nav-header">Examples</li>
-            <li class="divider"></li>
-
-            <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
-            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
-            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
-            <li>Restricted Boltzmann Machines (to come)</li>
-            <li>Probabilistic Programming<br>(to come)</li>
-
-            <li class="nav-header">Dynamical Systems</li>
-            <li>Stability Analysis (to come)</li>
-
-            <li class="nav-header">Control</li>
-            <li><a href="examples-kinematics.html">Kinematics</a></li>
-            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
-
-            <li class="nav-header">Physics</li>
-            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
-
-            <li class="nav-header">Math</li>
-            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
             
             <li class="nav-header">Benchmarks</li>
             <li class="divider"></li>
@@ -189,6 +167,30 @@
             <li class="nav-header">Reference</li>
             <li class="divider"></li>
             <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="examples-kinematics.html">Kinematics</a></li>
+            <li><a href="examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>
