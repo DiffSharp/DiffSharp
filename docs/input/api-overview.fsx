@@ -534,11 +534,12 @@ Currently, the library provides the following implementations in separate module
 - **DiffSharp.AD.ForwardG**: Forward AD, keeping vectors of gradient components
 - **DiffSharp.AD.ForwardGH**: Forward AD, keeping vectors of gradient components and matrices of Hessian components
 - **DiffSharp.AD.ForwardN**: Forward AD, lazy higher-order
+- **DiffSharp.AD.ForwardReverse**: Reverse-on-forward AD
 - **DiffSharp.AD.Reverse**: Reverse AD
 - **DiffSharp.Numerical**: Numerical differentiation
 - **DiffSharp.Symbolic**: Symbolic differentiation
 
-For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
+For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Reverse-on-Forward AD](gettingstarted-forwardreversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
 
 Vector and Matrix versus float[] and float[,]
 ---------------------------------------------
