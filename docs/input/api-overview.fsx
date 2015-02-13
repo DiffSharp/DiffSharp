@@ -11,148 +11,193 @@ The following table gives an overview of the differentiation API provided by the
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg .tg-5nhg{font-size:11px;background-color:#ecf4ff;text-align:center}
-.tg .tg-0e45{font-size:11px}
-.tg .tg-sgic{font-size:11px;background-color:#ffffc7;text-align:center}
-.tg .tg-71xk{font-size:11px;background-color:#e4ffb3;text-align:center}
-.tg .tg-sfug{font-size:11px;background-color:#ecf4ff;color:#000000;text-align:center}
-.tg .tg-nl5m{font-weight:bold;font-size:11px}
+.tg .tg-1r2d{font-size:9px;background-color:#ecf4ff;text-align:center}
+.tg .tg-glis{font-size:9px}
+.tg .tg-wcxf{font-size:9px;background-color:#ffffc7;text-align:center}
+.tg .tg-aycn{font-size:9px;background-color:#e4ffb3;text-align:center}
+.tg .tg-wklz{font-size:9px;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-7dqz{font-weight:bold;font-size:9px}
 </style>
 <table class="tg">
   <tr>
-    <th class="tg-0e45"></th>
-    <th class="tg-sgic">diff</th>
-    <th class="tg-sgic">diff2</th>
-    <th class="tg-sgic">diffn</th>
-    <th class="tg-71xk">grad</th>
-    <th class="tg-71xk">gradv</th>
-    <th class="tg-71xk">hessian</th>
-    <th class="tg-71xk">gradhessian</th>
-    <th class="tg-71xk">laplacian</th>
-    <th class="tg-sfug">jacobian</th>
-    <th class="tg-5nhg">jacobianv</th>
-    <th class="tg-5nhg">jacobianT</th>
-    <th class="tg-5nhg">jacobianTv</th>
+    <th class="tg-glis"></th>
+    <th class="tg-wcxf">diff</th>
+    <th class="tg-wcxf">diff2</th>
+    <th class="tg-wcxf">diffn</th>
+    <th class="tg-aycn">grad</th>
+    <th class="tg-aycn">gradv</th>
+    <th class="tg-aycn">hessian</th>
+    <th class="tg-aycn">hessianv</th>
+    <th class="tg-aycn">gradhessian</th>
+    <th class="tg-aycn">gradhessianv</th>
+    <th class="tg-aycn">laplacian</th>
+    <th class="tg-wklz">jacobian</th>
+    <th class="tg-1r2d">jacobianv</th>
+    <th class="tg-1r2d">jacobianT</th>
+    <th class="tg-1r2d">jacobianTv</th>
+    <th class="tg-1r2d">jacobianvTv</th>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.Forward</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.Forward</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.Forward2</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.Forward2</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.ForwardG</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg"></td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.ForwardG</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.ForwardGH</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg"></td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.ForwardN</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.ForwardN</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.AD.Reverse</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-71xk">XA</td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg"></td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg">X</td>
+    <td class="tg-7dqz">DiffSharp.AD.ForwardReverse</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.Numerical</td>
-    <td class="tg-sgic">A</td>
-    <td class="tg-sgic">A</td>
-    <td class="tg-sgic"></td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-71xk">A</td>
-    <td class="tg-sfug">A</td>
-    <td class="tg-5nhg">A</td>
-    <td class="tg-5nhg">A</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.AD.Reverse</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">XA</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-nl5m">DiffSharp.Symbolic</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-sgic">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk"></td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-71xk">X</td>
-    <td class="tg-sfug">X</td>
-    <td class="tg-5nhg"></td>
-    <td class="tg-5nhg">X</td>
-    <td class="tg-5nhg"></td>
+    <td class="tg-7dqz">DiffSharp.Numerical</td>
+    <td class="tg-wcxf">A</td>
+    <td class="tg-wcxf">A</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-aycn">A</td>
+    <td class="tg-wklz">A</td>
+    <td class="tg-1r2d">A</td>
+    <td class="tg-1r2d">A</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">DiffSharp.Symbolic</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d"></td>
   </tr>
 </table>
 
@@ -294,6 +339,25 @@ $$$
 
 ----------------------
 
+##### hessianv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}$
+
+**`hessianv f x v`** returns the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{H}_f \right)_\mathbf{x} \; \mathbf{v} \; .
+
+This value can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+
+----------------------
+
+##### hessianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}$
+
+**`hessianv' f x v`** returns the original value and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+
+----------------------
+
 ##### gradhessian : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^n \times \mathbb{R}^{n \times n})}$
 
 **`gradhessian f x`** returns the gradient and the Hessian of a vector-to-scalar function `f`, at the point `x`.
@@ -303,6 +367,18 @@ $$$
 ##### gradhessian' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})}$
 
 **`gradhessian' f x`** returns the original value, the gradient, and the Hessian of a vector-to-scalar function `f`, at the point `x`.
+
+----------------------
+
+##### gradhessianv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}$
+
+**`gradhessianv f x v`** returns the gradient-vector product (directional derivative) and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+
+----------------------
+
+##### gradhessianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R} \times \mathbb{R}^n)}$
+
+**`gradhessianv' f x v`** returns the original value, the gradient-vector product (directional derivative), and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
@@ -365,6 +441,8 @@ This value can be computed by the **DiffSharp.AD.Forward** module in a matrix-fr
 
 **`jacobianv' f x v`** returns the original value and the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
+This can be computed by the **DiffSharp.AD.Forward** module in a matrix-free and efficient way.
+
 ----------------------
 
 ##### jacobianT : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times m}}$
@@ -413,9 +491,36 @@ This can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and
 
 **`jacobianTv'' f x`** returns the original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. 
 
-Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
+Of the returned pair, the first is the original value of `f` at the point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
 
 This can be computed by the **DiffSharp.AD.Reverse** module in a matrix-free and efficient way.
+
+----------------------
+
+##### jacobianvTv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^n)}$
+
+**`jacobianvTv f x v1 v2`** returns the Jacobian-vector product along vector `v1` and the transposed Jacobian-vector product along `v2` of a vector-to-vector function `f`, at point `x`.
+
+This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+
+----------------------
+
+##### jacobianvTv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times \mathbb{R}^n)}$
+
+**`jacobianvTv' f x v1 v2`** returns the original value, the Jacobian-vector product along vector `v1`, and the transposed Jacobian-vector product along `v2` of a vector-to-vector function `f`, at point `x`.
+
+This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+
+----------------------
+
+##### jacobianvTv'' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}$
+
+**`jacobianvTv'' f x v1`** returns the original value, the Jacobian-vector product along vector `v1`, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`.
+
+Of the returned 3-tuple, the first is the original value of `f` at the point `x`, the second is the Jacobian-vector product of `f` at the point `x` along the vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
+
+This can be computed by the **DiffSharp.AD.ForwardReverse** module in a matrix-free and efficient way.
+
 
 Implemented Differentiation Techniques
 ----------------------
