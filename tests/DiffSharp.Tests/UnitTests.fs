@@ -2,7 +2,7 @@
 // This file is part of
 // DiffSharp -- F# Automatic Differentiation Library
 //
-// Copyright (C) 2014, National University of Ireland Maynooth.
+// Copyright (C) 2014, 2015, National University of Ireland Maynooth.
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by

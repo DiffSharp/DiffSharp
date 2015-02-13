@@ -2,7 +2,7 @@
 DiffSharp: Automatic Differentiation Library
 =================================================
 
-Copyright 2014, National University of Ireland Maynooth.
+Copyright 2014, 2015, National University of Ireland Maynooth.
 
 Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
 

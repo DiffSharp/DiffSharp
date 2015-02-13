@@ -2,7 +2,7 @@
 // This file is part of
 // DiffSharp -- F# Automatic Differentiation Library
 //
-// Copyright (C) 2014, National University of Ireland Maynooth.
+// Copyright (C) 2014, 2015, National University of Ireland Maynooth.
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
 
 /// Numerical differentiation operations module (automatically opened)
+// HIGHLY UNOPTIMIZED PLACEHOLDER CODE
 [<AutoOpen>]
 module NumericalOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
@@ -51,9 +52,9 @@ module NumericalOps =
         (f x, diff f x)
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:float[]->float) x v =
-        let veps = eps * Vector.Create(v)
-        let xv = Vector.Create(x)
+    let inline gradv (f:float[]->float) (x:float[]) (v:float[]) =
+        let veps = eps * (vector v)
+        let xv = vector x
         ((f (Vector.toArray (xv + veps))) - (f (Vector.toArray (xv - veps)))) / deps
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
@@ -74,10 +75,10 @@ module NumericalOps =
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' (f:float[]->float) x =
-        let xv = Vector.Create(x)
+        let xv = vector x
         let fx = f x
-        let g = Vector.Create(x.Length, fx)
-        let gg = Vector.Create(x.Length, fun i -> f (Vector.toArray (xv + Vector.Create(x.Length, i, eps))))
+        let g = Vector.create x.Length fx
+        let gg = Vector.init x.Length (fun i -> f (Vector.toArray (xv + Vector.Create(x.Length, i, eps))))
         (fx, Vector.toArray ((gg - g) / eps))
     
     /// Gradient of a vector-to-scalar function `f`, at point `x`
@@ -86,7 +87,7 @@ module NumericalOps =
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian' f x =
-        let xv = Vector(x)
+        let xv = vector x
         let (fx, g) = grad' f x
         let h = Matrix.Create(x.Length, g)
         let hh = Matrix.Create(x.Length, fun i -> grad f (Vector.toArray (xv + Vector.Create(x.Length, i, eps))))
@@ -103,6 +104,28 @@ module NumericalOps =
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
         gradhessian' f x |> trd
+
+    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
+    let inline hessianv' (f:float[]->float) (x:float[]) (v:float[]) =
+        let xv = vector x
+        let veps = eps * (vector v)
+        let fx, gg1 = grad' f (Vector.toArray (xv + veps))
+        let gg2 = grad f (Vector.toArray (xv - veps))
+        (fx, Vector.toArray (((vector gg1) - (vector gg2)) / deps))
+
+    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
+    let inline hessianv (f:float[]->float) x v =
+        hessianv' f x v |> snd
+
+    /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar funtion `f`, at point `x`, along vector `v`
+    let inline gradhessianv' (f:float[]->float) x v =
+        let fx, gv = gradv' f x v
+        let hv = hessianv f x v
+        (fx, gv, hv)
+
+    /// Gradient-vector product (directional derivative) and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
+    let inline gradhessianv (f:float[]->float) x v =
+        gradhessianv' f x v |> sndtrd
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian' f x =
