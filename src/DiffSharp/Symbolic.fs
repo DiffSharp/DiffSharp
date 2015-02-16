@@ -134,15 +134,6 @@ module ExprOps =
         | ShapeLambda(arg, body) -> Expr.Lambda(arg, diffExpr v body)
         | ShapeCombination(shape, args) -> RebuildShapeCombination(shape, List.map (diffExpr v) args)
     
-    /// Symbolically differentiate Expr `expr` with respect to variable name `vname`
-    let diffSym vname expr =
-        let eexpr = expr
-        let args = getExprArgs eexpr
-        let xvar = Array.tryFind (fun (a:Var) -> a.Name = vname) args
-        match xvar with
-        | Some(v) -> eexpr |> diffExpr v
-        | None -> eexpr |> diffExpr (Var(vname, args.[0].Type))
-    
     /// Compute the `n`-th derivative of an Expr, with respect to Var `v`
     let rec diffExprN v n =
         match n with
