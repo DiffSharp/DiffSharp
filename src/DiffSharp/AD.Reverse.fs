@@ -70,11 +70,21 @@ type Trace() =
         while Trace.Stack.Count > 0 do
             match Trace.Stack.Pop() with
             | Add(x, y, z) -> x.AddAdj(z.A); y.AddAdj(z.A)
+            | AddCons(x, z) -> x.AddAdj(z.A)
             | Sub(x, y, z) -> x.AddAdj(z.A); y.AddAdj(-z.A)
+            | SubAdjCons(x, z) -> x.AddAdj(z.A)
+            | SubConsAdj(y, z) -> y.AddAdj(-z.A)
             | Mul(x, y, z) -> x.AddAdj(z.A * y.P); y.AddAdj(z.A * x.P)
+            | MulCons(x, y, z) -> x.AddAdj(z.A * y)
             | Div(x, y, z) -> x.AddAdj(z.A * (1. / y.P)); y.AddAdj(z.A * (-x.P / (y.P * y.P)))
+            | DivAdjCons(x, y, z) -> x.AddAdj(z.A * (1. / y))
+            | DivConsAdj(x, y, z) -> y.AddAdj(z.A * (-x / (y.P * y.P)))
             | Pow(x, y, z) -> x.AddAdj(z.A * (x.P ** (y.P - 1.)) * y.P); y.AddAdj(z.A * (x.P ** y.P) * log x.P)
+            | PowAdjCons(x, y, z) -> x.AddAdj(z.A * (x.P ** (y - 1.)) * y)
+            | PowConsAdj(x, y, z) -> y.AddAdj(z.A * (x ** y.P) * log x)
             | Atan2(x, y, z) -> x.AddAdj(z.A * y.P / (x.P * x.P + y.P * y.P)); y.AddAdj(z.A * (-x.P) / (x.P * x.P + y.P * y.P))
+            | Atan2AdjCons(x, y, z) -> x.AddAdj(z.A * y / (x.P * x.P + y * y))
+            | Atan2ConsAdj(x, y, z) -> y.AddAdj(z.A * (-x) / (x * x + y.P * y.P))
             | Log(x, z) -> x.AddAdj(z.A / x.P)
             | Log10(x, z) -> x.AddAdj(z.A / (x.P * log10val))
             | Exp(x, z) -> x.AddAdj(z.A * z.P)
@@ -97,11 +107,21 @@ type Trace() =
 /// Discriminated union of operations for recording the trace
 and Op =
     | Add of Adj * Adj * Adj
+    | AddCons of Adj * Adj
     | Sub of Adj * Adj * Adj
+    | SubAdjCons of Adj * Adj
+    | SubConsAdj of Adj * Adj
     | Mul of Adj * Adj * Adj
+    | MulCons of Adj * float * Adj
     | Div of Adj * Adj * Adj
+    | DivAdjCons of Adj * float * Adj
+    | DivConsAdj of float * Adj * Adj
     | Pow of Adj * Adj * Adj
+    | PowAdjCons of Adj * float * Adj
+    | PowConsAdj of float * Adj * Adj
     | Atan2 of Adj * Adj * Adj
+    | Atan2AdjCons of Adj * float * Adj
+    | Atan2ConsAdj of float * Adj * Adj
     | Log of Adj * Adj
     | Log10 of Adj * Adj
     | Exp of Adj * Adj
@@ -152,33 +172,33 @@ and Adj =
     static member Pow (x:Adj, y:Adj) = let z = Adj(x.P ** y.P) in Trace.Push(Pow(x, y, z)); z
     static member Atan2 (x:Adj, y:Adj) = let z = Adj(atan2 x.P y.P) in Trace.Push(Atan2(x, y, z)); z
     // Adj - float binary operations
-    static member (+) (x:Adj, y:float) = x + Adj(y)
-    static member (-) (x:Adj, y:float) = x - Adj(y)
-    static member (*) (x:Adj, y:float) = x * Adj(y)
-    static member (/) (x:Adj, y:float) = x / Adj(y)
-    static member Pow (x:Adj, y:float) = x ** Adj(y)
-    static member Atan2 (x:Adj, y:float) = atan2 x (Adj(y))
+    static member (+) (x:Adj, y:float) = let z = Adj(x.P + y) in Trace.Push(AddCons(x, z)); z
+    static member (-) (x:Adj, y:float) = let z = Adj(x.P - y) in Trace.Push(SubAdjCons(x, z)); z
+    static member (*) (x:Adj, y:float) = let z = Adj(x.P * y) in Trace.Push(MulCons(x, y, z)); z
+    static member (/) (x:Adj, y:float) = let z = Adj(x.P / y) in Trace.Push(DivAdjCons(x, y, z)); z
+    static member Pow (x:Adj, y:float) = let z = Adj(x.P ** y) in Trace.Push(PowAdjCons(x, y, z)); z
+    static member Atan2 (x:Adj, y:float) = let z = Adj(atan2 x.P y) in Trace.Push(Atan2AdjCons(x, y, z)); z
     // float - Adj binary operations
-    static member (+) (x:float, y:Adj) = Adj(x) + y
-    static member (-) (x:float, y:Adj) = Adj(x) - y
-    static member (*) (x:float, y:Adj) = Adj(x) * y
-    static member (/) (x:float, y:Adj) = Adj(x) / y
-    static member Pow (x:float, y:Adj) = Adj(x) ** y
-    static member Atan2 (x:float, y:Adj) = atan2 (Adj(x)) y
+    static member (+) (x:float, y:Adj) = let z = Adj(x + y.P) in Trace.Push(AddCons(y, z)); z
+    static member (-) (x:float, y:Adj) = let z = Adj(x - y.P) in Trace.Push(SubConsAdj(y, z)); z
+    static member (*) (x:float, y:Adj) = let z = Adj(x * y.P) in Trace.Push(MulCons(y, x, z)); z
+    static member (/) (x:float, y:Adj) = let z = Adj(x / y.P) in Trace.Push(DivConsAdj(x, y, z)); z
+    static member Pow (x:float, y:Adj) = let z = Adj(x ** y.P) in Trace.Push(PowConsAdj(x, y, z)); z
+    static member Atan2 (x:float, y:Adj) = let z = Adj(atan2 x y.P) in Trace.Push(Atan2ConsAdj(x, y, z)); z
     // Adj - int binary operations
-    static member (+) (x:Adj, y:int) = x + Adj(float y)
-    static member (-) (x:Adj, y:int) = x - Adj(float y)
-    static member (*) (x:Adj, y:int) = x * Adj(float y)
-    static member (/) (x:Adj, y:int) = x / Adj(float y)
-    static member Pow (x:Adj, y:int) = x ** Adj(float y)
-    static member Atan2 (x:Adj, y:int) = atan2 x (Adj(float y))
+    static member (+) (x:Adj, y:int) = let z = Adj(x.P + float y) in Trace.Push(AddCons(x, z)); z
+    static member (-) (x:Adj, y:int) = let z = Adj(x.P - float y) in Trace.Push(SubAdjCons(x, z));
+    static member (*) (x:Adj, y:int) = let z = Adj(x.P + float y) in Trace.Push(MulCons(x, float y, z)); z
+    static member (/) (x:Adj, y:int) = let z = Adj(x.P / float y) in Trace.Push(DivAdjCons(x, float y, z)); z
+    static member Pow (x:Adj, y:int) = let z = Adj(x.P ** float y) in Trace.Push(PowAdjCons(x, float y, z)); z
+    static member Atan2 (x:Adj, y:int) = let z = Adj(atan2 x.P (float y)) in Trace.Push(Atan2AdjCons(x, float y, z)); z
     // int - Adj binary operations
-    static member (+) (x:int, y:Adj) = Adj(float x) + y
-    static member (-) (x:int, y:Adj) = Adj(float x) - y
-    static member (*) (x:int, y:Adj) = Adj(float x) * y
-    static member (/) (x:int, y:Adj) = Adj(float x) / y
-    static member Pow (x:int, y:Adj) = Adj(float x) ** y
-    static member Atan2 (x:int, y:Adj) = atan2 (Adj(float x)) y
+    static member (+) (x:int, y:Adj) = let z = Adj(float x + y.P) in Trace.Push(AddCons(y, z)); z
+    static member (-) (x:int, y:Adj) = let z = Adj(float x - y.P) in Trace.Push(SubConsAdj(y, z)); z
+    static member (*) (x:int, y:Adj) = let z = Adj(float x * y.P) in Trace.Push(MulCons(y, float x, z)); z
+    static member (/) (x:int, y:Adj) = let z = Adj(float x / y.P) in Trace.Push(DivConsAdj(float x, y, z)); z
+    static member Pow (x:int, y:Adj) = let z = Adj(float x ** y.P) in Trace.Push(PowConsAdj(float x, y, z)); z
+    static member Atan2 (x:int, y:Adj) = let z = Adj(atan2 (float x) y.P) in Trace.Push(Atan2ConsAdj(float x, y, z)); z
     // Adj unary operations
     static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
     static member Log10 (x:Adj) = let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
