@@ -13,12 +13,12 @@ The running times are averaged over half a million calls to each operation, on a
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg .tg-1r2d{font-size:9px;background-color:#ecf4ff;text-align:center}
-.tg .tg-glis{font-size:9px}
-.tg .tg-wcxf{font-size:9px;background-color:#ffffc7;text-align:center}
-.tg .tg-aycn{font-size:9px;background-color:#e4ffb3;text-align:center}
-.tg .tg-wklz{font-size:9px;background-color:#ecf4ff;color:#000000;text-align:center}
-.tg .tg-7dqz{font-weight:bold;font-size:9px}
+.tg .tg-1r2d{font-size:10px;background-color:#ecf4ff;text-align:center}
+.tg .tg-glis{font-size:10px}
+.tg .tg-wcxf{font-size:10px;background-color:#ffffc7;text-align:center}
+.tg .tg-aycn{font-size:10px;background-color:#e4ffb3;text-align:center}
+.tg .tg-wklz{font-size:10px;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-7dqz{font-weight:bold;font-size:10px}
 </style>
 <table class="tg">
   <tr>
@@ -185,37 +185,37 @@ The running times are averaged over half a million calls to each operation, on a
   </tr>
   <tr>
     <td class="tg-7dqz">DiffSharp.Symbolic (Compile)</td>
-    <td class="tg-wcxf">64.66k</td>
-    <td class="tg-wcxf">215.76k</td>
-    <td class="tg-wcxf">216.79k</td>
-    <td class="tg-aycn">408.76k</td>
+    <td class="tg-wcxf">704.83k</td>
+    <td class="tg-wcxf">7.16M</td>
+    <td class="tg-wcxf">7.18M</td>
+    <td class="tg-aycn">5.01M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">3.32M</td>
+    <td class="tg-aycn">97.11M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">3.90M</td>
+    <td class="tg-aycn">107.85M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">1.90M</td>
-    <td class="tg-1r2d">335.59k</td>
+    <td class="tg-aycn">57.09M</td>
+    <td class="tg-1r2d">2.61M</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">336.76k</td>
+    <td class="tg-1r2d">2.66M</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
     <td class="tg-7dqz">DiffSharp.Symbolic (Use)</td>
-    <td class="tg-wcxf">126.65</td>
-    <td class="tg-wcxf">82.63</td>
-    <td class="tg-wcxf">47.53</td>
-    <td class="tg-aycn">42.42k</td>
+    <td class="tg-wcxf">227.50</td>
+    <td class="tg-wcxf">87.29</td>
+    <td class="tg-wcxf">36.94</td>
+    <td class="tg-aycn">30.57k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">326.58k</td>
+    <td class="tg-aycn">170.03k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">386.61k</td>
+    <td class="tg-aycn">242.91k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">166.51k</td>
-    <td class="tg-1r2d">26.41k</td>
+    <td class="tg-aycn">90.87k</td>
+    <td class="tg-1r2d">17.93k</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">22.75k</td>
+    <td class="tg-1r2d">18.34k</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
   </tr>
@@ -401,37 +401,37 @@ The running times are averaged over half a million calls to each operation, on a
   </tr>
   <tr>
     <td class="tg-7dqz">DiffSharp.Symbolic (Compile)</td>
-    <td class="tg-wcxf">50.81k</td>
-    <td class="tg-wcxf">226.79k</td>
-    <td class="tg-wcxf">227.25k</td>
-    <td class="tg-aycn">388.75k</td>
+    <td class="tg-wcxf">827.85k</td>
+    <td class="tg-wcxf">8.54M</td>
+    <td class="tg-wcxf">8.50M</td>
+    <td class="tg-aycn">5.93M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">3.51M</td>
+    <td class="tg-aycn">111.49M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">3.81M</td>
+    <td class="tg-aycn">117.59M</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">1.91M</td>
-    <td class="tg-1r2d">337.51k</td>
+    <td class="tg-aycn">56.96M</td>
+    <td class="tg-1r2d">2.67M</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">341.25k</td>
+    <td class="tg-1r2d">2.56M</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
     <td class="tg-7dqz">DiffSharp.Symbolic (Use)</td>
-    <td class="tg-wcxf">33.16</td>
-    <td class="tg-wcxf">59.39</td>
-    <td class="tg-wcxf">58.70</td>
-    <td class="tg-aycn">46.60k</td>
+    <td class="tg-wcxf">97.51</td>
+    <td class="tg-wcxf">68.65</td>
+    <td class="tg-wcxf">64.26</td>
+    <td class="tg-aycn">41.29k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">343.58k</td>
+    <td class="tg-aycn">250.86k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">389.50k</td>
+    <td class="tg-aycn">244.49k</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">173.78k</td>
-    <td class="tg-1r2d">27.20k</td>
+    <td class="tg-aycn">105.99k</td>
+    <td class="tg-1r2d">23.05k</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">23.27k</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
   </tr>

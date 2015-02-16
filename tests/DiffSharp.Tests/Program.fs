@@ -119,7 +119,7 @@ let parseArgs args =
 [<EntryPoint>]
 let main argv = 
 
-    let benchmarkver = "1.0.3"
+    let benchmarkver = "1.0.4"
 
     printfn "DiffSharp Benchmarks"
 
