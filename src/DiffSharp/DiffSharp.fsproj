@@ -50,7 +50,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="Util.General.fs" />
-    <Compile Include="Util.Quotations.fs" />
     <Compile Include="Util.LinearAlgebra.fs" />
     <Compile Include="AD.Forward.fs" />
     <Compile Include="AD.Forward2.fs" />
