@@ -44,7 +44,7 @@ let ``is valid float`` x =
     not (System.Double.IsInfinity(x) || System.Double.IsNegativeInfinity(x) || System.Double.IsPositiveInfinity(x) || System.Double.IsNaN(x) || (x = System.Double.MinValue) || (x = System.Double.MaxValue))
 
 let (=~) x y =
-    abs (x - y) < 1e-1
+    abs ((x - y) / x) < 1e-6
 
 
 [<Property(Verbose = true)>]
