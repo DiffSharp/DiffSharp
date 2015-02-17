@@ -1,7 +1,7 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.7/FSharp.Charting.fsx"
-#load "../../packages/FSharp.Charting.0.90.7/EventEx-0.1.fsx"
+#load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.9/EventEx-0.1.fsx"
 
 (**
 Inverse Kinematics

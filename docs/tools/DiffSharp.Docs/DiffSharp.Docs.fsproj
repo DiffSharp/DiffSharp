@@ -61,7 +61,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Charting">
-      <HintPath>..\..\..\packages\FSharp.Charting.0.90.7\lib\net40\FSharp.Charting.dll</HintPath>
+      <HintPath>..\..\..\packages\FSharp.Charting.0.90.9\lib\net40\FSharp.Charting.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.CodeFormat">
