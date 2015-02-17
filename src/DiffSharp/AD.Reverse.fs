@@ -63,7 +63,7 @@ type Trace() =
         for op in t do
             match op with
             | Add(x, y, z) | Sub(x, y, z) | Mul(x, y, z) | Div(x, y, z) | Pow (x, y, z) | Atan2 (x, y, z) -> x.A <- 0.; y.A <- 0.; z.A <- 0.
-            | Neg(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) | Abs(x, z) | Floor(x, z) | Ceil(x, z) | Round(x, z) -> x.A <- 0.; z.A <- 0.;
+            | AddCons(x, z) | SubAdjCons(x, z) | SubConsAdj(x, z) | MulCons(x, _, z) | DivAdjCons(x, _, z) | DivConsAdj(_, x, z) | PowAdjCons(x, _, z) | PowConsAdj(_, x, z) | Atan2AdjCons(x, _, z) | Atan2ConsAdj(_, x, z) | Neg(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) | Abs(x, z) | Floor(x, z) | Ceil(x, z) | Round(x, z) -> x.A <- 0.; z.A <- 0.;
             ret.Push(op)
         ret
     static member ReverseSweep() =
