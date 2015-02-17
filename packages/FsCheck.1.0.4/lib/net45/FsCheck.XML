@@ -446,6 +446,15 @@ For implementing your own test runner.
 <member name="">
 
 </member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
 <member name="P:FsCheck.Outcome.Shrink">
 <summary>
  determines for which Outcome the result should be shrunk, or shrinking should continue.
@@ -630,6 +639,9 @@ Generate a nullable value that is null 1/8 of the time.
 <summary>
  Generates an Float (without NaN, Infinity)
 </summary>
+</member>
+<member name="">
+
 </member>
 <member name="">
 
