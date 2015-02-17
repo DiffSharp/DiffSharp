@@ -185,7 +185,7 @@ module Forward2Ops =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f (x:float[]) =
+    let inline grad' f (x:_[]) =
         let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
         (fst a.[0], Array.map snd a)
 
@@ -194,7 +194,7 @@ module Forward2Ops =
         grad' f x |> snd
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' f (x:float[]) =
+    let inline laplacian' f (x:_[]) =
         let a = Array.init x.Length (fun i ->
                                         standardBasis x.Length i
                                         |> Array.zip x
@@ -215,7 +215,7 @@ module Forward2Ops =
         jacobianv' f x v |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f (x:float[]) =
+    let inline jacobianT' f (x:_[]) =
         let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
         (fst a.[0], array2D (Array.map snd a))
 

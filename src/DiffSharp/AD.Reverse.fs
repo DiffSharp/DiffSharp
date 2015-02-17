@@ -292,8 +292,8 @@ module ReverseOps =
         jacobianT' f x |> snd
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline gradhessian' f x =
-        let xv = Vector(x)
+    let inline gradhessian' f (x:_[]) =
+        let xv = vector' float x
         let (v, g) = grad' f x
         let h = Matrix.Create(x.Length, g)
         let hh = Matrix.Create(x.Length, fun i -> grad f (Vector.toArray (xv + Vector.Create(x.Length, i, eps))))
@@ -320,11 +320,11 @@ module ReverseOps =
         laplacian' f x |> snd
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv' f x (v:float[]) =
+    let inline jacobianTv' f x (v:_[]) =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj[] = f xa
-        for i = 0 to z.Length - 1 do z.[i].A <- v.[i]
+        for i = 0 to z.Length - 1 do z.[i].A <- float v.[i]
         Trace.ReverseSweep()
         (Array.map primal z, Array.map adjoint xa)
 
@@ -340,9 +340,9 @@ module ReverseOps =
         let forwardTrace = Trace.Copy()
         let r1 = Array.map primal z
         let r2 =
-            fun (v:float[]) ->
+            fun (v:_[]) ->
                 Trace.SetClean(forwardTrace)
-                for i = 0 to z.Length - 1 do z.[i].A <- v.[i]
+                for i = 0 to z.Length - 1 do z.[i].A <- float v.[i]
                 Trace.ReverseSweep()
                 Array.map adjoint xa
         (r1, r2)
