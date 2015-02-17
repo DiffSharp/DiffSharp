@@ -40,31 +40,83 @@ open FsCheck
 open FsCheck.Xunit
 
 
-let ``is valid float`` x =
+let ``is nice?`` x =
     not (System.Double.IsInfinity(x) || System.Double.IsNegativeInfinity(x) || System.Double.IsPositiveInfinity(x) || System.Double.IsNaN(x) || (x = System.Double.MinValue) || (x = System.Double.MaxValue))
 
 let (=~) x y =
-    abs ((x - y) / x) < 1e-6
+    abs ((x - y) / x) < 1e-3
 
+[<ReflectedDefinition>]
+let inline SS x = (sin x) * (cos (exp x))
+
+let inline VS (x:_[]) = x.[0] * ((sqrt (x.[1] + x.[2])) * (log x.[2])) ** x.[1]
+
+[<ReflectedDefinition>]
+let inline VS_Symbolic x0 x1 x2 = x0 * ((sqrt (x1 + x2)) * (log x2)) ** x1
+
+
+// diff
+let diff_AD_Forward = DiffSharp.AD.Forward.ForwardOps.diff SS
+let diff_AD_Forward2 = DiffSharp.AD.Forward2.Forward2Ops.diff SS
+let diff_AD_ForwardG = DiffSharp.AD.ForwardG.ForwardGOps.diff SS
+let diff_AD_ForwardGH = DiffSharp.AD.ForwardGH.ForwardGHOps.diff SS
+let diff_AD_ForwardN = DiffSharp.AD.ForwardN.ForwardNOps.diff SS
+let diff_AD_Reverse = DiffSharp.AD.Reverse.ReverseOps.diff SS
+let diff_AD_ForwardReverse = DiffSharp.AD.ForwardReverse.ForwardReverseOps.diff SS
+let diff_Numerical = DiffSharp.Numerical.NumericalOps.diff SS
+let diff_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff <@ SS @>
+
+// diff2
+let diff2_AD_Forward2 = DiffSharp.AD.Forward2.Forward2Ops.diff2 SS
+let diff2_AD_ForwardN = DiffSharp.AD.ForwardN.ForwardNOps.diff2 SS
+let diff2_AD_ForwardReverse = DiffSharp.AD.ForwardReverse.ForwardReverseOps.diff2 SS
+let diff2_Numerical = DiffSharp.Numerical.NumericalOps.diff2 SS
+let diff2_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff2 <@ SS @>
+
+// diffn
+let diffn_AD_ForwardN n = DiffSharp.AD.ForwardN.ForwardNOps.diffn n SS
+let diffn_Symbolic n = DiffSharp.Symbolic.SymbolicOps.diffn n <@ SS @>
+
+
+// diff
+[<Property(Verbose = true)>]
+let ``diff AD.Forward = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_Forward x =~ diff_Symbolic x)
 
 [<Property(Verbose = true)>]
-let ``AD.Forward diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.Forward.ForwardOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
+let ``diff AD.Forward2 = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_Forward2 x =~ diff_Symbolic x)
 
 [<Property(Verbose = true)>]
-let ``AD.Forward2 diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.Forward2.Forward2Ops.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
+let ``diff AD.ForwardG = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_ForwardG x =~ diff_Symbolic x)
 
 [<Property(Verbose = true)>]
-let ``AD.ForwardN diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardN.ForwardNOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
+let ``diff AD.ForwardGH = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_ForwardGH x =~ diff_Symbolic x)
 
 [<Property(Verbose = true)>]
-let ``AD.ForwardG diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardG.ForwardGOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
+let ``diff AD.ForwardN = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_ForwardN x =~ diff_Symbolic x)
 
 [<Property(Verbose = true)>]
-let ``AD.ForwardGH diff = Symbolic diff`` (x:float) =
-    (``is valid float`` x) ==> ((DiffSharp.AD.ForwardGH.ForwardGHOps.diff (fun x -> (sin x) * (cos (exp x))) x) =~ (DiffSharp.Symbolic.SymbolicOps.diff <@ fun x -> (sin x) * (cos (exp x)) @> x))
+let ``diff AD.Reverse = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_Reverse x =~ diff_Symbolic x)
 
+[<Property(Verbose = true)>]
+let ``diff AD.ForwardReverse = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_AD_ForwardReverse x =~ diff_Symbolic x)
+
+[<Property(Verbose = true)>]
+let ``diff Numerical = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff_Numerical x =~ diff_Symbolic x)
+
+// diff2
+[<Property(Verbose = true)>]
+let ``diff2 AD.Forward2 = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff2_AD_Forward2 x =~ diff2_Symbolic x)
+
+[<Property(Verbose = true)>]
+let ``diff2 AD.ForwardN = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff2_AD_ForwardN x =~ diff2_Symbolic x)
+
+[<Property(Verbose = true)>]
+let ``diff2 AD.ForwardReverse = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff2_AD_ForwardReverse x =~ diff2_Symbolic x)
+
+[<Property(Verbose = true)>]
+let ``diff2 Numerical = Symbolic`` (x:float) = (``is nice?`` x) ==> (diff2_Numerical x =~ diff2_Symbolic x)
+
+// diffn
+[<Property(Verbose = true)>]
+let ``diffn AD.ForwardN = Symbolic`` (x:float) = (``is nice?`` x) ==> (diffn_AD_ForwardN 2 x =~ diffn_Symbolic 2 x)
 
