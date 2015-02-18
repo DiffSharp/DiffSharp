@@ -266,9 +266,9 @@ module ForwardReverseOps =
         let r1 = Array.map primal z
         let r2 = Array.map tangent z
         let r3 =
-            fun (v2:_[]) ->
+            fun v2 ->
                 Trace.SetClean(forwardTrace)
-                for i = 0 to z.Length - 1 do z.[i].A <- float v2.[i]
+                Array.iter2 (fun (a:DualAdj) b -> a.A <- float b) z v2
                 Trace.ReverseSweep()
                 Array.map adjoint xa
         (r1, r2, r3)

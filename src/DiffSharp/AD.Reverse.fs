@@ -320,11 +320,11 @@ module ReverseOps =
         laplacian' f x |> snd
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv' f x (v:_[]) =
+    let inline jacobianTv' f x v =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj[] = f xa
-        for i = 0 to z.Length - 1 do z.[i].A <- float v.[i]
+        Array.iter2 (fun (a:Adj) b -> a.A <- float b) z v
         Trace.ReverseSweep()
         (Array.map primal z, Array.map adjoint xa)
 
@@ -340,9 +340,9 @@ module ReverseOps =
         let forwardTrace = Trace.Copy()
         let r1 = Array.map primal z
         let r2 =
-            fun (v:_[]) ->
+            fun v ->
                 Trace.SetClean(forwardTrace)
-                for i = 0 to z.Length - 1 do z.[i].A <- float v.[i]
+                Array.iter2 (fun (a:Adj) b -> a.A <- float b) z v
                 Trace.ReverseSweep()
                 Array.map adjoint xa
         (r1, r2)
