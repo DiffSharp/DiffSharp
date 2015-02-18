@@ -1,6 +1,6 @@
 ﻿//
 // This file is part of
-// DiffSharp -- F# Automatic Differentiation Library
+// DiffSharp: Automatic Differentiation Library
 //
 // Copyright (C) 2014, 2015, National University of Ireland Maynooth.
 //
