@@ -46,17 +46,24 @@ type Vector<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (+) : 'T * 'T -> 'T)
                 and 'T : (static member (-) : 'T * 'T -> 'T)
                 and 'T : (static member (*) : 'T * 'T -> 'T)
-                and ^T : (static member (/) : ^T * ^T -> ^T)
+                and 'T : (static member (/) : 'T * 'T -> 'T)
+                and 'T : (static member Pow : 'T * 'T -> 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
                 and 'T : (static member Abs : 'T -> 'T)
-                and ^T : (static member op_Explicit : ^T -> float)
+                and 'T : (static member op_Explicit : 'T -> float)
+                and 'T : (static member One : 'T)
                 and 'T : comparison> =
     /// Vector with infinite dimension whose elements are all 0
     | ZeroVector of 'T
     /// Vector with finite dimension
     | Vector of 'T[]
     with
+    /// Gets the Lp norm (or p-norm) of this Vector, with the given `p`
+    member inline v.GetLPNorm(p:'T):'T =
+        match v with
+        | ZeroVector z -> z
+        | Vector v -> (Array.sumBy (fun x -> (abs x) ** p) v) ** (LanguagePrimitives.GenericOne<'T> / p)
     /// Gets the element of this Vector at the given position `i`
     member inline v.Item
         with get i =
@@ -73,11 +80,21 @@ type Vector<'T when 'T : (static member Zero : 'T)
         match v with
         | ZeroVector _ -> 0
         | Vector v -> v.Length
-    /// Gets the Euclidean norm of this Vector
-    member inline v.GetNorm() =
+    /// Gets the L1 (Manhattan) norm of this Vector
+    member inline v.GetL1Norm() =
+        match v with
+        | ZeroVector z -> z
+        | Vector v -> Array.sumBy abs v
+    /// Gets the L2 (Euclidean) norm of this Vector
+    member inline v.GetL2Norm() =
         match v with
         | ZeroVector z -> z
         | Vector v -> sqrt (Array.sumBy (fun x -> x * x) v)
+    /// Gets the squared L2 (Euclidean) norm of this Vector
+    member inline v.GetL2NormSq() =
+        match v with
+        | ZeroVector z -> z
+        | Vector v -> Array.sumBy (fun x -> x * x) v
     /// Gets the minimum element of this Vector
     member inline v.GetMin() =
         match v with
@@ -92,7 +109,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
     member inline v.GetUnitVector() =
         match v with
         | ZeroVector z -> ZeroVector z
-        | Vector vv -> let n = v.GetNorm() in Vector (Array.init vv.Length (fun i -> vv.[i] / n))
+        | Vector vv -> let n = v.GetL2Norm() in Vector (Array.init vv.Length (fun i -> vv.[i] / n))
     /// Gets a string representation of this Vector that can be pasted into a Mathematica notebook
     member inline v.ToMathematicaString() = 
         let sb = System.Text.StringBuilder()
@@ -259,6 +276,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member (-) : 'T * 'T -> 'T)
                 and 'T : (static member (*) : 'T * 'T -> 'T)
                 and 'T : (static member (/) : 'T * 'T -> 'T)
+                and 'T : (static member Pow : 'T * 'T -> 'T)
                 and 'T : (static member (~-) : 'T -> 'T)
                 and 'T : (static member Sqrt : 'T -> 'T)
                 and 'T : (static member Abs : 'T -> 'T)
@@ -724,7 +742,7 @@ type Matrix<'T when 'T : (static member Zero : 'T)
             for k = 0 to kmax do
                 z <- Matrix.Create(minor (z.ToArray2D()) k)
                 let x = z.[*, k]
-                let mutable a = x.GetNorm()
+                let mutable a = x.GetL2Norm()
                 if mm.[k, k] > LanguagePrimitives.GenericZero then a <- -a
                 let e = (x + Vector.Create(m.Rows, k, a)).GetUnitVector()
                 q.[k] <- Matrix.CreateIdentity(m.Rows) + Matrix.Create(m.Rows, m.Rows, fun i j -> -(e.[i] * e.[j] + e.[i] * e.[j]))
@@ -782,8 +800,14 @@ module Vector =
     let inline max (v:Vector<_>) = v.GetMax()
     /// Returns the minimum of all elements of Vector `v`
     let inline min (v:Vector<_>) = v.GetMin()
-    /// Gets the Euclidean norm of Vector `v`
-    let inline norm (v:Vector<_>) = v.GetNorm()
+    /// Gets the L1 (Manhattan) norm of Vector `v`
+    let inline l1norm (v:Vector<_>) = v.GetL1Norm()
+    /// Gets the L2 (Euclidean) norm of Vector `v`
+    let inline l2norm (v:Vector<_>) = v.GetL2Norm()
+    /// Gets the squared L2 (Euclidean) norm of Vector `v`
+    let inline l2normSq (v:Vector<_>) = v.GetL2NormSq()
+    /// Gets the Lp norm (or p-norm) of Vector `v`, with the given `p`
+    let inline lpnorm p (v:Vector<_>) = v.GetLPNorm(p)
     /// Applies function `f` to each element of Vector `v`, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN, then computes f (... (f i0 i1)...) iN.
     let inline reduce f (v:Vector<_>) = v |> toArray |> Array.reduce f
     /// Applies function `f` to each element of Vector `v`, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN then computes f i0 (...(f iN-1 iN)).
