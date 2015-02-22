@@ -20,34 +20,61 @@ The simplest and easiest way is to define functions using [lambda expressions](h
 open DiffSharp.AD.Forward
 
 // The lambda expression after "diff" has type Dual -> Dual
-// a: float -> float, the derivative of Sin(Sqrt(x))
-let a = diff (fun x -> sin (sqrt x))
+// f: float -> float, the derivative of Sin(Sqrt(x))
+let f = diff (fun x -> sin (sqrt x))
 
 // Use a to compute the derivative at 2
-let da = a 2.
+let df = f 2.
+
+(**
+
+The library also provides differentiation operators that return the original value and the derivative values at the same time. This is advantageous because, due to the way AD works, a function's value and its derivative can be computed via executing it just once using the AD-enabled type.
+
+*)
+
+// f2: float -> (float * float), the original value and the derivative of Sin(Sqrt(x))
+let f2 = diff' (fun x -> sin (sqrt x))
+
+// Compute f2 and its derivative at 2
+let vf2, df2 = f2 2.
 
 (**
 Existing Functions
 ------------------
 
-When you have an existing function, just opening the DiffSharp library and using a differentiation operation is sufficient in some cases for getting it interpreted as using AD-enabled types.
+When you have an existing function, just opening the DiffSharp library and using a differentiation operation is sufficient in some cases for giving it the AD-enabled signature.
 
 *)
 
-// b: float -> float
-let b x =
+// f3: float -> float
+let f3 x =
     sin (sqrt x)
 
 (** *)
 
 open DiffSharp.AD.Forward
 
-// c has the same definition with b, here Dual type is inferred automatically
-// c: Dual -> Dual
-let c x =
+// f4 has the same definition with f3, here Dual type is inferred automatically
+// f4: Dual -> Dual
+let f4 x =
     sin (sqrt x)
 
-let dc = diff c
+let df4 = diff f4
+
+(**
+
+In the above example, **f4** assumes the **Dual -> Dual** type and therefore cannot be used with other types, for example **float**. We can get around this by defining [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that can work with multiple types, via using **inline**.
+
+*)
+// f5 is the generic version of f4
+let inline f5 x =
+    sin (sqrt x)
+
+// Here f5 behaves as Dual -> Dual
+let df5 = diff f5 2.
+
+// Here f5 behaves as float -> float
+let vf5 = f5 2.
 
 (**
 "Injecting" AD-enabled Types
@@ -56,94 +83,26 @@ let dc = diff c
 Functions with numeric literals in their definition cannot be used as in the previous case, because literals cause the compiler to infer other numeric types (such as 3. for **float** or 3 for **int** arithmetic).
 *)
 
-// d: float -> float
-let d x =
+// f6: float -> float
+let f6 x =
     sin (3. * sqrt x)
 
 (** 
 In such cases, AD-enabled types should be explicitly used in one or more places in the function definition.
 
-A function's signature can be usually changed without having to change the type of all the involved values. For example, "injecting" some **Dual**s into a large **float** expression can cause the whole function to have **Dual** arithmetic.
+Usually, a function's signature can be changed without having to change the type of all involved values. For example, "injecting" some **Dual**s into a large **float** expression can cause the whole function to assume **Dual** type.
 
-Explicitly marking a parameter as **Dual**:
+Explicitly marking an argument as **Dual**:
 *)
 
-// e: Dual -> Dual
-let e (x:Dual) =
+// f7: Dual -> Dual
+let f7 (x:Dual) =
     sin (3. * sqrt x)
 
 (**
 Converting a **float** into a **Dual**:
 *)
 
-// f: Dual -> Dual
-let f x =
+// f8: Dual -> Dual
+let f8 x =
     sin ((dual 3.) * sqrt x)
-
-(**
-Numeric Literals for DiffSharp.AD.Forward.Dual
-----------------------------------------------
-
-The library provides the _Q_ and _R_ numeric literals for the **Dual** type. A _Q-literal_ produces a **Dual** with tangent (or, derivative) value 0 and an _R-literal_ produces a **Dual** with tangent value 1 (representing the variable of differentiation, because the derivative of the variable of differentiation is, by definition, 1).
-
-Using numeric literals to cause **Dual** inference:
-*)
-
-// g: Dual -> Dual
-let g x =
-    sin (3Q * sqrt x)
-
-(**
-
-Using numeric literals to calculate partial derivatives with **DiffSharp.AD.Forward**:
-*)
-
-// A multivariate function
-// h: Dual -> Dual -> Dual
-let h x y =
-    sin (x * y)
-
-// dh / dx at (3, 7)
-let dhx = tangent (h 3R 7Q)
-
-// dh / dy at (3, 7)
-let dhy = tangent (h 3Q 7R)
-
-(**
-Generic Functions
------------------
-
-F# supports [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that can work with multiple different numeric types.
-*)
-
-// A simple generic function
-let inline sum a b =
-    a + b
-
-// Use sum with float
-let i1 = sum 2. 2.
-
-// Use sum with int
-let i2 = sum 2 2
-
-// Use sum with bigint
-let i3 = sum 2I 2I
-
-// Use sum with Dual
-let i4 = sum 2Q 2Q
-
-(** 
-Using a generic function with the DiffSharp library.
-*)
-
-// A generic implementation of cosine, 8-th degree approximation
-// cosine: 'a -> 'a
-let inline cosine (x: ^a) =
-    let one: ^a = LanguagePrimitives.GenericOne
-    Seq.initInfinite(fun i -> LanguagePrimitives.DivideByInt (-x*x) ((2*i+1) * (2*i+2)))
-    |> Seq.scan (*) one
-    |> Seq.take 8
-    |> Seq.sum
-
-// Derivative of cosine at 3
-let j = diff cosine 3.

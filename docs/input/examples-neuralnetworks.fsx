@@ -128,7 +128,7 @@ let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (timeout:int) (n:Ne
             Trace.Clear()
             let error = 
                 (1. / float t.Length) * Array.sumBy 
-                    (fun t -> Vector.norm ((snd t) - runNetwork (fst t) n)) ta
+                    (fun t -> Vector.l2norm ((snd t) - runNetwork (fst t) n)) ta
             error.A <- 1.
             Trace.ReverseSweep()
             for l in n.l do

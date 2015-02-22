@@ -22,7 +22,7 @@ keep decreasing and the sequence $\mathbf{x}_n$ usually converges to a local min
 
 Generally speaking, using a fixed step size $\gamma$ yields suboptimal performance and there are adaptive variations of the gradient descent algorithm that select a locally optimal step size $\gamma$ on every iteration.
 
-Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the norm of the gradient falls below a given threshold.
+Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the squared norm of the gradient falls below a given threshold.
 
 *)
 
@@ -31,12 +31,12 @@ open DiffSharp.AD.Forward.Vector
 open DiffSharp.Util.LinearAlgebra
 
 // Gradient descent, with function f, starting at x0, step size a, threshold t
-let gradDesc f x0 (a:float) t =
+let gd f x0 (a:float) t =
     // Descending sequence of x, f(x)
     let dseq = Seq.unfold (fun x -> 
                             // Get value, gradient of f at x
                             let v, g = grad' f x
-                            if Vector.norm g < t then 
+                            if Vector.l2normSq g < t then 
                                 None 
                             else 
                                 let x' = x - a * g
@@ -51,7 +51,7 @@ Let us find a minimum of $f(x, y) = (\sin x + \cos y)$.
 // Find the minimum of Sin(x) + Cos(y)
 // Start from (1, 1), step size 0.01, threshold 0.00001
 let (xmin, fxmin), dseq =
-    gradDesc (fun x -> (sin x.[0]) + cos x.[1]) (vector [1.; 1.]) 0.9 0.00001
+    gd (fun x -> (sin x.[0]) + cos x.[1]) (vector [1.; 1.]) 0.9 0.00001
 
 (*** hide, define-output: o ***)
 printf "val xseq : seq<Vector<float> * float>

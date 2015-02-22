@@ -30,7 +30,7 @@ let Newton f (x0:Vector<float>) (a:float) t =
     let dseq = Seq.unfold (fun x -> 
                             // Get value, gradient, hessian of f at x
                             let v, g, h = gradhessian' f x
-                            if Vector.norm g < t then
+                            if Vector.l2normSq g < t then
                                 None
                             else
                                 let p = (Matrix.inverse h) * (-g)
@@ -41,7 +41,7 @@ let Newton f (x0:Vector<float>) (a:float) t =
 
 (**
 
-Let us find a (local) optimum of the function
+Let us find a (local) extremum of the function
 
 $$$
  f(\mathbf{x}) = e^{x_1 - 1} + e^{-x_2 + 1} + (x_1 + x_2)^2
@@ -52,19 +52,19 @@ around the point $(0, 0)$.
 
 let (xopt, fxopt), dseq =
     Newton (fun x -> (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)) 
-           (vector [0.; 0.]) 1. 0.00001
+           (vector [0.; 0.]) 1. 0.0001
 
 let numsteps = Seq.length dseq
 
 (*** hide, define-output: o ***)
-printf "val xopt : Vector<float> = Vector [|0.7958861818; 1.203482609|]
-val fxopt : float = 1.797388803
+printf "val xopt : Vector<float> = Vector [|0.7749209799; 1.162864526|]
+val fxopt : float = 1.798659611
 val dseq : seq<Vector<float> * float>
-val numsteps : int = 4"
+val numsteps : int = 3"
 (*** include-output: o ***)
 
 (**
 
-The optimum is found as $f(0.7958861818, 1.203482609) = 1.797388803$ in 4 iterations.
+The extremum is found as $f(0.7958861818, 1.203482609) = 1.797388803$ in 3 iterations.
    
 *)

@@ -804,6 +804,8 @@ module Vector =
     let inline l1norm (v:Vector<_>) = v.GetL1Norm()
     /// Gets the L2 (Euclidean) norm of Vector `v`
     let inline l2norm (v:Vector<_>) = v.GetL2Norm()
+    /// Gets the L2 (Euclidean) norm of Vector `v`, the same with `Vector.l2norm`
+    let inline norm (v:Vector<_>) = v.GetL2Norm()
     /// Gets the squared L2 (Euclidean) norm of Vector `v`
     let inline l2normSq (v:Vector<_>) = v.GetL2NormSq()
     /// Gets the Lp norm (or p-norm) of Vector `v`, with the given `p`
