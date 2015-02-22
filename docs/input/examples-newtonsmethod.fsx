@@ -24,20 +24,28 @@ open DiffSharp.AD.ForwardGH
 open DiffSharp.AD.ForwardGH.Vector
 open DiffSharp.Util.LinearAlgebra
 
-// Newton's method, with function f, starting at x0, step size a, threshold t
-let Newton f (x0:Vector<float>) (a:float) t =
-    // Descending sequence of x, f(x)
-    let dseq = Seq.unfold (fun x -> 
-                            // Get value, gradient, hessian of f at x
-                            let v, g, h = gradhessian' f x
-                            if Vector.l2normSq g < t then
-                                None
-                            else
-                                let p = (Matrix.inverse h) * (-g)
-                                let x' = x + a * p
-                                Some((x, v), x'))
-                        (x0)
-    (Seq.last dseq, dseq)
+
+// Newton's method, with function f, starting point x0, step size a, threshold t
+let Newton f x0 (a:float) t =
+    let rec desc x =
+        let g, h = gradhessian f x
+        if Vector.norm g < t then x else desc (x - a * (Matrix.inverse h) * g)
+    desc x0
+
+
+// Newton's method, with function f, starting point x0, step size a, threshold t
+// Returns a descending sequence of pairs (x, f(x))
+let NewtonSeq f (x0:Vector<float>) (a:float) t =
+    Seq.unfold (fun x -> 
+                    // Get value, gradient, hessian of f at x
+                    let v, g, h = gradhessian' f x
+                    if Vector.l2normSq g < t then
+                        None
+                    else
+                        let p = (Matrix.inverse h) * (-g)
+                        let x' = x + a * p
+                        Some((x, v), x'))
+                (x0)
 
 (**
 
@@ -50,21 +58,21 @@ around the point $(0, 0)$.
 
 *)
 
-let (xopt, fxopt), dseq =
-    Newton (fun x -> (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)) 
+let dseq =
+    NewtonSeq (fun x -> (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)) 
            (vector [0.; 0.]) 1. 0.0001
 
+let xext, fxext = Seq.last dseq
 let numsteps = Seq.length dseq
-
-(*** hide, define-output: o ***)
-printf "val xopt : Vector<float> = Vector [|0.7749209799; 1.162864526|]
-val fxopt : float = 1.798659611
-val dseq : seq<Vector<float> * float>
-val numsteps : int = 3"
-(*** include-output: o ***)
 
 (**
 
-The extremum is found as $f(0.7958861818, 1.203482609) = 1.797388803$ in 3 iterations.
+The extremum is found as $f(0.7749209799, 1.162864526) = 1.798659611 in 3 iterations.
    
 *)
+
+(*** hide, define-output: o ***)
+printf "val xext : Vector<float> = Vector [|0.7749209799; 1.162864526|]
+val fxext : float = 1.798659611
+val numsteps : int = 3"
+(*** include-output: o ***)
