@@ -805,9 +805,11 @@ module Vector =
     /// Gets the L2 (Euclidean) norm of Vector `v`
     let inline l2norm (v:Vector<_>) = v.GetL2Norm()
     /// Gets the L2 (Euclidean) norm of Vector `v`. This is the same with `Vector.l2norm`.
-    let inline norm (v:Vector<_>) = v.GetL2Norm()
+    let inline norm v = l2norm v
     /// Gets the squared L2 (Euclidean) norm of Vector `v`
     let inline l2normSq (v:Vector<_>) = v.GetL2NormSq()
+    /// Gets the squared L2 (Euclidean) norm of Vector `v`. This is the same with `Vector.l2normSq`
+    let inline normSq v = l2normSq v
     /// Gets the Lp norm (or p-norm) of Vector `v`, with the given `p`
     let inline lpnorm p (v:Vector<_>) = v.GetLPNorm(p)
     /// Applies function `f` to each element of Vector `v`, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN, then computes f (... (f i0 i1)...) iN.

@@ -165,3 +165,13 @@ let deps = eps * 2.
 /// Square of eps
 let epssq = eps * eps
 
+let invalidArgLog() = invalidArg "" "The derivative of log(x) is not defined for x <= 0."
+let invalidArgLog10() = invalidArg "" "The derivative of log10(x) is not defined for x <= 0."
+let invalidArgTan() = invalidArg "" "The derivative of tan(x) is not defined for x such that cos(x) = 0."
+let invalidArgSqrt() = invalidArg "" "The derivative of sqrt(x) is not defined for x <= 0."
+let invalidArgAsin() = invalidArg "" "The derivative of asin(x) is not defined for x such that abs(x) >= 1."
+let invalidArgAcos() = invalidArg "" "The derivative of acos(x) is not defined for x such that abs(x) >= 1."
+let invalidArgAbs() = invalidArg "" "The derivative of abs(x) is not defined for x = 0."
+let invalidArgFloor() = invalidArg "" "The derivative of floor(x) is not defined for integer values of x."
+let invalidArgCeil() = invalidArg "" "The derivative of ceil(x) is not defined for integer values of x."
+let invalidArgRound() = invalidArg "" "The derivative of round(x) is not defined for values of x halfway between integers."

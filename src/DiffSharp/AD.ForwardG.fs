@@ -102,31 +102,44 @@ type DualG =
     static member Pow (a:int, b:DualG) = DualG.Pow(float a, b)
     static member Atan2 (a:int, b:DualG) = DualG.Atan2(float a, b)
     // DualG unary operations
-    static member Log (DualG(a, ag)) = DualG(log a, ag / a)
-    static member Log10 (DualG(a, ag)) = DualG(log10 a, ag / (a * log10val))
+    static member Log (DualG(a, ag)) = 
+        if a <= 0. then invalidArgLog()
+        DualG(log a, ag / a)
+    static member Log10 (DualG(a, ag)) = 
+        if a <= 0. then invalidArgLog10()
+        DualG(log10 a, ag / (a * log10val))
     static member Exp (DualG(a, ag)) = let expa = exp a in DualG(expa, ag * expa)
     static member Sin (DualG(a, ag)) = DualG(sin a, ag * cos a)
     static member Cos (DualG(a, ag)) = DualG(cos a, -ag * sin a)
-    static member Tan (DualG(a, ag)) = let cosa = cos a in DualG(tan a, ag / (cosa * cosa))
+    static member Tan (DualG(a, ag)) = 
+        let cosa = cos a
+        if cosa = 0. then invalidArgTan()
+        DualG(tan a, ag / (cosa * cosa))
     static member (~-) (DualG(a, ag)) = DualG(-a, -ag)
-    static member Sqrt (DualG(a, ag)) = let sqrta = sqrt a in DualG(sqrta, ag / (2. * sqrta))
+    static member Sqrt (DualG(a, ag)) =
+        if a <= 0. then invalidArgSqrt()
+        let sqrta = sqrt a in DualG(sqrta, ag / (2. * sqrta))
     static member Sinh (DualG(a, ag)) = DualG(sinh a, ag * cosh a)
     static member Cosh (DualG(a, ag)) = DualG(cosh a, ag * sinh a)
     static member Tanh (DualG(a, ag)) = let cosha = cosh a in DualG(tanh a, ag / (cosha * cosha))
-    static member Asin (DualG(a, ag)) = DualG(asin a, ag / sqrt (1. - a * a))
-    static member Acos (DualG(a, ag)) = DualG(acos a, -ag / sqrt (1. - a * a))
-    static member agan (DualG(a, ag)) = DualG(atan a, ag / (1. + a * a))
+    static member Asin (DualG(a, ag)) =
+        if (abs a) >= 1. then invalidArgAsin()
+        DualG(asin a, ag / sqrt (1. - a * a))
+    static member Acos (DualG(a, ag)) = 
+        if (abs a) >= 1. then invalidArgAcos()
+        DualG(acos a, -ag / sqrt (1. - a * a))
+    static member Atan (DualG(a, ag)) = DualG(atan a, ag / (1. + a * a))
     static member Abs (DualG(a, ag)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if a = 0. then invalidArgAbs()
         DualG(abs a, ag * float (sign a))
     static member Floor (DualG(a, ag)) =
-        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a then invalidArgFloor()
         DualG(floor a, Vector.Create(ag.Length, 0.))
     static member Ceiling (DualG(a, ag)) =
-        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a then invalidArgCeil()
         DualG(ceil a, Vector.Create(ag.Length, 0.))
     static member Round (DualG(a, ag)) =
-        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a then invalidArgRound()
         DualG(round a, Vector.Create(ag.Length, 0.))
 
 /// DualG operations module (automatically opened)

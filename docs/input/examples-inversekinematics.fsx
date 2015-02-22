@@ -83,7 +83,7 @@ let inverseK (target:Vector<float>) (eta:float) (timeout:int) =
             let error = target - pos
             let da = (Matrix.inverse j) * error
             a <- a + eta * da
-            yield (Vector.l2norm error, a)
+            yield (Vector.norm error, a)
             }
     |> Seq.takeWhile (fun x -> fst x > 0.4)
     |> Seq.map snd
@@ -159,7 +159,7 @@ let inverseK' (target:Vector<float>) (eta:float) (timeout:int) =
             let error = target - pos
             let da = jTv error
             a <- a + eta * da
-            yield (Vector.l2norm error, a)
+            yield (Vector.norm error, a)
             }
     |> Seq.takeWhile (fun x -> fst x > 0.4)
     |> Seq.map snd

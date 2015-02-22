@@ -102,31 +102,43 @@ type DualN =
     static member Pow (a:int, b:DualN) = DualN.Pow(float a, b)
     static member Atan2 (a:int, b:DualN) = DualN.Atan2(float a, b)
     // DualN unary operations
-    static member Log (a:DualN) = DualN(log a.P, lazy (a.T / a))
-    static member Log10 (a:DualN) = DualN(log10 a.P, lazy (a.T / (a * log10val)))
+    static member Log (a:DualN) = 
+        if a.P <= 0. then invalidArgLog()
+        DualN(log a.P, lazy (a.T / a))
+    static member Log10 (a:DualN) = 
+        if a.P <= 0. then invalidArgLog10()
+        DualN(log10 a.P, lazy (a.T / (a * log10val)))
     static member Exp (a:DualN) = DualN(exp a.P, lazy (a.T * exp a))
     static member Sin (a:DualN) = DualN(sin a.P, lazy (a.T * cos a))
     static member Cos (a:DualN) = DualN(cos a.P, lazy (-a.T * sin a))
-    static member Tan (a:DualN) = DualN(tan a.P, lazy (a.T / ((cos a) * (cos a))))
+    static member Tan (a:DualN) = 
+        if cos a.P = 0. then invalidArgTan()
+        DualN(tan a.P, lazy (a.T / ((cos a) * (cos a))))
     static member (~-) (a:DualN) = DualN(-a.P, lazy (-a.T))
-    static member Sqrt (a:DualN) = DualN(sqrt a.P, lazy (a.T / (2. * sqrt a)))
+    static member Sqrt (a:DualN) = 
+        if a.P <= 0. then invalidArgSqrt()
+        DualN(sqrt a.P, lazy (a.T / (2. * sqrt a)))
     static member Sinh (a:DualN) = DualN(sinh a.P, lazy (a.T * cosh a))
     static member Cosh (a:DualN) = DualN(cosh a.P, lazy (a.T * sinh a))
     static member Tanh (a:DualN) = DualN(tanh a.P, lazy (a.T / ((cosh a) * (cosh a))))
-    static member Asin (a:DualN) = DualN(asin a.P, lazy (a.T / sqrt (1. - a * a)))
-    static member Acos (a:DualN) = DualN(acos a.P, lazy (-a.T / sqrt (1. - a * a)))
+    static member Asin (a:DualN) = 
+        if (abs a.P) >= 1. then invalidArgAsin()
+        DualN(asin a.P, lazy (a.T / sqrt (1. - a * a)))
+    static member Acos (a:DualN) = 
+        if (abs a.P) >= 1. then invalidArgAcos()
+        DualN(acos a.P, lazy (-a.T / sqrt (1. - a * a)))
     static member Atan (a:DualN) = DualN(atan a.P, lazy (a.T / (1. + a * a)))
     static member Abs (a:DualN) = 
-        if a.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if a.P = 0. then invalidArgAbs()
         DualN(abs a.P, lazy (a.T * float (sign a.P)))
     static member Floor (a:DualN) =
-        if isInteger a.P then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a.P then invalidArgFloor()
         DualN(floor a.P, lazy (DualN.Zero))
     static member Ceiling (a:DualN) =
-        if isInteger a.P then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a.P then invalidArgCeil()
         DualN(ceil a.P, lazy (DualN.Zero))
     static member Round (a:DualN) =
-        if isHalfway a.P then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a.P then invalidArgRound()
         DualN(round a.P, lazy (DualN.Zero))
 
 /// DualN operations module (automatically opened)

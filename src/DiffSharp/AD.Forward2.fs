@@ -99,31 +99,44 @@ type Dual2 =
     static member Pow (a:int, b:Dual2) = Dual2.Pow(float a, b)
     static member Atan2 (a:int, b:Dual2) = Dual2.Atan2(float a, b)
     // Dual2 unary operations
-    static member Log (Dual2(a, at, at2)) = Dual2(log a, at / a, (-at * at + a * at2) / (a * a))
-    static member Log10 (Dual2(a, at, at2)) = let alog10 = a * log10val in Dual2(log10 a, at / alog10, (-at * at + a * at2) / (a * alog10))
+    static member Log (Dual2(a, at, at2)) = 
+        if a <= 0. then invalidArgLog()
+        Dual2(log a, at / a, (-at * at + a * at2) / (a * a))
+    static member Log10 (Dual2(a, at, at2)) = 
+        if a <= 0. then invalidArgLog10()
+        let alog10 = a * log10val in Dual2(log10 a, at / alog10, (-at * at + a * at2) / (a * alog10))
     static member Exp (Dual2(a, at, at2)) = let expa = exp a in Dual2(expa, at * expa, expa * (at * at + at2))
     static member Sin (Dual2(a, at, at2)) = let sina, cosa = sin a, cos a in Dual2(sina, at * cosa, -sina * at * at + cosa * at2)
     static member Cos (Dual2(a, at, at2)) = let cosa, sina = cos a, sin a in Dual2(cosa, -at * sina, -cosa * at * at - sina * at2)
-    static member Tan (Dual2(a, at, at2)) = let tana, secsqa = tan a, 1. / ((cos a) * (cos a)) in Dual2(tana, at * secsqa, (2. * tana * at * at + at2) * secsqa)
+    static member Tan (Dual2(a, at, at2)) = 
+        let cosa = cos a
+        if cosa = 0. then invalidArgTan()
+        let tana, secsqa = tan a, 1. / ((cosa) * (cosa)) in Dual2(tana, at * secsqa, (2. * tana * at * at + at2) * secsqa)
     static member (~-) (Dual2(a, at, at2)) = Dual2(-a, -at, -at2)
-    static member Sqrt (Dual2(a, at, at2)) = let sqrta = sqrt a in Dual2(sqrta, at / (2. * sqrta), (-at * at + 2. * a * at2) / (4. * a ** 1.5))
+    static member Sqrt (Dual2(a, at, at2)) = 
+        if a <= 0. then invalidArgSqrt()
+        let sqrta = sqrt a in Dual2(sqrta, at / (2. * sqrta), (-at * at + 2. * a * at2) / (4. * a ** 1.5))
     static member Sinh (Dual2(a, at, at2)) = let sinha, cosha = sinh a, cosh a in Dual2(sinha, at * cosha, sinha * at * at + cosha * at2)
     static member Cosh (Dual2(a, at, at2)) = let cosha, sinha = cosh a, sinh a in Dual2(cosha, at * sinha, cosha * at * at + sinha * at2)
     static member Tanh (Dual2(a, at, at2)) = let tanha, sechsqa = tanh a, 1. / ((cosh a) * (cosh a)) in Dual2(tanha, at * sechsqa, (-2. * tanha * at * at + at2) * sechsqa)
-    static member Asin (Dual2(a, at, at2)) = let asq = a * a in Dual2(asin a, at / sqrt (1. - asq), (a * at * at - (asq - 1.) * at2) / (1. - asq) ** 1.5)
-    static member Acos (Dual2(a, at, at2)) = let asq = a * a in Dual2(acos a, -at / sqrt (1. - asq), -((a * at * at + at2 - asq * at2) / (1. - asq) ** 1.5))
+    static member Asin (Dual2(a, at, at2)) = 
+        if (abs a) >= 1. then invalidArgAsin()
+        let asq = a * a in Dual2(asin a, at / sqrt (1. - asq), (a * at * at - (asq - 1.) * at2) / (1. - asq) ** 1.5)
+    static member Acos (Dual2(a, at, at2)) = 
+        if (abs a) >= 1. then invalidArgAcos()
+        let asq = a * a in Dual2(acos a, -at / sqrt (1. - asq), -((a * at * at + at2 - asq * at2) / (1. - asq) ** 1.5))
     static member Atan (Dual2(a, at, at2)) = let asq = a * a in Dual2(atan a, at / (1. + asq), (-2. * a * at * at + (1. + asq) * at2) / (1. + asq) ** 2.)
     static member Abs (Dual2(a, at, at2)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if a = 0. then invalidArgAbs()
         Dual2(abs a, at * float (sign a), 0.)
     static member Floor (Dual2(a, _, _)) =
-        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a then invalidArgFloor()
         Dual2(floor a, 0., 0.)
     static member Ceiling (Dual2(a, _, _)) =
-        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a then invalidArgCeil()
         Dual2(ceil a, 0., 0.)
     static member Round (Dual2(a, _, _)) =
-        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a then invalidArgRound()
         Dual2(round a, 0., 0.)
 
 /// Dual2 operations module (automatically opened)

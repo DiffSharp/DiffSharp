@@ -98,31 +98,44 @@ type Dual =
     static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
     static member Atan2 (a:int, b:Dual) = Dual.Atan2(float a, b)
     // Dual unary operations
-    static member Log (Dual(a, at)) = Dual(log a, at / a)
-    static member Log10 (Dual(a, at)) = Dual(log10 a, at / (a * log10val))
+    static member Log (Dual(a, at)) =
+        if a <= 0. then invalidArgLog()
+        Dual(log a, at / a)
+    static member Log10 (Dual(a, at)) =
+        if a <= 0. then invalidArgLog10()
+        Dual(log10 a, at / (a * log10val))
     static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
     static member Sin (Dual(a, at)) = Dual(sin a, at * cos a)
     static member Cos (Dual(a, at)) = Dual(cos a, -at * sin a)
-    static member Tan (Dual(a, at)) = let cosa = cos a in Dual(tan a, at / (cosa * cosa))
+    static member Tan (Dual(a, at)) =
+        let cosa = cos a
+        if cosa = 0. then invalidArgTan()
+        Dual(tan a, at / (cosa * cosa))
     static member (~-) (Dual(a, at)) = Dual(-a, -at)
-    static member Sqrt (Dual(a, at)) = let sqrta = sqrt a in Dual(sqrta, at / (2. * sqrta))
+    static member Sqrt (Dual(a, at)) = 
+        if a <= 0. then invalidArgSqrt()
+        let sqrta = sqrt a in Dual(sqrta, at / (2. * sqrta))
     static member Sinh (Dual(a, at)) = Dual(sinh a, at * cosh a)
     static member Cosh (Dual(a, at)) = Dual(cosh a, at * sinh a)
     static member Tanh (Dual(a, at)) = let cosha = cosh a in Dual(tanh a, at / (cosha * cosha))
-    static member Asin (Dual(a, at)) = Dual(asin a, at / sqrt (1. - a * a))
-    static member Acos (Dual(a, at)) = Dual(acos a, -at / sqrt (1. - a * a))
+    static member Asin (Dual(a, at)) =
+        if (abs a) >= 1. then invalidArgAsin()
+        Dual(asin a, at / sqrt (1. - a * a))
+    static member Acos (Dual(a, at)) = 
+        if (abs a) >= 1. then invalidArgAcos()
+        Dual(acos a, -at / sqrt (1. - a * a))
     static member Atan (Dual(a, at)) = Dual(atan a, at / (1. + a * a))
     static member Abs (Dual(a, at)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if a = 0. then invalidArgAbs()
         Dual(abs a, at * float (sign a))
     static member Floor (Dual(a, _)) =
-        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a then invalidArgFloor()
         Dual(floor a, 0.)
     static member Ceiling (Dual(a, _)) =
-        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a then invalidArgCeil()
         Dual(ceil a, 0.)
     static member Round (Dual(a, _)) =
-        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a then invalidArgRound()
         Dual(round a, 0.)
 
 /// Dual operations module (automatically opened)

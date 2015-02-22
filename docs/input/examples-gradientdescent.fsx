@@ -22,7 +22,7 @@ keep decreasing and the sequence $\mathbf{x}_n$ usually converges to a local min
 
 Generally speaking, using a fixed step size $\gamma$ yields suboptimal performance and there are adaptive variations of the gradient descent algorithm that select a locally optimal step size $\gamma$ on every iteration.
 
-Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
+Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the squared [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
 
 *)
 
@@ -34,7 +34,7 @@ open DiffSharp.Util.LinearAlgebra
 let gd f x0 (a:float) t =
     let rec desc x =
         let g = grad f x
-        if Vector.norm g < t then x else desc (x - a * g)
+        if Vector.normSq g < t then x else desc (x - a * g)
     desc x0
 
 (**
@@ -65,7 +65,7 @@ let gdSeq f x0 (a:float) t =
     Seq.unfold (fun x -> 
                     // Get value, gradient of f at x
                     let v, g = grad' f x
-                    if Vector.norm g < t then 
+                    if Vector.normSq g < t then 
                         None 
                     else 
                         let x' = x - a * g

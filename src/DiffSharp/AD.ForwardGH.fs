@@ -103,31 +103,44 @@ type DualGH =
     static member Pow (a:int, b:DualGH) = DualGH.Pow(float a, b)
     static member Atan2 (a:int, b:DualGH) = DualGH.Atan2(float a, b)
     // DualGH unary operations
-    static member Log (DualGH(a, ag, ah)) = let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
-    static member Log10 (DualGH(a, ag, ah)) = let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
+    static member Log (DualGH(a, ag, ah)) = 
+        if a <= 0. then invalidArgLog()
+        let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
+    static member Log10 (DualGH(a, ag, ah)) = 
+        if a <= 0. then invalidArgLog10()
+        let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
     static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.SymmetricOp(ah, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
     static member Sin (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(sina, cosa * ag, Matrix.SymmetricOp(ah, fun i j -> -sina * ag.[i] * ag.[j] + cosa * ah.[i, j]))
     static member Cos (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(cosa, -sina * ag, Matrix.SymmetricOp(ah, fun i j -> -cosa * ag.[i] * ag.[j] - sina * ah.[i, j]))
-    static member Tan (DualGH(a, ag, ah)) = let tana, secsqa = tan a, 1. / ((cos a) * (cos a)) in DualGH(tana, secsqa * ag, Matrix.SymmetricOp(ah, fun i j -> 2. * secsqa * tana * ag.[i] * ag.[j] + secsqa * ah.[i, j]))
+    static member Tan (DualGH(a, ag, ah)) = 
+        let cosa = cos a
+        if cosa = 0. then invalidArgTan()
+        let tana, secsqa = tan a, 1. / ((cosa) * (cosa)) in DualGH(tana, secsqa * ag, Matrix.SymmetricOp(ah, fun i j -> 2. * secsqa * tana * ag.[i] * ag.[j] + secsqa * ah.[i, j]))
     static member (~-) (DualGH(a, ag, ah)) = DualGH(-a, -ag, -ah)
-    static member Sqrt (DualGH(a, ag, ah)) = let term = 1. / (2. * sqrt a) in DualGH(sqrt a, term * ag, Matrix.SymmetricOp(ah, fun i j -> (term / (-2. * a)) * ag.[i] * ag.[j] + term * ah.[i,j]))
+    static member Sqrt (DualGH(a, ag, ah)) = 
+        if a <= 0. then invalidArgSqrt()
+        let term = 1. / (2. * sqrt a) in DualGH(sqrt a, term * ag, Matrix.SymmetricOp(ah, fun i j -> (term / (-2. * a)) * ag.[i] * ag.[j] + term * ah.[i,j]))
     static member Sinh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(sinha, cosha * ag, Matrix.SymmetricOp(ah, fun i j -> sinha * ag.[i] * ag.[j] + cosha * ah.[i, j]))
     static member Cosh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(cosha, sinha * ag, Matrix.SymmetricOp(ah, fun i j -> cosha * ag.[i] * ag.[j] + sinha * ah.[i, j]))
     static member Tanh (DualGH(a, ag, ah)) = let tanha, sechsqa = tanh a, 1. / ((cosh a) * (cosh a)) in DualGH(tanha, sechsqa * ag, Matrix.SymmetricOp(ah, fun i j -> -2. * sechsqa * tanha * ag.[i] * ag.[j] + sechsqa * ah.[i, j]))
-    static member Asin (DualGH(a, ag, ah)) = let term, term2 = 1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(asin a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
-    static member Acos (DualGH(a, ag, ah)) = let term, term2 = -1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(acos a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
+    static member Asin (DualGH(a, ag, ah)) = 
+        if (abs a) >= 1. then invalidArgAsin()
+        let term, term2 = 1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(asin a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
+    static member Acos (DualGH(a, ag, ah)) = 
+        if (abs a) >= 1. then invalidArgAcos()
+        let term, term2 = -1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(acos a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Atan (DualGH(a, ag, ah)) = let term, term2 = 1. / (1. + a * a), (-2. * a / (1. + a * a)) in DualGH(atan a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Abs (DualGH(a, ag, ah)) = 
-        if a = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if a = 0. then invalidArgAbs()
         DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
     static member Floor (DualGH(a, ag, ah)) =
-        if isInteger a then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a then invalidArgFloor()
         DualGH(floor a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
     static member Ceiling (DualGH(a, ag, ah)) =
-        if isInteger a then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a then invalidArgCeil()
         DualGH(ceil a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
     static member Round (DualGH(a, ag, ah)) =
-        if isHalfway a then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a then invalidArgRound()
         DualGH(round a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
 
 /// DualGH operations module (automatically opened)

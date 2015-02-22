@@ -200,31 +200,43 @@ and Adj =
     static member Pow (x:int, y:Adj) = let z = Adj(float x ** y.P) in Trace.Push(PowConsAdj(float x, y, z)); z
     static member Atan2 (x:int, y:Adj) = let z = Adj(atan2 (float x) y.P) in Trace.Push(Atan2ConsAdj(float x, y, z)); z
     // Adj unary operations
-    static member Log (x:Adj) = let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
-    static member Log10 (x:Adj) = let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
+    static member Log (x:Adj) = 
+        if x.P <= 0. then invalidArgLog()
+        let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
+    static member Log10 (x:Adj) = 
+        if x.P <= 0. then invalidArgLog10()
+        let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
     static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
     static member Sin (x:Adj) = let z = Adj(sin x.P) in Trace.Push(Sin(x, z)); z
     static member Cos (x:Adj) = let z = Adj(cos x.P) in Trace.Push(Cos(x, z)); z
-    static member Tan (x:Adj) = let z = Adj(tan x.P) in Trace.Push(Tan(x, z)); z
+    static member Tan (x:Adj) = 
+        if cos x.P = 0. then invalidArgTan()
+        let z = Adj(tan x.P) in Trace.Push(Tan(x, z)); z
     static member (~-) (x:Adj) = let z = Adj(-x.P) in Trace.Push(Neg(x, z)); z
-    static member Sqrt (x:Adj) = let z = Adj(sqrt x.P) in Trace.Push(Sqrt(x, z)); z
+    static member Sqrt (x:Adj) =
+        if x.P <= 0. then invalidArgSqrt()
+        let z = Adj(sqrt x.P) in Trace.Push(Sqrt(x, z)); z
     static member Sinh (x:Adj) = let z = Adj(sinh x.P) in Trace.Push(Sinh(x, z)); z
     static member Cosh (x:Adj) = let z = Adj(cosh x.P) in Trace.Push(Cosh(x, z)); z
     static member Tanh (x:Adj) = let z = Adj(tanh x.P) in Trace.Push(Tanh(x, z)); z
-    static member Asin (x:Adj) = let z = Adj(asin x.P) in Trace.Push(Asin(x, z)); z
-    static member Acos (x:Adj) = let z = Adj(acos x.P) in Trace.Push(Acos(x, z)); z
+    static member Asin (x:Adj) = 
+        if (abs x.P) >= 1. then invalidArgAsin()
+        let z = Adj(asin x.P) in Trace.Push(Asin(x, z)); z
+    static member Acos (x:Adj) = 
+        if (abs x.P) >= 1. then invalidArgAcos()
+        let z = Adj(acos x.P) in Trace.Push(Acos(x, z)); z
     static member Atan (x:Adj) = let z = Adj(atan x.P) in Trace.Push(Atan(x, z)); z
     static member Abs (x:Adj) = 
-        if x.P = 0. then invalidArg "" "The derivative of abs is not defined at 0."
+        if x.P = 0. then invalidArgAbs()
         let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
     static member Floor (x:Adj) =
-        if isInteger x.P then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger x.P then invalidArgFloor()
         let z = Adj(floor x.P) in Trace.Push(Floor(x, z)); z
     static member Ceiling (x:Adj) =
-        if isInteger x.P then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger x.P then invalidArgCeil()
         let z = Adj(ceil x.P) in Trace.Push(Ceil(x, z)); z
     static member Round (x:Adj) =
-        if isHalfway x.P then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway x.P then invalidArgRound()
         let z = Adj(round x.P) in Trace.Push(Round(x, z)); z
 
 /// Adj operations module (automatically opened)

@@ -105,31 +105,43 @@ type DualAdj =
     static member Pow (a:int, b:DualAdj) = DualAdj.Pow(float a, b)
     static member Atan2 (a:int, b:DualAdj) = DualAdj.Atan2(float a, b)
     // DualAdj unary operations
-    static member Log (DualAdj(a, at)) = DualAdj(log a, at / a)
-    static member Log10 (DualAdj(a, at)) = DualAdj(log10 a, at / (a * log10val))
+    static member Log (DualAdj(a, at)) = 
+        if a.P <= 0. then invalidArgLog()
+        DualAdj(log a, at / a)
+    static member Log10 (DualAdj(a, at)) = 
+        if a.P <= 0. then invalidArgLog10()
+        DualAdj(log10 a, at / (a * log10val))
     static member Exp (DualAdj(a, at)) = let expa = exp a in DualAdj(expa, at * expa)
     static member Sin (DualAdj(a, at)) = DualAdj(sin a, at * cos a)
     static member Cos (DualAdj(a, at)) = DualAdj(cos a, -at * sin a)
-    static member Tan (DualAdj(a, at)) = let cosa = cos a in DualAdj(tan a, at / (cosa * cosa))
+    static member Tan (DualAdj(a, at)) = 
+        if cos a.P = 0. then invalidArgTan()
+        let cosa = cos a in DualAdj(tan a, at / (cosa * cosa))
     static member (~-) (DualAdj(a, at)) = DualAdj(-a, -at)
-    static member Sqrt (DualAdj(a, at)) = let sqrta = sqrt a in DualAdj(sqrta, at / (2. * sqrta))
+    static member Sqrt (DualAdj(a, at)) = 
+        if a.P <= 0. then invalidArgSqrt()
+        let sqrta = sqrt a in DualAdj(sqrta, at / (2. * sqrta))
     static member Sinh (DualAdj(a, at)) = DualAdj(sinh a, at * cosh a)
     static member Cosh (DualAdj(a, at)) = DualAdj(cosh a, at * sinh a)
     static member Tanh (DualAdj(a, at)) = let cosha = cosh a in DualAdj(tanh a, at / (cosha * cosha))
-    static member Asin (DualAdj(a, at)) = DualAdj(asin a, at / sqrt (1. - a * a))
-    static member Acos (DualAdj(a, at)) = DualAdj(acos a, -at / sqrt (1. - a * a))
+    static member Asin (DualAdj(a, at)) = 
+        if (abs a.P) >= 1. then invalidArgAsin()
+        DualAdj(asin a, at / sqrt (1. - a * a))
+    static member Acos (DualAdj(a, at)) = 
+        if (abs a.P) >= 1. then invalidArgAcos()
+        DualAdj(acos a, -at / sqrt (1. - a * a))
     static member Atan (DualAdj(a, at)) = DualAdj(atan a, at / (1. + a * a))
     static member Abs (DualAdj(a, at)) = 
-        if a = (adj 0.) then invalidArg "" "The derivative of abs is not defined at 0."
+        if a.P = 0. then invalidArgAbs()
         DualAdj(abs a, at * (sign a.P))
     static member Floor (DualAdj(a, _)) =
-        if isInteger a.P then invalidArg "" "The derivative of floor is not defined for integer values."
+        if isInteger a.P then invalidArgFloor()
         DualAdj(floor a, adj 0.)
     static member Ceiling (DualAdj(a, _)) =
-        if isInteger a.P then invalidArg "" "The derivative of ceil is not defined for integer values."
+        if isInteger a.P then invalidArgCeil()
         DualAdj(ceil a, adj 0.)
     static member Round (DualAdj(a, _)) =
-        if isHalfway a.P then invalidArg "" "The derivative of round is not defined for values halfway between integers."
+        if isHalfway a.P then invalidArgRound()
         DualAdj(round a, adj 0.)
 
 /// DualAdj operations module (automatically opened)

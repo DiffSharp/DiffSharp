@@ -29,7 +29,7 @@ open DiffSharp.Util.LinearAlgebra
 let Newton f x0 (a:float) t =
     let rec desc x =
         let g, h = gradhessian f x
-        if Vector.norm g < t then x else desc (x - a * (Matrix.inverse h) * g)
+        if Vector.normSq g < t then x else desc (x - a * (Matrix.inverse h) * g)
     desc x0
 
 
@@ -39,7 +39,7 @@ let NewtonSeq f (x0:Vector<float>) (a:float) t =
     Seq.unfold (fun x -> 
                     // Get value, gradient, hessian of f at x
                     let v, g, h = gradhessian' f x
-                    if Vector.l2normSq g < t then
+                    if Vector.normSq g < t then
                         None
                     else
                         let p = (Matrix.inverse h) * (-g)
