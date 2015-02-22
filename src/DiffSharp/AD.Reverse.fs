@@ -241,7 +241,7 @@ module AdjOps =
 [<AutoOpen>]
 module ReverseOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         Trace.Clear()
         let xa = adj x
         let z:Adj = f xa
@@ -254,7 +254,7 @@ module ReverseOps =
         diff' f x |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x =
+    let inline grad' f (x:float[]) =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj = f xa
@@ -267,7 +267,7 @@ module ReverseOps =
         grad' f x |> snd
 
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`, using one forward sweep and several reverse sweeps
-    let inline jacobian' f x =
+    let inline jacobian' f (x:float[]) =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj[] = f xa
@@ -292,7 +292,7 @@ module ReverseOps =
         jacobianT' f x |> snd
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline gradhessian' f (x:_[]) =
+    let inline gradhessian' f (x:float[]) =
         let xv = vector' float x
         let (v, g) = grad' f x
         let h = Matrix.Create(x.Length, g)
@@ -320,11 +320,11 @@ module ReverseOps =
         laplacian' f x |> snd
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv' f x v =
+    let inline jacobianTv' f (x:float[]) (v:float[]) =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj[] = f xa
-        Array.iter2 (fun (a:Adj) b -> a.A <- float b) z v
+        Array.iter2 (fun (a:Adj) b -> a.A <- b) z v
         Trace.ReverseSweep()
         (Array.map primal z, Array.map adjoint xa)
 
@@ -333,7 +333,7 @@ module ReverseOps =
         jacobianTv' f x v |> snd
 
     /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
-    let inline jacobianTv'' f x =
+    let inline jacobianTv'' f (x:float[]) =
         Trace.Clear()
         let xa = Array.map adj x
         let z:Adj[] = f xa
@@ -342,7 +342,7 @@ module ReverseOps =
         let r2 =
             fun v ->
                 Trace.SetClean(forwardTrace)
-                Array.iter2 (fun (a:Adj) b -> a.A <- float b) z v
+                Array.iter2 (fun (a:Adj) b -> a.A <- b) z v
                 Trace.ReverseSweep()
                 Array.map adjoint xa
         (r1, r2)

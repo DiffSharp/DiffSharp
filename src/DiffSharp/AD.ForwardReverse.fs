@@ -157,15 +157,15 @@ module DualAdjOps =
 [<AutoOpen>]
 module ForwardReverseOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`. Computed using forward mode AD.
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         dualAdjAct x |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`. Computed using forward mode AD.
-    let inline diff f x =
+    let inline diff f (x:float) =
         dualAdjAct x |> f |> tangent
 
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`. Computed using reverse-on-forward mode AD.
-    let inline diff2'' f x =
+    let inline diff2'' f (x:float) =
         Trace.Clear()
         let xa = dualAdjAct x
         let z:DualAdj = f xa
@@ -182,7 +182,7 @@ module ForwardReverseOps =
         diff2'' f x |> fsttrd
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
-    let inline gradv' f x v =
+    let inline gradv' f (x:float[]) (v:float[]) =
         Array.zip x v |> Array.map dualAdjSet |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
@@ -190,7 +190,7 @@ module ForwardReverseOps =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`. Computed using reverse mode AD.
-    let inline grad' f x =
+    let inline grad' f (x:float[]) =
         Trace.Clear()
         let xa = Array.map dualAdj x
         let z:DualAdj = f xa
@@ -203,7 +203,7 @@ module ForwardReverseOps =
         grad' f x |> snd
 
     /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using reverse-on-forward mode AD.
-    let inline gradhessianv' f x v =
+    let inline gradhessianv' f (x:float[]) (v:float[]) =
         Trace.Clear()
         let xa = Array.map dualAdjSet (Array.zip x v)
         let z:DualAdj = f xa
@@ -216,7 +216,7 @@ module ForwardReverseOps =
         gradhessianv' f x v |> sndtrd
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`. Computed using reverse-on-forward mode AD.
-    let inline gradhessian' f (x:_[]) =
+    let inline gradhessian' f (x:float[]) =
         let a = Array.init x.Length (fun i -> gradhessianv' f x (standardBasis x.Length i))
         (fst3 a.[0], Array.map snd3 a, array2D (Array.map trd a))
 
@@ -233,7 +233,7 @@ module ForwardReverseOps =
         hessianv' f x v |> snd
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`. Computed using reverse-on-forward mode AD.
-    let inline hessian' f (x:_[]) =
+    let inline hessian' f (x:float[]) =
         let a = Array.init x.Length (fun i -> hessianv' f x (standardBasis x.Length i))
         (fst a.[0], array2D (Array.map snd a))
 
@@ -250,7 +250,7 @@ module ForwardReverseOps =
         laplacian' f x |> snd
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
-    let inline jacobianv' f x v =
+    let inline jacobianv' f (x:float[]) (v:float[]) =
         Array.zip x v |> Array.map dualAdjSet |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
@@ -258,7 +258,7 @@ module ForwardReverseOps =
         jacobianv' f x v |> snd
 
     /// Original value, Jacobian-vector product, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned 3-tuple, the first is the original value of function `f` at point `x`, the second is the Jacobian-vector product of `f` at point `x` along vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
-    let inline jacobianvTv'' f x v1 =
+    let inline jacobianvTv'' f (x:float[]) (v1:float[]) =
         Trace.Clear()
         let xa = Array.map dualAdjSet (Array.zip x v1)
         let z:DualAdj[] = f xa
@@ -268,7 +268,7 @@ module ForwardReverseOps =
         let r3 =
             fun v2 ->
                 Trace.SetClean(forwardTrace)
-                Array.iter2 (fun (a:DualAdj) b -> a.A <- float b) z v2
+                Array.iter2 (fun (a:DualAdj) b -> a.A <- b) z v2
                 Trace.ReverseSweep()
                 Array.map adjoint xa
         (r1, r2, r3)
@@ -283,12 +283,12 @@ module ForwardReverseOps =
         jacobianvTv' f x v1 v2 |> sndtrd
 
     /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Computed using reverse mode AD. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
-    let inline jacobianTv'' f (x:_[]) =
+    let inline jacobianTv'' f (x:float[]) =
         let r1, _, r3 = jacobianvTv'' f x (Array.zeroCreate x.Length)
         (r1, r3)
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using reverse mode AD.
-    let inline jacobianTv' f x (v:_[]) =
+    let inline jacobianTv' f x (v:float[]) =
         let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
 
@@ -297,7 +297,7 @@ module ForwardReverseOps =
         jacobianTv' f x v |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`. For a function `f:R^n -> R^m`, the Jacobian is computed using forward mode AD if n < m, or reverse mode AD if n > m.
-    let inline jacobianT' (f:DualAdj[]->DualAdj[]) (x:_[]) =
+    let inline jacobianT' (f:DualAdj[]->DualAdj[]) (x:float[]) =
         let o = x |> Array.map dualAdj |> f |> Array.map primal
         if x.Length < o.Length then // f:R^n -> R^m, if n < m use forward mode AD
             let a = Array.init x.Length (fun i -> jacobianv f x (standardBasis x.Length i))

@@ -157,27 +157,27 @@ module Dual2Ops =
 [<AutoOpen>]
 module Forward2Ops =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         dual2Act x |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x =
+    let inline diff f (x:float) =
         dual2Act x |> f |> tangent
 
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' f x =
+    let inline diff2' f (x:float) =
         dual2Act x |> f |> tuple2
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 f x =
+    let inline diff2 f (x:float) =
         dual2Act x |> f |> tangent2
     
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' f x =
+    let inline diff2'' f (x:float) =
         dual2Act x |> f |> tupleAll
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' f x v =
+    let inline gradv' f (x:float[]) (v:float[]) =
         Array.zip x v |> Array.map dual2Set |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
@@ -185,7 +185,7 @@ module Forward2Ops =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f (x:_[]) =
+    let inline grad' f (x:float[]) =
         let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
         (fst a.[0], Array.map snd a)
 
@@ -194,7 +194,7 @@ module Forward2Ops =
         grad' f x |> snd
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' f (x:_[]) =
+    let inline laplacian' f (x:float[]) =
         let a = Array.init x.Length (fun i ->
                                         standardBasis x.Length i
                                         |> Array.zip x
@@ -207,7 +207,7 @@ module Forward2Ops =
         laplacian' f x |> snd
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f x v = 
+    let inline jacobianv' f (x:float[]) (v:float[]) = 
         Array.zip x v |> Array.map dual2Set |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
@@ -215,7 +215,7 @@ module Forward2Ops =
         jacobianv' f x v |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f (x:_[]) =
+    let inline jacobianT' f (x:float[]) =
         let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
         (fst a.[0], array2D (Array.map snd a))
 

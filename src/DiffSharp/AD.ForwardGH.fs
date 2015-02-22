@@ -161,7 +161,7 @@ module DualGHOps =
 [<AutoOpen>]
 module ForwardGHOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         dualGHAct x 1 0 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
@@ -169,7 +169,7 @@ module ForwardGHOps =
         diff' f x |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x =
+    let inline grad' f (x:float[]) =
         dualGHActArray x |> f |> tupleG
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
@@ -177,7 +177,7 @@ module ForwardGHOps =
         grad' f x |> snd
     
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x =
+    let inline jacobian' f (x:float[]) =
         let a = dualGHActArray x |> f
         (Array.map primal a, Matrix.toArray2D (Matrix.Create(a.Length, fun i -> gradient a.[i])))
 
@@ -194,7 +194,7 @@ module ForwardGHOps =
         jacobianT' f x |> snd
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' f x =
+    let inline hessian' f (x:float[]) =
         dualGHActArray x |> f |> tupleH
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
@@ -202,7 +202,7 @@ module ForwardGHOps =
         hessian' f x |> snd
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' f x =
+    let inline gradhessian' f (x:float[]) =
         dualGHActArray x |> f |> tupleGH
     
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`

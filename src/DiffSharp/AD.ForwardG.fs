@@ -156,15 +156,15 @@ module DualGOps =
 [<AutoOpen>]
 module ForwardGOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         dualGAct x 1 0 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x =
+    let inline diff f (x:float) =
         dualGAct x 1 0 |> f |> tangent
        
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f x =
+    let inline grad' f (x:float[]) =
         dualGActArray x |> f |> tupleG
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
@@ -172,7 +172,7 @@ module ForwardGOps =
         grad' f x |> snd
     
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' f x =
+    let inline jacobian' f (x:float[]) =
         let a = dualGActArray x |> f
         (Array.map primal a, Matrix.toArray2D (Matrix.Create(a.Length, fun i -> gradient a.[i])))
 

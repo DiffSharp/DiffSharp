@@ -146,15 +146,15 @@ module DualOps =
 [<AutoOpen>]
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f x =
+    let inline diff' f (x:float) =
         dualAct x |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f x =
+    let inline diff f (x:float) =
         dualAct x |> f |> tangent
        
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' f x v =
+    let inline gradv' f (x:float[]) (v:float[]) =
         Array.zip x v |> Array.map dualSet |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
@@ -162,7 +162,7 @@ module ForwardOps =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f (x:_[]) =
+    let inline grad' f (x:float[]) =
         let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
         (fst a.[0], Array.map snd a)
 
@@ -171,15 +171,15 @@ module ForwardOps =
         grad' f x |> snd
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f x v = 
+    let inline jacobianv' f (x:float[]) (v:float[]) = 
         Array.zip x v |> Array.map dualSet |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv f x v = 
+    let inline jacobianv f (x:float[]) (v:float[]) = 
         jacobianv' f x v |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f (x:_[]) =
+    let inline jacobianT' f (x:float[]) =
         let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
         (fst a.[0], array2D (Array.map snd a))
 
