@@ -223,14 +223,3 @@ module Vector =
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
 
-/// Numeric literal for a Dual with tangent 0
-module NumericLiteralQ = // (Allowed literals : Q, R, Z, I, N, G)
-    let FromZero () = dual 0.
-    let FromOne () = dual 1.
-    let FromInt32 p = dual (float p)
-
-/// Numeric literal for a Dual with tangent 1 (i.e. the variable of differentiation)
-module NumericLiteralR =    
-    let FromZero () = dualAct 0.
-    let FromOne () = dualAct 1.
-    let FromInt32 p = dualAct (float p)
