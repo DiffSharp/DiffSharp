@@ -118,16 +118,17 @@ It is important to note that the backpropagation algorithm is just a special cas
 *)
 
 // The backpropagation algorithm
-// t is the training set consisting of input and output vectors
-// eta is the learning rate
-// timeout is the maximum number of iterations
-// n is the network to be trained
-let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (timeout:int) (n:Network) =
+// n: network to be trained
+// eta: learning rate
+// epsilon: error threshold
+// timeout: maximum number of iterations
+// t: training set consisting of input and output vectors
+let backprop (n:Network) (eta:float) epsilon (timeout:int) (t:(Vector<float>*Vector<float>)[]) =
     let ta = Array.map (fun x -> Vector.map adj (fst x), Vector.map adj (snd x)) t
     seq {for i in 0 .. timeout do // A timeout value
             Trace.Clear()
             let error = 
-                (1. / float t.Length) * Array.sumBy 
+                (1. / float ta.Length) * Array.sumBy 
                     (fun t -> Vector.normSq ((snd t) - runNetwork (fst t) n)) ta
             error.A <- 1.
             Trace.ReverseSweep()
@@ -135,9 +136,9 @@ let backprop (t:(Vector<float>*Vector<float>)[]) (eta:float) (timeout:int) (n:Ne
                 for n in l.n do
                     n.b <- n.b - eta * n.b.A // Update neuron bias
                     n.w <- Vector.map (fun (w:Adj) -> w - eta * w.A) n.w // Update neuron weights
-            if i = timeout then printfn "Failed to converge within %i steps" timeout
+            if i = timeout then printfn "Failed to converge within %i steps." timeout
             yield primal error}
-    |> Seq.takeWhile (fun x -> x > 0.005)
+    |> Seq.takeWhile ((<) epsilon)
 
 (**
 
@@ -159,7 +160,7 @@ let trainOR = [|vector [0.; 0.], vector [0.]
 let net2 = createNetwork 2 [|1|]
 
 // Train
-let train2 = backprop trainOR 0.9 10000 net2
+let train2 = backprop net2 0.9 0.005 10000 trainOR
 
 // Plot the error during training
 Chart.Line train2
@@ -197,7 +198,7 @@ let trainXOR = [|vector [0.; 0.], vector [0.]
 let net3 = createNetwork 2 [|3; 1|]
 
 // Train
-let train3 = backprop trainXOR 0.9 10000 net3
+let train3 = backprop net3 0.9 0.005 10000 trainXOR
 
 // Plot the error during training
 Chart.Line train3
