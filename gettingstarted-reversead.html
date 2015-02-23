@@ -262,9 +262,9 @@ val de'dd' : float = 0.4794255386
 <div class="tip" id="fs5">val x : Adj []</div>
 <div class="tip" id="fs6">Multiple items<br />type Adj =<br />&#160;&#160;interface IComparable<br />&#160;&#160;new : p:float -&gt; Adj<br />&#160;&#160;new : p:float * a:float -&gt; Adj<br />&#160;&#160;val P: float<br />&#160;&#160;val mutable A: float<br />&#160;&#160;member AddAdj : a:float -&gt; unit<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member Abs : x:Adj -&gt; Adj<br />&#160;&#160;...<br /><br />Full name: DiffSharp.AD.Reverse.Adj<br /><br />--------------------<br />new : p:float -&gt; Adj<br />new : p:float * a:float -&gt; Adj</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
-<div class="tip" id="fs8">val ga : (int [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.ga</div>
-<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; x:&#39;a [] -&gt; float [] (requires member op_Explicit)<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
-<div class="tip" id="fs10">val gb : (int [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.gb</div>
+<div class="tip" id="fs8">val ga : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.ga</div>
+<div class="tip" id="fs9">val grad : f:(Adj [] -&gt; Adj) -&gt; x:float [] -&gt; float []<br /><br />Full name: DiffSharp.AD.Reverse.ReverseOps.grad</div>
+<div class="tip" id="fs10">val gb : (float [] -&gt; float [])<br /><br />Full name: Gettingstarted-reversead.gb</div>
 <div class="tip" id="fs11">Multiple items<br />type Trace =<br />&#160;&#160;new : unit -&gt; Trace<br />&#160;&#160;static member CleanCopy : t:seq&lt;Op&gt; -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member Copy : unit -&gt; Stack&lt;Op&gt;<br />&#160;&#160;static member ReverseSweep : unit -&gt; unit<br />&#160;&#160;static member Set : t:Stack&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member SetClean : t:seq&lt;Op&gt; -&gt; unit<br />&#160;&#160;static member Clear : (unit -&gt; unit)<br />&#160;&#160;static member Push : (Op -&gt; unit)<br />&#160;&#160;static member Stack : Stack&lt;Op&gt;<br />&#160;&#160;static member Stack : Stack&lt;Op&gt; with set<br /><br />Full name: DiffSharp.AD.Reverse.Trace<br /><br />--------------------<br />new : unit -&gt; Trace</div>
 <div class="tip" id="fs12">property Trace.Clear: unit -&gt; unit</div>
 <div class="tip" id="fs13">val a : Adj<br /><br />Full name: Gettingstarted-reversead.a</div>
@@ -321,6 +321,7 @@ val de'dd' : float = 0.4794255386
 
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>
