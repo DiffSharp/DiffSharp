@@ -29,16 +29,6 @@ You can install the library via NuGet. You can also download the source code or 
     <div class="span1"></div>
 </div>
 
-Future Releases
----------------
-
-We are working on the following features for the next release:
-
-- Handling of nested AD operations
-- Improved Hessian calculations exploiting structure (e.g. sparsity)
-- AD via source code transformation, using code quotations
-- Integration with [Math.NET Numerics](http://numerics.mathdotnet.com/) vectors and matrices
-
 Quick Usage Example
 -------------------
 *)
@@ -47,20 +37,19 @@ Quick Usage Example
 open DiffSharp.AD.Forward
 
 // A scalar-to-scalar function
-let f x = 
-    sin (sqrt x)
+let f x = sin (sqrt x)
 
 // Derivative of f
-let df = diff f
+let f' = diff f
 
-// Value of the derivative of f at a point
-let df2 = df 2.
+// Value of the derivative of f at 2
+let v = f' 2.
 
 (**
 More Info and How to Cite
 -------------------------
 
-For a quick overview of AD and other differentiation methods, you can refer to our [recent poster](http://www.cs.nuim.ie/~gunes/files/AGBaydinICML2014Poster.pdf) or [article](http://arxiv.org/abs/1404.7456) for the AutoML workshop at the International Conference on Machine Learning 2014. For in-depth material, you can check our [publications page](http://www.bcl.hamilton.ie/publications/) and the [autodiff.org](http://www.autodiff.org/) website.
+For a quick overview of AD and other differentiation methods, you can refer to our [recent poster](http://www.cs.nuim.ie/~gunes/files/AGBaydinICML2014Poster.pdf) for the AutoML workshop at the International Conference on Machine Learning 2014 or [this article](http://arxiv.org/abs/1502.05767). For in-depth material, you can check our [publications page](http://www.bcl.hamilton.ie/publications/) and the [autodiff.org](http://www.autodiff.org/) website.
 
 We are writing an article about this library and its usage and we hope to get it ready soon. In the meantime, if you are using DiffSharp and would like to cite it, please use the following information:
 
@@ -75,5 +64,15 @@ _Baydin, A. G. and Pearlmutter, B. A. (2014). Diffsharp: Automatic Differentiati
 
 
 If you are using DiffSharp, we would be very happy to link to your research or work on this page.
+
+Future Releases
+---------------
+
+We are working on the following features:
+
+- Handling of nested AD operations
+- Improved Hessian calculations exploiting structure (e.g. sparsity)
+- AD via source code transformation, using code quotations
+- Integration with [Math.NET Numerics](http://numerics.mathdotnet.com/) vectors and matrices
 
 *)

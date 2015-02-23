@@ -47,8 +47,7 @@ When you have an existing function, just opening the DiffSharp library and using
 *)
 
 // f3: float -> float
-let f3 x =
-    sin (sqrt x)
+let f3 x = sin (sqrt x)
 
 (** *)
 
@@ -56,8 +55,7 @@ open DiffSharp.AD.Forward
 
 // f4 has the same definition with f3, here Dual type is inferred automatically
 // f4: Dual -> Dual
-let f4 x =
-    sin (sqrt x)
+let f4 x = sin (sqrt x)
 
 let df4 = diff f4
 
@@ -67,8 +65,7 @@ In the above example, **f4** assumes the **Dual -> Dual** type and therefore can
 
 *)
 // f5 is the generic version of f4
-let inline f5 x =
-    sin (sqrt x)
+let inline f5 x = sin (sqrt x)
 
 // Here f5 behaves as Dual -> Dual
 let df5 = diff f5 2.
@@ -84,8 +81,7 @@ Functions with numeric literals in their definition cannot be used as in the pre
 *)
 
 // f6: float -> float
-let f6 x =
-    sin (3. * sqrt x)
+let f6 x = sin (3. * sqrt x)
 
 (** 
 In such cases, AD-enabled types should be explicitly used in one or more places in the function definition.
@@ -96,13 +92,11 @@ Explicitly marking an argument as **Dual**:
 *)
 
 // f7: Dual -> Dual
-let f7 (x:Dual) =
-    sin (3. * sqrt x)
+let f7 (x:Dual) = sin (3. * sqrt x)
 
 (**
 Converting a **float** into a **Dual**:
 *)
 
 // f8: Dual -> Dual
-let f8 x =
-    sin ((dual 3.) * sqrt x)
+let f8 x = sin ((dual 3.) * sqrt x)
