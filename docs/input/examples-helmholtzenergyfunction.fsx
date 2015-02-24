@@ -15,7 +15,7 @@ where $R$ is the universal gas constant, $T$ is the absolute temperature, $\math
 
 In practice, gradients of formulae such as this need to be evaluated at thousands of points for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.
 
-Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f(x): \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse automatic differentiation, which needs only one forward and one reverse evaluation of $f(x)$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
+Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f: \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse mode AD, which needs only one forward and one reverse evaluation of $f$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
 *)
 
 open DiffSharp.AD.Reverse
@@ -89,7 +89,7 @@ Chart.Line([for n in 1 .. 50 -> duration 1000 (fun _ -> testHelmholtz n)])
     </div>
 </div>
 
-Let us compare this with the performance of numerical differentiation (**DiffSharp.Numerical**) and forward automatic differentiation (**DiffSharp.AD.Forward** and **DiffSharp.AD.ForwardG**).
+Let us compare this with the performance of numerical differentiation (**DiffSharp.Numerical**) and forward mode AD (**DiffSharp.AD.Forward** and **DiffSharp.AD.ForwardG**).
 *)
 
 open DiffSharp.Numerical.Vector
@@ -146,11 +146,11 @@ let testHelmholtzDualG n =
     grad (helmholtzDualG R T b A) x
 
 (**
-As shown by the regular and logarithmic plots below, reverse automatic differentiation performs substantially better than forward automatic differentiation and numerical differentiation, as expected. For instance, for $n = 50$, reverse AD performs approximately ten times faster than the other methods. Also, simple forward automatic differentiation (**DiffSharp.AD.Forward**) performs worse than vectorized forward mode (**DiffSharp.AD.ForwardG**), which is optimized for functions with many inputs.
+As shown by the regular and logarithmic plots below, reverse mode AD performs substantially better than forward mode AD and numerical differentiation, as expected. For instance, for $n = 50$, reverse mode AD performs approximately ten times faster than the other methods. Also, simple forward mode AD (**DiffSharp.AD.Forward**) performs worse than vectorized forward mode (**DiffSharp.AD.ForwardG**), which is optimized for functions with many inputs.
 
-In general, for a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^m$, reverse AD will have a performance advantage over forward AD when $n \gg m$.
+In general, for a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^m$, reverse mode AD will have a performance advantage over forward mode AD when $n \gg m$.
 
-It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward AD and reverse AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation, which is prone to truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.
+It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward mode AD and reverse mode AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation, which is prone to truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.
 *)
 
 Chart.Combine([Chart.Line([for n in 1 .. 50 -> duration 1000 (fun _ -> testHelmholtzFloat n)],

@@ -5,7 +5,7 @@
 Type Inference
 ==============
 
-F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **Diffsharp.AD.Forward.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number) for forward AD and the **DiffSharp.AD.Reverse.Adj** type implementing adjoints for reverse AD.
+F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **Diffsharp.AD.Forward.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number) for forward mode AD and the **DiffSharp.AD.Reverse.Adj** type implementing adjoints for reverse AD.
 
 There are several ways the F# type inference system can work together with the DiffSharp library.
 

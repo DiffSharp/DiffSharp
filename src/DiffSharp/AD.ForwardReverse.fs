@@ -35,7 +35,7 @@
 
 #light
 
-/// Reverse-on-forward AD module
+/// Reverse-on-forward mode AD module
 module DiffSharp.AD.ForwardReverse
 
 open DiffSharp.AD.Reverse

@@ -39,7 +39,7 @@
 
 #light
 
-/// Forward AD module, keeping vectors of gradient components and matrices of Hessian components
+/// Forward mode AD module, keeping vectors of gradient components and matrices of Hessian components
 module DiffSharp.AD.ForwardGH
 
 open DiffSharp.Util.LinearAlgebra

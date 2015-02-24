@@ -146,7 +146,7 @@ drawArmLive (movement3 |> Seq.append movement2 |> Seq.append movement1)
 
 It is known that one can use the Jacobian transpose $\mathbf{J^T}$ instead of the inverse Jacobian $\mathbf{J^{-1}}$ and obtain similar results, albeit with slightly different behavior.
 
-The **DiffSharp.AD.Reverse** module provides the operation **jacobianTv** making use of reverse automatic differentiation to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the [API Overview](api-overview.html) and [Benchmarks](benchmarks.html) pages for a comparison of these operations.)
+The **DiffSharp.AD.Reverse** module provides the operation **jacobianTv** making use of reverse mode AD to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the [API Overview](api-overview.html) and [Benchmarks](benchmarks.html) pages for a comparison of these operations.)
 
 Using this method with the same arm positions gives us the following result:
 *)

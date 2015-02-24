@@ -35,7 +35,7 @@
 
 #light
 
-/// Forward AD module, 2nd order
+/// Forward mode AD module, 2nd order
 module DiffSharp.AD.Forward2
 
 open DiffSharp.Util.LinearAlgebra

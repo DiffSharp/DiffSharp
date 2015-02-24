@@ -39,7 +39,7 @@
 
 #light
 
-/// Forward AD module, keeping vectors of gradient components
+/// Forward mode AD module, keeping vectors of gradient components
 module DiffSharp.AD.ForwardG
 
 open DiffSharp.Util.LinearAlgebra

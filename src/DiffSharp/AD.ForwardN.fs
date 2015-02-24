@@ -35,7 +35,7 @@
 
 #light
 
-/// Forward AD module, lazy higher-order
+/// Forward mode AD module, lazy higher-order
 module DiffSharp.AD.ForwardN
 
 open DiffSharp.Util.LinearAlgebra

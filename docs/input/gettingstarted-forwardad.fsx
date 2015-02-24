@@ -5,14 +5,14 @@
 Forward AD
 ==========
 
-The DiffSharp library provides several implementations of forward AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.
+The DiffSharp library provides several implementations of forward mode AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 DiffSharp.AD.Forward
 --------------------
   
-This is a forward AD module implemented using [dual numbers](http://en.wikipedia.org/wiki/Dual_number) of primal and tangent values. It provides a performance advantage when computing derivatives of scalar-to-scalar functions, or vector-to-vector functions $f: \mathbb{R}^n \to \mathbb{R}^m$ where $n \ll m$.
+This is a forward mode AD module implemented using [dual numbers](http://en.wikipedia.org/wiki/Dual_number) of primal and tangent values. It provides a performance advantage when computing derivatives of scalar-to-scalar functions, or vector-to-vector functions $f: \mathbb{R}^n \to \mathbb{R}^m$ where $n \ll m$.
 
 This module is used with the **Dual** numeric type.
 *)
@@ -44,7 +44,7 @@ let jh = jacobian h [|2.; 3.|]
 DiffSharp.AD.Forward2
 ---------------------
 
-This is a forward AD module that also keeps the tangent-of-tangent values to compute 2nd derivatives.
+This is a forward mode AD module that also keeps the tangent-of-tangent values to compute 2nd derivatives.
 
 This module is used with the **Dual2** numeric type.
 *)
@@ -67,7 +67,7 @@ let lg2 = laplacian g2 [|2.; 3.|]
 DiffSharp.AD.ForwardG
 ---------------------
 
-This is a forward AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.
+This is a forward mode AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.
 
 This module is used with the **DualG** numeric type.
 *)
@@ -90,7 +90,7 @@ let jh3 = jacobian h3 [|2.; 3.|]
 DiffSharp.AD.ForwardGH
 ----------------------
 
-This is a forward AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.
+This is a forward mode AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.
 
 This module is used with the **DualGH** numeric type.
 *)
@@ -107,7 +107,7 @@ let gg4, hg4 = gradhessian g4 [|2.; 3.|]
 DiffSharp.AD.ForwardN
 ---------------------
 
-This is a forward AD module lazily evaluating higher-order derivatives as they are called. It provides higher order derivatives of scalar-to-scalar functions.
+This is a forward mode AD module lazily evaluating higher-order derivatives as they are called. It provides higher order derivatives of scalar-to-scalar functions.
 
 This module is used with the **DualN** numeric type.
 *)

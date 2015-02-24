@@ -211,7 +211,7 @@ Differentiation Operations and Variants
 The operations summarized in the above table have _prime-suffixed_ variants (e.g. **diff** and **diff'** ) that return tuples containing the value of the original function together with the value of the desired operation. This is advantageous in the majority of AD operations, since the original function value is almost always already computed as a by-product of AD computations, providing a performance advantage. 
 *)
 
-// Use forward AD
+// Use forward mode AD
 open DiffSharp.AD.Forward
 
 // Derivative of Sin(Sqrt(x)) at x = 2
@@ -523,13 +523,13 @@ The main focus of the DiffSharp library is AD, but we also implement symbolic an
 
 Currently, the library provides the following implementations in separate modules:
 
-- **DiffSharp.AD.Forward**: Forward AD 
-- **DiffSharp.AD.Forward2**: Forward AD, 2nd order
-- **DiffSharp.AD.ForwardG**: Forward AD, keeping vectors of gradient components
-- **DiffSharp.AD.ForwardGH**: Forward AD, keeping vectors of gradient components and matrices of Hessian components
-- **DiffSharp.AD.ForwardN**: Forward AD, lazy higher-order
-- **DiffSharp.AD.ForwardReverse**: Reverse-on-forward AD
-- **DiffSharp.AD.Reverse**: Reverse AD
+- **DiffSharp.AD.Forward**: Forward mode AD 
+- **DiffSharp.AD.Forward2**: Forward mode AD, 2nd order
+- **DiffSharp.AD.ForwardG**: Forward mode AD, keeping vectors of gradient components
+- **DiffSharp.AD.ForwardGH**: Forward mode AD, keeping vectors of gradient components and matrices of Hessian components
+- **DiffSharp.AD.ForwardN**: Forward mode AD, lazy higher-order
+- **DiffSharp.AD.ForwardReverse**: Reverse-on-forward mode AD
+- **DiffSharp.AD.Reverse**: reverse mode AD
 - **DiffSharp.Numerical**: Numerical differentiation
 - **DiffSharp.Symbolic**: Symbolic differentiation
 

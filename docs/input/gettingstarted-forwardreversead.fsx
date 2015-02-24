@@ -5,14 +5,14 @@
 Reverse-on-Forward AD
 =====================
 
-The library provides a reverse-on-forward AD implementation, which is a mixed method where a forward AD pass is followed by a reverse AD pass. This gives an efficient way of computing Hessians and [Hessian-vector products](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation).
+The library provides a reverse-on-forward mode AD implementation, which is a mixed method where a forward mode AD pass is followed by a reverse mode AD pass. This gives an efficient way of computing Hessians and [Hessian-vector products](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation).
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 DiffSharp.AD.ForwardReverse
 ---------------------------
 
-This is a reverse-on-forward AD module, used with the **DualAdj** numeric type.
+This is a reverse-on-forward mode AD module, used with the **DualAdj** numeric type.
 *)
 
 open DiffSharp.AD.ForwardReverse

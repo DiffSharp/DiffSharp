@@ -40,7 +40,7 @@
 
 #light
 
-/// Reverse AD module
+/// Reverse mode AD module
 module DiffSharp.AD.Reverse
 
 open System.Collections.Generic

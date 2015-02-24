@@ -103,7 +103,7 @@ would give us the following network with 3 input nodes, a hidden layer with 4 ne
 
 We can also have more than one hidden layer.
 
-For training networks, we will make use of reverse automatic differentiation (the **DiffSharp.AD.Reverse** module) for propagating the error at the output $E$ backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will then use in an update rule
+For training networks, we will make use of reverse mode AD (the **DiffSharp.AD.Reverse** module) for propagating the error at the output $E$ backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will then use in an update rule
 
 $$$
  \begin{eqnarray*}
@@ -113,7 +113,7 @@ $$$
 
 where $\eta$ is the learning rate.
 
-It is important to note that the backpropagation algorithm is just a special case of reverse AD, with which it shares a common history. Please see the [Reverse AD](gettingstarted-reversead.html) page for an explanation of the usage of adjoints and their backwards propagation.
+It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Reverse AD](gettingstarted-reversead.html) page for an explanation of the usage of adjoints and their backwards propagation.
 
 *)
 
@@ -142,7 +142,7 @@ let backprop (n:Network) (eta:float) epsilon (timeout:int) (t:(Vector<float>*Vec
 
 (**
 
-Using reverse AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
+Using reverse mode AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
 
 We can now test the algorithm by training some networks. 
 
