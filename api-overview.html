@@ -266,7 +266,7 @@
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="c">// Use forward AD</span>
+<span class="c">// Use forward mode AD</span>
 <span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">Forward</span>
 
 <span class="c">// Derivative of Sin(Sqrt(x)) at x = 2</span>
@@ -566,13 +566,13 @@
 <p>Currently, the library provides the following implementations in separate modules:</p>
 
 <ul>
-<li><strong>DiffSharp.AD.Forward</strong>: Forward AD</li>
-<li><strong>DiffSharp.AD.Forward2</strong>: Forward AD, 2nd order</li>
-<li><strong>DiffSharp.AD.ForwardG</strong>: Forward AD, keeping vectors of gradient components</li>
-<li><strong>DiffSharp.AD.ForwardGH</strong>: Forward AD, keeping vectors of gradient components and matrices of Hessian components</li>
-<li><strong>DiffSharp.AD.ForwardN</strong>: Forward AD, lazy higher-order</li>
-<li><strong>DiffSharp.AD.ForwardReverse</strong>: Reverse-on-forward AD</li>
-<li><strong>DiffSharp.AD.Reverse</strong>: Reverse AD</li>
+<li><strong>DiffSharp.AD.Forward</strong>: Forward mode AD</li>
+<li><strong>DiffSharp.AD.Forward2</strong>: Forward mode AD, 2nd order</li>
+<li><strong>DiffSharp.AD.ForwardG</strong>: Forward mode AD, keeping vectors of gradient components</li>
+<li><strong>DiffSharp.AD.ForwardGH</strong>: Forward mode AD, keeping vectors of gradient components and matrices of Hessian components</li>
+<li><strong>DiffSharp.AD.ForwardN</strong>: Forward mode AD, lazy higher-order</li>
+<li><strong>DiffSharp.AD.ForwardReverse</strong>: Reverse-on-forward mode AD</li>
+<li><strong>DiffSharp.AD.Reverse</strong>: reverse mode AD</li>
 <li><strong>DiffSharp.Numerical</strong>: Numerical differentiation</li>
 <li><strong>DiffSharp.Symbolic</strong>: Symbolic differentiation</li>
 </ul>
@@ -765,6 +765,7 @@
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

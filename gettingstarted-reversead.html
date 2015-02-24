@@ -50,15 +50,15 @@
         <div class="span9" id="main">
           <h1>Reverse AD</h1>
 
-<p>The DiffSharp library currently provides a single implementation of reverse AD, using what is known in AD literature as a <em>tape</em>. In future releases of the library, we will provide several other implementations.</p>
+<p>The DiffSharp library currently provides a single implementation of reverse mode AD, using what is known in AD literature as a <em>tape</em>. In future releases of the library, we will provide several other implementations.</p>
 
 <p>For a complete list of the available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
 
 <h2>DiffSharp.AD.Reverse</h2>
 
-<p>This is a reverse AD module that works by recording a trace of operations in the forward evaluation of a function and using this in the reverse sweep for backpropagating adjoints.</p>
+<p>This is a reverse mode AD module that works by recording a trace of operations in the forward evaluation of a function and using this in the reverse sweep for backpropagating adjoints.</p>
 
-<p>Reverse AD provides a performance advantage when computing gradients of vector-to-scalar functions <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}\)</span>, because it can calculate all partial derivatives in just one forward evaluation and one reverse evaluation of the function, regardless the value of <span class="math">\(n\)</span>.</p>
+<p>Reverse mode AD provides a performance advantage when computing gradients of vector-to-scalar functions <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}\)</span>, because it can calculate all partial derivatives in just one forward evaluation and one reverse evaluation of the function, regardless the value of <span class="math">\(n\)</span>.</p>
 
 <p>This module is used with the <strong>Adj</strong> numeric type.</p>
 
@@ -100,9 +100,9 @@
 
 <h1>Using the Reverse AD Trace</h1>
 
-<p>In addition to using the differentiation API provided by the reverse AD module (such as <strong>diff</strong>, <strong>grad</strong>, <strong>jacobian</strong> ), you can make use of the exposed <a href="http://en.wikipedia.org/wiki/Tracing_%28software%29">trace</a> functionality. For code using the <strong>Adj</strong> numeric type, <strong>DiffSharp.AD.Reverse.Trace</strong> builds a global trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating the adjoint values in reverse.</p>
+<p>In addition to using the differentiation API provided by the reverse mode AD module (such as <strong>diff</strong>, <strong>grad</strong>, <strong>jacobian</strong> ), you can make use of the exposed <a href="http://en.wikipedia.org/wiki/Tracing_%28software%29">trace</a> functionality. For code using the <strong>Adj</strong> numeric type, <strong>DiffSharp.AD.Reverse.Trace</strong> builds a global trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating the adjoint values in reverse.</p>
 
-<p>The technique is equivalent to the <a href="http://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse AD. You can see an implementation of the backpropagation algorithm using the reverse AD trace in the <a href="examples-neuralnetworks.html">neural networks</a> example.</p>
+<p>The technique is equivalent to the <a href="http://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse mode AD. You can see an implementation of the backpropagation algorithm using the reverse mode AD trace in the <a href="examples-neuralnetworks.html">neural networks</a> example.</p>
 
 <p>For example, consider the computation</p>
 
@@ -128,7 +128,7 @@
     </div>
 </div>
 
-<p>Reverse AD works by propagating adjoint values from the output (e.g. <span class="math">\(\bar{e} = \frac{\partial e}{\partial e}\)</span>) towards the inputs (e.g. <span class="math">\(\bar{a} = \frac{\partial e}{\partial a}\)</span> and <span class="math">\(\bar{b} = \frac{\partial e}{\partial b}\)</span>), using adjoint propagation rules dictated by the dependencies in the computational graph:</p>
+<p>Reverse mode AD works by propagating adjoint values from the output (e.g. <span class="math">\(\bar{e} = \frac{\partial e}{\partial e}\)</span>) towards the inputs (e.g. <span class="math">\(\bar{a} = \frac{\partial e}{\partial a}\)</span> and <span class="math">\(\bar{b} = \frac{\partial e}{\partial b}\)</span>), using adjoint propagation rules dictated by the dependencies in the computational graph:</p>
 
 <p><span class="math">\[ \begin{eqnarray*}
  \bar{d} &amp;=&amp; \frac{\partial e}{\partial d} &amp;=&amp; \frac{\partial e}{\partial e} \frac{\partial e}{\partial d} &amp;=&amp; \bar{e} c\; , \\
@@ -322,6 +322,7 @@ val de'dd' : float = 0.4794255386
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

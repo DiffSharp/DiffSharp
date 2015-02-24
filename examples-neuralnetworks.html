@@ -96,7 +96,7 @@
 </tr>
 </table>
 
-<p>Each neuron works by taking inputs <span class="math">\(x_1, \dots, x_n\)</span> and calculating the activation (output)</p>
+<p>Each neuron works by taking inputs <span class="math">\(\{x_1, \dots, x_n\}\)</span> and calculating the activation (output)</p>
 
 <p><span class="math">\[  a = \sigma \left(\sum_{i} w_i x_i + b\right) \; ,\]</span></p>
 
@@ -196,7 +196,7 @@
 
 <p>We can also have more than one hidden layer.</p>
 
-<p>For training networks, we will make use of reverse automatic differentiation (the <strong>DiffSharp.AD.Reverse</strong> module) for propagating the error at the output <span class="math">\(E\)</span> backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight <span class="math">\(w_i\)</span> and bias <span class="math">\(b_i\)</span> in the network, which we will then use in an update rule</p>
+<p>For training networks, we will make use of reverse mode AD (the <strong>DiffSharp.AD.Reverse</strong> module) for propagating the error at the output <span class="math">\(E\)</span> backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight <span class="math">\(w_i\)</span> and bias <span class="math">\(b_i\)</span> in the network, which we will then use in an update rule</p>
 
 <p><span class="math">\[ \begin{eqnarray*}
  \Delta w_i &amp;=&amp; -\eta \frac{\partial E}{\partial w_i} \; ,\\
@@ -205,7 +205,7 @@
 
 <p>where <span class="math">\(\eta\)</span> is the learning rate.</p>
 
-<p>It is important to note that the backpropagation algorithm is just a special case of reverse AD, with which it shares a common history. Please see the <a href="gettingstarted-reversead.html">Reverse AD</a> page for an explanation of the usage of adjoints and their backwards propagation.</p>
+<p>It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the <a href="gettingstarted-reversead.html">Reverse AD</a> page for an explanation of the usage of adjoints and their backwards propagation.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -259,7 +259,7 @@
 </tr>
 </table>
 
-<p>Using reverse AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.</p>
+<p>Using reverse mode AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.</p>
 
 <p>We can now test the algorithm by training some networks.</p>
 
@@ -509,6 +509,7 @@ val train3 : seq&lt;float&gt;
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

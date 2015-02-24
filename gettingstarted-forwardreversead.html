@@ -50,13 +50,13 @@
         <div class="span9" id="main">
           <h1>Reverse-on-Forward AD</h1>
 
-<p>The library provides a reverse-on-forward AD implementation, which is a mixed method where a forward AD pass is followed by a reverse AD pass. This gives an efficient way of computing Hessians and <a href="http://en.wikipedia.org/wiki/Hessian_automatic_differentiation">Hessian-vector products</a>.</p>
+<p>The library provides a reverse-on-forward mode AD implementation, which is a mixed method where a forward mode AD pass is followed by a reverse mode AD pass. This gives an efficient way of computing Hessians and <a href="http://en.wikipedia.org/wiki/Hessian_automatic_differentiation">Hessian-vector products</a>.</p>
 
 <p>For a complete list of the available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
 
 <h2>DiffSharp.AD.ForwardReverse</h2>
 
-<p>This is a reverse-on-forward AD module, used with the <strong>DualAdj</strong> numeric type.</p>
+<p>This is a reverse-on-forward mode AD module, used with the <strong>DualAdj</strong> numeric type.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -156,6 +156,7 @@
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

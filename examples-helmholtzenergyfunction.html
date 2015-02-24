@@ -58,7 +58,7 @@
 
 <p>In practice, gradients of formulae such as this need to be evaluated at thousands of points for the purposes of phase equilibrium calculations, stability analysis, and energy density calculations of mixed fluids.</p>
 
-<p>Let us compute the gradient of this function with the <strong>DiffSharp.AD.Reverse</strong> module. <span class="math">\(f(x): \mathbb{R}^n \to \mathbb{R}\)</span> being a scalar valued function of many variables, this is an ideal case for using reverse automatic differentiation, which needs only one forward and one reverse evaluation of <span class="math">\(f(x)\)</span> to compute all the partial derivatives <span class="math">\(\frac{\partial f}{\partial x_i}\)</span>.</p>
+<p>Let us compute the gradient of this function with the <strong>DiffSharp.AD.Reverse</strong> module. <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}\)</span> being a scalar valued function of many variables, this is an ideal case for using reverse mode AD, which needs only one forward and one reverse evaluation of <span class="math">\(f\)</span> to compute all the partial derivatives <span class="math">\(\frac{\partial f}{\partial x_i}\)</span>.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -180,7 +180,7 @@
     </div>
 </div>
 
-<p>Let us compare this with the performance of numerical differentiation (<strong>DiffSharp.Numerical</strong>) and forward automatic differentiation (<strong>DiffSharp.AD.Forward</strong> and <strong>DiffSharp.AD.ForwardG</strong>).</p>
+<p>Let us compare this with the performance of numerical differentiation (<strong>DiffSharp.Numerical</strong>) and forward mode AD (<strong>DiffSharp.AD.Forward</strong> and <strong>DiffSharp.AD.ForwardG</strong>).</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -294,11 +294,11 @@
 </tr>
 </table>
 
-<p>As shown by the regular and logarithmic plots below, reverse automatic differentiation performs substantially better than forward automatic differentiation and numerical differentiation, as expected. For instance, for <span class="math">\(n = 50\)</span>, reverse AD performs approximately ten times faster than the other methods. Also, simple forward automatic differentiation (<strong>DiffSharp.AD.Forward</strong>) performs worse than vectorized forward mode (<strong>DiffSharp.AD.ForwardG</strong>), which is optimized for functions with many inputs.</p>
+<p>As shown by the regular and logarithmic plots below, reverse mode AD performs substantially better than forward mode AD and numerical differentiation, as expected. For instance, for <span class="math">\(n = 50\)</span>, reverse mode AD performs approximately ten times faster than the other methods. Also, simple forward mode AD (<strong>DiffSharp.AD.Forward</strong>) performs worse than vectorized forward mode (<strong>DiffSharp.AD.ForwardG</strong>), which is optimized for functions with many inputs.</p>
 
-<p>In general, for a function <span class="math">\(f: \mathbb{R}^n \rightarrow \mathbb{R}^m\)</span>, reverse AD will have a performance advantage over forward AD when <span class="math">\(n \gg m\)</span>.</p>
+<p>In general, for a function <span class="math">\(f: \mathbb{R}^n \rightarrow \mathbb{R}^m\)</span>, reverse mode AD will have a performance advantage over forward mode AD when <span class="math">\(n \gg m\)</span>.</p>
 
-<p>It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward AD and reverse AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation, which is prone to truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.</p>
+<p>It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward mode AD and reverse mode AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation with the associated truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -503,6 +503,7 @@
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

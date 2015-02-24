@@ -253,7 +253,7 @@ val movement3 : seq&lt;Vector&lt;float&gt;&gt;
 
 <p>It is known that one can use the Jacobian transpose <span class="math">\(\mathbf{J^T}\)</span> instead of the inverse Jacobian <span class="math">\(\mathbf{J^{-1}}\)</span> and obtain similar results, albeit with slightly different behavior.</p>
 
-<p>The <strong>DiffSharp.AD.Reverse</strong> module provides the operation <strong>jacobianTv</strong> making use of reverse automatic differentiation to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the <a href="api-overview.html">API Overview</a> and <a href="benchmarks.html">Benchmarks</a> pages for a comparison of these operations.)</p>
+<p>The <strong>DiffSharp.AD.Reverse</strong> module provides the operation <strong>jacobianTv</strong> making use of reverse mode AD to calculate the transposed Jacobian-vector product in a matrix-free and highly efficient way. This is in contrast to the above code, which comes with the cost of computing the full Jacobian matrix and its inverse in every step of the iteration. (See the <a href="api-overview.html">API Overview</a> and <a href="benchmarks.html">Benchmarks</a> pages for a comparison of these operations.)</p>
 
 <p>Using this method with the same arm positions gives us the following result:</p>
 
@@ -413,6 +413,7 @@ val movement3 : seq&lt;Vector&lt;float&gt;&gt;
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>

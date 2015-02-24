@@ -50,13 +50,13 @@
         <div class="span9" id="main">
           <h1>Forward AD</h1>
 
-<p>The DiffSharp library provides several implementations of forward AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.</p>
+<p>The DiffSharp library provides several implementations of forward mode AD, with distinct advantages under different applications. Here we show several toy examples to get you started using the library.</p>
 
 <p>For a complete list of the available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
 
 <h2>DiffSharp.AD.Forward</h2>
 
-<p>This is a forward AD module implemented using <a href="http://en.wikipedia.org/wiki/Dual_number">dual numbers</a> of primal and tangent values. It provides a performance advantage when computing derivatives of scalar-to-scalar functions, or vector-to-vector functions <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}^m\)</span> where <span class="math">\(n \ll m\)</span>.</p>
+<p>This is a forward mode AD module implemented using <a href="http://en.wikipedia.org/wiki/Dual_number">dual numbers</a> of primal and tangent values. It provides a performance advantage when computing derivatives of scalar-to-scalar functions, or vector-to-vector functions <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}^m\)</span> where <span class="math">\(n \ll m\)</span>.</p>
 
 <p>This module is used with the <strong>Dual</strong> numeric type.</p>
 
@@ -114,7 +114,7 @@
 
 <h2>DiffSharp.AD.Forward2</h2>
 
-<p>This is a forward AD module that also keeps the tangent-of-tangent values to compute 2nd derivatives.</p>
+<p>This is a forward mode AD module that also keeps the tangent-of-tangent values to compute 2nd derivatives.</p>
 
 <p>This module is used with the <strong>Dual2</strong> numeric type.</p>
 
@@ -154,7 +154,7 @@
 
 <h2>DiffSharp.AD.ForwardG</h2>
 
-<p>This is a forward AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.</p>
+<p>This is a forward mode AD module using a vector of gradient components for speeding up gradient calculations. It provides a performance advantage when computing gradients of vector-to-scalar functions.</p>
 
 <p>This module is used with the <strong>DualG</strong> numeric type.</p>
 
@@ -194,7 +194,7 @@
 
 <h2>DiffSharp.AD.ForwardGH</h2>
 
-<p>This is a forward AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.</p>
+<p>This is a forward mode AD module using a vector of gradient components and a matrix of Hessian components, for speeding up gradient and Hessian calculations. It provides exact Hessians.</p>
 
 <p>This module is used with the <strong>DualGH</strong> numeric type.</p>
 
@@ -222,7 +222,7 @@
 
 <h2>DiffSharp.AD.ForwardN</h2>
 
-<p>This is a forward AD module lazily evaluating higher-order derivatives as they are called. It provides higher order derivatives of scalar-to-scalar functions.</p>
+<p>This is a forward mode AD module lazily evaluating higher-order derivatives as they are called. It provides higher order derivatives of scalar-to-scalar functions.</p>
 
 <p>This module is used with the <strong>DualN</strong> numeric type.</p>
 
@@ -337,6 +337,7 @@
             <li class="nav-header">Machine Learning</li>
             <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
             <li><a href="examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="examples-kmeansclustering.html">K-Means Clustering</a></li>
             <li><a href="examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>
