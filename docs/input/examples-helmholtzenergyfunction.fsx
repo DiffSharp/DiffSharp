@@ -150,7 +150,7 @@ As shown by the regular and logarithmic plots below, reverse mode AD performs su
 
 In general, for a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^m$, reverse mode AD will have a performance advantage over forward mode AD when $n \gg m$.
 
-It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward mode AD and reverse mode AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation, which is prone to truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.
+It should also be noted that numerical differentiation is shown here only for illustrating its computational cost. Both forward mode AD and reverse mode AD give the exact value of the gradient up to machine precision (equal to what one would get from symbolic differentiation) whereas numerical differentiation only provides a finite difference approximation with the associated truncation and roundoff errors. Automatic differentiation is superior to numerical differentiation in terms of both accuracy and speed.
 *)
 
 Chart.Combine([Chart.Line([for n in 1 .. 50 -> duration 1000 (fun _ -> testHelmholtzFloat n)],

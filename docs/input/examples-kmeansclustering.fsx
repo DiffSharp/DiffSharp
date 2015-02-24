@@ -9,10 +9,10 @@ K-Means Clustering
 
 [K-means clustering](http://en.wikipedia.org/wiki/K-means_clustering) is a popular method in [cluster analysis](http://en.wikipedia.org/wiki/Cluster_analysis) for partitioning a given set of observations into $k$ clusters, where the observations in the same cluster are more similar to each other than to those in other clusters.
 
-Given $n$ observations $\{\mathbf{x}_1,\dots,\mathbf{x}_n\}$, the observations are assigned to $k$ clusters $\mathbf{S} = \{S_1,\dots,S_k\}$ so as to minimize
+Given $d$ observations $\{\mathbf{x}_1,\dots,\mathbf{x}_d\}$, the observations are assigned to $k$ clusters $\mathbf{S} = \{S_1,\dots,S_k\}$ so as to minimize
 
 $$$
-  \underset{\mathbf{S}}{\textrm{argmin}} = \sum_{i=1}^{k} \sum_{\mathbf{x} \in S_i} \left|\left| \mathbf{x} - \mathbf{\mu}_i \right|\right|^2 \; ,
+  \underset{\mathbf{S}}{\textrm{argmin}} \sum_{i=1}^{k} \sum_{\mathbf{x} \in S_i} \left|\left| \mathbf{x} - \mathbf{\mu}_i \right|\right|^2 \; ,
 
 where $\mathbf{\mu}_i$ is the mean of the observations in $S_i$.
 
@@ -43,10 +43,25 @@ let sgd f w0 (eta:float) epsilon (t:(Vector<float>*Vector<float>)[]) =
 
 (**
 
-The following code implements the k-means model in the form ...
+The following code implements the k-means model in the form
 
-[iris.csv](https://dataminingproject.googlecode.com/svn-history/r44/DataMiningApp/datasets/Iris/iris.csv)
-    
+$$$
+  f_{\mathbf{w}}(\mathbf{x}) = \left|\left| \mathbf{x} - \mathbf{\mu}_{\ast} \right|\right|^2 \; ,
+
+where $\mathbf{x} \in \mathbb{R}^n$,
+
+$$$
+  \mathbf{\mu}_{\ast} = \{ \mathbf{\mu}_i : \left|\left| \mathbf{x} - \mathbf{\mu}_i \right|\right|^2 \le \left|\left| \mathbf{x} - \mathbf{\mu}_j \right|\right|^2 \; , \; \textrm{for all} \; 1 \le j \le k \}
+
+is the closest of the current means to the given point $\mathbf{X}$ and the current means $\mathbf{\mu}_i \in \mathbb{R}^n$ encoded in the weight vector $\mathbf{w} \in \mathbb{R}^{k\,n}$ are obtained by splitting it into subvectors $\{\mathbf{\mu}_1,\dots,\mathbf{\mu}_k\}$
+
+$$$
+  \mathbf{w} = \left[ \mathbf{\mu}_1 \, \mathbf{\mu}_2 \, \dots \, \mathbf{\mu}_k \right] \; .
+
+A given set of $d$ observations are then supplied to the stochastic gradient descent algorithm as the training set where the inputs are $\{\mathbf{x}_1,\dots,\mathbf{x}_d\}$ and the expected output is always $0$.
+
+An important thing to note here is that the **DiffSharp.AD.Reverse** module takes the derivative (via reverse mode AD) of this whole algorithm, which includes subprocedures, control flow, and random sampling, and makes the gradient calculations transparent. We do not need to concern ourselves with formulating the model in a closed-form expression for being able to define and then compute its derivative.
+
 *)
 
 let kmeans k eta epsilon (data:Vector<float>[]) =
@@ -67,8 +82,63 @@ let kmeans k eta epsilon (data:Vector<float>[]) =
     let assign = Array.map (fun d -> (nearestm d means |> fst, d)) data
     Array.init k (fun i -> assign |> Array.filter (fun (j, d) -> i = j) |> Array.map snd)
 
-let data = Array.init 100 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
+(**
 
+Now we can test the algorithm in a two-dimensional space, using a set of randomly generated points.
+
+*)
+
+// Generate 200 random points
+let data = Array.init 200 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
+
+// Cluster the data into 5 clusters
+let clusters = kmeans 5 0.01 0.01 data
+
+(**
+    
+*)
+
+open FSharp.Charting
+
+let plotClusters (c:Vector<float>[][]) =
+    Chart.Combine(
+        List.init c.Length (fun i -> 
+            Chart.Point(Array.map (fun (d:Vector<_>) -> d.[0], d.[1]) c.[i], MarkerSize = 10))
+        )
+
+plotClusters clusters
+
+(**
+
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-kmeansclustering-chart1.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
+ 
+Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of points in the data set.
+
+*)
+
+// Generate 10000 random points
+let data2 = Array.init 10000 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
+
+// Cluster the data into 8 clusters
+let clusters2 = kmeans 8 0.01 0.01 data2
+
+plotClusters clusters2
+
+(**
+
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-kmeansclustering-chart2.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
+
+Finally, we can test our algorithm with the [Iris flower data set](http://en.wikipedia.org/wiki/Iris_flower_data_set) that is commonly used for demonstrations. The data set contains four morphological features (_sepal length_, _sepal width_, _petal length_, _petal width_) of Iris flowers belonging to three related species. A version of the data set can be found [here](https://dataminingproject.googlecode.com/svn-history/r44/DataMiningApp/datasets/Iris/iris.csv).
+
+*)
 
 open FSharp.Data
 
@@ -79,14 +149,24 @@ let irisData =
     |> Seq.map (fun r -> vector [float r.``Sepal Width``; float r.``Petal Length``])
     |> Seq.toArray
 
-let clusters = kmeans 3 0.01 0.01 irisData
+let irisClusters = kmeans 3 0.01 0.01 irisData
 
+plotClusters irisClusters
 
-open FSharp.Charting
+(**
 
-let plotClusters (c:Vector<float>[][]) =
-    List.init c.Length (fun i -> 
-        Chart.Point(Array.map (fun (d:Vector<_>) -> d.[0], d.[1]) c.[i], MarkerSize = 10))
-    |> Chart.Combine
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-kmeansclustering-chart3.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
 
-plotClusters clusters
+Our clustering of the _sepal width_ - _petal length_ data correctly predicts the actual assignment of these features to the three flower species, which can be seen below ([image](http://en.wikipedia.org/wiki/Iris_flower_data_set#mediaviewer/File:Anderson%27s_Iris_data_set.png) by user [Indon](http://commons.wikimedia.org/wiki/User:Indon) on Wikimedia Commons, CC BY-SA 3.0).
+
+<div class="row">
+    <div class="span6 offset1">
+        <img src="img/examples-kmeansclustering-chart4.png" alt="Chart" style="width:550px"/>
+    </div>
+</div>
+
+*)

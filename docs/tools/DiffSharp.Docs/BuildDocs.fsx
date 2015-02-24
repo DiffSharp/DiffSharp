@@ -99,7 +99,7 @@ Literate.ProcessScriptFile(relative "input/examples-gradientdescent.fsx", relati
 Literate.ProcessScriptFile(relative "input/examples-inversekinematics.fsx", relative "input/templates/template.html", relative "output/examples-inversekinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-helmholtzenergyfunction.fsx", relative "input/templates/template.html", relative "output/examples-helmholtzenergyfunction.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-kinematics.fsx", relative "input/templates/template.html", relative "output/examples-kinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
-Literate.ProcessScriptFile(relative "input/examples-kmeansclustering.fsx", relative "input/templates/template.html", relative "output/examples-kmeansclustering.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/examples-kmeansclustering.fsx", relative "input/templates/template.html", relative "output/examples-kmeansclustering.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-lhopitalsrule.fsx", relative "input/templates/template.html", relative "output/examples-lhopitalsrule.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-neuralnetworks.fsx", relative "input/templates/template.html", relative "output/examples-neuralnetworks.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-newtonsmethod.fsx", relative "input/templates/template.html", relative "output/examples-newtonsmethod.html", replacements = tags, fsiEvaluator = FsiEvaluator())
