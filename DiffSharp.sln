@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\examples-helmholtzenergyfunction.fsx = docs\input\examples-helmholtzenergyfunction.fsx
 		docs\input\examples-inversekinematics.fsx = docs\input\examples-inversekinematics.fsx
 		docs\input\examples-kinematics.fsx = docs\input\examples-kinematics.fsx
+		docs\input\examples-kmeansclustering.fsx = docs\input\examples-kmeansclustering.fsx
 		docs\input\examples-lhopitalsrule.fsx = docs\input\examples-lhopitalsrule.fsx
 		docs\input\examples-neuralnetworks.fsx = docs\input\examples-neuralnetworks.fsx
 		docs\input\examples-newtonsmethod.fsx = docs\input\examples-newtonsmethod.fsx

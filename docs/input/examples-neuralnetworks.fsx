@@ -33,7 +33,7 @@ type Network =
 
 (** 
 
-Each neuron works by taking inputs $x_1, \dots, x_n$ and calculating the activation (output)
+Each neuron works by taking inputs $\{x_1, \dots, x_n\}$ and calculating the activation (output)
 
 $$$
   a = \sigma \left(\sum_{i} w_i x_i + b\right) \; ,
