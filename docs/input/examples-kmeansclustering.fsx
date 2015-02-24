@@ -18,7 +18,7 @@ where $\mathbf{\mu}_i$ is the mean of the observations in $S_i$.
 
 The classical way of finding partitionings is through a heuristic algorithm cycling through an _assignment step_, where observations are assigned to the cluster of the mean that they are currently closest to, and an _update step_ where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.
 
-Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in [another example](examples-stochasticgradientdescent.html). This variety of k-means clustering has been proposed in literature for addressing large-scale learning tasks, due to its superior performance.
+Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in [another example](examples-stochasticgradientdescent.html). This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.
 
 We start with the generic stochastic gradient descent code, introduced in the [stochastic gradient descent example](examples-stochasticgradientdescent.html), that can be used for finding weights $\mathbf{w}$ optimizing a model function $f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m$ trained using a set of inputs $\mathbf{x}_i \in \mathbb{R}^n$ and outputs $\mathbf{y}_i \in \mathbb{R}^m$.
 
