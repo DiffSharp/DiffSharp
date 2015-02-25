@@ -91,7 +91,7 @@ Now we can test the algorithm in a two-dimensional space, using a set of randoml
 // Generate 200 random points
 let data = Array.init 200 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
 
-// Cluster the data into 5 clusters
+// Partition the data into 5 clusters
 let clusters = kmeans 5 0.01 0.01 data
 
 (**
@@ -116,14 +116,14 @@ plotClusters clusters
     </div>
 </div>
  
-Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of points in the data set.
+Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of observations in the data set.
 
 *)
 
 // Generate 10000 random points
 let data2 = Array.init 10000 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
 
-// Cluster the data into 8 clusters
+// Partition the data into 8 clusters
 let clusters2 = kmeans 8 0.01 0.01 data2
 
 plotClusters clusters2
