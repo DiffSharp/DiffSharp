@@ -174,7 +174,7 @@
 <span class="c">// Generate 200 random points</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs65', 180)" onmouseover="showTip(event, 'fs65', 180)" class="i">data</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs19', 181)" onmouseover="showTip(event, 'fs19', 181)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs48', 182)" onmouseover="showTip(event, 'fs48', 182)" class="i">init</span> <span class="n">200</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs17', 183)" onmouseover="showTip(event, 'fs17', 183)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs49', 184)" onmouseover="showTip(event, 'fs49', 184)" class="i">init</span> <span class="n">2</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 185)" onmouseover="showTip(event, 'fs7', 185)" class="i">rnd</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs66', 186)" onmouseover="showTip(event, 'fs66', 186)" class="i">NextDouble</span>())))
 
-<span class="c">// Cluster the data into 5 clusters</span>
+<span class="c">// Partition the data into 5 clusters</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs67', 187)" onmouseover="showTip(event, 'fs67', 187)" class="i">clusters</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 188)" onmouseover="showTip(event, 'fs35', 188)" class="i">kmeans</span> <span class="n">5</span> <span class="n">0.01</span> <span class="n">0.01</span> <span onmouseout="hideTip(event, 'fs65', 189)" onmouseover="showTip(event, 'fs65', 189)" class="i">data</span></pre>
 </td>
 </tr>
@@ -212,7 +212,7 @@
     </div>
 </div>
 
-<p>Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of points in the data set.</p>
+<p>Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of observations in the data set.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -228,7 +228,7 @@
 <span class="c">// Generate 10000 random points</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs77', 215)" onmouseover="showTip(event, 'fs77', 215)" class="i">data2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs19', 216)" onmouseover="showTip(event, 'fs19', 216)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs48', 217)" onmouseover="showTip(event, 'fs48', 217)" class="i">init</span> <span class="n">10000</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs17', 218)" onmouseover="showTip(event, 'fs17', 218)" class="i">Vector</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs49', 219)" onmouseover="showTip(event, 'fs49', 219)" class="i">init</span> <span class="n">2</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs7', 220)" onmouseover="showTip(event, 'fs7', 220)" class="i">rnd</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs66', 221)" onmouseover="showTip(event, 'fs66', 221)" class="i">NextDouble</span>())))
 
-<span class="c">// Cluster the data into 8 clusters</span>
+<span class="c">// Partition the data into 8 clusters</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs78', 222)" onmouseover="showTip(event, 'fs78', 222)" class="i">clusters2</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 223)" onmouseover="showTip(event, 'fs35', 223)" class="i">kmeans</span> <span class="n">8</span> <span class="n">0.01</span> <span class="n">0.01</span> <span onmouseout="hideTip(event, 'fs77', 224)" onmouseover="showTip(event, 'fs77', 224)" class="i">data2</span>
 
 <span onmouseout="hideTip(event, 'fs70', 225)" onmouseover="showTip(event, 'fs70', 225)" class="i">plotClusters</span> <span onmouseout="hideTip(event, 'fs78', 226)" onmouseover="showTip(event, 'fs78', 226)" class="i">clusters2</span></pre>
