@@ -58,9 +58,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADF2</td>
@@ -79,9 +79,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADFG</td>
@@ -100,9 +100,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADFGH</td>
@@ -121,9 +121,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADFN</td>
@@ -142,9 +142,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADFR</td>
@@ -163,9 +163,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">ADR</td>
@@ -184,9 +184,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
   <tr>
     <td class="tg-7dqz">N</td>
@@ -205,9 +205,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">A</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">A</td>
-    <td class="tg-a60z">A</td>
-    <td class="tg-a60z">A</td>
+    <td class="tg-1r2d">A</td>
+    <td class="tg-1r2d">A</td>
+    <td class="tg-1r2d">A</td>
   </tr>
   <tr>
     <td class="tg-7dqz">S</td>
@@ -226,9 +226,9 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
-    <td class="tg-a60z">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
   </tr>
 </table>
 
