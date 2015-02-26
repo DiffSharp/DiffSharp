@@ -194,7 +194,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, Vector vb -> Vector vb
         | Vector va, ZeroVector _ -> Vector va
         | Vector va, Vector vb ->
-            if va.Length <> vb.Length then invalidArg "b" "Cannot add two Vectors with different dimensions."
+            if va.Length <> vb.Length then invalidArg "b" "Cannot add two Vectors of different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] + vb.[i])
     /// Subtracts Vector `b` from Vector `a`
     static member inline (-) (a:Vector<'T>, b:Vector<'T>) =
@@ -203,7 +203,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, Vector vb -> Vector.Create(vb.Length, fun i -> -vb.[i])
         | Vector va, ZeroVector _ -> Vector va
         | Vector va, Vector vb -> 
-            if va.Length <> vb.Length then invalidArg "b" "Cannot subtract two Vectors with different dimensions."
+            if va.Length <> vb.Length then invalidArg "b" "Cannot subtract two Vectors of different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] - vb.[i])
     /// Computes the inner product (dot / scalar product) of Vector `a` and Vector `b`
     static member inline (*) (a:Vector<'T>, b:Vector<'T>) =
@@ -212,7 +212,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, Vector _ -> LanguagePrimitives.GenericZero<'T>
         | Vector _, ZeroVector _ -> LanguagePrimitives.GenericZero<'T>
         | Vector va, Vector vb ->
-            if va.Length <> vb.Length then invalidArg "b" "Cannot multiply two Vectors with different dimensions."
+            if va.Length <> vb.Length then invalidArg "b" "Cannot multiply two Vectors of different dimensions."
             Array.sumBy (fun (x, y) -> x * y) (Array.zip va vb)
     /// Computes the cross product of Vector `a` and Vector `b` (three-dimensional)
     static member inline (%*) (a:Vector<'T>, b:Vector<'T>) =
@@ -230,7 +230,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, Vector _ -> Vector.Zero
         | Vector _, ZeroVector _ -> Vector.Zero
         | Vector va, Vector vb ->
-            if va.Length <> vb.Length then invalidArg "b" "Cannot multiply two Vectors with different dimensions."
+            if va.Length <> vb.Length then invalidArg "b" "Cannot multiply two Vectors of different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] * vb.[i])
     /// Divides Vector `a` by Vector `b` element-wise (Hadamard division)
     static member inline (./) (a:Vector<'T>, b:Vector<'T>) =
@@ -239,7 +239,7 @@ type Vector<'T when 'T : (static member Zero : 'T)
         | ZeroVector _, Vector _ -> Vector.Zero
         | Vector _, ZeroVector _-> raise (new System.DivideByZeroException("Attempted to divide a Vector by a ZeroVector."))
         | Vector va, Vector vb -> 
-            if va.Length <> vb.Length then invalidArg "b" "Cannot divide two Vectors with different dimensions."
+            if va.Length <> vb.Length then invalidArg "b" "Cannot divide two Vectors of different dimensions."
             Vector.Create(va.Length, fun i -> va.[i] / vb.[i])
     /// Adds scalar `b` to each element of Vector `a`
     static member inline (+) (a:Vector<'T>, b:'T) =
@@ -609,17 +609,17 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix _, SymmetricMatrix _ -> Matrix.Zero
         | Matrix _, ZeroMatrix _ -> Matrix.Zero
         | Matrix ma, Matrix mb ->
-            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices with incompatible sizes."
+            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices of incompatible sizes."
             Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> ma.[i, k] * mb.[k, j]) [|0..(b.Rows - 1)|] )
         | Matrix ma, SymmetricMatrix _ -> 
-            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices with incompatible sizes."
+            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices of incompatible sizes."
             Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> ma.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] )
         | SymmetricMatrix _, ZeroMatrix z -> ZeroMatrix z
         | SymmetricMatrix _, Matrix mb ->
-            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices with incompatible sizes."
+            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices of incompatible sizes."
             Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * mb.[k, j]) [|0..(b.Rows - 1)|] )
         | SymmetricMatrix _, SymmetricMatrix _ -> 
-            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices with incompatible sizes."
+            if (a.Cols <> b.Rows) then invalidArg "b" "Cannot multiply two matrices of incompatible sizes."
             Matrix.Create(a.Rows, b.Cols, fun i j -> Array.sumBy (fun k -> a.[i, k] * b.[k, j]) [|0..(b.Rows - 1)|] )
     /// Multiplies Matrix `a` and Matrix `b` element-wise (Hadamard product)
     static member inline (.*) (a:Matrix<'T>, b:Matrix<'T>) =
@@ -668,11 +668,11 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroMatrix z, Vector _ -> ZeroVector z
         | Matrix _, ZeroVector z -> ZeroVector z
         | Matrix ma, Vector vb ->
-            if (a.Cols <> b.Length) then invalidArg "b" "Cannot compute the matrix-vector product of a matrix and a vector with incompatible sizes."
+            if (a.Cols <> b.Length) then invalidArg "b" "Cannot compute the matrix-vector product of a matrix and a vector of incompatible sizes."
             Vector.Create(a.Rows, fun i -> Array.sumBy (fun j -> ma.[i, j] * vb.[j]) [|0..(b.Length - 1)|] )
         | SymmetricMatrix _, ZeroVector z -> ZeroVector z
         | SymmetricMatrix _, Vector vb ->
-            if (a.Cols <> b.Length) then invalidArg "b" "Cannot compute the matrix-vector product of a matrix and a vector with incompatible sizes."
+            if (a.Cols <> b.Length) then invalidArg "b" "Cannot compute the matrix-vector product of a matrix and a vector of incompatible sizes."
             Vector.Create(a.Rows, fun i -> Array.sumBy (fun j -> a.[i, j] * vb.[j]) [|0..(b.Length - 1)|] )
     /// Computes the vector-matrix product of Vector `a` and Matrix `b`
     static member inline (*) (a:Vector<'T>, b:Matrix<'T>) =
@@ -682,10 +682,10 @@ type Matrix<'T when 'T : (static member Zero : 'T)
         | ZeroVector z, SymmetricMatrix _ -> ZeroVector z
         | Vector _, ZeroMatrix z -> ZeroVector z
         | Vector va, Matrix mb ->
-            if (a.Length <> b.Rows) then invalidArg "b" "Cannot compute the vector-matrix product of a vector and matrix with incompatible sizes."
+            if (a.Length <> b.Rows) then invalidArg "b" "Cannot compute the vector-matrix product of a vector and matrix of incompatible sizes."
             Vector.Create(b.Cols, fun i -> Array.sumBy (fun j -> va.[j] * mb.[j, i]) [|0..(a.Length - 1)|])
         | Vector va, SymmetricMatrix _ ->
-            if (a.Length <> b.Rows) then invalidArg "b" "Cannot compute the vector-matrix product of a vector and matrix with incompatible sizes."
+            if (a.Length <> b.Rows) then invalidArg "b" "Cannot compute the vector-matrix product of a vector and matrix of incompatible sizes."
             Vector.Create(b.Cols, fun i -> Array.sumBy (fun j -> va.[j] * b.[j, i]) [|0..(a.Length - 1)|])
     /// Adds scalar `b` to each element of Matrix `a`
     static member inline (+) (a:Matrix<'T>, b:'T) =
