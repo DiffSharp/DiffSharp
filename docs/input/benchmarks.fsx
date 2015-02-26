@@ -40,7 +40,7 @@ The running times are averaged over half a million calls to each operation, on a
     <th class="tg-1r2d">jacobianvTv</th>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward</td>
+    <td class="tg-7dqz">ADF</td>
     <td class="tg-wcxf">2.48</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -58,7 +58,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward2</td>
+    <td class="tg-7dqz">ADF2</td>
     <td class="tg-wcxf">3.65</td>
     <td class="tg-wcxf">3.59</td>
     <td class="tg-wcxf"></td>
@@ -76,7 +76,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardG</td>
+    <td class="tg-7dqz">ADFG</td>
     <td class="tg-wcxf">3.27</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -94,7 +94,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-7dqz">ADFGH</td>
     <td class="tg-wcxf">13.69</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -112,7 +112,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardN</td>
+    <td class="tg-7dqz">ADFN</td>
     <td class="tg-wcxf">16.33</td>
     <td class="tg-wcxf">42.50</td>
     <td class="tg-wcxf">43.73</td>
@@ -130,7 +130,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardReverse</td>
+    <td class="tg-7dqz">ADFR</td>
     <td class="tg-wcxf">68.16</td>
     <td class="tg-wcxf">11.94</td>
     <td class="tg-wcxf"></td>
@@ -148,7 +148,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d">43.77</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Reverse</td>
+    <td class="tg-7dqz">ADR</td>
     <td class="tg-wcxf">6.11</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -166,7 +166,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Numerical</td>
+    <td class="tg-7dqz">N</td>
     <td class="tg-wcxf">2.12</td>
     <td class="tg-wcxf">2.99</td>
     <td class="tg-wcxf"></td>
@@ -184,7 +184,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Symbolic (Compile)</td>
+    <td class="tg-7dqz">S (Compile)</td>
     <td class="tg-wcxf">865.51k</td>
     <td class="tg-wcxf">8.90M</td>
     <td class="tg-wcxf">9.10M</td>
@@ -202,7 +202,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Symbolic (Use)</td>
+    <td class="tg-7dqz">S (Use)</td>
     <td class="tg-wcxf">143.53</td>
     <td class="tg-wcxf">53.44</td>
     <td class="tg-wcxf">27.42</td>
@@ -256,7 +256,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d">jacobianvTv'</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward</td>
+    <td class="tg-7dqz">ADF</td>
     <td class="tg-wcxf">2.76</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -274,7 +274,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward2</td>
+    <td class="tg-7dqz">ADF2</td>
     <td class="tg-wcxf">3.66</td>
     <td class="tg-wcxf">3.78</td>
     <td class="tg-wcxf"></td>
@@ -292,7 +292,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardG</td>
+    <td class="tg-7dqz">ADFG</td>
     <td class="tg-wcxf">3.16</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -310,7 +310,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-7dqz">ADFGH</td>
     <td class="tg-wcxf">13.00</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -328,7 +328,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardN</td>
+    <td class="tg-7dqz">ADFN</td>
     <td class="tg-wcxf">16.44</td>
     <td class="tg-wcxf">43.45</td>
     <td class="tg-wcxf">44.35</td>
@@ -346,7 +346,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardReverse</td>
+    <td class="tg-7dqz">ADFR</td>
     <td class="tg-wcxf">53.38</td>
     <td class="tg-wcxf">11.19</td>
     <td class="tg-wcxf"></td>
@@ -364,7 +364,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d">45.58</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Reverse</td>
+    <td class="tg-7dqz">ADR</td>
     <td class="tg-wcxf">10.30</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -382,7 +382,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Numerical</td>
+    <td class="tg-7dqz">N</td>
     <td class="tg-wcxf">3.05</td>
     <td class="tg-wcxf">4.04</td>
     <td class="tg-wcxf"></td>
@@ -400,7 +400,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Symbolic (Compile)</td>
+    <td class="tg-7dqz">S (Compile)</td>
     <td class="tg-wcxf">904.78k</td>
     <td class="tg-wcxf">10.10M</td>
     <td class="tg-wcxf">10.07M</td>
@@ -418,7 +418,7 @@ The running times are averaged over half a million calls to each operation, on a
     <td class="tg-1r2d"></td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Symbolic (Use)</td>
+    <td class="tg-7dqz">S (Use)</td>
     <td class="tg-wcxf">26.47</td>
     <td class="tg-wcxf">67.12</td>
     <td class="tg-wcxf">45.10</td>

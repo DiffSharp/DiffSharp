@@ -11,6 +11,7 @@ The following table gives an overview of the differentiation API provided by the
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg .tg-a60z{font-size:9px;background-color:#ecf4ff}
 .tg .tg-1r2d{font-size:9px;background-color:#ecf4ff;text-align:center}
 .tg .tg-glis{font-size:9px}
 .tg .tg-wcxf{font-size:9px;background-color:#ffffc7;text-align:center}
@@ -36,9 +37,12 @@ The following table gives an overview of the differentiation API provided by the
     <th class="tg-1r2d">jacobianT</th>
     <th class="tg-1r2d">jacobianTv</th>
     <th class="tg-1r2d">jacobianvTv</th>
+    <th class="tg-a60z">curl</th>
+    <th class="tg-a60z">div</th>
+    <th class="tg-a60z">curldiv</th>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward</td>
+    <td class="tg-7dqz">ADF</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -54,9 +58,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Forward2</td>
+    <td class="tg-7dqz">ADF2</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
@@ -72,9 +79,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardG</td>
+    <td class="tg-7dqz">ADFG</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -90,9 +100,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardGH</td>
+    <td class="tg-7dqz">ADFGH</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -108,9 +121,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardN</td>
+    <td class="tg-7dqz">ADFN</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
@@ -126,9 +142,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.ForwardReverse</td>
+    <td class="tg-7dqz">ADFR</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
@@ -144,9 +163,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.AD.Reverse</td>
+    <td class="tg-7dqz">ADR</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
@@ -162,9 +184,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Numerical</td>
+    <td class="tg-7dqz">N</td>
     <td class="tg-wcxf">A</td>
     <td class="tg-wcxf">A</td>
     <td class="tg-wcxf"></td>
@@ -180,9 +205,12 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">A</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">A</td>
+    <td class="tg-a60z">A</td>
+    <td class="tg-a60z">A</td>
   </tr>
   <tr>
-    <td class="tg-7dqz">DiffSharp.Symbolic</td>
+    <td class="tg-7dqz">S</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
@@ -198,12 +226,17 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
+    <td class="tg-a60z">X</td>
   </tr>
 </table>
 
 **Yellow**: For scalar-to-scalar functions; **Green**: For vector-to-scalar functions; **Blue**: For vector-to-vector functions
 
 **X**: Exact value; **A**: Numerical approximation; **XA**: Exact gradient, approximated Hessian
+
+**ADF**: DiffSharp.AD.Forward; **ADF2**: DiffSharp.AD.Forward2; **ADFG**: DiffSharp.AD.ForwardG; **ADFGH**: DiffSharp.AD.ForwardGH; **ADFN**: DiffSharp.AD.ForwardN; **ADFR**: DiffSharp.AD.ForwardReverse; **ADR**: DiffSharp.AD.Reverse; **N**: DiffSharp.Numerical; **S**: DiffSharp.Symbolic
 
 Differentiation Operations and Variants
 ---------------------------------------
