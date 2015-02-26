@@ -260,15 +260,35 @@ module ForwardNOps =
     let inline jacobian f x =
         jacobian' f x |> snd
 
+    /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl' f x =
+        let v, j = jacobianT' f x
+        if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurl()
+        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
+
+    /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl f x =
+        curl' f x |> snd
+
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div' f x =
         let v, j = jacobianT' f x
         if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
         v, trace j
 
-    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div f x =
         div' f x |> snd
+
+    /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv' f x =
+        let v, j = jacobianT' f x
+        if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurlDiv()
+        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], trace j
+
+    /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv f x =
+        curldiv' f x |> sndtrd
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
@@ -311,7 +331,15 @@ module Vector =
     let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
-    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

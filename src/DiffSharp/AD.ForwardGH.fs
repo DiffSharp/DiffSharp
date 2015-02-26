@@ -230,15 +230,35 @@ module ForwardGHOps =
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl' f x =
+        let v, j = jacobian' f x
+        if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurl()
+        v, [|j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]|]
+
+    /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl f x =
+        curl' f x |> snd
+
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div' f x =
         let v, j = jacobian' f x
         if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
         v, trace j
 
-    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div f x =
         div' f x |> snd
+
+    /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv' f x =
+        let v, j = jacobian' f x
+        if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurlDiv()
+        v, [|j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]|], trace j
+
+    /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv f x =
+        curldiv' f x |> sndtrd
 
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
@@ -271,7 +291,15 @@ module Vector =
     let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curl (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
-    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
+    let inline curldiv (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
