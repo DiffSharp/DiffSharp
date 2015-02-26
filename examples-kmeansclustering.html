@@ -58,11 +58,11 @@
 
 <p>where <span class="math">\(\mathbf{\mu}_i\)</span> is the mean of the observations in <span class="math">\(S_i\)</span>.</p>
 
-<p>The classical way of finding k-means partitionings is using a heuristic algorithm cycling through an <em>assignment step</em>, where observations are assigned to the cluster of the mean that they are currently closest to, and an <em>update step</em> where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.</p>
+<p>The classical way of finding k-means partitionings is to use a heuristic algorithm cycling through an <em>assignment step</em>, where observations are assigned to the cluster of the mean that they are currently closest to, and an <em>update step</em> where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.</p>
 
-<p>Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in <a href="examples-stochasticgradientdescent.html">another example</a>. This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.</p>
+<p>Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in another example. This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.</p>
 
-<p>We start with the generic stochastic gradient descent code, introduced in the <a href="examples-stochasticgradientdescent.html">stochastic gradient descent example</a>, that can be used for finding weights <span class="math">\(\mathbf{w}\)</span> optimizing a model function <span class="math">\(f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m\)</span> trained using a set of inputs <span class="math">\(\mathbf{x}_i \in \mathbb{R}^n\)</span> and outputs <span class="math">\(\mathbf{y}_i \in \mathbb{R}^m\)</span>.</p>
+<p>We start with the generic stochastic gradient descent code, introduced in the <a href="examples-stochasticgradientdescent.html">stochastic gradient descent example</a>, which can be used for finding weights <span class="math">\(\mathbf{w}\)</span> optimizing a model function <span class="math">\(f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m\)</span> trained using a set of inputs <span class="math">\(\mathbf{x}_i \in \mathbb{R}^n\)</span> and outputs <span class="math">\(\mathbf{y}_i \in \mathbb{R}^m\)</span>.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -110,11 +110,11 @@
 
 <p><span class="math">\[  \mathbf{\mu}_{\ast} = \{ \mathbf{\mu}_i : \left|\left| \mathbf{x} - \mathbf{\mu}_i \right|\right|^2 \le \left|\left| \mathbf{x} - \mathbf{\mu}_j \right|\right|^2 \; , \; \textrm{for all} \; 1 \le j \le k \}\]</span></p>
 
-<p>is the closest of the current means to the given point <span class="math">\(\mathbf{X}\)</span> and the current means <span class="math">\(\mathbf{\mu}_i \in \mathbb{R}^n\)</span> encoded in the weight vector <span class="math">\(\mathbf{w} \in \mathbb{R}^{k\,n}\)</span> are obtained by splitting it into subvectors <span class="math">\(\{\mathbf{\mu}_1,\dots,\mathbf{\mu}_k\}\)</span></p>
+<p>is the closest of the current means to the given point <span class="math">\(\mathbf{x}\)</span>, and the current means <span class="math">\(\mathbf{\mu}_i \in \mathbb{R}^n\)</span> encoded in the weight vector <span class="math">\(\mathbf{w} \in \mathbb{R}^{k\,n}\)</span> are obtained by splitting it into subvectors <span class="math">\(\{\mathbf{\mu}_1,\dots,\mathbf{\mu}_k\}\)</span></p>
 
 <p><span class="math">\[  \mathbf{w} = \left[ \mathbf{\mu}_1 \, \mathbf{\mu}_2 \, \dots \, \mathbf{\mu}_k \right] \; .\]</span></p>
 
-<p>A given set of <span class="math">\(d\)</span> observations are then supplied to the stochastic gradient descent algorithm as the training set where the inputs are <span class="math">\(\{\mathbf{x}_1,\dots,\mathbf{x}_d\}\)</span> and the expected output is always <span class="math">\(0\)</span>.</p>
+<p>A given set of <span class="math">\(d\)</span> observations are then supplied to the stochastic gradient descent algorithm as the training set consisting of pairs <span class="math">\((\mathbf{x}_i,\,0)\)</span> (decreasing <span class="math">\(f_{\mathbf{W}} (\mathbf{x}_i) \to 0\,\)</span> for all <span class="math">\(1 \le i \le d\)</span>).</p>
 
 <p>An important thing to note here is that the <strong>DiffSharp.AD.Reverse</strong> module takes the derivative (via reverse mode AD) of this whole algorithm, which includes subprocedures, control flow, and random sampling, and makes the gradient calculations transparent. We do not need to concern ourselves with formulating the model in a closed-form expression for being able to define and then compute its derivative.</p>
 
