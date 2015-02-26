@@ -66,19 +66,13 @@ An important thing to note here is that the **DiffSharp.AD.Reverse** module take
 
 let kmeans k eta epsilon (data:Vector<float>[]) =
     // (index of, squared distance to) the nearest mean to x
-    let inline nearestm (x:Vector<_>) (means:Vector<_>[]) =
-        means |> Array.mapi (fun i m -> i, Vector.normSq (x - m)) |> Array.minBy snd
-    // Extract means from w
-    let inline extractm (w:Vector<_>) =
-        Array.init k (fun i -> Vector.init (w.Length/k) (fun j -> w.[i*(w.Length/k)+j]))
+    let inline nearestm (x:Vector<_>) (means:seq<Vector<_>>) =
+        means |> Seq.mapi (fun i m -> i, Vector.normSq (x - m)) |> Seq.minBy snd
     // Squared distance of x to the nearest of the means encoded in w
-    let inline dist (w:Vector<_>) (x:Vector<_>) = w |> extractm |> nearestm x |> snd
-    // The training set
-    let train = Array.zip data (Array.create data.Length (vector [0.]))
-    let w0 = Array.init k (fun _ -> Vector.toArray data.[rnd.Next(data.Length)]) 
-                |> Array.concat |> vector
-    let wopt = sgd dist w0 eta epsilon train
-    let means = extractm wopt
+    let inline dist (w:Vector<_>) (x:Vector<_>) = w |> Vector.split k |> nearestm x |> snd
+    let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> Vector.concat
+    let wopt = Array.zip data (Array.create data.Length (vector [0.])) |> sgd dist w0 eta epsilon
+    let means = Vector.split k wopt
     let assign = Array.map (fun d -> (nearestm d means |> fst, d)) data
     Array.init k (fun i -> assign |> Array.filter (fun (j, d) -> i = j) |> Array.map snd)
 
