@@ -11,7 +11,7 @@ Stochastic Gradient Descent
 $$$
   Q(\mathbf{w}) = \sum_{i=1}^{n} Q_i(\mathbf{w}) \; ,
 
-where $\mathbf{w}$ a weight vector parametrizing $Q$. The component $Q_i$ is the contribution of the $i$-th sample to the objective function $Q$, which is to be minimized using a training set of $n$ samples.
+where $\mathbf{w}$ is a weight vector parametrizing $Q$. The component $Q_i$ is the contribution of the $i$-th sample to the objective function $Q$, which is to be minimized using a training set of $n$ samples.
 
 Using the standard gradient descent algorithm, $Q$ can be minimized by the iteration
 

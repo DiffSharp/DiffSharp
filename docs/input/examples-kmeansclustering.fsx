@@ -16,11 +16,11 @@ $$$
 
 where $\mathbf{\mu}_i$ is the mean of the observations in $S_i$.
 
-The classical way of finding k-means partitionings is using a heuristic algorithm cycling through an _assignment step_, where observations are assigned to the cluster of the mean that they are currently closest to, and an _update step_ where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.
+The classical way of finding k-means partitionings is to use a heuristic algorithm cycling through an _assignment step_, where observations are assigned to the cluster of the mean that they are currently closest to, and an _update step_ where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.
 
-Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in [another example](examples-stochasticgradientdescent.html). This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.
+Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in another example. This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.
 
-We start with the generic stochastic gradient descent code, introduced in the [stochastic gradient descent example](examples-stochasticgradientdescent.html), that can be used for finding weights $\mathbf{w}$ optimizing a model function $f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m$ trained using a set of inputs $\mathbf{x}_i \in \mathbb{R}^n$ and outputs $\mathbf{y}_i \in \mathbb{R}^m$.
+We start with the generic stochastic gradient descent code, introduced in the [stochastic gradient descent example](examples-stochasticgradientdescent.html), which can be used for finding weights $\mathbf{w}$ optimizing a model function $f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m$ trained using a set of inputs $\mathbf{x}_i \in \mathbb{R}^n$ and outputs $\mathbf{y}_i \in \mathbb{R}^m$.
 
 *)
 
@@ -53,12 +53,12 @@ where $\mathbf{x} \in \mathbb{R}^n$,
 $$$
   \mathbf{\mu}_{\ast} = \{ \mathbf{\mu}_i : \left|\left| \mathbf{x} - \mathbf{\mu}_i \right|\right|^2 \le \left|\left| \mathbf{x} - \mathbf{\mu}_j \right|\right|^2 \; , \; \textrm{for all} \; 1 \le j \le k \}
 
-is the closest of the current means to the given point $\mathbf{X}$ and the current means $\mathbf{\mu}_i \in \mathbb{R}^n$ encoded in the weight vector $\mathbf{w} \in \mathbb{R}^{k\,n}$ are obtained by splitting it into subvectors $\{\mathbf{\mu}_1,\dots,\mathbf{\mu}_k\}$
+is the closest of the current means to the given point $\mathbf{x}$, and the current means $\mathbf{\mu}_i \in \mathbb{R}^n$ encoded in the weight vector $\mathbf{w} \in \mathbb{R}^{k\,n}$ are obtained by splitting it into subvectors $\{\mathbf{\mu}_1,\dots,\mathbf{\mu}_k\}$
 
 $$$
   \mathbf{w} = \left[ \mathbf{\mu}_1 \, \mathbf{\mu}_2 \, \dots \, \mathbf{\mu}_k \right] \; .
 
-A given set of $d$ observations are then supplied to the stochastic gradient descent algorithm as the training set where the inputs are $\{\mathbf{x}_1,\dots,\mathbf{x}_d\}$ and the expected output is always $0$.
+A given set of $d$ observations are then supplied to the stochastic gradient descent algorithm as the training set consisting of pairs $(\mathbf{x}_i,\,0)$ (decreasing $f_{\mathbf{W}} (\mathbf{x}_i) \to 0\,$ for all $1 \le i \le d$).
 
 An important thing to note here is that the **DiffSharp.AD.Reverse** module takes the derivative (via reverse mode AD) of this whole algorithm, which includes subprocedures, control flow, and random sampling, and makes the gradient calculations transparent. We do not need to concern ourselves with formulating the model in a closed-form expression for being able to define and then compute its derivative.
 
