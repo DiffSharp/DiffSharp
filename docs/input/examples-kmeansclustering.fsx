@@ -78,7 +78,7 @@ let kmeans k eta epsilon (data:Vector<float>[]) =
 
 (**
 
-Now we can test the algorithm in a two-dimensional space, using a set of randomly generated points.
+Now let us test the algorithm in two-dimensions, using a set of randomly generated points.
 
 *)
 
@@ -110,7 +110,7 @@ plotClusters clusters
     </div>
 </div>
  
-Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the number of observations in the data set.
+Compared to the commonly used batch-update k-means algorithm running through all the observations at each step, this algorithm has the advantage of running independent from the size of the data set and thus being suitable for large-scale or online learning applications.
 
 *)
 
