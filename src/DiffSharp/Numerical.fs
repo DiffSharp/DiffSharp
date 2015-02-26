@@ -165,6 +165,16 @@ module NumericalOps =
     let inline jacobianv' f x v =
         (f x, jacobianv f x v)
 
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' f x =
+        let v, j = jacobian' f x
+        if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
+        v, trace j
+
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div f x =
+        div' f x |> snd
+
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -210,3 +220,7 @@ module Vector =
     let inline jacobianv' (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' (f:Vector<float>->Vector<float>) x = NumericalOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div (f:Vector<float>->Vector<float>) x = NumericalOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)

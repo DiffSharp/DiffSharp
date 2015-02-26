@@ -175,3 +175,5 @@ let invalidArgAbs() = invalidArg "" "The derivative of abs(x) is not defined for
 let invalidArgFloor() = invalidArg "" "The derivative of floor(x) is not defined for integer values of x."
 let invalidArgCeil() = invalidArg "" "The derivative of ceil(x) is not defined for integer values of x."
 let invalidArgRound() = invalidArg "" "The derivative of round(x) is not defined for values of x halfway between integers."
+let invalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
+let invalidArgCurl() = invalidArg "" "Curl is defined only for functions with a three-by-three Jacobian matrix."

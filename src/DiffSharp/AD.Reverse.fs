@@ -359,6 +359,17 @@ module ReverseOps =
                 Array.map adjoint xa
         (r1, r2)
 
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' f x =
+        let v, j = jacobian' f x
+        if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
+        v, trace j
+
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div f x =
+        div' f x |> snd
+
+
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
@@ -395,3 +406,7 @@ module Vector =
     let inline jacobianTv' (f:Vector<Adj>->Vector<Adj>) x v = ReverseOps.jacobianTv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
     let inline jacobianTv'' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobianTv'' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Vector.toArray >> b >> vector)
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)

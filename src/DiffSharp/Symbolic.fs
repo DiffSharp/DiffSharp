@@ -299,6 +299,18 @@ module SymbolicOps =
         let fgh = gradhessian' f
         fun x -> fgh x |> sndtrd
 
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' f x =
+        let v, j = jacobianT' f x
+        if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
+        v, trace j
+
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div f x =
+        let j = jacobianT f x
+        if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
+        trace j
+
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -340,3 +352,7 @@ module Vector =
     let inline gradhessian' f x = Vector.toArray >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
     /// Gradient and Hessian of a vector-to-scalar function `f`
     let inline gradhessian f x = Vector.toArray >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' f x = Vector.toArray >> SymbolicOps.div' f >> fun (a, b) -> (vector a, b)
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div f x = Vector.toArray >> SymbolicOps.div f

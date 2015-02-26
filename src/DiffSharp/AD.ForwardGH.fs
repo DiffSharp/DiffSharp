@@ -230,6 +230,16 @@ module ForwardGHOps =
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' f x =
+        let v, j = jacobian' f x
+        if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
+        v, trace j
+
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div f x =
+        div' f x |> snd
+
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
@@ -261,3 +271,7 @@ module Vector =
     let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    /// Divergence of a vector-to-vector function`f`, at point `x`. Defined only for functions with a square Jacobian matrix.
+    let inline div (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
