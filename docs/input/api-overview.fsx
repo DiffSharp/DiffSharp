@@ -285,10 +285,10 @@ $$$
 
 **`grad f x`** returns the [gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
 
-For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
 
 $$$
-  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \frac{\partial f}{{\partial a}_2}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ----------------------
 
@@ -321,7 +321,7 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward** module in
 
 **`hessian f x`** returns the [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
 
-For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -386,10 +386,10 @@ This value can be computed efficiently by the **DiffSharp.AD.ForwardReverse** mo
 
 **`laplacian f x`** returns the [Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
 
-For a function $f(a_1, a_2, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
 
 $$$
-  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \frac{\partial ^2 f}{\partial a_2^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; ,
+  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; ,
 
 which is the trace of the Hessian matrix.
 
@@ -407,7 +407,7 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward2** module, 
 
 **`jacobian f x`** returns the [Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
 
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -447,7 +447,7 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward** module in
 
 **`jacobianT f x`** returns the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
 
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, a_2, \dots, a_n), \dots, F_m (a_1, a_2, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -514,6 +514,42 @@ This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module i
 Of the returned 3-tuple, the first is the original value of `f` at the point `x`, the second is the Jacobian-vector product of `f` at the point `x` along the vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can be used to compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
 
 This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module in a matrix-free way (without computing the full Jacobian matrix).
+
+##### curl : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{\mathbb{R}^3}$
+
+**`curl f x`** returns the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
+
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this gives
+
+$$$
+  \left( \textrm{curl} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \times \mathbf{F} \right)_{\mathbf{x}}= \left. \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+##### curl' : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R}^3)}$
+
+**`curl' f x`** returns the original value and the curl of a vector-to-vector function `f`, at the point `x`.
+
+##### div : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^n) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}$
+
+**`div f x`** returns the [divergence](http://en.wikipedia.org/wiki/Divergence) of a vector-to-vector function `f`, at the point `x`.
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$ this gives
+
+$$$
+  \left( \textrm{div} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \cdot \mathbf{F} \right)_{\mathbf{X}} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right) = \left. \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \right|_{\mathbf{a}\; = \; \mathbf{x}} \; ,
+
+which is the trace of the Jacobian matrix.
+
+##### div' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^n) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^n \times \mathbb{R})}$
+
+**`div' f x`** returns the original value and the divergence of a vector-to-vector function `f`, at the point `x`.
+
+##### curldiv : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R})}$
+
+**`curldiv f x`** returns the curl and the divergence of a vector-to-vector function `f`, at the point `x`.
+
+##### curldiv' : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R}^3 \times \mathbb{R})}$
+
+**`curldiv' f x`** returns the original value, the curl, and the divergence of a vector-to-vector function `f`, at the point `x`.
 
 
 Implemented Differentiation Techniques
