@@ -61,10 +61,70 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '185', 185)" onmouseover="showTip(event, '185', 185)">
+          <code onmouseout="hideTip(event, '239', 239)" onmouseover="showTip(event, '239', 239)">
+            curl f x
+          </code>
+          <div class="tip" id="239">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Curl of a vector-to-vector function <code>f</code>, at point <code>x</code>. Supported only for functions with a three-by-three Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '240', 240)" onmouseover="showTip(event, '240', 240)">
+            curl&#39; f x
+          </code>
+          <div class="tip" id="240">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Vector&lt;float&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and curl of a vector-to-vector function <code>f</code>, at point <code>x</code>. Supported only for functions with a three-by-three Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '241', 241)" onmouseover="showTip(event, '241', 241)">
+            curldiv f x
+          </code>
+          <div class="tip" id="241">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Curl and divergence of a vector-to-vector function <code>f</code>, at point <code>x</code>. Supported only for functions with a three-by-three Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '242', 242)" onmouseover="showTip(event, '242', 242)">
+            curldiv&#39; f x
+          </code>
+          <div class="tip" id="242">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Vector&lt;float&gt; * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value, curl, and divergence of a vector-to-vector function <code>f</code>, at point <code>x</code>. Supported only for functions with a three-by-three Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '243', 243)" onmouseover="showTip(event, '243', 243)">
             diff f x
           </code>
-          <div class="tip" id="185">
+          <div class="tip" id="243">
             <strong>Signature:</strong> f:(DualG -&gt; DualG) -&gt; x:float -&gt; float<br />
                       </div>
         </td>
@@ -76,10 +136,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '186', 186)" onmouseover="showTip(event, '186', 186)">
+          <code onmouseout="hideTip(event, '244', 244)" onmouseover="showTip(event, '244', 244)">
             diff&#39; f x
           </code>
-          <div class="tip" id="186">
+          <div class="tip" id="244">
             <strong>Signature:</strong> f:(DualG -&gt; DualG) -&gt; x:float -&gt; float * float<br />
                       </div>
         </td>
@@ -91,10 +151,40 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '187', 187)" onmouseover="showTip(event, '187', 187)">
+          <code onmouseout="hideTip(event, '245', 245)" onmouseover="showTip(event, '245', 245)">
+            div f x
+          </code>
+          <div class="tip" id="245">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Divergence of a vector-to-vector function <code>f</code>, at point <code>x</code>. Defined only for functions with a square Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '246', 246)" onmouseover="showTip(event, '246', 246)">
+            div&#39; f x
+          </code>
+          <div class="tip" id="246">
+            <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Original value and divergence of a vector-to-vector function <code>f</code>, at point <code>x</code>. Defined only for functions with a square Jacobian matrix.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '247', 247)" onmouseover="showTip(event, '247', 247)">
             grad f x
           </code>
-          <div class="tip" id="187">
+          <div class="tip" id="247">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; DualG) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt;<br />
                       </div>
         </td>
@@ -106,10 +196,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '188', 188)" onmouseover="showTip(event, '188', 188)">
+          <code onmouseout="hideTip(event, '248', 248)" onmouseover="showTip(event, '248', 248)">
             grad&#39; f x
           </code>
-          <div class="tip" id="188">
+          <div class="tip" id="248">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; DualG) -&gt; x:Vector&lt;float&gt; -&gt; float * Vector&lt;float&gt;<br />
                       </div>
         </td>
@@ -121,10 +211,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '189', 189)" onmouseover="showTip(event, '189', 189)">
+          <code onmouseout="hideTip(event, '249', 249)" onmouseover="showTip(event, '249', 249)">
             jacobian f x
           </code>
-          <div class="tip" id="189">
+          <div class="tip" id="249">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -136,10 +226,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '190', 190)" onmouseover="showTip(event, '190', 190)">
+          <code onmouseout="hideTip(event, '250', 250)" onmouseover="showTip(event, '250', 250)">
             jacobian&#39; f x
           </code>
-          <div class="tip" id="190">
+          <div class="tip" id="250">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -151,10 +241,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '191', 191)" onmouseover="showTip(event, '191', 191)">
+          <code onmouseout="hideTip(event, '251', 251)" onmouseover="showTip(event, '251', 251)">
             jacobianT f x
           </code>
-          <div class="tip" id="191">
+          <div class="tip" id="251">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Matrix&lt;float&gt;<br />
                       </div>
         </td>
@@ -166,10 +256,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '192', 192)" onmouseover="showTip(event, '192', 192)">
+          <code onmouseout="hideTip(event, '252', 252)" onmouseover="showTip(event, '252', 252)">
             jacobianT&#39; f x
           </code>
-          <div class="tip" id="192">
+          <div class="tip" id="252">
             <strong>Signature:</strong> f:(Vector&lt;DualG&gt; -&gt; Vector&lt;DualG&gt;) -&gt; x:Vector&lt;float&gt; -&gt; Vector&lt;float&gt; * Matrix&lt;float&gt;<br />
                       </div>
         </td>
