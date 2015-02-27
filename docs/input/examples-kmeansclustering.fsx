@@ -95,10 +95,9 @@ let clusters = kmeans 5 0.01 0.01 data
 open FSharp.Charting
 
 let plotClusters (c:Vector<float>[][]) =
-    Chart.Combine(
-        List.init c.Length (fun i -> 
-            Chart.Point(Array.map (fun (d:Vector<_>) -> d.[0], d.[1]) c.[i], MarkerSize = 10))
-        )
+    List.init c.Length (fun i -> 
+        Chart.Point(Array.map (fun (d:Vector<_>) -> d.[0], d.[1]) c.[i], MarkerSize = 10))
+    |> Chart.Combine
 
 plotClusters clusters
 

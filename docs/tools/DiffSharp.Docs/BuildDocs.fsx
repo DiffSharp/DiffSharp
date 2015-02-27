@@ -97,6 +97,7 @@ Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiati
 Literate.ProcessScriptFile(relative "input/benchmarks.fsx", relative "input/templates/template.html", relative "output/benchmarks.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-gradientdescent.fsx", relative "input/templates/template.html", relative "output/examples-gradientdescent.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-inversekinematics.fsx", relative "input/templates/template.html", relative "output/examples-inversekinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/examples-hamiltonianmontecarlo.fsx", relative "input/templates/template.html", relative "output/examples-hamiltonianmontecarlo.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-helmholtzenergyfunction.fsx", relative "input/templates/template.html", relative "output/examples-helmholtzenergyfunction.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-kinematics.fsx", relative "input/templates/template.html", relative "output/examples-kinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-kmeansclustering.fsx", relative "input/templates/template.html", relative "output/examples-kmeansclustering.html", replacements = tags)
