@@ -65,8 +65,8 @@
             dualGH p m
           </code>
           <div class="tip" id="253">
-            <strong>Signature:</strong> p:^?703062 -&gt; m:int -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?703062          </div>
+            <strong>Signature:</strong> p:^?711838 -&gt; m:int -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?711838          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualGH, with primal value <code>p</code>, gradient dimension <code>m</code>, and all gradient and Hessian components 0</p>
@@ -80,8 +80,8 @@
             dualGHAct p m i
           </code>
           <div class="tip" id="254">
-            <strong>Signature:</strong> p:^?703066 -&gt; m:int -&gt; i:int -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?703066          </div>
+            <strong>Signature:</strong> p:^?711842 -&gt; m:int -&gt; i:int -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?711842          </div>
         </td>
         <td class="xmldoc">
           <p>Make active DualGH (i.e. variable of differentiation), with primal value <code>p</code>, gradient dimension <code>m</code>, the gradient component with index <code>i</code> having value 1, the rest of the gradient components 0, and Hessian components 0</p>
@@ -95,8 +95,8 @@
             dualGHActArray x
           </code>
           <div class="tip" id="255">
-            <strong>Signature:</strong> x:^?703068 [] -&gt; DualGH []<br />
-                          <strong>Type parameters:</strong> ^?703068          </div>
+            <strong>Signature:</strong> x:^?711844 [] -&gt; DualGH []<br />
+                          <strong>Type parameters:</strong> ^?711844          </div>
         </td>
         <td class="xmldoc">
           <p>Make an array of active DualGH, with primal values given in array <code>x</code>. For a DualGH with index <em>i</em>, the gradient is the unit vector with 1 in the <em>i</em>th place, and the Hessian components are 0.</p>
@@ -110,8 +110,8 @@
             dualGHSet (p, g, h)
           </code>
           <div class="tip" id="256">
-            <strong>Signature:</strong> (p:^?703064 * g:float [] * h:float [,]) -&gt; DualGH<br />
-                          <strong>Type parameters:</strong> ^?703064          </div>
+            <strong>Signature:</strong> (p:^?711840 * g:float [] * h:float [,]) -&gt; DualGH<br />
+                          <strong>Type parameters:</strong> ^?711840          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualGH, with primal value <code>p</code>, gradient array <code>g</code>, and Hessian 2d array <code>h</code></p>
@@ -262,9 +262,10 @@
 
             <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
             <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
-            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
             <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>
             <li>Probabilistic Programming<br>(to come)</li>
@@ -273,11 +274,12 @@
             <li>Stability Analysis (to come)</li>
 
             <li class="nav-header">Control</li>
-            <li><a href="../examples-kinematics.html">Kinematics</a></li>
             <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
             <li>Adaptive Control (to come)</li>
 
             <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
             <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
 
             <li class="nav-header">Math</li>

@@ -65,8 +65,8 @@
             dualG p m
           </code>
           <div class="tip" id="216">
-            <strong>Signature:</strong> p:^?703179 -&gt; m:int -&gt; DualG<br />
-                          <strong>Type parameters:</strong> ^?703179          </div>
+            <strong>Signature:</strong> p:^?711955 -&gt; m:int -&gt; DualG<br />
+                          <strong>Type parameters:</strong> ^?711955          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualG, with primal value <code>p</code>, gradient dimension <code>m</code>, and all gradient components 0</p>
@@ -80,8 +80,8 @@
             dualGAct p m i
           </code>
           <div class="tip" id="217">
-            <strong>Signature:</strong> p:^?703183 -&gt; m:int -&gt; i:int -&gt; DualG<br />
-                          <strong>Type parameters:</strong> ^?703183          </div>
+            <strong>Signature:</strong> p:^?711959 -&gt; m:int -&gt; i:int -&gt; DualG<br />
+                          <strong>Type parameters:</strong> ^?711959          </div>
         </td>
         <td class="xmldoc">
           <p>Make active DualG (i.e. variable of differentiation), with primal value <code>p</code>, gradient dimension <code>m</code>, the component with index <code>i</code> having value 1, and the rest of the components 0</p>
@@ -95,8 +95,8 @@
             dualGActArray x
           </code>
           <div class="tip" id="218">
-            <strong>Signature:</strong> x:^?703185 [] -&gt; DualG []<br />
-                          <strong>Type parameters:</strong> ^?703185          </div>
+            <strong>Signature:</strong> x:^?711961 [] -&gt; DualG []<br />
+                          <strong>Type parameters:</strong> ^?711961          </div>
         </td>
         <td class="xmldoc">
           <p>Make an array of active DualG, with primal values given in array <code>x</code>. For a DualG with index <em>i</em>, the gradient is the unit vector with 1 in the <em>i</em>th place.</p>
@@ -110,8 +110,8 @@
             dualGSet (p, g)
           </code>
           <div class="tip" id="219">
-            <strong>Signature:</strong> (p:^?703181 * g:float []) -&gt; DualG<br />
-                          <strong>Type parameters:</strong> ^?703181          </div>
+            <strong>Signature:</strong> (p:^?711957 * g:float []) -&gt; DualG<br />
+                          <strong>Type parameters:</strong> ^?711957          </div>
         </td>
         <td class="xmldoc">
           <p>Make DualG, with primal value <code>p</code> and gradient array <code>g</code></p>
@@ -232,9 +232,10 @@
 
             <li class="nav-header">Machine Learning</li>
             <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
             <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
             <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
-            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
             <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
             <li>Neural Turing Machines (to come)</li>
             <li>Probabilistic Programming<br>(to come)</li>
@@ -243,11 +244,12 @@
             <li>Stability Analysis (to come)</li>
 
             <li class="nav-header">Control</li>
-            <li><a href="../examples-kinematics.html">Kinematics</a></li>
             <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
             <li>Adaptive Control (to come)</li>
 
             <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
             <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
 
             <li class="nav-header">Math</li>
