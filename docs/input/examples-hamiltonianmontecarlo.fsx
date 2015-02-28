@@ -48,7 +48,7 @@ open DiffSharp.Util.LinearAlgebra
 // k: kinetic energy function
 // d: integration step size
 // steps: number of integration steps
-// (q0, p0): initial position and momentum vectors
+// (x0, p0): initial position and momentum vectors
 let leapFrog u k d steps (x0, p0) =
     let hd = d / 2.
     [1..steps] 
@@ -134,7 +134,7 @@ let multiNormal mu sigma (x:Vector<Adj>) =
 
 (**
 
-Here we plot 10000 samples from the bivariate case, with $\mathbf{\mu} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$ and $\mathbf{\Sigma} = \begin{bmatrix} 1 & 0.8 \\ 0.8 & 1 \end{bmatrix}\,$.
+Here we plot 10000 samples from the bivariate case with $\mathbf{\mu} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$ and $\mathbf{\Sigma} = \begin{bmatrix} 1 & 0.8 \\ 0.8 & 1 \end{bmatrix}\,$.
 
 *)
 
