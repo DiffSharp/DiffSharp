@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\api-overview.fsx = docs\input\api-overview.fsx
 		docs\input\benchmarks.fsx = docs\input\benchmarks.fsx
 		docs\input\examples-gradientdescent.fsx = docs\input\examples-gradientdescent.fsx
+		docs\input\examples-hamiltonianmontecarlo.fsx = docs\input\examples-hamiltonianmontecarlo.fsx
 		docs\input\examples-helmholtzenergyfunction.fsx = docs\input\examples-helmholtzenergyfunction.fsx
 		docs\input\examples-inversekinematics.fsx = docs\input\examples-inversekinematics.fsx
 		docs\input\examples-kinematics.fsx = docs\input\examples-kinematics.fsx

@@ -64,6 +64,8 @@ An important thing to note here is that the **DiffSharp.AD.Reverse** module take
 
 *)
 
+// k-means clustering
+// k: number of partitions, eta: SGD step size, epsilon: SGD threshold, data: observations
 let kmeans k eta epsilon (data:Vector<float>[]) =
     // (index of, squared distance to) the nearest mean to x
     let inline nearestm (x:Vector<_>) (means:seq<Vector<_>>) =
