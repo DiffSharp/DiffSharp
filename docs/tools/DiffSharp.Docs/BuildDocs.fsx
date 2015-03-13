@@ -2,7 +2,7 @@
 // This file is part of
 // DiffSharp: Automatic Differentiation Library
 //
-// Copyright (C) 2014, National University of Ireland Maynooth.
+// Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 //   Barak A. Pearlmutter
 //   barak@cs.nuim.ie
 //
+//   Brain and Computation Lab
 //   Hamilton Institute & Department of Computer Science
 //   National University of Ireland Maynooth
 //   Maynooth, Co. Kildare
