@@ -27,7 +27,7 @@ let rnd = System.Random()
 let helmholtz R T (b:Vector<Adj>) (A:Matrix<Adj>) (x:Vector<Adj>) =
     let bx = b * x
     let oneminbx = 1. - bx
-    (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
+    R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
     - ((x * A * x) / (bx * sqrt 8.)) 
     * log ((1. + (1. + sqrt 2.) * bx) / (1. + (1. - sqrt 2.) * bx))
 
@@ -97,7 +97,7 @@ open DiffSharp.Numerical.Vector
 let helmholtzFloat R T (b:Vector<float>) (A:Matrix<float>) (x:Vector<float>) =
     let bx = b * x
     let oneminbx = 1. - bx
-    (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
+    R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
     - ((x * A * x) / (bx * sqrt 8.)) 
     * log ((1. + (1. + sqrt 2.) * bx) / (1. + (1. - sqrt 2.) * bx))
 
@@ -115,7 +115,7 @@ open DiffSharp.AD.Forward.Vector
 let helmholtzDual R T (b:Vector<Dual>) (A:Matrix<Dual>) (x:Vector<Dual>) =
     let bx = b * x
     let oneminbx = 1. - bx
-    (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
+    R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
     - ((x * A * x) / (bx * sqrt 8.)) 
     * log ((1. + (1. + sqrt 2.) * bx) / (1. + (1. - sqrt 2.) * bx))
 
@@ -133,7 +133,7 @@ open DiffSharp.AD.ForwardG.Vector
 let helmholtzDualG R T (b:Vector<DualG>) (A:Matrix<DualG>) (x:Vector<DualG>) =
     let bx = b * x
     let oneminbx = 1. - bx
-    (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
+    R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
     - ((x * A * x) / (bx * sqrt 8.)) 
     * log ((1. + (1. + sqrt 2.) * bx) / (1. + (1. - sqrt 2.) * bx))
 
