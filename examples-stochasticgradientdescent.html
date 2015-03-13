@@ -52,7 +52,7 @@
 
 <p><a href="http://en.wikipedia.org/wiki/Stochastic_gradient_descent">Stochastic gradient descent</a> is a <a href="http://en.wikipedia.org/wiki/Stochastic">stochastic</a> variant of the gradient descent algorithm that is used for minimizing objective functions with the form of a sum</p>
 
-<p><span class="math">\[  Q(\mathbf{w}) = \sum_{i=1}^{n} Q_i(\mathbf{w}) \; ,\]</span></p>
+<p><span class="math">\[  Q(\mathbf{w}) = \sum_{i=1}^{d} Q_i(\mathbf{w}) \; ,\]</span></p>
 
 <p>where <span class="math">\(\mathbf{w}\)</span> is a weight vector parametrizing <span class="math">\(Q\)</span>. The component <span class="math">\(Q_i\)</span> is the contribution of the <span class="math">\(i\)</span>-th sample to the objective function <span class="math">\(Q\)</span>, which is to be minimized using a training set of <span class="math">\(n\)</span> samples.</p>
 
@@ -60,16 +60,16 @@
 
 <p><span class="math">\[  \begin{eqnarray*}
   \mathbf{w}_{t+1} &amp;=&amp; \mathbf{w}_t - \eta \nabla Q \\
-   &amp;=&amp; \mathbf{w}_t - \eta \sum_{i=1}^{n} \nabla Q_i(\mathbf{w}) \; ,\\
+   &amp;=&amp; \mathbf{w}_t - \eta \sum_{i=1}^{d} \nabla Q_i(\mathbf{w}) \; ,\\
   \end{eqnarray*}\]</span></p>
 
-<p>where <span class="math">\(\eta &gt; 0\)</span> is a step size. This "batch" update rule has to compute the full objective function in each step, the evaluation time of which is proportional to the size of the training set <span class="math">\(n\)</span>.</p>
+<p>where <span class="math">\(\eta &gt; 0\)</span> is a step size. This "batch" update rule has to compute the full objective function in each step, the evaluation time of which is proportional to the size of the training set <span class="math">\(d\)</span>.</p>
 
 <p>Alternatively, in stochastic gradient descent, <span class="math">\(Q\)</span> is minimized using</p>
 
 <p><span class="math">\[  \mathbf{w}_{t+1} = \mathbf{w}_t - \eta \nabla Q_i (\mathbf{w}) \; ,\]</span></p>
 
-<p>updating the weights <span class="math">\(\mathbf{w}\)</span> in each step using just one sample <span class="math">\(i\)</span> randomly chosen from the training set. This is advantageous for big sample sizes, because it makes the evaluation time of each step independent from <span class="math">\(n\)</span>. Another advantage is that it can process samples on the fly, in an <a href="http://en.wikipedia.org/wiki/Online_machine_learning">online learning</a> task.</p>
+<p>updating the weights <span class="math">\(\mathbf{w}\)</span> in each step using just one sample <span class="math">\(i\)</span> randomly chosen from the training set. This is advantageous for big sample sizes, because it makes the evaluation time of each step independent from <span class="math">\(d\)</span>. Another advantage is that it can process samples on the fly, in an <a href="http://en.wikipedia.org/wiki/Online_machine_learning">online learning</a> task.</p>
 
 <p>In practice, instead of <span class="math">\(\eta\)</span>, the algorithm is used with a decreasing sequence of step sizes <span class="math">\(\eta_t\)</span>, updated in each step.</p>
 
@@ -117,7 +117,7 @@
 
 <p><span class="math">\[  Q_i(\mathbf{w}) = \left( \mathbf{y}_i - f_{\mathbf{w}} (\mathbf{x}_i) \right)^2 \; ,\]</span></p>
 
-<p>where <span class="math">\(f_{\mathbf{w}} : \mathbb{R}^n \to \mathbb{R}^m\)</span> is a model function for our data (parametrized by <span class="math">\(\mathbf{w}\)</span>) and <span class="math">\(\mathbf{x}_i \in \mathbb{R}^n\)</span> and <span class="math">\(\mathbf{y}_i \in \mathbb{R}^m\)</span> are the input and the expected output of the <span class="math">\(i\)</span>-th sample in the training set. Finding the parameters <span class="math">\(\mathbf{w}\)</span> minimizing <span class="math">\(Q(\mathbf{w}) = \sum_{i=1}^{n} Q_i (\mathbf{w})\)</span> thus fits the model function <span class="math">\(f_{\mathbf{w}}\)</span> to our data.</p>
+<p>where <span class="math">\(f_{\mathbf{w}} : \mathbb{R}^n \to \mathbb{R}^m\)</span> is a model function for our data (parametrized by <span class="math">\(\mathbf{w}\)</span>) and <span class="math">\(\mathbf{x}_i \in \mathbb{R}^n\)</span> and <span class="math">\(\mathbf{y}_i \in \mathbb{R}^m\)</span> are the input and the expected output of the <span class="math">\(i\)</span>-th sample in the training set. Finding the parameters <span class="math">\(\mathbf{w}\)</span> minimizing <span class="math">\(Q(\mathbf{w}) = \sum_{i=1}^{d} Q_i (\mathbf{w})\)</span> thus fits the model function <span class="math">\(f_{\mathbf{w}}\)</span> to our data.</p>
 
 <p>We can test this via <a href="http://en.wikipedia.org/wiki/Curve_fitting">fitting a curve</a></p>
 
