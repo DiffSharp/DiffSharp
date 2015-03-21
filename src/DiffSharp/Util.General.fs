@@ -54,26 +54,26 @@ let inline fsttrd (f, _, t) = (f, t)
 /// Gets the second and third terms of a 3-tuple
 let inline sndtrd (_, s, t) = (s, t)
 
-/// Checks whether 'a[,] `m` has the same number of elements in both dimensions
-let (|Square|) (m:'a[,]) =
+/// Checks whether the 2d array `m` has the same number of elements in both dimensions
+let (|Square|) (m:_[,]) =
     match m with
     | m when m.GetLength 0 = m.GetLength 1 -> m
-    | _ -> invalidArg "m" "Expecting a square float[,]"
+    | _ -> invalidArg "m" "Expecting a square 2d array"
 
-/// Gets the transpose of 'a[,] `m`
-let inline transpose (m:'a[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
+/// Gets the transpose of the 2d array `m`
+let inline transpose (m:_[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
 
-/// Gets a 'a[] containing the diagonal elements of 'a[,] `m`
-let inline diagonal (Square m:'a[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
+/// Gets an array containing the diagonal elements of the square 2d array `m`
+let inline diagonal (Square m:_[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
 
-/// Gets the trace of the square matrix given in 'a[,] `m`
-let inline trace (m:'a[,]) = Array.sum (diagonal m)
+/// Gets the trace of the square matrix given in the 2d array `m`
+let inline trace (m:_[,]) = Array.sum (diagonal m)
 
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
 let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then 1. else 0.)
 
-/// Copies the upper triangular elements of the square matrix given in 'a[,] `m` to the lower triangular part
-let inline copyUpperToLower (Square m:'a[,]) =
+/// Copies the upper triangular elements of the square matrix given in the 2d array `m` to the lower triangular part
+let inline copyUpperToLower (Square m:_[,]) =
     let r = Array2D.copy m
     let rows = r.GetLength 0
     if rows > 1 then
@@ -98,50 +98,6 @@ let inline matrixSolveHelper (lu:'a[,]) (b:'a[]) =
             sum <- sum - lu.[i, j] * x.[j]
         x.[i] <- sum / lu.[i, i]
     x
-
-/// Gets a string representation of float[] `v` that can be pasted into a Mathematica notebook
-let MathematicaVector (v:float[]) =
-    let sb = System.Text.StringBuilder()
-    sb.Append("{") |> ignore
-    for i = 0 to v.Length - 1 do
-        sb.Append(sprintf "%.2f" v.[i]) |> ignore
-        if i < v.Length - 1 then sb.Append(", ") |> ignore
-    sb.Append("}") |> ignore
-    sb.ToString()
-
-/// Gets a string representation of float[] `v` that can be pasted into MATLAB
-let MatlabVector (v:float[]) =
-    let sb = System.Text.StringBuilder()
-    sb.Append("[") |> ignore
-    for i = 0 to v.Length - 1 do
-        sb.Append(sprintf "%.2f" v.[i]) |> ignore
-        if i < v.Length - 1 then sb.Append(" ") |> ignore
-    sb.Append("]") |> ignore
-    sb.ToString()
-
-/// Gets a string representation of float[,] `m` than can be pasted into a Mathematica notebook
-let MathematicaMatrix (m:float[,]) =
-    let rows = m.GetLength 0
-    let cols = m.GetLength 1
-    let sb = System.Text.StringBuilder()
-    sb.Append("{") |> ignore
-    for i = 0 to rows - 1 do
-        sb.Append(MathematicaVector(Array.init cols (fun j -> m.[i, j]))) |> ignore
-        if i < rows - 1 then sb.Append(", ") |> ignore
-    sb.Append("}") |> ignore
-    sb.ToString()
-
-/// Gets a string representation of float[,] `m` that can be pasted into MATLAB
-let MatlabMatrix (m:float[,]) =
-    let rows = m.GetLength 0
-    let cols = m.GetLength 1
-    let sb = System.Text.StringBuilder()
-    sb.Append("[") |> ignore
-    for i = 0 to rows - 1 do
-        sb.Append(MatlabVector(Array.init cols (fun j -> m.[i, j]))) |> ignore
-        if i < rows - 1 then sb.Append("; ") |> ignore
-    sb.Append("]") |> ignore
-    sb.ToString()
 
 /// Computes a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =

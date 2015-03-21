@@ -362,21 +362,21 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`
     let inline laplacian f x = Vector.toArray >> SymbolicOps.laplacian f
     /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f x = Vector.toArray >> SymbolicOps.jacobianT' f >> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' f x = Vector.toArray >> SymbolicOps.jacobianT' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f x = Vector.toArray >> SymbolicOps.jacobianT f >> Matrix.ofArray2d
+    let inline jacobianT f x = Vector.toArray >> SymbolicOps.jacobianT f >> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f x = Vector.toArray >> SymbolicOps.jacobian' f >> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' f x = Vector.toArray >> SymbolicOps.jacobian' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f x = Vector.toArray >> SymbolicOps.jacobian f >> Matrix.ofArray2d
+    let inline jacobian f x = Vector.toArray >> SymbolicOps.jacobian f >> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`
-    let inline hessian' f x = Vector.toArray >> SymbolicOps.hessian' f >> fun (a, b) -> (a, Matrix.ofArray2d b)
+    let inline hessian' f x = Vector.toArray >> SymbolicOps.hessian' f >> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`
-    let inline hessian f x = Vector.toArray >> SymbolicOps.hessian f >> Matrix.ofArray2d
+    let inline hessian f x = Vector.toArray >> SymbolicOps.hessian f >> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian' f x = Vector.toArray >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
+    let inline gradhessian' f x = Vector.toArray >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian f x = Vector.toArray >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline gradhessian f x = Vector.toArray >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x = Vector.toArray >> SymbolicOps.curl' f  >> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.

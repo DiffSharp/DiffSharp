@@ -255,13 +255,13 @@ module Vector =
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad (f:Vector<Dual>->Dual) x = ForwardOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`

@@ -135,23 +135,23 @@ type DualG =
         DualG(abs a, ag * float (sign a))
     static member Floor (DualG(a, ag)) =
         if isInteger a then invalidArgFloor()
-        DualG(floor a, Vector.Create(ag.Length, 0.))
+        DualG(floor a, Vector.create ag.Length 0.)
     static member Ceiling (DualG(a, ag)) =
         if isInteger a then invalidArgCeil()
-        DualG(ceil a, Vector.Create(ag.Length, 0.))
+        DualG(ceil a, Vector.create ag.Length 0.)
     static member Round (DualG(a, ag)) =
         if isHalfway a then invalidArgRound()
-        DualG(round a, Vector.Create(ag.Length, 0.))
+        DualG(round a, Vector.create ag.Length 0.)
 
 /// DualG operations module (automatically opened)
 [<AutoOpen>]
 module DualGOps =
     /// Make DualG, with primal value `p`, gradient dimension `m`, and all gradient components 0
-    let inline dualG p m = DualG(float p, Vector.Create(m, 0.))
+    let inline dualG p m = DualG(float p, Vector.create m 0.)
     /// Make DualG, with primal value `p` and gradient array `g`
-    let inline dualGSet (p, g) = DualG(float p, Vector.Create(g))
+    let inline dualGSet (p, g) = DualG(float p, vector g)
     /// Make active DualG (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the component with index `i` having value 1, and the rest of the components 0
-    let inline dualGAct p m i = DualG(float p, Vector.Create(m, i, 1.))
+    let inline dualGAct p m i = DualG(float p, Vector.standardBasis m i)
     /// Make an array of active DualG, with primal values given in array `x`. For a DualG with index _i_, the gradient is the unit vector with 1 in the _i_th place.
     let inline dualGActArray (x:_[]) = Array.init x.Length (fun i -> dualGAct x.[i] x.Length i)
     /// Get the primal value of a DualG
@@ -188,7 +188,7 @@ module ForwardGOps =
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f (x:float[]) =
         let a = dualGActArray x |> f
-        (Array.map primal a, Matrix.toArray2D (Matrix.Create(a.Length, fun i -> gradient a.[i])))
+        (Array.map primal a, array2D (Array.init a.Length (fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
@@ -244,13 +244,13 @@ module Vector =
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad (f:Vector<DualG>->DualG) x = ForwardGOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' (f:Vector<DualG>->Vector<DualG>) x = ForwardGOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.

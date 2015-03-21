@@ -69,26 +69,26 @@ type DualGH =
         | _ -> false
     override d.GetHashCode() = let (DualGH(a, b, c)) = d in hash [|a; b; c|]
     // DualGH - DualGH binary operations
-    static member (+) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a + b, ag + bg, Matrix.SymmetricOp(ah, bh, fun i j -> ah.[i, j] + bh.[i, j]))
-    static member (-) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a - b, ag - bg, Matrix.SymmetricOp(ah, bh, fun i j -> ah.[i, j] - bh.[i, j]))
-    static member (*) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a * b, ag * b + a * bg, Matrix.SymmetricOp(ah, bh, fun i j -> ag.[j] * bg.[i] + a * bh.[i, j] + bg.[j] * ag.[i] + b * ah.[i, j]))
-    static member (/) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let bsq, atimes2, oneoverbcube = b * b, a * 2., 1. / (b * b * b) in DualGH(a / b, (ag * b - a * bg) / bsq, Matrix.SymmetricOp(ah, bh, fun i j -> (atimes2 * bg.[j] * bg.[i] + bsq * ah.[i, j] - b * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + a * bh.[i, j])) * oneoverbcube))
-    static member Pow (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let apowb, loga, apowbminus2, bsq = a ** b, log a, a ** (b - 2.), b * b in DualGH(apowb, apowb * ((b * ag / a) + (loga * bg)), Matrix.SymmetricOp(ah, bh, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (ag.[j] * (-ag.[i] + loga * a * bg.[i]) + a * (loga * bg.[j] * ag.[i] + ah.[i, j])) + a * (ag.[j] * bg.[i] + bg.[j] * (ag.[i] + loga * loga * a * bg.[i]) + loga * a * bh.[i, j]))))
-    static member Atan2 (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (ag * b - a * bg) / (asq + bsq), Matrix.SymmetricOp(ah, bh, fun i j -> (bsq * (-bg.[j] * ag.[i] - ag.[j] * bg.[i] + b * ah.[i, j]) + asq * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + b * ah.[i,j]) - (asq * a) * bh.[i, j] - a * b * (2. * ag.[j] * ag.[i] - 2. * bg.[j] * bg.[i] + b * bh.[i, j])) / (asq + bsq) ** 2.))
+    static member (+) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a + b, ag + bg, Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> ah.[i, j] + bh.[i, j]))
+    static member (-) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a - b, ag - bg, Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> ah.[i, j] - bh.[i, j]))
+    static member (*) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = DualGH(a * b, ag * b + a * bg, Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> ag.[j] * bg.[i] + a * bh.[i, j] + bg.[j] * ag.[i] + b * ah.[i, j]))
+    static member (/) (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let bsq, atimes2, oneoverbcube = b * b, a * 2., 1. / (b * b * b) in DualGH(a / b, (ag * b - a * bg) / bsq, Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> (atimes2 * bg.[j] * bg.[i] + bsq * ah.[i, j] - b * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + a * bh.[i, j])) * oneoverbcube))
+    static member Pow (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let apowb, loga, apowbminus2, bsq = a ** b, log a, a ** (b - 2.), b * b in DualGH(apowb, apowb * ((b * ag / a) + (loga * bg)), Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (ag.[j] * (-ag.[i] + loga * a * bg.[i]) + a * (loga * bg.[j] * ag.[i] + ah.[i, j])) + a * (ag.[j] * bg.[i] + bg.[j] * (ag.[i] + loga * loga * a * bg.[i]) + loga * a * bh.[i, j]))))
+    static member Atan2 (DualGH(a, ag, ah), DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (ag * b - a * bg) / (asq + bsq), Matrix.initSymmetric (max ag.Length bg.Length) (fun i j -> (bsq * (-bg.[j] * ag.[i] - ag.[j] * bg.[i] + b * ah.[i, j]) + asq * (bg.[j] * ag.[i] + ag.[j] * bg.[i] + b * ah.[i,j]) - (asq * a) * bh.[i, j] - a * b * (2. * ag.[j] * ag.[i] - 2. * bg.[j] * bg.[i] + b * bh.[i, j])) / (asq + bsq) ** 2.))
     // DualGH - float binary operations
     static member (+) (DualGH(a, ag, ah), b) = DualGH(a + b, ag, ah)
     static member (-) (DualGH(a, ag, ah), b) = DualGH(a - b, ag, ah)
-    static member (*) (DualGH(a, ag, ah), b) = DualGH(a * b, ag * b, Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * b))
-    static member (/) (DualGH(a, ag, ah), b) = DualGH(a / b, ag / b, Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] / b))
-    static member Pow (DualGH(a, ag, ah), b) = let apowb, bsq, apowbminus2 = a ** b, b * b, a ** (b - 2.) in DualGH(apowb, b * (a ** (b - 1.)) * ag, Matrix.SymmetricOp(ah, fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (a * ah.[i, j] - ag.[j] * ag.[i]))))
-    static member Atan2 (DualGH(a, ag, ah), b) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (b * ag) / (bsq + asq), Matrix.SymmetricOp(ah, fun i j -> (b * (-2. * a * ag.[j] * ag.[i] + bsq * ah.[i,j] + asq * ah.[i, j])) / (bsq + asq) ** 2.))
+    static member (*) (DualGH(a, ag, ah), b) = DualGH(a * b, ag * b, Matrix.initSymmetric ag.Length (fun i j -> ah.[i, j] * b))
+    static member (/) (DualGH(a, ag, ah), b) = DualGH(a / b, ag / b, Matrix.initSymmetric ag.Length (fun i j -> ah.[i, j] / b))
+    static member Pow (DualGH(a, ag, ah), b) = let apowb, bsq, apowbminus2 = a ** b, b * b, a ** (b - 2.) in DualGH(apowb, b * (a ** (b - 1.)) * ag, Matrix.initSymmetric ag.Length (fun i j -> apowbminus2 * (bsq * ag.[j] * ag.[i] + b * (a * ah.[i, j] - ag.[j] * ag.[i]))))
+    static member Atan2 (DualGH(a, ag, ah), b) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, (b * ag) / (bsq + asq), Matrix.initSymmetric ag.Length (fun i j -> (b * (-2. * a * ag.[j] * ag.[i] + bsq * ah.[i,j] + asq * ah.[i, j])) / (bsq + asq) ** 2.))
     // float - DualGH binary operations
     static member (+) (a, DualGH(b, bg, bh)) = DualGH(a + b, bg, bh)
     static member (-) (a, DualGH(b, bg, bh)) = DualGH(a - b, -bg, -bh)
-    static member (*) (a, DualGH(b, bg, bh)) = DualGH(a * b, a * bg, Matrix.SymmetricOp(bh, fun i j -> a * bh.[i, j]))
-    static member (/) (a, DualGH(b, bg, bh)) = let aoverbcube = a / (b * b * b) in DualGH(a / b, -aoverbcube * b * bg, Matrix.SymmetricOp(bh, fun i j -> (2. * bg.[j] * bg.[i] - b * bh.[i, j]) * aoverbcube))
-    static member Pow (a, DualGH(b, bg, bh)) = let apowb, loga, term = a ** b, log a, (a ** (b - 2.)) * a * log a in DualGH(apowb, apowb * loga * bg, Matrix.SymmetricOp(bh, fun i j -> term * (bg.[j] * loga * a * bg.[i] + a * bh.[i, j])))
-    static member Atan2 (a, DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, -(a * bg) / (asq + bsq), Matrix.SymmetricOp(bh, fun i j -> -((a *(-2. * b * bg.[j] * bg.[i] + asq * bh.[i, j] + bsq * bh.[i, j])) / (asq + bsq) ** 2.)))
+    static member (*) (a, DualGH(b, bg, bh)) = DualGH(a * b, a * bg, Matrix.initSymmetric bg.Length (fun i j -> a * bh.[i, j]))
+    static member (/) (a, DualGH(b, bg, bh)) = let aoverbcube = a / (b * b * b) in DualGH(a / b, -aoverbcube * b * bg, Matrix.initSymmetric bg.Length (fun i j -> (2. * bg.[j] * bg.[i] - b * bh.[i, j]) * aoverbcube))
+    static member Pow (a, DualGH(b, bg, bh)) = let apowb, loga, term = a ** b, log a, (a ** (b - 2.)) * a * log a in DualGH(apowb, apowb * loga * bg, Matrix.initSymmetric bg.Length (fun i j -> term * (bg.[j] * loga * a * bg.[i] + a * bh.[i, j])))
+    static member Atan2 (a, DualGH(b, bg, bh)) = let asq, bsq = a * a, b * b in DualGH(atan2 a b, -(a * bg) / (asq + bsq), Matrix.initSymmetric bg.Length (fun i j -> -((a *(-2. * b * bg.[j] * bg.[i] + asq * bh.[i, j] + bsq * bh.[i, j])) / (asq + bsq) ** 2.)))
     // DualGH - int binary operations
     static member (+) (a:DualGH, b:int) = a + float b
     static member (-) (a:DualGH, b:int) = a - float b
@@ -106,53 +106,53 @@ type DualGH =
     // DualGH unary operations
     static member Log (DualGH(a, ag, ah)) = 
         if a <= 0. then invalidArgLog()
-        let asq = a * a in DualGH(log a, ag / a, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
+        let asq = a * a in DualGH(log a, ag / a, Matrix.initSymmetric ag.Length (fun i j -> -ag.[i] * ag.[j] / asq + ah.[i, j] / a))
     static member Log10 (DualGH(a, ag, ah)) = 
         if a <= 0. then invalidArgLog10()
-        let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.SymmetricOp(ah, fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
-    static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.SymmetricOp(ah, fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
-    static member Sin (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(sina, cosa * ag, Matrix.SymmetricOp(ah, fun i j -> -sina * ag.[i] * ag.[j] + cosa * ah.[i, j]))
-    static member Cos (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(cosa, -sina * ag, Matrix.SymmetricOp(ah, fun i j -> -cosa * ag.[i] * ag.[j] - sina * ah.[i, j]))
+        let alog10 = a * log10val in DualGH(log10 a, ag / alog10, Matrix.initSymmetric ag.Length (fun i j -> -ag.[i] * ag.[j] / (a * alog10) + ah.[i, j] / alog10))
+    static member Exp (DualGH(a, ag, ah)) = let expa = exp a in DualGH(expa, expa * ag, Matrix.initSymmetric ag.Length (fun i j -> expa * ag.[i] * ag.[j] + expa * ah.[i, j]))
+    static member Sin (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(sina, cosa * ag, Matrix.initSymmetric ag.Length (fun i j -> -sina * ag.[i] * ag.[j] + cosa * ah.[i, j]))
+    static member Cos (DualGH(a, ag, ah)) = let sina, cosa = sin a, cos a in DualGH(cosa, -sina * ag, Matrix.initSymmetric ag.Length (fun i j -> -cosa * ag.[i] * ag.[j] - sina * ah.[i, j]))
     static member Tan (DualGH(a, ag, ah)) = 
         let cosa = cos a
         if cosa = 0. then invalidArgTan()
-        let tana, secsqa = tan a, 1. / ((cosa) * (cosa)) in DualGH(tana, secsqa * ag, Matrix.SymmetricOp(ah, fun i j -> 2. * secsqa * tana * ag.[i] * ag.[j] + secsqa * ah.[i, j]))
+        let tana, secsqa = tan a, 1. / ((cosa) * (cosa)) in DualGH(tana, secsqa * ag, Matrix.initSymmetric ag.Length (fun i j -> 2. * secsqa * tana * ag.[i] * ag.[j] + secsqa * ah.[i, j]))
     static member (~-) (DualGH(a, ag, ah)) = DualGH(-a, -ag, -ah)
     static member Sqrt (DualGH(a, ag, ah)) = 
         if a <= 0. then invalidArgSqrt()
-        let term = 1. / (2. * sqrt a) in DualGH(sqrt a, term * ag, Matrix.SymmetricOp(ah, fun i j -> (term / (-2. * a)) * ag.[i] * ag.[j] + term * ah.[i,j]))
-    static member Sinh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(sinha, cosha * ag, Matrix.SymmetricOp(ah, fun i j -> sinha * ag.[i] * ag.[j] + cosha * ah.[i, j]))
-    static member Cosh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(cosha, sinha * ag, Matrix.SymmetricOp(ah, fun i j -> cosha * ag.[i] * ag.[j] + sinha * ah.[i, j]))
-    static member Tanh (DualGH(a, ag, ah)) = let tanha, sechsqa = tanh a, 1. / ((cosh a) * (cosh a)) in DualGH(tanha, sechsqa * ag, Matrix.SymmetricOp(ah, fun i j -> -2. * sechsqa * tanha * ag.[i] * ag.[j] + sechsqa * ah.[i, j]))
+        let term = 1. / (2. * sqrt a) in DualGH(sqrt a, term * ag, Matrix.initSymmetric ag.Length (fun i j -> (term / (-2. * a)) * ag.[i] * ag.[j] + term * ah.[i,j]))
+    static member Sinh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(sinha, cosha * ag, Matrix.initSymmetric ag.Length (fun i j -> sinha * ag.[i] * ag.[j] + cosha * ah.[i, j]))
+    static member Cosh (DualGH(a, ag, ah)) = let sinha, cosha = sinh a, cosh a in DualGH(cosha, sinha * ag, Matrix.initSymmetric ag.Length (fun i j -> cosha * ag.[i] * ag.[j] + sinha * ah.[i, j]))
+    static member Tanh (DualGH(a, ag, ah)) = let tanha, sechsqa = tanh a, 1. / ((cosh a) * (cosh a)) in DualGH(tanha, sechsqa * ag, Matrix.initSymmetric ag.Length (fun i j -> -2. * sechsqa * tanha * ag.[i] * ag.[j] + sechsqa * ah.[i, j]))
     static member Asin (DualGH(a, ag, ah)) = 
         if (abs a) >= 1. then invalidArgAsin()
-        let term, term2 = 1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(asin a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
+        let term, term2 = 1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(asin a, term * ag, Matrix.initSymmetric ag.Length (fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Acos (DualGH(a, ag, ah)) = 
         if (abs a) >= 1. then invalidArgAcos()
-        let term, term2 = -1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(acos a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
-    static member Atan (DualGH(a, ag, ah)) = let term, term2 = 1. / (1. + a * a), (-2. * a / (1. + a * a)) in DualGH(atan a, term * ag, Matrix.SymmetricOp(ah, fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
+        let term, term2 = -1. / sqrt (1. - a * a), (a / (1. - a * a)) in DualGH(acos a, term * ag, Matrix.initSymmetric ag.Length (fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
+    static member Atan (DualGH(a, ag, ah)) = let term, term2 = 1. / (1. + a * a), (-2. * a / (1. + a * a)) in DualGH(atan a, term * ag, Matrix.initSymmetric ag.Length (fun i j -> term2 * term * ag.[i] * ag.[j] + term * ah.[i, j]))
     static member Abs (DualGH(a, ag, ah)) = 
         if a = 0. then invalidArgAbs()
-        DualGH(abs a, ag * float (sign a), Matrix.SymmetricOp(ah, fun i j -> ah.[i, j] * float (sign a)))
+        DualGH(abs a, ag * float (sign a), Matrix.initSymmetric ag.Length (fun i j -> ah.[i, j] * float (sign a)))
     static member Floor (DualGH(a, ag, ah)) =
         if isInteger a then invalidArgFloor()
-        DualGH(floor a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
+        DualGH(floor a, Vector.create ag.Length 0., Matrix.create ag.Length ag.Length 0.)
     static member Ceiling (DualGH(a, ag, ah)) =
         if isInteger a then invalidArgCeil()
-        DualGH(ceil a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
+        DualGH(ceil a, Vector.create ag.Length 0., Matrix.create ag.Length ag.Length 0.)
     static member Round (DualGH(a, ag, ah)) =
         if isHalfway a then invalidArgRound()
-        DualGH(round a, Vector.Create(ag.Length, 0.), Matrix.Create(ah.Rows, ah.Cols, 0.))
+        DualGH(round a, Vector.create ag.Length 0., Matrix.create ag.Length ag.Length 0.)
 
 /// DualGH operations module (automatically opened)
 [<AutoOpen>]
 module DualGHOps =
     /// Make DualGH, with primal value `p`, gradient dimension `m`, and all gradient and Hessian components 0
-    let inline dualGH p m = DualGH(float p, Vector.Create(m, 0.), Matrix.Create(m, m, 0.))
+    let inline dualGH p m = DualGH(float p, Vector.create m 0., Matrix.create m m 0.)
     /// Make DualGH, with primal value `p`, gradient array `g`, and Hessian 2d array `h`
-    let inline dualGHSet (p, g, h:float[,]) = DualGH(float p, Vector.Create(g), Matrix.Create(h))
+    let inline dualGHSet (p, g, h:float[,]) = DualGH(float p, vector g, Matrix.ofArray2D h)
     /// Make active DualGH (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the gradient component with index `i` having value 1, the rest of the gradient components 0, and Hessian components 0
-    let inline dualGHAct p m i = DualGH(float p, Vector.Create(m, i, 1.), Matrix.Create(m, m, 0.))
+    let inline dualGHAct p m i = DualGH(float p, Vector.standardBasis m i, Matrix.create m m 0.)
     /// Make an array of active DualGH, with primal values given in array `x`. For a DualGH with index _i_, the gradient is the unit vector with 1 in the _i_th place, and the Hessian components are 0.
     let inline dualGHActArray (x:_[]) = Array.init x.Length (fun i -> dualGHAct x.[i] x.Length i)
     /// Get the primal value of a DualGH
@@ -193,7 +193,7 @@ module ForwardGHOps =
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f (x:float[]) =
         let a = dualGHActArray x |> f
-        (Array.map primal a, Matrix.toArray2D (Matrix.Create(a.Length, fun i -> gradient a.[i])))
+        (Array.map primal a, array2D (Array.init a.Length (fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
@@ -277,21 +277,21 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2d b)
+    let inline hessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2d
+    let inline hessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2d c)
+    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2d b)
+    let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
