@@ -61,12 +61,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1687', 1687)" onmouseover="showTip(event, '1687', 1687)">
+          <code onmouseout="hideTip(event, '553', 553)" onmouseover="showTip(event, '553', 553)">
             concat(v)
           </code>
-          <div class="tip" id="1687">
-            <strong>Signature:</strong> v:seq&lt;Vector&lt;^?1386223&gt;&gt; -&gt; Vector&lt;^?1386223&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386223          </div>
+          <div class="tip" id="553">
+            <strong>Signature:</strong> v:seq&lt;Vector&lt;^?530000&gt;&gt; -&gt; Vector&lt;^?530000&gt;<br />
+                          <strong>Type parameters:</strong> ^?530000          </div>
         </td>
         <td class="xmldoc">
           <p>Builds a new Vector that contains the elements of each of the given sequence of Vectors <code>v</code></p>
@@ -76,12 +76,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1688', 1688)" onmouseover="showTip(event, '1688', 1688)">
+          <code onmouseout="hideTip(event, '554', 554)" onmouseover="showTip(event, '554', 554)">
             copy(v)
           </code>
-          <div class="tip" id="1688">
-            <strong>Signature:</strong> v:Vector&lt;^?1386211&gt; -&gt; Vector&lt;^?1386211&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386211          </div>
+          <div class="tip" id="554">
+            <strong>Signature:</strong> v:Vector&lt;^?530002&gt; -&gt; Vector&lt;^?530002&gt;<br />
+                          <strong>Type parameters:</strong> ^?530002          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a copy of Vector <code>v</code></p>
@@ -91,27 +91,42 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1689', 1689)" onmouseover="showTip(event, '1689', 1689)">
+          <code onmouseout="hideTip(event, '555', 555)" onmouseover="showTip(event, '555', 555)">
             create(n v)
           </code>
-          <div class="tip" id="1689">
-            <strong>Signature:</strong> n:int -&gt; v:^T -&gt; Vector&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="555">
+            <strong>Signature:</strong> n:int -&gt; v:^?530004 -&gt; Vector&lt;^?530004&gt;<br />
+                          <strong>Type parameters:</strong> ^?530004          </div>
         </td>
         <td class="xmldoc">
-          <p>Creates a Vector with <code>n</code> elements having value <code>v</code></p>
+          <p>Creates a Vector with <code>n</code> elements, all having value <code>v</code></p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1690', 1690)" onmouseover="showTip(event, '1690', 1690)">
+          <code onmouseout="hideTip(event, '556', 556)" onmouseover="showTip(event, '556', 556)">
+            createBasis(n i v)
+          </code>
+          <div class="tip" id="556">
+            <strong>Signature:</strong> n:int -&gt; i:int -&gt; v:^?530006 -&gt; Vector&lt;^?530006&gt;<br />
+                          <strong>Type parameters:</strong> ^?530006          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a Vector with <code>n</code> elements, where the element with index <code>i</code> has value <code>v</code> and the rest of the elements have value 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '557', 557)" onmouseover="showTip(event, '557', 557)">
             exists(p v)
           </code>
-          <div class="tip" id="1690">
-            <strong>Signature:</strong> p:(^?1386225 -&gt; bool) -&gt; v:Vector&lt;^?1386225&gt; -&gt; bool<br />
-                          <strong>Type parameters:</strong> ^?1386225          </div>
+          <div class="tip" id="557">
+            <strong>Signature:</strong> p:(^?530008 -&gt; bool) -&gt; v:Vector&lt;^?530008&gt; -&gt; bool<br />
+                          <strong>Type parameters:</strong> ^?530008          </div>
         </td>
         <td class="xmldoc">
           <p>Tests if any element of Vector <code>v</code> satisfies predicate <code>p</code></p>
@@ -121,12 +136,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1691', 1691)" onmouseover="showTip(event, '1691', 1691)">
+          <code onmouseout="hideTip(event, '558', 558)" onmouseover="showTip(event, '558', 558)">
             find(p v)
           </code>
-          <div class="tip" id="1691">
-            <strong>Signature:</strong> p:(^?1386227 -&gt; bool) -&gt; v:Vector&lt;^?1386227&gt; -&gt; ^?1386227<br />
-                          <strong>Type parameters:</strong> ^?1386227          </div>
+          <div class="tip" id="558">
+            <strong>Signature:</strong> p:(^?530010 -&gt; bool) -&gt; v:Vector&lt;^?530010&gt; -&gt; ^?530010<br />
+                          <strong>Type parameters:</strong> ^?530010          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the first element of Vector <code>v</code> for which predicate <code>p</code> is true</p>
@@ -136,12 +151,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1692', 1692)" onmouseover="showTip(event, '1692', 1692)">
+          <code onmouseout="hideTip(event, '559', 559)" onmouseover="showTip(event, '559', 559)">
             findIndex(p v)
           </code>
-          <div class="tip" id="1692">
-            <strong>Signature:</strong> p:(^?1386229 -&gt; bool) -&gt; v:Vector&lt;^?1386229&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386229          </div>
+          <div class="tip" id="559">
+            <strong>Signature:</strong> p:(^?530012 -&gt; bool) -&gt; v:Vector&lt;^?530012&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530012          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the index of the first element of Vector <code>v</code> for which predicate <code>p</code> is true</p>
@@ -151,12 +166,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1693', 1693)" onmouseover="showTip(event, '1693', 1693)">
+          <code onmouseout="hideTip(event, '560', 560)" onmouseover="showTip(event, '560', 560)">
             fold(f s v)
           </code>
-          <div class="tip" id="1693">
-            <strong>Signature:</strong> f:(&#39;?1386231 -&gt; ^?1386232 -&gt; &#39;?1386231) -&gt; s:&#39;?1386231 -&gt; v:Vector&lt;^?1386232&gt; -&gt; &#39;?1386231<br />
-                          <strong>Type parameters:</strong> '?1386231, ^?1386232          </div>
+          <div class="tip" id="560">
+            <strong>Signature:</strong> f:(&#39;?530014 -&gt; ^?530015 -&gt; &#39;?530014) -&gt; s:&#39;?530014 -&gt; v:Vector&lt;^?530015&gt; -&gt; &#39;?530014<br />
+                          <strong>Type parameters:</strong> '?530014, ^?530015          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code>, threading an accumulator (with initial state <code>s</code>) through the computation. If the input function is f and the elements are i0...iN then computes f (... (f s i0)...) iN.</p>
@@ -166,12 +181,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1694', 1694)" onmouseover="showTip(event, '1694', 1694)">
+          <code onmouseout="hideTip(event, '561', 561)" onmouseover="showTip(event, '561', 561)">
             foldBack(f s v)
           </code>
-          <div class="tip" id="1694">
-            <strong>Signature:</strong> f:(&#39;?1386234 -&gt; ^?1386235 [] -&gt; ^?1386235 []) -&gt; s:&#39;?1386234 [] -&gt; v:Vector&lt;^?1386235&gt; -&gt; ^?1386235 []<br />
-                          <strong>Type parameters:</strong> '?1386234, ^?1386235          </div>
+          <div class="tip" id="561">
+            <strong>Signature:</strong> f:(&#39;?530017 -&gt; ^?530018 [] -&gt; ^?530018 []) -&gt; s:&#39;?530017 [] -&gt; v:Vector&lt;^?530018&gt; -&gt; ^?530018 []<br />
+                          <strong>Type parameters:</strong> '?530017, ^?530018          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code>, threading an accumulator (with initial state <code>s</code>) through the computation. If the input function is f and the elements are i0...iN then computes f i0 (...(f iN s)).</p>
@@ -181,12 +196,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1695', 1695)" onmouseover="showTip(event, '1695', 1695)">
+          <code onmouseout="hideTip(event, '562', 562)" onmouseover="showTip(event, '562', 562)">
             forall(p v)
           </code>
-          <div class="tip" id="1695">
-            <strong>Signature:</strong> p:(^?1386237 -&gt; bool) -&gt; v:Vector&lt;^?1386237&gt; -&gt; bool<br />
-                          <strong>Type parameters:</strong> ^?1386237          </div>
+          <div class="tip" id="562">
+            <strong>Signature:</strong> p:(^?530020 -&gt; bool) -&gt; v:Vector&lt;^?530020&gt; -&gt; bool<br />
+                          <strong>Type parameters:</strong> ^?530020          </div>
         </td>
         <td class="xmldoc">
           <p>Tests if all elements of Vector <code>v</code> satisfy predicate <code>p</code></p>
@@ -196,12 +211,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1696', 1696)" onmouseover="showTip(event, '1696', 1696)">
+          <code onmouseout="hideTip(event, '563', 563)" onmouseover="showTip(event, '563', 563)">
             init(n f)
           </code>
-          <div class="tip" id="1696">
-            <strong>Signature:</strong> n:int -&gt; f:(int -&gt; ^T) -&gt; Vector&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="563">
+            <strong>Signature:</strong> n:int -&gt; f:(int -&gt; ^?530022) -&gt; Vector&lt;^?530022&gt;<br />
+                          <strong>Type parameters:</strong> ^?530022          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Vector with dimension <code>n</code> and a generator function <code>f</code> to compute the elements</p>
@@ -211,12 +226,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1697', 1697)" onmouseover="showTip(event, '1697', 1697)">
+          <code onmouseout="hideTip(event, '564', 564)" onmouseover="showTip(event, '564', 564)">
             iter(f v)
           </code>
-          <div class="tip" id="1697">
-            <strong>Signature:</strong> f:(^?1386239 -&gt; unit) -&gt; v:Vector&lt;^?1386239&gt; -&gt; unit<br />
-                          <strong>Type parameters:</strong> ^?1386239          </div>
+          <div class="tip" id="564">
+            <strong>Signature:</strong> f:(^?530024 -&gt; unit) -&gt; v:Vector&lt;^?530024&gt; -&gt; unit<br />
+                          <strong>Type parameters:</strong> ^?530024          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code></p>
@@ -226,12 +241,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1698', 1698)" onmouseover="showTip(event, '1698', 1698)">
+          <code onmouseout="hideTip(event, '565', 565)" onmouseover="showTip(event, '565', 565)">
             iteri(f v)
           </code>
-          <div class="tip" id="1698">
-            <strong>Signature:</strong> f:(int -&gt; ^?1386241 -&gt; unit) -&gt; v:Vector&lt;^?1386241&gt; -&gt; unit<br />
-                          <strong>Type parameters:</strong> ^?1386241          </div>
+          <div class="tip" id="565">
+            <strong>Signature:</strong> f:(int -&gt; ^?530026 -&gt; unit) -&gt; v:Vector&lt;^?530026&gt; -&gt; unit<br />
+                          <strong>Type parameters:</strong> ^?530026          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code>. The integer passed to function <code>f</code> indicates the index of element.</p>
@@ -241,12 +256,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1699', 1699)" onmouseover="showTip(event, '1699', 1699)">
+          <code onmouseout="hideTip(event, '566', 566)" onmouseover="showTip(event, '566', 566)">
             l1norm(v)
           </code>
-          <div class="tip" id="1699">
-            <strong>Signature:</strong> v:Vector&lt;^?1386261&gt; -&gt; ^?1386261<br />
-                          <strong>Type parameters:</strong> ^?1386261          </div>
+          <div class="tip" id="566">
+            <strong>Signature:</strong> v:Vector&lt;^?530028&gt; -&gt; ^?530028<br />
+                          <strong>Type parameters:</strong> ^?530028          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the L1 (Manhattan) norm of Vector <code>v</code></p>
@@ -256,42 +271,42 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1700', 1700)" onmouseover="showTip(event, '1700', 1700)">
+          <code onmouseout="hideTip(event, '567', 567)" onmouseover="showTip(event, '567', 567)">
             l2norm(v)
           </code>
-          <div class="tip" id="1700">
-            <strong>Signature:</strong> v:Vector&lt;^?1386263&gt; -&gt; ^?1386263<br />
-                          <strong>Type parameters:</strong> ^?1386263          </div>
+          <div class="tip" id="567">
+            <strong>Signature:</strong> v:Vector&lt;^?530030&gt; -&gt; ^?530030<br />
+                          <strong>Type parameters:</strong> ^?530030          </div>
         </td>
         <td class="xmldoc">
-          <p>Gets the L2 (Euclidean) norm of Vector <code>v</code></p>
+          <p>Gets the L2 (Euclidean) norm of Vector <code>v</code>. This is the same with <code>Vector.norm</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1701', 1701)" onmouseover="showTip(event, '1701', 1701)">
+          <code onmouseout="hideTip(event, '568', 568)" onmouseover="showTip(event, '568', 568)">
             l2normSq(v)
           </code>
-          <div class="tip" id="1701">
-            <strong>Signature:</strong> v:Vector&lt;^?1386267&gt; -&gt; ^?1386267<br />
-                          <strong>Type parameters:</strong> ^?1386267          </div>
+          <div class="tip" id="568">
+            <strong>Signature:</strong> v:Vector&lt;^?530032&gt; -&gt; ^?530032<br />
+                          <strong>Type parameters:</strong> ^?530032          </div>
         </td>
         <td class="xmldoc">
-          <p>Gets the squared L2 (Euclidean) norm of Vector <code>v</code></p>
+          <p>Gets the squared L2 (Euclidean) norm of Vector <code>v</code>. This is the same with <code>Vector.normSq</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1702', 1702)" onmouseover="showTip(event, '1702', 1702)">
+          <code onmouseout="hideTip(event, '569', 569)" onmouseover="showTip(event, '569', 569)">
             length(v)
           </code>
-          <div class="tip" id="1702">
-            <strong>Signature:</strong> v:Vector&lt;^?1386243&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386243          </div>
+          <div class="tip" id="569">
+            <strong>Signature:</strong> v:Vector&lt;^?530034&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530034          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the length of Vector <code>v</code></p>
@@ -301,12 +316,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1703', 1703)" onmouseover="showTip(event, '1703', 1703)">
+          <code onmouseout="hideTip(event, '570', 570)" onmouseover="showTip(event, '570', 570)">
             lpnorm(p v)
           </code>
-          <div class="tip" id="1703">
-            <strong>Signature:</strong> p:^?1386271 -&gt; v:Vector&lt;^?1386271&gt; -&gt; ^?1386271<br />
-                          <strong>Type parameters:</strong> ^?1386271          </div>
+          <div class="tip" id="570">
+            <strong>Signature:</strong> p:^?530036 -&gt; v:Vector&lt;^?530036&gt; -&gt; ^?530036<br />
+                          <strong>Type parameters:</strong> ^?530036          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the Lp norm (or p-norm) of Vector <code>v</code>, with the given <code>p</code></p>
@@ -316,12 +331,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1704', 1704)" onmouseover="showTip(event, '1704', 1704)">
+          <code onmouseout="hideTip(event, '571', 571)" onmouseover="showTip(event, '571', 571)">
             map(f v)
           </code>
-          <div class="tip" id="1704">
-            <strong>Signature:</strong> f:(^?1386245 -&gt; ^?1386246) -&gt; v:Vector&lt;^?1386245&gt; -&gt; Vector&lt;^?1386246&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386245, ^?1386246          </div>
+          <div class="tip" id="571">
+            <strong>Signature:</strong> f:(^?530038 -&gt; ^?530039) -&gt; v:Vector&lt;^?530038&gt; -&gt; Vector&lt;^?530039&gt;<br />
+                          <strong>Type parameters:</strong> ^?530038, ^?530039          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Vector whose elements are the results of applying function <code>f</code> to each element of Vector <code>v</code></p>
@@ -331,12 +346,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1705', 1705)" onmouseover="showTip(event, '1705', 1705)">
+          <code onmouseout="hideTip(event, '572', 572)" onmouseover="showTip(event, '572', 572)">
             mapi(f v)
           </code>
-          <div class="tip" id="1705">
-            <strong>Signature:</strong> f:(int -&gt; ^?1386248 -&gt; ^?1386249) -&gt; v:Vector&lt;^?1386248&gt; -&gt; Vector&lt;^?1386249&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386248, ^?1386249          </div>
+          <div class="tip" id="572">
+            <strong>Signature:</strong> f:(int -&gt; ^?530041 -&gt; ^?530042) -&gt; v:Vector&lt;^?530041&gt; -&gt; Vector&lt;^?530042&gt;<br />
+                          <strong>Type parameters:</strong> ^?530041, ^?530042          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Vector whose elements are the results of applying function <code>f</code> to each element of Vector <code>v</code>. An element index is also supplied to function <code>f</code>.</p>
@@ -346,12 +361,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1706', 1706)" onmouseover="showTip(event, '1706', 1706)">
+          <code onmouseout="hideTip(event, '573', 573)" onmouseover="showTip(event, '573', 573)">
             max(v)
           </code>
-          <div class="tip" id="1706">
-            <strong>Signature:</strong> v:Vector&lt;^?1386251&gt; -&gt; ^?1386251<br />
-                          <strong>Type parameters:</strong> ^?1386251          </div>
+          <div class="tip" id="573">
+            <strong>Signature:</strong> v:Vector&lt;^?530044&gt; -&gt; ^?530044<br />
+                          <strong>Type parameters:</strong> ^?530044          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the maximum of all elements of Vector <code>v</code></p>
@@ -361,12 +376,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1707', 1707)" onmouseover="showTip(event, '1707', 1707)">
+          <code onmouseout="hideTip(event, '574', 574)" onmouseover="showTip(event, '574', 574)">
             maxBy(f v)
           </code>
-          <div class="tip" id="1707">
-            <strong>Signature:</strong> f:(^?1386253 -&gt; &#39;?1386254) -&gt; v:Vector&lt;^?1386253&gt; -&gt; ^?1386253<br />
-                          <strong>Type parameters:</strong> ^?1386253, '?1386254          </div>
+          <div class="tip" id="574">
+            <strong>Signature:</strong> f:(^?530046 -&gt; &#39;?530047) -&gt; v:Vector&lt;^?530046&gt; -&gt; ^?530046<br />
+                          <strong>Type parameters:</strong> ^?530046, '?530047          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the maximum of all elements of Vector <code>v</code>, compared by using Operators.max on the result of function <code>f</code></p>
@@ -376,12 +391,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1708', 1708)" onmouseover="showTip(event, '1708', 1708)">
+          <code onmouseout="hideTip(event, '575', 575)" onmouseover="showTip(event, '575', 575)">
             min(v)
           </code>
-          <div class="tip" id="1708">
-            <strong>Signature:</strong> v:Vector&lt;^?1386256&gt; -&gt; ^?1386256<br />
-                          <strong>Type parameters:</strong> ^?1386256          </div>
+          <div class="tip" id="575">
+            <strong>Signature:</strong> v:Vector&lt;^?530049&gt; -&gt; ^?530049<br />
+                          <strong>Type parameters:</strong> ^?530049          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the minimum of all elements of Vector <code>v</code></p>
@@ -391,12 +406,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1709', 1709)" onmouseover="showTip(event, '1709', 1709)">
+          <code onmouseout="hideTip(event, '576', 576)" onmouseover="showTip(event, '576', 576)">
             minBy(f v)
           </code>
-          <div class="tip" id="1709">
-            <strong>Signature:</strong> f:(^?1386258 -&gt; &#39;?1386259) -&gt; v:Vector&lt;^?1386258&gt; -&gt; ^?1386258<br />
-                          <strong>Type parameters:</strong> ^?1386258, '?1386259          </div>
+          <div class="tip" id="576">
+            <strong>Signature:</strong> f:(^?530051 -&gt; &#39;?530052) -&gt; v:Vector&lt;^?530051&gt; -&gt; ^?530051<br />
+                          <strong>Type parameters:</strong> ^?530051, '?530052          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the minimum of all elements of Vector <code>v</code>, compared by using Operators.min on the result of function <code>f</code></p>
@@ -406,12 +421,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1710', 1710)" onmouseover="showTip(event, '1710', 1710)">
+          <code onmouseout="hideTip(event, '577', 577)" onmouseover="showTip(event, '577', 577)">
             norm(v)
           </code>
-          <div class="tip" id="1710">
-            <strong>Signature:</strong> v:Vector&lt;^?1386265&gt; -&gt; ^?1386265<br />
-                          <strong>Type parameters:</strong> ^?1386265          </div>
+          <div class="tip" id="577">
+            <strong>Signature:</strong> v:Vector&lt;^?530054&gt; -&gt; ^?530054<br />
+                          <strong>Type parameters:</strong> ^?530054          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the L2 (Euclidean) norm of Vector <code>v</code>. This is the same with <code>Vector.l2norm</code>.</p>
@@ -421,27 +436,27 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1711', 1711)" onmouseover="showTip(event, '1711', 1711)">
+          <code onmouseout="hideTip(event, '578', 578)" onmouseover="showTip(event, '578', 578)">
             normSq(v)
           </code>
-          <div class="tip" id="1711">
-            <strong>Signature:</strong> v:Vector&lt;^?1386269&gt; -&gt; ^?1386269<br />
-                          <strong>Type parameters:</strong> ^?1386269          </div>
+          <div class="tip" id="578">
+            <strong>Signature:</strong> v:Vector&lt;^?530056&gt; -&gt; ^?530056<br />
+                          <strong>Type parameters:</strong> ^?530056          </div>
         </td>
         <td class="xmldoc">
-          <p>Gets the squared L2 (Euclidean) norm of Vector <code>v</code>. This is the same with <code>Vector.l2normSq</code></p>
+          <p>Gets the squared L2 (Euclidean) norm of Vector <code>v</code>. This is the same with <code>Vector.l2normSq</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1712', 1712)" onmouseover="showTip(event, '1712', 1712)">
+          <code onmouseout="hideTip(event, '579', 579)" onmouseover="showTip(event, '579', 579)">
             ofSeq(s)
           </code>
-          <div class="tip" id="1712">
-            <strong>Signature:</strong> s:seq&lt;^?1386217&gt; -&gt; Vector&lt;^?1386217&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386217          </div>
+          <div class="tip" id="579">
+            <strong>Signature:</strong> s:seq&lt;^?529994&gt; -&gt; Vector&lt;^?529994&gt;<br />
+                          <strong>Type parameters:</strong> ^?529994          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Vector from sequence <code>s</code></p>
@@ -451,12 +466,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1713', 1713)" onmouseover="showTip(event, '1713', 1713)">
+          <code onmouseout="hideTip(event, '580', 580)" onmouseover="showTip(event, '580', 580)">
             reduce(f v)
           </code>
-          <div class="tip" id="1713">
-            <strong>Signature:</strong> f:(^?1386273 -&gt; ^?1386273 -&gt; ^?1386273) -&gt; v:Vector&lt;^?1386273&gt; -&gt; ^?1386273<br />
-                          <strong>Type parameters:</strong> ^?1386273          </div>
+          <div class="tip" id="580">
+            <strong>Signature:</strong> f:(^?530058 -&gt; ^?530058 -&gt; ^?530058) -&gt; v:Vector&lt;^?530058&gt; -&gt; ^?530058<br />
+                          <strong>Type parameters:</strong> ^?530058          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code>, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN, then computes f (... (f i0 i1)...) iN.</p>
@@ -466,12 +481,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1714', 1714)" onmouseover="showTip(event, '1714', 1714)">
+          <code onmouseout="hideTip(event, '581', 581)" onmouseover="showTip(event, '581', 581)">
             reduceBack(f v)
           </code>
-          <div class="tip" id="1714">
-            <strong>Signature:</strong> f:(^?1386275 -&gt; ^?1386275 -&gt; ^?1386275) -&gt; v:Vector&lt;^?1386275&gt; -&gt; ^?1386275<br />
-                          <strong>Type parameters:</strong> ^?1386275          </div>
+          <div class="tip" id="581">
+            <strong>Signature:</strong> f:(^?530060 -&gt; ^?530060 -&gt; ^?530060) -&gt; v:Vector&lt;^?530060&gt; -&gt; ^?530060<br />
+                          <strong>Type parameters:</strong> ^?530060          </div>
         </td>
         <td class="xmldoc">
           <p>Applies function <code>f</code> to each element of Vector <code>v</code>, threading an accumulator argument through the computation. If the input function is f and the elements are i0...iN then computes f i0 (...(f iN-1 iN)).</p>
@@ -481,12 +496,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1715', 1715)" onmouseover="showTip(event, '1715', 1715)">
+          <code onmouseout="hideTip(event, '582', 582)" onmouseover="showTip(event, '582', 582)">
             scan(f s v)
           </code>
-          <div class="tip" id="1715">
-            <strong>Signature:</strong> f:(&#39;?1386277 -&gt; ^?1386278 -&gt; &#39;?1386277) -&gt; s:&#39;?1386277 -&gt; v:Vector&lt;^?1386278&gt; -&gt; &#39;?1386277 []<br />
-                          <strong>Type parameters:</strong> '?1386277, ^?1386278          </div>
+          <div class="tip" id="582">
+            <strong>Signature:</strong> f:(&#39;?530062 -&gt; ^?530063 -&gt; &#39;?530062) -&gt; s:&#39;?530062 -&gt; v:Vector&lt;^?530063&gt; -&gt; &#39;?530062 []<br />
+                          <strong>Type parameters:</strong> '?530062, ^?530063          </div>
         </td>
         <td class="xmldoc">
           <p>Like Vector.fold, but returns the intermediate and final results</p>
@@ -496,12 +511,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1716', 1716)" onmouseover="showTip(event, '1716', 1716)">
+          <code onmouseout="hideTip(event, '583', 583)" onmouseover="showTip(event, '583', 583)">
             scanBack(f s v)
           </code>
-          <div class="tip" id="1716">
-            <strong>Signature:</strong> f:(&#39;?1386280 -&gt; ^?1386281 [] -&gt; ^?1386281 []) -&gt; s:&#39;?1386280 [] -&gt; v:Vector&lt;^?1386281&gt; -&gt; ^?1386281 [] []<br />
-                          <strong>Type parameters:</strong> '?1386280, ^?1386281          </div>
+          <div class="tip" id="583">
+            <strong>Signature:</strong> f:(&#39;?530065 -&gt; ^?530066 [] -&gt; ^?530066 []) -&gt; s:&#39;?530065 [] -&gt; v:Vector&lt;^?530066&gt; -&gt; ^?530066 [] []<br />
+                          <strong>Type parameters:</strong> '?530065, ^?530066          </div>
         </td>
         <td class="xmldoc">
           <p>Like Vector.foldBack, but returns both the intermediate and final results</p>
@@ -511,12 +526,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1717', 1717)" onmouseover="showTip(event, '1717', 1717)">
+          <code onmouseout="hideTip(event, '584', 584)" onmouseover="showTip(event, '584', 584)">
             split(n v)
           </code>
-          <div class="tip" id="1717">
-            <strong>Signature:</strong> n:int -&gt; v:Vector&lt;^?1386285&gt; -&gt; seq&lt;Vector&lt;^?1386285&gt;&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386285          </div>
+          <div class="tip" id="584">
+            <strong>Signature:</strong> n:int -&gt; v:Vector&lt;^?530068&gt; -&gt; seq&lt;Vector&lt;^?530068&gt;&gt;<br />
+                          <strong>Type parameters:</strong> ^?530068          </div>
         </td>
         <td class="xmldoc">
           <p>Returns a sequence of Vectors that are obtained by splitting Vector <code>v</code> into <code>n</code> subvectors of equal length. The length of Vector <code>v</code> must be an integer multiple of <code>n</code>, otherwise ArgumentException is raised.</p>
@@ -526,27 +541,27 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1718', 1718)" onmouseover="showTip(event, '1718', 1718)">
+          <code onmouseout="hideTip(event, '585', 585)" onmouseover="showTip(event, '585', 585)">
             standardBasis(n i)
           </code>
-          <div class="tip" id="1718">
-            <strong>Signature:</strong> n:int -&gt; i:int -&gt; Vector&lt;^?1386294&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386294          </div>
+          <div class="tip" id="585">
+            <strong>Signature:</strong> n:int -&gt; i:int -&gt; Vector&lt;^?530070&gt;<br />
+                          <strong>Type parameters:</strong> ^?530070          </div>
         </td>
         <td class="xmldoc">
-          <p>Creates a vector with <code>n</code> elements, where the <code>i</code>-th element is 1 and the rest of the elements are 0</p>
+          <p>Creates a Vector with <code>n</code> elements, where the <code>i</code>-th element is 1 and the rest of the elements are 0</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1719', 1719)" onmouseover="showTip(event, '1719', 1719)">
+          <code onmouseout="hideTip(event, '586', 586)" onmouseover="showTip(event, '586', 586)">
             sub(v s c)
           </code>
-          <div class="tip" id="1719">
-            <strong>Signature:</strong> v:Vector&lt;^?1386283&gt; -&gt; s:int -&gt; c:int -&gt; Vector&lt;^?1386283&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386283          </div>
+          <div class="tip" id="586">
+            <strong>Signature:</strong> v:Vector&lt;^?530072&gt; -&gt; s:int -&gt; c:int -&gt; Vector&lt;^?530072&gt;<br />
+                          <strong>Type parameters:</strong> ^?530072          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a new Vector that contains the given subrange of Vector <code>v</code>, specified by start index <code>s</code> and count <code>c</code></p>
@@ -556,12 +571,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1720', 1720)" onmouseover="showTip(event, '1720', 1720)">
+          <code onmouseout="hideTip(event, '587', 587)" onmouseover="showTip(event, '587', 587)">
             sum(v)
           </code>
-          <div class="tip" id="1720">
-            <strong>Signature:</strong> v:Vector&lt;^?1386287&gt; -&gt; ^?1386287<br />
-                          <strong>Type parameters:</strong> ^?1386287          </div>
+          <div class="tip" id="587">
+            <strong>Signature:</strong> v:Vector&lt;^?530074&gt; -&gt; ^?530074<br />
+                          <strong>Type parameters:</strong> ^?530074          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the sum of all the elements in Vector <code>v</code></p>
@@ -571,12 +586,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1721', 1721)" onmouseover="showTip(event, '1721', 1721)">
+          <code onmouseout="hideTip(event, '588', 588)" onmouseover="showTip(event, '588', 588)">
             sumBy(f v)
           </code>
-          <div class="tip" id="1721">
-            <strong>Signature:</strong> f:(^?1386289 -&gt; ^?1386290) -&gt; v:Vector&lt;^?1386289&gt; -&gt; ^?1386290<br />
-                          <strong>Type parameters:</strong> ^?1386289, ^?1386290          </div>
+          <div class="tip" id="588">
+            <strong>Signature:</strong> f:(^?530076 -&gt; ^?530077) -&gt; v:Vector&lt;^?530076&gt; -&gt; ^?530077<br />
+                          <strong>Type parameters:</strong> ^?530076, ^?530077          </div>
         </td>
         <td class="xmldoc">
           <p>Returns the sum of the results generated by applying function <code>f</code> to each element of Vector <code>v</code></p>
@@ -586,12 +601,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1722', 1722)" onmouseover="showTip(event, '1722', 1722)">
+          <code onmouseout="hideTip(event, '589', 589)" onmouseover="showTip(event, '589', 589)">
             toArray(v)
           </code>
-          <div class="tip" id="1722">
-            <strong>Signature:</strong> v:Vector&lt;^?1386219&gt; -&gt; ^?1386219 []<br />
-                          <strong>Type parameters:</strong> ^?1386219          </div>
+          <div class="tip" id="589">
+            <strong>Signature:</strong> v:Vector&lt;^?529996&gt; -&gt; ^?529996 []<br />
+                          <strong>Type parameters:</strong> ^?529996          </div>
         </td>
         <td class="xmldoc">
           <p>Converts Vector <code>v</code> to an array</p>
@@ -601,12 +616,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1723', 1723)" onmouseover="showTip(event, '1723', 1723)">
+          <code onmouseout="hideTip(event, '590', 590)" onmouseover="showTip(event, '590', 590)">
             toSeq(v)
           </code>
-          <div class="tip" id="1723">
-            <strong>Signature:</strong> v:Vector&lt;^?1386221&gt; -&gt; seq&lt;^?1386221&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386221          </div>
+          <div class="tip" id="590">
+            <strong>Signature:</strong> v:Vector&lt;^?529998&gt; -&gt; seq&lt;^?529998&gt;<br />
+                          <strong>Type parameters:</strong> ^?529998          </div>
         </td>
         <td class="xmldoc">
           <p>Returns Vector <code>v</code> as a sequence</p>
@@ -616,12 +631,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1724', 1724)" onmouseover="showTip(event, '1724', 1724)">
+          <code onmouseout="hideTip(event, '591', 591)" onmouseover="showTip(event, '591', 591)">
             unitVector(v)
           </code>
-          <div class="tip" id="1724">
-            <strong>Signature:</strong> v:Vector&lt;^?1386292&gt; -&gt; Vector&lt;^?1386292&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386292          </div>
+          <div class="tip" id="591">
+            <strong>Signature:</strong> v:Vector&lt;^?530079&gt; -&gt; Vector&lt;^?530079&gt;<br />
+                          <strong>Type parameters:</strong> ^?530079          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the unit vector codirectional with Vector <code>v</code></p>

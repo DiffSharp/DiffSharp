@@ -61,27 +61,27 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1669', 1669)" onmouseover="showTip(event, '1669', 1669)">
+          <code onmouseout="hideTip(event, '530', 530)" onmouseover="showTip(event, '530', 530)">
             cols(m)
           </code>
-          <div class="tip" id="1669">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386313&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386313          </div>
+          <div class="tip" id="530">
+            <strong>Signature:</strong> m:Matrix&lt;^?530129&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530129          </div>
         </td>
         <td class="xmldoc">
-          <p>Returns the number of columns in Matrix <code>m</code></p>
+          <p>Returns the number of columns in Matrix <code>m</code>. This is the same with <code>Matrix.length2</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1670', 1670)" onmouseover="showTip(event, '1670', 1670)">
+          <code onmouseout="hideTip(event, '531', 531)" onmouseover="showTip(event, '531', 531)">
             copy(m)
           </code>
-          <div class="tip" id="1670">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386297&gt; -&gt; Matrix&lt;^?1386297&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386297          </div>
+          <div class="tip" id="531">
+            <strong>Signature:</strong> m:Matrix&lt;^?530131&gt; -&gt; Matrix&lt;^?530131&gt;<br />
+                          <strong>Type parameters:</strong> ^?530131          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a copy of Matrix <code>m</code></p>
@@ -91,12 +91,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1671', 1671)" onmouseover="showTip(event, '1671', 1671)">
+          <code onmouseout="hideTip(event, '532', 532)" onmouseover="showTip(event, '532', 532)">
             create(m n v)
           </code>
-          <div class="tip" id="1671">
-            <strong>Signature:</strong> m:int -&gt; n:int -&gt; v:^T -&gt; Matrix&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="532">
+            <strong>Signature:</strong> m:int -&gt; n:int -&gt; v:^?530133 -&gt; Matrix&lt;^?530133&gt;<br />
+                          <strong>Type parameters:</strong> ^?530133          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix with <code>m</code> rows, <code>n</code> columns, and all entries having value <code>v</code></p>
@@ -106,12 +106,27 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1672', 1672)" onmouseover="showTip(event, '1672', 1672)">
+          <code onmouseout="hideTip(event, '533', 533)" onmouseover="showTip(event, '533', 533)">
+            createRows(m v)
+          </code>
+          <div class="tip" id="533">
+            <strong>Signature:</strong> m:int -&gt; v:^?530135 [] -&gt; Matrix&lt;^?530135&gt;<br />
+                          <strong>Type parameters:</strong> ^?530135          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a Matrix with <code>m</code> rows and all rows equal to array <code>v</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '534', 534)" onmouseover="showTip(event, '534', 534)">
             det(m)
           </code>
-          <div class="tip" id="1672">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386301&gt; -&gt; ^?1386301<br />
-                          <strong>Type parameters:</strong> ^?1386301          </div>
+          <div class="tip" id="534">
+            <strong>Signature:</strong> m:Matrix&lt;^?530137&gt; -&gt; ^?530137<br />
+                          <strong>Type parameters:</strong> ^?530137          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the determinant of Matrix <code>m</code></p>
@@ -121,12 +136,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1673', 1673)" onmouseover="showTip(event, '1673', 1673)">
+          <code onmouseout="hideTip(event, '535', 535)" onmouseover="showTip(event, '535', 535)">
             eigenvalues(m)
           </code>
-          <div class="tip" id="1673">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386303&gt; -&gt; ^?1386303 []<br />
-                          <strong>Type parameters:</strong> ^?1386303          </div>
+          <div class="tip" id="535">
+            <strong>Signature:</strong> m:Matrix&lt;^?530141&gt; -&gt; ^?530141 []<br />
+                          <strong>Type parameters:</strong> ^?530141          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the eigenvalues of Matrix <code>m</code></p>
@@ -136,12 +151,27 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1674', 1674)" onmouseover="showTip(event, '1674', 1674)">
+          <code onmouseout="hideTip(event, '536', 536)" onmouseover="showTip(event, '536', 536)">
+            identity(m)
+          </code>
+          <div class="tip" id="536">
+            <strong>Signature:</strong> m:int -&gt; Matrix&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates the identity matrix with <code>m</code> rows and columns</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '537', 537)" onmouseover="showTip(event, '537', 537)">
             init(m n f)
           </code>
-          <div class="tip" id="1674">
-            <strong>Signature:</strong> m:int -&gt; n:int -&gt; f:(int -&gt; int -&gt; ^T) -&gt; Matrix&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="537">
+            <strong>Signature:</strong> m:int -&gt; n:int -&gt; f:(int -&gt; int -&gt; ^?530143) -&gt; Matrix&lt;^?530143&gt;<br />
+                          <strong>Type parameters:</strong> ^?530143          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix with <code>m</code> rows, <code>n</code> columns and a generator function <code>f</code> to compute the entries</p>
@@ -151,12 +181,42 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1675', 1675)" onmouseover="showTip(event, '1675', 1675)">
+          <code onmouseout="hideTip(event, '538', 538)" onmouseover="showTip(event, '538', 538)">
+            initRows(m f)
+          </code>
+          <div class="tip" id="538">
+            <strong>Signature:</strong> m:int -&gt; f:(int -&gt; ^?530145 []) -&gt; Matrix&lt;^?530145&gt;<br />
+                          <strong>Type parameters:</strong> ^?530145          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a Matrix with <code>m</code> rows and a generator function <code>f</code> that gives each row as a an array</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '539', 539)" onmouseover="showTip(event, '539', 539)">
+            initSymmetric(m f)
+          </code>
+          <div class="tip" id="539">
+            <strong>Signature:</strong> m:int -&gt; f:(int -&gt; int -&gt; ^T) -&gt; Matrix&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a square Matrix with <code>m</code> rows and columns and a generator function <code>f</code> to compute the elements. Function <code>f</code> is used only for populating the diagonal and the upper triangular part of the Matrix, the lower triangular part will be the reflection.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '540', 540)" onmouseover="showTip(event, '540', 540)">
             inverse(m)
           </code>
-          <div class="tip" id="1675">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386307&gt; -&gt; Matrix&lt;^?1386307&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386307          </div>
+          <div class="tip" id="540">
+            <strong>Signature:</strong> m:Matrix&lt;^?530149&gt; -&gt; Matrix&lt;^?530149&gt;<br />
+                          <strong>Type parameters:</strong> ^?530149          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the inverse of Matrix <code>m</code></p>
@@ -166,42 +226,42 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1676', 1676)" onmouseover="showTip(event, '1676', 1676)">
+          <code onmouseout="hideTip(event, '541', 541)" onmouseover="showTip(event, '541', 541)">
             length1(m)
           </code>
-          <div class="tip" id="1676">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386311&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386311          </div>
+          <div class="tip" id="541">
+            <strong>Signature:</strong> m:Matrix&lt;^?530151&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530151          </div>
         </td>
         <td class="xmldoc">
-          <p>Returns the number of rows in Matrix <code>m</code></p>
+          <p>Returns the number of rows in Matrix <code>m</code>. This is the same with <code>Matrix.rows</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1677', 1677)" onmouseover="showTip(event, '1677', 1677)">
+          <code onmouseout="hideTip(event, '542', 542)" onmouseover="showTip(event, '542', 542)">
             length2(m)
           </code>
-          <div class="tip" id="1677">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386315&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386315          </div>
+          <div class="tip" id="542">
+            <strong>Signature:</strong> m:Matrix&lt;^?530153&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530153          </div>
         </td>
         <td class="xmldoc">
-          <p>Returns the number of columns in Matrix <code>m</code></p>
+          <p>Returns the number of columns in Matrix <code>m</code>. This is the same with <code>Matrix.cols</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1678', 1678)" onmouseover="showTip(event, '1678', 1678)">
+          <code onmouseout="hideTip(event, '543', 543)" onmouseover="showTip(event, '543', 543)">
             map(f m)
           </code>
-          <div class="tip" id="1678">
-            <strong>Signature:</strong> f:(^?1386317 -&gt; ^?1386318) -&gt; m:Matrix&lt;^?1386317&gt; -&gt; Matrix&lt;^?1386318&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386317, ^?1386318          </div>
+          <div class="tip" id="543">
+            <strong>Signature:</strong> f:(^?530155 -&gt; ^?530156) -&gt; m:Matrix&lt;^?530155&gt; -&gt; Matrix&lt;^?530156&gt;<br />
+                          <strong>Type parameters:</strong> ^?530155, ^?530156          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix whose entries are the results of applying function <code>f</code> to each entry of Matrix <code>m</code></p>
@@ -211,12 +271,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1679', 1679)" onmouseover="showTip(event, '1679', 1679)">
+          <code onmouseout="hideTip(event, '544', 544)" onmouseover="showTip(event, '544', 544)">
             mapi(f m)
           </code>
-          <div class="tip" id="1679">
-            <strong>Signature:</strong> f:(int -&gt; ^?1386320 -&gt; ^?1386321) -&gt; m:Matrix&lt;^?1386320&gt; -&gt; Matrix&lt;^?1386321&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386320, ^?1386321          </div>
+          <div class="tip" id="544">
+            <strong>Signature:</strong> f:(int -&gt; int -&gt; ^?530158 -&gt; ^?530159) -&gt; m:Matrix&lt;^?530158&gt; -&gt; Matrix&lt;^?530159&gt;<br />
+                          <strong>Type parameters:</strong> ^?530158, ^?530159          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix whose entries are the results of applying function <code>f</code> to each entry of Matrix <code>m</code>. An element index is also supplied to function <code>f</code>.</p>
@@ -226,12 +286,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1680', 1680)" onmouseover="showTip(event, '1680', 1680)">
-            ofArray2d(m)
+          <code onmouseout="hideTip(event, '545', 545)" onmouseover="showTip(event, '545', 545)">
+            ofArray2D(m)
           </code>
-          <div class="tip" id="1680">
-            <strong>Signature:</strong> m:^T [,] -&gt; Matrix&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="545">
+            <strong>Signature:</strong> m:^?530121 [,] -&gt; Matrix&lt;^?530121&gt;<br />
+                          <strong>Type parameters:</strong> ^?530121          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix from 2d array <code>m</code></p>
@@ -241,12 +301,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1681', 1681)" onmouseover="showTip(event, '1681', 1681)">
+          <code onmouseout="hideTip(event, '546', 546)" onmouseover="showTip(event, '546', 546)">
             ofSeq(s)
           </code>
-          <div class="tip" id="1681">
-            <strong>Signature:</strong> s:seq&lt;seq&lt;^T&gt;&gt; -&gt; Matrix&lt;^T&gt;<br />
-                          <strong>Type parameters:</strong> ^T          </div>
+          <div class="tip" id="546">
+            <strong>Signature:</strong> s:seq&lt;seq&lt;^?530123&gt;&gt; -&gt; Matrix&lt;^?530123&gt;<br />
+                          <strong>Type parameters:</strong> ^?530123          </div>
         </td>
         <td class="xmldoc">
           <p>Creates a Matrix from sequence <code>s</code></p>
@@ -256,27 +316,42 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1682', 1682)" onmouseover="showTip(event, '1682', 1682)">
+          <code onmouseout="hideTip(event, '547', 547)" onmouseover="showTip(event, '547', 547)">
             rows(m)
           </code>
-          <div class="tip" id="1682">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386309&gt; -&gt; int<br />
-                          <strong>Type parameters:</strong> ^?1386309          </div>
+          <div class="tip" id="547">
+            <strong>Signature:</strong> m:Matrix&lt;^?530161&gt; -&gt; int<br />
+                          <strong>Type parameters:</strong> ^?530161          </div>
         </td>
         <td class="xmldoc">
-          <p>Returns the number of rows in Matrix <code>m</code></p>
+          <p>Returns the number of rows in Matrix <code>m</code>. This is the same with <code>Matrix.length1</code>.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1683', 1683)" onmouseover="showTip(event, '1683', 1683)">
+          <code onmouseout="hideTip(event, '548', 548)" onmouseover="showTip(event, '548', 548)">
+            solve(a b)
+          </code>
+          <div class="tip" id="548">
+            <strong>Signature:</strong> a:Matrix&lt;^T&gt; -&gt; b:Vector&lt;^T&gt; -&gt; Vector&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Solves a system of linear equations ax = b, where the coefficients are given in Matrix <code>a</code> and the result vector is Vector <code>b</code>. The returned vector will correspond to x.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '549', 549)" onmouseover="showTip(event, '549', 549)">
             toArray(m)
           </code>
-          <div class="tip" id="1683">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386329&gt; -&gt; ^?1386329 [,]<br />
-                          <strong>Type parameters:</strong> ^?1386329          </div>
+          <div class="tip" id="549">
+            <strong>Signature:</strong> m:Matrix&lt;^?530127&gt; -&gt; ^?530127 [] []<br />
+                          <strong>Type parameters:</strong> ^?530127          </div>
         </td>
         <td class="xmldoc">
           <p>Converts Matrix <code>m</code> to a jagged array, e.g. from Matrix<float> to float[][]</p>
@@ -286,12 +361,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1684', 1684)" onmouseover="showTip(event, '1684', 1684)">
+          <code onmouseout="hideTip(event, '550', 550)" onmouseover="showTip(event, '550', 550)">
             toArray2D(m)
           </code>
-          <div class="tip" id="1684">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386327&gt; -&gt; ^?1386327 [,]<br />
-                          <strong>Type parameters:</strong> ^?1386327          </div>
+          <div class="tip" id="550">
+            <strong>Signature:</strong> m:Matrix&lt;^?530125&gt; -&gt; ^?530125 [,]<br />
+                          <strong>Type parameters:</strong> ^?530125          </div>
         </td>
         <td class="xmldoc">
           <p>Converts Matrix <code>m</code> to a 2d array, e.g. from Matrix<float> to float[,]</p>
@@ -301,12 +376,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1685', 1685)" onmouseover="showTip(event, '1685', 1685)">
+          <code onmouseout="hideTip(event, '551', 551)" onmouseover="showTip(event, '551', 551)">
             trace(m)
           </code>
-          <div class="tip" id="1685">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386331&gt; -&gt; ^?1386331<br />
-                          <strong>Type parameters:</strong> ^?1386331          </div>
+          <div class="tip" id="551">
+            <strong>Signature:</strong> m:Matrix&lt;^?530165&gt; -&gt; ^?530165<br />
+                          <strong>Type parameters:</strong> ^?530165          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the trace of Matrix <code>m</code></p>
@@ -316,12 +391,12 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '1686', 1686)" onmouseover="showTip(event, '1686', 1686)">
+          <code onmouseout="hideTip(event, '552', 552)" onmouseover="showTip(event, '552', 552)">
             transpose(m)
           </code>
-          <div class="tip" id="1686">
-            <strong>Signature:</strong> m:Matrix&lt;^?1386333&gt; -&gt; Matrix&lt;^?1386333&gt;<br />
-                          <strong>Type parameters:</strong> ^?1386333          </div>
+          <div class="tip" id="552">
+            <strong>Signature:</strong> m:Matrix&lt;^?530167&gt; -&gt; Matrix&lt;^?530167&gt;<br />
+                          <strong>Type parameters:</strong> ^?530167          </div>
         </td>
         <td class="xmldoc">
           <p>Gets the transpose of Matrix <code>m</code></p>
