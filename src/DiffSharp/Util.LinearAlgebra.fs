@@ -36,7 +36,7 @@
 
 #light
 
-/// Lightweight generic Vector and Matrix types
+/// Generic Vector and Matrix types
 module DiffSharp.Util.LinearAlgebra
 
 open DiffSharp.Util.General
@@ -352,7 +352,7 @@ module Vector =
     let inline unitVector (v:Vector<_>) = v.GetUnitVector()
 
 
-/// Lightweight generic matrix type
+/// Generic matrix type
 [<NoEquality; NoComparison>]
 type Matrix<'T when 'T : (static member Zero : 'T)
                 and 'T : (static member One : 'T)
