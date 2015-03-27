@@ -151,9 +151,9 @@ module DualAdjOps =
     /// Make DualAdj, with primal value `p` and tangent 0
     let inline dualAdj p = DualAdj(adj p, adj 0.)
     /// Make DualAdj, with primal value `p` and tangent value `t`
-    let inline dualAdjSet (p, t) = DualAdj(adj p, adj t)
+    let inline dualAdjPT p t = DualAdj(adj p, adj t)
     /// Make active DualAdj (i.e. variable of differentiation), with primal value `p` and tangent 1
-    let inline dualAdjAct p = DualAdj(adj p, adj 1.)
+    let inline dualAdjP1 p = DualAdj(adj p, adj 1.)
     /// Get the primal value of a DualAdj
     let inline primal (DualAdj(p, _)) = p.P
     /// Get the adjoint of the primal value of a DualAdj
@@ -171,16 +171,16 @@ module DualAdjOps =
 module ForwardReverseOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`. Computed using forward mode AD.
     let inline diff' f (x:float) =
-        dualAdjAct x |> f |> tuple
+        x |> dualAdjP1 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`. Computed using forward mode AD.
     let inline diff f (x:float) =
-        dualAdjAct x |> f |> tangent
+        x |> dualAdjP1 |> f |> tangent
 
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`. Computed using reverse-on-forward mode AD.
     let inline diff2'' f (x:float) =
         Trace.Clear()
-        let xa = dualAdjAct x
+        let xa = dualAdjP1 x
         let z:DualAdj = f xa
         z.TA <- 1.
         Trace.ReverseSweep()
@@ -196,7 +196,7 @@ module ForwardReverseOps =
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
     let inline gradv' f (x:float[]) (v:float[]) =
-        Array.zip x v |> Array.map dualAdjSet |> f |> tuple
+        Array.map2 dualAdjPT x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
     let inline gradv f x v =
@@ -218,7 +218,7 @@ module ForwardReverseOps =
     /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Computed using reverse-on-forward mode AD.
     let inline gradhessianv' f (x:float[]) (v:float[]) =
         Trace.Clear()
-        let xa = Array.map dualAdjSet (Array.zip x v)
+        let xa = Array.map2 dualAdjPT x v
         let z:DualAdj = f xa
         z.TA <- 1.
         Trace.ReverseSweep()
@@ -264,7 +264,7 @@ module ForwardReverseOps =
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
     let inline jacobianv' f (x:float[]) (v:float[]) =
-        Array.zip x v |> Array.map dualAdjSet |> f |> Array.map tuple |> Array.unzip
+        Array.map2 dualAdjPT x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Computed using forward mode AD.
     let inline jacobianv f x v =
@@ -273,7 +273,7 @@ module ForwardReverseOps =
     /// Original value, Jacobian-vector product, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned 3-tuple, the first is the original value of function `f` at point `x`, the second is the Jacobian-vector product of `f` at point `x` along vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
     let inline jacobianvTv'' f (x:float[]) (v1:float[]) =
         Trace.Clear()
-        let xa = Array.map dualAdjSet (Array.zip x v1)
+        let xa = Array.map2 dualAdjPT x v1
         let z:DualAdj[] = f xa
         let forwardTrace = Trace.Copy()
         let r1 = Array.map primal z

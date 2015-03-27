@@ -145,9 +145,9 @@ module DualOps =
     /// Make Dual, with primal value `p` and tangent 0
     let inline dual p = Dual(float p, 0.)
     /// Make Dual, with primal value `p` and tangent value `t`
-    let inline dualSet (p, t) = Dual(float p, float t)
+    let inline dualPT p t = Dual(float p, float t)
     /// Make active Dual (i.e. variable of differentiation), with primal value `p` and tangent 1
-    let inline dualAct p = Dual(float p, 1.)
+    let inline dualP1 p = Dual(float p, 1.)
     /// Get the primal value of a Dual
     let inline primal (Dual(p, _)) = p
     /// Get the tangent value of a Dual
@@ -161,15 +161,15 @@ module DualOps =
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
-        dualAct x |> f |> tuple
+        x |> dualP1 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f (x:float) =
-        dualAct x |> f |> tangent
+        x |> dualP1 |> f |> tangent
        
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f (x:float[]) (v:float[]) =
-        Array.zip x v |> Array.map dualSet |> f |> tuple
+        Array.map2 dualPT x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -186,7 +186,7 @@ module ForwardOps =
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f (x:float[]) (v:float[]) = 
-        Array.zip x v |> Array.map dualSet |> f |> Array.map tuple |> Array.unzip
+        Array.map2 dualPT x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f (x:float[]) (v:float[]) = 

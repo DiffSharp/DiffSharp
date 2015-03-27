@@ -149,11 +149,11 @@ module DualGOps =
     /// Make DualG, with primal value `p`, gradient dimension `m`, and all gradient components 0
     let inline dualG p m = DualG(float p, Vector.create m 0.)
     /// Make DualG, with primal value `p` and gradient array `g`
-    let inline dualGSet (p, g) = DualG(float p, vector g)
+    let inline dualGPT p g = DualG(float p, vector g)
     /// Make active DualG (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the component with index `i` having value 1, and the rest of the components 0
-    let inline dualGAct p m i = DualG(float p, Vector.standardBasis m i)
+    let inline dualGP1 p m i = DualG(float p, Vector.standardBasis m i)
     /// Make an array of active DualG, with primal values given in array `x`. For a DualG with index _i_, the gradient is the unit vector with 1 in the _i_th place.
-    let inline dualGActArray (x:_[]) = Array.init x.Length (fun i -> dualGAct x.[i] x.Length i)
+    let inline dualGP1Array (x:_[]) = Array.init x.Length (fun i -> dualGP1 x.[i] x.Length i)
     /// Get the primal value of a DualG
     let inline primal (DualG(p, _)) = p
     /// Get the gradient array of a DualG
@@ -171,15 +171,15 @@ module DualGOps =
 module ForwardGOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
-        dualGAct x 1 0 |> f |> tuple
+        dualGP1 x 1 0 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f (x:float) =
-        dualGAct x 1 0 |> f |> tangent
+        dualGP1 x 1 0 |> f |> tangent
        
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f (x:float[]) =
-        dualGActArray x |> f |> tupleG
+        dualGP1Array x |> f |> tupleG
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad f x =
@@ -187,7 +187,7 @@ module ForwardGOps =
     
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f (x:float[]) =
-        let a = dualGActArray x |> f
+        let a = dualGP1Array x |> f
         (Array.map primal a, array2D (Array.init a.Length (fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`

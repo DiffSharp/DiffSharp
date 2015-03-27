@@ -14,7 +14,7 @@ open System.Runtime.InteropServices;
 [<assembly: AssemblyConfiguration("Debug")>]
 [<assembly: AssemblyCompany("National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
 [<assembly: AssemblyProduct("DiffSharp")>]
-[<assembly: AssemblyCopyright("Copyright (c) 2014, 2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
+[<assembly: AssemblyCopyright("Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
  

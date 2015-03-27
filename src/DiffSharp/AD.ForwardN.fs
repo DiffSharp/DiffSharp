@@ -148,9 +148,9 @@ module DualNOps =
     /// Make DualN, with primal value `p` and tangent 0
     let inline dualN p = DualN.Create(float p, 0.)
     /// Make DualN, with primal value `p` and tangent value `t`
-    let inline dualNSet (p, t) = DualN.Create(float p, float t)
+    let inline dualNPT p t = DualN.Create(float p, float t)
     /// Make active DualN (i.e. variable of differentiation), with primal value `p` and tangent 1
-    let inline dualNAct p = DualN.Create(float p, 1.)
+    let inline dualNP1 p = DualN.Create(float p, 1.)
     /// Get the primal value of a DualN
     let inline primal (DualN(p, _)) = p
     /// Get the tangent value of a DualN
@@ -178,37 +178,37 @@ module DualNOps =
 module ForwardNOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
-        dualNAct x |> f |> tuple
+        x |> dualNP1 |> f |> tuple
     
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f (x:float) =
-        dualNAct x |> f |> tangent
+        x |> dualNP1 |> f |> tangent
 
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2' f (x:float) =
-        dualNAct x |> f |> fun a -> (primal a, tangent2 a)
+        x |> dualNP1 |> f |> fun a -> (primal a, tangent2 a)
         
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f (x:float) =
-        dualNAct x |> f |> tangent2
+        x |> dualNP1 |> f |> tangent2
 
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f (x:float) =
-        dualNAct x |> f |> fun a -> (primal a, tangent a, tangent2 a)
+        x |> dualNP1 |> f |> fun a -> (primal a, tangent a, tangent2 a)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn n f (x:float) =
-        dualNAct x |> f |> diffLazy n |> primal
+        x |> dualNP1 |> f |> diffLazy n |> primal
 
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f (x:float) =
-        let orig = x |> dualNAct |> f
+        let orig = x |> dualNP1 |> f
         let d = orig |> diffLazy n
         (primal orig, primal d)
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f (x:float[]) (v:float[]) =
-        Array.zip x v |> Array.map dualNSet |> f |> tuple
+        Array.map2 dualNPT x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -227,8 +227,7 @@ module ForwardNOps =
     let inline laplacian' f (x:float[]) =
         let a = Array.init x.Length (fun i ->
                                         standardBasis x.Length i
-                                        |> Array.zip x
-                                        |> Array.map dualNSet
+                                        |> Array.map2 dualNPT x
                                         |> f)
         (primal a.[0], Array.sumBy tangent2 a)
 
@@ -238,7 +237,7 @@ module ForwardNOps =
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f (x:float[]) (v:float[]) = 
-        Array.zip x v |> Array.map dualNSet |> f |> Array.map tuple |> Array.unzip
+        Array.map2 dualNPT x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v = 

@@ -146,11 +146,11 @@ module Dual2Ops =
     /// Make Dual2, with primal value `p`, tangent 0, and tangent-of-tangent 0
     let inline dual2 p = Dual2(float p, 0., 0.)
     /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent 0
-    let inline dual2Set (p, t) = Dual2(float p, float t, 0.)
+    let inline dual2PT p t = Dual2(float p, float t, 0.)
     /// Make Dual2, with primal value `p`, tangent value `t`, and tangent-of-tangent value `t2`
-    let inline dual2Set2 (p, t, t2) = Dual2(float p, float t, float t2)
+    let inline dual2PTT2 p t t2 = Dual2(float p, float t, float t2)
     /// Make active Dual2 (i.e. variable of differentiation), with primal value `p`, tangent 1, and tangent-of-tangent 0
-    let inline dual2Act p = Dual2(float p, 1., 0.)
+    let inline dual2P1 p = Dual2(float p, 1., 0.)
     /// Make a list of Dual2, given a list of primal values `p`
     let inline dual2List p = List.map dual2 p
     /// Get the primal value of a Dual2
@@ -172,27 +172,27 @@ module Dual2Ops =
 module Forward2Ops =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
-        dual2Act x |> f |> tuple
+        x |> dual2P1 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f (x:float) =
-        dual2Act x |> f |> tangent
+        x |> dual2P1 |> f |> tangent
 
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2' f (x:float) =
-        dual2Act x |> f |> tuple2
+        x |> dual2P1 |> f |> tuple2
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f (x:float) =
-        dual2Act x |> f |> tangent2
+        x |> dual2P1 |> f |> tangent2
     
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f (x:float) =
-        dual2Act x |> f |> tupleAll
+        x |> dual2P1 |> f |> tupleAll
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f (x:float[]) (v:float[]) =
-        Array.zip x v |> Array.map dual2Set |> f |> tuple
+        Array.map2 dual2PT x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -211,8 +211,7 @@ module Forward2Ops =
     let inline laplacian' f (x:float[]) =
         let a = Array.init x.Length (fun i ->
                                         standardBasis x.Length i
-                                        |> Array.zip x
-                                        |> Array.map dual2Set
+                                        |> Array.map2 dual2PT x 
                                         |> f)
         (primal a.[0], Array.sumBy tangent2 a)
 
@@ -222,7 +221,7 @@ module Forward2Ops =
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f (x:float[]) (v:float[]) = 
-        Array.zip x v |> Array.map dual2Set |> f |> Array.map tuple |> Array.unzip
+        Array.map2 dual2PT x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v = 

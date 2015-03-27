@@ -150,11 +150,11 @@ module DualGHOps =
     /// Make DualGH, with primal value `p`, gradient dimension `m`, and all gradient and Hessian components 0
     let inline dualGH p m = DualGH(float p, Vector.create m 0., Matrix.create m m 0.)
     /// Make DualGH, with primal value `p`, gradient array `g`, and Hessian 2d array `h`
-    let inline dualGHSet (p, g, h:float[,]) = DualGH(float p, vector g, Matrix.ofArray2D h)
+    let inline dualGHPT (p, g, h:float[,]) = DualGH(float p, vector g, Matrix.ofArray2D h)
     /// Make active DualGH (i.e. variable of differentiation), with primal value `p`, gradient dimension `m`, the gradient component with index `i` having value 1, the rest of the gradient components 0, and Hessian components 0
-    let inline dualGHAct p m i = DualGH(float p, Vector.standardBasis m i, Matrix.create m m 0.)
+    let inline dualGHP1 p m i = DualGH(float p, Vector.standardBasis m i, Matrix.create m m 0.)
     /// Make an array of active DualGH, with primal values given in array `x`. For a DualGH with index _i_, the gradient is the unit vector with 1 in the _i_th place, and the Hessian components are 0.
-    let inline dualGHActArray (x:_[]) = Array.init x.Length (fun i -> dualGHAct x.[i] x.Length i)
+    let inline dualGHP1Array (x:_[]) = Array.init x.Length (fun i -> dualGHP1 x.[i] x.Length i)
     /// Get the primal value of a DualGH
     let inline primal (DualGH(p, _, _)) = p
     /// Get the gradient array of a DualGH
@@ -176,7 +176,7 @@ module DualGHOps =
 module ForwardGHOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
-        dualGHAct x 1 0 |> f |> tuple
+        dualGHP1 x 1 0 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
@@ -184,7 +184,7 @@ module ForwardGHOps =
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f (x:float[]) =
-        dualGHActArray x |> f |> tupleG
+        dualGHP1Array x |> f |> tupleG
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad f x =
@@ -192,7 +192,7 @@ module ForwardGHOps =
     
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f (x:float[]) =
-        let a = dualGHActArray x |> f
+        let a = dualGHP1Array x |> f
         (Array.map primal a, array2D (Array.init a.Length (fun i -> gradient a.[i])))
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
@@ -209,7 +209,7 @@ module ForwardGHOps =
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f (x:float[]) =
-        dualGHActArray x |> f |> tupleH
+        dualGHP1Array x |> f |> tupleH
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
@@ -217,7 +217,7 @@ module ForwardGHOps =
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian' f (x:float[]) =
-        dualGHActArray x |> f |> tupleGH
+        dualGHP1Array x |> f |> tupleGH
     
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
