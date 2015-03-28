@@ -124,7 +124,7 @@ let main argv =
 
     printfn "DiffSharp Benchmarks"
 
-    printfn "Copyright (c) 2014--2015, National University of Ireland Maynooth."
+    printfn "Copyright (c) 2014, 2015, National University of Ireland Maynooth."
     printfn "Written by: Atilim Gunes Baydin, Barak A. Pearlmutter\n"
 
     let ops = parseArgs (List.ofArray argv)
