@@ -265,7 +265,11 @@ type GlobalTagger() =
 
 [<AutoOpen>]
 module DOps =
-    let inline dual p = Df(float p)
+    let inline dual p =
+        match box p with
+        | :? float as p -> Df(p)
+        | :? int as p -> Df(float p)
+        | :? D as p -> p
     let inline dualIPT i p t =
         match box p with
         | :? float as p ->
@@ -324,11 +328,24 @@ module ForwardOps =
     let inline diff2' f x =
         diff2'' f x |> fsttrd
 
+    let diffn n f x =
+        if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
+        elif n = 0 then x |> dual |> f
+        else
+            let rec d n f =
+                match n with
+                | 1 -> f
+                | _ -> d (n - 1) (diff f)
+            x |> dualP1 |> (d n f) |> tangent
+
+    let diffn' n f x =
+        (diffn 0 f x, diffn n f x)
+
     let inline gradv' f x v =
         let i = GlobalTagger.Next
         Array.map2 (dualIPT i) x v |> f |> tuple
 
-    let inline gradv f x v=
+    let inline gradv f x v =
         gradv' f x v |> snd
 
     let inline grad' f (x:_[]) =
@@ -389,6 +406,8 @@ module Vector =
     let inline diff2' (f:D->D) x = ForwardOps.diff2' f x
     let inline diff2 (f:D->D) x = ForwardOps.diff2 f x
     let inline diff2'' (f:D->D) x = ForwardOps.diff2'' f x
+    let inline diffn' (n:int) (f:D->D) x = ForwardOps.diffn' n f x 
+    let inline diffn (n:int) (f:D->D) x = ForwardOps.diffn n f x
     let inline gradv' (f:Vector<D>->D) x v = ForwardOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
     let inline gradv (f:Vector<D>->D) x v = ForwardOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     let inline grad' (f:Vector<D>->D) x = ForwardOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
