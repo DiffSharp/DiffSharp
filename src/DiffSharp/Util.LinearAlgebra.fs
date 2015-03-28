@@ -298,6 +298,8 @@ module Vector =
     let inline foldBack f s (v:Vector<_>) = v |> toArray |> Array.foldBack f s
     /// Tests if all elements of Vector `v` satisfy predicate `p`
     let inline forall p (v:Vector<_>) = v |> toArray |> Array.forall p
+    /// Returns the value of the element with the given index `i`
+    let inline get i (v:Vector<_>) = v.[i]
     /// Creates a Vector with dimension `n` and a generator function `f` to compute the elements
     let inline init n f = Vector (Array.init n f)
     /// Applies function `f` to each element of Vector `v`
@@ -700,6 +702,8 @@ module Matrix =
         Matrix (Array2D.init m m (fun i j -> if i = j then LanguagePrimitives.GenericOne<'T> else LanguagePrimitives.GenericZero<'T>))
     /// Gets the eigenvalues of Matrix `m`
     let inline eigenvalues (m:Matrix<_>) = m.GetEigenvalues()
+    /// Returns the value of the entry with the given indices `i` and `j`
+    let inline get i j (m:Matrix<_>) = m.[i, j]
     /// Creates a Matrix with `m` rows, `n` columns and a generator function `f` to compute the entries
     let inline init m n f = Matrix (Array2D.init m n f)
     /// Creates a Matrix with `m` rows and a generator function `f` that gives each row as a an array
