@@ -122,12 +122,23 @@ let deps = eps * 2.
 /// Square of eps
 let epssq = eps * eps
 
-/// Given a vector-to-scalar function `f` and an evaluation point `x`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
-let inline fTransform i f x =
+/// Vector-to-scalar to scalar-to-scalar function transform. Given a vector-to-scalar function `f` and an evaluation point `x`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
+let inline fVStoSS i f x =
     let xc = Array.copy x
     fun xx ->
         xc.[i] <- xx
         f xc
+
+/// Vector-to-vector to scalar-to-vector function transform. Given a vector-to-vector function `f` and an evaluation point `x`, returns a scalar-to-vector version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
+let inline fVVtoSV i (f:_[]->_[]) x =
+    let xc = Array.copy x
+    fun xx ->
+        xc.[i] <- xx
+        f xc
+
+/// Vector-to-vector to vector-to-scalar function transform. Given a vector-to-vector function `f`, returns a vector-to-scalar version of `f` supplying only the `i`-th output.
+let inline fVVtoVS i (f:_[]->_[]) =
+    fun xx -> (f xx).[i]
 
 let invalidArgLog() = invalidArg "" "The derivative of log(x) is not defined for x <= 0."
 let invalidArgLog10() = invalidArg "" "The derivative of log10(x) is not defined for x <= 0."

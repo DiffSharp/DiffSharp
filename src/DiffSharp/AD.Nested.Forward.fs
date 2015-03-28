@@ -361,7 +361,7 @@ module ForwardOps =
         let i = GlobalTagger.Next
         let a = Array.init x.Length (fun j ->
                                         let xd = standardBasis x.Length j |> Array.map2 (dualIPT i) x
-                                        fTransform j f xd
+                                        fVStoSS j f xd
                                         |> diff
                                         <| xd.[j])
         (x |> Array.map dual |> f, Array.sumBy tangent a)
@@ -388,6 +388,19 @@ module ForwardOps =
 
     let inline jacobian f x =
         jacobian' f x |> snd
+
+    let inline gradhessian f x =
+        jacobian' (grad f) x
+
+    let inline gradhessian' f x =
+        let g, h = gradhessian f x
+        (x |> Array.map dual |> f, g, h)
+
+    let inline hessian f x =
+        jacobian (grad f) x
+
+    let inline hessian' f x =
+        (x |> Array.map dual |> f, hessian f x)
 
     let inline curl' f x =
         let v, j = jacobianT' f x
@@ -426,12 +439,18 @@ module Vector =
     let inline gradv (f:Vector<D>->D) x v = ForwardOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     let inline grad' (f:Vector<D>->D) x = ForwardOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     let inline grad (f:Vector<D>->D) x = ForwardOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline laplacian' (f:Vector<D>->D) x = ForwardOps.laplacian' (vector >> f) (Vector.toArray x)
+    let inline laplacian (f:Vector<D>->D) x = ForwardOps.laplacian (vector >> f) (Vector.toArray x)
     let inline jacobianT' (f:Vector<D>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     let inline jacobianT (f:Vector<D>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     let inline jacobian' (f:Vector<D>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     let inline jacobian (f:Vector<D>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     let inline jacobianv' (f:Vector<D>->Vector<D>) x v = ForwardOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     let inline jacobianv (f:Vector<D>->Vector<D>) x v = ForwardOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    let inline hessian (f:Vector<D>->D) x = ForwardOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline hessian' (f:Vector<D>->D) x = ForwardOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
+    let inline gradhessian' (f:Vector<D>->D) x = ForwardOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    let inline gradhessian (f:Vector<D>->D) x = ForwardOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     let inline curl' (f:Vector<D>->Vector<D>) x = ForwardOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     let inline curl (f:Vector<D>->Vector<D>) x = ForwardOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     let inline div' (f:Vector<D>->Vector<D>) x = ForwardOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
