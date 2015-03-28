@@ -288,13 +288,14 @@ module DOps =
                 | D(pp,pt,pi), D(tp,tt,ti) when pi = ti -> D(D(pp,pt,pi), D(tp,tt,pi), i)
                 | D(pp,pt,pi), D(tp,tt,ti) when pi > ti -> D(D(pp,pt,pi), D(tp,Df 0.,pi), i)
     let inline dualPT p t = dualIPT GlobalTagger.Next p t
-    let inline dualP1 p =
+    let inline dualIP1 i p =
         match box p with
-        | :? float as p -> D(Df p, Df 1., GlobalTagger.Next)
+        | :? float as p -> D(Df p, Df 1., i)
         | :? D as p ->
             match p with
-            | Df(_) -> D(p, Df 1., GlobalTagger.Next)
-            | D(_, _, i) -> D(p, D(Df 1., Df 0., i), GlobalTagger.Next)
+            | Df(_) -> D(p, Df 1., i)
+            | D(_, _, i) -> D(p, D(Df 1., Df 0., i), i)
+    let inline dualP1 p = dualIP1 GlobalTagger.Next p
     let inline primal (d:D) =
         match d with
         | Df(_) -> d
@@ -307,6 +308,7 @@ module DOps =
         match d with
         | Df(_) -> (d, Df 0.)
         | D(p,t,_) -> (p, t)
+
 
 [<AutoOpen>]
 module ForwardOps =
@@ -354,6 +356,18 @@ module ForwardOps =
 
     let inline grad f x =
         grad' f x |> snd
+
+    let inline laplacian' f (x:_[]) =
+        let i = GlobalTagger.Next
+        let a = Array.init x.Length (fun j ->
+                                        let xd = standardBasis x.Length j |> Array.map2 (dualIPT i) x
+                                        fTransform j f xd
+                                        |> diff
+                                        <| xd.[j])
+        (x |> Array.map dual |> f, Array.sumBy tangent a)
+
+    let inline laplacian f x =
+        laplacian' f x |> snd
 
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
