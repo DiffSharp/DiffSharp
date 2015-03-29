@@ -169,6 +169,20 @@ type D =
         match b with
         | D(b) -> D(atan2 a b)
         | DD(bp, bt, bi) -> DD(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
+    // D - int binary operations
+    static member (+) (a:D, b:int) = a + float b
+    static member (-) (a:D, b:int) = a - float b
+    static member (*) (a:D, b:int) = a * float b
+    static member (/) (a:D, b:int) = a / float b
+    static member Pow (a:D, b:int) = D.Pow(a, float b)
+    static member Atan2 (a:D, b:int) = D.Atan2(a, float b)
+    // int - D binary operations
+    static member (+) (a:int, b:D) = (float a) + b
+    static member (-) (a:int, b:D) = (float a) - b
+    static member (*) (a:int, b:D) = (float a) * b
+    static member (/) (a:int, b:D) = (float a) / b
+    static member Pow (a:int, b:D) = D.Pow(float a, b)
+    static member Atan2 (a:int, b:D) = D.Atan2(float a, b)
     // D unary operations
     static member Log (a:D) =
         if (float a) <= 0. then invalidArgLog()
