@@ -7,11 +7,11 @@ open DiffSharp.AD.Nested.Forward.Vector
 open DiffSharp.Util.LinearAlgebra
 open FSharp.Charting
 
-let dt = Df 0.1
-let x0 = vector [Df 0.; Df 8.]
-let v0 = vector [Df 0.75; Df 0.]
+let dt = D 0.1
+let x0 = vector [D 0.; D 8.]
+let v0 = vector [D 0.75; D 0.]
 
-let p w (x:Vector<_>) = (1. / Vector.norm (x - vector [Df 10.; Df 10. - w])) + (1. / Vector.norm (x - vector [Df 10.; Df 0.]))
+let p w (x:Vector<_>) = (1. / Vector.norm (x - vector [D 10.; D 10. - w])) + (1. / Vector.norm (x - vector [D 10.; D 0.]))
 
 let trajectory (w:D) = (x0, v0) |> Seq.unfold (fun (x, v) -> 
                                                     let a = -grad (p w) x
@@ -21,7 +21,7 @@ let trajectory (w:D) = (x0, v0) |> Seq.unfold (fun (x, v) ->
 
 let error w =
     trajectory w 
-    |> Seq.takeWhile (fun (x:Vector<_>) -> x.[1] > Df 0.)
+    |> Seq.takeWhile (fun (x:Vector<_>) -> x.[1] > D 0.)
     |> Seq.last
     |> Vector.get 0
     |> fun x -> x * x
@@ -34,13 +34,13 @@ let optimize w0 threshold =
 
 let plot w = 
     trajectory w
-    |> Seq.takeWhile (fun (x:Vector<_>) -> x.[1] > Df 0.)
+    |> Seq.takeWhile (fun (x:Vector<_>) -> x.[1] > D 0.)
     |> Seq.map (Vector.map float) 
     |> Seq.map (fun (x:Vector<_>) -> x.[0], x.[1])
     |> Chart.Line
 
 
-let ws = optimize (Df 0.) (Df 1e-11)
+let ws = optimize (D 0.) (D 1e-11)
 
 let test = ws |> Seq.toArray
 let test2 = ws |> Seq.last |> error
