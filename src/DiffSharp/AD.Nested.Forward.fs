@@ -70,7 +70,7 @@ type D =
         match d with
         | D(a) -> hash [| a |]
         | DD(ap, at, ai) -> hash [|ap; at; ai|]
-        // D - D binary operations
+    // D - D binary operations
     static member (+) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a + b)
@@ -272,6 +272,7 @@ type D =
         | DD(ap, at, ai) -> DD(round ap, D 0., ai)
 
 
+/// Tagger for generating incremental integers
 type Tagger =
     val mutable LastTag : uint64
     new(t) = {LastTag = t}
