@@ -70,9 +70,8 @@ Future Releases
 
 We are working on the following features:
 
-- Handling of nested AD operations
 - Improved Hessian calculations exploiting structure (e.g. sparsity)
 - AD via source code transformation, using code quotations
-- Integration with [Math.NET Numerics](http://numerics.mathdotnet.com/) vectors and matrices
+- Parallelization and compiling to GPU
 
 *)
