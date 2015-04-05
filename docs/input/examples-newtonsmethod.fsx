@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 
 (**
 Newton's Method
@@ -21,7 +22,7 @@ Using the DiffSharp library, we can compute the exact Hessian via automatic diff
 
 open DiffSharp.AD.ForwardReverse
 open DiffSharp.AD.ForwardReverse.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 
 // Newton's method

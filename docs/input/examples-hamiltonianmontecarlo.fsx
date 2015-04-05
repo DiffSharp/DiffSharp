@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -41,7 +42,7 @@ where $\delta$ is the integration step size.
 
 open DiffSharp.AD.Reverse
 open DiffSharp.AD.Reverse.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 // Leapfrog integrator
 // u: potential energy function

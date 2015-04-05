@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -20,7 +21,7 @@ Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** m
 
 open DiffSharp.AD.Reverse
 open DiffSharp.AD.Reverse.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 let rnd = System.Random()
 

@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 
 (**
 Gradient Descent
@@ -27,7 +28,7 @@ Using the DiffSharp library, the following code implements gradient descent with
 
 open DiffSharp.AD.Forward
 open DiffSharp.AD.Forward.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 // Gradient descent
 // f: function, x0: starting point, eta: step size, epsilon: threshold

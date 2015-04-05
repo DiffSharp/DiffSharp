@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 #load "EventEx-0.1.fsx"
 
@@ -53,7 +54,7 @@ We will make use of the **DiffSharp.AD.Reverse** module for calculating the Jaco
 
 open DiffSharp.AD.Reverse
 open DiffSharp.AD.Reverse.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 // Set the lengths of the arm segments
 let l1 = 4.5

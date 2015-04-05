@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**

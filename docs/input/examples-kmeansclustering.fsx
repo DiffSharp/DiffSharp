@@ -1,5 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../packages/FSharp.Data.2.1.1/lib/net40/FSharp.Data.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
@@ -26,7 +27,7 @@ We start with the generic stochastic gradient descent code, introduced in the [s
 
 open DiffSharp.AD.Reverse
 open DiffSharp.AD.Reverse.Vector
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 let rnd = new System.Random()
 
