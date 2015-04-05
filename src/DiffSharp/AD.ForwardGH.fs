@@ -43,8 +43,8 @@
 /// Forward mode AD module, keeping vectors of gradient components and matrices of Hessian components
 module DiffSharp.AD.ForwardGH
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// DualGH numeric type, keeping a triplet of primal value, a vector of gradient components, and a matrix of Hessian components
 // NOT FULLY OPTIMIZED

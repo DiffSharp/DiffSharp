@@ -40,8 +40,8 @@
 module DiffSharp.AD.ForwardReverse
 
 open DiffSharp.AD.Reverse
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// DualAdj numeric type, keeping the primals and adjoints of primal and tangent values
 [<CustomEquality; CustomComparison>]

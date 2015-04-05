@@ -43,8 +43,8 @@
 /// Forward mode AD module, keeping vectors of gradient components
 module DiffSharp.AD.ForwardG
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// DualG numeric type, keeping a doublet of primal value and a vector of gradient components
 [<CustomEquality; CustomComparison>]

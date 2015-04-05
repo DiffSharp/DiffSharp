@@ -39,8 +39,8 @@
 /// Forward mode AD module, lazy higher-order
 module DiffSharp.AD.ForwardN
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// DualN numeric type, where the tangent value is another DualN, forming a lazy chain of higher-order derivatives
 // UNOPTIMIZED

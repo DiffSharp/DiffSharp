@@ -45,7 +45,9 @@ let ws = optimize (D 0.) (D 1e-11)
 let test = ws |> Seq.toArray
 let test2 = ws |> Seq.last |> error
 
-ws
-|> Seq.map plot
-|> Chart.Combine
-|> Chart.WithXAxis(Min = 0., Max = 10.)
+//ws
+//|> Seq.map plot
+//|> Chart.Combine
+//|> Chart.WithXAxis(Min = 0., Max = 10.)
+
+let test3 = diff (fun x -> x * (diff (fun y -> x * y) 3.)) 6.

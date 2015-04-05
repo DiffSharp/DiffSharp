@@ -60,6 +60,10 @@
       <HintPath>..\..\..\packages\FSharp.Formatting.2.4.36\lib\net40\CSharpFormat.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FsAlg">
+      <HintPath>..\..\..\packages\FsAlg.0.5.0\lib\FsAlg.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Charting">
       <HintPath>..\..\..\packages\FSharp.Charting.0.90.9\lib\net40\FSharp.Charting.dll</HintPath>
       <Private>True</Private>

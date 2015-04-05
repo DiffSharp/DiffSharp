@@ -35,7 +35,7 @@
 //
 
 open System.Diagnostics
-open DiffSharp.Util.LinearAlgebra
+open FsAlg.Generic
 
 //let duration n f =
 //    let before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime.Ticks

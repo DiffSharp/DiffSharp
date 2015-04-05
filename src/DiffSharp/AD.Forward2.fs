@@ -39,8 +39,8 @@
 /// Forward mode AD module, 2nd order
 module DiffSharp.AD.Forward2
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// Dual2 numeric type, keeping primal, tangent, and tangent-of-tangent values
 // UNOPTIMIZED

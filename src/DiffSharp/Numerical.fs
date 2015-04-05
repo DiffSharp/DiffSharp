@@ -37,8 +37,8 @@
 /// Numerical differentiation module
 module DiffSharp.Numerical
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// Numerical differentiation operations module (automatically opened)
 // HIGHLY UNOPTIMIZED PLACEHOLDER CODE

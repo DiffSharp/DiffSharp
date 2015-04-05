@@ -39,8 +39,8 @@
 /// Nested forward mode AD module
 module DiffSharp.AD.Nested.Forward
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// Dual numeric type with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
@@ -321,20 +321,32 @@ module DOps =
         | :? D as p ->
             match p with
             | D(_) -> DD(p, D 1., i)
-            | DD(_, _, i) -> DD(p, DD(D 1., D 0., i), i)
+            | DD(_, _, pi) -> DD(p, DD(D 1., D 0., pi), i)
     /// Make D, with primal value `p` and tangent 1. A new tag will be attached using the global tagger.
     let inline dualP1 p = dualIP1 GlobalTagger.Next p
-    /// Get the primal value of a D
+    /// Get the primal value of `d`
     let inline primal (d:D) =
         match d with
         | D(_) -> d
         | DD(p,_,_) -> p
-    /// Get the tangent value of a D
+    /// Get the primal value of `d` with the given tag `i`
+    let inline primalI i (d:D) =
+        match d with
+        | D(_) -> d
+        | DD(dp,_,di) when i = di -> dp
+        | DD(dp,_,di) when i <> di -> d
+    /// Get the tangent value of `d`
     let inline tangent (d:D) =
         match d with
         | D(_) -> D(0.)
         | DD(_,t,_) -> t
-    /// Get the primal and the first gradient component of a D, as a tuple
+    /// Get the tangent value of `d` with the given tag `i`
+    let inline tangentI i (d:D) =
+        match d with
+        | D(_) -> D(0.)
+        | DD(_,dt,di) when i = di -> dt
+        | DD(_,dt,di) when i <> di -> D(0.)
+    /// Get the primal and the first gradient component of `d`, as a tuple
     let inline tuple (d:D) =
         match d with
         | D(_) -> (d, D 0.)

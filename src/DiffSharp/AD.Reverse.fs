@@ -44,9 +44,9 @@
 /// Reverse mode AD module
 module DiffSharp.AD.Reverse
 
-open System.Collections.Generic
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open System.Collections.Generic
+open FsAlg.Generic
 
 /// Global trace for recording operations
 type Trace() =

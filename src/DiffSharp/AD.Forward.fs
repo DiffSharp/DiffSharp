@@ -39,8 +39,8 @@
 /// Forward mode AD module
 module DiffSharp.AD.Forward
 
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// Dual numeric type, keeping primal and tangent values
 [<CustomEquality; CustomComparison>]

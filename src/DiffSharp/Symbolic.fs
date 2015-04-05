@@ -54,8 +54,8 @@ open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.ExprShape
 open FSharp.Quotations.Evaluator
-open DiffSharp.Util.LinearAlgebra
 open DiffSharp.Util.General
+open FsAlg.Generic
 
 /// Symbolic differentiation expression operations module (automatically opened)
 [<AutoOpen>]

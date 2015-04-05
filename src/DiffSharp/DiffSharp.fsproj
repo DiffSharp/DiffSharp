@@ -50,7 +50,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="Util.General.fs" />
-    <Compile Include="Util.LinearAlgebra.fs" />
     <Compile Include="AD.Forward.fs" />
     <Compile Include="AD.Forward2.fs" />
     <Compile Include="AD.ForwardG.fs" />
@@ -66,6 +65,10 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FsAlg">
+      <HintPath>..\..\packages\FsAlg.0.5.0\lib\FsAlg.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Quotations.Evaluator">
       <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.6\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
       <Private>True</Private>
