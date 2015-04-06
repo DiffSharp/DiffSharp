@@ -61,7 +61,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FsAlg">
-      <HintPath>..\..\..\packages\FsAlg.0.5.1\lib\FsAlg.dll</HintPath>
+      <HintPath>..\..\..\packages\FsAlg.0.5.2\lib\FsAlg.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Charting">
