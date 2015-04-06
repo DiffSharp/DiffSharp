@@ -76,49 +76,49 @@ type D =
         | D(a),           D(b)           -> D(a + b)
         | D(a),           DD(bp, bt, bi) -> DD(a + bp, bt, bi)
         | DD(ap, at, ai), D(b)           -> DD(ap + b, at, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> DD(a + bp, bt, bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a + bp, bt, bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap + bp, at + bt, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> DD(ap + b, at, ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap + b, at, ai)
     static member (-) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a - b)
         | D(a),           DD(bp, bt, bi) -> DD(a - bp, -bt, bi)
         | DD(ap, at, ai), D(b)           -> DD(ap - b, at, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> DD(a - bp, -bt, bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a - bp, -bt, bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap - bp, at - bt, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> DD(ap - b, at, ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap - b, at, ai)
     static member (*) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a * b)
         | D(a),           DD(bp, bt, bi) -> DD(a * bp, a * bt, bi)
         | DD(ap, at, ai), D(b)           -> DD(ap * b, at * b, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> DD(a * bp, bt * a, bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a * bp, bt * a, bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap * bp, at * bp + bt * ap, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> DD(ap * b, at * b, ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap * b, at * b, ai)
     static member (/) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a / b)
         | D(a),           DD(bp, bt, bi) -> DD(a / bp, -(bt * a) / (bp * bp), bi)
         | DD(ap, at, ai), D(b)           -> DD(ap / b, at / b, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> DD(a / bp, -(bt * a) / (bp * bp), bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a / bp, -(bt * a) / (bp * bp), bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap / bp, (at * bp - bt * ap) / (bp * bp), ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> DD(ap / b, at / b, ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap / b, at / b, ai)
     static member Pow (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a ** b)
         | D(a),           DD(bp, bt, bi) -> let apb = D.Pow(a, bp) in DD(apb, apb * (log a) * bt, bi)
         | DD(ap, at, ai), D(b)           -> DD(ap ** b, b * (ap ** (b - 1.)) * at, ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> let apb = a ** bp in DD(apb, apb * (log a) * bt, bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> let apb = a ** bp in DD(apb, apb * (log a) * bt, bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> let apb = ap ** bp in DD(apb, apb * ((bp * at / ap) + ((log ap) * bt)), ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> let apb = ap ** b in DD(apb, apb * (b * at / ap), ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> let apb = ap ** b in DD(apb, apb * (b * at / ap), ai)
     static member Atan2 (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(atan2 a b)
         | D(a),           DD(bp, bt, bi) -> DD(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
         | DD(ap, at, ai), D(b)           -> DD(D.Atan2(ap, b), (b * at) / (ap * ap + b * b), ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai < bi -> DD(atan2 a bp, -(a * bt) / (a * a + bp * bp), bi)
+        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(atan2 a bp, -(a * bt) / (a * a + bp * bp), bi)
         | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(atan2 ap bp, (at * bp - ap * bt) / (ap * ap + bp * bp), ai)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai > bi -> DD(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
+        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
     // D - float binary operations
     static member (+) (a:D, b:float) =
         match a with
@@ -309,9 +309,9 @@ module DOps =
                 | D(_), D(_) -> DD(p, t, i)
                 | D(_), DD(_,_,_) -> DD(p, t, i)
                 | DD(_,_,_), D(_) -> DD(p, t, i)
-                | DD(pp,pt,pi), DD(tp,tt,ti) when pi < ti -> DD(DD(pp,D 0.,ti), DD(tp,tt,ti), i)
+                | DD(pp,_ ,pi), DD(tp,tt,ti) when pi < ti -> DD(DD(pp,D 0.,ti), DD(tp,tt,ti), i)
                 | DD(pp,pt,pi), DD(tp,tt,ti) when pi = ti -> DD(DD(pp,pt,pi), DD(tp,tt,pi), i)
-                | DD(pp,pt,pi), DD(tp,tt,ti) when pi > ti -> DD(DD(pp,pt,pi), DD(tp,D 0.,pi), i)
+                | DD(pp,pt,pi), DD(tp,_ ,ti) when pi > ti -> DD(DD(pp,pt,pi), DD(tp,D 0.,pi), i)
     /// Make D, with primal value `p` and tangent value `t`. A new tag will be attached using the global tagger.
     let inline dualPT p t = dualIPT GlobalTagger.Next p t
     /// Make D, with primal tag `i` and primal value `p`, and tangent 1.
@@ -334,7 +334,7 @@ module DOps =
         match d with
         | D(_) -> d
         | DD(dp,_,di) when i = di -> dp
-        | DD(dp,_,di) when i <> di -> d
+        | DD(_,_,di) when i <> di -> d
     /// Get the tangent value of `d`
     let inline tangent (d:D) =
         match d with
@@ -345,7 +345,7 @@ module DOps =
         match d with
         | D(_) -> D(0.)
         | DD(_,dt,di) when i = di -> dt
-        | DD(_,dt,di) when i <> di -> D(0.)
+        | DD(_,_,di) when i <> di -> D(0.)
     /// Get the primal and the first gradient component of `d`, as a tuple
     let inline tuple (d:D) =
         match d with
