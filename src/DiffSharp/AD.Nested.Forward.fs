@@ -259,17 +259,17 @@ type D =
         if isInteger (float a) then invalidArgFloor()
         match a with
         | D(a) -> D(floor a)
-        | DD(ap, at, ai) -> DD(floor ap, D 0., ai)
+        | DD(ap, _, ai) -> DD(floor ap, D 0., ai)
     static member Ceiling (a:D) =
         if isInteger (float a) then invalidArgCeil()
         match a with
         | D(a) -> D(ceil a)
-        | DD(ap, at, ai) -> DD(ceil ap, D 0., ai)
+        | DD(ap, _, ai) -> DD(ceil ap, D 0., ai)
     static member Round (a:D) =
         if isHalfway (float a) then invalidArgRound()
         match a with
         | D(a) -> D(round a)
-        | DD(ap, at, ai) -> DD(round ap, D 0., ai)
+        | DD(ap, _, ai) -> DD(round ap, D 0., ai)
 
 
 /// Tagger for generating incremental integers
