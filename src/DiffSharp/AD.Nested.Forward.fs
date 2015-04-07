@@ -295,7 +295,7 @@ module DOps =
         | :? int as p -> D(float p)
         | :? D as p -> p
     /// Make D, with tag `i`, primal value `p`, and tangent value `t`
-    let inline makeDFIPT i p t =
+    let inline makeDFipt i p t =
         match box p with
         | :? float as p ->
             match box t with
@@ -313,9 +313,9 @@ module DOps =
                 | DF(pp,pt,pi), DF(tp,tt,ti) when pi = ti -> DF(DF(pp,pt,pi), DF(tp,tt,pi), i)
                 | DF(pp,pt,pi), DF(tp,_ ,ti) when pi > ti -> DF(DF(pp,pt,pi), DF(tp,D 0.,pi), i)
     /// Make D, with primal value `p` and tangent value `t`. A new tag will be attached using the global tagger.
-    let inline makeDFPT p t = makeDFIPT GlobalTagger.Next p t
+    let inline makeDFpt p t = makeDFipt GlobalTagger.Next p t
     /// Make D, with primal tag `i` and primal value `p`, and tangent 1.
-    let inline makeDFIP1 i p =
+    let inline makeDFip1 i p =
         match box p with
         | :? float as p -> DF(D p, D 1., i)
         | :? D as p ->
@@ -323,7 +323,7 @@ module DOps =
             | D(_) -> DF(p, D 1., i)
             | DF(_, _, pi) -> DF(p, DF(D 1., D 0., pi), i)
     /// Make D, with primal value `p` and tangent 1. A new tag will be attached using the global tagger.
-    let inline makeDFP1 p = makeDFIP1 GlobalTagger.Next p
+    let inline makeDFp1 p = makeDFip1 GlobalTagger.Next p
     /// Get the primal value of `d`
     let inline primal (d:D) =
         match d with
@@ -357,11 +357,11 @@ module DOps =
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
-        x |> makeDFP1 |> f |> tuple
+        x |> makeDFp1 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
-        x |> makeDFP1 |> f |> tangent
+        x |> makeDFp1 |> f |> tangent
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f x =
@@ -386,7 +386,7 @@ module ForwardOps =
                 match n with
                 | 1 -> f
                 | _ -> d (n - 1) (diff f)
-            x |> makeDFP1 |> (d n f) |> tangent
+            x |> makeDFp1 |> (d n f) |> tangent
     
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f x =
@@ -395,7 +395,7 @@ module ForwardOps =
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDFIPT i) x v |> f |> tuple
+        Array.map2 (makeDFipt i) x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -414,7 +414,7 @@ module ForwardOps =
     let inline laplacian' f (x:_[]) =
         let i = GlobalTagger.Next
         let a = Array.init x.Length (fun j ->
-                                        let xd = standardBasis x.Length j |> Array.map2 (makeDFIPT i) x
+                                        let xd = standardBasis x.Length j |> Array.map2 (makeDFipt i) x
                                         fVStoSS j f xd
                                         |> diff
                                         <| xd.[j])
@@ -427,7 +427,7 @@ module ForwardOps =
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDFIPT i) x v |> f |> Array.map tuple |> Array.unzip
+        Array.map2 (makeDFipt i) x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v =
