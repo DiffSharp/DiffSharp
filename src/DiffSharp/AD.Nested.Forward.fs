@@ -378,7 +378,7 @@ module ForwardOps =
         diff2'' f x |> fsttrd
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let diffn n f x =
+    let inline diffn n f x =
         if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
         elif n = 0 then x |> dual |> f
         else
@@ -389,7 +389,7 @@ module ForwardOps =
             x |> dualP1 |> (d n f) |> tangent
     
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let diffn' n f x =
+    let inline diffn' n f x =
         (diffn 0 f x, diffn n f x)
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
