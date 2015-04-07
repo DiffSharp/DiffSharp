@@ -46,15 +46,15 @@ open FsAlg.Generic
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float
-    | DD of D * D * uint64
+    | DF of D * D * uint64
     static member op_Explicit(d:D) =
         match d with
         | D(a) -> a
-        | DD(ap, _, _) -> (float) ap
+        | DF(ap, _, _) -> (float) ap
     static member DivideByInt(d:D, i:int) =
         match d with
         | D(a) -> D(a / float i)
-        | DD(ap, at, ai) -> DD(ap/ float i, at / float i, ai)
+        | DF(ap, at, ai) -> DF(ap/ float i, at / float i, ai)
     static member Zero = D 0.
     static member One = D 1.
     interface System.IComparable with
@@ -69,106 +69,106 @@ type D =
     override d.GetHashCode() =
         match d with
         | D(a) -> hash [| a |]
-        | DD(ap, at, ai) -> hash [|ap; at; ai|]
+        | DF(ap, at, ai) -> hash [|ap; at; ai|]
     // D - D binary operations
     static member (+) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a + b)
-        | D(a),           DD(bp, bt, bi) -> DD(a + bp, bt, bi)
-        | DD(ap, at, ai), D(b)           -> DD(ap + b, at, ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a + bp, bt, bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap + bp, at + bt, ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap + b, at, ai)
+        | D(a),           DF(bp, bt, bi) -> DF(a + bp, bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap + b, at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a + bp, bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap + bp, at + bt, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap + b, at, ai)
     static member (-) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a - b)
-        | D(a),           DD(bp, bt, bi) -> DD(a - bp, -bt, bi)
-        | DD(ap, at, ai), D(b)           -> DD(ap - b, at, ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a - bp, -bt, bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap - bp, at - bt, ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap - b, at, ai)
+        | D(a),           DF(bp, bt, bi) -> DF(a - bp, -bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap - b, at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a - bp, -bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap - bp, at - bt, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap - b, at, ai)
     static member (*) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a * b)
-        | D(a),           DD(bp, bt, bi) -> DD(a * bp, a * bt, bi)
-        | DD(ap, at, ai), D(b)           -> DD(ap * b, at * b, ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a * bp, bt * a, bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap * bp, at * bp + bt * ap, ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap * b, at * b, ai)
+        | D(a),           DF(bp, bt, bi) -> DF(a * bp, a * bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap * b, at * b, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a * bp, bt * a, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap * bp, at * bp + bt * ap, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap * b, at * b, ai)
     static member (/) (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a / b)
-        | D(a),           DD(bp, bt, bi) -> DD(a / bp, -(bt * a) / (bp * bp), bi)
-        | DD(ap, at, ai), D(b)           -> DD(ap / b, at / b, ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(a / bp, -(bt * a) / (bp * bp), bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(ap / bp, (at * bp - bt * ap) / (bp * bp), ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(ap / b, at / b, ai)
+        | D(a),           DF(bp, bt, bi) -> DF(a / bp, -(bt * a) / (bp * bp), bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap / b, at / b, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a / bp, -(bt * a) / (bp * bp), bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap / bp, (at * bp - bt * ap) / (bp * bp), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap / b, at / b, ai)
     static member Pow (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(a ** b)
-        | D(a),           DD(bp, bt, bi) -> let apb = D.Pow(a, bp) in DD(apb, apb * (log a) * bt, bi)
-        | DD(ap, at, ai), D(b)           -> DD(ap ** b, b * (ap ** (b - 1.)) * at, ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> let apb = a ** bp in DD(apb, apb * (log a) * bt, bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> let apb = ap ** bp in DD(apb, apb * ((bp * at / ap) + ((log ap) * bt)), ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> let apb = ap ** b in DD(apb, apb * (b * at / ap), ai)
+        | D(a),           DF(bp, bt, bi) -> let apb = D.Pow(a, bp) in DF(apb, apb * (log a) * bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap ** b, b * (ap ** (b - 1.)) * at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> let apb = a ** bp in DF(apb, apb * (log a) * bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> let apb = ap ** bp in DF(apb, apb * ((bp * at / ap) + ((log ap) * bt)), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> let apb = ap ** b in DF(apb, apb * (b * at / ap), ai)
     static member Atan2 (a:D, b:D) =
         match a, b with
         | D(a),           D(b)           -> D(atan2 a b)
-        | D(a),           DD(bp, bt, bi) -> DD(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
-        | DD(ap, at, ai), D(b)           -> DD(D.Atan2(ap, b), (b * at) / (ap * ap + b * b), ai)
-        | DD(_ , _ , ai), DD(bp, bt, bi) when ai < bi -> DD(atan2 a bp, -(a * bt) / (a * a + bp * bp), bi)
-        | DD(ap, at, ai), DD(bp, bt, bi) when ai = bi -> DD(atan2 ap bp, (at * bp - ap * bt) / (ap * ap + bp * bp), ai)
-        | DD(ap, at, ai), DD(_ , _ , bi) when ai > bi -> DD(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
+        | D(a),           DF(bp, bt, bi) -> DF(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
+        | DF(ap, at, ai), D(b)           -> DF(D.Atan2(ap, b), (b * at) / (ap * ap + b * b), ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(atan2 a bp, -(a * bt) / (a * a + bp * bp), bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(atan2 ap bp, (at * bp - ap * bt) / (ap * ap + bp * bp), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
     // D - float binary operations
     static member (+) (a:D, b:float) =
         match a with
         | D(a) -> D(a + b)
-        | DD(ap, at, ai) -> DD(ap + b, at, ai)
+        | DF(ap, at, ai) -> DF(ap + b, at, ai)
     static member (-) (a:D, b:float) =
         match a with
         | D(a) -> D(a - b)
-        | DD(ap, at, ai) -> DD(ap - b, at, ai)
+        | DF(ap, at, ai) -> DF(ap - b, at, ai)
     static member (*) (a:D, b:float) =
         match a with
         | D(a) -> D(a * b)
-        | DD(ap, at, ai) -> DD(ap * b, at * b, ai)
+        | DF(ap, at, ai) -> DF(ap * b, at * b, ai)
     static member (/) (a:D, b:float) =
         match a with
         | D(a) -> D(a / b)
-        | DD(ap, at, ai) -> DD(ap / b, at / b, ai)
+        | DF(ap, at, ai) -> DF(ap / b, at / b, ai)
     static member Pow (a:D, b:float) =
         match a with
         | D(a) -> D(a ** b)
-        | DD(ap, at, ai) -> DD(ap ** b, b * (ap ** (b - 1.)) * at, ai)
+        | DF(ap, at, ai) -> DF(ap ** b, b * (ap ** (b - 1.)) * at, ai)
     static member Atan2 (a:D, b:float) =
         match a with
         | D(a) -> D(atan2 a b)
-        | DD(ap, at, ai) -> DD(D.Atan2(ap, b), (b * at) / (b * b + ap * ap), ai)
+        | DF(ap, at, ai) -> DF(D.Atan2(ap, b), (b * at) / (b * b + ap * ap), ai)
     // float - D binary operations
     static member (+) (a:float, b:D) =
         match b with
         | D(b) -> D(a + b)
-        | DD(bp, bt, bi) -> DD(a + bp, bt, bi)
+        | DF(bp, bt, bi) -> DF(a + bp, bt, bi)
     static member (-) (a:float, b:D) =
         match b with
         | D(b) -> D(a - b)
-        | DD(bp, bt, bi) -> DD(a - bp, -bt, bi)
+        | DF(bp, bt, bi) -> DF(a - bp, -bt, bi)
     static member (*) (a:float, b:D) =
         match b with
         | D(b) -> D(a * b)
-        | DD(bp, bt, bi) -> DD(a * bp, a * bt, bi)
+        | DF(bp, bt, bi) -> DF(a * bp, a * bt, bi)
     static member (/) (a:float, b:D) =
         match b with
         | D(b) -> D(a / b)
-        | DD(bp, bt, bi) -> DD(a / bp, -a * bt / (bp * bp), bi)
+        | DF(bp, bt, bi) -> DF(a / bp, -a * bt / (bp * bp), bi)
     static member Pow (a:float, b:D) =
         match b with
         | D(b) -> D(a ** b)
-        | DD(bp, bt, bi) -> let apb = D.Pow(a, bp) in DD(apb, apb * (log a) * bt , bi)
+        | DF(bp, bt, bi) -> let apb = D.Pow(a, bp) in DF(apb, apb * (log a) * bt , bi)
     static member Atan2 (a:float, b:D) =
         match b with
         | D(b) -> D(atan2 a b)
-        | DD(bp, bt, bi) -> DD(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
+        | DF(bp, bt, bi) -> DF(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
     // D - int binary operations
     static member (+) (a:D, b:int) = a + float b
     static member (-) (a:D, b:int) = a - float b
@@ -188,88 +188,88 @@ type D =
         if (float a) <= 0. then invalidArgLog()
         match a with
         | D(a) -> D(log a)
-        | DD(ap, at, ai) -> DD(log ap, at / ap, ai)
+        | DF(ap, at, ai) -> DF(log ap, at / ap, ai)
     static member Log10 (a:D) =
         if (float a) <= 0. then invalidArgLog10()
         match a with
         | D(a) -> D(log10 a)
-        | DD(ap, at, ai) -> DD(log10 ap, at / (ap * log10val), ai)
+        | DF(ap, at, ai) -> DF(log10 ap, at / (ap * log10val), ai)
     static member Exp (a:D) =
         match a with
         | D(a) -> D(exp a)
-        | DD(ap, at, ai) -> let expa = exp ap in DD(expa, at * expa, ai)
+        | DF(ap, at, ai) -> let expa = exp ap in DF(expa, at * expa, ai)
     static member Sin (a:D) =
         match a with
         | D(a) -> D(sin a)
-        | DD(ap, at, ai) -> DD(sin ap, at * cos ap, ai)
+        | DF(ap, at, ai) -> DF(sin ap, at * cos ap, ai)
     static member Cos (a:D) =
         match a with
         | D(a) -> D(cos a)
-        | DD(ap, at, ai) -> DD(cos ap, -at * sin ap, ai)
+        | DF(ap, at, ai) -> DF(cos ap, -at * sin ap, ai)
     static member Tan (a:D) =
         match a with
         | D(a) -> 
             if cos a = 0. then invalidArgTan()
             D(tan a)
-        | DD(ap, at, ai) ->
+        | DF(ap, at, ai) ->
             let cosa = cos ap
             if (float cosa) = 0. then invalidArgTan()
-            DD(tan ap, at / (cosa * cosa), ai)
+            DF(tan ap, at / (cosa * cosa), ai)
     static member (~-) (a:D) =
         match a with
         | D(a) -> D(-a)
-        | DD(ap, at, ai) -> DD(-ap, -at, ai)
+        | DF(ap, at, ai) -> DF(-ap, -at, ai)
     static member Sqrt (a:D) =
         if (float a) <= 0. then invalidArgSqrt()
         match a with
         | D(a) -> D(sqrt a)
-        | DD(ap, at, ai) -> let sqrta = sqrt ap in DD(sqrta, at / (2. * sqrta), ai)
+        | DF(ap, at, ai) -> let sqrta = sqrt ap in DF(sqrta, at / (2. * sqrta), ai)
     static member Sinh (a:D) =
         match a with
         | D(a) -> D(sinh a)
-        | DD(ap, at, ai) -> DD(sinh ap, at * cosh ap, ai)
+        | DF(ap, at, ai) -> DF(sinh ap, at * cosh ap, ai)
     static member Cosh (a:D) =
         match a with
         | D(a) -> D(cosh a)
-        | DD(ap, at, ai) -> DD(cosh ap, at * sinh ap, ai)
+        | DF(ap, at, ai) -> DF(cosh ap, at * sinh ap, ai)
     static member Tanh (a:D) =
         match a with
         | D(a) -> D(tanh a)
-        | DD(ap, at, ai) -> let cosha = cosh ap in DD(tanh ap, at / (cosha * cosha), ai)
+        | DF(ap, at, ai) -> let cosha = cosh ap in DF(tanh ap, at / (cosha * cosha), ai)
     static member Asin (a:D) =
         if abs (float a) >= 1. then invalidArgAsin()
         match a with
         | D(a) -> D(asin a)
-        | DD(ap, at, ai) -> DD(asin ap, at / sqrt (1. - ap * ap), ai)
+        | DF(ap, at, ai) -> DF(asin ap, at / sqrt (1. - ap * ap), ai)
     static member Acos (a:D) =
         if abs (float a) >= 1. then invalidArgAcos()
         match a with
         | D(a) -> D(acos a)
-        | DD(ap, at, ai) -> DD(acos ap, -at / sqrt (1. - ap * ap), ai)
+        | DF(ap, at, ai) -> DF(acos ap, -at / sqrt (1. - ap * ap), ai)
     static member Atan (a:D) =
         match a with
         | D(a) -> D(atan a)
-        | DD(ap, at, ai) -> DD(atan ap, at / (1. + ap * ap), ai)
+        | DF(ap, at, ai) -> DF(atan ap, at / (1. + ap * ap), ai)
     static member Abs (a:D) =
         if (float a) = 0. then invalidArgAbs()
         match a with
         | D(a) -> D(abs a)
-        | DD(ap, at, ai) -> DD(abs ap, at * float (sign (float ap)), ai)
+        | DF(ap, at, ai) -> DF(abs ap, at * float (sign (float ap)), ai)
     static member Floor (a:D) =
         if isInteger (float a) then invalidArgFloor()
         match a with
         | D(a) -> D(floor a)
-        | DD(ap, _, ai) -> DD(floor ap, D 0., ai)
+        | DF(ap, _, ai) -> DF(floor ap, D 0., ai)
     static member Ceiling (a:D) =
         if isInteger (float a) then invalidArgCeil()
         match a with
         | D(a) -> D(ceil a)
-        | DD(ap, _, ai) -> DD(ceil ap, D 0., ai)
+        | DF(ap, _, ai) -> DF(ceil ap, D 0., ai)
     static member Round (a:D) =
         if isHalfway (float a) then invalidArgRound()
         match a with
         | D(a) -> D(round a)
-        | DD(ap, _, ai) -> DD(round ap, D 0., ai)
+        | DF(ap, _, ai) -> DF(round ap, D 0., ai)
 
 
 /// Tagger for generating incremental integers
@@ -289,79 +289,79 @@ type GlobalTagger() =
 [<AutoOpen>]
 module DOps =
     /// Make D, with primal value `p`
-    let inline dual p =
+    let inline makeDF p =
         match box p with
         | :? float as p -> D(p)
         | :? int as p -> D(float p)
         | :? D as p -> p
     /// Make D, with tag `i`, primal value `p`, and tangent value `t`
-    let inline dualIPT i p t =
+    let inline makeDFIPT i p t =
         match box p with
         | :? float as p ->
             match box t with
-            | :? float as t -> DD(D p, D t, i)
-            | :? D as t -> DD(D p, t, i)
+            | :? float as t -> DF(D p, D t, i)
+            | :? D as t -> DF(D p, t, i)
         | :? D as p ->
             match box t with
-            | :? float as t -> DD(p, D t, i)
+            | :? float as t -> DF(p, D t, i)
             | :? D as t ->
                 match p, t with
-                | D(_), D(_) -> DD(p, t, i)
-                | D(_), DD(_,_,_) -> DD(p, t, i)
-                | DD(_,_,_), D(_) -> DD(p, t, i)
-                | DD(pp,_ ,pi), DD(tp,tt,ti) when pi < ti -> DD(DD(pp,D 0.,ti), DD(tp,tt,ti), i)
-                | DD(pp,pt,pi), DD(tp,tt,ti) when pi = ti -> DD(DD(pp,pt,pi), DD(tp,tt,pi), i)
-                | DD(pp,pt,pi), DD(tp,_ ,ti) when pi > ti -> DD(DD(pp,pt,pi), DD(tp,D 0.,pi), i)
+                | D(_), D(_) -> DF(p, t, i)
+                | D(_), DF(_,_,_) -> DF(p, t, i)
+                | DF(_,_,_), D(_) -> DF(p, t, i)
+                | DF(pp,_ ,pi), DF(tp,tt,ti) when pi < ti -> DF(DF(pp,D 0.,ti), DF(tp,tt,ti), i)
+                | DF(pp,pt,pi), DF(tp,tt,ti) when pi = ti -> DF(DF(pp,pt,pi), DF(tp,tt,pi), i)
+                | DF(pp,pt,pi), DF(tp,_ ,ti) when pi > ti -> DF(DF(pp,pt,pi), DF(tp,D 0.,pi), i)
     /// Make D, with primal value `p` and tangent value `t`. A new tag will be attached using the global tagger.
-    let inline dualPT p t = dualIPT GlobalTagger.Next p t
+    let inline makeDFPT p t = makeDFIPT GlobalTagger.Next p t
     /// Make D, with primal tag `i` and primal value `p`, and tangent 1.
-    let inline dualIP1 i p =
+    let inline makeDFIP1 i p =
         match box p with
-        | :? float as p -> DD(D p, D 1., i)
+        | :? float as p -> DF(D p, D 1., i)
         | :? D as p ->
             match p with
-            | D(_) -> DD(p, D 1., i)
-            | DD(_, _, pi) -> DD(p, DD(D 1., D 0., pi), i)
+            | D(_) -> DF(p, D 1., i)
+            | DF(_, _, pi) -> DF(p, DF(D 1., D 0., pi), i)
     /// Make D, with primal value `p` and tangent 1. A new tag will be attached using the global tagger.
-    let inline dualP1 p = dualIP1 GlobalTagger.Next p
+    let inline makeDFP1 p = makeDFIP1 GlobalTagger.Next p
     /// Get the primal value of `d`
     let inline primal (d:D) =
         match d with
         | D(_) -> d
-        | DD(p,_,_) -> p
+        | DF(p,_,_) -> p
     /// Get the primal value of `d` with the given tag `i`
     let inline primalI i (d:D) =
         match d with
         | D(_) -> d
-        | DD(dp,_,di) when i = di -> dp
-        | DD(_,_,di) when i <> di -> d
+        | DF(dp,_,di) when i = di -> dp
+        | DF(_,_,di) when i <> di -> d
     /// Get the tangent value of `d`
     let inline tangent (d:D) =
         match d with
         | D(_) -> D(0.)
-        | DD(_,t,_) -> t
+        | DF(_,t,_) -> t
     /// Get the tangent value of `d` with the given tag `i`
     let inline tangentI i (d:D) =
         match d with
         | D(_) -> D(0.)
-        | DD(_,dt,di) when i = di -> dt
-        | DD(_,_,di) when i <> di -> D(0.)
+        | DF(_,dt,di) when i = di -> dt
+        | DF(_,_,di) when i <> di -> D(0.)
     /// Get the primal and the first gradient component of `d`, as a tuple
     let inline tuple (d:D) =
         match d with
         | D(_) -> (d, D 0.)
-        | DD(p,t,_) -> (p, t)
+        | DF(p,t,_) -> (p, t)
 
 
 [<AutoOpen>]
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
-        x |> dualP1 |> f |> tuple
+        x |> makeDFP1 |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
-        x |> dualP1 |> f |> tangent
+        x |> makeDFP1 |> f |> tangent
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f x =
@@ -380,13 +380,13 @@ module ForwardOps =
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn n f x =
         if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
-        elif n = 0 then x |> dual |> f
+        elif n = 0 then x |> makeDF |> f
         else
             let rec d n f =
                 match n with
                 | 1 -> f
                 | _ -> d (n - 1) (diff f)
-            x |> dualP1 |> (d n f) |> tangent
+            x |> makeDFP1 |> (d n f) |> tangent
     
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f x =
@@ -395,7 +395,7 @@ module ForwardOps =
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (dualIPT i) x v |> f |> tuple
+        Array.map2 (makeDFIPT i) x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -414,11 +414,11 @@ module ForwardOps =
     let inline laplacian' f (x:_[]) =
         let i = GlobalTagger.Next
         let a = Array.init x.Length (fun j ->
-                                        let xd = standardBasis x.Length j |> Array.map2 (dualIPT i) x
+                                        let xd = standardBasis x.Length j |> Array.map2 (makeDFIPT i) x
                                         fVStoSS j f xd
                                         |> diff
                                         <| xd.[j])
-        (x |> Array.map dual |> f, Array.sumBy tangent a)
+        (x |> Array.map makeDF |> f, Array.sumBy tangent a)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x =
@@ -427,7 +427,7 @@ module ForwardOps =
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (dualIPT i) x v |> f |> Array.map tuple |> Array.unzip
+        Array.map2 (makeDFIPT i) x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v =
@@ -457,7 +457,7 @@ module ForwardOps =
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian' f x =
         let g, h = gradhessian f x
-        (x |> Array.map dual |> f, g, h)
+        (x |> Array.map makeDF |> f, g, h)
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
@@ -465,7 +465,7 @@ module ForwardOps =
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
-        (x |> Array.map dual |> f, hessian f x)
+        (x |> Array.map makeDF |> f, hessian f x)
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x =
