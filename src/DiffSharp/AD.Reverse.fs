@@ -105,7 +105,7 @@ type Trace() =
             | Ceil(x, z) -> ()
             | Round(x, z) -> ()
 
-/// Discriminated union of operations for recording the trace
+/// Operation types for the trace
 and Op =
     | Add of Adj * Adj * Adj
     | AddCons of Adj * Adj
