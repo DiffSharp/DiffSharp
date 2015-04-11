@@ -312,13 +312,14 @@ module DOps =
         match d with
         | D(_) -> D(0.)
         | DF(_,t,_) -> t
-    /// Get the primal and the first gradient component of `d`, as a tuple
+    /// Get the primal and tangent values of  `d`, as a tuple
     let inline tuple (d:D) =
         match d with
         | D(_) -> (d, D 0.)
         | DF(p,t,_) -> (p, t)
 
 
+/// Forward differentiation operations module (automatically opened)
 [<AutoOpen>]
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`

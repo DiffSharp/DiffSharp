@@ -333,8 +333,10 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0UL
 
+/// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
+    /// Reverse propagates the adjoints through the trace of `d`
     let inline reverseTr (d:D) =
         match d with
         | D(_) -> ()
@@ -375,8 +377,8 @@ module DOps =
                 | Floor(_, _)            -> ()
                 | Ceil(_, _)             -> ()
                 | Round(_, _)            -> ()
-
-    let inline cleanTr (d:D) =
+    /// Clear the adjoints of all the values in the trace of `d`
+    let inline clearTr (d:D) =
         match d with
         | D(_) -> ()
         | DR(_,_,o,_) ->
@@ -385,14 +387,16 @@ module DOps =
                 | Add(a,b,c) | Sub(a,b,c) | Mul(a,b,c) | Div(a,b,c) | Pow(a,b,c) | Atan2(a,b,c) -> a.A <- D 0.; b.A <- D 0.; c.A <- D 0.
                 | MulCons(a,_,b) | DivDCons(a,_,b) | DivConsD(_,a,b) | PowDCons(a,_,b) | PowConsD(_,a,b) | Atan2DCons(a,_,b) | Atan2ConsD(_,a,b) | Log(a,b) | Log10(a,b) | Exp(a,b) | Sin(a,b) | Cos(a,b) | Tan(a,b) | Neg(a,b) | Sqrt(a,b) | Sinh(a,b) | Cosh(a,b) | Tanh(a,b) | Asin(a,b) | Acos(a,b) | Atan(a,b) | Abs(a,b) | Floor(a,b) | Ceil(a,b) | Round(a,b) -> a.A <- D 0.; b.A <- D 0.
                 | AddCons(a,_) | SubDCons(a,_) | SubConsD(_,a) -> a.A <- D 0.
-
+    /// Make DR, with tag `i` and primal value `p`
     let inline makeDR i p = 
         DR(p, ref (D 0.), Stack<Op>(), i) 
-
+    /// Get the adjoint value of `d`
     let inline adjoint (d:D) = d.A
-
+    /// Get the primal value of `d`
     let inline primal (d:D) = d.P
 
+
+/// Reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
 module ReverseOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
@@ -466,7 +470,7 @@ module ReverseOps =
         let r1 = Array.map primal z
         let r2 =
             fun v ->
-                Array.iter cleanTr z
+                Array.iter clearTr z
                 Array.iter2 (fun (a:D) b -> a.A <- b) z v
                 Array.iter reverseTr z
                 Array.map adjoint xa

@@ -1,10 +1,10 @@
 ﻿
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
-open DiffSharp.AD.Nested.Forward
-open DiffSharp.AD.Nested.Forward.Vector
+open DiffSharp.AD.Nested.Reverse
+open DiffSharp.AD.Nested.Reverse.Vector
 open FsAlg.Generic
 open FSharp.Charting
 
@@ -41,14 +41,14 @@ let plot w =
     |> Chart.Line
 
 
-let ws = optimize (D 0.) (D 1e-11)
+let ws = optimize (D 0.) (D 1e-1)
 
 let test = ws |> Seq.toArray
 let test2 = ws |> Seq.last |> error
 
-//ws
-//|> Seq.map plot
-//|> Chart.Combine
-//|> Chart.WithXAxis(Min = 0., Max = 10.)
+ws
+|> Seq.map plot
+|> Chart.Combine
+|> Chart.WithXAxis(Min = 0., Max = 10.)
 
-let test3 = diff (fun x -> x * (diff (fun y -> x * y) 3.)) 6.
+//let test3 = diff (fun x -> x * (diff (fun y -> x * y) (D 3.))) (D 6.)
