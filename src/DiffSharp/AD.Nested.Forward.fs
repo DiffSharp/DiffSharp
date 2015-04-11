@@ -45,8 +45,8 @@ open FsAlg.Generic
 /// Dual numeric type with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
-    | D of float
-    | DF of D * D * uint64
+    | D of float // Primal
+    | DF of D * D * uint64 // Primal, tangent, tag
     static member op_Explicit(d:D) =
         match d with
         | D(a) -> a
@@ -288,64 +288,30 @@ type GlobalTagger() =
 /// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
-    /// Make D, with primal value `p`
-    let inline makeDF p =
-        match box p with
-        | :? float as p -> D(p)
-        | :? int as p -> D(float p)
-        | :? D as p -> p
     /// Make D, with tag `i`, primal value `p`, and tangent value `t`
-    let inline makeDFipt i p t =
-        match box p with
-        | :? float as p ->
-            match box t with
-            | :? float as t -> DF(D p, D t, i)
-            | :? D as t -> DF(D p, t, i)
-        | :? D as p ->
-            match box t with
-            | :? float as t -> DF(p, D t, i)
-            | :? D as t ->
-                match p, t with
-                | D(_), D(_) -> DF(p, t, i)
-                | D(_), DF(_,_,_) -> DF(p, t, i)
-                | DF(_,_,_), D(_) -> DF(p, t, i)
-                | DF(pp,_ ,pi), DF(tp,tt,ti) when pi < ti -> DF(DF(pp,D 0.,ti), DF(tp,tt,ti), i)
-                | DF(pp,pt,pi), DF(tp,tt,ti) when pi = ti -> DF(DF(pp,pt,pi), DF(tp,tt,pi), i)
-                | DF(pp,pt,pi), DF(tp,_ ,ti) when pi > ti -> DF(DF(pp,pt,pi), DF(tp,D 0.,pi), i)
-    /// Make D, with primal value `p` and tangent value `t`. A new tag will be attached using the global tagger.
-    let inline makeDFpt p t = makeDFipt GlobalTagger.Next p t
+    let inline makeDF i p t =
+        match p, t with
+        | D(_), D(_) -> DF(p, t, i)
+        | D(_), DF(_,_,_) -> DF(p, t, i)
+        | DF(_,_,_), D(_) -> DF(p, t, i)
+        | DF(pp,_ ,pi), DF(tp,tt,ti) when pi < ti -> DF(DF(pp,D 0.,ti), DF(tp,tt,ti), i)
+        | DF(pp,pt,pi), DF(tp,tt,ti) when pi = ti -> DF(DF(pp,pt,pi), DF(tp,tt,pi), i)
+        | DF(pp,pt,pi), DF(tp,_ ,ti) when pi > ti -> DF(DF(pp,pt,pi), DF(tp,D 0.,pi), i)
     /// Make D, with primal tag `i` and primal value `p`, and tangent 1.
-    let inline makeDFip1 i p =
-        match box p with
-        | :? float as p -> DF(D p, D 1., i)
-        | :? D as p ->
-            match p with
-            | D(_) -> DF(p, D 1., i)
-            | DF(_, _, pi) -> DF(p, DF(D 1., D 0., pi), i)
-    /// Make D, with primal value `p` and tangent 1. A new tag will be attached using the global tagger.
-    let inline makeDFp1 p = makeDFip1 GlobalTagger.Next p
+    let inline makeDFp1 i p =
+        match p with
+        | D(_) -> DF(p, D 1., i)
+        | DF(_, _, pi) -> DF(p, DF(D 1., D 0., pi), i)
     /// Get the primal value of `d`
     let inline primal (d:D) =
         match d with
         | D(_) -> d
         | DF(p,_,_) -> p
-    /// Get the primal value of `d` with the given tag `i`
-    let inline primalI i (d:D) =
-        match d with
-        | D(_) -> d
-        | DF(dp,_,di) when i = di -> dp
-        | DF(_,_,di) when i <> di -> d
     /// Get the tangent value of `d`
     let inline tangent (d:D) =
         match d with
         | D(_) -> D(0.)
         | DF(_,t,_) -> t
-    /// Get the tangent value of `d` with the given tag `i`
-    let inline tangentI i (d:D) =
-        match d with
-        | D(_) -> D(0.)
-        | DF(_,dt,di) when i = di -> dt
-        | DF(_,_,di) when i <> di -> D(0.)
     /// Get the primal and the first gradient component of `d`, as a tuple
     let inline tuple (d:D) =
         match d with
@@ -357,11 +323,11 @@ module DOps =
 module ForwardOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
-        x |> makeDFp1 |> f |> tuple
+        x |> makeDFp1 GlobalTagger.Next |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
-        x |> makeDFp1 |> f |> tangent
+        x |> makeDFp1 GlobalTagger.Next |> f |> tangent
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f x =
@@ -380,13 +346,13 @@ module ForwardOps =
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn n f x =
         if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
-        elif n = 0 then x |> makeDF |> f
+        elif n = 0 then x |> f
         else
             let rec d n f =
                 match n with
                 | 1 -> f
                 | _ -> d (n - 1) (diff f)
-            x |> makeDFp1 |> (d n f) |> tangent
+            x |> makeDFp1 GlobalTagger.Next |> (d n f) |> tangent
     
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f x =
@@ -395,7 +361,7 @@ module ForwardOps =
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDFipt i) x v |> f |> tuple
+        Array.map2 (makeDF i) x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -414,11 +380,11 @@ module ForwardOps =
     let inline laplacian' f (x:_[]) =
         let i = GlobalTagger.Next
         let a = Array.init x.Length (fun j ->
-                                        let xd = standardBasis x.Length j |> Array.map2 (makeDFipt i) x
+                                        let xd = standardBasis x.Length j |> Array.map2 (makeDF i) x
                                         fVStoSS j f xd
                                         |> diff
                                         <| xd.[j])
-        (x |> Array.map makeDF |> f, Array.sumBy tangent a)
+        (x |> f, Array.sumBy tangent a)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x =
@@ -427,7 +393,7 @@ module ForwardOps =
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDFipt i) x v |> f |> Array.map tuple |> Array.unzip
+        Array.map2 (makeDF i) x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v =
@@ -457,7 +423,7 @@ module ForwardOps =
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian' f x =
         let g, h = gradhessian f x
-        (x |> Array.map makeDF |> f, g, h)
+        (x |> f, g, h)
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
@@ -465,7 +431,7 @@ module ForwardOps =
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
-        (x |> Array.map makeDF |> f, hessian f x)
+        (x |> f, hessian f x)
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x =
@@ -496,8 +462,9 @@ module ForwardOps =
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv f x =
         curldiv' f x |> sndtrd
+        
 
-
+/// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' (f:D->D) x = ForwardOps.diff' f x
@@ -526,13 +493,13 @@ module Vector =
     /// Laplacian of a vector-to-scalar function `f`, at point x
     let inline laplacian (f:Vector<D>->D) x = ForwardOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<D>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<D>->Vector<D>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<D>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<D>->Vector<D>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<D>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<D>->Vector<D>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<D>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<D>->Vector<D>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' (f:Vector<D>->Vector<D>) x v = ForwardOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`

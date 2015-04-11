@@ -63,6 +63,7 @@
     <Content Include="app.config" />
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="AD.Nested.Reverse.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsAlg">

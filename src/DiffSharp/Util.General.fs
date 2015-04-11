@@ -70,7 +70,7 @@ let inline diagonal (Square m:_[,]) = Array.init (m.GetLength 0) (fun i -> m.[i,
 let inline trace (m:_[,]) = Array.sum (diagonal m)
 
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
-let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then 1. else 0.)
+let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then LanguagePrimitives.GenericOne else LanguagePrimitives.GenericZero)
 
 /// Copies the upper triangular elements of the square matrix given in the 2d array `m` to the lower triangular part
 let inline copyUpperToLower (Square m:_[,]) =
@@ -139,6 +139,13 @@ let inline fVVtoSV i (f:_[]->_[]) x =
 /// Vector-to-vector to vector-to-scalar function transform. Given a vector-to-vector function `f`, returns a vector-to-scalar version of `f` supplying only the `i`-th output.
 let inline fVVtoVS i (f:_[]->_[]) =
     fun xx -> (f xx).[i]
+
+/// Vector-to-vector to scalar-to-scalar function transform. Given a vector-to-vector function `f`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`, supplying only the `j`-th output.
+let inline fVVtoSS i j (f:'a[]->'b[]) (x:'a[]) =
+    let xc = Array.copy x
+    fun xx ->
+        xc.[i] <- xx
+        (f xc).[j]
 
 let invalidArgLog() = invalidArg "" "The derivative of log(x) is not defined for x <= 0."
 let invalidArgLog10() = invalidArg "" "The derivative of log10(x) is not defined for x <= 0."
