@@ -48,30 +48,37 @@ open System.Collections.Generic
 [<CustomEquality; CustomComparison>]    
 type D =
     | D of float // Primal
-    | DR of D * (D ref) * Stack<Op> * uint64 // Primal, adjoint, trace, tag
+    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out, tag
     member d.P =
         match d with
         | D(_) -> d
-        | DR(p,_,_,_) -> p
+        | DR(p,_,_,_,_) -> p
     member d.A
         with get() =
             match d with
             | D(_) -> D 0.
-            | DR(_,a,_,_) -> !a
+            | DR(_,a,_,_,_) -> !a
         and set(v) =
             match d with
             | D(_) -> ()
-            | DR(_,a,_,_) -> a := v
-    member d.AddA a =
-        d.A <- d.A + a
+            | DR(_,a,_,_,_) -> a := v
+    member d.F
+        with get() =
+            match d with
+            | D(_) -> 0u
+            | DR(_,_,_,f,_) -> !f
+        and set(v) =
+            match d with
+            | D(_) -> ()
+            | DR(_,_,_,f,_) -> f := v
     static member op_Explicit(d:D) =
         match d with
         | D(a) -> a
-        | DR(ap,_,_,_) -> float ap
+        | DR(ap,_,_,_,_) -> float ap
     static member DivideByInt(d:D, i:int) =
         match d with
         | D(a) -> D(a / float i)
-        | DR(_,_,_,_) -> d / float i
+        | DR(_,_,_,_,_) -> d / float i
     static member Zero = D 0.
     static member One = D 1.
     interface System.IComparable with
@@ -86,106 +93,70 @@ type D =
     override d.GetHashCode() =
         match d with
         | D(a) -> hash [| a |]
-        | DR(ap,_,atr,ai) -> hash [|ap; atr; ai|]
+        | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
     // D - D binary operations
     static member (+) (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(ap + bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(ap + bp, ref (D 0.), btr, bi) in btr.Push(AddCons(b, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(ap + bp, ref (D 0.), atr, ai) in atr.Push(AddCons(a, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(a + bp, ref (D 0.), btr, bi) in btr.Push(AddCons(b, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(ap + bp, ref (D 0.), atr, ai) in atr.Push(Add(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(ap + b, ref (D 0.), atr, ai) in atr.Push(AddCons(a, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap + bp, ref (D 0.), AddCons(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap + bp, ref (D 0.), AddCons(a), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a + bp, ref (D 0.), AddCons(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap + bp, ref (D 0.), Add(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap + b, ref (D 0.), AddCons(a), ref 0u, ai)
     static member (-) (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(ap - bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(ap - bp, ref (D 0.), btr, bi) in btr.Push(SubConsD(b, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(ap - bp, ref (D 0.), atr, ai) in atr.Push(SubDCons(a, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(a - bp, ref (D 0.), btr, bi) in btr.Push(SubConsD(b, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(ap - bp, ref (D 0.), atr, ai) in atr.Push(Sub(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(ap - b, ref (D 0.), atr, ai) in atr.Push(SubDCons(a, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap - bp, ref (D 0.), SubConsD(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap - bp, ref (D 0.), SubDCons(a), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a - bp, ref (D 0.), SubConsD(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap - bp, ref (D 0.), Sub(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap - b, ref (D 0.), SubDCons(a), ref 0u, ai)
     static member (*) (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(ap * bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(ap * bp, ref (D 0.), btr, bi) in btr.Push(MulCons(b, a, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(ap * bp, ref (D 0.), atr, ai) in atr.Push(MulCons(a, b, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(a * bp, ref (D 0.), btr, bi) in btr.Push(MulCons(b, a, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(ap * bp, ref (D 0.), atr, ai) in atr.Push(Mul(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(ap * b, ref (D 0.), atr, ai) in atr.Push(MulCons(a, b, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap * bp, ref (D 0.), MulCons(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap * bp, ref (D 0.), MulCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a * bp, ref (D 0.), MulCons(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap * bp, ref (D 0.), Mul(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap * b, ref (D 0.), MulCons(a, b), ref 0u, ai)
     static member (/) (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(ap / bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(ap / bp, ref (D 0.), btr, bi) in btr.Push(DivConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(ap / bp, ref (D 0.), atr, ai) in atr.Push(DivDCons(a, b, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(a / bp, ref (D 0.), btr, bi) in btr.Push(DivConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(ap / bp, ref (D 0.), atr, ai) in atr.Push(Div(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(ap / b, ref (D 0.), atr, ai) in atr.Push(DivDCons(a, b, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap / bp, ref (D 0.), DivConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap / bp, ref (D 0.), DivDCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a / bp, ref (D 0.), DivConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap / bp, ref (D 0.), Div(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap / b, ref (D 0.), DivDCons(a, b), ref 0u, ai)
     static member Pow (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(ap ** bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(D.Pow(ap, bp), ref (D 0.), btr, bi) in btr.Push(PowConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(ap ** bp, ref (D 0.), atr, ai) in atr.Push(PowDCons(a, b, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(a ** bp, ref (D 0.), btr, bi) in btr.Push(PowConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(ap ** bp, ref (D 0.), atr, ai) in atr.Push(Pow(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(ap ** b, ref (D 0.), atr, ai) in atr.Push(PowDCons(a, b, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(D.Pow(ap, bp), ref (D 0.), PowConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap ** bp, ref (D 0.), PowDCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a ** bp, ref (D 0.), PowConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap ** bp, ref (D 0.), Pow(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap ** b, ref (D 0.), PowDCons(a, b), ref 0u, ai)
     static member Atan2 (a:D, b:D) =
         match a, b with
         | D(ap), D(bp) -> D(atan2 ap bp)
-        | D(ap), DR(bp, _, btr, bi) -> let c = DR(D.Atan2(ap, bp), ref (D 0.), btr, bi) in btr.Push(Atan2ConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), D(bp) -> let c = DR(D.Atan2(ap, bp), ref (D 0.), atr, ai) in atr.Push(Atan2DCons(a, b, c)); c
-        | DR(_ , _, _ , ai), DR(bp, _, btr, bi) when ai < bi -> let c = DR(atan2 a bp, ref (D 0.), btr, bi) in btr.Push(Atan2ConsD(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(bp, _, _ , bi) when ai = bi -> let c = DR(atan2 ap bp, ref (D 0.), atr, ai) in atr.Push(Atan2(a, b, c)); c
-        | DR(ap, _, atr, ai), DR(_ , _, _ , bi) when ai > bi -> let c = DR(atan2 ap b, ref (D 0.), atr, ai) in atr.Push(Atan2DCons(a, b, c)); c
+        | D(ap), DR(bp, _, _, _, bi) -> DR(D.Atan2(ap, bp), ref (D 0.), Atan2ConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(D.Atan2(ap, bp), ref (D 0.), Atan2DCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(atan2 a bp, ref (D 0.), Atan2ConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(atan2 ap bp, ref (D 0.), Atan2(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(atan2 ap b, ref (D 0.), Atan2DCons(a, b), ref 0u, ai)
     // D - float binary operations
-    static member (+) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a + b)
-        | DR(ap, _, atr, ai) -> let c = DR(ap + b, ref (D 0.), atr, ai) in atr.Push(AddCons(a, c)); c
-    static member (-) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a - b)
-        | DR(ap, _, atr, ai) -> let c = DR(ap - b, ref (D 0.), atr, ai) in atr.Push(SubDCons(a, c)); c
-    static member (*) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a * b)
-        | DR(ap, _, atr, ai) -> let c = DR(ap * b, ref (D 0.), atr, ai) in atr.Push(MulCons(a, D b, c)); c
-    static member (/) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a / b)
-        | DR(ap, _, atr, ai) -> let c = DR(ap / b, ref (D 0.), atr, ai) in atr.Push(DivDCons(a, D b, c)); c
-    static member Pow (a:D, b:float) =
-        match a with
-        | D(a) -> D(a ** b)
-        | DR(ap, _, atr, ai) -> let c = DR(ap ** b, ref (D 0.), atr, ai) in atr.Push(PowDCons(a, D b, c)); c
-    static member Atan2 (a:D, b:float) =
-        match a with
-        | D(a) -> D(atan2 a b)
-        | DR(ap, _, atr, ai) -> let c = DR(D.Atan2(ap, b), ref (D 0.), atr, ai) in atr.Push(Atan2DCons(a, D b, c)); c
+    static member (+) (a:D, b:float) = a + (D b)
+    static member (-) (a:D, b:float) = a - (D b)
+    static member (*) (a:D, b:float) = a * (D b)
+    static member (/) (a:D, b:float) = a / (D b)
+    static member Pow (a:D, b:float) = a ** (D b)
+    static member Atan2 (a:D, b:float) = atan2 a (D b)
     // float - D binary operations
-    static member (+) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a + b)
-        | DR(bp, _, btr, bi) -> let c = DR(a + bp, ref (D 0.), btr, bi) in btr.Push(AddCons(b, c)); c
-    static member (-) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a - b)
-        | DR(bp, _, btr, bi) -> let c = DR(a - bp, ref (D 0.), btr, bi) in btr.Push(SubConsD(b, c)); c
-    static member (*) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a * b)
-        | DR(bp, _, btr, bi) -> let c = DR(a * bp, ref (D 0.), btr, bi) in btr.Push(MulCons(b, D a, c)); c
-    static member (/) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a / b)
-        | DR(bp, _, btr, bi) -> let c = DR(a * bp, ref (D 0.), btr, bi) in btr.Push(DivConsD(D a, b, c)); c
-    static member Pow (a:float, b:D) =
-        match b with
-        | D(b) -> D(a ** b)
-        | DR(bp, _, btr, bi) -> let c = DR(D.Pow(a, bp), ref (D 0.), btr, bi) in btr.Push(PowConsD(D a, b, c)); c
-    static member Atan2 (a:float, b:D) =
-        match b with
-        | D(b) -> D(atan2 a b)
-        | DR(bp, _, btr, bi) -> let c = DR(D.Atan2(a, bp), ref (D 0.), btr, bi) in btr.Push(Atan2ConsD(D a, b, c)); c
+    static member (+) (a:float, b:D) = (D a) + b
+    static member (-) (a:float, b:D) = (D a) - b
+    static member (*) (a:float, b:D) = (D a) * b
+    static member (/) (a:float, b:D) = (D a) / b
+    static member Pow (a:float, b:D) = (D a) ** b
+    static member Atan2 (a:float, b:D) = atan2 (D a) b
     // D - int binary operations
     static member (+) (a:D, b:int) = a + float b
     static member (-) (a:D, b:int) = a - float b
@@ -205,191 +176,229 @@ type D =
         if (float a) <= 0. then invalidArgLog()
         match a with
         | D(a) -> D(log a)
-        | DR(ap, _, atr, ai) -> let c = DR(log ap, ref (D 0.), atr, ai) in atr.Push(Log(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(log ap, ref (D 0.), Log(a), ref 0u, ai)
     static member Log10 (a:D) =
         if (float a) <= 0. then invalidArgLog10()
         match a with
         | D(a) -> D(log10 a)
-        | DR(ap, _, atr, ai) -> let c = DR(log10 ap, ref (D 0.), atr, ai) in atr.Push(Log10(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(log10 ap, ref (D 0.), Log10(a), ref 0u, ai)
     static member Exp (a:D) =
         match a with
         | D(a) -> D(exp a)
-        | DR(ap, _, atr, ai) -> let c = DR(exp ap, ref (D 0.), atr, ai) in atr.Push(Exp(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(exp ap, ref (D 0.), Exp(a), ref 0u, ai)
     static member Sin (a:D) =
         match a with
         | D(a) -> D(sin a)
-        | DR(ap, _, atr, ai) -> let c = DR(sin ap, ref (D 0.), atr, ai) in atr.Push(Sin(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(sin ap, ref (D 0.), Sin(a), ref 0u, ai)
     static member Cos (a:D) =
         match a with
         | D(a) -> D(cos a)
-        | DR(ap, _, atr, ai) -> let c = DR(cos ap, ref (D 0.), atr, ai) in atr.Push(Cos(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(cos ap, ref (D 0.), Cos(a), ref 0u, ai)
     static member Tan (a:D) =
         if (float (cos a)) = 0. then invalidArgTan()
         match a with
         | D(a) -> D(tan a)
-        | DR(ap, _, atr, ai) -> let c = DR(tan ap, ref (D 0.), atr, ai) in atr.Push(Tan(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(tan ap, ref (D 0.), Tan(a), ref 0u, ai)
     static member (~-) (a:D) =
         match a with
         | D(a) -> D(-a)
-        | DR(ap, _, atr, ai) -> let c = DR(-ap, ref (D 0.), atr, ai) in atr.Push(Neg(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(-ap, ref (D 0.), Neg(a), ref 0u, ai)
     static member Sqrt (a:D) =
         if (float a) <= 0. then invalidArgSqrt()
         match a with
         | D(a) -> D(sqrt a)
-        | DR(ap, _, atr, ai) -> let c = DR(sqrt ap, ref (D 0.), atr, ai) in atr.Push(Sqrt(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(sqrt ap, ref (D 0.), Sqrt(a), ref 0u, ai)
     static member Sinh (a:D) =
         match a with
         | D(a) -> D(sinh a)
-        | DR(ap, _, atr, ai) -> let c = DR(sinh ap, ref (D 0.), atr, ai) in atr.Push(Sinh(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(sinh ap, ref (D 0.), Sinh(a), ref 0u, ai)
     static member Cosh (a:D) =
         match a with
         | D(a) -> D(cosh a)
-        | DR(ap, _, atr, ai) -> let c = DR(cosh ap, ref (D 0.), atr, ai) in atr.Push(Cosh(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(cosh ap, ref (D 0.), Cosh(a), ref 0u, ai)
     static member Tanh (a:D) =
         match a with
         | D(a) -> D(tanh a)
-        | DR(ap, _, atr, ai) -> let c = DR(tanh ap, ref (D 0.), atr, ai) in atr.Push(Cosh(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(tanh ap, ref (D 0.), Tanh(a), ref 0u, ai)
     static member Asin (a:D) =
         if abs (float a) >= 1. then invalidArgAsin()
         match a with
         | D(a) -> D(asin a)
-        | DR(ap, _, atr, ai) -> let c = DR(asin ap, ref (D 0.), atr, ai) in atr.Push(Asin(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(asin ap, ref (D 0.), Asin(a), ref 0u, ai)
     static member Acos (a:D) =
         if abs (float a) >= 1. then invalidArgAcos()
         match a with
         | D(a) -> D(acos a)
-        | DR(ap, _, atr, ai) -> let c = DR(acos ap, ref (D 0.), atr, ai) in atr.Push(Acos(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(acos ap, ref (D 0.), Acos(a), ref 0u, ai)
     static member Atan (a:D) =
         match a with
         | D(a) -> D(atan a)
-        | DR(ap, _, atr, ai) -> let c = DR(atan ap, ref (D 0.), atr, ai) in atr.Push(Atan(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(atan ap, ref (D 0.), Atan(a), ref 0u, ai)
     static member Abs (a:D) =
         if float a = 0. then invalidArgAbs()
         match a with
         | D(a) -> D(abs a)
-        | DR(ap, _, atr, ai) -> let c = DR(abs ap, ref (D 0.), atr, ai) in atr.Push(Abs(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(abs ap, ref (D 0.), Abs(a), ref 0u, ai)
     static member Floor (a:D) =
         if isInteger (float a) then invalidArgFloor()
         match a with
         | D(a) -> D(floor a)
-        | DR(ap, _, atr, ai) -> let c = DR(floor ap, ref (D 0.), atr, ai) in atr.Push(Floor(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(floor ap, ref (D 0.), Floor(a), ref 0u, ai)
     static member Ceiling (a:D) =
         if isInteger (float a) then invalidArgCeil()
         match a with
         | D(a) -> D(ceil a)
-        | DR(ap, _, atr, ai) -> let c = DR(ceil ap, ref (D 0.), atr, ai) in atr.Push(Ceil(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(ceil ap, ref (D 0.), Ceil(a), ref 0u, ai)
     static member Round (a:D) =
         if isHalfway (float a) then invalidArgRound()
         match a with
         | D(a) -> D(round a)
-        | DR(ap, _, atr, ai) -> let c = DR(round ap, ref (D 0.), atr, ai) in atr.Push(Round(a, c)); c
+        | DR(ap, _, _, _, ai) -> DR(round ap, ref (D 0.), Round(a), ref 0u, ai)
 
 /// Operation types for the trace
 and Op =
-    | Add        of D * D * D
-    | AddCons    of D * D
-    | Sub        of D * D * D
-    | SubDCons   of D * D
-    | SubConsD   of D * D
-    | Mul        of D * D * D
-    | MulCons    of D * D * D
-    | Div        of D * D * D
-    | DivDCons   of D * D * D
-    | DivConsD   of D * D * D
-    | Pow        of D * D * D
-    | PowDCons   of D * D * D
-    | PowConsD   of D * D * D
-    | Atan2      of D * D * D
-    | Atan2DCons of D * D * D
-    | Atan2ConsD of D * D * D
-    | Log        of D * D
-    | Log10      of D * D
-    | Exp        of D * D
-    | Sin        of D * D
-    | Cos        of D * D
-    | Tan        of D * D
-    | Neg        of D * D
-    | Sqrt       of D * D
-    | Sinh       of D * D
-    | Cosh       of D * D
-    | Tanh       of D * D
-    | Asin       of D * D
-    | Acos       of D * D
-    | Atan       of D * D
-    | Abs        of D * D
-    | Floor      of D * D
-    | Ceil       of D * D
-    | Round      of D * D
+    | Add        of D * D
+    | AddCons    of D
+    | Sub        of D * D
+    | SubDCons   of D
+    | SubConsD   of D
+    | Mul        of D * D
+    | MulCons    of D * D
+    | Div        of D * D
+    | DivDCons   of D * D
+    | DivConsD   of D * D
+    | Pow        of D * D
+    | PowDCons   of D * D
+    | PowConsD   of D * D
+    | Atan2      of D * D
+    | Atan2DCons of D * D
+    | Atan2ConsD of D * D
+    | Log        of D
+    | Log10      of D
+    | Exp        of D
+    | Sin        of D
+    | Cos        of D
+    | Tan        of D
+    | Neg        of D
+    | Sqrt       of D
+    | Sinh       of D
+    | Cosh       of D
+    | Tanh       of D
+    | Asin       of D
+    | Acos       of D
+    | Atan       of D
+    | Abs        of D
+    | Floor      of D
+    | Ceil       of D
+    | Round      of D
+    | Noop
 
 /// Tagger for generating incremental integers
 type Tagger =
-    val mutable LastTag : uint64
+    val mutable LastTag : uint32
     new(t) = {LastTag = t}
-    member t.Next() = t.LastTag <- t.LastTag + 1UL; t.LastTag
+    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
 
 /// Global tagger for D operations
 type GlobalTagger() =
-    static let T = new Tagger(0UL)
+    static let T = new Tagger(0u)
     static member Next = T.Next()
-    static member Reset = T.LastTag <- 0UL
+    static member Reset = T.LastTag <- 0u
 
 /// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
-    /// Reverse propagates the adjoints through the trace of `d`
-    let inline reverseTr (d:D) =
+    /// Reverse propagates the adjoint `v` through the trace of `d`
+    let rec reverse (v:D) (d:D) =
         match d with
         | D(_) -> ()
-        | DR(_,_,o,_) ->
-            for op in o do
-                match op with
-                | Add(a, b, c)           -> a.AddA c.A; b.AddA c.A
-                | AddCons(a, c)          -> a.AddA c.A
-                | Sub(a, b, c)           -> a.AddA c.A; b.AddA -c.A
-                | SubDCons(a, c)         -> a.AddA c.A
-                | SubConsD(a, c)         -> a.AddA -c.A
-                | Mul(a, b, c)           -> a.AddA (c.A * b.P); b.AddA (c.A * a.P)
-                | MulCons(a, cons, c)    -> a.AddA (c.A * cons)
-                | Div(a, b, c)           -> a.AddA (c.A / b.P); b.AddA (c.A * (-a.P / (b.P * b.P)))
-                | DivDCons(a, cons, c)   -> a.AddA (c.A / cons)
-                | DivConsD(cons, b, c)   -> b.AddA (c.A * (-cons / (b.P * b.P)))
-                | Pow(a, b, c)           -> a.AddA (c.A * (a.P ** (b.P - D 1.)) * b.P); b.AddA (c.A * (a.P ** b.P) * log a.P)
-                | PowDCons(a, cons, c)   -> a.AddA (c.A * (a.P ** (cons - D 1.)) * cons)
-                | PowConsD(cons, b, c)   -> b.AddA (c.A * (cons ** b.P) * log cons)
-                | Atan2(a, b, c)         -> let denom = a.P * a.P + b.P * b.P in a.AddA (c.A * b.P / denom); b.AddA (c.A * (-a.P) / denom)
-                | Atan2DCons(a, cons, c) -> a.AddA (c.A * cons / (a.P * a.P + cons * cons))
-                | Atan2ConsD(cons, b, c) -> b.AddA (c.A * (-cons) / (cons * cons + b.P * b.P))
-                | Log(a, c)              -> a.AddA (c.A / a.P)
-                | Log10(a, c)            -> a.AddA (c.A / (a.P * log10val))
-                | Exp(a, c)              -> a.AddA (c.A * c.P) // c.P = exp a.P
-                | Sin(a, c)              -> a.AddA (c.A * cos a.P)
-                | Cos(a, c)              -> a.AddA (c.A * (-sin a.P))
-                | Tan(a, c)              -> let seca = D 1. / cos a.P in a.AddA (c.A * seca * seca)
-                | Neg(a, c)              -> a.AddA -c.A
-                | Sqrt(a, c)             -> a.AddA (c.A / (D 2. * c.P)) // c.P = sqrt a.P
-                | Sinh(a, c)             -> a.AddA (c.A * cosh a.P)
-                | Cosh(a, c)             -> a.AddA (c.A * sinh a.P)
-                | Tanh(a, c)             -> let secha = D 1. / cosh a.P in a.AddA (c.A * secha * secha)
-                | Asin(a, c)             -> a.AddA (c.A / sqrt (D 1. - a.P * a.P))
-                | Acos(a, c)             -> a.AddA (-c.A / sqrt (D 1. - a.P * a.P))
-                | Atan(a, c)             -> a.AddA (c.A / (D 1. + a.P * a.P))
-                | Abs(a, c)              -> a.AddA (c.A * float (sign (float a.P)))
-                | Floor(_, _)            -> ()
-                | Ceil(_, _)             -> ()
-                | Round(_, _)            -> ()
-    /// Clear the adjoints of all the values in the trace of `d`
-    let inline clearTr (d:D) =
+        | DR(_,_,o,_,_) ->
+            d.A <- d.A + v
+            d.F <- d.F - 1u
+            if d.F = 0u then
+                match o with
+                | Add(a, b)           -> reverse d.A a; reverse d.A b
+                | AddCons(a)          -> reverse d.A a
+                | Sub(a, b)           -> reverse d.A a; reverse -d.A b
+                | SubDCons(a)         -> reverse d.A a
+                | SubConsD(a)         -> reverse -d.A a
+                | Mul(a, b)           -> reverse (d.A * b.P) a; reverse (d.A * a.P) b
+                | MulCons(a, cons)    -> reverse (d.A * cons) a
+                | Div(a, b)           -> reverse (d.A / b.P) a; reverse (d.A * (-a.P / (b.P * b.P))) b
+                | DivDCons(a, cons)   -> reverse (d.A / cons) a
+                | DivConsD(a, cons)   -> reverse (d.A * (-cons / (a.P * a.P))) a
+                | Pow(a, b)           -> reverse (d.A * (a.P ** (b.P - D 1.)) * b.P) a; reverse (d.A * (a.P ** b.P) * log a.P) b
+                | PowDCons(a, cons)   -> reverse (d.A * (a.P ** (cons - D 1.)) * cons) a
+                | PowConsD(a, cons)   -> reverse (d.A * (cons ** a.P) * log cons) a
+                | Atan2(a, b)         -> let denom = a.P * a.P + b.P * b.P in reverse (d.A * b.P / denom) a; reverse (d.A * (-a.P) / denom) b
+                | Atan2DCons(a, cons) -> reverse (d.A * cons / (a.P * a.P + cons * cons)) a
+                | Atan2ConsD(a, cons) -> reverse (d.A * (-cons) / (cons * cons + a.P * a.P)) a
+                | Log(a)              -> reverse (d.A / a.P) a
+                | Log10(a)            -> reverse (d.A / (a.P * log10val)) a
+                | Exp(a)              -> reverse (d.A * d.P) a // d.P = exp a.P
+                | Sin(a)              -> reverse (d.A * cos a.P) a
+                | Cos(a)              -> reverse (d.A * (-sin a.P)) a
+                | Tan(a)              -> let seca = D 1. / cos a.P in reverse (d.A * seca * seca) a
+                | Neg(a)              -> reverse -d.A a
+                | Sqrt(a)             -> reverse (d.A / (D 2. * d.P)) a // d.P = sqrt a.P
+                | Sinh(a)             -> reverse (d.A * cosh a.P) a
+                | Cosh(a)             -> reverse (d.A * sinh a.P) a
+                | Tanh(a)             -> let secha = D 1. / cosh a.P in reverse (d.A * secha * secha) a
+                | Asin(a)             -> reverse (d.A / sqrt (D 1. - a.P * a.P)) a
+                | Acos(a)             -> reverse (-d.A / sqrt (D 1. - a.P * a.P)) a
+                | Atan(a)             -> reverse (d.A / (D 1. + a.P * a.P)) a
+                | Abs(a)              -> reverse (d.A * float (sign (float a.P))) a
+                | Floor(_)            -> ()
+                | Ceil(_)             -> ()
+                | Round(_)            -> ()
+                | Noop                -> ()
+    /// Resets the adjoints of all the values in the trace of `d`
+    let rec reset (d:D) =
         match d with
         | D(_) -> ()
-        | DR(_,_,o,_) ->
-            for op in o do
-                match op with
-                | Add(a,b,c) | Sub(a,b,c) | Mul(a,b,c) | Div(a,b,c) | Pow(a,b,c) | Atan2(a,b,c) -> a.A <- D 0.; b.A <- D 0.; c.A <- D 0.
-                | MulCons(a,_,b) | DivDCons(a,_,b) | DivConsD(_,a,b) | PowDCons(a,_,b) | PowConsD(_,a,b) | Atan2DCons(a,_,b) | Atan2ConsD(_,a,b) | Log(a,b) | Log10(a,b) | Exp(a,b) | Sin(a,b) | Cos(a,b) | Tan(a,b) | Neg(a,b) | Sqrt(a,b) | Sinh(a,b) | Cosh(a,b) | Tanh(a,b) | Asin(a,b) | Acos(a,b) | Atan(a,b) | Abs(a,b) | Floor(a,b) | Ceil(a,b) | Round(a,b) -> a.A <- D 0.; b.A <- D 0.
-                | AddCons(a,_) | SubDCons(a,_) | SubConsD(_,a) -> a.A <- D 0.
+        | DR(_,_,o,_,_) ->
+            d.A <- D 0.
+            d.F <- d.F + 1u
+            if d.F = 1u then
+                match o with
+                | Add(a, b)           -> reset a; reset b
+                | AddCons(a)          -> reset a
+                | Sub(a, b)           -> reset a; reset b
+                | SubDCons(a)         -> reset a
+                | SubConsD(a)         -> reset a
+                | Mul(a, b)           -> reset a; reset b
+                | MulCons(a, _)       -> reset a
+                | Div(a, b)           -> reset a; reset b
+                | DivDCons(a, _)      -> reset a
+                | DivConsD(a, _)      -> reset a
+                | Pow(a, b)           -> reset a; reset b
+                | PowDCons(a, _)      -> reset a
+                | PowConsD(a, _)      -> reset a
+                | Atan2(a, b)         -> reset a; reset b
+                | Atan2DCons(a, _)    -> reset a
+                | Atan2ConsD(a, _)    -> reset a
+                | Log(a)              -> reset a
+                | Log10(a)            -> reset a
+                | Exp(a)              -> reset a
+                | Sin(a)              -> reset a
+                | Cos(a)              -> reset a
+                | Tan(a)              -> reset a
+                | Neg(a)              -> reset a
+                | Sqrt(a)             -> reset a
+                | Sinh(a)             -> reset a
+                | Cosh(a)             -> reset a
+                | Tanh(a)             -> reset a
+                | Asin(a)             -> reset a
+                | Acos(a)             -> reset a
+                | Atan(a)             -> reset a
+                | Abs(a)              -> reset a
+                | Floor(a)            -> reset a
+                | Ceil(a)             -> reset a
+                | Round(a)            -> reset a
+                | Noop                -> ()
     /// Make DR, with tag `i` and primal value `p`
     let inline makeDR i p = 
-        DR(p, ref (D 0.), Stack<Op>(), i) 
+        DR(p, ref (D 0.), Noop, ref 0u, i) 
     /// Get the adjoint value of `d`
     let inline adjoint (d:D) = d.A
     /// Get the primal value of `d`
@@ -402,9 +411,9 @@ module ReverseOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
         let xa = x |> makeDR GlobalTagger.Next
-        let (z:D) = xa |> f
-        z.A <- D 1.
-        z |> reverseTr
+        let z:D = f xa
+        z |> reset
+        z |> reverse (D 1.)
         (primal z, adjoint xa)
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
@@ -434,19 +443,19 @@ module ReverseOps =
                 match n with
                 | 1 -> diff f
                 | _ -> d (n - 1) (diff f)
-            x |> makeDR GlobalTagger.Next |> (d n f)
+            x |> (d n f)
 
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f x =
         (diffn 0 f x, diffn n f x)
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`    
-    let inline grad' f (x:_[]) =
+    let inline grad' f x =
         let i = GlobalTagger.Next
         let xa = x |> Array.map (makeDR i)
         let z:D = f xa
-        z.A <- D 1.
-        z |> reverseTr
+        z |> reset
+        z |> reverse (D 1.)
         (primal z, Array.map adjoint xa)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`    
@@ -470,9 +479,8 @@ module ReverseOps =
         let r1 = Array.map primal z
         let r2 =
             fun v ->
-                Array.iter clearTr z
-                Array.iter2 (fun (a:D) b -> a.A <- b) z v
-                Array.iter reverseTr z
+                Array.iter reset z
+                Array.iter2 reverse v z
                 Array.map adjoint xa
         (r1, r2)
 

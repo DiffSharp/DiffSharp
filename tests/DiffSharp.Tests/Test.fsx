@@ -3,8 +3,8 @@
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
-open DiffSharp.AD.Nested.Reverse
-open DiffSharp.AD.Nested.Reverse.Vector
+open DiffSharp.AD.Nested.Forward
+open DiffSharp.AD.Nested.Forward.Vector
 open FsAlg.Generic
 open FSharp.Charting
 
@@ -41,7 +41,7 @@ let plot w =
     |> Chart.Line
 
 
-let ws = optimize (D 0.) (D 1e-1)
+let ws = optimize (D 0.) (D 1e-11)
 
 let test = ws |> Seq.toArray
 let test2 = ws |> Seq.last |> error

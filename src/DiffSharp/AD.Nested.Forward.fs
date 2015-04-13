@@ -46,7 +46,7 @@ open FsAlg.Generic
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float // Primal
-    | DF of D * D * uint64 // Primal, tangent, tag
+    | DF of D * D * uint32 // Primal, tangent, tag
     static member op_Explicit(d:D) =
         match d with
         | D(a) -> a
@@ -120,55 +120,19 @@ type D =
         | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(atan2 ap bp, (at * bp - ap * bt) / (ap * ap + bp * bp), ai)
         | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
     // D - float binary operations
-    static member (+) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a + b)
-        | DF(ap, at, ai) -> DF(ap + b, at, ai)
-    static member (-) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a - b)
-        | DF(ap, at, ai) -> DF(ap - b, at, ai)
-    static member (*) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a * b)
-        | DF(ap, at, ai) -> DF(ap * b, at * b, ai)
-    static member (/) (a:D, b:float) =
-        match a with
-        | D(a) -> D(a / b)
-        | DF(ap, at, ai) -> DF(ap / b, at / b, ai)
-    static member Pow (a:D, b:float) =
-        match a with
-        | D(a) -> D(a ** b)
-        | DF(ap, at, ai) -> DF(ap ** b, b * (ap ** (b - 1.)) * at, ai)
-    static member Atan2 (a:D, b:float) =
-        match a with
-        | D(a) -> D(atan2 a b)
-        | DF(ap, at, ai) -> DF(D.Atan2(ap, b), (b * at) / (b * b + ap * ap), ai)
+    static member (+) (a:D, b:float) = a + (D b)
+    static member (-) (a:D, b:float) = a - (D b)
+    static member (*) (a:D, b:float) = a * (D b)
+    static member (/) (a:D, b:float) = a / (D b)
+    static member Pow (a:D, b:float) = a ** (D b)
+    static member Atan2 (a:D, b:float) = atan2 a (D b)
     // float - D binary operations
-    static member (+) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a + b)
-        | DF(bp, bt, bi) -> DF(a + bp, bt, bi)
-    static member (-) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a - b)
-        | DF(bp, bt, bi) -> DF(a - bp, -bt, bi)
-    static member (*) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a * b)
-        | DF(bp, bt, bi) -> DF(a * bp, a * bt, bi)
-    static member (/) (a:float, b:D) =
-        match b with
-        | D(b) -> D(a / b)
-        | DF(bp, bt, bi) -> DF(a / bp, -a * bt / (bp * bp), bi)
-    static member Pow (a:float, b:D) =
-        match b with
-        | D(b) -> D(a ** b)
-        | DF(bp, bt, bi) -> let apb = D.Pow(a, bp) in DF(apb, apb * (log a) * bt , bi)
-    static member Atan2 (a:float, b:D) =
-        match b with
-        | D(b) -> D(atan2 a b)
-        | DF(bp, bt, bi) -> DF(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
+    static member (+) (a:float, b:D) = (D a) + b
+    static member (-) (a:float, b:D) = (D a) - b
+    static member (*) (a:float, b:D) = (D a) * b
+    static member (/) (a:float, b:D) = (D a) / b
+    static member Pow (a:float, b:D) = (D a) ** b
+    static member Atan2 (a:float, b:D) = atan2 (D a) b
     // D - int binary operations
     static member (+) (a:D, b:int) = a + float b
     static member (-) (a:D, b:int) = a - float b
@@ -274,15 +238,15 @@ type D =
 
 /// Tagger for generating incremental integers
 type Tagger =
-    val mutable LastTag : uint64
+    val mutable LastTag : uint32
     new(t) = {LastTag = t}
-    member t.Next() = t.LastTag <- t.LastTag + 1UL; t.LastTag
+    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
 
 /// Global tagger for D operations
 type GlobalTagger() =
-    static let T = new Tagger(0UL)
+    static let T = new Tagger(0u)
     static member Next = T.Next()
-    static member Reset = T.LastTag <- 0UL
+    static member Reset = T.LastTag <- 0u
 
 
 /// D operations module (automatically opened)
