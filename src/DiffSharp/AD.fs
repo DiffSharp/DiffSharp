@@ -42,21 +42,25 @@ namespace DiffSharp.AD
 open DiffSharp.Util.General
 open FsAlg.Generic
 
+/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float // Primal
     | DF of D * D * uint32 // Primal, tangent, tag
-    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out, tag
+    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    /// Primal value of this D
     member d.P =
         match d with
         | D(_) -> d
         | DF(p,_,_) -> p
         | DR(p,_,_,_,_) -> p
+    /// Tangent value of this D
     member d.T =
         match d with
         | D(_) -> D 0.
         | DF(_,t,_) -> t
         | DR(_,_,_,_,_) -> failwith "DR does not have a tangent value."
+    /// Adjoint value of this D
     member d.A
         with get() =
             match d with
@@ -68,6 +72,7 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set adjoint value for DF."
             | DR(_,a,_,_,_) -> a := v
+    /// Fan-out counter of this D
     member d.F
         with get() =
             match d with
@@ -219,19 +224,19 @@ type D =
     static member Pow (a:float, b:D) = (D a) ** b
     static member Atan2 (a:float, b:D) = atan2 (D a) b
     // D - int binary operations
-    static member (+) (a:D, b:int) = a + float b
-    static member (-) (a:D, b:int) = a - float b
-    static member (*) (a:D, b:int) = a * float b
-    static member (/) (a:D, b:int) = a / float b
-    static member Pow (a:D, b:int) = D.Pow(a, float b)
-    static member Atan2 (a:D, b:int) = D.Atan2(a, float b)
+    static member (+) (a:D, b:int) = a + (D (float b))
+    static member (-) (a:D, b:int) = a - (D (float b))
+    static member (*) (a:D, b:int) = a * (D (float b))
+    static member (/) (a:D, b:int) = a / (D (float b))
+    static member Pow (a:D, b:int) = D.Pow(a, (D (float b)))
+    static member Atan2 (a:D, b:int) = D.Atan2(a, (D (float b)))
     // int - D binary operations
-    static member (+) (a:int, b:D) = (float a) + b
-    static member (-) (a:int, b:D) = (float a) - b
-    static member (*) (a:int, b:D) = (float a) * b
-    static member (/) (a:int, b:D) = (float a) / b
-    static member Pow (a:int, b:D) = D.Pow(float a, b)
-    static member Atan2 (a:int, b:D) = D.Atan2(float a, b)
+    static member (+) (a:int, b:D) = (D (float a)) + b
+    static member (-) (a:int, b:D) = (D (float a)) - b
+    static member (*) (a:int, b:D) = (D (float a)) * b
+    static member (/) (a:int, b:D) = (D (float a)) / b
+    static member Pow (a:int, b:D) = D.Pow((D (float a)), b)
+    static member Atan2 (a:int, b:D) = D.Atan2((D (float a)), b)
     // D unary operations
     static member Log (a:D) =
         if (float a) <= 0. then invalidArgLog()
@@ -334,7 +339,7 @@ type D =
         | DF(ap, _, ai) -> DF(round ap, D 0., ai)
         | DR(ap,_,_,_,ai) -> DR(round ap, ref (D 0.), Round(a), ref 0u, ai)
 
-
+/// Operation types for the trace
 and Op =
     | Add        of D * D
     | AddCons    of D
@@ -384,16 +389,22 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
-
+/// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
+    /// Make DF, with tag `i`, primal value `p`, and tangent value `t`
     let inline makeDF i t p = DF(p, t, i)
+    /// Make DR, with tag `i` and primal value `p`
     let inline makeDR i p = DR(p, ref (D 0.), Noop, ref 0u, i)
+    /// Get the primal value of `d`
     let inline primal (d:D) = d.P
+    /// Get the tangent value of `d`
     let inline tangent (d:D) = d.T
+    /// Get the adjoint value of `d`
     let inline adjoint (d:D) = d.A
+    /// Get the primal and tangent values of  `d`, as a tuple
     let inline tuple (d:D) = (d.P, d.T)
-
+    /// Reverse propagates the adjoint `v` through the trace of `d`
     let rec reverse (v:D) (d:D) =
         match d with
         | DR(_,_,o,_,_) ->
@@ -437,7 +448,7 @@ module DOps =
                 | Round(_)            -> ()
                 | Noop                -> ()
         | _ -> ()
-
+    /// Resets the adjoints of all the values in the trace of `d`
     let rec reset (d:D) =
         match d with
         | DR(_,_,o,_,_) ->
@@ -482,27 +493,34 @@ module DOps =
                 | Noop                -> ()
         | _ -> ()
 
+/// Forward and reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
 module DiffOps =
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
         x |> makeDF GlobalTagger.Next (D 1.) |> f |> tuple
 
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
         x |> makeDF GlobalTagger.Next (D 1.) |> f |> tangent
 
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f x =
         diff (diff f) x
 
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2'' f x =
         let v, d = diff' f x
         let d2 = diff2 f x
         (v, d, d2)
 
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2' f x =
         diff2'' f x |> fsttrd
 
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`    
     let inline diffn n f x =
-        if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
+        if n < 0 then invalidArgDiffn()
         elif n = 0 then x |> f
         else
             let rec d n f =
@@ -511,16 +529,20 @@ module DiffOps =
                 | _ -> d (n - 1) (diff f)
             x |> d n f
 
+    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diffn' n f x =
         (x |> f, diffn n f x)
 
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         let i = GlobalTagger.Next
         Array.map2 (makeDF i) v x |> f |> tuple
 
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad' f x =
         let i = GlobalTagger.Next
         let xa = x |> Array.map (makeDR i)
@@ -529,22 +551,28 @@ module DiffOps =
         z |> reverse (D 1.)
         (primal z, Array.map adjoint xa)
 
+    /// Gradient of a vector-to-scalar function `f`, at point `x`
     let inline grad f x =
         grad' f x |> snd
 
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian' f (x:_[]) = 
         (x |> f, Array.init x.Length (fun i -> x |> fVVtoSS i i (grad f) |> diff <| x.[i]) |> Array.sum)
 
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`    
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
         Array.map2 (makeDF i) v x |> f |> Array.map tuple |> Array.unzip
 
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v =
         jacobianv' f x v |> snd
 
+    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
     let inline jacobianTv'' f x =
         let i = GlobalTagger.Next
         let xa = x |> Array.map (makeDR i)
@@ -557,13 +585,16 @@ module DiffOps =
                 Array.map adjoint xa
         (r1, r2)
 
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianTv' f x v =
         let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
 
+    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianTv f x v =
         jacobianTv' f x v |> snd
 
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian' f (x:_[]) =
         let o = x |> f |> Array.map primal
         if x.Length > o.Length then // f:R^n -> R^m and n > m, use reverse mode
@@ -572,38 +603,49 @@ module DiffOps =
         else                        // f:R^n -> R^m and n <= m, use forward mode
             (o, Array.init x.Length (fun i -> jacobianv f x (standardBasis x.Length i)) |> array2D |> transpose)
 
+    /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
         jacobian' f x |> snd
 
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT' f x =
         jacobian' f x |> fun (r, j) -> (r, transpose j)
 
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
         jacobianT' f x |> snd
 
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
         jacobian' (grad f) x
 
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian' f x =
         let g, h = gradhessian f x
         (x |> f, g, h)
 
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
         jacobian (grad f) x
 
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
         (x |> f, hessian f x)
 
+    /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradhessianv' f x v =
         let gv, hv = grad' (fun xx -> gradv f xx v) x
         (x |> f, gv, hv)
 
+    /// Gradient-vector product (directional derivative) and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradhessianv f x v =
         gradhessianv' f x v |> sndtrd
 
+    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`
     let inline hessianv' f x v =
         gradhessianv' f x v |> fsttrd
 
+    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`
     let inline hessianv f x v =
         hessianv' f x v |> snd
 

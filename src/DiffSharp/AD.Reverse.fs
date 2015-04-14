@@ -48,7 +48,7 @@ open System.Collections.Generic
 [<CustomEquality; CustomComparison>]    
 type D =
     | D of float // Primal
-    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out, tag
+    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
     member d.P =
         match d with
         | D(_) -> d
@@ -158,101 +158,101 @@ type D =
     static member Pow (a:float, b:D) = (D a) ** b
     static member Atan2 (a:float, b:D) = atan2 (D a) b
     // D - int binary operations
-    static member (+) (a:D, b:int) = a + float b
-    static member (-) (a:D, b:int) = a - float b
-    static member (*) (a:D, b:int) = a * float b
-    static member (/) (a:D, b:int) = a / float b
-    static member Pow (a:D, b:int) = D.Pow(a, float b)
-    static member Atan2 (a:D, b:int) = D.Atan2(a, float b)
+    static member (+) (a:D, b:int) = a + (D (float b))
+    static member (-) (a:D, b:int) = a - (D (float b))
+    static member (*) (a:D, b:int) = a * (D (float b))
+    static member (/) (a:D, b:int) = a / (D (float b))
+    static member Pow (a:D, b:int) = D.Pow(a, (D (float b)))
+    static member Atan2 (a:D, b:int) = D.Atan2(a, (D (float b)))
     // int - D binary operations
-    static member (+) (a:int, b:D) = (float a) + b
-    static member (-) (a:int, b:D) = (float a) - b
-    static member (*) (a:int, b:D) = (float a) * b
-    static member (/) (a:int, b:D) = (float a) / b
-    static member Pow (a:int, b:D) = D.Pow(float a, b)
-    static member Atan2 (a:int, b:D) = D.Atan2(float a, b)
+    static member (+) (a:int, b:D) = (D (float a)) + b
+    static member (-) (a:int, b:D) = (D (float a)) - b
+    static member (*) (a:int, b:D) = (D (float a)) * b
+    static member (/) (a:int, b:D) = (D (float a)) / b
+    static member Pow (a:int, b:D) = D.Pow((D (float a)), b)
+    static member Atan2 (a:int, b:D) = D.Atan2((D (float a)), b)
     // D unary operations
     static member Log (a:D) =
         if (float a) <= 0. then invalidArgLog()
         match a with
-        | D(a) -> D(log a)
+        | D(ap) -> D(log ap)
         | DR(ap, _, _, _, ai) -> DR(log ap, ref (D 0.), Log(a), ref 0u, ai)
     static member Log10 (a:D) =
         if (float a) <= 0. then invalidArgLog10()
         match a with
-        | D(a) -> D(log10 a)
+        | D(ap) -> D(log10 ap)
         | DR(ap, _, _, _, ai) -> DR(log10 ap, ref (D 0.), Log10(a), ref 0u, ai)
     static member Exp (a:D) =
         match a with
-        | D(a) -> D(exp a)
+        | D(ap) -> D(exp ap)
         | DR(ap, _, _, _, ai) -> DR(exp ap, ref (D 0.), Exp(a), ref 0u, ai)
     static member Sin (a:D) =
         match a with
-        | D(a) -> D(sin a)
+        | D(ap) -> D(sin ap)
         | DR(ap, _, _, _, ai) -> DR(sin ap, ref (D 0.), Sin(a), ref 0u, ai)
     static member Cos (a:D) =
         match a with
-        | D(a) -> D(cos a)
+        | D(ap) -> D(cos ap)
         | DR(ap, _, _, _, ai) -> DR(cos ap, ref (D 0.), Cos(a), ref 0u, ai)
     static member Tan (a:D) =
         if (float (cos a)) = 0. then invalidArgTan()
         match a with
-        | D(a) -> D(tan a)
+        | D(ap) -> D(tan ap)
         | DR(ap, _, _, _, ai) -> DR(tan ap, ref (D 0.), Tan(a), ref 0u, ai)
     static member (~-) (a:D) =
         match a with
-        | D(a) -> D(-a)
+        | D(ap) -> D(-ap)
         | DR(ap, _, _, _, ai) -> DR(-ap, ref (D 0.), Neg(a), ref 0u, ai)
     static member Sqrt (a:D) =
         if (float a) <= 0. then invalidArgSqrt()
         match a with
-        | D(a) -> D(sqrt a)
+        | D(ap) -> D(sqrt ap)
         | DR(ap, _, _, _, ai) -> DR(sqrt ap, ref (D 0.), Sqrt(a), ref 0u, ai)
     static member Sinh (a:D) =
         match a with
-        | D(a) -> D(sinh a)
+        | D(ap) -> D(sinh ap)
         | DR(ap, _, _, _, ai) -> DR(sinh ap, ref (D 0.), Sinh(a), ref 0u, ai)
     static member Cosh (a:D) =
         match a with
-        | D(a) -> D(cosh a)
+        | D(ap) -> D(cosh ap)
         | DR(ap, _, _, _, ai) -> DR(cosh ap, ref (D 0.), Cosh(a), ref 0u, ai)
     static member Tanh (a:D) =
         match a with
-        | D(a) -> D(tanh a)
+        | D(ap) -> D(tanh ap)
         | DR(ap, _, _, _, ai) -> DR(tanh ap, ref (D 0.), Tanh(a), ref 0u, ai)
     static member Asin (a:D) =
         if abs (float a) >= 1. then invalidArgAsin()
         match a with
-        | D(a) -> D(asin a)
+        | D(ap) -> D(asin ap)
         | DR(ap, _, _, _, ai) -> DR(asin ap, ref (D 0.), Asin(a), ref 0u, ai)
     static member Acos (a:D) =
         if abs (float a) >= 1. then invalidArgAcos()
         match a with
-        | D(a) -> D(acos a)
+        | D(ap) -> D(acos ap)
         | DR(ap, _, _, _, ai) -> DR(acos ap, ref (D 0.), Acos(a), ref 0u, ai)
     static member Atan (a:D) =
         match a with
-        | D(a) -> D(atan a)
+        | D(ap) -> D(atan ap)
         | DR(ap, _, _, _, ai) -> DR(atan ap, ref (D 0.), Atan(a), ref 0u, ai)
     static member Abs (a:D) =
         if float a = 0. then invalidArgAbs()
         match a with
-        | D(a) -> D(abs a)
+        | D(ap) -> D(abs ap)
         | DR(ap, _, _, _, ai) -> DR(abs ap, ref (D 0.), Abs(a), ref 0u, ai)
     static member Floor (a:D) =
         if isInteger (float a) then invalidArgFloor()
         match a with
-        | D(a) -> D(floor a)
+        | D(ap) -> D(floor ap)
         | DR(ap, _, _, _, ai) -> DR(floor ap, ref (D 0.), Floor(a), ref 0u, ai)
     static member Ceiling (a:D) =
         if isInteger (float a) then invalidArgCeil()
         match a with
-        | D(a) -> D(ceil a)
+        | D(ap) -> D(ceil ap)
         | DR(ap, _, _, _, ai) -> DR(ceil ap, ref (D 0.), Ceil(a), ref 0u, ai)
     static member Round (a:D) =
         if isHalfway (float a) then invalidArgRound()
         match a with
-        | D(a) -> D(round a)
+        | D(ap) -> D(round ap)
         | DR(ap, _, _, _, ai) -> DR(round ap, ref (D 0.), Round(a), ref 0u, ai)
 
 /// Operation types for the trace
@@ -308,6 +308,12 @@ type GlobalTagger() =
 /// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
+    /// Make DR, with tag `i` and primal value `p`
+    let inline makeDR i p = DR(p, ref (D 0.), Noop, ref 0u, i) 
+    /// Get the adjoint value of `d`
+    let inline adjoint (d:D) = d.A
+    /// Get the primal value of `d`
+    let inline primal (d:D) = d.P
     /// Reverse propagates the adjoint `v` through the trace of `d`
     let rec reverse (v:D) (d:D) =
         match d with
@@ -396,13 +402,6 @@ module DOps =
                 | Ceil(a)             -> reset a
                 | Round(a)            -> reset a
                 | Noop                -> ()
-    /// Make DR, with tag `i` and primal value `p`
-    let inline makeDR i p = 
-        DR(p, ref (D 0.), Noop, ref 0u, i) 
-    /// Get the adjoint value of `d`
-    let inline adjoint (d:D) = d.A
-    /// Get the primal value of `d`
-    let inline primal (d:D) = d.P
 
 
 /// Reverse differentiation operations module (automatically opened)
@@ -436,7 +435,7 @@ module DiffOps =
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`    
     let inline diffn n f x =
-        if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
+        if n < 0 then invalidArgDiffn()
         elif n = 0 then x |> f
         else
             let rec d n f =
@@ -464,8 +463,7 @@ module DiffOps =
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian' f (x:_[]) =
-        let a = Array.init x.Length (fun i -> x |> fVVtoSS i i (grad f) |> diff <| x.[i])
-        (x |> f, a |> Array.sum)
+        (x |> f, Array.init x.Length (fun i -> x |> fVVtoSS i i (grad f) |> diff <| x.[i]) |> Array.sum)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian f x =
@@ -484,7 +482,7 @@ module DiffOps =
                 Array.map adjoint xa
         (r1, r2)
 
-    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`    
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianTv' f x v =
         let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
@@ -524,7 +522,7 @@ module DiffOps =
     let inline hessian f x =
         jacobian (grad f) x
 
-    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`    
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
         (x |> f, hessian f x)
 

@@ -163,7 +163,7 @@ module DualNOps =
     /// Compute the `n`-th derivative of a DualN
     let rec diffLazy n =
         match n with
-        | a when a < 0 -> invalidArg "" "Order of differentiation cannot be negative."
+        | a when a < 0 -> invalidArgDiffn()
         | 0 -> fun (x:DualN) -> x
         | 1 -> fun x -> x.T
         | _ -> fun x -> diffLazy (n - 1) x.T

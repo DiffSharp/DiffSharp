@@ -160,3 +160,4 @@ let invalidArgRound() = invalidArg "" "The derivative of round(x) is not defined
 let invalidArgCurl() = invalidArg "" "Curl is supported only for functions with a three-by-three Jacobian matrix."
 let invalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
 let invalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
+let invalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
