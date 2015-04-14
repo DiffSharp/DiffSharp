@@ -38,13 +38,13 @@
 // Script for generating library documentation
 //
 
-#I "../../../packages/FSharp.Compiler.Service.0.0.67/lib/net40/"
+#I "../packages/FSharp.Compiler.Service.0.0.67/lib/net40/"
 #r "FSharp.Compiler.Service.dll"
-#I "../../../packages/RazorEngine.3.3.0/lib/net40/"
+#I "../packages/RazorEngine.3.3.0/lib/net40/"
 #r "RazorEngine.dll"
-#I "../../../packages/Microsoft.AspNet.Razor.2.0.30506.0/lib/net40/"
+#I "../packages/Microsoft.AspNet.Razor.2.0.30506.0/lib/net40/"
 #r "System.Web.Razor.dll"
-#I "../../../packages/FSharp.Formatting.2.4.36/lib/net40/"
+#I "../packages/FSharp.Formatting.2.4.36/lib/net40/"
 #r "FSharp.MetadataFormat.dll"
 #r "FSharp.CodeFormat.dll"
 #r "FSharp.Literate.dll"
@@ -60,7 +60,7 @@ open FSharp.MetadataFormat
 //
 
 let source = __SOURCE_DIRECTORY__ 
-let docs = Path.Combine(source, "../../")
+let docs = Path.Combine(source, "")
 let relative subdir = Path.Combine(docs, subdir)
 
 let test = Directory.Exists (relative "output")
