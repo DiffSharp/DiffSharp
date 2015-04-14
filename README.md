@@ -14,6 +14,8 @@ Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
 
     www.bcl.hamilton.ie
 
-For open source use, DiffSharp is licensed under the GNU General Public License version 3. Permitting uses outside of these license terms may be considered on a by-case basis. Please contact Atilim Gunes Baydin and Barak A. Pearlmutter for licensing options at atilimgunes.baydin@nuim.ie and barak@cs.nuim.ie.
+DiffSharp is released under the GNU Lesser General Public License (LGPL) version 3. This means that you can integrate DiffSharp as a (dynamically linked) shared library into your software, which may be closed-source or open-source under a non-LGPL license.
+
+Permitting uses outside of these license terms may be considered on a by-case basis. Please contact Atilim Gunes Baydin and Barak A. Pearlmutter for licensing options at atilimgunes.baydin@nuim.ie and barak@cs.nuim.ie.
 
 This work is supported by Science Foundation Ireland grant 09/IN.1/I2637.
