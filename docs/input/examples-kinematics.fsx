@@ -35,7 +35,7 @@ Chart.Line([for t in 0.0..0.01..4.0 -> (t, x t)]).WithXAxis(Title="t").WithYAxis
 We can calculate the position $x(t)$, the velocity $v(t)=\frac{\partial x(t)}{\partial t}$, and the acceleration $a(t)=\frac{\partial ^ 2 x(t)}{\partial t ^ 2}$ of the particle at the same time, using the **diff2''** operation that returns the original value, the first derivative, and the second derivative of a given function.
 *)
 
-open DiffSharp.AD.Forward2
+open DiffSharp.AD.Specialized.Forward2
 
 // diff2'' returns the tuple (original value, first derivative, second derivative)
 let xva = diff2'' (fun t -> t * t * t - 6 * t * t + 10 * t)

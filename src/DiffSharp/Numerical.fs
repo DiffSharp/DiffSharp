@@ -34,8 +34,8 @@
 //   www.bcl.hamilton.ie
 //
 
-/// Numerical differentiation module
-module DiffSharp.Numerical
+/// Numerical differentiation
+namespace DiffSharp.Numerical
 
 open DiffSharp.Util.General
 open FsAlg.Generic
@@ -43,7 +43,7 @@ open FsAlg.Generic
 /// Numerical differentiation operations module (automatically opened)
 // HIGHLY UNOPTIMIZED PLACEHOLDER CODE
 [<AutoOpen>]
-module NumericalOps =
+module DiffOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff (f:float->float) x =
         ((f (x + eps)) - (f (x - eps))) / deps
@@ -200,56 +200,56 @@ module NumericalOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:float->float) x = NumericalOps.diff' f x
+    let inline diff' (f:float->float) x = DiffOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:float->float) x = NumericalOps.diff f x
+    let inline diff (f:float->float) x = DiffOps.diff f x
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' (f:float->float) x = NumericalOps.diff2' f x
+    let inline diff2' (f:float->float) x = DiffOps.diff2' f x
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 (f:float->float) x = NumericalOps.diff2 f x
+    let inline diff2 (f:float->float) x = DiffOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' (f:float->float) x = NumericalOps.diff2'' f x
+    let inline diff2'' (f:float->float) x = DiffOps.diff2'' f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<float>->float) x v = NumericalOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    let inline gradv' (f:Vector<float>->float) x v = DiffOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<float>->float) x v = NumericalOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    let inline gradv (f:Vector<float>->float) x v = DiffOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<float>->float) x = NumericalOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<float>->float) x = DiffOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<float>->float) x = NumericalOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline grad (f:Vector<float>->float) x = DiffOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<float>->float) x = NumericalOps.laplacian' (vector >> f) (Vector.toArray x)
+    let inline laplacian' (f:Vector<float>->float) x = DiffOps.laplacian' (vector >> f) (Vector.toArray x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<float>->float) x = NumericalOps.laplacian (vector >> f) (Vector.toArray x)
+    let inline laplacian (f:Vector<float>->float) x = DiffOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<float>->Vector<float>) x = NumericalOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<float>->Vector<float>) x = DiffOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<float>->Vector<float>) x = NumericalOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<float>->Vector<float>) x = DiffOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<float>->Vector<float>) x = NumericalOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<float>->Vector<float>) x = DiffOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<float>->Vector<float>) x = NumericalOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<float>->Vector<float>) x = DiffOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<float>->float) x = NumericalOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
+    let inline hessian' (f:Vector<float>->float) x = DiffOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<float>->float) x = NumericalOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline hessian (f:Vector<float>->float) x = DiffOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<float>->float) x = NumericalOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    let inline gradhessian' (f:Vector<float>->float) x = DiffOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<float>->float) x = NumericalOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline gradhessian (f:Vector<float>->float) x = DiffOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<float>->Vector<float>) x v = DiffOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<float>->Vector<float>) x v = NumericalOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    let inline jacobianv (f:Vector<float>->Vector<float>) x v = DiffOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' (f:Vector<float>->Vector<float>) x = NumericalOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    let inline curl' (f:Vector<float>->Vector<float>) x = DiffOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl (f:Vector<float>->Vector<float>) x = NumericalOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
+    let inline curl (f:Vector<float>->Vector<float>) x = DiffOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' (f:Vector<float>->Vector<float>) x = NumericalOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline div' (f:Vector<float>->Vector<float>) x = DiffOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div (f:Vector<float>->Vector<float>) x = NumericalOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    let inline div (f:Vector<float>->Vector<float>) x = DiffOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' (f:Vector<float>->Vector<float>) x = NumericalOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' (f:Vector<float>->Vector<float>) x = DiffOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv (f:Vector<float>->Vector<float>) x = NumericalOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline curldiv (f:Vector<float>->Vector<float>) x = DiffOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

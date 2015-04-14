@@ -20,8 +20,8 @@ Newton's method converges faster than gradient descent, but this comes at the co
 Using the DiffSharp library, we can compute the exact Hessian via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardReverse** module, which provides the **gradhessian** operation returning the gradient and the Hessian of a function at a given point using only one forward evaluation.
 *)
 
-open DiffSharp.AD.ForwardReverse
-open DiffSharp.AD.ForwardReverse.Vector
+open DiffSharp.AD.Specialized.Forward1Reverse1
+open DiffSharp.AD.Specialized.Forward1Reverse1.Vector
 open FsAlg.Generic
 
 

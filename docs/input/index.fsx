@@ -35,7 +35,7 @@ Quick Usage Example
 *)
 
 // Use forward mode AD
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // A scalar-to-scalar function
 let f x = sin (sqrt x)

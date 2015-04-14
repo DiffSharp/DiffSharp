@@ -15,8 +15,8 @@ We start by defining our neural network structure.
 
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
+open DiffSharp.AD.Specialized.Reverse1
+open DiffSharp.AD.Specialized.Reverse1.Vector
 open FsAlg.Generic
 
 // A neuron

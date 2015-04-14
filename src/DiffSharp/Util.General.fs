@@ -116,10 +116,10 @@ let log10val = log 10.
 /// Global step size for numerical approximations
 let eps = 0.00001
 
-/// Two times eps
+/// Two times `eps`
 let deps = eps * 2.
 
-/// Square of eps
+/// Square of `eps`
 let epssq = eps * eps
 
 /// Vector-to-scalar to scalar-to-scalar function transform. Given a vector-to-scalar function `f` and an evaluation point `x`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.

@@ -57,26 +57,26 @@ let inline VS_Symbolic x0 x1 x2 = x0 * ((sqrt (x1 + x2)) * (log x2)) ** x1
 
 
 // diff
-let diff_AD_Forward = DiffSharp.AD.Forward.ForwardOps.diff SS
-let diff_AD_Forward2 = DiffSharp.AD.Forward2.Forward2Ops.diff SS
-let diff_AD_ForwardG = DiffSharp.AD.ForwardG.ForwardGOps.diff SS
-let diff_AD_ForwardGH = DiffSharp.AD.ForwardGH.ForwardGHOps.diff SS
-let diff_AD_ForwardN = DiffSharp.AD.ForwardN.ForwardNOps.diff SS
-let diff_AD_Reverse = DiffSharp.AD.Reverse.ReverseOps.diff SS
-let diff_AD_ForwardReverse = DiffSharp.AD.ForwardReverse.ForwardReverseOps.diff SS
-let diff_Numerical = DiffSharp.Numerical.NumericalOps.diff SS
-let diff_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff <@ SS @>
+let diff_AD_Forward = DiffSharp.AD.Specialized.Forward1.DiffOps.diff SS
+let diff_AD_Forward2 = DiffSharp.AD.Specialized.Forward2.DiffOps.diff SS
+let diff_AD_ForwardG = DiffSharp.AD.Specialized.ForwardG.DiffOps.diff SS
+let diff_AD_ForwardGH = DiffSharp.AD.Specialized.ForwardGH.DiffOps.diff SS
+let diff_AD_ForwardN = DiffSharp.AD.Specialized.ForwardN.DiffOps.diff SS
+let diff_AD_Reverse = DiffSharp.AD.Specialized.Reverse1.DiffOps.diff SS
+let diff_AD_ForwardReverse = DiffSharp.AD.Specialized.Forward1Reverse1.DiffOps.diff SS
+let diff_Numerical = DiffSharp.Numerical.DiffOps.diff SS
+let diff_Symbolic = DiffSharp.Symbolic.DiffOps.diff <@ SS @>
 
 // diff2
-let diff2_AD_Forward2 = DiffSharp.AD.Forward2.Forward2Ops.diff2 SS
-let diff2_AD_ForwardN = DiffSharp.AD.ForwardN.ForwardNOps.diff2 SS
-let diff2_AD_ForwardReverse = DiffSharp.AD.ForwardReverse.ForwardReverseOps.diff2 SS
-let diff2_Numerical = DiffSharp.Numerical.NumericalOps.diff2 SS
-let diff2_Symbolic = DiffSharp.Symbolic.SymbolicOps.diff2 <@ SS @>
+let diff2_AD_Forward2 = DiffSharp.AD.Specialized.Forward2.DiffOps.diff2 SS
+let diff2_AD_ForwardN = DiffSharp.AD.Specialized.ForwardN.DiffOps.diff2 SS
+let diff2_AD_ForwardReverse = DiffSharp.AD.Specialized.Forward1Reverse1.DiffOps.diff2 SS
+let diff2_Numerical = DiffSharp.Numerical.DiffOps.diff2 SS
+let diff2_Symbolic = DiffSharp.Symbolic.DiffOps.diff2 <@ SS @>
 
 // diffn
-let diffn_AD_ForwardN n = DiffSharp.AD.ForwardN.ForwardNOps.diffn n SS
-let diffn_Symbolic n = DiffSharp.Symbolic.SymbolicOps.diffn n <@ SS @>
+let diffn_AD_ForwardN n = DiffSharp.AD.Specialized.ForwardN.DiffOps.diffn n SS
+let diffn_Symbolic n = DiffSharp.Symbolic.DiffOps.diffn n <@ SS @>
 
 
 // diff

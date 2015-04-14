@@ -40,8 +40,8 @@ where $\delta$ is the integration step size.
 
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
+open DiffSharp.AD.Specialized.Reverse1
+open DiffSharp.AD.Specialized.Reverse1.Vector
 open FsAlg.Generic
 
 // Leapfrog integrator

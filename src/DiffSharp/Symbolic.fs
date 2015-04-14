@@ -44,11 +44,9 @@
 
 #light
 
-/// Symbolic differentiation module
-module DiffSharp.Symbolic
+/// Symbolic differentiation
+namespace DiffSharp.Symbolic
 
-open System.Reflection
-open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
@@ -177,7 +175,7 @@ module ExprOps =
 
 /// Symbolic differentiation operations module (automatically opened)
 [<AutoOpen>]
-module SymbolicOps =
+module DiffOps =
     /// First derivative of a scalar-to-scalar function `f`
     let diff (f:Expr<float->float>) =
         let fe = expand f
@@ -340,52 +338,52 @@ module SymbolicOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`
-    let inline diff' f = SymbolicOps.diff' f
+    let inline diff' f = DiffOps.diff' f
     /// First derivative of a scalar-to-scalar function `f`
-    let inline diff f = SymbolicOps.diff f
+    let inline diff f = DiffOps.diff f
     /// Original value and second derivative of a scalar-to-scalar function `f`
-    let inline diff2' f = SymbolicOps.diff2' f
+    let inline diff2' f = DiffOps.diff2' f
     /// Second derivative of a scalar-to-scalar function `f`
-    let inline diff2 f = SymbolicOps.diff2 f
+    let inline diff2 f = DiffOps.diff2 f
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`
-    let inline diff2'' f = SymbolicOps.diff2'' f
+    let inline diff2'' f = DiffOps.diff2'' f
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`
-    let inline diffn' n f = SymbolicOps.diffn' n f
+    let inline diffn' n f = DiffOps.diffn' n f
     /// `n`-th derivative of a scalar-to-scalar function `f`
-    let inline diffn n f = SymbolicOps.diffn n f
+    let inline diffn n f = DiffOps.diffn n f
     /// Original value and gradient of a vector-to-scalar function `f`
-    let inline grad' f = Vector.toArray >> SymbolicOps.grad' f >> fun (a, b) -> (a, vector b)
+    let inline grad' f = Vector.toArray >> DiffOps.grad' f >> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`
-    let inline grad f x = Vector.toArray >> SymbolicOps.grad f >> vector
+    let inline grad f x = Vector.toArray >> DiffOps.grad f >> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`
-    let inline laplacian' f x = Vector.toArray >> SymbolicOps.laplacian' f
+    let inline laplacian' f x = Vector.toArray >> DiffOps.laplacian' f
     /// Laplacian of a vector-to-scalar function `f`
-    let inline laplacian f x = Vector.toArray >> SymbolicOps.laplacian f
+    let inline laplacian f x = Vector.toArray >> DiffOps.laplacian f
     /// Original value and transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT' f x = Vector.toArray >> SymbolicOps.jacobianT' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' f x = Vector.toArray >> DiffOps.jacobianT' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`
-    let inline jacobianT f x = Vector.toArray >> SymbolicOps.jacobianT f >> Matrix.ofArray2D
+    let inline jacobianT f x = Vector.toArray >> DiffOps.jacobianT f >> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`
-    let inline jacobian' f x = Vector.toArray >> SymbolicOps.jacobian' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' f x = Vector.toArray >> DiffOps.jacobian' f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`
-    let inline jacobian f x = Vector.toArray >> SymbolicOps.jacobian f >> Matrix.ofArray2D
+    let inline jacobian f x = Vector.toArray >> DiffOps.jacobian f >> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`
-    let inline hessian' f x = Vector.toArray >> SymbolicOps.hessian' f >> fun (a, b) -> (a, Matrix.ofArray2D b)
+    let inline hessian' f x = Vector.toArray >> DiffOps.hessian' f >> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`
-    let inline hessian f x = Vector.toArray >> SymbolicOps.hessian f >> Matrix.ofArray2D
+    let inline hessian f x = Vector.toArray >> DiffOps.hessian f >> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian' f x = Vector.toArray >> SymbolicOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    let inline gradhessian' f x = Vector.toArray >> DiffOps.gradhessian' f >> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`
-    let inline gradhessian f x = Vector.toArray >> SymbolicOps.gradhessian f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline gradhessian f x = Vector.toArray >> DiffOps.gradhessian f >> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' f x = Vector.toArray >> SymbolicOps.curl' f  >> fun (a, b) -> (vector a, vector b)
+    let inline curl' f x = Vector.toArray >> DiffOps.curl' f  >> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl f x = Vector.toArray >> SymbolicOps.curl f >> vector
+    let inline curl f x = Vector.toArray >> DiffOps.curl f >> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' f x = Vector.toArray >> SymbolicOps.div' f >> fun (a, b) -> (vector a, b)
+    let inline div' f x = Vector.toArray >> DiffOps.div' f >> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div f x = Vector.toArray >> SymbolicOps.div f
+    let inline div f x = Vector.toArray >> DiffOps.div f
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' f x = Vector.toArray >> SymbolicOps.curldiv' f >> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' f x = Vector.toArray >> DiffOps.curldiv' f >> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv f x = Vector.toArray >> SymbolicOps.curldiv f >> fun (a, b) -> (vector a, b)
+    let inline curldiv f x = Vector.toArray >> DiffOps.curldiv f >> fun (a, b) -> (vector a, b)

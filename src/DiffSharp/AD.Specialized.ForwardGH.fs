@@ -40,8 +40,8 @@
 
 #light
 
-/// Forward mode AD module, keeping vectors of gradient components and matrices of Hessian components
-module DiffSharp.AD.ForwardGH
+/// Non-nested forward mode AD, keeping vectors of gradient components and matrices of Hessian components
+namespace DiffSharp.AD.Specialized.ForwardGH
 
 open DiffSharp.Util.General
 open FsAlg.Generic
@@ -173,7 +173,7 @@ module DualGHOps =
 
 /// ForwardGH differentiation operations module (automatically opened)
 [<AutoOpen>]
-module ForwardGHOps =
+module DiffOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
         dualGHP1 x 1 0 |> f |> tuple
@@ -265,42 +265,42 @@ module ForwardGHOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:DualGH->DualGH) x = ForwardGHOps.diff' f x
+    let inline diff' (f:DualGH->DualGH) x = DiffOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:DualGH->DualGH) x = ForwardGHOps.diff f x
+    let inline diff (f:DualGH->DualGH) x = DiffOps.diff f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualGH>->DualGH) x = DiffOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<DualGH>->DualGH) x = ForwardGHOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline grad (f:Vector<DualGH>->DualGH) x = DiffOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian' (vector >> f) (Vector.toArray x)
+    let inline laplacian' (f:Vector<DualGH>->DualGH) x = DiffOps.laplacian' (vector >> f) (Vector.toArray x)
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.laplacian (vector >> f) (Vector.toArray x)
+    let inline laplacian (f:Vector<DualGH>->DualGH) x = DiffOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
+    let inline hessian' (f:Vector<DualGH>->DualGH) x = DiffOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline hessian (f:Vector<DualGH>->DualGH) x = DiffOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    let inline gradhessian' (f:Vector<DualGH>->DualGH) x = DiffOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<DualGH>->DualGH) x = ForwardGHOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline gradhessian (f:Vector<DualGH>->DualGH) x = DiffOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    let inline curl' (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
+    let inline curl (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline div' (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    let inline div (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv (f:Vector<DualGH>->Vector<DualGH>) x = ForwardGHOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline curldiv (f:Vector<DualGH>->Vector<DualGH>) x = DiffOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

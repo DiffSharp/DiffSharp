@@ -52,8 +52,8 @@ We will make use of the **DiffSharp.AD.Reverse** module for calculating the Jaco
 
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
+open DiffSharp.AD.Specialized.Reverse1
+open DiffSharp.AD.Specialized.Reverse1.Vector
 open FsAlg.Generic
 
 // Set the lengths of the arm segments

@@ -18,7 +18,7 @@ This is a forward mode AD module implemented using [dual numbers](http://en.wiki
 This module is used with the **Dual** numeric type.
 *)
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // f: Dual -> Dual
 let f (x:Dual) = sin (3. * sqrt x)
@@ -50,7 +50,7 @@ This is a forward mode AD module that also keeps the tangent-of-tangent values t
 This module is used with the **Dual2** numeric type.
 *)
 
-open DiffSharp.AD.Forward2
+open DiffSharp.AD.Specialized.Forward2
 
 // f2: Dual2 -> Dual2
 let f2 (x:Dual2) = sin (3. * sqrt x)
@@ -73,7 +73,7 @@ This is a forward mode AD module using a vector of gradient components for speed
 This module is used with the **DualG** numeric type.
 *)
 
-open DiffSharp.AD.ForwardG
+open DiffSharp.AD.Specialized.ForwardG
 
 // g3: DualG[] -> DualG
 let g3 (x:DualG[]) = sin (x.[0] * x.[1])
@@ -96,7 +96,7 @@ This is a forward mode AD module using a vector of gradient components and a mat
 This module is used with the **DualGH** numeric type.
 *)
 
-open DiffSharp.AD.ForwardGH
+open DiffSharp.AD.Specialized.ForwardGH
 
 // g4: DualGH[] -> DualGH
 let g4 (x:DualGH[]) = sin (x.[0] * x.[1])
@@ -113,7 +113,7 @@ This is a forward mode AD module lazily evaluating higher-order derivatives as t
 This module is used with the **DualN** numeric type.
 *)
 
-open DiffSharp.AD.ForwardN
+open DiffSharp.AD.Specialized.ForwardN
 
 // f5: DualN -> DualN
 let f5 (x:DualN) = sin (3. * sqrt x)

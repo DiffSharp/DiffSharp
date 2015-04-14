@@ -26,8 +26,8 @@ Using the DiffSharp library, the following code implements gradient descent with
 
 *)
 
-open DiffSharp.AD.Forward
-open DiffSharp.AD.Forward.Vector
+open DiffSharp.AD.Specialized.Forward1
+open DiffSharp.AD.Specialized.Forward1.Vector
 open FsAlg.Generic
 
 // Gradient descent

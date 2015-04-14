@@ -36,147 +36,304 @@
 
 #light
 
-/// Forward mode AD module
-module DiffSharp.AD.Forward
+/// Nested forward mode AD
+namespace DiffSharp.AD.Forward
 
 open DiffSharp.Util.General
 open FsAlg.Generic
 
-/// Dual numeric type, keeping primal and tangent values
+/// Dual numeric type with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
-type Dual =
-    // Primal, tangent
-    | Dual of float * float
-    override d.ToString() = let (Dual(p, t)) = d in sprintf "Dual(%A, %A)" p t
-    static member op_Explicit(p) = Dual(p, 0.)
-    static member op_Explicit(Dual(p, _)) = p
-    static member DivideByInt(Dual(p, t), i:int) = Dual(p / float i, t / float i)
-    static member Zero = Dual(0., 0.)
-    static member One = Dual(1., 0.)
+type D =
+    | D of float // Primal
+    | DF of D * D * uint32 // Primal, tangent, tag
+    static member op_Explicit(d:D) =
+        match d with
+        | D(a) -> a
+        | DF(ap, _, _) -> (float) ap
+    static member DivideByInt(d:D, i:int) =
+        match d with
+        | D(a) -> D(a / float i)
+        | DF(ap, at, ai) -> DF(ap/ float i, at / float i, ai)
+    static member Zero = D 0.
+    static member One = D 1.
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
-            | :? Dual as d2 -> let Dual(a, _), Dual(b, _) = d, d2 in compare a b
-            | _ -> failwith "Cannot compare this Dual with another type of object."
-    override d.Equals(other) = 
+            | :? D as d2 -> compare ((float) d) ((float) d2)
+            | _ -> invalidArg "" "Cannot compare this D with another type of object."
+    override d.Equals(other) =
         match other with
-        | :? Dual as d2 -> compare d d2 = 0
+        | :? D as d2 -> compare ((float) d) ((float) d2) = 0
         | _ -> false
-    override d.GetHashCode() = let (Dual(a, b)) = d in hash [|a; b|]
-    // Dual - Dual binary operations
-    static member (+) (Dual(a, at), Dual(b, bt)) = Dual(a + b, at + bt)
-    static member (-) (Dual(a, at), Dual(b, bt)) = Dual(a - b, at - bt)
-    static member (*) (Dual(a, at), Dual(b, bt)) = Dual(a * b, at * b + a * bt)
-    static member (/) (Dual(a, at), Dual(b, bt)) = Dual(a / b, (at * b - a * bt) / (b * b))
-    static member Pow (Dual(a, at), Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * ((b * at / a) + ((log a) * bt)))
-    static member Atan2 (Dual(a, at), Dual(b, bt)) = Dual(atan2 a b, (at * b - a * bt) / (a * a + b * b))
-    // Dual - float binary operations
-    static member (+) (Dual(a, at), b) = Dual(a + b, at)
-    static member (-) (Dual(a, at), b) = Dual(a - b, at)
-    static member (*) (Dual(a, at), b) = Dual(a * b, at * b)
-    static member (/) (Dual(a, at), b) = Dual(a / b, at / b)
-    static member Pow (Dual(a, at), b) = Dual(a ** b, b * (a ** (b - 1.)) * at)
-    static member Atan2 (Dual(a, at), b) = Dual(atan2 a b, (b * at) / (b * b + a * a))
-    // float - Dual binary operations
-    static member (+) (a, Dual(b, bt)) = Dual(b + a, bt)
-    static member (-) (a, Dual(b, bt)) = Dual(a - b, -bt)
-    static member (*) (a, Dual(b, bt)) = Dual(b * a, bt * a)
-    static member (/) (a, Dual(b, bt)) = Dual(a / b, -a * bt / (b * b))
-    static member Pow (a, Dual(b, bt)) = let apb = a ** b in Dual(apb, apb * (log a) * bt)
-    static member Atan2 (a, Dual(b, bt)) = Dual(atan2 a b, -(a * bt) / (a * a + b * b))
-    // Dual - int binary operations
-    static member (+) (a:Dual, b:int) = a + float b
-    static member (-) (a:Dual, b:int) = a - float b
-    static member (*) (a:Dual, b:int) = a * float b
-    static member (/) (a:Dual, b:int) = a / float b
-    static member Pow (a:Dual, b:int) = Dual.Pow(a, float b)
-    static member Atan2 (a:Dual, b:int) = Dual.Atan2(a, float b)
-    // int - Dual binary operations
-    static member (+) (a:int, b:Dual) = (float a) + b
-    static member (-) (a:int, b:Dual) = (float a) - b
-    static member (*) (a:int, b:Dual) = (float a) * b
-    static member (/) (a:int, b:Dual) = (float a) / b
-    static member Pow (a:int, b:Dual) = Dual.Pow(float a, b)
-    static member Atan2 (a:int, b:Dual) = Dual.Atan2(float a, b)
-    // Dual unary operations
-    static member Log (Dual(a, at)) =
-        if a <= 0. then invalidArgLog()
-        Dual(log a, at / a)
-    static member Log10 (Dual(a, at)) =
-        if a <= 0. then invalidArgLog10()
-        Dual(log10 a, at / (a * log10val))
-    static member Exp (Dual(a, at)) = let expa = exp a in Dual(expa, at * expa)
-    static member Sin (Dual(a, at)) = Dual(sin a, at * cos a)
-    static member Cos (Dual(a, at)) = Dual(cos a, -at * sin a)
-    static member Tan (Dual(a, at)) =
-        let cosa = cos a
-        if cosa = 0. then invalidArgTan()
-        Dual(tan a, at / (cosa * cosa))
-    static member (~-) (Dual(a, at)) = Dual(-a, -at)
-    static member Sqrt (Dual(a, at)) = 
-        if a <= 0. then invalidArgSqrt()
-        let sqrta = sqrt a in Dual(sqrta, at / (2. * sqrta))
-    static member Sinh (Dual(a, at)) = Dual(sinh a, at * cosh a)
-    static member Cosh (Dual(a, at)) = Dual(cosh a, at * sinh a)
-    static member Tanh (Dual(a, at)) = let cosha = cosh a in Dual(tanh a, at / (cosha * cosha))
-    static member Asin (Dual(a, at)) =
-        if (abs a) >= 1. then invalidArgAsin()
-        Dual(asin a, at / sqrt (1. - a * a))
-    static member Acos (Dual(a, at)) = 
-        if (abs a) >= 1. then invalidArgAcos()
-        Dual(acos a, -at / sqrt (1. - a * a))
-    static member Atan (Dual(a, at)) = Dual(atan a, at / (1. + a * a))
-    static member Abs (Dual(a, at)) = 
-        if a = 0. then invalidArgAbs()
-        Dual(abs a, at * float (sign a))
-    static member Floor (Dual(a, _)) =
-        if isInteger a then invalidArgFloor()
-        Dual(floor a, 0.)
-    static member Ceiling (Dual(a, _)) =
-        if isInteger a then invalidArgCeil()
-        Dual(ceil a, 0.)
-    static member Round (Dual(a, _)) =
-        if isHalfway a then invalidArgRound()
-        Dual(round a, 0.)
+    override d.GetHashCode() =
+        match d with
+        | D(a) -> hash [| a |]
+        | DF(ap, at, ai) -> hash [|ap; at; ai|]
+    // D - D binary operations
+    static member (+) (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(a + b)
+        | D(a),           DF(bp, bt, bi) -> DF(a + bp, bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap + b, at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a + bp, bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap + bp, at + bt, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap + b, at, ai)
+    static member (-) (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(a - b)
+        | D(a),           DF(bp, bt, bi) -> DF(a - bp, -bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap - b, at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a - bp, -bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap - bp, at - bt, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap - b, at, ai)
+    static member (*) (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(a * b)
+        | D(a),           DF(bp, bt, bi) -> DF(a * bp, a * bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap * b, at * b, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a * bp, bt * a, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap * bp, at * bp + bt * ap, ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap * b, at * b, ai)
+    static member (/) (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(a / b)
+        | D(a),           DF(bp, bt, bi) -> DF(a / bp, -(bt * a) / (bp * bp), bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap / b, at / b, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(a / bp, -(bt * a) / (bp * bp), bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(ap / bp, (at * bp - bt * ap) / (bp * bp), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(ap / b, at / b, ai)
+    static member Pow (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(a ** b)
+        | D(a),           DF(bp, bt, bi) -> let apb = D.Pow(a, bp) in DF(apb, apb * (log a) * bt, bi)
+        | DF(ap, at, ai), D(b)           -> DF(ap ** b, b * (ap ** (b - 1.)) * at, ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> let apb = a ** bp in DF(apb, apb * (log a) * bt, bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> let apb = ap ** bp in DF(apb, apb * ((bp * at / ap) + ((log ap) * bt)), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> let apb = ap ** b in DF(apb, apb * (b * at / ap), ai)
+    static member Atan2 (a:D, b:D) =
+        match a, b with
+        | D(a),           D(b)           -> D(atan2 a b)
+        | D(a),           DF(bp, bt, bi) -> DF(D.Atan2(a, bp), -(a * bt) / (a * a + bp * bp), bi)
+        | DF(ap, at, ai), D(b)           -> DF(D.Atan2(ap, b), (b * at) / (ap * ap + b * b), ai)
+        | DF(_ , _ , ai), DF(bp, bt, bi) when ai < bi -> DF(atan2 a bp, -(a * bt) / (a * a + bp * bp), bi)
+        | DF(ap, at, ai), DF(bp, bt, bi) when ai = bi -> DF(atan2 ap bp, (at * bp - ap * bt) / (ap * ap + bp * bp), ai)
+        | DF(ap, at, ai), DF(_ , _ , bi) when ai > bi -> DF(atan2 ap b, (at * b) / (ap * ap + b * b), ai)
+    // D - float binary operations
+    static member (+) (a:D, b:float) = a + (D b)
+    static member (-) (a:D, b:float) = a - (D b)
+    static member (*) (a:D, b:float) = a * (D b)
+    static member (/) (a:D, b:float) = a / (D b)
+    static member Pow (a:D, b:float) = a ** (D b)
+    static member Atan2 (a:D, b:float) = atan2 a (D b)
+    // float - D binary operations
+    static member (+) (a:float, b:D) = (D a) + b
+    static member (-) (a:float, b:D) = (D a) - b
+    static member (*) (a:float, b:D) = (D a) * b
+    static member (/) (a:float, b:D) = (D a) / b
+    static member Pow (a:float, b:D) = (D a) ** b
+    static member Atan2 (a:float, b:D) = atan2 (D a) b
+    // D - int binary operations
+    static member (+) (a:D, b:int) = a + float b
+    static member (-) (a:D, b:int) = a - float b
+    static member (*) (a:D, b:int) = a * float b
+    static member (/) (a:D, b:int) = a / float b
+    static member Pow (a:D, b:int) = D.Pow(a, float b)
+    static member Atan2 (a:D, b:int) = D.Atan2(a, float b)
+    // int - D binary operations
+    static member (+) (a:int, b:D) = (float a) + b
+    static member (-) (a:int, b:D) = (float a) - b
+    static member (*) (a:int, b:D) = (float a) * b
+    static member (/) (a:int, b:D) = (float a) / b
+    static member Pow (a:int, b:D) = D.Pow(float a, b)
+    static member Atan2 (a:int, b:D) = D.Atan2(float a, b)
+    // D unary operations
+    static member Log (a:D) =
+        if (float a) <= 0. then invalidArgLog()
+        match a with
+        | D(a) -> D(log a)
+        | DF(ap, at, ai) -> DF(log ap, at / ap, ai)
+    static member Log10 (a:D) =
+        if (float a) <= 0. then invalidArgLog10()
+        match a with
+        | D(a) -> D(log10 a)
+        | DF(ap, at, ai) -> DF(log10 ap, at / (ap * log10val), ai)
+    static member Exp (a:D) =
+        match a with
+        | D(a) -> D(exp a)
+        | DF(ap, at, ai) -> let expa = exp ap in DF(expa, at * expa, ai)
+    static member Sin (a:D) =
+        match a with
+        | D(a) -> D(sin a)
+        | DF(ap, at, ai) -> DF(sin ap, at * cos ap, ai)
+    static member Cos (a:D) =
+        match a with
+        | D(a) -> D(cos a)
+        | DF(ap, at, ai) -> DF(cos ap, -at * sin ap, ai)
+    static member Tan (a:D) =
+        match a with
+        | D(a) -> 
+            if cos a = 0. then invalidArgTan()
+            D(tan a)
+        | DF(ap, at, ai) ->
+            let cosa = cos ap
+            if (float cosa) = 0. then invalidArgTan()
+            DF(tan ap, at / (cosa * cosa), ai)
+    static member (~-) (a:D) =
+        match a with
+        | D(a) -> D(-a)
+        | DF(ap, at, ai) -> DF(-ap, -at, ai)
+    static member Sqrt (a:D) =
+        if (float a) <= 0. then invalidArgSqrt()
+        match a with
+        | D(a) -> D(sqrt a)
+        | DF(ap, at, ai) -> let sqrta = sqrt ap in DF(sqrta, at / (2. * sqrta), ai)
+    static member Sinh (a:D) =
+        match a with
+        | D(a) -> D(sinh a)
+        | DF(ap, at, ai) -> DF(sinh ap, at * cosh ap, ai)
+    static member Cosh (a:D) =
+        match a with
+        | D(a) -> D(cosh a)
+        | DF(ap, at, ai) -> DF(cosh ap, at * sinh ap, ai)
+    static member Tanh (a:D) =
+        match a with
+        | D(a) -> D(tanh a)
+        | DF(ap, at, ai) -> let cosha = cosh ap in DF(tanh ap, at / (cosha * cosha), ai)
+    static member Asin (a:D) =
+        if abs (float a) >= 1. then invalidArgAsin()
+        match a with
+        | D(a) -> D(asin a)
+        | DF(ap, at, ai) -> DF(asin ap, at / sqrt (1. - ap * ap), ai)
+    static member Acos (a:D) =
+        if abs (float a) >= 1. then invalidArgAcos()
+        match a with
+        | D(a) -> D(acos a)
+        | DF(ap, at, ai) -> DF(acos ap, -at / sqrt (1. - ap * ap), ai)
+    static member Atan (a:D) =
+        match a with
+        | D(a) -> D(atan a)
+        | DF(ap, at, ai) -> DF(atan ap, at / (1. + ap * ap), ai)
+    static member Abs (a:D) =
+        if (float a) = 0. then invalidArgAbs()
+        match a with
+        | D(a) -> D(abs a)
+        | DF(ap, at, ai) -> DF(abs ap, at * float (sign (float ap)), ai)
+    static member Floor (a:D) =
+        if isInteger (float a) then invalidArgFloor()
+        match a with
+        | D(a) -> D(floor a)
+        | DF(ap, _, ai) -> DF(floor ap, D 0., ai)
+    static member Ceiling (a:D) =
+        if isInteger (float a) then invalidArgCeil()
+        match a with
+        | D(a) -> D(ceil a)
+        | DF(ap, _, ai) -> DF(ceil ap, D 0., ai)
+    static member Round (a:D) =
+        if isHalfway (float a) then invalidArgRound()
+        match a with
+        | D(a) -> D(round a)
+        | DF(ap, _, ai) -> DF(round ap, D 0., ai)
 
-/// Dual operations module (automatically opened)
+
+/// Tagger for generating incremental integers
+type Tagger =
+    val mutable LastTag : uint32
+    new(t) = {LastTag = t}
+    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
+
+/// Global tagger for D operations
+type GlobalTagger() =
+    static let T = new Tagger(0u)
+    static member Next = T.Next()
+    static member Reset = T.LastTag <- 0u
+
+
+/// D operations module (automatically opened)
 [<AutoOpen>]
-module DualOps =
-    /// Make Dual, with primal value `p` and tangent 0
-    let inline dual p = Dual(float p, 0.)
-    /// Make Dual, with primal value `p` and tangent value `t`
-    let inline dualPT p t = Dual(float p, float t)
-    /// Make active Dual (i.e. variable of differentiation), with primal value `p` and tangent 1
-    let inline dualP1 p = Dual(float p, 1.)
-    /// Get the primal value of a Dual
-    let inline primal (Dual(p, _)) = p
-    /// Get the tangent value of a Dual
-    let inline tangent (Dual(_, t)) = t
-    /// Get the primal and tangent values of a Dual, as a tuple
-    let inline tuple (Dual(p, t)) = (p, t)
+module DOps =
+    /// Make D, with tag `i`, primal value `p`, and tangent value `t`
+    let inline makeDF i p t =
+        match p, t with
+        | D(_), D(_) -> DF(p, t, i)
+        | D(_), DF(_,_,_) -> DF(p, t, i)
+        | DF(_,_,_), D(_) -> DF(p, t, i)
+        | DF(pp,_ ,pi), DF(tp,tt,ti) when pi < ti -> DF(DF(pp,D 0.,ti), DF(tp,tt,ti), i)
+        | DF(pp,pt,pi), DF(tp,tt,ti) when pi = ti -> DF(DF(pp,pt,pi), DF(tp,tt,pi), i)
+        | DF(pp,pt,pi), DF(tp,_ ,ti) when pi > ti -> DF(DF(pp,pt,pi), DF(tp,D 0.,pi), i)
+    /// Make D, with primal tag `i` and primal value `p`, and tangent 1.
+    let inline makeDFp1 i p =
+        match p with
+        | D(_) -> DF(p, D 1., i)
+        | DF(_, _, pi) -> DF(p, DF(D 1., D 0., pi), i)
+    /// Get the primal value of `d`
+    let inline primal (d:D) =
+        match d with
+        | D(_) -> d
+        | DF(p,_,_) -> p
+    /// Get the tangent value of `d`
+    let inline tangent (d:D) =
+        match d with
+        | D(_) -> D(0.)
+        | DF(_,t,_) -> t
+    /// Get the primal and tangent values of  `d`, as a tuple
+    let inline tuple (d:D) =
+        match d with
+        | D(_) -> (d, D 0.)
+        | DF(p,t,_) -> (p, t)
 
 
 /// Forward differentiation operations module (automatically opened)
 [<AutoOpen>]
-module ForwardOps =
+module DiffOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f (x:float) =
-        x |> dualP1 |> f |> tuple
+    let inline diff' f x =
+        x |> makeDFp1 GlobalTagger.Next |> f |> tuple
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff f (x:float) =
-        x |> dualP1 |> f |> tangent
-       
+    let inline diff f x =
+        x |> makeDFp1 GlobalTagger.Next |> f |> tangent
+
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 f x =
+        diff (diff f) x
+
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x =
+        let v, d = diff' f x
+        let d2 = diff2 f x
+        (v, d, d2)
+
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' f x =
+        diff2'' f x |> fsttrd
+
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn n f x =
+        if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
+        elif n = 0 then x |> f
+        else
+            let rec d n f =
+                match n with
+                | 1 -> f
+                | _ -> d (n - 1) (diff f)
+            x |> makeDFp1 GlobalTagger.Next |> (d n f) |> tangent
+    
+    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn' n f x =
+        (diffn 0 f x, diffn n f x)
+
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' f (x:float[]) (v:float[]) =
-        Array.map2 dualPT x v |> f |> tuple
+    let inline gradv' f x v =
+        let i = GlobalTagger.Next
+        Array.map2 (makeDF i) x v |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
         gradv' f x v |> snd
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f (x:float[]) =
+    let inline grad' f (x:_[]) =
         let a = Array.init x.Length (fun i -> gradv' f x (standardBasis x.Length i))
         (fst a.[0], Array.map snd a)
 
@@ -184,16 +341,31 @@ module ForwardOps =
     let inline grad f x =
         grad' f x |> snd
 
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f (x:_[]) =
+        let i = GlobalTagger.Next
+        let a = Array.init x.Length (fun j ->
+                                        let xd = standardBasis x.Length j |> Array.map2 (makeDF i) x
+                                        fVStoSS j f xd
+                                        |> diff
+                                        <| xd.[j])
+        (x |> f, Array.sumBy tangent a)
+
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x =
+        laplacian' f x |> snd
+
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' f (x:float[]) (v:float[]) = 
-        Array.map2 dualPT x v |> f |> Array.map tuple |> Array.unzip
+    let inline jacobianv' f x v =
+        let i = GlobalTagger.Next
+        Array.map2 (makeDF i) x v |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv f (x:float[]) (v:float[]) = 
+    let inline jacobianv f x v =
         jacobianv' f x v |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' f (x:float[]) =
+    let inline jacobianT' f (x:_[]) =
         let a = Array.init x.Length (fun i -> jacobianv' f x (standardBasis x.Length i))
         (fst a.[0], array2D (Array.map snd a))
 
@@ -208,6 +380,23 @@ module ForwardOps =
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
         jacobian' f x |> snd
+
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian f x =
+        jacobian' (grad f) x
+
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' f x =
+        let g, h = gradhessian f x
+        (x |> f, g, h)
+
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian f x =
+        jacobian (grad f) x
+
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian' f x =
+        (x |> f, hessian f x)
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x =
@@ -238,43 +427,65 @@ module ForwardOps =
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv f x =
         curldiv' f x |> sndtrd
-
+        
 
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:Dual->Dual) x = ForwardOps.diff' f x
+    let inline diff' (f:D->D) x = DiffOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:Dual->Dual) x = ForwardOps.diff f x
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<Dual>->Dual) x v = ForwardOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<Dual>->Dual) x v = ForwardOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    let inline diff (f:D->D) x = DiffOps.diff f x
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' (f:D->D) x = DiffOps.diff2' f x
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 (f:D->D) x = DiffOps.diff2 f x
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' (f:D->D) x = DiffOps.diff2'' f x
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn' (n:int) (f:D->D) x = DiffOps.diffn' n f x
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn (n:int) (f:D->D) x = DiffOps.diffn n f x
+    /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
+    let inline gradv' (f:Vector<D>->D) x v = DiffOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
+    let inline gradv (f:Vector<D>->D) x v = DiffOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<Dual>->Dual) x = ForwardOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<D>->D) x = DiffOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<Dual>->Dual) x = ForwardOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline grad (f:Vector<D>->D) x = DiffOps.grad (vector >> f) (Vector.toArray x) |> vector
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' (f:Vector<D>->D) x = DiffOps.laplacian' (vector >> f) (Vector.toArray x)
+    /// Laplacian of a vector-to-scalar function `f`, at point x
+    let inline laplacian (f:Vector<D>->D) x = DiffOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<D>->Vector<D>) x = DiffOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<D>->Vector<D>) x = DiffOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<D>->Vector<D>) x = DiffOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Dual>->Vector<_>) x = ForwardOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<D>->Vector<D>) x = DiffOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<D>->Vector<D>) x v = DiffOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<Dual>->Vector<Dual>) x v = ForwardOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    let inline jacobianv (f:Vector<D>->Vector<D>) x v = DiffOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian (f:Vector<D>->D) x = DiffOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian' (f:Vector<D>->D) x = DiffOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' (f:Vector<D>->D) x = DiffOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian (f:Vector<D>->D) x = DiffOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    let inline curl' (f:Vector<D>->Vector<D>) x = DiffOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
+    let inline curl (f:Vector<D>->Vector<D>) x = DiffOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline div' (f:Vector<D>->Vector<D>) x = DiffOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    let inline div (f:Vector<D>->Vector<D>) x = DiffOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' (f:Vector<D>->Vector<D>) x = DiffOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv (f:Vector<Dual>->Vector<Dual>) x = ForwardOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline curldiv (f:Vector<D>->Vector<D>) x = DiffOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

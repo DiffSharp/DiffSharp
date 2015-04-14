@@ -37,8 +37,8 @@ Let us implement stochastic gradient descent with the DiffSharp library, using c
 
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
+open DiffSharp.AD.Specialized.Reverse1
+open DiffSharp.AD.Specialized.Reverse1.Vector
 open FsAlg.Generic
 
 let rnd = new System.Random()

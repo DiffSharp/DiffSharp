@@ -34,263 +34,470 @@
 //   www.bcl.hamilton.ie
 //
 
-//
-// Reverse mode AD
-// Builds up a trace in forward evaluation, uses this in the reverse sweep for updating adjoint values
-// 
-
 #light
 
-/// Reverse mode AD module
-module DiffSharp.AD.Reverse
+/// Nested reverse mode AD
+namespace DiffSharp.AD.Reverse
 
 open DiffSharp.Util.General
-open System.Collections.Generic
 open FsAlg.Generic
+open System.Collections.Generic
 
-/// Global trace for recording operations
-type Trace() =
-    static let mutable stack = new Stack<Op>()
-    static member Stack
-        with get() = stack
-        and set s = stack <- s
-    static member Push = Trace.Stack.Push
-    static member Clear = Trace.Stack.Clear
-    static member Copy() = new Stack<Op>(Trace.Stack)
-    static member Set(t) = Trace.Stack <- t
-    static member SetClean(t) = Trace.Stack <- Trace.CleanCopy t
-    static member CleanCopy(t) =
-        let ret = new Stack<Op>()
-        for op in t do
-            match op with
-            | Add(x, y, z) | Sub(x, y, z) | Mul(x, y, z) | Div(x, y, z) | Pow (x, y, z) | Atan2 (x, y, z) -> x.A <- 0.; y.A <- 0.; z.A <- 0.
-            | AddCons(x, z) | SubAdjCons(x, z) | SubConsAdj(x, z) | MulCons(x, _, z) | DivAdjCons(x, _, z) | DivConsAdj(_, x, z) | PowAdjCons(x, _, z) | PowConsAdj(_, x, z) | Atan2AdjCons(x, _, z) | Atan2ConsAdj(_, x, z) | Neg(x, z) | Log(x, z) | Log10(x, z) | Exp (x, z) | Sin(x, z) | Cos(x, z) | Tan(x, z) | Sqrt(x, z) | Sinh(x, z) | Cosh(x, z) | Tanh(x, z) | Asin(x, z) | Acos(x, z) | Atan(x, z) | Abs(x, z) | Floor(x, z) | Ceil(x, z) | Round(x, z) -> x.A <- 0.; z.A <- 0.;
-            ret.Push(op)
-        ret
-    static member ReverseSweep() =
-        while Trace.Stack.Count > 0 do
-            match Trace.Stack.Pop() with
-            | Add(x, y, z) -> x.AddAdj(z.A); y.AddAdj(z.A)
-            | AddCons(x, z) -> x.AddAdj(z.A)
-            | Sub(x, y, z) -> x.AddAdj(z.A); y.AddAdj(-z.A)
-            | SubAdjCons(x, z) -> x.AddAdj(z.A)
-            | SubConsAdj(y, z) -> y.AddAdj(-z.A)
-            | Mul(x, y, z) -> x.AddAdj(z.A * y.P); y.AddAdj(z.A * x.P)
-            | MulCons(x, y, z) -> x.AddAdj(z.A * y)
-            | Div(x, y, z) -> x.AddAdj(z.A * (1. / y.P)); y.AddAdj(z.A * (-x.P / (y.P * y.P)))
-            | DivAdjCons(x, y, z) -> x.AddAdj(z.A * (1. / y))
-            | DivConsAdj(x, y, z) -> y.AddAdj(z.A * (-x / (y.P * y.P)))
-            | Pow(x, y, z) -> x.AddAdj(z.A * (x.P ** (y.P - 1.)) * y.P); y.AddAdj(z.A * (x.P ** y.P) * log x.P)
-            | PowAdjCons(x, y, z) -> x.AddAdj(z.A * (x.P ** (y - 1.)) * y)
-            | PowConsAdj(x, y, z) -> y.AddAdj(z.A * (x ** y.P) * log x)
-            | Atan2(x, y, z) -> x.AddAdj(z.A * y.P / (x.P * x.P + y.P * y.P)); y.AddAdj(z.A * (-x.P) / (x.P * x.P + y.P * y.P))
-            | Atan2AdjCons(x, y, z) -> x.AddAdj(z.A * y / (x.P * x.P + y * y))
-            | Atan2ConsAdj(x, y, z) -> y.AddAdj(z.A * (-x) / (x * x + y.P * y.P))
-            | Log(x, z) -> x.AddAdj(z.A / x.P)
-            | Log10(x, z) -> x.AddAdj(z.A / (x.P * log10val))
-            | Exp(x, z) -> x.AddAdj(z.A * z.P)
-            | Sin(x, z) -> x.AddAdj(z.A * cos x.P)
-            | Cos(x, z) -> x.AddAdj(z.A * (-sin x.P))
-            | Tan(x, z) -> let secx = 1. / cos x.P in x.AddAdj(z.A * (secx * secx))
-            | Neg(x, z) -> x.AddAdj(-z.A)
-            | Sqrt(x, z) -> x.AddAdj(z.A / (2. * z.P))
-            | Sinh(x, z) -> x.AddAdj(z.A * cosh x.P)
-            | Cosh(x, z) -> x.AddAdj(z.A * sinh x.P)
-            | Tanh(x, z) -> let sechx = 1. / cosh x.P in x.AddAdj(z.A * (sechx * sechx))
-            | Asin(x, z) -> x.AddAdj(z.A / sqrt (1. - x.P * x.P))
-            | Acos(x, z) -> x.AddAdj(-z.A / sqrt (1. - x.P * x.P))
-            | Atan(x, z) -> x.AddAdj(z.A / (1. + x.P * x.P))
-            | Abs(x, z) -> x.AddAdj(z.A * float (sign x.P))
-            | Floor(x, z) -> ()
-            | Ceil(x, z) -> ()
-            | Round(x, z) -> ()
+
+/// Numeric type keeping adjoint values and traces, with nesting capability, using tags to avoid perturbation confusion
+[<CustomEquality; CustomComparison>]    
+type D =
+    | D of float // Primal
+    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out, tag
+    member d.P =
+        match d with
+        | D(_) -> d
+        | DR(p,_,_,_,_) -> p
+    member d.A
+        with get() =
+            match d with
+            | D(_) -> D 0.
+            | DR(_,a,_,_,_) -> !a
+        and set(v) =
+            match d with
+            | D(_) -> ()
+            | DR(_,a,_,_,_) -> a := v
+    member d.F
+        with get() =
+            match d with
+            | D(_) -> 0u
+            | DR(_,_,_,f,_) -> !f
+        and set(v) =
+            match d with
+            | D(_) -> ()
+            | DR(_,_,_,f,_) -> f := v
+    static member op_Explicit(d:D) =
+        match d with
+        | D(a) -> a
+        | DR(ap,_,_,_,_) -> float ap
+    static member DivideByInt(d:D, i:int) =
+        match d with
+        | D(a) -> D(a / float i)
+        | DR(_,_,_,_,_) -> d / float i
+    static member Zero = D 0.
+    static member One = D 1.
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? D as d2 -> compare ((float) d) ((float) d2)
+            | _ -> invalidArg "" "Cannot compare this D with another type of object."
+    override d.Equals(other) =
+        match other with
+        | :? D as d2 -> compare ((float) d) ((float) d2) = 0
+        | _ -> false
+    override d.GetHashCode() =
+        match d with
+        | D(a) -> hash [| a |]
+        | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
+    // D - D binary operations
+    static member (+) (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(ap + bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap + bp, ref (D 0.), AddCons(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap + bp, ref (D 0.), AddCons(a), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a + bp, ref (D 0.), AddCons(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap + bp, ref (D 0.), Add(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap + b, ref (D 0.), AddCons(a), ref 0u, ai)
+    static member (-) (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(ap - bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap - bp, ref (D 0.), SubConsD(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap - bp, ref (D 0.), SubDCons(a), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a - bp, ref (D 0.), SubConsD(b), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap - bp, ref (D 0.), Sub(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap - b, ref (D 0.), SubDCons(a), ref 0u, ai)
+    static member (*) (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(ap * bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap * bp, ref (D 0.), MulCons(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap * bp, ref (D 0.), MulCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a * bp, ref (D 0.), MulCons(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap * bp, ref (D 0.), Mul(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap * b, ref (D 0.), MulCons(a, b), ref 0u, ai)
+    static member (/) (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(ap / bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(ap / bp, ref (D 0.), DivConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap / bp, ref (D 0.), DivDCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a / bp, ref (D 0.), DivConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap / bp, ref (D 0.), Div(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap / b, ref (D 0.), DivDCons(a, b), ref 0u, ai)
+    static member Pow (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(ap ** bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(D.Pow(ap, bp), ref (D 0.), PowConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(ap ** bp, ref (D 0.), PowDCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(a ** bp, ref (D 0.), PowConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(ap ** bp, ref (D 0.), Pow(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(ap ** b, ref (D 0.), PowDCons(a, b), ref 0u, ai)
+    static member Atan2 (a:D, b:D) =
+        match a, b with
+        | D(ap), D(bp) -> D(atan2 ap bp)
+        | D(ap), DR(bp, _, _, _, bi) -> DR(D.Atan2(ap, bp), ref (D 0.), Atan2ConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), D(bp) -> DR(D.Atan2(ap, bp), ref (D 0.), Atan2DCons(a, b), ref 0u, ai)
+        | DR( _, _, _, _, ai), DR(bp, _, _, _, bi) when ai < bi -> DR(atan2 a bp, ref (D 0.), Atan2ConsD(b, a), ref 0u, bi)
+        | DR(ap, _, _, _, ai), DR(bp, _, _, _, bi) when ai = bi -> DR(atan2 ap bp, ref (D 0.), Atan2(a, b), ref 0u, ai)
+        | DR(ap, _, _, _, ai), DR( _, _, _, _, bi) when ai > bi -> DR(atan2 ap b, ref (D 0.), Atan2DCons(a, b), ref 0u, ai)
+    // D - float binary operations
+    static member (+) (a:D, b:float) = a + (D b)
+    static member (-) (a:D, b:float) = a - (D b)
+    static member (*) (a:D, b:float) = a * (D b)
+    static member (/) (a:D, b:float) = a / (D b)
+    static member Pow (a:D, b:float) = a ** (D b)
+    static member Atan2 (a:D, b:float) = atan2 a (D b)
+    // float - D binary operations
+    static member (+) (a:float, b:D) = (D a) + b
+    static member (-) (a:float, b:D) = (D a) - b
+    static member (*) (a:float, b:D) = (D a) * b
+    static member (/) (a:float, b:D) = (D a) / b
+    static member Pow (a:float, b:D) = (D a) ** b
+    static member Atan2 (a:float, b:D) = atan2 (D a) b
+    // D - int binary operations
+    static member (+) (a:D, b:int) = a + float b
+    static member (-) (a:D, b:int) = a - float b
+    static member (*) (a:D, b:int) = a * float b
+    static member (/) (a:D, b:int) = a / float b
+    static member Pow (a:D, b:int) = D.Pow(a, float b)
+    static member Atan2 (a:D, b:int) = D.Atan2(a, float b)
+    // int - D binary operations
+    static member (+) (a:int, b:D) = (float a) + b
+    static member (-) (a:int, b:D) = (float a) - b
+    static member (*) (a:int, b:D) = (float a) * b
+    static member (/) (a:int, b:D) = (float a) / b
+    static member Pow (a:int, b:D) = D.Pow(float a, b)
+    static member Atan2 (a:int, b:D) = D.Atan2(float a, b)
+    // D unary operations
+    static member Log (a:D) =
+        if (float a) <= 0. then invalidArgLog()
+        match a with
+        | D(a) -> D(log a)
+        | DR(ap, _, _, _, ai) -> DR(log ap, ref (D 0.), Log(a), ref 0u, ai)
+    static member Log10 (a:D) =
+        if (float a) <= 0. then invalidArgLog10()
+        match a with
+        | D(a) -> D(log10 a)
+        | DR(ap, _, _, _, ai) -> DR(log10 ap, ref (D 0.), Log10(a), ref 0u, ai)
+    static member Exp (a:D) =
+        match a with
+        | D(a) -> D(exp a)
+        | DR(ap, _, _, _, ai) -> DR(exp ap, ref (D 0.), Exp(a), ref 0u, ai)
+    static member Sin (a:D) =
+        match a with
+        | D(a) -> D(sin a)
+        | DR(ap, _, _, _, ai) -> DR(sin ap, ref (D 0.), Sin(a), ref 0u, ai)
+    static member Cos (a:D) =
+        match a with
+        | D(a) -> D(cos a)
+        | DR(ap, _, _, _, ai) -> DR(cos ap, ref (D 0.), Cos(a), ref 0u, ai)
+    static member Tan (a:D) =
+        if (float (cos a)) = 0. then invalidArgTan()
+        match a with
+        | D(a) -> D(tan a)
+        | DR(ap, _, _, _, ai) -> DR(tan ap, ref (D 0.), Tan(a), ref 0u, ai)
+    static member (~-) (a:D) =
+        match a with
+        | D(a) -> D(-a)
+        | DR(ap, _, _, _, ai) -> DR(-ap, ref (D 0.), Neg(a), ref 0u, ai)
+    static member Sqrt (a:D) =
+        if (float a) <= 0. then invalidArgSqrt()
+        match a with
+        | D(a) -> D(sqrt a)
+        | DR(ap, _, _, _, ai) -> DR(sqrt ap, ref (D 0.), Sqrt(a), ref 0u, ai)
+    static member Sinh (a:D) =
+        match a with
+        | D(a) -> D(sinh a)
+        | DR(ap, _, _, _, ai) -> DR(sinh ap, ref (D 0.), Sinh(a), ref 0u, ai)
+    static member Cosh (a:D) =
+        match a with
+        | D(a) -> D(cosh a)
+        | DR(ap, _, _, _, ai) -> DR(cosh ap, ref (D 0.), Cosh(a), ref 0u, ai)
+    static member Tanh (a:D) =
+        match a with
+        | D(a) -> D(tanh a)
+        | DR(ap, _, _, _, ai) -> DR(tanh ap, ref (D 0.), Tanh(a), ref 0u, ai)
+    static member Asin (a:D) =
+        if abs (float a) >= 1. then invalidArgAsin()
+        match a with
+        | D(a) -> D(asin a)
+        | DR(ap, _, _, _, ai) -> DR(asin ap, ref (D 0.), Asin(a), ref 0u, ai)
+    static member Acos (a:D) =
+        if abs (float a) >= 1. then invalidArgAcos()
+        match a with
+        | D(a) -> D(acos a)
+        | DR(ap, _, _, _, ai) -> DR(acos ap, ref (D 0.), Acos(a), ref 0u, ai)
+    static member Atan (a:D) =
+        match a with
+        | D(a) -> D(atan a)
+        | DR(ap, _, _, _, ai) -> DR(atan ap, ref (D 0.), Atan(a), ref 0u, ai)
+    static member Abs (a:D) =
+        if float a = 0. then invalidArgAbs()
+        match a with
+        | D(a) -> D(abs a)
+        | DR(ap, _, _, _, ai) -> DR(abs ap, ref (D 0.), Abs(a), ref 0u, ai)
+    static member Floor (a:D) =
+        if isInteger (float a) then invalidArgFloor()
+        match a with
+        | D(a) -> D(floor a)
+        | DR(ap, _, _, _, ai) -> DR(floor ap, ref (D 0.), Floor(a), ref 0u, ai)
+    static member Ceiling (a:D) =
+        if isInteger (float a) then invalidArgCeil()
+        match a with
+        | D(a) -> D(ceil a)
+        | DR(ap, _, _, _, ai) -> DR(ceil ap, ref (D 0.), Ceil(a), ref 0u, ai)
+    static member Round (a:D) =
+        if isHalfway (float a) then invalidArgRound()
+        match a with
+        | D(a) -> D(round a)
+        | DR(ap, _, _, _, ai) -> DR(round ap, ref (D 0.), Round(a), ref 0u, ai)
 
 /// Operation types for the trace
 and Op =
-    | Add of Adj * Adj * Adj
-    | AddCons of Adj * Adj
-    | Sub of Adj * Adj * Adj
-    | SubAdjCons of Adj * Adj
-    | SubConsAdj of Adj * Adj
-    | Mul of Adj * Adj * Adj
-    | MulCons of Adj * float * Adj
-    | Div of Adj * Adj * Adj
-    | DivAdjCons of Adj * float * Adj
-    | DivConsAdj of float * Adj * Adj
-    | Pow of Adj * Adj * Adj
-    | PowAdjCons of Adj * float * Adj
-    | PowConsAdj of float * Adj * Adj
-    | Atan2 of Adj * Adj * Adj
-    | Atan2AdjCons of Adj * float * Adj
-    | Atan2ConsAdj of float * Adj * Adj
-    | Log of Adj * Adj
-    | Log10 of Adj * Adj
-    | Exp of Adj * Adj
-    | Sin of Adj * Adj
-    | Cos of Adj * Adj
-    | Tan of Adj * Adj
-    | Neg of Adj * Adj
-    | Sqrt of Adj * Adj
-    | Sinh of Adj * Adj
-    | Cosh of Adj * Adj
-    | Tanh of Adj * Adj
-    | Asin of Adj * Adj
-    | Acos of Adj * Adj
-    | Atan of Adj * Adj
-    | Abs of Adj * Adj
-    | Floor of Adj * Adj
-    | Ceil of Adj * Adj
-    | Round of Adj * Adj
-    
-/// Adj numeric type, keeping primal and adjoint values
-and Adj =
-    val P:float // Primal
-    val mutable A:float // Adjoint
-    new(p) = {P = p; A = 0.}
-    new(p, a) = {P = p; A = a}
-    override this.ToString() = sprintf "Adj(%A, %A)" this.P this.A
-    static member op_Explicit(x) = Adj(x)
-    static member op_Explicit(x:Adj) = x.P
-    static member DivideByInt(x:Adj, i:int) = Adj(x.P / float i, x.A / float i)
-    static member Zero = Adj(0., 0.)
-    static member One = Adj(1., 0.)
-    interface System.IComparable with
-        override a.CompareTo(other) =
-            match other with
-            | :? Adj as a2 -> compare a.P a2.P
-            | _ -> failwith "Cannot compare this Adj with another type of object."
-    override a.Equals(other) = 
-        match other with
-        | :? Adj as a2 -> compare a.P a2.P = 0
-        | _ -> false
-    override a.GetHashCode() = hash [|a.P; a.A|]
-    member this.AddAdj(a) = this.A <- this.A + a
-    // Adj - Adj binary operations
-    static member (+) (x:Adj, y:Adj) = let z = Adj(x.P + y.P) in Trace.Push(Add(x, y, z)); z
-    static member (-) (x:Adj, y:Adj) = let z = Adj(x.P - y.P) in Trace.Push(Sub(x, y, z)); z
-    static member (*) (x:Adj, y:Adj) = let z = Adj(x.P * y.P) in Trace.Push(Mul(x, y, z)); z
-    static member (/) (x:Adj, y:Adj) = let z = Adj(x.P / y.P) in Trace.Push(Div(x, y, z)); z
-    static member Pow (x:Adj, y:Adj) = let z = Adj(x.P ** y.P) in Trace.Push(Pow(x, y, z)); z
-    static member Atan2 (x:Adj, y:Adj) = let z = Adj(atan2 x.P y.P) in Trace.Push(Atan2(x, y, z)); z
-    // Adj - float binary operations
-    static member (+) (x:Adj, y:float) = let z = Adj(x.P + y) in Trace.Push(AddCons(x, z)); z
-    static member (-) (x:Adj, y:float) = let z = Adj(x.P - y) in Trace.Push(SubAdjCons(x, z)); z
-    static member (*) (x:Adj, y:float) = let z = Adj(x.P * y) in Trace.Push(MulCons(x, y, z)); z
-    static member (/) (x:Adj, y:float) = let z = Adj(x.P / y) in Trace.Push(DivAdjCons(x, y, z)); z
-    static member Pow (x:Adj, y:float) = let z = Adj(x.P ** y) in Trace.Push(PowAdjCons(x, y, z)); z
-    static member Atan2 (x:Adj, y:float) = let z = Adj(atan2 x.P y) in Trace.Push(Atan2AdjCons(x, y, z)); z
-    // float - Adj binary operations
-    static member (+) (x:float, y:Adj) = let z = Adj(x + y.P) in Trace.Push(AddCons(y, z)); z
-    static member (-) (x:float, y:Adj) = let z = Adj(x - y.P) in Trace.Push(SubConsAdj(y, z)); z
-    static member (*) (x:float, y:Adj) = let z = Adj(x * y.P) in Trace.Push(MulCons(y, x, z)); z
-    static member (/) (x:float, y:Adj) = let z = Adj(x / y.P) in Trace.Push(DivConsAdj(x, y, z)); z
-    static member Pow (x:float, y:Adj) = let z = Adj(x ** y.P) in Trace.Push(PowConsAdj(x, y, z)); z
-    static member Atan2 (x:float, y:Adj) = let z = Adj(atan2 x y.P) in Trace.Push(Atan2ConsAdj(x, y, z)); z
-    // Adj - int binary operations
-    static member (+) (x:Adj, y:int) = let z = Adj(x.P + float y) in Trace.Push(AddCons(x, z)); z
-    static member (-) (x:Adj, y:int) = let z = Adj(x.P - float y) in Trace.Push(SubAdjCons(x, z));
-    static member (*) (x:Adj, y:int) = let z = Adj(x.P + float y) in Trace.Push(MulCons(x, float y, z)); z
-    static member (/) (x:Adj, y:int) = let z = Adj(x.P / float y) in Trace.Push(DivAdjCons(x, float y, z)); z
-    static member Pow (x:Adj, y:int) = let z = Adj(x.P ** float y) in Trace.Push(PowAdjCons(x, float y, z)); z
-    static member Atan2 (x:Adj, y:int) = let z = Adj(atan2 x.P (float y)) in Trace.Push(Atan2AdjCons(x, float y, z)); z
-    // int - Adj binary operations
-    static member (+) (x:int, y:Adj) = let z = Adj(float x + y.P) in Trace.Push(AddCons(y, z)); z
-    static member (-) (x:int, y:Adj) = let z = Adj(float x - y.P) in Trace.Push(SubConsAdj(y, z)); z
-    static member (*) (x:int, y:Adj) = let z = Adj(float x * y.P) in Trace.Push(MulCons(y, float x, z)); z
-    static member (/) (x:int, y:Adj) = let z = Adj(float x / y.P) in Trace.Push(DivConsAdj(float x, y, z)); z
-    static member Pow (x:int, y:Adj) = let z = Adj(float x ** y.P) in Trace.Push(PowConsAdj(float x, y, z)); z
-    static member Atan2 (x:int, y:Adj) = let z = Adj(atan2 (float x) y.P) in Trace.Push(Atan2ConsAdj(float x, y, z)); z
-    // Adj unary operations
-    static member Log (x:Adj) = 
-        if x.P <= 0. then invalidArgLog()
-        let z = Adj(log x.P) in Trace.Push(Log(x, z)); z
-    static member Log10 (x:Adj) = 
-        if x.P <= 0. then invalidArgLog10()
-        let z = Adj(log10 x.P) in Trace.Push(Log10(x, z)); z
-    static member Exp (x:Adj) = let z = Adj(exp x.P) in Trace.Push(Exp(x, z)); z
-    static member Sin (x:Adj) = let z = Adj(sin x.P) in Trace.Push(Sin(x, z)); z
-    static member Cos (x:Adj) = let z = Adj(cos x.P) in Trace.Push(Cos(x, z)); z
-    static member Tan (x:Adj) = 
-        if cos x.P = 0. then invalidArgTan()
-        let z = Adj(tan x.P) in Trace.Push(Tan(x, z)); z
-    static member (~-) (x:Adj) = let z = Adj(-x.P) in Trace.Push(Neg(x, z)); z
-    static member Sqrt (x:Adj) =
-        if x.P <= 0. then invalidArgSqrt()
-        let z = Adj(sqrt x.P) in Trace.Push(Sqrt(x, z)); z
-    static member Sinh (x:Adj) = let z = Adj(sinh x.P) in Trace.Push(Sinh(x, z)); z
-    static member Cosh (x:Adj) = let z = Adj(cosh x.P) in Trace.Push(Cosh(x, z)); z
-    static member Tanh (x:Adj) = let z = Adj(tanh x.P) in Trace.Push(Tanh(x, z)); z
-    static member Asin (x:Adj) = 
-        if (abs x.P) >= 1. then invalidArgAsin()
-        let z = Adj(asin x.P) in Trace.Push(Asin(x, z)); z
-    static member Acos (x:Adj) = 
-        if (abs x.P) >= 1. then invalidArgAcos()
-        let z = Adj(acos x.P) in Trace.Push(Acos(x, z)); z
-    static member Atan (x:Adj) = let z = Adj(atan x.P) in Trace.Push(Atan(x, z)); z
-    static member Abs (x:Adj) = 
-        if x.P = 0. then invalidArgAbs()
-        let z = Adj(abs x.P) in Trace.Push(Abs(x, z)); z
-    static member Floor (x:Adj) =
-        if isInteger x.P then invalidArgFloor()
-        let z = Adj(floor x.P) in Trace.Push(Floor(x, z)); z
-    static member Ceiling (x:Adj) =
-        if isInteger x.P then invalidArgCeil()
-        let z = Adj(ceil x.P) in Trace.Push(Ceil(x, z)); z
-    static member Round (x:Adj) =
-        if isHalfway x.P then invalidArgRound()
-        let z = Adj(round x.P) in Trace.Push(Round(x, z)); z
+    | Add        of D * D
+    | AddCons    of D
+    | Sub        of D * D
+    | SubDCons   of D
+    | SubConsD   of D
+    | Mul        of D * D
+    | MulCons    of D * D
+    | Div        of D * D
+    | DivDCons   of D * D
+    | DivConsD   of D * D
+    | Pow        of D * D
+    | PowDCons   of D * D
+    | PowConsD   of D * D
+    | Atan2      of D * D
+    | Atan2DCons of D * D
+    | Atan2ConsD of D * D
+    | Log        of D
+    | Log10      of D
+    | Exp        of D
+    | Sin        of D
+    | Cos        of D
+    | Tan        of D
+    | Neg        of D
+    | Sqrt       of D
+    | Sinh       of D
+    | Cosh       of D
+    | Tanh       of D
+    | Asin       of D
+    | Acos       of D
+    | Atan       of D
+    | Abs        of D
+    | Floor      of D
+    | Ceil       of D
+    | Round      of D
+    | Noop
 
-/// Adj operations module (automatically opened)
+/// Tagger for generating incremental integers
+type Tagger =
+    val mutable LastTag : uint32
+    new(t) = {LastTag = t}
+    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
+
+/// Global tagger for D operations
+type GlobalTagger() =
+    static let T = new Tagger(0u)
+    static member Next = T.Next()
+    static member Reset = T.LastTag <- 0u
+
+/// D operations module (automatically opened)
 [<AutoOpen>]
-module AdjOps =
-    /// Make Adj, with primal value `p` and adjoint 0
-    let inline adj p = Adj(float p)
-    /// Get the primal value of an Adj
-    let inline primal (x:Adj) = x.P
-    /// Get the adjoint value of an Adj
-    let inline adjoint (x:Adj) = x.A
+module DOps =
+    /// Reverse propagates the adjoint `v` through the trace of `d`
+    let rec reverse (v:D) (d:D) =
+        match d with
+        | D(_) -> ()
+        | DR(_,_,o,_,_) ->
+            d.A <- d.A + v
+            d.F <- d.F - 1u
+            if d.F = 0u then
+                match o with
+                | Add(a, b)           -> reverse d.A a; reverse d.A b
+                | AddCons(a)          -> reverse d.A a
+                | Sub(a, b)           -> reverse d.A a; reverse -d.A b
+                | SubDCons(a)         -> reverse d.A a
+                | SubConsD(a)         -> reverse -d.A a
+                | Mul(a, b)           -> reverse (d.A * b.P) a; reverse (d.A * a.P) b
+                | MulCons(a, cons)    -> reverse (d.A * cons) a
+                | Div(a, b)           -> reverse (d.A / b.P) a; reverse (d.A * (-a.P / (b.P * b.P))) b
+                | DivDCons(a, cons)   -> reverse (d.A / cons) a
+                | DivConsD(a, cons)   -> reverse (d.A * (-cons / (a.P * a.P))) a
+                | Pow(a, b)           -> reverse (d.A * (a.P ** (b.P - D 1.)) * b.P) a; reverse (d.A * (a.P ** b.P) * log a.P) b
+                | PowDCons(a, cons)   -> reverse (d.A * (a.P ** (cons - D 1.)) * cons) a
+                | PowConsD(a, cons)   -> reverse (d.A * (cons ** a.P) * log cons) a
+                | Atan2(a, b)         -> let denom = a.P * a.P + b.P * b.P in reverse (d.A * b.P / denom) a; reverse (d.A * (-a.P) / denom) b
+                | Atan2DCons(a, cons) -> reverse (d.A * cons / (a.P * a.P + cons * cons)) a
+                | Atan2ConsD(a, cons) -> reverse (d.A * (-cons) / (cons * cons + a.P * a.P)) a
+                | Log(a)              -> reverse (d.A / a.P) a
+                | Log10(a)            -> reverse (d.A / (a.P * log10val)) a
+                | Exp(a)              -> reverse (d.A * d.P) a // d.P = exp a.P
+                | Sin(a)              -> reverse (d.A * cos a.P) a
+                | Cos(a)              -> reverse (d.A * (-sin a.P)) a
+                | Tan(a)              -> let seca = D 1. / cos a.P in reverse (d.A * seca * seca) a
+                | Neg(a)              -> reverse -d.A a
+                | Sqrt(a)             -> reverse (d.A / (D 2. * d.P)) a // d.P = sqrt a.P
+                | Sinh(a)             -> reverse (d.A * cosh a.P) a
+                | Cosh(a)             -> reverse (d.A * sinh a.P) a
+                | Tanh(a)             -> let secha = D 1. / cosh a.P in reverse (d.A * secha * secha) a
+                | Asin(a)             -> reverse (d.A / sqrt (D 1. - a.P * a.P)) a
+                | Acos(a)             -> reverse (-d.A / sqrt (D 1. - a.P * a.P)) a
+                | Atan(a)             -> reverse (d.A / (D 1. + a.P * a.P)) a
+                | Abs(a)              -> reverse (d.A * float (sign (float a.P))) a
+                | Floor(_)            -> ()
+                | Ceil(_)             -> ()
+                | Round(_)            -> ()
+                | Noop                -> ()
+    /// Resets the adjoints of all the values in the trace of `d`
+    let rec reset (d:D) =
+        match d with
+        | D(_) -> ()
+        | DR(_,_,o,_,_) ->
+            d.A <- D 0.
+            d.F <- d.F + 1u
+            if d.F = 1u then
+                match o with
+                | Add(a, b)           -> reset a; reset b
+                | AddCons(a)          -> reset a
+                | Sub(a, b)           -> reset a; reset b
+                | SubDCons(a)         -> reset a
+                | SubConsD(a)         -> reset a
+                | Mul(a, b)           -> reset a; reset b
+                | MulCons(a, _)       -> reset a
+                | Div(a, b)           -> reset a; reset b
+                | DivDCons(a, _)      -> reset a
+                | DivConsD(a, _)      -> reset a
+                | Pow(a, b)           -> reset a; reset b
+                | PowDCons(a, _)      -> reset a
+                | PowConsD(a, _)      -> reset a
+                | Atan2(a, b)         -> reset a; reset b
+                | Atan2DCons(a, _)    -> reset a
+                | Atan2ConsD(a, _)    -> reset a
+                | Log(a)              -> reset a
+                | Log10(a)            -> reset a
+                | Exp(a)              -> reset a
+                | Sin(a)              -> reset a
+                | Cos(a)              -> reset a
+                | Tan(a)              -> reset a
+                | Neg(a)              -> reset a
+                | Sqrt(a)             -> reset a
+                | Sinh(a)             -> reset a
+                | Cosh(a)             -> reset a
+                | Tanh(a)             -> reset a
+                | Asin(a)             -> reset a
+                | Acos(a)             -> reset a
+                | Atan(a)             -> reset a
+                | Abs(a)              -> reset a
+                | Floor(a)            -> reset a
+                | Ceil(a)             -> reset a
+                | Round(a)            -> reset a
+                | Noop                -> ()
+    /// Make DR, with tag `i` and primal value `p`
+    let inline makeDR i p = 
+        DR(p, ref (D 0.), Noop, ref 0u, i) 
+    /// Get the adjoint value of `d`
+    let inline adjoint (d:D) = d.A
+    /// Get the primal value of `d`
+    let inline primal (d:D) = d.P
+
 
 /// Reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
-module ReverseOps =
+module DiffOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' f (x:float) =
-        Trace.Clear()
-        let xa = adj x
-        let z:Adj = f xa
-        z.A <- 1.
-        Trace.ReverseSweep()
+    let inline diff' f x =
+        let xa = x |> makeDR GlobalTagger.Next
+        let z:D = f xa
+        z |> reset
+        z |> reverse (D 1.)
         (primal z, adjoint xa)
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff f x =
         diff' f x |> snd
 
-    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' f (x:float[]) =
-        Trace.Clear()
-        let xa = Array.map adj x
-        let z:Adj = f xa
-        z.A <- 1.
-        Trace.ReverseSweep()
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 f x =
+        diff (diff f) x
+
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' f x =
+        let v, d = diff' f x
+        let d2 = diff2 f x
+        (v, d, d2)
+
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' f x =
+        diff2'' f x |> fsttrd
+
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`    
+    let inline diffn n f x =
+        if n < 0 then invalidArg "" "Order of differentiation cannot be negative."
+        elif n = 0 then x |> f
+        else
+            let rec d n f =
+                match n with
+                | 1 -> diff f
+                | _ -> d (n - 1) (diff f)
+            x |> (d n f)
+
+    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn' n f x =
+        (diffn 0 f x, diffn n f x)
+
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`    
+    let inline grad' f x =
+        let i = GlobalTagger.Next
+        let xa = x |> Array.map (makeDR i)
+        let z:D = f xa
+        z |> reset
+        z |> reverse (D 1.)
         (primal z, Array.map adjoint xa)
 
-    /// Original value of a vector-to-scalar function `f`, at point `x`
+    /// Gradient of a vector-to-scalar function `f`, at point `x`    
     let inline grad f x =
         grad' f x |> snd
 
-    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`, using one forward sweep and several reverse sweeps
-    let inline jacobian' f (x:float[]) =
-        Trace.Clear()
-        let xa = Array.map adj x
-        let z:Adj[] = f xa
-        let forwardTrace = Trace.Copy()
-        let jac = Array.init z.Length (fun i ->
-                                        if i > 0 then Trace.SetClean(forwardTrace)
-                                        z.[i].A <- 1.
-                                        Trace.ReverseSweep()
-                                        Array.map adjoint xa)
-        (Array.map primal z, array2D jac)
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian' f (x:_[]) =
+        let a = Array.init x.Length (fun i -> x |> fVVtoSS i i (grad f) |> diff <| x.[i])
+        (x |> f, a |> Array.sum)
+
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`
+    let inline laplacian f x =
+        laplacian' f x |> snd
+
+    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
+    let inline jacobianTv'' f x =
+        let i = GlobalTagger.Next
+        let xa = x |> Array.map (makeDR i)
+        let z:D[] = f xa
+        let r1 = Array.map primal z
+        let r2 =
+            fun v ->
+                Array.iter reset z
+                Array.iter2 reverse v z
+                Array.map adjoint xa
+        (r1, r2)
+
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`    
+    let inline jacobianTv' f x v =
+        let r1, r2 = jacobianTv'' f x
+        (r1, r2 v)
+
+    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
+    let inline jacobianTv f x v =
+        jacobianTv' f x v |> snd
+
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
+    let inline jacobian' f x =
+        let r1, r2 = jacobianTv'' f x
+        let a = Array.init r1.Length (fun j -> r2 (standardBasis r1.Length j))
+        (r1, array2D a)
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobian f x =
@@ -298,73 +505,34 @@ module ReverseOps =
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT' f x =
-        let (v, j) = jacobian' f x in (v, transpose j)
-    
+        jacobian' f x |> fun (r, j) -> (r, transpose j)
+
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
         jacobianT' f x |> snd
 
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline gradhessian' f (x:float[]) =
-        let xv = vectorBy float x
-        let (v, g) = grad' f x
-        let h = Matrix.createRows x.Length g
-        let hh = Matrix.initRows x.Length (fun i -> grad f (Vector.toArray (xv + Vector.createBasis x.Length i eps)))
-        (v, g, Matrix.toArray2D ((hh - h) / eps))
-
-    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
-        gradhessian' f x |> sndtrd
-    
-    /// Original valuea and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline hessian' f x =
-        gradhessian' f x |> fsttrd
+        jacobian' (grad f) x
 
-    /// Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' f x =
+        let g, h = gradhessian f x
+        (x |> f, g, h)
+
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
-        gradhessian' f x |> trd
+        jacobian (grad f) x
 
-    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline laplacian' f x =
-        let (v, h) = hessian' f x in (v, trace h)
-
-    /// Laplacian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
-    let inline laplacian f x =
-        laplacian' f x |> snd
-
-    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv' f (x:float[]) (v:float[]) =
-        Trace.Clear()
-        let xa = Array.map adj x
-        let z:Adj[] = f xa
-        Array.iter2 (fun (a:Adj) b -> a.A <- b) z v
-        Trace.ReverseSweep()
-        (Array.map primal z, Array.map adjoint xa)
-
-    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv f x v =
-        jacobianTv' f x v |> snd
-
-    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
-    let inline jacobianTv'' f (x:float[]) =
-        Trace.Clear()
-        let xa = Array.map adj x
-        let z:Adj[] = f xa
-        let forwardTrace = Trace.Copy()
-        let r1 = Array.map primal z
-        let r2 =
-            fun v ->
-                Trace.SetClean(forwardTrace)
-                Array.iter2 (fun (a:Adj) b -> a.A <- b) z v
-                Trace.ReverseSweep()
-                Array.map adjoint xa
-        (r1, r2)
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`    
+    let inline hessian' f x =
+        (x |> f, hessian f x)
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x =
-        let v, j = jacobian' f x
+        let v, j = jacobianT' f x
         if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurl()
-        v, [|j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]|]
+        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
 
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl f x =
@@ -372,7 +540,7 @@ module ReverseOps =
 
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div' f x =
-        let v, j = jacobian' f x
+        let v, j = jacobianT' f x
         if Array2D.length1 j <> Array2D.length2 j then invalidArgDiv()
         v, trace j
 
@@ -382,59 +550,70 @@ module ReverseOps =
 
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv' f x =
-        let v, j = jacobian' f x
+        let v, j = jacobianT' f x
         if (Array2D.length1 j, Array2D.length2 j) <> (3, 3) then invalidArgCurlDiv()
-        v, [|j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]|], trace j
+        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], trace j
 
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv f x =
         curldiv' f x |> sndtrd
 
+
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:Adj->Adj) x = ReverseOps.diff' f x
+    let inline diff' (f:D->D) x = DiffOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:Adj->Adj) x = ReverseOps.diff f x
+    let inline diff (f:D->D) x = DiffOps.diff f x
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2' (f:D->D) x = DiffOps.diff2' f x
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2 (f:D->D) x = DiffOps.diff2 f x
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diff2'' (f:D->D) x = DiffOps.diff2'' f x
+    /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn' (n:int) (f:D->D) x = DiffOps.diffn' n f x
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
+    let inline diffn (n:int) (f:D->D) x = DiffOps.diffn n f x
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<Adj>->Adj) x = ReverseOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<D>->D) x = DiffOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<Adj>->Adj) x = ReverseOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline grad (f:Vector<D>->D) x = DiffOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<Adj>->Adj) x = ReverseOps.laplacian' (vector >> f) (Vector.toArray x)
-    /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian (f:Vector<Adj>->Adj) x = ReverseOps.laplacian (vector >> f) (Vector.toArray x)
+    let inline laplacian' (f:Vector<D>->D) x = DiffOps.laplacian' (vector >> f) (Vector.toArray x)
+    /// Laplacian of a vector-to-scalar function `f`, at point x
+    let inline laplacian (f:Vector<D>->D) x = DiffOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<D>->Vector<D>) x = DiffOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<D>->Vector<D>) x = DiffOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<D>->Vector<D>) x = DiffOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
-    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian' (f:Vector<Adj>->Adj) x = ReverseOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
-    /// Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline hessian (f:Vector<Adj>->Adj) x = ReverseOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
-    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian' (f:Vector<Adj>->Adj) x = ReverseOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
-    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
-    let inline gradhessian (f:Vector<Adj>->Adj) x = ReverseOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian (f:Vector<D>->Vector<D>) x = DiffOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv (f:Vector<Adj>->Vector<Adj>) x v = ReverseOps.jacobianTv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    let inline jacobianTv (f:Vector<D>->Vector<D>) x v = DiffOps.jacobianTv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianTv' (f:Vector<Adj>->Vector<Adj>) x v = ReverseOps.jacobianTv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianTv' (f:Vector<D>->Vector<D>) x v = DiffOps.jacobianTv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
-    let inline jacobianTv'' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.jacobianTv'' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Vector.toArray >> b >> vector)
+    let inline jacobianTv'' (f:Vector<D>->Vector<D>) x = DiffOps.jacobianTv'' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Vector.toArray >> b >> vector)
+    /// Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian (f:Vector<D>->D) x = DiffOps.hessian (vector >> f) (Vector.toArray x) |> Matrix.ofArray2D
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline hessian' (f:Vector<D>->D) x = DiffOps.hessian' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, Matrix.ofArray2D b)
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian' (f:Vector<D>->D) x = DiffOps.gradhessian' (vector >> f) (Vector.toArray x) |> fun (a, b, c) -> (a, vector b, Matrix.ofArray2D c)
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
+    let inline gradhessian (f:Vector<D>->D) x = DiffOps.gradhessian (vector >> f) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    let inline curl' (f:Vector<D>->Vector<D>) x = DiffOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
+    let inline curl (f:Vector<D>->Vector<D>) x = DiffOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline div' (f:Vector<D>->Vector<D>) x = DiffOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    let inline div (f:Vector<D>->Vector<D>) x = DiffOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' (f:Vector<D>->Vector<D>) x = DiffOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv (f:Vector<Adj>->Vector<Adj>) x = ReverseOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline curldiv (f:Vector<D>->Vector<D>) x = DiffOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

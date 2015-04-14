@@ -20,7 +20,7 @@ Reverse mode AD provides a performance advantage when computing gradients of vec
 This module is used with the **Adj** numeric type.
 *)
 
-open DiffSharp.AD.Reverse
+open DiffSharp.AD.Specialized.Reverse1
 
 // f: Adj[] -> Adj
 let f (x:Adj[]) = sin (x.[0] * x.[1] * x.[2])
@@ -39,7 +39,7 @@ let gb = grad (fun x -> sin (x.[0] * x.[1] * x.[2]))
 Using the Reverse AD Trace
 ==========================
 
-In addition to using the differentiation API provided by the reverse mode AD module (such as **diff**, **grad**, **jacobian** ), you can make use of the exposed [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. For code using the **Adj** numeric type, **DiffSharp.AD.Reverse.Trace** builds a global trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating the adjoint values in reverse. 
+In addition to using the differentiation API provided by the reverse mode AD module (such as **diff**, **grad**, **jacobian** ), you can make use of the exposed [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. For code using the **Adj** numeric type, **DiffSharp.AD.Specialized.Reverse1.Trace** builds a global trace of all executed mathematical operations, which subsequently allows a reverse sweep of these operations for propagating the adjoint values in reverse. 
 
 The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks in machine learning, which is essentially just a special case of reverse mode AD. You can see an implementation of the backpropagation algorithm using the reverse mode AD trace in the [neural networks](examples-neuralnetworks.html) example.
 

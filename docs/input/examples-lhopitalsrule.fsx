@@ -52,7 +52,7 @@ printf "val lim : float = nan"
 Using the DiffSharp library, we can generate a sequence of repeated applications of l'Hôpital's rule.
 *)
 
-open DiffSharp.AD.ForwardN
+open DiffSharp.AD.Specialized.ForwardN
 
 // Differentiate f(x) and g(x) n times and evaluate the division
 let lhopital f g n x = diffn n f x / diffn n g x

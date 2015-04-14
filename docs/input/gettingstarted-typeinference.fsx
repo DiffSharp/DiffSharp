@@ -6,7 +6,7 @@
 Type Inference
 ==============
 
-F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **Diffsharp.AD.Forward.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number) for forward mode AD and the **DiffSharp.AD.Reverse.Adj** type implementing adjoints for reverse AD.
+F# is a statically typed language with [type inference](http://msdn.microsoft.com/en-us/library/dd233180.aspx). Parts of the DiffSharp library work via AD-enabled numeric types, such as the **DiffSharp.AD.Specialized.Forward1.Dual** type implementing [dual numbers](http://en.wikipedia.org/wiki/Dual_number) for forward mode AD and the **DiffSharp.AD.Specialized.Reverse1.Adj** type implementing adjoints for reverse AD.
 
 There are several ways the F# type inference system can work together with the DiffSharp library.
 
@@ -18,7 +18,7 @@ The simplest and easiest way is to define functions using [lambda expressions](h
 (You can hover the pointer over the examples to check their types.)
 *)
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // The lambda expression after "diff" has type Dual -> Dual
 // f: float -> float, the derivative of Sin(Sqrt(x))
@@ -52,7 +52,7 @@ let f3 x = sin (sqrt x)
 
 (** *)
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // f4 has the same definition with f3, here Dual type is inferred automatically
 // f4: Dual -> Dual

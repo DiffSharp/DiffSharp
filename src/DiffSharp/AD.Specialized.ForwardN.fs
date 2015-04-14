@@ -36,8 +36,8 @@
 
 #light
 
-/// Forward mode AD module, lazy higher-order
-module DiffSharp.AD.ForwardN
+/// Non-nested forward mode AD, lazy higher-order
+namespace DiffSharp.AD.Specialized.ForwardN
 
 open DiffSharp.Util.General
 open FsAlg.Generic
@@ -175,7 +175,7 @@ module DualNOps =
 
 /// ForwardN differentiation operations module (automatically opened)
 [<AutoOpen>]
-module ForwardNOps =
+module DiffOps =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f (x:float) =
         x |> dualNP1 |> f |> tuple
@@ -294,52 +294,52 @@ module ForwardNOps =
 /// Module with differentiation operators using Vector and Matrix input and output, instead of float[] and float[,]
 module Vector =
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff' (f:DualN->DualN) x = ForwardNOps.diff' f x
+    let inline diff' (f:DualN->DualN) x = DiffOps.diff' f x
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff (f:DualN->DualN) x = ForwardNOps.diff f x
+    let inline diff (f:DualN->DualN) x = DiffOps.diff f x
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2' (f:DualN->DualN) x = ForwardNOps.diff2' f x
+    let inline diff2' (f:DualN->DualN) x = DiffOps.diff2' f x
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2 (f:DualN->DualN) x = ForwardNOps.diff2 f x
+    let inline diff2 (f:DualN->DualN) x = DiffOps.diff2 f x
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diff2'' (f:DualN->DualN) x = ForwardNOps.diff2'' f x
+    let inline diff2'' (f:DualN->DualN) x = DiffOps.diff2'' f x
     /// Original value and the `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diffn' (n:int) (f:DualN->DualN) x = ForwardNOps.diffn' n f x 
+    let inline diffn' (n:int) (f:DualN->DualN) x = DiffOps.diffn' n f x 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    let inline diffn (n:int) (f:DualN->DualN) x = ForwardNOps.diffn n f x
+    let inline diffn (n:int) (f:DualN->DualN) x = DiffOps.diffn n f x
     /// Original value and directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv' (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    let inline gradv' (f:Vector<DualN>->DualN) x v = DiffOps.gradv' (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Directional derivative of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    let inline gradv (f:Vector<DualN>->DualN) x v = ForwardNOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
+    let inline gradv (f:Vector<DualN>->DualN) x v = DiffOps.gradv (vector >> f) (Vector.toArray x) (Vector.toArray v)
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad' (f:Vector<DualN>->DualN) x = ForwardNOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
+    let inline grad' (f:Vector<DualN>->DualN) x = DiffOps.grad' (vector >> f) (Vector.toArray x) |> fun (a, b) -> (a, vector b)
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    let inline grad (f:Vector<DualN>->DualN) x = ForwardNOps.grad (vector >> f) (Vector.toArray x) |> vector
+    let inline grad (f:Vector<DualN>->DualN) x = DiffOps.grad (vector >> f) (Vector.toArray x) |> vector
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
-    let inline laplacian' (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian' (vector >> f) (Vector.toArray x)
+    let inline laplacian' (f:Vector<DualN>->DualN) x = DiffOps.laplacian' (vector >> f) (Vector.toArray x)
     /// Laplacian of a vector-to-scalar function `f`, at point x
-    let inline laplacian (f:Vector<DualN>->DualN) x = ForwardNOps.laplacian (vector >> f) (Vector.toArray x)
+    let inline laplacian (f:Vector<DualN>->DualN) x = DiffOps.laplacian (vector >> f) (Vector.toArray x)
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobianT' (f:Vector<DualN>->Vector<DualN>) x = DiffOps.jacobianT' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobianT (f:Vector<DualN>->Vector<DualN>) x = DiffOps.jacobianT (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
+    let inline jacobian' (f:Vector<DualN>->Vector<DualN>) x = DiffOps.jacobian' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, Matrix.ofArray2D b)
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    let inline jacobian (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
+    let inline jacobian (f:Vector<DualN>->Vector<DualN>) x = DiffOps.jacobian (vector >> f >> Vector.toArray) (Vector.toArray x) |> Matrix.ofArray2D
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
+    let inline jacobianv' (f:Vector<DualN>->Vector<DualN>) x v = DiffOps.jacobianv' (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> fun (a, b) -> (vector a, vector b)
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    let inline jacobianv (f:Vector<DualN>->Vector<DualN>) x v = ForwardNOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
+    let inline jacobianv (f:Vector<DualN>->Vector<DualN>) x v = DiffOps.jacobianv (vector >> f >> Vector.toArray) (Vector.toArray x) (Vector.toArray v) |> vector
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
+    let inline curl' (f:Vector<DualN>->Vector<DualN>) x = DiffOps.curl' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, vector b)
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curl (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
+    let inline curl (f:Vector<DualN>->Vector<DualN>) x = DiffOps.curl (vector >> f >> Vector.toArray) (Vector.toArray x) |> vector
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline div' (f:Vector<DualN>->Vector<DualN>) x = DiffOps.div' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    let inline div (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
+    let inline div (f:Vector<DualN>->Vector<DualN>) x = DiffOps.div (vector >> f >> Vector.toArray) (Vector.toArray x)
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv' (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
+    let inline curldiv' (f:Vector<DualN>->Vector<DualN>) x = DiffOps.curldiv' (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b, c) -> (vector a, vector b, c)
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    let inline curldiv (f:Vector<DualN>->Vector<DualN>) x = ForwardNOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)
+    let inline curldiv (f:Vector<DualN>->Vector<DualN>) x = DiffOps.curldiv (vector >> f >> Vector.toArray) (Vector.toArray x) |> fun (a, b) -> (vector a, b)

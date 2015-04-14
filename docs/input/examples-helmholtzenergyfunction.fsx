@@ -19,8 +19,8 @@ In practice, gradients of formulae such as this need to be evaluated at thousand
 Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f: \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse mode AD, which needs only one forward and one reverse evaluation of $f$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
+open DiffSharp.AD.Specialized.Reverse1
+open DiffSharp.AD.Specialized.Reverse1.Vector
 open FsAlg.Generic
 
 let rnd = System.Random()
@@ -110,8 +110,8 @@ let testHelmholtzFloat n =
     let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
     grad (helmholtzFloat R T b A) x
 
-open DiffSharp.AD.Forward
-open DiffSharp.AD.Forward.Vector
+open DiffSharp.AD.Specialized.Forward1
+open DiffSharp.AD.Specialized.Forward1.Vector
 
 let helmholtzDual R T (b:Vector<Dual>) (A:Matrix<Dual>) (x:Vector<Dual>) =
     let bx = b * x
@@ -128,8 +128,8 @@ let testHelmholtzDual n =
     let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
     grad (helmholtzDual R T b A) x
 
-open DiffSharp.AD.ForwardG
-open DiffSharp.AD.ForwardG.Vector
+open DiffSharp.AD.Specialized.ForwardG
+open DiffSharp.AD.Specialized.ForwardG.Vector
 
 let helmholtzDualG R T (b:Vector<DualG>) (A:Matrix<DualG>) (x:Vector<DualG>) =
     let bx = b * x

@@ -246,7 +246,7 @@ The operations summarized in the above table have _prime-suffixed_ variants (e.g
 *)
 
 // Use forward mode AD
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // Derivative of Sin(Sqrt(x)) at x = 2
 let a = diff (fun x -> sin (sqrt x)) 2.
@@ -612,7 +612,7 @@ When a differentiation module such as **DiffSharp.AD.Forward** is opened, the de
 
 *)
 
-open DiffSharp.AD.Forward
+open DiffSharp.AD.Specialized.Forward1
 
 // Gradient of a vector-to-scalar function
 // g1: float[] -> float[]
@@ -632,8 +632,8 @@ Vector and Matrix operations are handled through the [FsAlg Linear Algebra Libra
 
 *)
 
-open DiffSharp.AD.Forward
-open DiffSharp.AD.Forward.Vector
+open DiffSharp.AD.Specialized.Forward1
+open DiffSharp.AD.Specialized.Forward1.Vector
 open FsAlg.Generic
 
 // Gradient of a vector-to-scalar function
