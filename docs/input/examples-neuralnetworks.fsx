@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -15,14 +15,14 @@ We start by defining our neural network structure.
 
 *)
 
-open DiffSharp.AD.Specialized.Reverse1
-open DiffSharp.AD.Specialized.Reverse1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 // A neuron
 type Neuron =
-    {mutable w:Vector<Adj> // Weight vector of this neuron
-     mutable b:Adj} // Bias of this neuron
+    {mutable w:Vector<D> // Weight vector of this neuron
+     mutable b:D} // Bias of this neuron
  
 // A layer of neurons
 type Layer =
@@ -58,17 +58,17 @@ Now let us write the network evaluation code and a function for creating a given
 
 *)
 
-let sigmoid (x:Adj) = 1. / (1. + exp -x)
+let sigmoid (x:D) = 1. / (1. + exp -x)
 
-let runNeuron (x:Vector<Adj>) (n:Neuron) =
+let runNeuron (x:Vector<D>) (n:Neuron) =
     x * n.w + n.b
     |> sigmoid
 
-let runLayer (x:Vector<Adj>) (l:Layer) =
+let runLayer (x:Vector<D>) (l:Layer) =
     Array.map (runNeuron x) l.n
     |> vector
 
-let runNetwork (x:Vector<Adj>) (n:Network) =
+let runNetwork (x:Vector<D>) (n:Network) =
     Seq.fold (fun o l -> runLayer o l) x n.l
 
 let rnd = System.Random()
@@ -80,8 +80,8 @@ let createNetwork (inputs:int) (layers:int[]) =
         {n = Array.init layers.[i] (fun j -> 
             {w = Vector.init
                      (if i = 0 then inputs else layers.[i - 1])
-                     (fun k -> adj (-0.5 + rnd.NextDouble()))
-             b = adj (-0.5 + rnd.NextDouble())})})}
+                     (fun k -> D (-0.5 + rnd.NextDouble()))
+             b = D (-0.5 + rnd.NextDouble())})})}
 (**
 
 This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers we want. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
@@ -125,7 +125,7 @@ It is important to note that the backpropagation algorithm is just a special cas
 // timeout: maximum number of iterations
 // t: training set consisting of input and output vectors
 let backprop (n:Network) (eta:float) epsilon (timeout:int) (t:(Vector<float>*Vector<float>)[]) =
-    let ta = Array.map (fun x -> Vector.map adj (fst x), Vector.map adj (snd x)) t
+    let ta = Array.map (fun x -> Vector.map D (fst x), Vector.map D (snd x)) t
     seq {for i in 0 .. timeout do // A timeout value
             Trace.Clear()
             let error = 

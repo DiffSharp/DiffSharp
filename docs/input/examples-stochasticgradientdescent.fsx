@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -37,16 +37,16 @@ Let us implement stochastic gradient descent with the DiffSharp library, using c
 
 *)
 
-open DiffSharp.AD.Specialized.Reverse1
-open DiffSharp.AD.Specialized.Reverse1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 let rnd = new System.Random()
 
 // Stochastic gradient descent
 // f: function, w0: starting weights, eta: step size, epsilon: threshold, t: training set
-let sgd f w0 (eta:float) epsilon (t:(Vector<float>*Vector<float>)[]) =
-    let ta = Array.map (fun (x, y) -> Vector.map adj x, Vector.map adj y) t
+let sgd f w0 (eta:D) epsilon (t:(Vector<float>*Vector<float>)[]) =
+    let ta = Array.map (fun (x, y) -> Vector.map D x, Vector.map D y) t
     let rec desc w =
         let x, y = ta.[rnd.Next(ta.Length)]
         let g = grad (fun wi -> Vector.normSq (y - (f wi x))) w
@@ -84,7 +84,7 @@ let points = [|0.5, 2.
 let train = Array.map (fun x -> (vector [fst x]), (vector [snd x])) points
 
 // Find w minimizing the error of fit
-let wopt = sgd f (vector [0.; 0.; 0.]) 0.0001 0.01 train
+let wopt = sgd f (vector [D 0.; D 0.; D 0.]) (D 0.0001) (D 0.01) train |> Vector.map float
 
 (*** hide, define-output: o ***)
 printf "val wopt : Vector<float> = Vector [|0.3874125148; -1.77368708; 2.745850698|]"

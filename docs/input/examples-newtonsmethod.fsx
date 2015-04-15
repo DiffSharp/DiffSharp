@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
 Newton's Method
@@ -20,14 +20,14 @@ Newton's method converges faster than gradient descent, but this comes at the co
 Using the DiffSharp library, we can compute the exact Hessian via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardReverse** module, which provides the **gradhessian** operation returning the gradient and the Hessian of a function at a given point using only one forward evaluation.
 *)
 
-open DiffSharp.AD.Specialized.Forward1Reverse1
-open DiffSharp.AD.Specialized.Forward1Reverse1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 
 // Newton's method
 // f: function, x0: starting point, eta: step size, epsilon: threshold
-let Newton f x0 (eta:float) epsilon =
+let Newton f x0 (eta:D) epsilon =
     let rec desc x =
         let g, h = gradhessian f x
         if Vector.normSq g < epsilon then x else desc (x - eta * (Matrix.inverse h) * g)
@@ -44,14 +44,14 @@ around the point $(0, 0)$.
 
 *)
 
-let f (x:Vector<DualAdj>) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
+let f (x:Vector<D>) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
 
-let xmin = Newton f (vector [0.; 0.]) 1. 0.001
-let fxmin = xmin |> Vector.map dualAdj |> f |> primal
+let xmin = Newton f (vector [D 0.; D 0.]) (D 1.) (D 0.001)
+let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : Vector<float> = Vector [|0.7958861818; 1.203482609|]
-val fxmin : float = 1.797388803"
+printf "val xmin : Vector<D> = Vector [|D 0.7958861818; D 1.203482609|]
+val fxmin : D = D 1.797388803"
 (*** include-output: o ***)
 
 (**

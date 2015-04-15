@@ -33,7 +33,7 @@ let rnd = new System.Random()
 
 // Stochastic gradient descent
 // f: function, w0: starting weights, eta: step size, epsilon: threshold, t: training set
-let sgd f w0 (eta:float) epsilon (t:(Vector<float>*Vector<float>)[]) =
+let sgd f w0 (eta:D) epsilon (t:(Vector<float>*Vector<float>)[]) =
     let ta = Array.map (fun (x, y) -> Vector.map D x, Vector.map D y) t
     let rec desc w =
         let x, y = ta.[rnd.Next(ta.Length)]
@@ -73,9 +73,9 @@ let kmeans k eta epsilon (data:Vector<float>[]) =
         means |> Seq.mapi (fun i m -> i, Vector.normSq (x - m)) |> Seq.minBy snd
     // Squared distance of x to the nearest of the means encoded in w
     let inline dist (w:Vector<_>) (x:Vector<_>) = w |> Vector.split k |> nearestm x |> snd
-    let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> Vector.concat
-    let wopt = Array.zip data (Array.create data.Length (vector [0.])) |> sgd dist w0 eta epsilon
-    let means = Vector.split k wopt
+    let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> Vector.concat |> Vector.map D
+    let wopt = Array.zip data (Array.create data.Length (vector [0.])) |> sgd dist w0 (D eta) (D epsilon)
+    let means = Vector.split k (wopt |> Vector.map float)
     let assign = Array.map (fun d -> (nearestm d means |> fst, d)) data
     Array.init k (fun i -> assign |> Array.filter (fun (j, d) -> i = j) |> Array.map snd)
 

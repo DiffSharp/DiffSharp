@@ -1,6 +1,5 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -52,7 +51,7 @@ printf "val lim : float = nan"
 Using the DiffSharp library, we can generate a sequence of repeated applications of l'Hôpital's rule.
 *)
 
-open DiffSharp.AD.Specialized.ForwardN
+open DiffSharp.AD
 
 // Differentiate f(x) and g(x) n times and evaluate the division
 let lhopital f g n x = diffn n f x / diffn n g x
@@ -62,14 +61,14 @@ let lhopital f g n x = diffn n f x / diffn n g x
 let lhseq f g x = Seq.initInfinite (fun n -> lhopital f g n x)
 
 // Use lhseq with f(x) and g(x), at x = 0
-let l = lhseq (fun x -> 2. * sin x - sin (2. * x)) (fun x -> x - sin x) 0.
+let l = lhseq (fun x -> 2. * sin x - sin (2. * x)) (fun x -> x - sin x) (D 0.)
 
 (**
 The first four elements ($n = 0,\dots,4$) of this infinite sequence are   
 *)
 
 (*** hide, define-output: o2 ***)
-printf "val l : seq [nan; nan; nan; 6.0; ...]"
+printf "val l : seq [nan; nan; nan; D 6.0; ...]"
 (*** include-output: o2 ***)
 
 (**
@@ -105,13 +104,13 @@ let isdeterminate x =
     || System.Double.IsNaN(x))
 
 // Find the limit of f(x) / g(x) at a given point
-let findlim f g x = Seq.find isdeterminate (lhseq f g x)
+let findlim f g x = Seq.find (float >> isdeterminate) (lhseq f g x)
 
 // Find the limit of f(x) / g(x) at x = 0
-let lim2 = findlim (fun x -> 2. * sin x - sin (2. * x)) (fun x -> x - sin x) 0.
+let lim2 = findlim (fun x -> 2. * sin x - sin (2. * x)) (fun x -> x - sin x) (D 0.)
 
 (*** hide, define-output: o3 ***)
-printf "val lim2 : float = 6.0"
+printf "val lim2 : D = D -6.0"
 (*** include-output: o3 ***)
 
 (**
@@ -128,10 +127,10 @@ $$$
  \lim_{x \to 0} \frac{\sin \pi x}{\pi x} = \lim_{y \to 0} \frac{\sin y}{y} = \lim_{y \to 0} \frac{\cos y}{1} = 1 \; .
 *)
 
-let lim3 = findlim (fun x -> sin (System.Math.PI * x)) (fun x -> System.Math.PI * x) 0.
+let lim3 = findlim (fun x -> sin (System.Math.PI * x)) (fun x -> System.Math.PI * x) (D 0.)
 
 (*** hide, define-output: o4 ***)
-printf "val lim3 : float = 1.0"
+printf "val lim3 : D = D 1.0"
 (*** include-output: o4 ***)
 
 (**
@@ -146,10 +145,10 @@ $$$
  \lim_{x \to 0} \frac{e^x - 1 - x}{x^2} = \lim_{x \to 0} \frac{e^x - 1}{2x} = \lim_{x \to 0} \frac{e^x}{2} = \frac{1}{2} \; .
 *)
 
-let lim4 = findlim (fun x -> exp x - 1 - x) (fun x -> x * x) 0.
+let lim4 = findlim (fun x -> exp x - 1 - x) (fun x -> x * x) (D 0.)
 
 (*** hide, define-output: o5 ***)
-printf "val lim4 : float = 0.5"
+printf "val lim4 : D = D 0.5"
 (*** include-output: o5 ***)
 
 (**
