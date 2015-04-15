@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -35,19 +35,19 @@ Chart.Line([for t in 0.0..0.01..4.0 -> (t, x t)]).WithXAxis(Title="t").WithYAxis
 We can calculate the position $x(t)$, the velocity $v(t)=\frac{\partial x(t)}{\partial t}$, and the acceleration $a(t)=\frac{\partial ^ 2 x(t)}{\partial t ^ 2}$ of the particle at the same time, using the **diff2''** operation that returns the original value, the first derivative, and the second derivative of a given function.
 *)
 
-open DiffSharp.AD.Specialized.Forward2
+open DiffSharp.AD
 
 // diff2'' returns the tuple (original value, first derivative, second derivative)
-let xva = diff2'' (fun t -> t * t * t - 6 * t * t + 10 * t)
+let xva = D >> diff2'' (fun t -> t * t * t - 6 * t * t + 10 * t)
 
 (**
 The following gives us a combined plot of $x(t)$, $v(t)$, and $a(t)$.
 *)
 
 // Functions for extracting the position, velocity, acceleration values from a 3-tuple
-let pos (x, _, _) = x
-let vel (_, v, _) = v
-let acc (_, _, a) = a
+let pos (x, _, _) = x |> float
+let vel (_, v, _) = v |> float
+let acc (_, _, a) = a |> float
 
 // Draw x(t), v(t), and a(t) between t = 0 and t = 4
 Chart.Combine([Chart.Line([for t in 0.0..0.01..4.0 -> (t, pos (xva t))], Name="x(t)")

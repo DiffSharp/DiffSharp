@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
 Gradient Descent
@@ -26,13 +26,13 @@ Using the DiffSharp library, the following code implements gradient descent with
 
 *)
 
-open DiffSharp.AD.Specialized.Forward1
-open DiffSharp.AD.Specialized.Forward1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 // Gradient descent
 // f: function, x0: starting point, eta: step size, epsilon: threshold
-let gd f x0 (eta:float) epsilon =
+let gd f x0 eta epsilon =
     let rec desc x =
         let g = grad f x
         if Vector.normSq g < epsilon then x else desc (x - eta * g)
@@ -46,12 +46,12 @@ let inline f (x:Vector<_>) =  sin x.[0] + cos x.[1]
 
 // Find the minimum of f
 // Start from (1, 1), step size 0.9, threshold 0.00001
-let xmin = gd f (vector [1.; 1.]) 0.9 0.00001
+let xmin = gd f (vector [D 1.; D 1.]) (D 0.9) (D 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : Vector<float> = Vector [|-1.570787572; 3.141587977|]
-val fxmin : float = -2.0"
+printf "val xmin : Vector<D> = Vector [|D -1.57023951; D 3.141523675|]
+val fxmin : D = D -2.0"
 (*** include-output: o ***)
 
 (**

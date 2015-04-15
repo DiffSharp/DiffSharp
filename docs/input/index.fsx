@@ -10,7 +10,7 @@ DiffSharp is an [automatic differentiation](http://en.wikipedia.org/wiki/Automat
 
 AD allows exact and efficient calculation of derivatives, by systematically applying the chain rule of calculus at the elementary operator level. AD is different from [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation), which is prone to truncation and round-off errors, and [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which is exact but not efficient for run-time calculations and can only handle closed-form mathematical expressions.
 
-Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Please see the [API Overview](api-overview.html) page for a list of available operations.
+Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Operations can be nested to any level, meaning that you can compute exact higher-order derivatives and differentiate functions that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
 
 The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
 
@@ -34,17 +34,23 @@ Quick Usage Example
 -------------------
 *)
 
-// Use forward mode AD
-open DiffSharp.AD.Specialized.Forward1
+// Use mixed mode nested AD
+open DiffSharp.AD
 
 // A scalar-to-scalar function
 let f x = sin (sqrt x)
 
 // Derivative of f
-let f' = diff f
+let df = diff f
 
-// Value of the derivative of f at 2
-let v = f' 2.
+// A vector-to-scalar function
+let g (x:_[]) = exp (x.[0] * x.[1]) + x.[2]
+
+// Gradient of g
+let gg = grad g 
+
+// Hessian of g
+let hg = hessian g
 
 (**
 More Info and How to Cite
@@ -73,6 +79,6 @@ We are working on the following features:
 
 - Improved Hessian calculations exploiting structure (e.g. sparsity)
 - AD via source code transformation, using code quotations
-- Parallelization and compiling to GPU
+- Compiling to GPU
 
 *)

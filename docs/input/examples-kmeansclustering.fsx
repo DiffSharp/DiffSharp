@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../packages/FSharp.Data.2.1.1/lib/net40/FSharp.Data.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
@@ -25,8 +25,8 @@ We start with the generic stochastic gradient descent code, introduced in the [s
 
 *)
 
-open DiffSharp.AD.Specialized.Reverse1
-open DiffSharp.AD.Specialized.Reverse1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 let rnd = new System.Random()
@@ -34,7 +34,7 @@ let rnd = new System.Random()
 // Stochastic gradient descent
 // f: function, w0: starting weights, eta: step size, epsilon: threshold, t: training set
 let sgd f w0 (eta:float) epsilon (t:(Vector<float>*Vector<float>)[]) =
-    let ta = Array.map (fun (x, y) -> Vector.map adj x, Vector.map adj y) t
+    let ta = Array.map (fun (x, y) -> Vector.map D x, Vector.map D y) t
     let rec desc w =
         let x, y = ta.[rnd.Next(ta.Length)]
         let g = grad (fun wi -> Vector.normSq (y - (f wi x))) w

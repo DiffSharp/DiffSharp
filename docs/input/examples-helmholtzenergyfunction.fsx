@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #load "../../packages/FSharp.Charting.0.90.9/FSharp.Charting.fsx"
 
 (**
@@ -19,13 +19,13 @@ In practice, gradients of formulae such as this need to be evaluated at thousand
 Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f: \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse mode AD, which needs only one forward and one reverse evaluation of $f$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
 *)
 
-open DiffSharp.AD.Specialized.Reverse1
-open DiffSharp.AD.Specialized.Reverse1.Vector
+open DiffSharp.AD.Reverse
+open DiffSharp.AD.Reverse.Vector
 open FsAlg.Generic
 
 let rnd = System.Random()
 
-let helmholtz R T (b:Vector<Adj>) (A:Matrix<Adj>) (x:Vector<Adj>) =
+let helmholtz R T (b:Vector<D>) (A:Matrix<D>) (x:Vector<D>) =
     let bx = b * x
     let oneminbx = 1. - bx
     R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
@@ -36,9 +36,9 @@ let helmholtz R T (b:Vector<Adj>) (A:Matrix<Adj>) (x:Vector<Adj>) =
 let testHelmholtz n =
     let R = 1.
     let T = 1.
-    let b = Vector.init n (fun _ -> adj (0.1 * rnd.NextDouble()))
-    let A = Matrix.init n n (fun _ _ -> adj (0.1 * rnd.NextDouble()))
-    let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
+    let b = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
+    let A = Matrix.init n n (fun _ _ -> D (0.1 * rnd.NextDouble()))
+    let x = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
     grad (helmholtz R T b A) x
 
 // Compute the gradient with 6 variables
@@ -110,10 +110,10 @@ let testHelmholtzFloat n =
     let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
     grad (helmholtzFloat R T b A) x
 
-open DiffSharp.AD.Specialized.Forward1
-open DiffSharp.AD.Specialized.Forward1.Vector
+open DiffSharp.AD.Forward
+open DiffSharp.AD.Forward.Vector
 
-let helmholtzDual R T (b:Vector<Dual>) (A:Matrix<Dual>) (x:Vector<Dual>) =
+let helmholtzDual R T (b:Vector<D>) (A:Matrix<D>) (x:Vector<D>) =
     let bx = b * x
     let oneminbx = 1. - bx
     R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
@@ -123,9 +123,9 @@ let helmholtzDual R T (b:Vector<Dual>) (A:Matrix<Dual>) (x:Vector<Dual>) =
 let testHelmholtzDual n =
     let R = 1.
     let T = 1.
-    let b = Vector.init n (fun _ -> dual (0.1 * rnd.NextDouble()))
-    let A = Matrix.init n n (fun _ _ -> dual (0.1 * rnd.NextDouble()))
-    let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
+    let b = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
+    let A = Matrix.init n n (fun _ _ -> D (0.1 * rnd.NextDouble()))
+    let x = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
     grad (helmholtzDual R T b A) x
 
 open DiffSharp.AD.Specialized.ForwardG
