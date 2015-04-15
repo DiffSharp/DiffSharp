@@ -163,3 +163,16 @@ let invalidArgCurl() = invalidArg "" "Curl is supported only for functions with 
 let invalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
 let invalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
 let invalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
+
+
+/// Tagger for generating incremental integers
+type Tagger =
+    val mutable LastTag : uint32
+    new(t) = {LastTag = t}
+    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
+
+/// Global tagger for nested D operations
+type GlobalTagger() =
+    static let T = new Tagger(0u)
+    static member Next = T.Next()
+    static member Reset = T.LastTag <- 0u

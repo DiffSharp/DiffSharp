@@ -234,19 +234,6 @@ type D =
         | DF(ap, _, ai) -> DF(round ap, D 0., ai)
 
 
-/// Tagger for generating incremental integers
-type Tagger =
-    val mutable LastTag : uint32
-    new(t) = {LastTag = t}
-    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
-
-/// Global tagger for D operations
-type GlobalTagger() =
-    static let T = new Tagger(0u)
-    static member Next = T.Next()
-    static member Reset = T.LastTag <- 0u
-
-
 /// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =

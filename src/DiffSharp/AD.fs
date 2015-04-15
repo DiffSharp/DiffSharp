@@ -49,7 +49,7 @@ open FsAlg.Generic
 type D =
     | D of float // Primal
     | DF of D * D * uint32 // Primal, tangent, tag
-    | DR of D * (D ref) * Op * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    | DR of D * (D ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
     /// Primal value of this D
     member d.P =
         match d with
@@ -341,8 +341,8 @@ type D =
         | DF(ap, _, ai) -> DF(round ap, D 0., ai)
         | DR(ap,_,_,_,ai) -> DR(round ap, ref (D 0.), Round(a), ref 0u, ai)
 
-/// Operation types for the trace
-and Op =
+/// Operation types recorded in the evaluation trace
+and TraceOp =
     | Add        of D * D
     | AddCons    of D
     | Sub        of D * D
@@ -379,18 +379,6 @@ and Op =
     | Round      of D
     | Noop
 
-/// Tagger for generating incremental integers
-type Tagger =
-    val mutable LastTag : uint32
-    new(t) = {LastTag = t}
-    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
-
-/// Global tagger for D operations
-type GlobalTagger() =
-    static let T = new Tagger(0u)
-    static member Next = T.Next()
-    static member Reset = T.LastTag <- 0u
-
 /// D operations module (automatically opened)
 [<AutoOpen>]
 module DOps =
@@ -406,92 +394,92 @@ module DOps =
     let inline adjoint (d:D) = d.A
     /// Get the primal and tangent values of  `d`, as a tuple
     let inline tuple (d:D) = (d.P, d.T)
-    /// Reverse propagates the adjoint `v` through the trace of `d`
-    let rec reverse (v:D) (d:D) =
+    /// Reverse propagates the adjoint `v` through the evaluation trace of `d`
+    let rec reverseTrace (v:D) (d:D) =
         match d with
         | DR(_,_,o,_,_) ->
             d.A <- d.A + v
             d.F <- d.F - 1u
             if d.F = 0u then
                 match o with
-                | Add(a, b)           -> reverse d.A a; reverse d.A b
-                | AddCons(a)          -> reverse d.A a
-                | Sub(a, b)           -> reverse d.A a; reverse -d.A b
-                | SubDCons(a)         -> reverse d.A a
-                | SubConsD(a)         -> reverse -d.A a
-                | Mul(a, b)           -> reverse (d.A * b.P) a; reverse (d.A * a.P) b
-                | MulCons(a, cons)    -> reverse (d.A * cons) a
-                | Div(a, b)           -> reverse (d.A / b.P) a; reverse (d.A * (-a.P / (b.P * b.P))) b
-                | DivDCons(a, cons)   -> reverse (d.A / cons) a
-                | DivConsD(a, cons)   -> reverse (d.A * (-cons / (a.P * a.P))) a
-                | Pow(a, b)           -> reverse (d.A * (a.P ** (b.P - D 1.)) * b.P) a; reverse (d.A * (a.P ** b.P) * log a.P) b
-                | PowDCons(a, cons)   -> reverse (d.A * (a.P ** (cons - D 1.)) * cons) a
-                | PowConsD(a, cons)   -> reverse (d.A * (cons ** a.P) * log cons) a
-                | Atan2(a, b)         -> let denom = a.P * a.P + b.P * b.P in reverse (d.A * b.P / denom) a; reverse (d.A * (-a.P) / denom) b
-                | Atan2DCons(a, cons) -> reverse (d.A * cons / (a.P * a.P + cons * cons)) a
-                | Atan2ConsD(a, cons) -> reverse (d.A * (-cons) / (cons * cons + a.P * a.P)) a
-                | Log(a)              -> reverse (d.A / a.P) a
-                | Log10(a)            -> reverse (d.A / (a.P * log10val)) a
-                | Exp(a)              -> reverse (d.A * d.P) a // d.P = exp a.P
-                | Sin(a)              -> reverse (d.A * cos a.P) a
-                | Cos(a)              -> reverse (d.A * (-sin a.P)) a
-                | Tan(a)              -> let seca = D 1. / cos a.P in reverse (d.A * seca * seca) a
-                | Neg(a)              -> reverse -d.A a
-                | Sqrt(a)             -> reverse (d.A / (D 2. * d.P)) a // d.P = sqrt a.P
-                | Sinh(a)             -> reverse (d.A * cosh a.P) a
-                | Cosh(a)             -> reverse (d.A * sinh a.P) a
-                | Tanh(a)             -> let secha = D 1. / cosh a.P in reverse (d.A * secha * secha) a
-                | Asin(a)             -> reverse (d.A / sqrt (D 1. - a.P * a.P)) a
-                | Acos(a)             -> reverse (-d.A / sqrt (D 1. - a.P * a.P)) a
-                | Atan(a)             -> reverse (d.A / (D 1. + a.P * a.P)) a
-                | Abs(a)              -> reverse (d.A * float (sign (float a.P))) a
+                | Add(a, b)           -> reverseTrace d.A a; reverseTrace d.A b
+                | AddCons(a)          -> reverseTrace d.A a
+                | Sub(a, b)           -> reverseTrace d.A a; reverseTrace -d.A b
+                | SubDCons(a)         -> reverseTrace d.A a
+                | SubConsD(a)         -> reverseTrace -d.A a
+                | Mul(a, b)           -> reverseTrace (d.A * b.P) a; reverseTrace (d.A * a.P) b
+                | MulCons(a, cons)    -> reverseTrace (d.A * cons) a
+                | Div(a, b)           -> reverseTrace (d.A / b.P) a; reverseTrace (d.A * (-a.P / (b.P * b.P))) b
+                | DivDCons(a, cons)   -> reverseTrace (d.A / cons) a
+                | DivConsD(a, cons)   -> reverseTrace (d.A * (-cons / (a.P * a.P))) a
+                | Pow(a, b)           -> reverseTrace (d.A * (a.P ** (b.P - D 1.)) * b.P) a; reverseTrace (d.A * (a.P ** b.P) * log a.P) b
+                | PowDCons(a, cons)   -> reverseTrace (d.A * (a.P ** (cons - D 1.)) * cons) a
+                | PowConsD(a, cons)   -> reverseTrace (d.A * (cons ** a.P) * log cons) a
+                | Atan2(a, b)         -> let denom = a.P * a.P + b.P * b.P in reverseTrace (d.A * b.P / denom) a; reverseTrace (d.A * (-a.P) / denom) b
+                | Atan2DCons(a, cons) -> reverseTrace (d.A * cons / (a.P * a.P + cons * cons)) a
+                | Atan2ConsD(a, cons) -> reverseTrace (d.A * (-cons) / (cons * cons + a.P * a.P)) a
+                | Log(a)              -> reverseTrace (d.A / a.P) a
+                | Log10(a)            -> reverseTrace (d.A / (a.P * log10val)) a
+                | Exp(a)              -> reverseTrace (d.A * d.P) a // d.P = exp a.P
+                | Sin(a)              -> reverseTrace (d.A * cos a.P) a
+                | Cos(a)              -> reverseTrace (d.A * (-sin a.P)) a
+                | Tan(a)              -> let seca = D 1. / cos a.P in reverseTrace (d.A * seca * seca) a
+                | Neg(a)              -> reverseTrace -d.A a
+                | Sqrt(a)             -> reverseTrace (d.A / (D 2. * d.P)) a // d.P = sqrt a.P
+                | Sinh(a)             -> reverseTrace (d.A * cosh a.P) a
+                | Cosh(a)             -> reverseTrace (d.A * sinh a.P) a
+                | Tanh(a)             -> let secha = D 1. / cosh a.P in reverseTrace (d.A * secha * secha) a
+                | Asin(a)             -> reverseTrace (d.A / sqrt (D 1. - a.P * a.P)) a
+                | Acos(a)             -> reverseTrace (-d.A / sqrt (D 1. - a.P * a.P)) a
+                | Atan(a)             -> reverseTrace (d.A / (D 1. + a.P * a.P)) a
+                | Abs(a)              -> reverseTrace (d.A * float (sign (float a.P))) a
                 | Floor(_)            -> ()
                 | Ceil(_)             -> ()
                 | Round(_)            -> ()
                 | Noop                -> ()
         | _ -> ()
-    /// Resets the adjoints of all the values in the trace of `d`
-    let rec reset (d:D) =
+    /// Resets the adjoints of all the values in the evaluation trace of `d`
+    let rec resetTrace (d:D) =
         match d with
         | DR(_,_,o,_,_) ->
             d.A <- D 0.
             d.F <- d.F + 1u
             if d.F = 1u then
                 match o with
-                | Add(a, b)           -> reset a; reset b
-                | AddCons(a)          -> reset a
-                | Sub(a, b)           -> reset a; reset b
-                | SubDCons(a)         -> reset a
-                | SubConsD(a)         -> reset a
-                | Mul(a, b)           -> reset a; reset b
-                | MulCons(a, _)       -> reset a
-                | Div(a, b)           -> reset a; reset b
-                | DivDCons(a, _)      -> reset a
-                | DivConsD(a, _)      -> reset a
-                | Pow(a, b)           -> reset a; reset b
-                | PowDCons(a, _)      -> reset a
-                | PowConsD(a, _)      -> reset a
-                | Atan2(a, b)         -> reset a; reset b
-                | Atan2DCons(a, _)    -> reset a
-                | Atan2ConsD(a, _)    -> reset a
-                | Log(a)              -> reset a
-                | Log10(a)            -> reset a
-                | Exp(a)              -> reset a
-                | Sin(a)              -> reset a
-                | Cos(a)              -> reset a
-                | Tan(a)              -> reset a
-                | Neg(a)              -> reset a
-                | Sqrt(a)             -> reset a
-                | Sinh(a)             -> reset a
-                | Cosh(a)             -> reset a
-                | Tanh(a)             -> reset a
-                | Asin(a)             -> reset a
-                | Acos(a)             -> reset a
-                | Atan(a)             -> reset a
-                | Abs(a)              -> reset a
-                | Floor(a)            -> reset a
-                | Ceil(a)             -> reset a
-                | Round(a)            -> reset a
+                | Add(a, b)           -> resetTrace a; resetTrace b
+                | AddCons(a)          -> resetTrace a
+                | Sub(a, b)           -> resetTrace a; resetTrace b
+                | SubDCons(a)         -> resetTrace a
+                | SubConsD(a)         -> resetTrace a
+                | Mul(a, b)           -> resetTrace a; resetTrace b
+                | MulCons(a, _)       -> resetTrace a
+                | Div(a, b)           -> resetTrace a; resetTrace b
+                | DivDCons(a, _)      -> resetTrace a
+                | DivConsD(a, _)      -> resetTrace a
+                | Pow(a, b)           -> resetTrace a; resetTrace b
+                | PowDCons(a, _)      -> resetTrace a
+                | PowConsD(a, _)      -> resetTrace a
+                | Atan2(a, b)         -> resetTrace a; resetTrace b
+                | Atan2DCons(a, _)    -> resetTrace a
+                | Atan2ConsD(a, _)    -> resetTrace a
+                | Log(a)              -> resetTrace a
+                | Log10(a)            -> resetTrace a
+                | Exp(a)              -> resetTrace a
+                | Sin(a)              -> resetTrace a
+                | Cos(a)              -> resetTrace a
+                | Tan(a)              -> resetTrace a
+                | Neg(a)              -> resetTrace a
+                | Sqrt(a)             -> resetTrace a
+                | Sinh(a)             -> resetTrace a
+                | Cosh(a)             -> resetTrace a
+                | Tanh(a)             -> resetTrace a
+                | Asin(a)             -> resetTrace a
+                | Acos(a)             -> resetTrace a
+                | Atan(a)             -> resetTrace a
+                | Abs(a)              -> resetTrace a
+                | Floor(a)            -> resetTrace a
+                | Ceil(a)             -> resetTrace a
+                | Round(a)            -> resetTrace a
                 | Noop                -> ()
         | _ -> ()
 
@@ -549,8 +537,8 @@ module DiffOps =
         let i = GlobalTagger.Next
         let xa = x |> Array.map (makeDR i)
         let z:D = f xa
-        z |> reset
-        z |> reverse (D 1.)
+        z |> resetTrace
+        z |> reverseTrace (D 1.)
         (primal z, Array.map adjoint xa)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
@@ -582,8 +570,8 @@ module DiffOps =
         let r1 = Array.map primal z
         let r2 =
             fun v ->
-                Array.iter reset z
-                Array.iter2 reverse v z
+                Array.iter resetTrace z
+                Array.iter2 reverseTrace v z
                 Array.map adjoint xa
         (r1, r2)
 
