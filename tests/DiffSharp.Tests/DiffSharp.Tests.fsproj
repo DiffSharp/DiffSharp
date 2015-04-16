@@ -61,12 +61,13 @@
     <Compile Include="UnitTests.fs" />
     <Compile Include="Program.fs" />
     <None Include="Test.fsx" />
+    <None Include="Test2.fsx" />
     <None Include="App.config" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsAlg">
-      <HintPath>..\..\packages\FsAlg.0.5.2\lib\FsAlg.dll</HintPath>
+      <HintPath>..\..\packages\FsAlg.0.5.3\lib\FsAlg.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsCheck">
