@@ -1,6 +1,7 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+
 
 (**
 Forward AD

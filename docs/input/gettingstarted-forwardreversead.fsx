@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 #r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
+#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
 Reverse-on-Forward AD
@@ -16,7 +16,7 @@ DiffSharp.AD.ForwardReverse
 This is a reverse-on-forward mode AD module, used with the **DualAdj** numeric type.
 *)
 
-open DiffSharp.AD.Specialized.Forward1Reverse
+open DiffSharp.AD.Specialized.Forward1Reverse1
 
 // f: DualAdj[] -> DualAdj
 let f (x:DualAdj[]) = sin (x.[0] * x.[1])
