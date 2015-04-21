@@ -38,18 +38,17 @@
 // Script for generating library documentation
 //
 
-#I "../packages/FSharp.Compiler.Service.0.0.67/lib/net40/"
+#I "../packages/FSharp.Compiler.Service.0.0.87/lib/net40/"
 #r "FSharp.Compiler.Service.dll"
-#I "../packages/RazorEngine.3.3.0/lib/net40/"
-#r "RazorEngine.dll"
-#I "../packages/Microsoft.AspNet.Razor.2.0.30506.0/lib/net40/"
-#r "System.Web.Razor.dll"
-#I "../packages/FSharp.Formatting.2.4.36/lib/net40/"
-#r "FSharp.MetadataFormat.dll"
+#I "../packages/FSharpVSPowerTools.Core.1.8.0/lib/net45"
+#r "FSharpVSPowerTools.Core.dll"
+#I "../packages/FSharp.Formatting.2.9.1/lib/net40/"
+#r "CSharpFormat.dll"
 #r "FSharp.CodeFormat.dll"
 #r "FSharp.Literate.dll"
+#r "FSharp.MetadataFormat.dll"
 #r "FSharp.Markdown.dll"
-#r "CSharpFormat.dll"
+
 
 open System.IO
 open FSharp.Literate
