@@ -77,10 +77,10 @@ let rnd = System.Random()
 // Weights and biases between -0.5 and 0.5
 let createNetwork (inputs:int) (layers:int[]) =
     {l = Array.init layers.Length (fun i -> 
-        {n = Array.init layers.[i] (fun j -> 
+        {n = Array.init layers.[i] (fun _ -> 
             {w = Vector.init
                      (if i = 0 then inputs else layers.[i - 1])
-                     (fun k -> D (-0.5 + rnd.NextDouble()))
+                     (fun _ -> D (-0.5 + rnd.NextDouble()))
              b = D (-0.5 + rnd.NextDouble())})})}
 (**
 
@@ -127,18 +127,17 @@ It is important to note that the backpropagation algorithm is just a special cas
 let backprop (n:Network) (eta:float) epsilon (timeout:int) (t:(Vector<float>*Vector<float>)[]) =
     let ta = Array.map (fun x -> Vector.map D (fst x), Vector.map D (snd x)) t
     seq {for i in 0 .. timeout do // A timeout value
-            Trace.Clear()
             let error = 
                 (1. / float ta.Length) * Array.sumBy 
                     (fun t -> Vector.normSq ((snd t) - runNetwork (fst t) n)) ta
-            error.A <- 1.
-            Trace.ReverseSweep()
+            error |> resetTrace
+            error |> reverseTrace (D 1.)
             for l in n.l do
                 for n in l.n do
                     n.b <- n.b - eta * n.b.A // Update neuron bias
-                    n.w <- Vector.map (fun (w:Adj) -> w - eta * w.A) n.w // Update neuron weights
+                    n.w <- Vector.map (fun (w:D) -> w - eta * w.A) n.w // Update neuron weights
             if i = timeout then printfn "Failed to converge within %i steps." timeout
-            yield primal error}
+            yield float error}
     |> Seq.takeWhile ((<) epsilon)
 
 (**
@@ -168,13 +167,8 @@ Chart.Line train2
 
 (*** hide, define-output: o ***)
 printf "val net2 : Network =
-  {l =
-    [|{n =
-        [|{w =
-            Vector
-              [|Adj(0.3039949223, -0.120172164);
-                Adj(-0.1498002706, -0.1234536468)|];
-           b = Adj(0.1627550189, -0.120581615);}|];}|];}
+  {l = [|{n = [|{w = Vector [|D -0.3042126283; D -0.2509630955|];
+                 b = D 0.4165584179;}|];}|];}
 val train2 : seq<float>"
 (*** include-output: o ***)
 
