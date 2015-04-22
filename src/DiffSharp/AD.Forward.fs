@@ -41,7 +41,7 @@
 /// Nested forward mode AD
 namespace DiffSharp.AD.Forward
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// Dual numeric type with nesting capability, using tags to avoid perturbation confusion

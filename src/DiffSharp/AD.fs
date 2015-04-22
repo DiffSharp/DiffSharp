@@ -41,7 +41,7 @@
 /// Nested mixed (forward and reverse combined) mode AD
 namespace DiffSharp.AD
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion

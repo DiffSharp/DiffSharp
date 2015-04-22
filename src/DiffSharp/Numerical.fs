@@ -39,7 +39,7 @@
 /// Numerical differentiation
 namespace DiffSharp.Numerical
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// Numerical differentiation operations module (automatically opened)
@@ -48,7 +48,7 @@ open FsAlg.Generic
 module DiffOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff (f:float->float) x =
-        ((f (x + eps)) - (f (x - eps))) / deps
+        ((f (x + StepSize)) - (f (x - StepSize))) / (StepSize * 2.)
     
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
@@ -56,9 +56,9 @@ module DiffOps =
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv (f:float[]->float) (x:float[]) (v:float[]) =
-        let veps = eps * (vector v)
+        let vStepSize = StepSize * (vector v)
         let xv = vector x
-        ((f (Vector.toArray (xv + veps))) - (f (Vector.toArray (xv - veps)))) / deps
+        ((f (Vector.toArray (xv + vStepSize))) - (f (Vector.toArray (xv - vStepSize)))) / (StepSize * 2.)
 
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
@@ -66,7 +66,7 @@ module DiffOps =
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2 f x =
-        ((f (x + eps)) - 2. * (f x) + (f (x - eps))) / epssq
+        ((f (x + StepSize)) - 2. * (f x) + (f (x - StepSize))) / (StepSize * StepSize)
 
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff2' f x =
@@ -81,8 +81,8 @@ module DiffOps =
         let xv = vector x
         let fx = f x
         let g = Vector.create x.Length fx
-        let gg = Vector.init x.Length (fun i -> f (Vector.toArray (xv + Vector.createBasis x.Length i eps)))
-        (fx, Vector.toArray ((gg - g) / eps))
+        let gg = Vector.init x.Length (fun i -> f (Vector.toArray (xv + Vector.createBasis x.Length i StepSize)))
+        (fx, Vector.toArray ((gg - g) / StepSize))
     
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let grad f x =
@@ -93,8 +93,8 @@ module DiffOps =
         let xv = vector x
         let (fx, g) = grad' f x
         let h = Matrix.createRows x.Length g
-        let hh = Matrix.initRows x.Length (fun i -> grad f (Vector.toArray (xv + Vector.createBasis x.Length i eps)))
-        (fx, g, Matrix.toArray2D ((hh - h) / eps))
+        let hh = Matrix.initRows x.Length (fun i -> grad f (Vector.toArray (xv + Vector.createBasis x.Length i StepSize)))
+        (fx, g, Matrix.toArray2D ((hh - h) / StepSize))
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
@@ -111,10 +111,10 @@ module DiffOps =
     /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv' (f:float[]->float) (x:float[]) (v:float[]) =
         let xv = vector x
-        let veps = eps * (vector v)
-        let fx, gg1 = grad' f (Vector.toArray (xv + veps))
-        let gg2 = grad f (Vector.toArray (xv - veps))
-        (fx, Vector.toArray (((vector gg1) - (vector gg2)) / deps))
+        let vStepSize = StepSize * (vector v)
+        let fx, gg1 = grad' f (Vector.toArray (xv + vStepSize))
+        let gg2 = grad f (Vector.toArray (xv - vStepSize))
+        (fx, Vector.toArray (((vector gg1) - (vector gg2)) / (StepSize * 2.)))
 
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv (f:float[]->float) x v =
@@ -143,8 +143,8 @@ module DiffOps =
         let xv = Vector(x)
         let fx = f x
         let j = Matrix.createRows x.Length fx
-        let jj = Matrix.initRows x.Length (fun i -> f (Vector.toArray (xv + Vector.createBasis x.Length i eps)))
-        (fx, Matrix.toArray2D ((jj - j) / eps))
+        let jj = Matrix.initRows x.Length (fun i -> f (Vector.toArray (xv + Vector.createBasis x.Length i StepSize)))
+        (fx, Matrix.toArray2D ((jj - j) / StepSize))
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
     let inline jacobianT f x =
@@ -160,9 +160,9 @@ module DiffOps =
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv (f:float[]->float[]) x v =
-        let veps = eps * (vector v)
+        let vStepSize = StepSize * (vector v)
         let xv = vector x
-        Vector.toArray ((vector (f (Vector.toArray (xv + veps))) - vector (f (Vector.toArray (xv - veps)))) / deps)
+        Vector.toArray ((vector (f (Vector.toArray (xv + vStepSize))) - vector (f (Vector.toArray (xv - vStepSize)))) / (StepSize * 2.))
 
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f x v =

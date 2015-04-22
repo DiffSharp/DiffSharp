@@ -32,8 +32,7 @@ for the **diff2** operation; and the 1st order forward difference
 $$$
   \frac{df(x)}{dx} \approx \frac{f(x + h) - f(x)}{h}
 
-for the **grad**, **hessian**, **laplacian**, and **jacobian** operations, where $ 0 < h \ll 1 $. The default step size is taken as $h = 10^{-5}$ and in future releases this will be replaced by adaptive methods for choosing the optimal step size for each operation.
-
+for the **grad**, **hessian**, **laplacian**, and **jacobian** operations, where $ 0 < h \ll 1 $. 
 *)
 
 open DiffSharp.Numerical
@@ -55,3 +54,18 @@ let h (x:float[]) = [| sin x.[0]; cos x.[1] |]
 
 // Jacobian of h at (2, 3)
 let jh = jacobian h [|2.; 3.|]
+
+(**
+The default step size is $h = 10^{-5}$ and it can be changed by changing the mutable value **DiffSharp.Util.StepSize**.
+*)
+
+let v1 = diff sin 0.2
+
+DiffSharp.Util.StepSize <- 0.001
+
+let v2 = diff sin 0.2
+
+(*** hide, define-output: o ***)
+printf "val v1 : float = 0.9800665778
+val v2 : float = 0.9800664145"
+(*** include-output: o ***)

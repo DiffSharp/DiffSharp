@@ -45,7 +45,7 @@
 /// Non-nested forward mode AD, keeping vectors of gradient components
 namespace DiffSharp.AD.Specialized.ForwardG
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// DualG numeric type, keeping a doublet of primal value and a vector of gradient components

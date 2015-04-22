@@ -49,7 +49,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="Util.General.fs" />
+    <Compile Include="Util.fs" />
     <Compile Include="AD.fs" />
     <Compile Include="AD.Forward.fs" />
     <Compile Include="AD.Reverse.fs" />

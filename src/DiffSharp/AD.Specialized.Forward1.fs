@@ -41,7 +41,7 @@
 /// Non-nested 1st-order forward mode AD
 namespace DiffSharp.AD.Specialized.Forward1
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// Dual numeric type, keeping primal and tangent values

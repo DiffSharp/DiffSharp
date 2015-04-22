@@ -41,7 +41,7 @@
 /// Non-nested 1st-order reverse mode AD
 namespace DiffSharp.AD.Specialized.Reverse1
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open System.Collections.Generic
 open FsAlg.Generic
 
@@ -306,8 +306,8 @@ module DiffOps =
         let xv = vectorBy float x
         let (v, g) = grad' f x
         let h = Matrix.createRows x.Length g
-        let hh = Matrix.initRows x.Length (fun i -> grad f (Vector.toArray (xv + Vector.createBasis x.Length i eps)))
-        (v, g, Matrix.toArray2D ((hh - h) / eps))
+        let hh = Matrix.initRows x.Length (fun i -> grad f (Vector.toArray (xv + Vector.createBasis x.Length i StepSize)))
+        (v, g, Matrix.toArray2D ((hh - h) / StepSize))
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`, using finite differences over reverse mode gradient
     let inline gradhessian f x =

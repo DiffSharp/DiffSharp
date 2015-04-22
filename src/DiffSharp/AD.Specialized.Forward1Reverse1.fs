@@ -42,7 +42,7 @@
 namespace DiffSharp.AD.Specialized.Forward1Reverse1
 
 open DiffSharp.AD.Specialized.Reverse1
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// DualAdj numeric type, keeping the primals and adjoints of primal and tangent values

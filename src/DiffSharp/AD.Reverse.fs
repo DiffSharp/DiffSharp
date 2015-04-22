@@ -41,7 +41,7 @@
 /// Nested reverse mode AD
 namespace DiffSharp.AD.Reverse
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 

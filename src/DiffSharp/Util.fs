@@ -39,7 +39,7 @@
 #light
 
 /// Various utility functions used all over the library
-module DiffSharp.Util.General
+module DiffSharp.Util
 
 /// Gets the first term of a 3-tuple
 let inline fst3 (f, _, _) = f
@@ -116,13 +116,7 @@ let isHalfway a = abs (a % 1.) = 0.5
 let log10val = log 10.
 
 /// Global step size for numerical approximations
-let eps = 0.00001
-
-/// Two times `eps`
-let deps = eps * 2.
-
-/// Square of `eps`
-let epssq = eps * eps
+let mutable StepSize = 0.00001
 
 /// Vector-to-scalar to scalar-to-scalar function transform. Given a vector-to-scalar function `f` and an evaluation point `x`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
 let inline fVStoSS i f x =

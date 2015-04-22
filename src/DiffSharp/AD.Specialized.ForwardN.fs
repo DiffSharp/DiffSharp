@@ -41,7 +41,7 @@
 /// Non-nested forward mode AD, lazy higher-order
 namespace DiffSharp.AD.Specialized.ForwardN
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// DualN numeric type, where the tangent value is another DualN, forming a lazy chain of higher-order derivatives

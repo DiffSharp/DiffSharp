@@ -45,7 +45,7 @@
 /// Non-nested forward mode AD, keeping vectors of gradient components and matrices of Hessian components
 namespace DiffSharp.AD.Specialized.ForwardGH
 
-open DiffSharp.Util.General
+open DiffSharp.Util
 open FsAlg.Generic
 
 /// DualGH numeric type, keeping a triplet of primal value, a vector of gradient components, and a matrix of Hessian components
