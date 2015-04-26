@@ -110,7 +110,7 @@ $$$
 
 where $\eta$ is the learning rate.
 
-It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Reverse AD](gettingstarted-reversead.html) page for an explanation of the usage of adjoints and their backwards propagation.
+It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Nested AD](gettingstarted-nestedad.html) page for an explanation of the usage of adjoints and their backwards propagation.
 
 *)
 
@@ -121,15 +121,14 @@ It is important to note that the backpropagation algorithm is just a special cas
 // timeout: maximum number of iterations
 // t: training set consisting of input and output vectors
 let backprop (n:Network) eta epsilon timeout (t:(Vector<_>*Vector<_>)[]) =
-    let i = DiffSharp.Util.General.GlobalTagger.Next
+    let i = DiffSharp.Util.GlobalTagger.Next
     seq {for j in 0 .. timeout do
             for l in n.layers do
                 l.W |> Matrix.replace (makeDR i)
                 l.b |> Vector.replace (makeDR i) 
 
             let error = t |> Array.sumBy (fun (x, y) -> Vector.normSq (y - runNetwork x n))
-            error |> resetTrace
-            error |> reverseTrace (D 1.)
+            error |> reverseProp (D 1.) // Propagate adjoint value 1 backward
 
             for l in n.layers do
                 l.W |> Matrix.replace (fun (x:D) -> x.P - eta * x.A)

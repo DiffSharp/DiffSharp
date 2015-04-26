@@ -12,13 +12,13 @@ The following table gives an overview of the differentiation API provided by the
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
 .tg th{font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg .tg-a60z{font-size:9px;background-color:#ecf4ff}
-.tg .tg-1r2d{font-size:9px;background-color:#ecf4ff;text-align:center}
-.tg .tg-glis{font-size:9px}
-.tg .tg-wcxf{font-size:9px;background-color:#ffffc7;text-align:center}
-.tg .tg-aycn{font-size:9px;background-color:#e4ffb3;text-align:center}
-.tg .tg-wklz{font-size:9px;background-color:#ecf4ff;color:#000000;text-align:center}
-.tg .tg-7dqz{font-weight:bold;font-size:9px}
+.tg .tg-a60z{font-size:10px;background-color:#ecf4ff}
+.tg .tg-1r2d{font-size:10px;background-color:#ecf4ff;text-align:center}
+.tg .tg-glis{font-size:10px}
+.tg .tg-wcxf{font-size:10px;background-color:#ffffc7;text-align:center}
+.tg .tg-aycn{font-size:10px;background-color:#e4ffb3;text-align:center}
+.tg .tg-wklz{font-size:10px;background-color:#ecf4ff;color:#000000;text-align:center}
+.tg .tg-7dqz{font-weight:bold;font-size:10px}
 </style>
 <table class="tg">
   <tr>
@@ -37,133 +37,46 @@ The following table gives an overview of the differentiation API provided by the
     <th class="tg-1r2d">jacobianv</th>
     <th class="tg-1r2d">jacobianT</th>
     <th class="tg-1r2d">jacobianTv</th>
-    <th class="tg-1r2d">jacobianvTv</th>
     <th class="tg-a60z">curl</th>
     <th class="tg-a60z">div</th>
     <th class="tg-a60z">curldiv</th>
   </tr>
   <tr>
+    <td class="tg-7dqz">AD</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
     <td class="tg-7dqz">ADF</td>
     <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-wklz">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-  </tr>
-  <tr>
-    <td class="tg-7dqz">ADF2</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-wklz">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-  </tr>
-  <tr>
-    <td class="tg-7dqz">ADFG</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-wklz">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-  </tr>
-  <tr>
-    <td class="tg-7dqz">ADFGH</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-wklz">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-  </tr>
-  <tr>
-    <td class="tg-7dqz">ADFN</td>
-    <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-wcxf">X</td>
     <td class="tg-aycn">X</td>
     <td class="tg-aycn">X</td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
-    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
     <td class="tg-aycn">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-  </tr>
-  <tr>
-    <td class="tg-7dqz">ADFR</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf">X</td>
-    <td class="tg-wcxf"></td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-aycn">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
@@ -171,20 +84,139 @@ The following table gives an overview of the differentiation API provided by the
   <tr>
     <td class="tg-7dqz">ADR</td>
     <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADF1</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADF2</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADFG</td>
+    <td class="tg-wcxf">X</td>
     <td class="tg-wcxf"></td>
     <td class="tg-wcxf"></td>
     <td class="tg-aycn">X</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">A</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">XA</td>
     <td class="tg-aycn"></td>
-    <td class="tg-aycn">A</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADFGH</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-wklz">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADFN</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d"></td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+    <td class="tg-1r2d">X</td>
+  </tr>
+  <tr>
+    <td class="tg-7dqz">SADR1</td>
+    <td class="tg-wcxf">X</td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-wcxf"></td>
+    <td class="tg-aycn">X</td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
+    <td class="tg-aycn"></td>
     <td class="tg-wklz">X</td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
-    <td class="tg-1r2d"></td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
@@ -204,7 +236,6 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-wklz">A</td>
     <td class="tg-1r2d">A</td>
     <td class="tg-1r2d">A</td>
-    <td class="tg-1r2d"></td>
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d">A</td>
     <td class="tg-1r2d">A</td>
@@ -226,7 +257,6 @@ The following table gives an overview of the differentiation API provided by the
     <td class="tg-1r2d"></td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d"></td>
-    <td class="tg-1r2d"></td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
     <td class="tg-1r2d">X</td>
@@ -235,24 +265,47 @@ The following table gives an overview of the differentiation API provided by the
 
 **Yellow**: For scalar-to-scalar functions; **Green**: For vector-to-scalar functions; **Blue**: For vector-to-vector functions
 
-**X**: Exact value; **A**: Numerical approximation; **XA**: Exact gradient, approximated Hessian
+**X**: Exact value; **A**: Numerical approximation
 
-**ADF**: DiffSharp.AD.Forward; **ADF2**: DiffSharp.AD.Forward2; **ADFG**: DiffSharp.AD.ForwardG; **ADFGH**: DiffSharp.AD.ForwardGH; **ADFN**: DiffSharp.AD.ForwardN; **ADFR**: DiffSharp.AD.ForwardReverse; **ADR**: DiffSharp.AD.Reverse; **N**: DiffSharp.Numerical; **S**: DiffSharp.Symbolic
+The main functionality in DiffSharp is provided by the **DiffSharp.AD** namespace, which supports nesting and can combine forward and reverse AD as needed. The modules under **DiffSharp.AD.Specialized** provide several non-nested implementations of AD, for situations where you know beforehand that nesting will not be needed. This can give better performance for some specific non-nested tasks.
+
+The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
+
+Currently, the library provides the following implementations:
+
+- **AD | DiffSharp.AD**: Nested AD, forward and reverse mode
+- **ADF | DiffSharp.AD.Forward**: Nested AD, only forward mode
+- **ADR | DiffSharp.AD.Reverse**: Nested AD, only reverse mode
+- **SADF1 | DiffSharp.AD.Specialized.Forward1**: Non-nested AD, forward mode, 1st order
+- **SADF2 | DiffSharp.AD.Specialized.Forward2**: Non-nested AD, forward mode, 2nd order
+- **SADFG | DiffSharp.AD.Specialized.ForwardG**: Non-nested AD, forward mode, keeping vectors of gradient components
+- **SADFGH | DiffSharp.AD.Specialized.ForwardGH**: Non-nested AD, forward mode, keeping vectors of gradient components and matrices of Hessian components
+- **SADFN | DiffSharp.AD.Specialized.ForwardN**: Non-nested AD, forward mode, lazy higher-order
+- **SADR1 | DiffSharp.AD.Specialized.Reverse1**: Non-nested AD, reverse mode, 1st order
+- **N | DiffSharp.Numerical**: Numerical differentiation
+- **S | DiffSharp.Symbolic**: Symbolic differentiation
+
+For brief explanations of these implementations, please refer to the [Nested AD](gettingstarted-nestedad.html), [Non-nested AD](gettingstarted-nonnestedad.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
 
 Differentiation Operations and Variants
 ---------------------------------------
 
-The operations summarized in the above table have _prime-suffixed_ variants (e.g. **diff** and **diff'** ) that return tuples containing the value of the original function together with the value of the desired operation. This is advantageous in the majority of AD operations, since the original function value is almost always already computed as a by-product of AD computations, providing a performance advantage. 
+The operations summarized in the above table have _prime-suffixed_ variants (e.g. **diff** and **diff'** ) that return tuples containing the value of the original function together with the value of the desired operation. This provides a performance advantage in the majority of AD operations, since the original function value is almost always computed during the same execution of the code, as a by-product of AD computations.
 *)
 
-// Use forward mode AD
-open DiffSharp.AD.Specialized.Forward1
+open DiffSharp.AD
 
 // Derivative of Sin(Sqrt(x)) at x = 2
-let a = diff (fun x -> sin (sqrt x)) 2.
+let a = diff (fun x -> sin (sqrt x)) (D 2.)
 
 // (Original value, derivative) of Sin(Sqrt(x)) at x = 2
-let b, c = diff' (fun x -> sin (sqrt x)) 2.
+let b, c = diff' (fun x -> sin (sqrt x)) (D 2.)
+
+(*** hide, define-output: o ***)
+printf "val a : D = D 0.05513442203
+val c : D = D 0.05513442203
+val b : D = D 0.987765946"
+(*** include-output: o ***)
 
 (**
 
@@ -525,30 +578,6 @@ Of the returned pair, the first is the original value of `f` at the point `x` (t
 
 This can be computed efficiently by the **DiffSharp.AD.Reverse** module in a matrix-free way (without computing the full Jacobian matrix).
 
-----------------------
-
-##### jacobianvTv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^n)}$
-
-**`jacobianvTv f x v1 v2`** returns the Jacobian-vector product along the vector `v1`, and the transposed Jacobian-vector product along the vector`v2`, of a vector-to-vector function `f`, at the point `x`.
-
-This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module in one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
-
-----------------------
-
-##### jacobianvTv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times \mathbb{R}^n)}$
-
-**`jacobianvTv' f x v1 v2`** returns the original value, the Jacobian-vector product along the vector `v1`, and the transposed Jacobian-vector product along the vector `v2` of a vector-to-vector function `f`, at the point `x`.
-
-----------------------
-
-##### jacobianvTv'' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}$
-
-**`jacobianvTv'' f x v1`** returns the original value, the Jacobian-vector product along the vector `v1`, and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`.
-
-Of the returned 3-tuple, the first is the original value of `f` at the point `x`, the second is the Jacobian-vector product of `f` at the point `x` along the vector `v1` (computed using forward mode AD), and the third is a function (the reverse evaluator) that can be used to compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass).
-
-This can be computed efficiently by the **DiffSharp.AD.ForwardReverse** module in a matrix-free way (without computing the full Jacobian matrix).
-
 ##### curl : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{\mathbb{R}^3}$
 
 **`curl f x`** returns the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
@@ -585,84 +614,89 @@ which is the trace of the Jacobian matrix.
 
 **`curldiv' f x`** returns the original value, the curl, and the divergence of a vector-to-vector function `f`, at the point `x`.
 
-
-Implemented Differentiation Techniques
---------------------------------------
-
-The main focus of the DiffSharp library is AD, but we also implement symbolic and numerical differentiation.
-
-Currently, the library provides the following implementations in separate modules:
-
-- **DiffSharp.AD.Forward**: Forward mode AD 
-- **DiffSharp.AD.Forward2**: Forward mode AD, 2nd order
-- **DiffSharp.AD.ForwardG**: Forward mode AD, keeping vectors of gradient components
-- **DiffSharp.AD.ForwardGH**: Forward mode AD, keeping vectors of gradient components and matrices of Hessian components
-- **DiffSharp.AD.ForwardN**: Forward mode AD, lazy higher-order
-- **DiffSharp.AD.ForwardReverse**: Reverse-on-forward mode AD
-- **DiffSharp.AD.Reverse**: reverse mode AD
-- **DiffSharp.Numerical**: Numerical differentiation
-- **DiffSharp.Symbolic**: Symbolic differentiation
-
-For brief explanations of these implementations, please refer to the [Forward AD](gettingstarted-forwardad.html), [Reverse AD](gettingstarted-reversead.html), [Reverse-on-Forward AD](gettingstarted-forwardreversead.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
-
 Vector and Matrix versus float[] and float[,]
 ---------------------------------------------
 
-When a differentiation module such as **DiffSharp.AD.Forward** is opened, the default operations involving vectors or matrices handle these via **float[]** and **float[,]** arrays.
+When a differentiation module such as **DiffSharp.AD** is opened, the default operations involving vectors or matrices handle these via **float[]** and **float[,]** arrays.
 
 *)
 
-open DiffSharp.AD.Specialized.Forward1
+open DiffSharp.AD
 
 // Gradient of a vector-to-scalar function
-// g1: float[] -> float[]
-// i.e. take the function arguments as a float[] and return the gradient as a float[]
-// Inner lambda expression: Dual[] -> Dual
+// g1: D[] -> D[]
+// i.e., take the function arguments as a D[] and return the gradient as a D[]
+// Inner lambda expression: D[] -> D
 let g1 = grad (fun x -> sin (x.[0] * x.[1]))
 
 // Compute the gradient at (1, 2)
-// g1val: float[]
-let g1val = g1 [|1.; 2.|]
+// g1val: D[]
+let g1val = g1 [|D 1.; D 2.|]
+
+// Jacobian of a vector-to-vector function
+// j1: D[] -> D[,]
+// i.e., take the function arguments as a D[] and return the Jacobian as a D[,]
+// Inner lambda expression: D[] -> D[]
+let j1 = jacobian (fun x -> [|sin x.[0]; cos x.[1]|])
+
+// Compute the Jacobian at (1, 2)
+let j1val = j1 [|D 1.; D 2.|]
+
+(*** hide, define-output: o2 ***)
+printf "val g1 : (D [] -> D [])
+val g1val : D [] = [|D -0.8322936731; D -0.4161468365|]
+val j1 : (D [] -> D [,])
+val j1val : D [,] = [[D 0.5403023059; D 0.0]
+                     [D 0.0; D -0.9092974268]]"
+(*** include-output: o2 ***)
 
 (**
 
-In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**. This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](gettingstarted-forwardad.html).
+In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**. This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](examples-gradientdescent.html).
 
-Vector and Matrix operations are handled through the [FsAlg Linear Algebra Library](http://gbaydin.github.io/FsAlg/). Please see the API reference of FsAlg for a complete list of supported linear algebra operations.
+Vector and Matrix operations are handled through the [FsAlg Linear Algebra Library](http://gbaydin.github.io/FsAlg/), which supports most of the commonly used linear algebra operations, including matrix–vector operations, matrix inverse, determinants, eigenvalues, LU and QR decompositions. Please see the API reference of FsAlg for a complete list of supported linear algebra operations.
 
 *)
 
-open DiffSharp.AD.Specialized.Forward1
-open DiffSharp.AD.Specialized.Forward1.Vector
+open DiffSharp.AD
+open DiffSharp.AD.Vector
 open FsAlg.Generic
 
 // Gradient of a vector-to-scalar function
-// g2: Vector<float> -> Vector<float>
-// i.e. take the function arguments as a Vector<float> and return the gradient as a Vector<float>
-// Inner lambda expression: Vector<Dual> -> Dual
+// g2: Vector<D> -> Vector<D>
+// i.e., take the function arguments as a Vector<D> and return the gradient as a Vector<D>
+// Inner lambda expression: Vector<D> -> D
 let g2 = grad (fun x -> sin (x.[0] * x.[1]))
 
 // Compute the gradient at (1, 2)
-// g2val: Vector<float>
-let g2val = g2 (vector [1.; 2.])
+// g2val: Vector<D>
+let g2val = g2 (vector [D 1.; D 2.])
 
 // Compute the negative of the gradient vector
 let g2valb = -g2val
 
 // Scale the gradient vector
-let g2valc = 0.2 * g2val
+let g2valc = D 0.2 * g2val
 
 // Get the norm of the gradient vector
 let g2vald = Vector.norm g2val
 
 // Jacobian of a vector-to-vector function
-// j: Vector<float> -> Matrix<float>
-// i.e. take the function arguments as a Vector<float> and return the Jacobian as a Matrix<float>
-// Inner lambda expression: Vector<Dual> -> Vector<Dual>
-let j = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
+// j2: Vector<D> -> Matrix<D>
+// i.e., take the function arguments as a Vector<D> and return the Jacobian as a Matrix<D>
+// Inner lambda expression: Vector<D> -> Vector<D>
+let j2 = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
 
 // Compute the Jacobian at (1, 2)
-let jval = j (vector [1.; 2.])
+let j2val = j2 (vector [D 1.; D 2.])
 
-// Compute the determinant of the Jacobian matrix
-let jvalb = Matrix.det jval
+(*** hide, define-output: o3 ***)
+printf "val g2 : (Vector<D> -> Vector<D>)
+val g2val : Vector<D> = Vector [|D -0.8322936731; D -0.4161468365|]
+val g2valb : Vector<D> = Vector [|D 0.8322936731; D 0.4161468365|]
+val g2valc : Vector<D> = Vector [|D -0.1664587346; D -0.08322936731|]
+val g2vald : D = D 0.9305326151
+val j2 : (Vector<D> -> Matrix<D>)
+val j2val : Matrix<D> = Matrix [[D 0.5403023059; D 0.0]
+                                [D 0.0; D -0.9092974268]]"
+(*** include-output: o3 ***)

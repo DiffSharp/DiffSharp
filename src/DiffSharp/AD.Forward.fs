@@ -299,7 +299,7 @@ module DiffOps =
     /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDF i) x v |> f |> tuple
+        Array.map2 (makeDF i) v x |> f |> tuple
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradv f x v =
@@ -325,7 +325,7 @@ module DiffOps =
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv' f x v =
         let i = GlobalTagger.Next
-        Array.map2 (makeDF i) x v |> f |> Array.map tuple |> Array.unzip
+        Array.map2 (makeDF i) v x |> f |> Array.map tuple |> Array.unzip
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
     let inline jacobianv f x v =

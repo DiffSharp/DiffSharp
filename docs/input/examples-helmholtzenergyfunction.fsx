@@ -47,10 +47,10 @@ let test = testHelmholtz 6
 
 (**
 
-<table class="pre"><tr><td><pre><code>val test : Vector&lt;float&gt; =
+<table class="pre"><tr><td><pre><code>val test : Vector<D> =
   Vector
-    [|-1.349719714; -1.458964954; -1.637555967; -2.891547509; -2.136274086;
-      -2.676240035|]
+    [|D -1.349921482; D -2.33080194; D -2.567169994; D -2.179311351;
+      D -2.57667612; D -2.275579311|]
 </code></pre></td></tr></table>
 
 We can investigate how the time needed to compute this gradient scales with the number of independent variables $n$.
@@ -78,7 +78,7 @@ Now we can plot the time needed as a function of $n$.
 
 open FSharp.Charting
 
-Chart.Line([for n in 1 .. 50 -> duration 1000 (fun _ -> testHelmholtz n)])
+Chart.Line([for n in 1 .. 50 -> duration 100 (fun _ -> testHelmholtz n)])
           .WithXAxis(Title = "n (num. variables)", Min = 0.)
           .WithYAxis(Title = "Time (ms)")
 
@@ -90,7 +90,7 @@ Chart.Line([for n in 1 .. 50 -> duration 1000 (fun _ -> testHelmholtz n)])
     </div>
 </div>
 
-Let us compare this with the performance of numerical differentiation (**DiffSharp.Numerical**) and forward mode AD (**DiffSharp.AD.Forward** and **DiffSharp.AD.ForwardG**).
+Let us compare this with the performance of numerical differentiation (**DiffSharp.Numerical**) and forward mode AD (**DiffSharp.AD.Forward** and **DiffSharp.AD.Specialized.ForwardG**).
 *)
 
 open DiffSharp.Numerical.Vector
@@ -131,7 +131,7 @@ let testHelmholtzDual n =
 open DiffSharp.AD.Specialized.ForwardG
 open DiffSharp.AD.Specialized.ForwardG.Vector
 
-let helmholtzDualG R T (b:Vector<DualG>) (A:Matrix<DualG>) (x:Vector<DualG>) =
+let helmholtzDualG R T (b:Vector<D>) (A:Matrix<D>) (x:Vector<D>) =
     let bx = b * x
     let oneminbx = 1. - bx
     R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
@@ -141,13 +141,13 @@ let helmholtzDualG R T (b:Vector<DualG>) (A:Matrix<DualG>) (x:Vector<DualG>) =
 let testHelmholtzDualG n =
     let R = 1.
     let T = 1.
-    let b = Vector.init n (fun _ -> dualG (0.1 * rnd.NextDouble()) n)
-    let A = Matrix.init n n (fun _ _ -> dualG (0.1 * rnd.NextDouble()) n)
+    let b = Vector.init n (fun _ -> makeD (0.1 * rnd.NextDouble()) n)
+    let A = Matrix.init n n (fun _ _ -> makeD (0.1 * rnd.NextDouble()) n)
     let x = Vector.init n (fun _ -> (0.1 * rnd.NextDouble()))
     grad (helmholtzDualG R T b A) x
 
 (**
-As shown by the regular and logarithmic plots below, reverse mode AD performs substantially better than forward mode AD and numerical differentiation, as expected. For instance, for $n = 50$, reverse mode AD performs approximately ten times faster than the other methods. Also, simple forward mode AD (**DiffSharp.AD.Forward**) performs worse than vectorized forward mode (**DiffSharp.AD.ForwardG**), which is optimized for functions with many inputs.
+As shown by the regular and logarithmic plots below, reverse mode AD performs substantially better than forward mode AD and numerical differentiation, as expected. For instance, for $n = 50$, reverse mode AD performs approximately ten times faster than the other methods. Also, simple forward mode AD (**DiffSharp.AD.Forward**) performs worse than vectorized forward mode (**DiffSharp.AD.Specialized.ForwardG**), which is optimized for functions with many inputs.
 
 In general, for a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^m$, reverse mode AD will have a performance advantage over forward mode AD when $n \gg m$.
 

@@ -87,13 +87,12 @@ for fileInfo in DirectoryInfo(relative "input/files/img").EnumerateFiles() do
 let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/gbaydin/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
 
 Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates/template.html", relative "output/index.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/api-overview.fsx", relative "input/templates/template.html", relative "output/api-overview.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/api-overview.fsx", relative "input/templates/template.html", relative "output/api-overview.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/gettingstarted-typeinference.fsx", relative "input/templates/template.html", relative "output/gettingstarted-typeinference.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/gettingstarted-forwardad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-forwardad.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/gettingstarted-forwardreversead.fsx", relative "input/templates/template.html", relative "output/gettingstarted-forwardreversead.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/gettingstarted-reversead.fsx", relative "input/templates/template.html", relative "output/gettingstarted-reversead.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/gettingstarted-nestedad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-nestedad.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/gettingstarted-nonnestedad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-nonnestedad.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/gettingstarted-symbolicdifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-symbolicdifferentiation.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-numericaldifferentiation.html", replacements = tags)
+Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-numericaldifferentiation.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/benchmarks.fsx", relative "input/templates/template.html", relative "output/benchmarks.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-gradientdescent.fsx", relative "input/templates/template.html", relative "output/examples-gradientdescent.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-inversekinematics.fsx", relative "input/templates/template.html", relative "output/examples-inversekinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())

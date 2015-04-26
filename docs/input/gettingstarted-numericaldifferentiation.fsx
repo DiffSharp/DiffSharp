@@ -8,7 +8,7 @@ Numerical Differentiation
 
 In addition to AD, the DiffSharp library also implements [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation).
 
-Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function evaluated at some sample points. Unlike AD, numerical differentiation gives only approximate results and has problems caused by truncation and roundoff errors.
+Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function evaluated at some sample points. Unlike AD, numerical differentiation gives only approximate results and is unstable due to truncation and roundoff errors.
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 

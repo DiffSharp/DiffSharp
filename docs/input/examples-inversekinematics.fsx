@@ -102,9 +102,9 @@ let movement2 = inverseK (vector [D 3.5; D -4.0]) (D 0.025) 100000
 let movement3 = inverseK (vector [D 4.5; D 4.5]) (D 0.025) 100000
 
 (*** hide, define-output: o ***)
-printf "val movement1 : seq<Vector<float>>
-val movement2 : seq<Vector<float>>
-val movement3 : seq<Vector<float>>"
+printf "val movement1 : seq<Vector<D>>
+val movement2 : seq<Vector<D>>
+val movement3 : seq<Vector<D>>"
 (*** include-output: o ***)
 
 (**

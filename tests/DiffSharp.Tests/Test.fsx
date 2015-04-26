@@ -32,15 +32,15 @@ let createNetwork (l:int[]) =
 
 
 let backprop (n:Network) eta epsilon timeout (t:(Vector<_>*Vector<_>)[]) =
-    let i = DiffSharp.Util.General.GlobalTagger.Next
+    let i = DiffSharp.Util.GlobalTagger.Next
     seq {for j in 0 .. timeout do
             for l in n.layers do
                 l.W |> Matrix.replace (makeDR i)
                 l.b |> Vector.replace (makeDR i) 
 
             let error = t |> Array.sumBy (fun (x, y) -> Vector.normSq (y - runNetwork x n))
-            error |> resetTrace
-            error |> reverseTrace (D 1.)
+            error |> reverseReset
+            error |> reversePush (D 1.)
 
             for l in n.layers do
                 l.W |> Matrix.replace (fun (x:D) -> x.P - eta * x.A)
