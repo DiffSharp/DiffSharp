@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DualG - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DualG</h1>
+<div class="xmldoc">
+<p>DualG numeric type, keeping a doublet of primal value and a vector of gradient components</p>
+</div>
+  <h3>Union Cases</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Union Case</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3982', 3982)" onmouseover="showTip(event, '3982', 3982)">
+            DualG(float,(type))
+          </code>
+          <div class="tip" id="3982">
+            <strong>Signature:</strong> float * (type)<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3983', 3983)" onmouseover="showTip(event, '3983', 3983)">
+            ( - )(a, b)
+          </code>
+          <div class="tip" id="3983">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3984', 3984)" onmouseover="showTip(event, '3984', 3984)">
+            ( - )(a, b)
+          </code>
+          <div class="tip" id="3984">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3985', 3985)" onmouseover="showTip(event, '3985', 3985)">
+            ( - )(a, arg2)
+          </code>
+          <div class="tip" id="3985">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3986', 3986)" onmouseover="showTip(event, '3986', 3986)">
+            ( - )(arg1, b)
+          </code>
+          <div class="tip" id="3986">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3987', 3987)" onmouseover="showTip(event, '3987', 3987)">
+            ( - )(arg1, arg2)
+          </code>
+          <div class="tip" id="3987">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3988', 3988)" onmouseover="showTip(event, '3988', 3988)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="3988">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3989', 3989)" onmouseover="showTip(event, '3989', 3989)">
+            ( * )(a, b)
+          </code>
+          <div class="tip" id="3989">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3990', 3990)" onmouseover="showTip(event, '3990', 3990)">
+            ( * )(a, arg2)
+          </code>
+          <div class="tip" id="3990">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3991', 3991)" onmouseover="showTip(event, '3991', 3991)">
+            ( * )(arg1, b)
+          </code>
+          <div class="tip" id="3991">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3992', 3992)" onmouseover="showTip(event, '3992', 3992)">
+            ( * )(arg1, arg2)
+          </code>
+          <div class="tip" id="3992">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3993', 3993)" onmouseover="showTip(event, '3993', 3993)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="3993">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3994', 3994)" onmouseover="showTip(event, '3994', 3994)">
+            ( / )(a, b)
+          </code>
+          <div class="tip" id="3994">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3995', 3995)" onmouseover="showTip(event, '3995', 3995)">
+            ( / )(a, arg2)
+          </code>
+          <div class="tip" id="3995">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3996', 3996)" onmouseover="showTip(event, '3996', 3996)">
+            ( / )(arg1, b)
+          </code>
+          <div class="tip" id="3996">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3997', 3997)" onmouseover="showTip(event, '3997', 3997)">
+            ( / )(arg1, arg2)
+          </code>
+          <div class="tip" id="3997">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3998', 3998)" onmouseover="showTip(event, '3998', 3998)">
+            ( ~- )(arg1)
+          </code>
+          <div class="tip" id="3998">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3999', 3999)" onmouseover="showTip(event, '3999', 3999)">
+            ( + )(a, b)
+          </code>
+          <div class="tip" id="3999">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4000', 4000)" onmouseover="showTip(event, '4000', 4000)">
+            ( + )(a, b)
+          </code>
+          <div class="tip" id="4000">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4001', 4001)" onmouseover="showTip(event, '4001', 4001)">
+            ( + )(a, arg2)
+          </code>
+          <div class="tip" id="4001">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4002', 4002)" onmouseover="showTip(event, '4002', 4002)">
+            ( + )(arg1, b)
+          </code>
+          <div class="tip" id="4002">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4003', 4003)" onmouseover="showTip(event, '4003', 4003)">
+            ( + )(arg1, arg2)
+          </code>
+          <div class="tip" id="4003">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4004', 4004)" onmouseover="showTip(event, '4004', 4004)">
+            Abs(arg1)
+          </code>
+          <div class="tip" id="4004">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4005', 4005)" onmouseover="showTip(event, '4005', 4005)">
+            Acos(arg1)
+          </code>
+          <div class="tip" id="4005">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4006', 4006)" onmouseover="showTip(event, '4006', 4006)">
+            Asin(arg1)
+          </code>
+          <div class="tip" id="4006">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4007', 4007)" onmouseover="showTip(event, '4007', 4007)">
+            Atan(arg1)
+          </code>
+          <div class="tip" id="4007">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4008', 4008)" onmouseover="showTip(event, '4008', 4008)">
+            Atan2(a, b)
+          </code>
+          <div class="tip" id="4008">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4009', 4009)" onmouseover="showTip(event, '4009', 4009)">
+            Atan2(a, b)
+          </code>
+          <div class="tip" id="4009">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4010', 4010)" onmouseover="showTip(event, '4010', 4010)">
+            Atan2(a, arg2)
+          </code>
+          <div class="tip" id="4010">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4011', 4011)" onmouseover="showTip(event, '4011', 4011)">
+            Atan2(arg1, b)
+          </code>
+          <div class="tip" id="4011">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4012', 4012)" onmouseover="showTip(event, '4012', 4012)">
+            Atan2(arg1, arg2)
+          </code>
+          <div class="tip" id="4012">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4013', 4013)" onmouseover="showTip(event, '4013', 4013)">
+            Ceiling(arg1)
+          </code>
+          <div class="tip" id="4013">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4014', 4014)" onmouseover="showTip(event, '4014', 4014)">
+            Cos(arg1)
+          </code>
+          <div class="tip" id="4014">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4015', 4015)" onmouseover="showTip(event, '4015', 4015)">
+            Cosh(arg1)
+          </code>
+          <div class="tip" id="4015">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4016', 4016)" onmouseover="showTip(event, '4016', 4016)">
+            DivideByInt(arg1, i)
+          </code>
+          <div class="tip" id="4016">
+            <strong>Signature:</strong> (DualG * i:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4017', 4017)" onmouseover="showTip(event, '4017', 4017)">
+            Exp(arg1)
+          </code>
+          <div class="tip" id="4017">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4018', 4018)" onmouseover="showTip(event, '4018', 4018)">
+            Floor(arg1)
+          </code>
+          <div class="tip" id="4018">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4019', 4019)" onmouseover="showTip(event, '4019', 4019)">
+            Log(arg1)
+          </code>
+          <div class="tip" id="4019">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4020', 4020)" onmouseover="showTip(event, '4020', 4020)">
+            Log10(arg1)
+          </code>
+          <div class="tip" id="4020">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4021', 4021)" onmouseover="showTip(event, '4021', 4021)">
+            One
+          </code>
+          <div class="tip" id="4021">
+            <strong>Signature:</strong> DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4022', 4022)" onmouseover="showTip(event, '4022', 4022)">
+            op_Explicit(arg1)
+          </code>
+          <div class="tip" id="4022">
+            <strong>Signature:</strong> DualG -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4023', 4023)" onmouseover="showTip(event, '4023', 4023)">
+            op_Explicit(p)
+          </code>
+          <div class="tip" id="4023">
+            <strong>Signature:</strong> p:float -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4024', 4024)" onmouseover="showTip(event, '4024', 4024)">
+            Pow(a, b)
+          </code>
+          <div class="tip" id="4024">
+            <strong>Signature:</strong> (a:int * b:DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4025', 4025)" onmouseover="showTip(event, '4025', 4025)">
+            Pow(a, b)
+          </code>
+          <div class="tip" id="4025">
+            <strong>Signature:</strong> (a:DualG * b:int) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4026', 4026)" onmouseover="showTip(event, '4026', 4026)">
+            Pow(a, arg2)
+          </code>
+          <div class="tip" id="4026">
+            <strong>Signature:</strong> (a:float * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4027', 4027)" onmouseover="showTip(event, '4027', 4027)">
+            Pow(arg1, b)
+          </code>
+          <div class="tip" id="4027">
+            <strong>Signature:</strong> (DualG * b:float) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4028', 4028)" onmouseover="showTip(event, '4028', 4028)">
+            Pow(arg1, arg2)
+          </code>
+          <div class="tip" id="4028">
+            <strong>Signature:</strong> (DualG * DualG) -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4029', 4029)" onmouseover="showTip(event, '4029', 4029)">
+            Round(arg1)
+          </code>
+          <div class="tip" id="4029">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4030', 4030)" onmouseover="showTip(event, '4030', 4030)">
+            Sin(arg1)
+          </code>
+          <div class="tip" id="4030">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4031', 4031)" onmouseover="showTip(event, '4031', 4031)">
+            Sinh(arg1)
+          </code>
+          <div class="tip" id="4031">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4032', 4032)" onmouseover="showTip(event, '4032', 4032)">
+            Sqrt(arg1)
+          </code>
+          <div class="tip" id="4032">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4033', 4033)" onmouseover="showTip(event, '4033', 4033)">
+            Tan(arg1)
+          </code>
+          <div class="tip" id="4033">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4034', 4034)" onmouseover="showTip(event, '4034', 4034)">
+            Tanh(arg1)
+          </code>
+          <div class="tip" id="4034">
+            <strong>Signature:</strong> DualG -&gt; DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4035', 4035)" onmouseover="showTip(event, '4035', 4035)">
+            Zero
+          </code>
+          <div class="tip" id="4035">
+            <strong>Signature:</strong> DualG<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="../gettingstarted-nestedad.html">Forward AD</a></li>
+            <li><a href="../gettingstarted-nonnested.html">Reverse AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+            <li><a href="index.html">API Reference</a></li>
+            
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+</html>

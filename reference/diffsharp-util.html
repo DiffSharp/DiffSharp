@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Util - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>Util</h1>
+<div class="xmldoc">
+<p>Various utility functions used all over the library</p>
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+  <h2>Nested types and modules</h2>
+  <div>
+      <table class="table table-bordered type-list">
+    <thead>
+      <tr><td>Type</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-globaltagger.html">GlobalTagger</a>
+          </td>
+          <td class="xmldoc"><p>Global tagger for nested D operations</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-tagger.html">Tagger</a>
+          </td>
+          <td class="xmldoc"><p>Tagger for generating incremental integers</p>
+</td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '1', 1)" onmouseover="showTip(event, '1', 1)">
+            copyUpperToLower arg1
+          </code>
+          <div class="tip" id="1">
+            <strong>Signature:</strong> &#39;?645102 [,] -&gt; &#39;?645102 [,]<br />
+                          <strong>Type parameters:</strong> '?645102          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Copies the upper triangular elements of the square matrix given in the 2d array <code>m</code> to the lower triangular part</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '2', 2)" onmouseover="showTip(event, '2', 2)">
+            diagonal arg1
+          </code>
+          <div class="tip" id="2">
+            <strong>Signature:</strong> &#39;?645096 [,] -&gt; &#39;?645096 []<br />
+                          <strong>Type parameters:</strong> '?645096          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets an array containing the diagonal elements of the square 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '3', 3)" onmouseover="showTip(event, '3', 3)">
+            fst3 (f, arg2, arg3)
+          </code>
+          <div class="tip" id="3">
+            <strong>Signature:</strong> (f:&#39;?645072 * &#39;?645073 * &#39;?645074) -&gt; &#39;?645072<br />
+                          <strong>Type parameters:</strong> '?645072, '?645073, '?645074          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the first term of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '4', 4)" onmouseover="showTip(event, '4', 4)">
+            fsttrd (f, arg2, t)
+          </code>
+          <div class="tip" id="4">
+            <strong>Signature:</strong> (f:&#39;?645084 * &#39;?645085 * t:&#39;?645086) -&gt; &#39;?645084 * &#39;?645086<br />
+                          <strong>Type parameters:</strong> '?645084, '?645085, '?645086          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the first and third terms of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '5', 5)" onmouseover="showTip(event, '5', 5)">
+            fVStoSS i f x
+          </code>
+          <div class="tip" id="5">
+            <strong>Signature:</strong> i:int -&gt; f:(&#39;?645112 [] -&gt; &#39;?645113) -&gt; x:&#39;?645112 [] -&gt; &#39;?645112 -&gt; &#39;?645113<br />
+                          <strong>Type parameters:</strong> '?645112, '?645113          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Vector-to-scalar to scalar-to-scalar function transform. Given a vector-to-scalar function <code>f</code> and an evaluation point <code>x</code>, returns a scalar-to-scalar version of <code>f</code>, where the <code>i</code>-th variable is free and the rest of the variables have the constant values given in <code>x</code>.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '6', 6)" onmouseover="showTip(event, '6', 6)">
+            fVVtoSS i j f x
+          </code>
+          <div class="tip" id="6">
+            <strong>Signature:</strong> i:int -&gt; j:int -&gt; f:(&#39;a [] -&gt; &#39;b []) -&gt; x:&#39;a [] -&gt; &#39;a -&gt; &#39;b<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Vector-to-vector to scalar-to-scalar function transform. Given a vector-to-vector function <code>f</code>, returns a scalar-to-scalar version of <code>f</code>, where the <code>i</code>-th variable is free and the rest of the variables have the constant values given in <code>x</code>, supplying only the <code>j</code>-th output.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '7', 7)" onmouseover="showTip(event, '7', 7)">
+            fVVtoSV i f x
+          </code>
+          <div class="tip" id="7">
+            <strong>Signature:</strong> i:int -&gt; f:(&#39;?645115 [] -&gt; &#39;?645116 []) -&gt; x:&#39;?645115 [] -&gt; &#39;?645115 -&gt; &#39;?645116 []<br />
+                          <strong>Type parameters:</strong> '?645115, '?645116          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Vector-to-vector to scalar-to-vector function transform. Given a vector-to-vector function <code>f</code> and an evaluation point <code>x</code>, returns a scalar-to-vector version of <code>f</code>, where the <code>i</code>-th variable is free and the rest of the variables have the constant values given in <code>x</code>.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '8', 8)" onmouseover="showTip(event, '8', 8)">
+            fVVtoVS i f xx
+          </code>
+          <div class="tip" id="8">
+            <strong>Signature:</strong> i:int -&gt; f:(&#39;?645118 [] -&gt; &#39;?645119 []) -&gt; xx:&#39;?645118 [] -&gt; &#39;?645119<br />
+                          <strong>Type parameters:</strong> '?645118, '?645119          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Vector-to-vector to vector-to-scalar function transform. Given a vector-to-vector function <code>f</code>, returns a vector-to-scalar version of <code>f</code> supplying only the <code>i</code>-th output.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '9', 9)" onmouseover="showTip(event, '9', 9)">
+            hash o
+          </code>
+          <div class="tip" id="9">
+            <strong>Signature:</strong> o:obj [] -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Computes a combined hash code for the objects in array <code>o</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
+            invalidArgAbs ()
+          </code>
+          <div class="tip" id="10">
+            <strong>Signature:</strong> unit -&gt; &#39;?645136<br />
+                          <strong>Type parameters:</strong> '?645136          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
+            invalidArgAcos ()
+          </code>
+          <div class="tip" id="11">
+            <strong>Signature:</strong> unit -&gt; &#39;?645134<br />
+                          <strong>Type parameters:</strong> '?645134          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '12', 12)" onmouseover="showTip(event, '12', 12)">
+            invalidArgAsin ()
+          </code>
+          <div class="tip" id="12">
+            <strong>Signature:</strong> unit -&gt; &#39;?645132<br />
+                          <strong>Type parameters:</strong> '?645132          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '13', 13)" onmouseover="showTip(event, '13', 13)">
+            invalidArgCeil ()
+          </code>
+          <div class="tip" id="13">
+            <strong>Signature:</strong> unit -&gt; &#39;?645140<br />
+                          <strong>Type parameters:</strong> '?645140          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
+            invalidArgCurl ()
+          </code>
+          <div class="tip" id="14">
+            <strong>Signature:</strong> unit -&gt; &#39;?645144<br />
+                          <strong>Type parameters:</strong> '?645144          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
+            invalidArgCurlDiv ()
+          </code>
+          <div class="tip" id="15">
+            <strong>Signature:</strong> unit -&gt; &#39;?645148<br />
+                          <strong>Type parameters:</strong> '?645148          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
+            invalidArgDiffn ()
+          </code>
+          <div class="tip" id="16">
+            <strong>Signature:</strong> unit -&gt; &#39;?645150<br />
+                          <strong>Type parameters:</strong> '?645150          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
+            invalidArgDiv ()
+          </code>
+          <div class="tip" id="17">
+            <strong>Signature:</strong> unit -&gt; &#39;?645146<br />
+                          <strong>Type parameters:</strong> '?645146          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
+            invalidArgFloor ()
+          </code>
+          <div class="tip" id="18">
+            <strong>Signature:</strong> unit -&gt; &#39;?645138<br />
+                          <strong>Type parameters:</strong> '?645138          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
+            invalidArgLog ()
+          </code>
+          <div class="tip" id="19">
+            <strong>Signature:</strong> unit -&gt; &#39;?645124<br />
+                          <strong>Type parameters:</strong> '?645124          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+            invalidArgLog10 ()
+          </code>
+          <div class="tip" id="20">
+            <strong>Signature:</strong> unit -&gt; &#39;?645126<br />
+                          <strong>Type parameters:</strong> '?645126          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
+            invalidArgRound ()
+          </code>
+          <div class="tip" id="21">
+            <strong>Signature:</strong> unit -&gt; &#39;?645142<br />
+                          <strong>Type parameters:</strong> '?645142          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+            invalidArgSqrt ()
+          </code>
+          <div class="tip" id="22">
+            <strong>Signature:</strong> unit -&gt; &#39;?645130<br />
+                          <strong>Type parameters:</strong> '?645130          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+            invalidArgTan ()
+          </code>
+          <div class="tip" id="23">
+            <strong>Signature:</strong> unit -&gt; &#39;?645128<br />
+                          <strong>Type parameters:</strong> '?645128          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
+            isHalfway a
+          </code>
+          <div class="tip" id="24">
+            <strong>Signature:</strong> a:float&lt;MeasureOne&gt; -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Checks whether a float is halfway between two integers</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
+            isInteger a
+          </code>
+          <div class="tip" id="25">
+            <strong>Signature:</strong> a:float -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Checks whether a float contains an integer value</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
+            log10val 
+          </code>
+          <div class="tip" id="26">
+            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Value of log 10.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+            matrixSolveHelper lu b
+          </code>
+          <div class="tip" id="27">
+            <strong>Signature:</strong> lu:^a [,] -&gt; b:^a [] -&gt; ^a []<br />
+                          <strong>Type parameters:</strong> ^a, ^?645105          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Finds an array that, when multiplied by an LU matrix <code>lu</code>, gives array <code>b</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
+            snd3 (arg1, s, arg3)
+          </code>
+          <div class="tip" id="28">
+            <strong>Signature:</strong> (&#39;?645076 * s:&#39;?645077 * &#39;?645078) -&gt; &#39;?645077<br />
+                          <strong>Type parameters:</strong> '?645076, '?645077, '?645078          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the second term of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
+            sndtrd (arg1, s, t)
+          </code>
+          <div class="tip" id="29">
+            <strong>Signature:</strong> (&#39;?645088 * s:&#39;?645089 * t:&#39;?645090) -&gt; &#39;?645089 * &#39;?645090<br />
+                          <strong>Type parameters:</strong> '?645088, '?645089, '?645090          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the second and third terms of a 3-tuple</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
+            standardBasis n i
+          </code>
+          <div class="tip" id="30">
+            <strong>Signature:</strong> n:int -&gt; i:int -&gt; ^?645100 []<br />
+                          <strong>Type parameters:</strong> ^?645100          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets an array of size <code>n</code>, where the <code>i</code>-th element is 1 and the rest of the elements are 0</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
+            StepSize 
+          </code>
+          <div class="tip" id="31">
+            <strong>Signature:</strong> float&lt;MeasureOne&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Global step size for numerical approximations</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
+            trace m
+          </code>
+          <div class="tip" id="32">
+            <strong>Signature:</strong> m:^?645098 [,] -&gt; ^?645098<br />
+                          <strong>Type parameters:</strong> ^?645098          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the trace of the square matrix given in the 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
+            transpose m
+          </code>
+          <div class="tip" id="33">
+            <strong>Signature:</strong> m:&#39;?645094 [,] -&gt; &#39;?645094 [,]<br />
+                          <strong>Type parameters:</strong> '?645094          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the transpose of the 2d array <code>m</code></p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+            trd (arg1, arg2, t)
+          </code>
+          <div class="tip" id="34">
+            <strong>Signature:</strong> (&#39;?645080 * &#39;?645081 * t:&#39;?645082) -&gt; &#39;?645082<br />
+                          <strong>Type parameters:</strong> '?645080, '?645081, '?645082          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the tail of a 3-tuple</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Active patterns</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Active pattern</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
+            ( |Square| ) m
+          </code>
+          <div class="tip" id="35">
+            <strong>Signature:</strong> m:&#39;?645092 [,] -&gt; &#39;?645092 [,]<br />
+                          <strong>Type parameters:</strong> '?645092          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Checks whether the 2d array <code>m</code> has the same number of elements in both dimensions</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/gbaydin/DiffSharp/releases">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="../gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="../gettingstarted-nonnested.html">Non-nested AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+            <li><a href="index.html">API Reference</a></li>
+            
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+</html>
