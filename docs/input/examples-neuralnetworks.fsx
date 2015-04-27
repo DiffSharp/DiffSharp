@@ -21,7 +21,7 @@ open FsAlg.Generic
 // A layer of neurons
 type Layer =
     {W:Matrix<D>  // Weigth matrix
-     b:Vector<D>} // Bias matrix
+     b:Vector<D>} // Bias vector
 
 // A feedforward network of neuron layers
 type Network =
