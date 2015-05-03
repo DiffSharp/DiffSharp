@@ -67,9 +67,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsAlg">
-      <HintPath>..\..\packages\FsAlg.0.5.4\lib\FsAlg.dll</HintPath>
+      <HintPath>..\..\packages\FsAlg.0.5.5\lib\FsAlg.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FsAlg" />
     <Reference Include="FsCheck">
       <HintPath>..\..\packages\FsCheck.1.0.4\lib\net45\FsCheck.dll</HintPath>
       <Private>True</Private>
