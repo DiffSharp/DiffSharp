@@ -51,8 +51,8 @@ type D =
     | D of float * Lazy<D>
     static member Create(p) = D(p, lazy (D.Zero))
     static member Create(p, t) = D(p, lazy (D.Create(t)))
-    static member op_Explicit(p) = D.Create(p)
-    static member op_Explicit(D(p, _)) = p
+    static member op_Explicit(D(p, _)):float = p
+    static member op_Explicit(D(p, _)):int = int p
     override d.ToString() = let (D(p, t)) = d in sprintf "D (%A, %A)" p (float t.Value)
     member d.P = let (D(p, _)) = d in p
     member d.T = let (D(_, t)) = d in t.Value

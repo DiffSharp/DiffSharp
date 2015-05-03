@@ -49,10 +49,14 @@ open FsAlg.Generic
 type D =
     | D of float // Primal
     | DF of D * D * uint32 // Primal, tangent, tag
-    static member op_Explicit(d:D) =
+    static member op_Explicit(d:D):float =
         match d with
         | D(a) -> a
-        | DF(ap, _, _) -> (float) ap
+        | DF(ap, _, _) -> float ap
+    static member op_Explicit(d:D):int =
+        match d with
+        | D(a) -> int a
+        | DF(ap, _, _) -> int ap
     static member DivideByInt(d:D, i:int) =
         match d with
         | D(a) -> D(a / float i)

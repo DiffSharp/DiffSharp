@@ -53,8 +53,8 @@ open FsAlg.Generic
 type D =
     | D of float * Vector<float> // Primal, vector of gradient components
     override d.ToString() = let (D(p, g)) = d in sprintf "D (%A, %A)" p g
-    static member op_Explicit(p) = D(p, Vector.Zero)
-    static member op_Explicit(D(p, _)) = p
+    static member op_Explicit(D(p, _)):float = p
+    static member op_Explicit(D(p, _)):int = int p
     static member DivideByInt(D(p, g), i:int) = D(p / float i, g / float i)
     static member Zero = D(0., Vector.Zero)
     static member One = D(1., Vector.Zero)

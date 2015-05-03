@@ -86,11 +86,16 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set fan-out value for DF."
             | DR(_,_,_,f,_) -> f := v
-    static member op_Explicit(d:D) =
+    static member op_Explicit(d:D):float =
         match d with
         | D(a) -> a
         | DF(ap,_,_) -> float ap
         | DR(ap,_,_,_,_) -> float ap
+    static member op_Explicit(d:D):int =
+        match d with
+        | D(a) -> int a
+        | DF(ap,_,_) -> int ap
+        | DR(ap,_,_,_,_) -> int ap
     static member DivideByInt(d:D, i:int) = d / float i
     static member Zero = D 0.
     static member One = D 1.

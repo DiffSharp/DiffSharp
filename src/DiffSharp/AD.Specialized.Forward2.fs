@@ -49,8 +49,8 @@ open FsAlg.Generic
 type D =
     | D of float * float * float // Primal, tangent, tangent-of-tangent
     override d.ToString() = let (D(p, t, t2)) = d in sprintf "D(%A, %A, %A)" p t t2
-    static member op_Explicit(p) = D(p, 0. , 0.)
-    static member op_Explicit(D(p, _, _)) = p
+    static member op_Explicit(D(p, _, _)):float = p
+    static member op_Explicit(D(p, _, _)):int = int p
     static member DivideByInt(D(p, t, t2), i:int) = D(p / float i, t / float i, t2 / float i)
     static member Zero = D(0., 0., 0.)
     static member One = D(1., 0., 0.)

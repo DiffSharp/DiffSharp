@@ -57,7 +57,8 @@ type D =
     member d.F
         with get() = let (D(_,_,_,f)) = d in !f
         and set(v) = let (D(_,_,_,f)) = d in f := v
-    static member op_Explicit(D(p,_,_,_)) = p
+    static member op_Explicit(D(p,_,_,_)):float = p
+    static member op_Explicit(D(p,_,_,_)):int = int p
     static member DivideByInt(d:D, i:int) = d / float i
     static member Zero = D(0., ref 0., Noop, ref 0u)
     static member One = D(1., ref 0., Noop, ref 0u)
