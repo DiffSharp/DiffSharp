@@ -62,6 +62,7 @@
     <Compile Include="AD.Specialized.Reverse1.fs" />
     <Compile Include="Numerical.fs" />
     <Compile Include="Symbolic.fs" />
+    <Compile Include="Interop.fs" />
     <Content Include="app.config" />
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
