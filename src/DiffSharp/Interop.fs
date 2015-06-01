@@ -39,7 +39,7 @@
 /// Interoperability with .NET languages
 namespace DiffSharp.Interop
 
-/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion
+/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 type D(x:DiffSharp.AD.D) =
     new(x:float) = D(DiffSharp.AD.D(x))
     member internal this.toADD() = x

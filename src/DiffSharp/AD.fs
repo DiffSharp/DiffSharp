@@ -44,7 +44,7 @@ namespace DiffSharp.AD
 open DiffSharp.Util
 open FsAlg.Generic
 
-/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion
+/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float // Primal
