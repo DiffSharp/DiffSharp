@@ -640,11 +640,11 @@ module DiffOps =
     let inline gradhessianv f x v =
         gradhessianv' f x v |> sndtrd
 
-    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`
+    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv' f x v =
         gradhessianv' f x v |> fsttrd
 
-    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`
+    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv f x v =
         hessianv' f x v |> snd
 
