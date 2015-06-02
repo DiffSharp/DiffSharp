@@ -47,7 +47,7 @@
 
 <h1>D</h1>
 <div class="xmldoc">
-<p>Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion</p>
+<p>Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion</p>
 </div>
   <h3>Union Cases</h3>
   <table class="table table-bordered member-list">
@@ -756,7 +756,7 @@
             op_Explicit(d)
           </code>
           <div class="tip" id="704">
-            <strong>Signature:</strong> d:D -&gt; float<br />
+            <strong>Signature:</strong> d:D -&gt; int<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -767,10 +767,10 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '705', 705)" onmouseover="showTip(event, '705', 705)">
-            Pow(a, b)
+            op_Explicit(d)
           </code>
           <div class="tip" id="705">
-            <strong>Signature:</strong> (a:int * b:D) -&gt; D<br />
+            <strong>Signature:</strong> d:D -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -784,7 +784,7 @@
             Pow(a, b)
           </code>
           <div class="tip" id="706">
-            <strong>Signature:</strong> (a:D * b:int) -&gt; D<br />
+            <strong>Signature:</strong> (a:int * b:D) -&gt; D<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -798,7 +798,7 @@
             Pow(a, b)
           </code>
           <div class="tip" id="707">
-            <strong>Signature:</strong> (a:float * b:D) -&gt; D<br />
+            <strong>Signature:</strong> (a:D * b:int) -&gt; D<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -812,7 +812,7 @@
             Pow(a, b)
           </code>
           <div class="tip" id="708">
-            <strong>Signature:</strong> (a:D * b:float) -&gt; D<br />
+            <strong>Signature:</strong> (a:float * b:D) -&gt; D<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -826,7 +826,7 @@
             Pow(a, b)
           </code>
           <div class="tip" id="709">
-            <strong>Signature:</strong> (a:D * b:D) -&gt; D<br />
+            <strong>Signature:</strong> (a:D * b:float) -&gt; D<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -837,10 +837,10 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '710', 710)" onmouseover="showTip(event, '710', 710)">
-            Round(a)
+            Pow(a, b)
           </code>
           <div class="tip" id="710">
-            <strong>Signature:</strong> a:D -&gt; D<br />
+            <strong>Signature:</strong> (a:D * b:D) -&gt; D<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -851,7 +851,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '711', 711)" onmouseover="showTip(event, '711', 711)">
-            Sin(a)
+            Round(a)
           </code>
           <div class="tip" id="711">
             <strong>Signature:</strong> a:D -&gt; D<br />
@@ -865,7 +865,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '712', 712)" onmouseover="showTip(event, '712', 712)">
-            Sinh(a)
+            Sin(a)
           </code>
           <div class="tip" id="712">
             <strong>Signature:</strong> a:D -&gt; D<br />
@@ -879,7 +879,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '713', 713)" onmouseover="showTip(event, '713', 713)">
-            Sqrt(a)
+            Sinh(a)
           </code>
           <div class="tip" id="713">
             <strong>Signature:</strong> a:D -&gt; D<br />
@@ -893,7 +893,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '714', 714)" onmouseover="showTip(event, '714', 714)">
-            Tan(a)
+            Sqrt(a)
           </code>
           <div class="tip" id="714">
             <strong>Signature:</strong> a:D -&gt; D<br />
@@ -907,7 +907,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '715', 715)" onmouseover="showTip(event, '715', 715)">
-            Tanh(a)
+            Tan(a)
           </code>
           <div class="tip" id="715">
             <strong>Signature:</strong> a:D -&gt; D<br />
@@ -921,9 +921,23 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '716', 716)" onmouseover="showTip(event, '716', 716)">
-            Zero
+            Tanh(a)
           </code>
           <div class="tip" id="716">
+            <strong>Signature:</strong> a:D -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '717', 717)" onmouseover="showTip(event, '717', 717)">
+            Zero
+          </code>
+          <div class="tip" id="717">
             <strong>Signature:</strong> D<br />
                       </div>
         </td>
@@ -956,6 +970,7 @@
             <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="../benchmarks.html">Benchmarks</a></li>
+            <li><a href="../csharp.html">C# and Other Languages</a></li>
             <li><a href="index.html">API Reference</a></li>
             
             <li class="nav-header">Examples</li>
