@@ -10,7 +10,7 @@
     <RootNamespace>DiffSharp</RootNamespace>
     <AssemblyName>DiffSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
     <Name>DiffSharp</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -69,7 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsAlg">
-      <HintPath>..\..\packages\FsAlg.0.5.7\lib\FsAlg.dll</HintPath>
+      <HintPath>..\..\packages\FsAlg.0.5.6\lib\FsAlg.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Quotations.Evaluator">

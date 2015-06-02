@@ -12,7 +12,7 @@
     <AssemblyName>dsbench</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
     <Name>DiffSharp.Tests</Name>
     <NuGetPackageImportStamp>78a75667</NuGetPackageImportStamp>
     <TargetFrameworkProfile />
@@ -68,7 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsAlg">
-      <HintPath>..\..\packages\FsAlg.0.5.7\lib\FsAlg.dll</HintPath>
+      <HintPath>..\..\packages\FsAlg.0.5.6\lib\FsAlg.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsCheck">
