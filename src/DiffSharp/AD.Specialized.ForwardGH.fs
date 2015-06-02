@@ -53,8 +53,8 @@ open FsAlg.Generic
 type D =
     | D of float * Vector<float> * Matrix<float> // Primal, vector of gradient components, matrix of Hessian components
     override d.ToString() = let (D(p, g, h)) = d in sprintf "D (%A, %A, %A)" p g h
-    static member op_Explicit(p) = D(p, Vector.Zero, Matrix.Zero)
-    static member op_Explicit(D(p, _, _)) = p
+    static member op_Explicit(D(p, _, _)):float = p
+    static member op_Explicit(D(p, _, _)):int = int p
     static member DivideByInt(D(p, g, m), i:int) = D(p / float i, g / float i, m / float i)
     static member Zero = D(0., Vector.Zero, Matrix.Zero)
     static member One = D(1., Vector.Zero, Matrix.Zero)

@@ -44,7 +44,7 @@ namespace DiffSharp.AD
 open DiffSharp.Util
 open FsAlg.Generic
 
-/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode, with nesting capability, using tags to avoid perturbation confusion
+/// Numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float // Primal
@@ -86,11 +86,16 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set fan-out value for DF."
             | DR(_,_,_,f,_) -> f := v
-    static member op_Explicit(d:D) =
+    static member op_Explicit(d:D):float =
         match d with
         | D(a) -> a
         | DF(ap,_,_) -> float ap
         | DR(ap,_,_,_,_) -> float ap
+    static member op_Explicit(d:D):int =
+        match d with
+        | D(a) -> int a
+        | DF(ap,_,_) -> int ap
+        | DR(ap,_,_,_,_) -> int ap
     static member DivideByInt(d:D, i:int) = d / float i
     static member Zero = D 0.
     static member One = D 1.
@@ -635,11 +640,11 @@ module DiffOps =
     let inline gradhessianv f x v =
         gradhessianv' f x v |> sndtrd
 
-    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`
+    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv' f x v =
         gradhessianv' f x v |> fsttrd
 
-    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`
+    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv f x v =
         hessianv' f x v |> snd
 

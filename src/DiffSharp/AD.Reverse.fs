@@ -72,10 +72,14 @@ type D =
             match d with
             | D(_) -> ()
             | DR(_,_,_,f,_) -> f := v
-    static member op_Explicit(d:D) =
+    static member op_Explicit(d:D):float =
         match d with
         | D(a) -> a
         | DR(ap,_,_,_,_) -> float ap
+    static member op_Explicit(d:D):int =
+        match d with
+        | D(a) -> int a
+        | DR(ap,_,_,_,_) -> int ap
     static member DivideByInt(d:D, i:int) =
         match d with
         | D(a) -> D(a / float i)
