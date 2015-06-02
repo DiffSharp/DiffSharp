@@ -132,11 +132,9 @@ Currently the following operations are supported by **DiffSharp.Interop.AD**:
 ### AD.Diff
 #### First derivative of a scalar-to-scalar function
 
-Signature: `AD.Diff(Func<D,D>)`
+Syntax: `public static Func<D,D> AD.Diff(Func<D,D> f)`
 
-Return value: `Func<D,D>`
-
-For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the derivative
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, this returns a function that computes the derivative
 
 $$$
   \frac{d}{da} f(a) \; .
@@ -150,11 +148,9 @@ $$$
 
 #### First derivative of a scalar-to-scalar function evaluated at a point
 
-Signature:  `AD.Diff(Func<D,D>, D)`
+Syntax: `public static D AD.Diff(Func<D,D> f, D x)`
 
-Return value: `D`
-
-For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the derivative evaluated at $x$
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this returns the derivative evaluated at $x$
 
 $$$
   \left. \frac{d}{da} f(a) \right|_{a\; =\; x} \; .
@@ -167,11 +163,9 @@ $$$
 
 #### Second derivative of a scalar-to-scalar function
 
-Signature: `AD.Diff2(Func<D,D>)`
+Syntax: `public static Func<D,D> AD.Diff2(Func<D,D> f)`
 
-Return value: `Func<D,D>`
-
-For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the second derivative
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, this returns a function that computes the second derivative
 
 $$$
   \frac{d^2}{da^2} f(a) \; .
@@ -185,11 +179,9 @@ $$$
 
 #### Second derivative of a scalar-to-scalar function evaluated at a point
 
-Signature: `AD.Diff2(Func<D,D>, D)`
+Syntax: `public static D AD.Diff2(Func<D,D> f, D x)`
 
-Return value: `D`
-
-For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the second derivative evaluated at $x$
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this returns the second derivative evaluated at $x$
 
 $$$
   \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} \; .
@@ -202,11 +194,9 @@ $$$
 
 #### N-th derivative of a scalar-to-scalar function
 
-Signature: `AD.Diffn(Int32, Func<D,D>)`
+Syntax: `public static Func<D,D> AD.Diffn(Int32 n, Func<D,D> f)`
 
-Return value: `Func<D,D>`
-
-For $n \in \mathbb{N}$ and a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the n-th derivative
+For $n \in \mathbb{N}$ and a function $f(a): \mathbb{R} \to \mathbb{R}$, this returns a function that computes the n-th derivative
 
 $$$
   \frac{d^n}{da^n} f(a) \; .
@@ -220,11 +210,9 @@ $$$
 
 #### N-th derivative of a scalar-to-scalar function evaluated at a point
 
-Signature: `AD.Diffn(Int32, Func<D,D>, D)`
+Syntax: `public static D AD.Diffn(Int32 n, Func<D,D> f, D x)`
 
-Return value: `D`
-
-For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the n-th derivative evaluated at $x$
+For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this returns the n-th derivative evaluated at $x$
 
 $$$
   \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} \; .
@@ -237,11 +225,9 @@ $$$
 
 #### Gradient of a vector-to-scalar function
 
-Signature: `AD.Grad(Func<D[], D>)`
+Syntax: `public static Func<D[],D[]> AD.Grad(Func<D[], D> f)`
 
-Return value: `Func<D[],D[]>`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this gives the [gradient](http://en.wikipedia.org/wiki/Gradient)
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [gradient](http://en.wikipedia.org/wiki/Gradient)
 
 $$$
   \nabla f = \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \; .
@@ -255,11 +241,9 @@ $$$
 
 #### Gradient of a vector-to-scalar function evaluated at a point
 
-Signature: `AD.Grad(Func<D[],D>, D[])`
+Syntax: `public static D[] AD.Grad(Func<D[],D> f, D[] x)`
 
-Return value: `D[]`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the gradient evaluated at $\mathbf{x}$
 
 $$$
   \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
@@ -272,11 +256,9 @@ $$$
 
 #### Gradient-vector product (directional derivative)
 
-Signature: `AD.Gradv(Func<D[],D>, D[], D[])`
+Syntax: `public static D AD.Gradv(Func<D[],D> f, D[] x, D[] v)`
 
-Return value: `D`
-
-For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \nabla f \right)_\mathbf{x} \cdot \mathbf{v} \; .
@@ -291,11 +273,9 @@ With AD, this value is computed efficiently in one forward evaluation of the fun
 
 #### Hessian of a vector-to-scalar function
 
-Signature: `AD.Hessian(Func<D[],D>)`
+Syntax: `public static Func<D[],D[,]> AD.Hessian(Func<D[],D> f)`
 
-Return value: `Func<D[],D[,]>`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this gives the [Hessian matrix](http://en.wikipedia.org/wiki/Hessian_matrix)
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [Hessian matrix](http://en.wikipedia.org/wiki/Hessian_matrix)
 
 $$$
   \mathbf{H}_f = \begin{bmatrix}
@@ -314,11 +294,9 @@ $$$
 
 #### Hessian of a vector-to-scalar function evaluated at a point
 
-Signature: `AD.Hessian(Func<D[],D>, D[])`
+Syntax: `public static D[,] AD.Hessian(Func<D[],D> f, D[] x)`
 
-Return value: `D[,]`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the Hessian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -336,11 +314,9 @@ $$$
 
 #### Hessian-vector product
 
-Signature: `AD.Hessianv(Func<D[],D>, D[], D[])`
+Syntax: `public static D[] AD.Hessianv(Func<D[],D> f, D[] x, D[] v)`
 
-Return value: `D[]`
-
-For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} \; \mathbf{v} \; .
@@ -355,11 +331,9 @@ With AD, this value is computed efficiently using one forward and one reverse ev
 
 #### Laplacian of a vector-to-scalar function
 
-Signature: `AD.Laplacian(Func<D[],D>)`
+Syntax: `public static Func<D[],D> AD.Laplacian(Func<D[],D> f)`
 
-Return value: `Func<D[],D>`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns a function that computes the sum of second derivatives evaluated at $\mathbf{x}$
 
 $$$
   \mathrm{tr}\left(\mathbf{H}_f \right) = \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \; ,
@@ -377,11 +351,9 @@ With AD, this value is computed efficiently in a Matrix-free way, without comput
 
 #### Laplacian of a vector-to-scalar function evaluated at a point
 
-Signature: `AD.Laplacian(Func<D[],D>, D[])`
+Syntax: `public static D AD.Laplacian(Func<D[],D> f, D[] x)`
 
-Return value: `D`
-
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the sum of second derivatives evaluated at $\mathbf{x}$
 
 $$$
   \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; .
@@ -394,11 +366,9 @@ $$$
 
 #### Jacobian of a vector-to-vector function
 
-Signature: `AD.Jacobian(Func<D[],D[]>)`
+Syntax: `public static Func<D[],D[,]> AD.Jacobian(Func<D[],D[]> f)`
 
-Return value: `Func<D[],D[,]>`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this gives the $m$-by-$n$ [Jacobian matrix](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $m$-by-$n$ [Jacobian matrix](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
 
 $$$
   \mathbf{J}_\mathbf{F} = \begin{bmatrix}
@@ -416,11 +386,9 @@ $$$
 
 #### Jacobian of a vector-to-vector function evaluated at a point
 
-Signature: `AD.Jacobian(Func<D[],D[]>, D[])`
+Syntax: `public static D[,] AD.Jacobian(Func<D[],D[]> f, D[] x)`
 
-Return value: `D[,]`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -437,11 +405,9 @@ $$$
 
 #### Jacobian-vector product
 
-Signature: `AD.Jacobianv(Func<D[],D[]>, D[], D[])`
+Syntax: `public static D[] AD.Jacobianv(Func<D[],D[]> f, D[] x, D[] v)`
 
-Return value: `D[]`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the Jacobian-vector product, that is, the matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the Jacobian-vector product, that is, the matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} \mathbf{v} \; .
@@ -456,11 +422,9 @@ With AD, this value is computed efficiently in one forward evaluation of the fun
 
 #### Transposed Jacobian of a vector-to-vector function
 
-Signature: `AD.JacobianT(Func<D[],D[]>)`
+Syntax: `public static Func<D[],D[,]> AD.JacobianT(Func<D[],D[]> f)`
 
-Return value: `Func<D[],D[,]>`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this gives the $n$-by-$m$ transposed Jacobian matrix
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $n$-by-$m$ transposed Jacobian matrix
 
 $$$
   \mathbf{J}_\mathbf{F}^\textrm{T} = \begin{bmatrix}
@@ -478,11 +442,9 @@ $$$
 
 #### Transposed Jacobian of a vector-to-vector function evaluated at a point
 
-Signature: `AD.JacobianT(Func<D[],D[]>, D[])`
+Syntax: `public static D[,] AD.JacobianT(Func<D[],D[]> f, D[] x)`
 
-Return value: `D[,]`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
@@ -499,11 +461,9 @@ $$$
 
 #### Transposed Jacobian-vector product
 
-Signature: `AD.JacobianTv(Func<D[],D[]>, D[], D[])`
+Syntax: `public static D[] AD.JacobianTv(Func<D[],D[]> f, D[] x, D[] v)`
 
-Return value: `D[]`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this gives the matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this returns the matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} \mathbf{v} \; .
@@ -518,11 +478,9 @@ With AD, this value is computed efficiently in one forward and one reverse evalu
 
 #### Curl of a vector-to-vector function
 
-Signature: `AD.Curl(Func<D[],D[]>)`
+Syntax: `public static Func<D[],D[]> AD.Curl(Func<D[],D[]> f)`
 
-Return value: `Func<D[],D[]>`
-
-For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this gives the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this returns a function that computes the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
 
 $$$
   \textrm{curl} \, \mathbf{F} = \nabla \times \mathbf{F} = \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \; .
@@ -536,11 +494,9 @@ $$$
 
 #### Curl of a vector-to-vector function evaluated at a point
 
-Signature: `AD.Curl(Func<D[],D[]>, D[])`
+Syntax: `public static D[] AD.Curl(Func<D[],D[]> f, D[] x)`
 
-Return value: `D[]`
-
-For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this gives the curl evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this returns the curl evaluated at $\mathbf{x}$
 
 $$$
   \left( \textrm{curl} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \times \mathbf{F} \right)_{\mathbf{x}}= \left. \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
@@ -553,11 +509,9 @@ $$$
 
 #### Divergence of a vector-to-vector function
 
-Signature: `AD.Div(Func<D[],D[]>)`
+Syntax: `public static Func<D[],D> AD.Div(Func<D[],D[]> f)`
 
-Return value: `Func<D[],D>`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this gives the [divergence](http://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this returns a function that computes the [divergence](http://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
 
 $$$
   \textrm{div} \, \mathbf{F} = \nabla \cdot \mathbf{F} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right) = \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \; .
@@ -571,11 +525,9 @@ $$$
 
 #### Divergence of a vector-to-vector function evaluated at a point
 
-Signature: `AD.Div(Func<D[],D[]>, D[])`
+Syntax: `public static D AD.Div(Func<D[],D[]> f, D[] x)`
 
-Return value: `D`
-
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the trace of the Jacobian matrix evaluated at $\mathbf{x}$
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the trace of the Jacobian matrix evaluated at $\mathbf{x}$
 
 $$$
   \left( \textrm{div} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \cdot \mathbf{F} \right)_{\mathbf{x}} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right)_{\mathbf{x}} = \left. \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
