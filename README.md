@@ -2,6 +2,8 @@
 DiffSharp: Automatic Differentiation Library
 ============================================
 
+[![Join the chat at https://gitter.im/gbaydin/DiffSharp](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gbaydin/DiffSharp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 
 Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
