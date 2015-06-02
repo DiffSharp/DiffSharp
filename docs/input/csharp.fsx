@@ -128,7 +128,10 @@ for functions $f$ and $g$ and a gradient-based minimization procedure $\mathbf{m
 
 Currently the following operations are supported by **DiffSharp.Interop.AD**:
 
-##### `AD.Diff(Func<D,D>)` : First derivative of a scalar-to-scalar function
+### AD.Diff
+#### First derivative of a scalar-to-scalar function
+
+Signature: `AD.Diff(Func<D,D>)`
 
 Return value: `Func<D,D>`
 
@@ -137,7 +140,16 @@ For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the derivative
 $$$
   \frac{d}{da} f(a) \; .
 
-##### `AD.Diff(Func<D,D>, D)` : First derivative of a scalar-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Derivative of a scalar-to-scalar function
+    var df = AD.Diff(x => AD.Sin(x * x - AD.Exp(x)));
+
+    // Evaluate df at a point
+    var v = df(3);
+
+#### First derivative of a scalar-to-scalar function evaluated at a point
+
+Signature:  `AD.Diff(Func<D,D>, D)`
 
 Return value: `D`
 
@@ -146,7 +158,15 @@ For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this g
 $$$
   \left. \frac{d}{da} f(a) \right|_{a\; =\; x} \; .
 
-##### `AD.Diff2(Func<D,D>)`: Second derivative of a scalar-to-scalar function
+    [lang=csharp]
+    // Derivative of a scalar-to-scalar function at a point
+    var v = AD.Diff(x => AD.Sin(x * x - AD.Exp(x)), 3);
+
+### AD.Diff2
+
+#### Second derivative of a scalar-to-scalar function
+
+Signature: `AD.Diff2(Func<D,D>)`
 
 Return value: `Func<D,D>`
 
@@ -155,7 +175,16 @@ For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the second derivati
 $$$
   \frac{d^2}{da^2} f(a) \; .
 
-##### `AD.Diff2(Func<D,D>, D)`: Second derivative of a scalar-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Second derivative of a scalar-to-scalar function
+    var df = AD.Diff2(x => AD.Sin(x * x - AD.Exp(x)));
+
+    // Evaluate df at a point
+    var v = df(3);
+
+#### Second derivative of a scalar-to-scalar function evaluated at a point
+
+Signature: `AD.Diff2(Func<D,D>, D)`
 
 Return value: `D`
 
@@ -164,7 +193,15 @@ For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this g
 $$$
   \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} \; .
 
-##### `AD.Diffn(Int32, Func<D,D>)`: N-th derivative of a scalar-to-scalar function
+    [lang=csharp]
+    // Second derivative of a scalar-to-scalar function at a point
+    var v = AD.Diff2(x => AD.Sin(x * x - AD.Exp(x)), 3);
+
+### AD.Diffn
+
+#### N-th derivative of a scalar-to-scalar function
+
+Signature: `AD.Diffn(Int32, Func<D,D>)`
 
 Return value: `Func<D,D>`
 
@@ -173,7 +210,16 @@ For $n \in \mathbb{N}$ and a function $f(a): \mathbb{R} \to \mathbb{R}$, this gi
 $$$
   \frac{d^n}{da^n} f(a) \; .
 
-##### `AD.Diffn(Int32, Func<D,D>, D)`: N-th derivative of a scalar-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Fifth derivative of a scalar-to-scalar function
+    var df = AD.Diffn(5, x => AD.Sin(x * x - AD.Exp(x)));
+
+    // Evaluate df at a point
+    var v = df(3);
+
+#### N-th derivative of a scalar-to-scalar function evaluated at a point
+
+Signature: `AD.Diffn(Int32, Func<D,D>, D)`
 
 Return value: `D`
 
@@ -182,7 +228,15 @@ For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in
 $$$
   \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} \; .
 
-##### `AD.Grad(Func<D[], D>)`: Gradient of a vector-to-scalar function
+    [lang=csharp]
+    // Fifth derivative of a scalar-to-scalar function at a point
+    var v = AD.Diffn(5, x => AD.Sin(x * x - AD.Exp(x)), 3);
+
+### AD.Grad
+
+#### Gradient of a vector-to-scalar function
+
+Signature: `AD.Grad(Func<D[], D>)`
 
 Return value: `Func<D[],D[]>`
 
@@ -191,7 +245,16 @@ For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this gives the
 $$$
   \nabla f = \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \; .
 
-##### `AD.Grad(Func<D[],D>, D[])`: Gradient of a vector-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Gradient of a vector-to-scalar function
+    var gf = AD.Grad(x => AD.Sin(x[0] * x[1]));
+
+    // Evaluate gf at a point
+    var v = gf(new D[] { 3, 2 });
+
+#### Gradient of a vector-to-scalar function evaluated at a point
+
+Signature: `AD.Grad(Func<D[],D>, D[])`
 
 Return value: `D[]`
 
@@ -200,7 +263,15 @@ For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x
 $$$
   \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
-##### `AD.Gradv(Func<D[],D>, D[], D[])`: Gradient-vector product (directional derivative)
+    [lang=csharp]
+    // Gradient of a vector-to-scalar function at a point
+    var v = AD.Grad(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
+
+### AD.Gradv
+
+#### Gradient-vector product (directional derivative)
+
+Signature: `AD.Gradv(Func<D[],D>, D[], D[])`
 
 Return value: `D`
 
@@ -211,7 +282,15 @@ $$$
 
 With AD, this value is computed efficiently in one forward evaluation of the function, without computing the full gradient.
 
-##### `AD.Hessian(Func<D[],D>)`: Hessian of a vector-to-scalar function
+    [lang=csharp]
+    // Gradient-vector product of a vector-to-scalar function
+    var v = AD.Gradv(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 }, new D[] { 5, 3 } );
+
+### AD.Hessian
+
+#### Hessian of a vector-to-scalar function
+
+Signature: `AD.Hessian(Func<D[],D>)`
 
 Return value: `Func<D[],D[,]>`
 
@@ -225,7 +304,16 @@ $$$
                     \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
                     \end{bmatrix} \; .
 
-##### `AD.Hessian(Func<D[],D>, D[])`: Hessian of a vector-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Hessian of a vector-to-scalar function
+    var hf = AD.Hessian(x => AD.Sin(x[0] * x[1]));
+
+    // Evaluate hf at a point
+    var v = hf(new D[] { 3, 2 });
+
+#### Hessian of a vector-to-scalar function evaluated at a point
+
+Signature: `AD.Hessian(Func<D[],D>, D[])`
 
 Return value: `D[,]`
 
@@ -239,7 +327,15 @@ $$$
                                            \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
-##### `AD.Hessianv(Func<D[],D>, D[], D[])`: Hessian-vector product
+    [lang=csharp]
+    // Hessian of a vector-to-scalar function at a point
+    var v = AD.Hessian(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
+
+### AD.Hessianv
+
+#### Hessian-vector product
+
+Signature: `AD.Hessianv(Func<D[],D>, D[], D[])`
 
 Return value: `D[]`
 
@@ -250,7 +346,15 @@ $$$
 
 With AD, this value is computed efficiently using one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Hessian matrix).
 
-##### `AD.Laplacian(Func<D[],D>)`: Laplacian of a vector-to-scalar function
+    [lang=csharp]
+    // Hessian-vector product of a vector-to-scalar function
+    var hv = AD.Hessianv(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 }, new D[] { 5, 3 });
+
+### AD.Laplacian
+
+#### Laplacian of a vector-to-scalar function
+
+Signature: `AD.Laplacian(Func<D[],D>)`
 
 Return value: `Func<D[],D>`
 
@@ -263,7 +367,16 @@ which is the trace of the Hessian matrix.
 
 With AD, this value is computed efficiently in a Matrix-free way, without computing the full Hessian matrix.
 
-##### `AD.Laplacian(Func<D[],D>, D[])`: Laplacian of a vector-to-scalar function evaluated at a point
+    [lang=csharp]
+    // Laplacian of a vector-to-scalar function
+    var lf = AD.Laplacian(x => AD.Sin(x[0] * x[1]));
+
+    // Evaluate lf at a point
+    var v = lf(new D[] { 3, 2 });
+
+#### Laplacian of a vector-to-scalar function evaluated at a point
+
+Signature: `AD.Laplacian(Func<D[],D>, D[])`
 
 Return value: `D`
 
@@ -272,8 +385,15 @@ For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x
 $$$
   \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; .
 
+    [lang=csharp]
+    // Laplacian of a vector-to-scalar function at a point
+    var v = AD.Laplacian(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
 
-##### `AD.Jacobian(Func<D[],D[]>)`: Jacobian of a vector-to-vector function
+### AD.Jacobian
+
+#### Jacobian of a vector-to-vector function
+
+Signature: `AD.Jacobian(Func<D[],D[]>)`
 
 Return value: `Func<D[],D[,]>`
 
@@ -286,7 +406,16 @@ $$$
                             \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
                             \end{bmatrix} \; .
 
-##### `AD.Jacobian(Func<D[],D[]>, D[])`: Jacobian of a vector-to-vector function evaluated at a point
+    [lang=csharp]
+    // Jacobian of a vector-to-vector function
+    var jf = AD.Jacobian(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+
+    // Evaluate jf at a point
+    var v = jf(new D[] { 3, 2, 4 });
+
+#### Jacobian of a vector-to-vector function evaluated at a point
+
+Signature: `AD.Jacobian(Func<D[],D[]>, D[])`
 
 Return value: `D[,]`
 
@@ -299,7 +428,15 @@ $$$
                                                             \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
-##### `AD.Jacobianv(Func<D[],D[]>, D[], D[])`: Jacobian-vector product
+    [lang=csharp]
+    // Jacobian of a vector-to-vector function at a point
+    var v = AD.Jacobian(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
+
+### AD.Jacobianv
+
+#### Jacobian-vector product
+
+Signature: `AD.Jacobianv(Func<D[],D[]>, D[], D[])`
 
 Return value: `D[]`
 
@@ -310,7 +447,15 @@ $$$
   
 With AD, this value is computed efficiently in one forward evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
 
-##### `AD.JacobianT(Func<D[],D[]>)`: Transposed Jacobian of a vector-to-vector function
+    [lang=csharp]
+    // Jacobian-vector product of a vector-to-vector function
+    var v = AD.Jacobianv(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 }, new D[] { 1, 2, 3 });
+
+### AD.JacobianT
+
+#### Transposed Jacobian of a vector-to-vector function
+
+Signature: `AD.JacobianT(Func<D[],D[]>)`
 
 Return value: `Func<D[],D[,]>`
 
@@ -323,8 +468,16 @@ $$$
                                         \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
                                         \end{bmatrix} \; .
 
+    [lang=csharp]
+    // Transposed Jacobian of a vector-to-vector function
+    var jf = AD.JacobianT(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
 
-##### `AD.JacobianT(Func<D[],D[]>, D[])`: Transposed Jacobian of a vector-to-vector function evaluated at a point
+    // Evaluate jf at a point
+    var v = jf(new D[] { 3, 2, 4 });
+
+#### Transposed Jacobian of a vector-to-vector function evaluated at a point
+
+Signature: `AD.JacobianT(Func<D[],D[]>, D[])`
 
 Return value: `D[,]`
 
@@ -337,8 +490,15 @@ $$$
                                                             \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
                                                            \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
+    [lang=csharp]
+    // Transposed Jacobian of a vector-to-vector function at a point
+    var v = AD.JacobianT(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
 
-##### `AD.JacobianTv(Func<D[],D[]>, D[], D[])`: Transposed Jacobian-vector product
+### AD.JacobianTv
+
+#### Transposed Jacobian-vector product
+
+Signature: `AD.JacobianTv(Func<D[],D[]>, D[], D[])`
 
 Return value: `D[]`
 
@@ -349,7 +509,15 @@ $$$
   
 With AD, this value is computed efficiently in one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
 
-##### `AD.Curl(Func<D[],D[]>)`: Curl of a vector-to-vector function
+    [lang=csharp]
+    // Transposed Jacobian-vector product of a vector-to-vector function
+    var v = AD.JacobianTv(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 }, new D[] { 1, 2, 3 });
+
+### AD.Curl
+
+#### Curl of a vector-to-vector function
+
+Signature: `AD.Curl(Func<D[],D[]>)`
 
 Return value: `Func<D[],D[]>`
 
@@ -358,7 +526,16 @@ For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(
 $$$
   \textrm{curl} \, \mathbf{F} = \nabla \times \mathbf{F} = \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \; .
   
-##### `AD.Curl(Func<D[],D[]>, D[])`: Curl of a vector-to-vector function evaluated at a point
+    [lang=csharp]
+    // Curl of a vector-to-vector function
+    var cf = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+
+    // Evaluate cf at a point
+    var v = cf(new D[] { 3, 2, 4 });
+
+#### Curl of a vector-to-vector function evaluated at a point
+
+Signature: `AD.Curl(Func<D[],D[]>, D[])`
 
 Return value: `D[]`
 
@@ -367,8 +544,15 @@ For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(
 $$$
   \left( \textrm{curl} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \times \mathbf{F} \right)_{\mathbf{x}}= \left. \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
+    [lang=csharp]
+    // Curl of a vector-to-vector function at a point
+    var v = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
 
-##### `AD.Div(Func<D[],D[]>)`: Divergence of a vector-to-vector function
+### AD.Div
+
+#### Divergence of a vector-to-vector function
+
+Signature: `AD.Div(Func<D[],D[]>)`
 
 Return value: `Func<D[],D>`
 
@@ -377,8 +561,16 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(
 $$$
   \textrm{div} \, \mathbf{F} = \nabla \cdot \mathbf{F} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right) = \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \; .
 
+    [lang=csharp]
+    // Divergence of a vector-to-vector function
+    var df = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
 
-##### `AD.Div(Func<D[],D[]>, D[])`: Divergence of a vector-to-vector function evaluated at a point
+    // Evaluate df at a point
+    var v = df(new D[] { 3, 2, 4 });
+
+#### Divergence of a vector-to-vector function evaluated at a point
+
+Signature: `AD.Div(Func<D[],D[]>, D[])`
 
 Return value: `D`
 
@@ -386,6 +578,10 @@ For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(
 
 $$$
   \left( \textrm{div} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \cdot \mathbf{F} \right)_{\mathbf{x}} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right)_{\mathbf{x}} = \left. \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+    [lang=csharp]
+    // Divergence of a vector-to-vector function at a point
+    var v = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
 
 Numerical Differentiation
 -------------------------
