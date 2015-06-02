@@ -27,7 +27,7 @@ C# versions of the differentiation operations are also provided through the **Di
     class Program
     {
         // Define a function whose derivative you need
-        // F(x) = sin(x^2 - exp(x))
+        // F(x) = Sin(x^2 - Exp(x))
         public static D F(D x)
         {
             return AD.Sin(x * x - AD.Exp(x));
@@ -56,34 +56,425 @@ C# versions of the differentiation operations are also provided through the **Di
 
             // Cast D to double
             double c = (double)a;
-
         }
     }
 
-Differentiation operations can be nested, meaning that you can compute higher-order derivatives and differentiate functions that are internally making use of differentiation (also see [Nested AD](gettingstarted-nestedad.html)).
+Differentiation operations can be nested, meaning that you can compute higher-order derivatives and differentiate functions that are themselves internally making use of differentiation (also see [Nested AD](gettingstarted-nestedad.html)).
 
+    [lang=csharp]
+    using DiffSharp.Interop;
 
+    class Program
+    {
+        // F(x) = Sin(x^2 - Exp(x))
+        public D F(D x)
+        {
+            return AD.Sin(x * x - AD.Exp(x));
+        }
+
+        // G is internally using the derivative of F
+        // G(x) = F'(x) / Exp(x^3)
+        public D G(D x)
+        {
+            return AD.Diff(F, x) / AD.Exp(AD.Pow(x, 3));
+        }
+
+        // H is internally using the derivative of G
+        // H(x) = Sin(G'(x) / 2)
+        public D H(D x)
+        {
+            return AD.Sin(AD.Diff(G, x) / 2);
+        }
+    }
+
+A convenient way of writing functions is to use [C# lambda expressions](https://msdn.microsoft.com/en-us/library/bb397687.aspx) with which you can define local anonymous functions.
+
+    [lang=csharp]
+    using DiffSharp.Interop;
+
+    class Program
+    {
+        // F(x) = Sin(x^2 - Exp(x))
+        public static D F(D x)
+        {
+            return AD.Sin(x * x - AD.Exp(x));
+        }
+
+        public static void Main(string[] args)
+        {
+            // Derivative of F(x) at x = 3
+            var a = AD.Diff(F, 3);
+
+            // This is the same with above, defining the function inline
+            var b = AD.Diff(x => AD.Sin(x * x - AD.Exp(x)), 3);
+        }
+
+DiffSharp can handle nested cases such as computing the derivative of a function $f$ that takes an argument $x$, which, in turn, computes the derivative of another function $g$ nested inside $f$ that has a free reference to $x$, the argument to the surrounding function.
+
+$$$
+  \frac{d}{dx} \left. \left( x \left( \left. \frac{d}{dy} x y \; \right|_{y=3} \right) \right) \right|_{x=2}
+
+    [lang=csharp]
+    var c = AD.Diff(x => x * AD.Diff(y => x * y, 3), 2);
+
+This allows you to write, for example, nested optimization algorithms of the form
+
+$$$
+  \mathbf{min} \left( \lambda x \; . \; (f \; x) + \mathbf{min} \left( \lambda y \; . \; g \; x \; y \right) \right)\; ,
+
+for functions $f$ and $g$ and a gradient-based minimization procedure $\mathbf{min}$.
+
+### Differentiation Operations
 
 Currently the following operations are supported by **DiffSharp.Interop.AD**:
 
-- **AD.Diff**: First derivative of a scalar-to-scalar function
-- **AD.Diff2**: Second derivative of a scalar-to-scalar function
-- **AD.Diffn**: N-th derivative of a scalar-to-scalar function
-- **AD.Grad**: Gradient of a vector-to-scalar function
-- **AD.Gradv**: Gradient-vector product (directional derivative)
-- **AD.Laplacian**: Laplacian of a vector-to-scalar function
-- **AD.Jacobian**: Jacobian of a vector-to-vector function
-- **AD.JacobianT**: Transposed Jacobian of a vector-to-vector function
-- **AD.Jacobianv**: Jacobian-vector product
-- **AD.JacobianTv**: Transposed Jacobian-vector product
-- **AD.Hessian**: Hessian of a vector-to-scalar function
-- **AD.Hessianv**: Hessian-vector product
-- **AD.Curl**: Curl of a vector-to-vector function
-- **AD.Div**: Divergence of a vector-to-vector function
+##### `AD.Diff(Func<D,D>)` : First derivative of a scalar-to-scalar function
+
+Return value: `Func<D,D>`
+
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the derivative
+
+$$$
+  \frac{d}{da} f(a) \; .
+
+##### `AD.Diff(Func<D,D>, D)` : First derivative of a scalar-to-scalar function evaluated at a point
+
+Return value: `D`
+
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the derivative evaluated at $x$
+
+$$$
+  \left. \frac{d}{da} f(a) \right|_{a\; =\; x} \; .
+
+##### `AD.Diff2(Func<D,D>)`: Second derivative of a scalar-to-scalar function
+
+Return value: `Func<D,D>`
+
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the second derivative
+
+$$$
+  \frac{d^2}{da^2} f(a) \; .
+
+##### `AD.Diff2(Func<D,D>, D)`: Second derivative of a scalar-to-scalar function evaluated at a point
+
+Return value: `D`
+
+For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the second derivative evaluated at $x$
+
+$$$
+  \left. \frac{d^2}{da^2} f(a) \right|_{a\; =\; x} \; .
+
+##### `AD.Diffn(Int32, Func<D,D>)`: N-th derivative of a scalar-to-scalar function
+
+Return value: `Func<D,D>`
+
+For $n \in \mathbb{N}$ and a function $f(a): \mathbb{R} \to \mathbb{R}$, this gives the n-th derivative
+
+$$$
+  \frac{d^n}{da^n} f(a) \; .
+
+##### `AD.Diffn(Int32, Func<D,D>, D)`: N-th derivative of a scalar-to-scalar function evaluated at a point
+
+Return value: `D`
+
+For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the n-th derivative evaluated at $x$
+
+$$$
+  \left. \frac{d^n}{da^n} f(a) \right|_{a\; =\; x} \; .
+
+##### `AD.Grad(Func<D[], D>)`: Gradient of a vector-to-scalar function
+
+Return value: `Func<D[],D[]>`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this gives the [gradient](http://en.wikipedia.org/wiki/Gradient)
+
+$$$
+  \nabla f = \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \; .
+
+##### `AD.Grad(Func<D[],D>, D[])`: Gradient of a vector-to-scalar function evaluated at a point
+
+Return value: `D[]`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
+
+$$$
+  \left( \nabla f \right)_\mathbf{x} = \left. \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+##### `AD.Gradv(Func<D[],D>, D[], D[])`: Gradient-vector product (directional derivative)
+
+Return value: `D`
+
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \nabla f \right)_\mathbf{x} \cdot \mathbf{v} \; .
+
+With AD, this value is computed efficiently in one forward evaluation of the function, without computing the full gradient.
+
+##### `AD.Hessian(Func<D[],D>)`: Hessian of a vector-to-scalar function
+
+Return value: `Func<D[],D[,]>`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this gives the [Hessian matrix](http://en.wikipedia.org/wiki/Hessian_matrix)
+
+$$$
+  \mathbf{H}_f = \begin{bmatrix}
+                    \frac{\partial ^2 f}{\partial a_1^2} & \frac{\partial ^2 f}{\partial a_1 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_1 \partial a_n} \\
+                    \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2^2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
+                    \vdots  & \vdots  & \ddots & \vdots  \\
+                    \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
+                    \end{bmatrix} \; .
+
+##### `AD.Hessian(Func<D[],D>, D[])`: Hessian of a vector-to-scalar function evaluated at a point
+
+Return value: `D[,]`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{H}_f \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                           \frac{\partial ^2 f}{\partial a_1^2} & \frac{\partial ^2 f}{\partial a_1 \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_1 \partial a_n} \\
+                                           \frac{\partial ^2 f}{\partial a_2 \partial a_1} & \frac{\partial ^2 f}{\partial a_2^2} & \cdots & \frac{\partial ^2 f}{\partial a_2 \partial a_n} \\
+                                           \vdots  & \vdots  & \ddots & \vdots  \\
+                                           \frac{\partial ^2 f}{\partial a_n \partial a_1} & \frac{\partial ^2 f}{\partial a_n \partial a_2} & \cdots & \frac{\partial ^2 f}{\partial a_n^2}
+                                          \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+##### `AD.Hessianv(Func<D[],D>, D[], D[])`: Hessian-vector product
+
+Return value: `D[]`
+
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{H}_f \right)_\mathbf{x} \; \mathbf{v} \; .
+
+With AD, this value is computed efficiently using one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Hessian matrix).
+
+##### `AD.Laplacian(Func<D[],D>)`: Laplacian of a vector-to-scalar function
+
+Return value: `Func<D[],D>`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+
+$$$
+  \mathrm{tr}\left(\mathbf{H}_f \right) = \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \; ,
+
+which is the trace of the Hessian matrix.
+
+With AD, this value is computed efficiently in a Matrix-free way, without computing the full Hessian matrix.
+
+##### `AD.Laplacian(Func<D[],D>, D[])`: Laplacian of a vector-to-scalar function evaluated at a point
+
+Return value: `D`
+
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
+
+$$$
+  \mathrm{tr}\left(\mathbf{H}_f \right)_\mathbf{x} = \left. \left(\frac{\partial ^2 f}{\partial a_1^2} + \dots + \frac{\partial ^2 f}{\partial a_n^2}\right) \right|_{\mathbf{a} \; = \; \mathbf{x}} \; .
+
+
+##### `AD.Jacobian(Func<D[],D[]>)`: Jacobian of a vector-to-vector function
+
+Return value: `Func<D[],D[,]>`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this gives the $m$-by-$n$ [Jacobian matrix](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
+
+$$$
+  \mathbf{J}_\mathbf{F} = \begin{bmatrix}
+                            \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_1}{\partial a_n} \\
+                            \vdots & \ddots & \vdots  \\
+                            \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
+                            \end{bmatrix} \; .
+
+##### `AD.Jacobian(Func<D[],D[]>, D[])`: Jacobian of a vector-to-vector function evaluated at a point
+
+Return value: `D[,]`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                                            \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_1}{\partial a_n} \\
+                                                            \vdots & \ddots & \vdots  \\
+                                                            \frac{\partial F_m}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_n}
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+##### `AD.Jacobianv(Func<D[],D[]>, D[], D[])`: Jacobian-vector product
+
+Return value: `D[]`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the Jacobian-vector product, that is, the matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F} \right)_\mathbf{x} \mathbf{v} \; .
+  
+With AD, this value is computed efficiently in one forward evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
+
+##### `AD.JacobianT(Func<D[],D[]>)`: Transposed Jacobian of a vector-to-vector function
+
+Return value: `Func<D[],D[,]>`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this gives the $n$-by-$m$ transposed Jacobian matrix
+
+$$$
+  \mathbf{J}_\mathbf{F}^\textrm{T} = \begin{bmatrix}
+                                        \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_1} \\
+                                        \vdots & \ddots & \vdots  \\
+                                        \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
+                                        \end{bmatrix} \; .
+
+
+##### `AD.JacobianT(Func<D[],D[]>, D[])`: Transposed Jacobian of a vector-to-vector function evaluated at a point
+
+Return value: `D[,]`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} = \left. \begin{bmatrix}
+                                                            \frac{\partial F_1}{\partial a_1} & \cdots & \frac{\partial F_m}{\partial a_1} \\
+                                                            \vdots & \ddots & \vdots  \\
+                                                            \frac{\partial F_1}{\partial a_n} & \cdots & \frac{\partial F_m}{\partial a_n}
+                                                           \end{bmatrix} \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+
+##### `AD.JacobianTv(Func<D[],D[]>, D[], D[])`: Transposed Jacobian-vector product
+
+Return value: `D[]`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this gives the matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
+
+$$$
+  \left( \mathbf{J}_\mathbf{F}^\textrm{T} \right)_\mathbf{x} \mathbf{v} \; .
+  
+With AD, this value is computed efficiently in one forward and one reverse evaluation of the function, in a matrix-free way (without computing the full Jacobian matrix).
+
+##### `AD.Curl(Func<D[],D[]>)`: Curl of a vector-to-vector function
+
+Return value: `Func<D[],D[]>`
+
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this gives the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
+
+$$$
+  \textrm{curl} \, \mathbf{F} = \nabla \times \mathbf{F} = \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \; .
+  
+##### `AD.Curl(Func<D[],D[]>, D[])`: Curl of a vector-to-vector function evaluated at a point
+
+Return value: `D[]`
+
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this gives the curl evaluated at $\mathbf{x}$
+
+$$$
+  \left( \textrm{curl} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \times \mathbf{F} \right)_{\mathbf{x}}= \left. \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
+
+
+##### `AD.Div(Func<D[],D[]>)`: Divergence of a vector-to-vector function
+
+Return value: `Func<D[],D>`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this gives the [divergence](http://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
+
+$$$
+  \textrm{div} \, \mathbf{F} = \nabla \cdot \mathbf{F} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right) = \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \; .
+
+
+##### `AD.Div(Func<D[],D[]>, D[])`: Divergence of a vector-to-vector function evaluated at a point
+
+Return value: `D`
+
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the trace of the Jacobian matrix evaluated at $\mathbf{x}$
+
+$$$
+  \left( \textrm{div} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \cdot \mathbf{F} \right)_{\mathbf{x}} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right)_{\mathbf{x}} = \left. \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 Numerical Differentiation
 -------------------------
 
-**DiffSharp.Interop** also provides 
+**DiffSharp.Interop** also provides access to [numerical differentiation](gettingstarted-numericaldifferentiation.html), through the **DiffSharp.Interop.Numerical** class.
+
+Numerical differentiation operations are used with the **double** numeric type, and the common mathematical functions can be accessed using the [**System.Math**](https://msdn.microsoft.com/en-us/library/System.Math(v=vs.110).aspx) class as usual (e.g. **Math.Exp**, **Math.Sin**, **Math.Pow** ).
+
+Currently, the following operations are supported:
+
+- **AD.Diff**: First derivative of a scalar-to-scalar function
+- **AD.Diff2**: Second derivative of a scalar-to-scalar function
+- **AD.Grad**: Gradient of a vector-to-scalar function
+- **AD.Gradv**: Gradient-vector product (directional derivative)
+- **AD.Hessian**: Hessian of a vector-to-scalar function
+- **AD.Hessianv**: Hessian-vector product
+- **AD.Laplacian**: Laplacian of a vector-to-scalar function
+- **AD.Jacobian**: Jacobian of a vector-to-vector function
+- **AD.JacobianT**: Transposed Jacobian of a vector-to-vector function
+- **AD.Jacobianv**: Jacobian-vector product
+- **AD.Curl**: Curl of a vector-to-vector function
+- **AD.Div**: Divergence of a vector-to-vector function
+
+Here are some examples:
+
+    [lang=csharp]
+    using DiffSharp.Interop;
+
+    class Program
+    {
+        // A scalar-to-scalar function
+        // F(x) = Sin(x^2 - Exp(x))
+        public static double F(double x)
+        {
+            return Math.Sin(x * x - Math.Exp(x));
+        }
+
+        // A vector-to-scalar function
+        // G(x1, x2) = Sin(x1 * x2)
+        public static double G(double[] x)
+        {
+            return Math.Sin(x[0] * x[1]);
+        }
+
+        // A vector-to-vector function
+        // H(x1, x2, x3) = (Sin(x1 * x2), Exp(x1 - x2), x3)
+        public static double[] H(double[] x)
+        {
+            return new double[] { Math.Sin(x[0] * x[1]), Math.Exp(x[0] - x[1]), x[2] };
+        }
+
+        public static void Main(string[] args)
+        {
+            // Derivative of F(x) at x = 3
+            var a = Numerical.Diff(F, 3);
+
+            // Second derivative of F(x) at x = 3
+            var b = Numerical.Diff2(F, 3);
+
+            // Gradient of G(x) at x = (4, 3)
+            var c = Numerical.Grad(G, new double[] { 4, 3 });
+
+            // Directional derivative of G(x) at x = (4, 3) along v = (2, 5)
+            var d = Numerical.Gradv(G, new double[] { 4, 3 }, new double[] { 2, 5 });
+
+            // Hessian of G(x) at x = (4, 3)
+            var e = Numerical.Hessian(G, new double[] { 4, 3 });
+
+            // Hessian-vector product of G(x), with x = (4, 3) and v = (2, 5)
+            var f = Numerical.Hessianv(G, new double[] { 4, 3 }, new double[] { 2, 5 });
+
+            // Laplacian of G(x) at x = (4, 3)
+            var g = Numerical.Laplacian(G, new double[] { 4, 3 });
+
+            // Jacobian of H(x) at x = (5, 2, 1)
+            var h = Numerical.Jacobian(H, new double[] { 5, 2, 1 });
+
+            // Transposed Jacobian of H(x) at x = (5, 2, 1)
+            var i = Numerical.JacobianT(H, new double[] { 5, 2, 1 });
+
+            // Jacobian-vector product of H(x), with x = (5, 2, 1) and v = (2, 5, 3)
+            var j = Numerical.Jacobianv(H, new double[] { 5, 2, 1 }, new double[] { 2, 5, 3 });
+
+            // Curl of H(x) at x = (5, 2, 1)
+            var k = Numerical.Curl(H, new double[] { 5, 2, 1 });
+
+            // Divergence of H(x) at x = (5, 2, 1)
+            var l = Numerical.Div(H, new double[] { 5, 2, 1 });
+        }
+    }
 *)
 
