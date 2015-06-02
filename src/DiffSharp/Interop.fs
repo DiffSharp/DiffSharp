@@ -60,7 +60,8 @@ type D(x:DiffSharp.AD.D) =
             | DiffSharp.AD.DF(p,t,_) -> sprintf "DF (%A, %A)" (s p) (s t)
             | DiffSharp.AD.DR(p,a,_,_,_) -> sprintf "DR (%A, %A)" (s p) (s !a)
         s (d.toADD())
-    static member op_Explicit(d:D):float = float (d.toADD())
+    static member op_Implicit(d:D):float = float (d.toADD())
+    static member op_Implicit(a:float):D = D(a)
     static member Zero = D(0.)
     static member One = D(1.)
     interface System.IComparable with
