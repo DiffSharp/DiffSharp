@@ -6,7 +6,7 @@
 DiffSharp: Automatic Differentiation Library
 ============================================
 
-DiffSharp is an [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language.
+DiffSharp is an [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language. It [supports C#](csharp.html) and the other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages).
 
 AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation), which is prone to truncation and round-off errors, and [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which suffers from expression swell and cannot handle algorithmic control flow.
 
