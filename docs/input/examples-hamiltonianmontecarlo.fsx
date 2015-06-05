@@ -40,8 +40,6 @@ where $\delta$ is the integration step size.
 
 *)
 
-//open DiffSharp.AD.Specialized.Reverse1
-//open DiffSharp.AD.Specialized.Reverse1.Vector
 open DiffSharp.AD
 open DiffSharp.AD.Vector
 open FsAlg.Generic
