@@ -1,8 +1,18 @@
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gbaydin/DiffSharp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 DiffSharp: Automatic Differentiation Library
 ============================================
 
-Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
+[![Join the chat at https://gitter.im/DiffSharp/DiffSharp](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/DiffSharp/DiffSharp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+DiffSharp is an [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language. It supports C# and the other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages). The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
+
+Please visit the [project website](http://gbaydin.github.io/DiffSharp/) for detailed documentation and usage examples.
+
+License
+-------
+Copyright (c) 2014–2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 
 Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
 
