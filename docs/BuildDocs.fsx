@@ -86,7 +86,7 @@ for fileInfo in DirectoryInfo(relative "input/files/img").EnumerateFiles() do
 // Generate documentation
 //
 
-let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/gbaydin/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
+let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/DiffSharp/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
 
 Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates/template.html", relative "output/index.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/api-overview.fsx", relative "input/templates/template.html", relative "output/api-overview.html", replacements = tags, fsiEvaluator = FsiEvaluator())

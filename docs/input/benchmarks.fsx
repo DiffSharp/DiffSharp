@@ -487,7 +487,7 @@ The running times are averaged over half a million calls to each operation, on a
 Running Benchmarks on Your Machine
 ----------------------------------
 
-If you would like to run the benchmarks on your own machine, you can use the **_DiffSharp Benchmarks_** command line tool distributed together with the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
+If you would like to run the benchmarks on your own machine, you can use the **_DiffSharp Benchmarks_** command line tool distributed together with the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
 <div class="row">
     <div class="span6">

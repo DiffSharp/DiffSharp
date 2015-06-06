@@ -17,7 +17,7 @@ The library is under active development by [Atılım Güneş Baydin](http://www.
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#F0B2B2">
-        <b>As of version 0.6, DiffSharp supports nesting of AD operations.</b> This entails important changes in the library structure. Please see the <a href="https://github.com/gbaydin/DiffSharp/releases">release notes</a> to learn about the changes and how you can update your code.
+        <b>As of version 0.6, DiffSharp supports nesting of AD operations.</b> This entails important changes in the library structure. Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can update your code.
     </div>
     </div>
 </div>
@@ -25,7 +25,7 @@ The library is under active development by [Atılım Güneş Baydin](http://www.
 How to Get
 ----------
 
-You can install the library via NuGet. You can also download the source code or the binaries of the latest release <a href="https://github.com/gbaydin/DiffSharp/releases">on GitHub</a>.
+You can install the library via NuGet. You can also download the source code or the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
 <div class="row">
     <div class="span1"></div>
