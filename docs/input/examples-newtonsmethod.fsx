@@ -38,7 +38,7 @@ let Newton f x0 (eta:D) epsilon =
 Let us find a (local) extremum of the function
 
 $$$
- f(\mathbf{x}) = e^{x_1 - 1} + e^{-x_2 + 1} + (x_1 + x_2)^2
+ f(\mathbf{x}) = e^{x_1 - 1} + e^{-x_2 + 1} + (x_1 - x_2)^2
 
 around the point $(0, 0)$.
 
