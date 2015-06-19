@@ -56,6 +56,6 @@ val fxmin : D = D 1.797388803"
 
 (**
 
-The extremum is found as $f(0.7749209799, 1.162864526) = 1.798659611$.
+The extremum is found as $f(0.7958861818, 1.203482609) = 1.797388803$.
    
 *)
