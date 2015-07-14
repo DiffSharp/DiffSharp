@@ -72,10 +72,10 @@ let kmeans k eta epsilon (data:Vector<float>[]) =
     let inline nearestm (x:Vector<_>) (means:seq<Vector<_>>) =
         means |> Seq.mapi (fun i m -> i, Vector.normSq (x - m)) |> Seq.minBy snd
     // Squared distance of x to the nearest of the means encoded in w
-    let inline dist (w:Vector<_>) (x:Vector<_>) = w |> Vector.split k |> nearestm x |> snd
+    let inline dist (w:Vector<_>) (x:Vector<_>) = w |> Vector.splitEqual k |> nearestm x |> snd
     let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> Vector.concat |> Vector.map D
     let wopt = Array.zip data (Array.create data.Length (vector [0.])) |> sgd dist w0 (D eta) (D epsilon)
-    let means = Vector.split k (wopt |> Vector.map float)
+    let means = Vector.splitEqual k (wopt |> Vector.map float)
     let assign = Array.map (fun d -> (nearestm d means |> fst, d)) data
     Array.init k (fun i -> assign |> Array.filter (fun (j, d) -> i = j) |> Array.map snd)
 
