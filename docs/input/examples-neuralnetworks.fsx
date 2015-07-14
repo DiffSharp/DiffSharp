@@ -4,6 +4,15 @@
 #load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
 
 (**
+
+<div class="row">
+    <div class="span9">
+    <div class="well well-small" id="nuget" style="background-color:#E0EBEB">
+        <b>Please note:</b> the code in this example is provided for illustrating the basics and therefore kept simple and unoptimized. It is not intended for production use. It will be replaced with a better version supporting more complex cases.
+    </div>
+    </div>
+</div>
+
 Neural Networks
 ===============
 
