@@ -50,13 +50,15 @@
         <div class="span9" id="main">
           <h1>DiffSharp: Automatic Differentiation Library</h1>
 
-<p>DiffSharp is an <a href="http://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library. AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="http://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
+<p>DiffSharp is an <a href="http://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library.</p>
+
+<p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="http://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
 
 <p>Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Operations can be nested to any level, meaning that you can compute exact higher-order derivatives and differentiate functions that are internally making use of differentiation. Please see the <a href="api-overview.html">API Overview</a> page for a list of available operations.</p>
 
 <p>The library is under active development by <a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a> and <a href="http://bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a> mainly for research applications in machine learning, as part of their work at the <a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a>, Hamilton Institute, National University of Ireland Maynooth.</p>
 
-<p>The library is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono or the .Net Framework. It is tested on Linux, Windows, and Mac OS X. We are working on interfaces/ports to other languages.</p>
+<p>DiffSharp is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono or the .Net Framework. It is tested on Linux, Windows, and Mac OS X. We are working on interfaces/ports to other languages.</p>
 
 <div class="row">
     <div class="span9">
@@ -140,7 +142,7 @@
 
 <h2>More Info and How to Cite</h2>
 
-<p>If you are using DiffSharp and would like to cite it, please use the following information:</p>
+<p>If you are using the library and would like to cite it, please use the following information:</p>
 
 <p><em>Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767</em> (<a href="http://arxiv.org/abs/1502.05767">link</a>) (<a href="misc/adml2015.bib">BibTeX</a>)</p>
 
