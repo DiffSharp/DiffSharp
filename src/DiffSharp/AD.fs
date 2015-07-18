@@ -134,7 +134,7 @@ type D =
     static member (-) (a:D, b:D) =
         match a, b with
         | D(ap), D(bp)               -> D(ap - bp)
-        | D(ap), DF(bp, bt, bi)      -> DF(ap - bp, bt, bi)
+        | D(ap), DF(bp, bt, bi)      -> DF(ap - bp, -bt, bi)
         | D(ap), DR(bp, _, _, _, bi) -> DR(ap - bp, ref (D 0.), SubConsD(b), ref 0u, bi)
         | DF(ap, at, ai), D(bp)      -> DF(ap - bp, at, ai)
         | DR(ap, _, _, _, ai), D(bp) -> DR(ap - bp, ref (D 0.), SubDCons(a), ref 0u, ai)
