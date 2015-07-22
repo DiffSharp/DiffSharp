@@ -1436,6 +1436,7 @@ module DOps =
                     | Make_DM_ofDV(a) -> a |> Array.iter (fun v -> reverseReset v)
                     | Slice_DM(a,_,_,_,_) -> reverseReset a
                     | _ -> ()
+            | _ -> ()
         | _ -> ()
     let reverseProp (v:obj) (d:obj) =
         d |> reverseReset
