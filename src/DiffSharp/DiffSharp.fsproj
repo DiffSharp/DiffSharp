@@ -51,31 +51,26 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="Util.fs" />
+    <Compile Include="Engine.OpenBLAS.fs" />
+    <Compile Include="Engine.NonBLAS.fs" />
     <Compile Include="AD.fs" />
-    <Compile Include="AD.Forward.fs" />
-    <Compile Include="AD.Reverse.fs" />
-    <Compile Include="AD.Specialized.Forward1.fs" />
-    <Compile Include="AD.Specialized.Forward2.fs" />
-    <Compile Include="AD.Specialized.ForwardG.fs" />
-    <Compile Include="AD.Specialized.ForwardGH.fs" />
-    <Compile Include="AD.Specialized.ForwardN.fs" />
-    <Compile Include="AD.Specialized.Reverse1.fs" />
-    <Compile Include="Numerical.fs" />
-    <Compile Include="Symbolic.fs" />
-    <Compile Include="Interop.fs" />
     <Content Include="app.config" />
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <None Include="libgcc_s_seh-1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libgfortran-3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libopenblas.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libquadmath-0.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsAlg">
-      <HintPath>..\..\packages\FsAlg.0.5.8\lib\FsAlg.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Quotations.Evaluator">
-      <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.6\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{CD409EFB-0AE4-41E5-9987-C99C5F061588}"
 EndProject
@@ -29,8 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\index.fsx = docs\input\index.fsx
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{59F0F3F9-E967-4002-8E75-F37D03AF01A8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,10 +39,6 @@ Global
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
