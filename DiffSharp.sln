@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\index.fsx = docs\input\index.fsx
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{D4B2D758-F33E-43EB-B081-6A5AE0882488}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B2D758-F33E-43EB-B081-6A5AE0882488}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B2D758-F33E-43EB-B081-6A5AE0882488}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B2D758-F33E-43EB-B081-6A5AE0882488}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B2D758-F33E-43EB-B081-6A5AE0882488}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
