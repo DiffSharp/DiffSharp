@@ -44,6 +44,7 @@ open DiffSharp.Util
 open DiffSharp.Engine
 open System.Threading.Tasks
 
+[<CustomEquality; CustomComparison>]
 type D =
     | D of float
     | DF of D * D * uint32
@@ -95,6 +96,20 @@ type D =
         | DF(ap,_,_) -> float ap
         | DR(ap,_,_,_,_) -> float ap
     static member op_Explicit(d) = D(d)
+    interface System.IComparable with
+        override d.CompareTo(other) =
+            match other with
+            | :? D as d2 -> compare ((float) d) ((float) d2)
+            | _ -> invalidArg "" "Cannot compare thid D with another type."
+    override d.Equals(other) =
+        match other with
+        | :? D as d2 -> compare ((float) d) ((float) d2) = 0
+        | _ -> false
+    override d.GetHashCode() =
+        match d with
+        | D(ap) -> hash [|ap|]
+        | DF(ap,at,ai) -> hash [|ap; at; ai|]
+        | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
 
     static member inline Op_D_D (a, ff, fd, df, r) =
         match a with
@@ -402,7 +417,7 @@ and DV =
         match d with
         | DV(ap) -> DV(ap.[l..u])
         | DVF(ap,at,ai) -> DVF(ap.[l..u], at.[l..u], ai)
-        | DVR(ap,_,_,_,ai) -> DVR(ap.[l..u], ref DV.Zero, Slice_DV(d, l), ref 0u, ai)
+        | DVR(ap,_,_,_,ai) -> let cp = ap.[l..u] in DVR(cp, ref (DV.ZeroN cp.Length), Slice_DV(d, l), ref 0u, ai)
     member d.L1Norm() =
         match d with
         | DV(ap) -> D(OpenBLAS.v_l1norm(ap))
@@ -442,12 +457,12 @@ and DV =
         | DVR(ap,_,_,_,ai) ->
             let aps = ap.Split(n)
             let ii = n |> Seq.mapFold (fun s i -> s, s + i) 0 |> fst
-            Seq.mapi (fun i p -> DVR(p, ref DV.Zero, Split_DV(d, ii |> Seq.item i), ref 0u, ai)) aps
+            Seq.mapi (fun i p -> DVR(p, ref (DV.ZeroN p.Length), Split_DV(d, ii |> Seq.item i), ref 0u, ai)) aps
     member d.ToRowMatrix() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
         | DVF(ap,at,ai) -> DMF(ap.ToRowMatrix(), at.ToRowMatrix(), ai)
-        | DVR(ap,_,_,_,ai) -> DMR(ap.ToRowMatrix(), ref DM.Zero, RowMatrix_DV(d), ref 0u, ai)
+        | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowMatrix() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
     member d.ToColMatrix() = d.ToRowMatrix().Transpose()
     
     static member Zero = DV Array.empty
@@ -468,14 +483,14 @@ and DV =
             DVF(DV.ofArray(ap), DV.ofArray(at), ai)
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array.Parallel.map (fun x -> x.P)
-            DVR(DV.ofArray(ap), ref DV.Zero, Make_DV(a), ref 0u, ai)
+            let cp = DV.ofArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV(a), ref 0u, ai)
 
 
     static member inline Op_DV_DV (a, ff, fd, df, r) =
         match a with
         | DV(ap)                      -> DV(ff(ap))
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DVF(cp, df(cp, ap, at), ai)
-        | DVR(ap,_,_,_,ai)            -> DVR(fd(ap), ref DV.Zero, r(a), ref 0u, ai)
+        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DVR(cp, ref (DV.ZeroN cp.Length), r(a), ref 0u, ai)
 
     static member inline Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -483,7 +498,7 @@ and DV =
             match b with
             | DV(bp)                  -> DV(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi)
+            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi)
         | DVF(ap, at, ai) ->
             match b with
             | DV(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
@@ -494,22 +509,22 @@ and DV =
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
             | DVR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | -1                  -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
+                | -1                  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
         | DVR(ap,  _,  _,  _, ai) ->
             match b with
-            | DV(_)                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai)
+            | DV(_)                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
-                | 1                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 1                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
             | DVR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | 0                   -> DVR(fd(ap, bp), ref DV.Zero, r_d_d(a, b), ref 0u, ai) // ai = bi
-                | -1                  -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
-                | _                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 0                   -> let cp = fd(ap, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_d(a, b), ref 0u, ai) // ai = bi
+                | -1                  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
+                | _                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
 
     static member inline Op_DV_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -585,7 +600,7 @@ and DV =
             match b with
             | D(bp)                   -> DV(ff(ap, bp))
             | DF(bp, bt, bi)          -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DR(bp,  _,  _,  _, bi)  -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi)
+            | DR(bp,  _,  _,  _, bi)  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi)
         | DVF(ap, at, ai) ->
             match b with
             | D(_)                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
@@ -596,22 +611,22 @@ and DV =
                 | _                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
             | DR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | -1                   -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
+                | -1                   -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | 1                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                    -> failwith "Forward and reverse AD cannot run on the same level."
         | DVR(ap,  _,  _,  _, ai) ->
             match b with
-            | D(_)                    -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai)
+            | D(_)                    -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                   -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
-                | 1                    -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 1                    -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
                 | _                    -> failwith "Forward and reverse AD cannot run on the same level."
             | DR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | 0                    -> DVR(fd(ap, bp), ref DV.Zero, r_d_d(a, b), ref 0u, ai) // ai = bi
-                | -1                   -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
-                | _                    -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 0                    -> let cp = fd(ap, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_d(a, b), ref 0u, ai) // ai = bi
+                | -1                   -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
+                | _                    -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
 
 
     static member inline Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
@@ -620,7 +635,7 @@ and DV =
             match b with
             | DV(bp)                  -> DV(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi)
+            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi)
         | DF(ap, at, ai) ->
             match b with
             | DV(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
@@ -631,22 +646,22 @@ and DV =
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
             | DVR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | -1                  -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
+                | -1                  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
         | DR(ap,  _,  _,  _, ai) ->
             match b with
-            | DV(_)                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai)
+            | DV(_)                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
-                | 1                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 1                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
             | DVR(bp,  _,  _,  _, bi) ->
                 match compare ai bi with
-                | 0                   -> DVR(fd(ap, bp), ref DV.Zero, r_d_d(a, b), ref 0u, ai) // ai = bi
-                | -1                  -> DVR(fd(a, bp), ref DV.Zero, r_c_d(a, b), ref 0u, bi) // ai < bi
-                | _                   -> DVR(fd(ap, b), ref DV.Zero, r_d_c(a, b), ref 0u, ai) // ai > bi
+                | 0                   -> let cp = fd(ap, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_d(a, b), ref 0u, ai) // ai = bi
+                | -1                  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
+                | _                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
 
     static member (+) (a:DV, b:DV) =
         let inline ff(a, b) = OpenBLAS.v_add(a, b)
@@ -1405,7 +1420,7 @@ module Vector =
     let inline adjoint (v:DV) = v.A
     let inline primalTangent (v:DV) = v.P, v.T
     let inline makeForward i t p = DVF(p, t, i)
-    let inline makeReverse i p = DVR(p, ref DV.Zero, Noop, ref 0u, i)
+    let inline makeReverse i p = DVR(p, ref (DV.ZeroN p.Length), Noop, ref 0u, i)
 
     let inline ofArray a = DV.ofArray(a)
     let inline toArray (v:DV) = v.ToArray()
@@ -1701,7 +1716,7 @@ module DOps =
         | :? DV as d ->
             match d with
             | DVR(_,_,o,_,_) ->
-                d.A <- DV Array.empty
+                d.A <- DV.ZeroN d.Length
                 d.F <- d.F + 1u
                 if d.F = 1u then
                     match o with

@@ -58,6 +58,11 @@ let inline sndtrd (_, s, t) = (s, t)
 /// Value of log 10.
 let log10val = log 10.
 
+/// Computes a combined hash code for the objects in array `o`
+let inline hash (o:obj[]) =
+    Array.map (fun a -> a.GetHashCode()) o
+    |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
+
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
 let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then LanguagePrimitives.GenericOne else LanguagePrimitives.GenericZero)
 

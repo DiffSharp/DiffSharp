@@ -1,8 +1,9 @@
-﻿// Learn more about F# at http://fsharp.org. See the 'F# Tutorial' project
-// for more guidance on F# programming.
+﻿
+#r "bin/Debug/DiffSharp.dll"
 
-#load "Library1.fs"
-open DiffSharp.Tests
+open DiffSharp.AD
+open DiffSharp.Util
 
-// Define your library scripting code here
-
+let f (x:DV) = x.[0] + x.[1]
+let g = grad f (vector [D 1.1; D 1.2])
+g.[1] |> float
