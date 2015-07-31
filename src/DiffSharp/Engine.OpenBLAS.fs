@@ -234,7 +234,7 @@ module OpenBLAS =
             v_scale_replace(alpha, Array.copy a)     
 
     // b <- alpha * a + b
-    let v_add_mul_replace(alpha:float, a:float[], b:float[]) =
+    let v_add_replace'(alpha:float, a:float[], b:float[]) =
         let n = a.Length
 
         let mutable arg_n = n
@@ -250,7 +250,7 @@ module OpenBLAS =
 
     // b <- a + b
     let v_add_replace(a:float[], b:float[]) =
-        v_add_mul_replace(1., a, b)
+        v_add_replace'(1., a, b)
 
     // c <- a + b
     let v_add(a:float[], b:float[]) =
@@ -259,7 +259,7 @@ module OpenBLAS =
         elif Array.isEmpty b then 
             Array.copy a
         else
-            v_add_mul_replace(1., a, Array.copy b)
+            v_add_replace'(1., a, Array.copy b)
 
     let v_sub(a:float[], b:float[]) =
         if Array.isEmpty a then
@@ -267,7 +267,7 @@ module OpenBLAS =
         elif Array.isEmpty b then
             Array.copy a
         else
-            v_add_mul_replace(-1., b, Array.copy a)
+            v_add_replace'(-1., b, Array.copy a)
 
     let v_dot(a:float[], b:float[]) =
         if Array.isEmpty a || Array.isEmpty b then

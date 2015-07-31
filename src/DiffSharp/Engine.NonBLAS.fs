@@ -49,21 +49,31 @@ module NonBLAS =
         if Array.isEmpty a || Array.isEmpty b then
             Array.empty
         else
-            Array.init a.Length (fun i -> a.[i] * b.[i])
-    
+            let c = Array.zeroCreate a.Length
+            Parallel.For(0, a.Length, fun i -> c.[i] <- a.[i] * b.[i]) |> ignore
+            c
+        
     let v_div_hadamard(a:float[], b:float[]) =
         if Array.isEmpty a then
             Array.empty
         elif Array.isEmpty b then
-            invalidArg "" "Attempted Hadamard division by a zero vector."
+            invalidArg "" "Hadamard division by a zero vector."
         else
-            Array.init a.Length (fun i -> a.[i] / b.[i])
+            let c = Array.zeroCreate a.Length
+            Parallel.For(0, a.Length, fun i -> c.[i] <- a.[i] / b.[i]) |> ignore
+            c
 
     let v_sum(a:float[]) =
         if Array.isEmpty a then
             0.
         else
             Array.sum a
+    
+    let v_exp(a:float[]) =
+        if Array.isEmpty a then
+            Array.empty // Should be an infinite unit vector
+        else
+            Array.Parallel.map exp a
 
     let v_abs(a:float[]) =
         if Array.isEmpty a then
@@ -77,8 +87,23 @@ module NonBLAS =
         else
             Array.Parallel.map (sign>>float) a
 
-    let vs_add(alpha:float, a:float[]) =
-        Array.Parallel.map (fun v -> v + alpha) a
+    let sv_div(a:float, b:float[]) =
+        if Array.isEmpty b then invalidArg "" "Division of scalar by a zero vector."
+        else
+            Array.Parallel.map (fun v -> a / v) b
+
+    let vs_add(a:float[], b:float) =
+        Array.Parallel.map (fun v -> v + b) a
+
+    let vs_sub(a:float[], b:float) =
+        if b = 0. then a
+        else
+            Array.Parallel.map (fun v -> v - b) a
+
+    let sv_sub(a:float, b:float[]) =
+        if a = 0. then OpenBLAS.v_scale(-1., b)
+        else
+            Array.Parallel.map (fun v -> a - v) b
 
     let m_add(a:float[,], b:float[,]) =
         if Array2D.isEmpty a then
@@ -106,7 +131,7 @@ module NonBLAS =
         if Array2D.isEmpty a then
             Array2D.empty
         elif Array2D.isEmpty b then
-            invalidArg "" "Attempted Hadamard division by a zero matrix."
+            invalidArg "" "Hadamard division by a zero matrix."
         else
             Array2D.init (Array2D.length1 a) (Array2D.length2 a) (fun i j -> a.[i, j] / b.[i, j])
 
