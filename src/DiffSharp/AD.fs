@@ -721,7 +721,7 @@ and DV =
         let inline df_dab(cp, ap, at, bp, bt) = (at - bt .* cp) ./ bp // cp = ap / bp
         let inline r_d_d(a, b) = Div_Had_DV_DV(a, b)
         let inline r_d_c(a, b) = Div_Had_DV_DVCons(a, b)
-        let inline r_c_d(a, b) = Div_Had_DV_DVCons(b, a)
+        let inline r_c_d(a, b) = Div_Had_DVCons_DV(a, b)
         DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (*) (a:DV, b:D) =
@@ -786,8 +786,8 @@ and DV =
         let inline df_db(cp, bp, bt) = bt
         let inline df_dab(cp, ap, at, bp, bt) = at + bt
         let inline r_d_d(a, b) = Add_DV_D(b, a)
-        let inline r_d_c(a, b) = Add_DV_DCons(b)
-        let inline r_c_d(a, b) = Add_DVCons_D(a)
+        let inline r_d_c(a, b) = Add_DVCons_D(a)
+        let inline r_c_d(a, b) = Add_DV_DCons(b)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (-) (a:DV, b:D) =
