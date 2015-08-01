@@ -422,26 +422,7 @@ and DV =
         | DV(ap) -> DV(ap.[l..u])
         | DVF(ap,at,ai) -> DVF(ap.[l..u], at.[l..u], ai)
         | DVR(ap,_,_,_,ai) -> let cp = ap.[l..u] in DVR(cp, ref (DV.ZeroN cp.Length), Slice_DV(d, l), ref 0u, ai)
-    member d.L1Norm() =
-        match d with
-        | DV(ap) -> D(OpenBLAS.v_l1norm(ap))
-        | DVF(ap,at,ai) -> DF(ap.L1Norm(), at * (DV.Sign ap), ai)
-        | DVR(ap,_,_,_,ai) -> DR(ap.L1Norm(), ref (D 0.), L1Norm_DV(d), ref 0u, ai)
-    member d.L2NormSq() =
-        match d with
-        | DV(ap) -> let l2norm = OpenBLAS.v_l2norm(ap) in D(l2norm * l2norm)
-        | DVF(ap,at,ai) -> DF(ap.L2NormSq(), (D 2.) * (ap * at), ai)
-        | DVR(ap,_,_,_,ai) -> DR(ap.L2NormSq(), ref (D 0.), L2NormSq_DV(d), ref 0u, ai)
-    member d.L2Norm() =
-        match d with
-        | DV(ap) -> D(OpenBLAS.v_l2norm(ap))
-        | DVF(ap,at,ai) -> let l2norm = ap.L2Norm() in DF(l2norm, (ap * at) / l2norm, ai)
-        | DVR(ap,_,_,_,ai) -> DR(ap.L2Norm(), ref (D 0.), L2Norm_DV(d), ref 0u, ai)
-    member d.Sum() =
-        match d with
-        | DV(ap) -> D(NonBLAS.v_sum(ap))
-        | DVF(ap,at,ai) -> DF(ap.Sum(), at.Sum(), ai)
-        | DVR(ap,_,_,_,ai) -> DR(ap.Sum(), ref (D 0.), Sum_DV(d), ref 0u, ai)
+
     member d.ToArray() =
         match d with
         | DV(ap) -> ap |> Array.Parallel.map D
@@ -495,6 +476,12 @@ and DV =
         | DV(ap)                      -> DV(ff(ap))
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DVF(cp, df(cp, ap, at), ai)
         | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DVR(cp, ref (DV.ZeroN cp.Length), r(a), ref 0u, ai)
+
+    static member inline Op_DV_D (a, ff, fd, df, r) =
+        match a with
+        | DV(ap)                      -> D(ff(ap))
+        | DVF(ap, at, ai)             -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
+        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DR(cp, ref (D 0.), r(a), ref 0u, ai)
 
     static member inline Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -896,6 +883,34 @@ and DV =
         let inline r(a) = Sign_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
+    static member L1Norm (a:DV) =
+        let inline ff(a) = OpenBLAS.v_l1norm(a)
+        let inline fd(a) = DV.L1Norm(a)
+        let inline df(cp, ap, at) = at * DV.Sign(ap)
+        let inline r(a) = L1Norm_DV(a)
+        DV.Op_DV_D (a, ff, fd, df, r)
+
+    static member L2NormSq(a:DV) =
+        let inline ff(a) = let l2norm = OpenBLAS.v_l2norm(a) in l2norm * l2norm
+        let inline fd(a) = DV.L2NormSq(a)
+        let inline df(cp, ap, at) = (D 2.) * (ap * at)
+        let inline r(a) = L2NormSq_DV(a)
+        DV.Op_DV_D (a, ff, fd, df, r)
+
+    static member L2Norm(a:DV) =
+        let inline ff(a) = OpenBLAS.v_l2norm(a)
+        let inline fd(a) = DV.L2Norm(a)
+        let inline df(cp, ap, at) = (ap * at) / cp // cp = DV.L2Norm(ap)
+        let inline r(a) = L2Norm_DV(a)
+        DV.Op_DV_D (a, ff, fd, df, r)
+
+    static member Sum(a:DV) =
+        let inline ff(a) = NonBLAS.v_sum(a)
+        let inline fd(a) = DV.Sum(a)
+        let inline df(cp, ap, at) = DV.Sum(at)
+        let inline r(a) = Sum_DV(a)
+        DV.Op_DV_D (a, ff, fd, df, r)
+
     static member Append (a:DV, b:DV) =
         let inline ff(a, b) = Array.append a b
         let inline fd(a, b) = DV.Append(a, b)
@@ -999,16 +1014,6 @@ and DM =
         | DMF(ap,at,ai) -> DVF(ap.[rowStart..rowFinish, col], at.[rowStart..rowFinish, col], ai)
         | DMR(ap,_,_,_,ai) -> let cp = ap.[rowStart..rowFinish, col] in DVR(cp, ref (DV.ZeroN cp.Length), SliceCol_DM(d, rowStart, col), ref 0u, ai)
 
-    member d.Sum() =
-        match d with
-        | DM(ap) -> D(NonBLAS.m_sum(ap))
-        | DMF(ap,at,ai) -> DF(ap.Sum(), at.Sum(), ai)
-        | DMR(ap,_,_,_,ai) -> DR(ap.Sum(), ref (D 0.), Sum_DM(d), ref 0u, ai)
-    member d.Transpose() =
-        match d with
-        | DM(ap) -> DM(NonBLAS.m_transpose(ap))
-        | DMF(ap,at,ai) -> DMF(ap.Transpose(), at.Transpose(), ai)
-        | DMR(ap,_,_,_,ai) -> DMR(ap.Transpose(), ref (DM.ZeroMN d.Cols d.Rows), Transpose_DM(d), ref 0u, ai)
     member d.GetRows() =
         seq {for i = 0 to d.Rows - 1 do yield d.[i,*]}
     member d.GetCols() =
@@ -1055,6 +1060,12 @@ and DM =
         | DM(ap)                      -> DM(ff(ap))
         | DMF(ap, at, ai)             -> let cp = fd(ap) in DMF(cp, df(cp, ap, at), ai)
         | DMR(ap,_,_,_,ai)            -> let cp = fd(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r(a), ref 0u, ai)
+
+    static member inline Op_DM_D (a, ff, fd, df, r) =
+        match a with
+        | DM(ap)                      -> D(ff(ap))
+        | DMF(ap, at, ai)             -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
+        | DMR(ap,_,_,_,ai)            -> let cp = fd(ap) in DR(cp, ref (D 0.), r(a), ref 0u, ai)
 
     static member inline Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -1217,7 +1228,7 @@ and DM =
 
     static member (*) (a:DV, b:DM) =
         // TODO: reimplement faster
-        b.Transpose() * a
+        DM.Transpose(b) * a
 
     static member (*) (a:DM, b:D) =
         let inline ff(a, b) = OpenBLAS.m_scale(b, a)
@@ -1238,6 +1249,20 @@ and DM =
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
+
+    static member Transpose(a:DM) =
+        let inline ff(a) = NonBLAS.m_transpose(a)
+        let inline fd(a) = DM.Transpose(a)
+        let inline df(cp, ap, at) = DM.Transpose(at)
+        let inline r(a) = Transpose_DM(a)
+        DM.Op_DM_DM (a, ff, fd, df, r)
+
+    static member Sum(a:DM) =
+        let inline ff(a) = NonBLAS.m_sum(a)
+        let inline fd(a) = DM.Sum(a)
+        let inline df(cp, ap, at) = DM.Sum(at)
+        let inline r(a) = Sum_DM(a)
+        DM.Op_DM_D (a, ff, fd, df, r)
 
     static member Solve (a:DM, b:DV) =
         let inline ff(a, b) = match OpenBLAS.mv_solve(a, b) with Some(x) -> x | _ -> ErrorMessages.invalidArgSolve()
@@ -1287,6 +1312,7 @@ and DM =
         let inline r_d_c(a, b) = AddSubMatrix_DM_DMCons(a)
         let inline r_c_d(a, b) = AddSubMatrix_DMCons_DM(i, j, b)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
+
 
 and TraceOp =
     | Add_D_D                of D * D
@@ -1429,16 +1455,16 @@ module Vector =
     let inline zeroCreate n = DV.ZeroN n
     let inline init n f = DV.ofArray(Array.init n f)
     let inline copy (v:DV) = v.Copy()
-    let inline l1norm (v:DV) = v.L1Norm()
-    let inline l2norm (v:DV) = v.L2Norm()
-    let inline l2normSq (v:DV) = v.L2NormSq()
-    let inline norm (v:DV) = v.L2Norm()
-    let inline normSq(v:DV) = v.L2NormSq()
+    let inline l1norm (v:DV) = DV.L1Norm(v)
+    let inline l2norm (v:DV) = DV.L2Norm(v)
+    let inline l2normSq (v:DV) = DV.L2NormSq(v)
+    let inline norm (v:DV) = DV.L2Norm(v)
+    let inline normSq(v:DV) = DV.L2NormSq(v)
     // TODO: implement supNorm (infinity norm, with BLAS IDAMAX)
     let inline append (v1:DV) (v2:DV) = DV.Append(v1, v2)
     let inline prepend (v1:DV) (v2:DV) = DV.Append(v2, v1)
     let inline split (n:seq<int>) (v:DV) = v.Split(n)
-    let inline sum (v:DV) = v.Sum()
+    let inline sum (v:DV) = DV.Sum(v)
     let inline standardBasis (n:int) (i:int) = DV(Array.init n (fun j -> if i = j then 1. else 0.))
 
 [<RequireQualifiedAccess>]
@@ -1446,7 +1472,7 @@ module Matrix =
     let inline ofArray2D a = DM.ofArray2D(a)
     let inline ofArray m a = DM.ofArray(m, a)
     let inline ofRows s = DM.ofRows(s)
-    let inline transpose (m:DM) = m.Transpose()
+    let inline transpose (m:DM) = DM.Transpose(m)
     let inline ofCols (s:seq<DV>) = s |> ofRows |> transpose
     let inline toRows (m:DM) = m.GetRows()
     let inline toCols (m:DM) = m.GetCols()
@@ -1541,34 +1567,34 @@ module DOps =
                     match o with
                     | Add_DV_DV(a, b) -> reversePush d.A a; reversePush d.A b
                     | Add_DV_DVCons(a) -> reversePush d.A a
-                    | Add_DV_D(a, b) -> reversePush d.A a; reversePush (d.A.Sum()) b
+                    | Add_DV_D(a, b) -> reversePush d.A a; reversePush (DV.Sum(d.A)) b
                     | Add_DV_DCons(a) -> reversePush d.A a
-                    | Add_DVCons_D(b) -> reversePush (d.A.Sum()) b
+                    | Add_DVCons_D(b) -> reversePush (DV.Sum(d.A)) b
                     | Sub_DV_DV(a, b) -> reversePush d.A a; reversePush -d.A b
                     | Sub_DV_DVCons(a) -> reversePush d.A a
                     | Sub_DVCons_DV(a) -> reversePush -d.A a
-                    | Sub_DV_D(a, b) -> reversePush d.A a; reversePush -(d.A.Sum()) b
+                    | Sub_DV_D(a, b) -> reversePush d.A a; reversePush -(DV.Sum(d.A)) b
                     | Sub_DV_DCons(a) -> reversePush d.A a
-                    | Sub_DVCons_D(b) -> reversePush -(d.A.Sum()) b
-                    | Sub_D_DV(a, b) -> reversePush (d.A.Sum()) a; reversePush d.A b
-                    | Sub_D_DVCons(a) -> reversePush (d.A.Sum()) a
+                    | Sub_DVCons_D(b) -> reversePush -(DV.Sum(d.A)) b
+                    | Sub_D_DV(a, b) -> reversePush (DV.Sum(d.A)) a; reversePush d.A b
+                    | Sub_D_DVCons(a) -> reversePush (DV.Sum(d.A)) a
                     | Sub_DCons_DV(b) -> reversePush d.A b
                     | Mul_Had_DV_DV(a, b) -> reversePush (d.A .* b.P) a; reversePush (d.A .* a.P) b
                     | Mul_Had_DV_DVCons(a, cons) -> reversePush (d.A .* cons) a
                     | Mul_DV_D(a, b) -> reversePush (d.A * b.P) a; reversePush (d.A * a.P) b
                     | Mul_DV_DCons(a, cons) -> reversePush (d.A * cons) a
                     | Mul_DVCons_D(cons, b) -> reversePush (d.A * cons) b
-                    | Mul_DM_DV(a, b) -> reversePush (d.A &* b.P) a; reversePush (a.P.Transpose() * d.A) b
+                    | Mul_DM_DV(a, b) -> reversePush (d.A &* b.P) a; reversePush (DM.Transpose(a.P) * d.A) b
                     | Mul_DM_DVCons(a, cons) -> reversePush (d.A &* cons) a
-                    | Mul_DMCons_DV(cons, b) -> reversePush (cons.Transpose() * d.A) b
+                    | Mul_DMCons_DV(cons, b) -> reversePush (DM.Transpose(cons) * d.A) b
                     | Div_Had_DV_DV(a, b) -> reversePush (d.A ./ b.P) a; reversePush (d.A .* (-a.P ./ (b.P .* b.P))) b
                     | Div_Had_DV_DVCons(a, cons) -> reversePush (d.A ./ cons) a
                     | Div_Had_DVCons_DV(cons, b) -> reversePush (d.A .* (-cons ./ (b.P .* b.P))) b
                     | Div_DV_D(a, b) -> reversePush (d.A / b.P) a; reversePush (d.A * (-a.P / (b.P * b.P))) b
                     | Div_DV_DCons(a, cons) -> reversePush (d.A / cons) a
                     | Div_DVCons_D(cons, b) -> reversePush (d.A * (-cons / (b.P * b.P))) b
-                    | Div_D_DV(a, b) -> reversePush ((d.A ./ b.P).Sum()) a; reversePush (d.A .* (-a.P / (b.P .* b.P))) b
-                    | Div_D_DVCons(a, cons) -> reversePush ((d.A ./ cons).Sum()) a
+                    | Div_D_DV(a, b) -> reversePush (DV.Sum(d.A ./ b.P)) a; reversePush (d.A .* (-a.P / (b.P .* b.P))) b
+                    | Div_D_DVCons(a, cons) -> reversePush (DV.Sum(d.A ./ cons)) a
                     | Div_DCons_DV(cons, b) -> reversePush (d.A .* (-cons / (b.P .* b.P))) b
                     | Exp_DV(a) -> reversePush (d.A .* d.P) a // d.P = exp a.P
                     | Neg_DV(a) -> reversePush -d.A a
@@ -1581,9 +1607,9 @@ module DOps =
                     | SliceCol_DM(a, i, j) ->
                         a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToColMatrix())
                         reversePush DM.Zero a
-                    | Solve_DM_DV(a, b) -> let ba = DM.Solve(a.Transpose(), d.A) in reversePush (-ba &* d.A) a; reversePush (ba) b
-                    | Solve_DM_DVCons(a, cons) -> let ba = DM.Solve(a.Transpose(), d.A) in reversePush (-ba &* d.A) a
-                    | Solve_DMCons_DV(cons, b) -> let ba = DM.Solve(cons.Transpose(), d.A) in reversePush ba b
+                    | Solve_DM_DV(a, b) -> let ba = DM.Solve(DM.Transpose(a), d.A) in reversePush (-ba &* d.A) a; reversePush (ba) b
+                    | Solve_DM_DVCons(a, cons) -> let ba = DM.Solve(DM.Transpose(a), d.A) in reversePush (-ba &* d.A) a
+                    | Solve_DMCons_DV(cons, b) -> let ba = DM.Solve(DM.Transpose(cons), d.A) in reversePush ba b
                     | Append_DV_DV(a, b) ->
                         a.A <- a.A + d.A.[..(a.Length - 1)]
                         reversePush DV.Zero a
@@ -1621,18 +1647,18 @@ module DOps =
                     | Sub_DM_DM(a, b) -> reversePush d.A a; reversePush -d.A b
                     | Sub_DM_DMCons(a) -> reversePush d.A a
                     | Sub_DMCons_DM(a) -> reversePush -d.A a
-                    | Mul_DM_DM(a, b) -> reversePush (d.A * b.P.Transpose()) a; reversePush (a.P.Transpose() * d.A) b
-                    | Mul_DM_DMCons(a, cons) -> reversePush (d.A * cons.Transpose()) a
-                    | Mul_DMCons_DM(cons, b) -> reversePush (cons.Transpose() * d.A) b
+                    | Mul_DM_DM(a, b) -> reversePush (d.A * DM.Transpose(b.P)) a; reversePush (DM.Transpose(a.P) * d.A) b
+                    | Mul_DM_DMCons(a, cons) -> reversePush (d.A * DM.Transpose(cons)) a
+                    | Mul_DMCons_DM(cons, b) -> reversePush (DM.Transpose(cons) * d.A) b
                     | Mul_Had_DM_DM(a, b) -> reversePush (d.A .* b.P) a; reversePush (d.A .* a.P) b
                     | Mul_Had_DM_DMCons(a, cons) -> reversePush (d.A .* cons) a
-                    | Mul_DM_D(a, b) -> reversePush (d.A * b.P) a; reversePush ((d.A .* a.P).Sum()) b
+                    | Mul_DM_D(a, b) -> reversePush (d.A * b.P) a; reversePush (DM.Sum(d.A .* a.P)) b
                     | Mul_DM_DCons(a, cons) -> reversePush (d.A * cons) a
-                    | Mul_DMCons_D(cons, b) -> reversePush ((d.A .* cons).Sum()) b
-                    | Mul_Out_DV_DV(a, b) -> reversePush (d.A * b.P) a; reversePush (d.A.Transpose() * a.P) b
+                    | Mul_DMCons_D(cons, b) -> reversePush (DM.Sum(d.A .* cons)) b
+                    | Mul_Out_DV_DV(a, b) -> reversePush (d.A * b.P) a; reversePush (DM.Transpose(d.A) * a.P) b
                     | Mul_Out_DV_DVCons(a, cons) -> reversePush (d.A * cons) a
-                    | Mul_Out_DVCons_DV(cons, b) -> reversePush (d.A.Transpose() * cons) b
-                    | Transpose_DM(a) -> reversePush (d.A.Transpose()) a
+                    | Mul_Out_DVCons_DV(cons, b) -> reversePush (DM.Transpose(d.A) * cons) b
+                    | Transpose_DM(a) -> reversePush (DM.Transpose(d.A)) a
                     | Make_DM_ofD(a) -> a |> Array2D.iteri (fun i j v -> reversePush d.A.[i, j] v)
                     | Make_DM_ofDV(a) -> a |> Array.iteri (fun i v -> reversePush d.A.[i, *] v)
                     | AddItem_DM_D(a, i, j, b) -> reversePush d.A a; reversePush (d.A.[i, j]) b
