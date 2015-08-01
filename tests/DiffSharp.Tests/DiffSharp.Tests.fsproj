@@ -56,6 +56,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Tests.fs" />
+    <Compile Include="AD.P.fs" />
+    <Compile Include="AD.T.fs" />
+    <Compile Include="AD.A.fs" />
+    <Compile Include="AD.Nesting.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
     <Content Include="app.config" />

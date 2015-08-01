@@ -82,6 +82,8 @@ type D =
             | D(_) -> failwith "Cannot set fan-out value of D."
             | DF(_,_,_) -> failwith "Cannot set fan-out value of DF."
             | DR(_,_,_,f,_) -> f := v
+    member d.GetForward(t:D, i:uint32) = DF(d, t, i)
+    member d.GetReverse(i:uint32) = DR(d, ref (D 0.), Noop, ref 0u, i)
     member d.Copy() =
         match d with
         | D(ap) -> D(ap)
@@ -394,6 +396,8 @@ and DV =
             | DV(_) -> failwith "Cannot set fan-out value of DV."
             | DVF(_,_,_) -> failwith "Cannot set fan-out value of DVF."
             | DVR(_,_,_,f,_) -> f := v
+    member d.GetForward(t:DV, i:uint32) = DVF(d, t, i)
+    member d.GetReverse(i:uint32) = DVR(d, ref (DV.ZeroN d.Length), Noop, ref 0u, i)
     member d.Copy() =
         match d with
         | DV(ap) -> DV(Array.copy ap)
@@ -942,6 +946,8 @@ and DM =
             | DM(_) -> failwith "Cannot set fan-out value of DM."
             | DMF(_,_,_) -> failwith "Cannot set fan-out value of DMF."
             | DMR(_,_,_,f,_) -> f := v
+    member d.GetForward(t:DM, i:uint32) = DMF(d, t, i)
+    member d.GetReverse(i:uint32) = DMR(d, ref (DM.ZeroMN d.Rows d.Cols), Noop, ref 0u, i)
     member d.Copy() =
         match d with
         | DM(ap) -> DM(Array2D.copy ap)
@@ -1415,13 +1421,6 @@ and TraceOp =
 
 [<RequireQualifiedAccess>]
 module Vector =
-    let inline primal (v:DV) = v.P
-    let inline tangent (v:DV) = v.T
-    let inline adjoint (v:DV) = v.A
-    let inline primalTangent (v:DV) = v.P, v.T
-    let inline makeForward i t p = DVF(p, t, i)
-    let inline makeReverse i p = DVR(p, ref (DV.ZeroN p.Length), Noop, ref 0u, i)
-
     let inline ofArray a = DV.ofArray(a)
     let inline toArray (v:DV) = v.ToArray()
     let inline toRowMatrix (v:DV) = v.ToRowMatrix()
@@ -1440,16 +1439,10 @@ module Vector =
     let inline prepend (v1:DV) (v2:DV) = DV.Append(v2, v1)
     let inline split (n:seq<int>) (v:DV) = v.Split(n)
     let inline sum (v:DV) = v.Sum()
+    let inline standardBasis (n:int) (i:int) = DV(Array.init n (fun j -> if i = j then 1. else 0.))
 
 [<RequireQualifiedAccess>]
 module Matrix =
-    let inline primal (m:DM) = m.P
-    let inline tangent (m:DM) = m.T
-    let inline adjoint (m:DM) = m.A
-    let inline primalTangent (m:DM) = m.P, m.T
-    let inline makeForward i t p = DMF(p, t, i)
-    let inline makeReverse i p = DMR(p, ref DM.Zero, Noop, ref 0u, i)
-
     let inline ofArray2D a = DM.ofArray2D(a)
     let inline ofArray m a = DM.ofArray(m, a)
     let inline ofRows s = DM.ofRows(s)
@@ -1472,21 +1465,18 @@ module Matrix =
 
 
 [<AutoOpen>]
-module Util =
-    let inline standardBasis (n:int) (i:int) = DV(Array.init n (fun j -> if i = j then 1. else 0.))
-
-
-[<AutoOpen>]
 module DOps =
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
     let inline vector (v:seq<D>) = v |> Seq.toArray |> Vector.ofArray
     let inline matrix (m:seq<seq<D>>) = m |> array2D |> Matrix.ofArray2D
-    let inline makeForward i t p = DF(p, t, i)
-    let inline makeReverse i p = DR(p, ref (D 0.), Noop, ref 0u, i)
-    let inline primal (d:D) = d.P
-    let inline tangent (d:D) = d.T
-    let inline adjoint (d:D) = d.A
-    let inline primalTangent (d:D) = d.P, d.T
+    let inline makeForward i (t:^a) (p:^a) = 
+        (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
+    let inline makeReverse i (p:^a) = 
+        (^a : (member GetReverse : uint32 -> ^a) p, i)
+    let inline primal (d:^a when ^a : (member P : ^a)) = (^a : (member P : ^a) d)
+    let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
+    let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
+    let inline primalTangent d = d |> primal, d |> tangent
     let rec reversePush (v:obj) (d:obj) =
         match d with
         | :? D as d ->
@@ -1845,18 +1835,14 @@ module DiffOps =
     let inline diffn' n f x =
         (x |> f, diffn n f x)
 
-    let inline gradv' f x v =
-        x |> Vector.makeForward GlobalTagger.Next v |> f |> primalTangent
-
-    let inline gradv f x v = // TODO: optimize
-        gradv' f x v |> snd
+    // gradv not needed anymore, subsumed by generalized jacobianv.
 
     let inline grad' f x =
-        let xa = x |> Vector.makeReverse GlobalTagger.Next
+        let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
         z |> reverseReset
         z |> reversePush (D 1.)
-        (z.P, xa.A)
+        (z.P, xa |> adjoint)
 
     let inline grad f x = // TODO: optimize
         grad' f x |> snd
@@ -1866,20 +1852,20 @@ module DiffOps =
     //let inline laplacian
 
     let inline jacobianv' f x v =
-        x |> Vector.makeForward GlobalTagger.Next v |> f |> Vector.primalTangent
+        x |> makeForward GlobalTagger.Next v |> f |> primalTangent
 
     let inline jacobianv f x v = // TODO: optimize
         jacobianv' f x v |> snd
 
-    let inline jacobianTv'' f x =
-        let xa = x |> Vector.makeReverse GlobalTagger.Next
-        let z:DV = f xa
-        let r1 = z |> Vector.primal
+    let inline jacobianTv'' (f:'a->'b) (x:'a) =
+        let xa = x |> makeReverse GlobalTagger.Next
+        let z = f xa
+        let r1 = z |> primal
         let r2 =
-            fun (v:DV) ->
+            fun (v:'b) ->
                 z |> reverseReset
                 z |> reversePush v
-                xa |> Vector.adjoint
+                xa |> adjoint
         (r1, r2)
 
     let inline jacobianTv' f x v =
@@ -1890,12 +1876,12 @@ module DiffOps =
         jacobianTv' f x v |> snd
 
     let inline jacobian' f (x:DV) =
-        let o = x |> f |> Vector.primal
+        let o:DV = x |> f |> primal
         if x.Length > o.Length then
             let r = jacobianTv f x
-            (o, Array.init o.Length (fun j -> r (standardBasis o.Length j)) |> Matrix.ofRows)
+            (o, Array.init o.Length (fun j -> r (Vector.standardBasis o.Length j)) |> Matrix.ofRows)
         else
-            (o, Array.init x.Length (fun i -> jacobianv f x (standardBasis x.Length i)) |> Matrix.ofCols)
+            (o, Array.init x.Length (fun i -> jacobianv f x (Vector.standardBasis x.Length i)) |> Matrix.ofCols)
 
     let inline jacobian f x =
         jacobian' f x |> snd
@@ -1920,7 +1906,7 @@ module DiffOps =
         (x |> f, hessian f x)
 
     let inline gradhessianv' f x v =
-        let gv, hv = grad' (fun xx -> gradv f xx v) x
+        let gv, hv = grad' (fun xx -> jacobianv f xx v) x
         (x |> f, gv, hv)
 
     let inline gradhessianv f x v =
