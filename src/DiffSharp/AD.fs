@@ -448,7 +448,7 @@ and DV =
         | DV(ap) -> seq [ap] |> array2D |> DM
         | DVF(ap,at,ai) -> DMF(ap.ToRowMatrix(), at.ToRowMatrix(), ai)
         | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowMatrix() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
-    member d.ToColMatrix() = d.ToRowMatrix().Transpose()
+    member d.ToColMatrix() = DM.Transpose(d.ToRowMatrix())
     
     static member Zero = DV Array.empty
     static member ZeroN n = DV(Array.zeroCreate n)
