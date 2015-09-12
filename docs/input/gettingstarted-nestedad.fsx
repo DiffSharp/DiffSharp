@@ -1,13 +1,11 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-
 
 (**
 Nested AD
 =========
 
-The main functionality of DiffSharp is found under the **DiffSharp.AD** namespace. Opening this namespace allows you to automatically evaluate derivatives of code via forward and/or reverse AD.
+The main functionality of DiffSharp is found under the **DiffSharp.AD** namespace. Opening this namespace allows you to automatically evaluate derivatives of code via forward and/or reverse AD. Internally, for any case involving a function $f: \mathbb{R}^n \to \mathbb{R}^m$, DiffSharp uses forward AD when $n \ll m$ and reverse AD when $n \gg m$. Combinations such as reverse-on-forward or forward-on-reverse AD ...
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 

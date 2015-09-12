@@ -40,6 +40,9 @@
 /// Various utility functions
 module DiffSharp.Util
 
+open System.Threading.Tasks
+
+
 /// Gets the first term of a 3-tuple
 let inline fst3 (f, _, _) = f
 
@@ -56,7 +59,8 @@ let inline fsttrd (f, _, t) = (f, t)
 let inline sndtrd (_, s, t) = (s, t)
 
 /// Value of log 10.
-let log10val = log 10.
+let log10ValFloat64 = log 10.
+let log10ValFloat32 = log 10.f
 
 /// Computes a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =
@@ -64,11 +68,65 @@ let inline hash (o:obj[]) =
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
-let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then LanguagePrimitives.GenericOne else LanguagePrimitives.GenericZero)
+let inline standardBasis (n:int) (i:int) = 
+    let s = Array.zeroCreate n
+    s.[i] <- LanguagePrimitives.GenericOne
+    s
+
+let inline standardBasisVal (n:int) (i:int) v = 
+    let s = Array.zeroCreate n
+    s.[i] <- v
+    s
+
+/// Copies the upper triangular elements of the square matrix given in the 2d array `m` to the lower triangular part
+let inline copyUpperToLower (m:_[,]) =
+    if (Array2D.length1 m) <> (Array2D.length2 m) then invalidArg "" "Expecting a square matrix."
+    let r = Array2D.copy m
+    let rows = r.GetLength 0
+    if rows > 1 then
+        Parallel.For(1, rows, fun i ->
+            Parallel.For(0, i, fun j ->
+                r.[i, j] <- r.[j, i]) |> ignore) |> ignore
+    r
+    
+let inline signummod x =
+    if x < LanguagePrimitives.GenericZero then -LanguagePrimitives.GenericOne
+    elif x > LanguagePrimitives.GenericZero then LanguagePrimitives.GenericOne
+    else LanguagePrimitives.GenericZero
+
+let inline signum (x:'a) = (^a : (static member Sign : ^a -> ^a) x)
+
+let inline logsumexp (x:^a) = (^a : (static member LogSumExp : ^a -> ^b) x)
+let inline softplus (x:^a) = (^a : (static member SoftPlus : ^a -> ^a) x)
+let inline softsign (x:^a) = (^a : (static member SoftSign : ^a -> ^a) x)
+let inline sigmoid (x:^a) = (^a : (static member Sigmoid : ^a -> ^a) x)
+let inline reLU (x:^a) = (^a : (static member ReLU : ^a -> ^a) x)
+let inline softmax (x:^a) = (^a : (static member Softmax : ^a -> ^a) x)
+let inline maximum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Max : ^a * ^b -> ^c) x, y)
+let inline minimum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Min : ^a * ^b -> ^c) x, y)
+
+//type System.Single with
+//    static member LogSumExp(x:float32) = x
+//    static member SoftPlus(x) = log (1.f + exp x)
+//    static member SoftSign(x) = x / (1.f + abs x)
+//    static member Sigmoid(x) = 1.f / (1.f + exp -x)
+//    static member ReLU(x) = max 0.f x
+//
+//type System.Double with
+//    static member LogSumExp(x:float) = x
+//    static member SoftPlus(x) = log (1. + exp x)
+//    static member SoftSign(x) = x / (1. + abs x)
+//    static member Sigmoid(x) = 1. / (1. + exp -x)
+//    static member ReLU(x) = max 0. x
 
 module ErrorMessages =
-    let invalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
-    let invalidArgSolve() = invalidArg "" "Given system of linear equations has no solution."
+    let InvalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
+    let InvalidArgSolve() = invalidArg "" "Given system of linear equations has no solution."
+    let InvalidArgCurl() = invalidArg "" "Curl is supported only for functions with a three-by-three Jacobian matrix."
+    let InvalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
+    let InvalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
+    let InvalidArgInverse() = invalidArg "" "Cannot compute the inverse of the given matrix."
+    let InvalidArgDet() = invalidArg "" "Cannot compute the determinant of the given matrix."
 
 /// Tagger for generating incremental integers
 type Tagger =
@@ -82,7 +140,29 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
+module Array =
+    module Parallel =
+        let map2 f (a1:_[]) (a2:_[]) =
+            let n = min a1.Length a2.Length
+            Array.Parallel.init n (fun i -> f a1.[i] a2.[i])
+
 module Array2D =
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)
     let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray
+
+    module Parallel =
+        let init m n f =
+            let a = Array2D.zeroCreate m n
+            // Nested parallel fors caused problems with mutable variables
+            //Parallel.For(0, m, fun i ->
+            //    Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore) |> ignore
+            for i = 0 to m - 1 do
+                Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore
+            a
+        let map f (a:_[,]) =
+            init (Array2D.length1 a) (Array2D.length2 a) (fun i j -> f a.[i, j])
+        let map2 f (a1:_[,]) (a2:_[,]) =
+            let m = min (Array2D.length1 a1) (Array2D.length1 a2)
+            let n = min (Array2D.length2 a1) (Array2D.length2 a2)
+            init m n (fun i j -> f a1.[i, j] a2.[i, j])

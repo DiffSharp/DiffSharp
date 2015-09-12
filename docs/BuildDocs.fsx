@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 // 
-// Released under LGPL license.
+// Released under the LGPL license.
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU Lesser General Public License as published by
@@ -40,11 +40,11 @@
 // Script for generating library documentation
 //
 
-#I "../packages/FSharp.Compiler.Service.0.0.87/lib/net40/"
+#I "../packages/FSharp.Compiler.Service.0.0.90/lib/net45/"
 #r "FSharp.Compiler.Service.dll"
-#I "../packages/FSharpVSPowerTools.Core.1.8.0/lib/net45"
+#I "../packages/FSharpVSPowerTools.Core.1.9.0/lib/net45"
 #r "FSharpVSPowerTools.Core.dll"
-#I "../packages/FSharp.Formatting.2.9.1/lib/net40/"
+#I "../packages/FSharp.Formatting.2.10.3/lib/net40/"
 #r "CSharpFormat.dll"
 #r "FSharp.CodeFormat.dll"
 #r "FSharp.Literate.dll"
