@@ -1232,7 +1232,7 @@ and DV =
         mini
     static member Min (a:DV) = a.[DV.MinIndex(a)]
 
-    static member Softmax (a:DV) =
+    static member SoftMax (a:DV) =
         let a' = a - DV.Max(a)
         let e = exp a'
         e / DV.Sum(e)
@@ -3232,7 +3232,7 @@ module DiffOps =
     let inline curl' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurl()
-        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
+        v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
 
     let inline curl f x =
         curl' f x |> snd
@@ -3248,7 +3248,7 @@ module DiffOps =
     let inline curldiv' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurlDiv()
-        v, [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
+        v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
 
     let inline curldiv f x =
         curldiv' f x |> sndtrd

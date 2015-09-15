@@ -64,6 +64,8 @@
     <Compile Include="Numerical.Float64.fs" />
     <Compile Include="Symbolic.Float32.fs" />
     <Compile Include="Symbolic.Float64.fs" />
+    <Compile Include="Interop.Float32.fs" />
+    <Compile Include="Interop.Float64.fs" />
     <None Include="libgcc_s_seh-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -101,7 +101,7 @@ let inline softplus (x:^a) = (^a : (static member SoftPlus : ^a -> ^a) x)
 let inline softsign (x:^a) = (^a : (static member SoftSign : ^a -> ^a) x)
 let inline sigmoid (x:^a) = (^a : (static member Sigmoid : ^a -> ^a) x)
 let inline reLU (x:^a) = (^a : (static member ReLU : ^a -> ^a) x)
-let inline softmax (x:^a) = (^a : (static member Softmax : ^a -> ^a) x)
+let inline softmax (x:^a) = (^a : (static member SoftMax : ^a -> ^a) x)
 let inline maximum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Max : ^a * ^b -> ^c) x, y)
 let inline minimum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Min : ^a * ^b -> ^c) x, y)
 
