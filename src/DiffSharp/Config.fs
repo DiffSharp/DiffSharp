@@ -40,6 +40,7 @@ namespace DiffSharp.Config
 
 open DiffSharp.BackEnd
 
+/// Record type holding configuration parameters
 type Config =
     {Float32BackEnd : BackEnd<float32>
      Float64BackEnd : BackEnd<float>
@@ -50,7 +51,7 @@ type Config =
      Float32EpsilonRec2 : float32
      Float64EpsilonRec2 : float}
 
-
+/// Global configuration
 type GlobalConfig() =
     static let mutable C =
         let eps = 0.00001

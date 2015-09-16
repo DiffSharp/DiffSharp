@@ -67,12 +67,13 @@ let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
-/// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
+/// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are zero
 let inline standardBasis (n:int) (i:int) = 
     let s = Array.zeroCreate n
     s.[i] <- LanguagePrimitives.GenericOne
     s
 
+/// Gets an array of size `n`, where the `i`-th element has value `v` and the rest of the elements are zero
 let inline standardBasisVal (n:int) (i:int) v = 
     let s = Array.zeroCreate n
     s.[i] <- v
@@ -140,12 +141,14 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
+/// Extensions for the FSharp.Collections.Array module
 module Array =
     module Parallel =
         let map2 f (a1:_[]) (a2:_[]) =
             let n = min a1.Length a2.Length
             Array.Parallel.init n (fun i -> f a1.[i] a2.[i])
 
+/// Extensions for the FSharp.Collections.Array2D module
 module Array2D =
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)

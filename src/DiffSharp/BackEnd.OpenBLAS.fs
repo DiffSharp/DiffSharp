@@ -48,7 +48,7 @@ open System.Security
 open System.Threading.Tasks
 open DiffSharp.Util
 
-
+/// Backend using OpenBLAS library for BLAS and LAPACK operations, and parallel threads for non-BLAS operations
 module OpenBLAS =
 
     type PinnedArray<'T when 'T : unmanaged> (array : 'T[]) =

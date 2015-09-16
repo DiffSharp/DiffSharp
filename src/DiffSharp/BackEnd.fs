@@ -38,6 +38,7 @@
 
 namespace DiffSharp.BackEnd
 
+/// Interface for DiffSharp backends
 type BackEnd<'T> =
     abstract member Mul_Dot_V_V : 'T[] * 'T[] -> 'T
     abstract member L1Norm_V : ('T[]) -> 'T

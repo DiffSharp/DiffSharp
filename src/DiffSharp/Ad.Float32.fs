@@ -36,29 +36,33 @@
 //   www.bcl.hamilton.ie
 //
 
-namespace DiffSharp.AD.Float32
+/// Nested forward and reverse mode automatic differentiation module
+module DiffSharp.AD.Float32
 
 open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
 
-
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
-    | D of float32
-    | DF of D * D * uint32
-    | DR of D * (D ref) * TraceOp * (uint32 ref) * uint32
+    | D of float32 // Primal
+    | DF of D * D * uint32 // Primal, tangent, tag
+    | DR of D * (D ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
 
+    /// Primal value of this D
     member d.P =
         match d with
         | D(_) -> d
         | DF(ap,_,_) -> ap
         | DR(ap,_,_,_,_) -> ap
+    /// Tangent value of this D
     member d.T =
         match d with
         | D(_) -> D 0.f
         | DF(_,at,_) -> at
         | DR(_,_,_,_,_) -> failwith "Cannot get tangent value of DR."
+    /// Adjoint value of this D
     member d.A
         with get() =
             match d with
@@ -70,6 +74,7 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set adjoint value of DF."
             | DR(_,a,_,_,_) -> a := v
+    /// Fan-out counter of this D
     member d.F
         with get() =
             match d with
@@ -388,21 +393,25 @@ type D =
     static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / 2.f
     static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / 2.f
 
+/// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 and DV =
-    | DV of float32[]
-    | DVF of DV * DV * uint32
-    | DVR of DV * (DV ref) * TraceOp * (uint32 ref) * uint32
+    | DV of float32[] // Primal
+    | DVF of DV * DV * uint32 // Primal, tangent, tag
+    | DVR of DV * (DV ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
 
+    /// Primal value of this DV
     member d.P =
         match d with
         | DV(_) -> d
         | DVF(ap,_,_) -> ap
         | DVR(ap,_,_,_,_) -> ap
+    /// Tangent value of this DV
     member d.T =
         match d with
         | DV(_) -> DV Array.empty
         | DVF(_,at,_) -> at
         | DVR(_,_,_,_,_) -> failwith "Cannot get tangent value of DVR."
+    /// Adjoint value of this DV
     member d.A
         with get() =
             match d with
@@ -414,6 +423,7 @@ and DV =
             | DV(_) -> ()
             | DVF(_,_,_) -> failwith "Cannot set adjoint value of DVF."
             | DVR(_,a,_,_,_) -> a := v
+    /// Fan-out counter of this DV
     member d.F
         with get() =
             match d with
@@ -722,6 +732,7 @@ and DV =
                 | -1                  -> let cp = fd(a, bp) in DVR(cp, ref (DV.ZeroN cp.Length), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DVR(cp, ref (DV.ZeroN cp.Length), r_d_c(a, b), ref 0u, ai) // ai > bi
 
+    /// Element-wise addition of `a` and `b`
     static member (+) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Add_V_V(a, b)
         let inline fd(a, b) = a + b
@@ -733,6 +744,7 @@ and DV =
         let inline r_c_d(a, b) = Add_DV_DVCons(b)
         DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Element-wise subtraction of `a` and `b`
     static member (-) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Sub_V_V(a, b)
         let inline fd(a, b) = a - b
@@ -744,7 +756,7 @@ and DV =
         let inline r_c_d(a, b) = Sub_DVCons_DV(b)
         DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Inner (dot, scalar) product
+    /// Inner (dot, scalar) product of `a` and `b`
     static member (*) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_Dot_V_V(a, b)
         let inline fd(a, b) = a * b
@@ -756,7 +768,7 @@ and DV =
         let inline r_c_d(a, b) = Mul_Dot_DV_DVCons(b, a)
         DV.Op_DV_DV_D (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Element-wise (Hadamard, Schur) product
+    /// Element-wise (Hadamard, Schur) product of `a` and `b`
     static member (.*) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_V_V((*), a, b)
         let inline fd(a, b) = a .* b
@@ -768,7 +780,7 @@ and DV =
         let inline r_c_d(a, b) = Mul_Had_DV_DVCons(b, a)
         DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Outer (dyadic, tensor) product of two vectors
+    /// Outer (dyadic, tensor) product of `a` and `b`
     static member (&*) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_Out_V_V(a, b)
         let inline fd(a, b) = a &* b
@@ -780,7 +792,7 @@ and DV =
         let inline r_c_d(a, b) = Mul_Out_DVCons_DV(a, b)
         DV.Op_DV_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Element-wise (Hadamard, Schur) division
+    /// Element-wise (Hadamard, Schur) division of `a` and `b`
     static member (./) (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_V_V((/), a, b)
         let inline fd(a, b) = a ./ b
@@ -792,6 +804,7 @@ and DV =
         let inline r_c_d(a, b) = Div_Had_DVCons_DV(a, b)
         DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Element-wise power of `a` and `b`
     static member Pow (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_V_V((fun x y -> x ** y), a, b)
         let inline fd(a, b) = a ** b
@@ -803,6 +816,7 @@ and DV =
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
         DV.Op_DV_DV_DV(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
     
+    /// Element-wise atan2 of `a` and `b`
     static member Atan2 (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_V_V(atan2, a, b)
         let inline fd(a, b) = atan2 a b
@@ -814,6 +828,7 @@ and DV =
         let inline r_c_d(a, b) = Atan2_DVCons_DV(a, b)
         DV.Op_DV_DV_DV(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Multiply vector `a` by scalar `b`
     static member (*) (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_S_V(b, a)
         let inline fd(a, b) = a * b
@@ -825,6 +840,7 @@ and DV =
         let inline r_c_d(a, b) = Mul_DVCons_D(a, b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Multiply vector `b` by scalar `a`
     static member (*) (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_S_V(a, b)
         let inline fd(a, b) = a * b
@@ -836,6 +852,7 @@ and DV =
         let inline r_c_d(a, b) = Mul_DVCons_D(b, a)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Divide vector `a` by scalar `b`
     static member (/) (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_S_V(1.f / b, a)
         let inline fd(a, b) = a / b
@@ -847,6 +864,7 @@ and DV =
         let inline r_c_d(a, b) = Div_DVCons_D(a, b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where each element is scalar `a` divided by the corresponding element of vector `b`
     static member (/) (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> a / v), b)
         let inline fd(a, b) = a / b
@@ -858,6 +876,7 @@ and DV =
         let inline r_c_d(a, b) = Div_DCons_DV(a, b)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Add scalar `b` to vector `a`
     static member (+) (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> v + b), a)
         let inline fd(a, b) = a + b
@@ -869,6 +888,7 @@ and DV =
         let inline r_c_d(a, b) = Add_DVCons_D(b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Add scalar `a` to vector `b`
     static member (+) (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> a + v), b)
         let inline fd(a, b) = a + b
@@ -880,6 +900,7 @@ and DV =
         let inline r_c_d(a, b) = Add_DV_DCons(b)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Subtract scalar `b` from vector `a`
     static member (-) (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Sub_V_S(a, b)
         let inline fd(a, b) = a - b
@@ -891,6 +912,7 @@ and DV =
         let inline r_c_d(a, b) = Sub_DVCons_D(b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where each element is the corresponding element of vector `b` subtracted from scalar `a`
     static member (-) (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Sub_S_V(a, b)
         let inline fd(a, b) = a - b
@@ -902,6 +924,7 @@ and DV =
         let inline r_c_d(a, b) = Sub_DCons_DV(b)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Pow (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> v ** b), a)
         let inline fd(a, b) = a ** b
@@ -913,6 +936,7 @@ and DV =
         let inline r_c_d(a, b) = Pow_DVCons_D(a, b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where scalar `a` is raised to the power of each corresponding element of vector `b`
     static member Pow (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> a ** v), b)
         let inline fd(a:D, b:DV) = DV.Pow(a, b)
@@ -924,6 +948,7 @@ and DV =
         let inline r_c_d(a, b) = Pow_DCons_DV(a, b)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Atan2 (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> atan2 v b), a)
         let inline fd(a:DV, b:D) = DV.Atan2(a, b)
@@ -935,6 +960,7 @@ and DV =
         let inline r_c_d(a, b) = Atan2_DVCons_D(a, b)
         DV.Op_DV_D_DV(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Generate a vector where scalar `a` is raised to the power of each corresponding element of vector `b`
     static member Atan2 (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> atan2 a v), b)
         let inline fd(a:D, b:DV) = DV.Atan2(a, b)
@@ -946,6 +972,7 @@ and DV =
         let inline r_c_d(a, b) = Atan2_DCons_DV(a, b)
         DV.Op_D_DV_DV(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Add scalar `b` to vector `a` at index `i`
     static member AddItem (a:DV, i:int, b:D) =
         let inline ff(a, b) = let aa = Array.copy a in aa.[i] <- aa.[i] + b; aa
         let inline fd(a, b) = DV.AddItem(a, i, b)
@@ -957,6 +984,7 @@ and DV =
         let inline r_c_d(a, b) = AddItem_DVCons_D(i, b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
     
+    /// Add subvector `b` to vector `a`, starting from index `i`
     static member AddSubVector (a:DV, i:int, b:DV) =
         let inline ff(a, b:_[]) = 
             let aa = Array.copy a 
@@ -1023,7 +1051,7 @@ and DV =
         let inline df(cp, ap, at) = at .* cp // cp = exp ap
         let inline r(a) = Exp_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
-
+    
     static member Sin (a:DV) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.Map_F_V(sin, a)
         let inline fd(a) = sin a
@@ -1136,6 +1164,7 @@ and DV =
         let inline r(a) = Round_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
+    /// L1 norm of vector `a`
     static member L1Norm (a:DV) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.L1Norm_V(a)
         let inline fd(a) = DV.L1Norm(a)
@@ -1143,27 +1172,31 @@ and DV =
         let inline r(a) = L1Norm_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
 
-    static member L2NormSq(a:DV) =
+    /// Squared L2 norm of vector `a`
+    static member L2NormSq (a:DV) =
         let inline ff(a) = let l2norm = GlobalConfig.Float32BackEnd.L2Norm_V(a) in l2norm * l2norm
         let inline fd(a) = DV.L2NormSq(a)
         let inline df(cp, ap, at) = (D 2.f) * (ap * at)
         let inline r(a) = L2NormSq_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
 
-    static member L2Norm(a:DV) =
+    /// L2 norm of vector `a`
+    static member L2Norm (a:DV) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.L2Norm_V(a)
         let inline fd(a) = DV.L2Norm(a)
         let inline df(cp, ap, at) = (ap * at) / cp // cp = DV.L2Norm(ap)
         let inline r(a) = L2Norm_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
 
-    static member Sum(a:DV) =
+    /// Sum of the elements of vector `a`
+    static member Sum (a:DV) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.Sum_V(a)
         let inline fd(a) = DV.Sum(a)
         let inline df(cp, ap, at) = DV.Sum(at)
         let inline r(a) = Sum_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
 
+    /// Append vector `b` to vector `a`
     static member Append (a:DV, b:DV) =
         if a.Length = 0 then
             b
@@ -1204,6 +1237,7 @@ and DV =
         let inline df(cp:D, ap:DV, at:DV) = (at * (exp ap)) / exp cp // cp = DV.LogSumExp(ap)
         let inline r(a) = LogSumExp_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
+    /// Normalize vector `a` to have zero mean and unit variance
     static member Normalize (a:DV) =
         let mu = DV.Sum(a) / a.Length
         let s = a - mu
@@ -1216,6 +1250,7 @@ and DV =
     static member Min (a:DV, b:D) = ((a + b) - abs (a - b)) / 2.f
     static member Min (a:D, b:DV) = ((a + b) - abs (a - b)) / 2.f
 
+    /// Index of the maximum element of vector `a`
     static member MaxIndex (a:DV) =
         let a' = DV.op_Explicit(a)
         let mutable maxi = 0
@@ -1224,6 +1259,7 @@ and DV =
         maxi
     static member Max (a:DV) = a.[DV.MaxIndex(a)]
         
+    /// Index of the minimum element of vector `b`
     static member MinIndex (a:DV) =
         let a' = DV.op_Explicit(a)
         let mutable mini = 0
@@ -1237,21 +1273,25 @@ and DV =
         let e = exp a'
         e / DV.Sum(e)
 
+/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 and DM =
-    | DM of float32[,]
-    | DMF of DM * DM * uint32
-    | DMR of DM * (DM ref) * TraceOp * (uint32 ref) * uint32
+    | DM of float32[,] // Primal
+    | DMF of DM * DM * uint32 // Primal, tangent, tag
+    | DMR of DM * (DM ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
 
+    /// Primal value of this DM
     member d.P =
         match d with
         | DM(_) -> d
         | DMF(ap,_,_) -> ap
         | DMR(ap,_,_,_,_) -> ap
+    /// Tangent value of this DM
     member d.T =
         match d with
         | DM(_) -> DM Array2D.empty
         | DMF(_,at,_) -> at
         | DMR(_,_,_,_,_) -> failwith "Cannot get tangent value of DMR."
+    /// Adjoint value of this DM
     member d.A
         with get() =
             match d with
@@ -1263,6 +1303,7 @@ and DM =
             | DM(_) -> ()
             | DMF(_,_,_) -> failwith "Cannot set adjoint value of DMF."
             | DMR(_,a,_,_,_) -> a := v
+    /// Fan-out value of this DM
     member d.F
         with get() =
             match d with
@@ -1639,6 +1680,7 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_c(a, b), ref 0u, ai) // ai > bi
 
+    /// Element-wise addition of `a` and `b`
     static member (+) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Add_M_M(a, b)
         let inline fd(a, b) = a + b
@@ -1650,6 +1692,7 @@ and DM =
         let inline r_c_d(a, b) = Add_DM_DMCons(b)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Element-wise subtraction of `a` and `b`
     static member (-) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Sub_M_M(a, b)
         let inline fd(a, b) = a - b
@@ -1661,7 +1704,7 @@ and DM =
         let inline r_c_d(a, b) = Sub_DMCons_DM(b)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Matrix multiplication
+    /// Matrix product of `a` and `b`
     static member (*) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_M_M(a, b)
         let inline fd(a, b) = a * b
@@ -1673,7 +1716,7 @@ and DM =
         let inline r_c_d(a, b) = Mul_DMCons_DM(a, b)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Element-wise (Hadamard, Schur) product
+    /// Element-wise (Hadamard, Schur) product of `a` and `b`
     static member (.*) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_Had_M_M(a, b)
         let inline fd(a, b) = a .* b
@@ -1685,6 +1728,7 @@ and DM =
         let inline r_c_d(a, b) = Mul_Had_DM_DMCons(b, a)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Right-multiply matrix `a` by vector `b`
     static member (*) (a:DM, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_M_V(a, b)
         let inline fd(a, b) = a * b
@@ -1696,6 +1740,7 @@ and DM =
         let inline r_c_d(a, b) = Mul_DMCons_DV(a, b)
         DM.Op_DM_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Left-multiply matrix `b` by vector `a`
     static member (*) (a:DV, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Mul_V_M(a, b)
         let inline fd(a, b) = a * b
@@ -1707,7 +1752,7 @@ and DM =
         let inline r_c_d(a, b) = Mul_DVCons_DM(a, b)
         DM.Op_DV_DM_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
-    // Element-wise (Hadamard, Schur) division
+    /// Element-wise (Hadamard, Schur) division `a` and `b`
     static member (./) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_M_M((/), a, b)
         let inline fd(a, b) = a ./ b
@@ -2038,6 +2083,7 @@ and DM =
         let inline r(a) = Round_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
+    /// Transpose of matrix `a`
     static member Transpose(a:DM) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.Transpose_M(a)
         let inline fd(a) = DM.Transpose(a)
@@ -2045,6 +2091,7 @@ and DM =
         let inline r(a) = Transpose_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
+    /// Diagonal of matrix `a`
     static member Diagonal(a:DM) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.Diagonal_M(a)
         let inline fd(a) = DM.Diagonal(a)
@@ -2052,9 +2099,11 @@ and DM =
         let inline r(a) = Diagonal_DM(a)
         DM.Op_DM_DV (a, ff, fd, df, r)
 
+    /// Trace of matrix `a`
     static member Trace(a:DM) =
         DV.Sum(DM.Diagonal(a))
 
+    /// Sum of the entries of matrix `a`
     static member Sum(a:DM) =
         let inline ff(a) = GlobalConfig.Float32BackEnd.Sum_M(a)
         let inline fd(a) = DM.Sum(a)
@@ -2062,6 +2111,7 @@ and DM =
         let inline r(a) = Sum_DM(a)
         DM.Op_DM_D (a, ff, fd, df, r)
 
+    /// Solve a system of linear equations Ax = b, where the coefficient matrix `a` has general form
     static member Solve (a:DM, b:DV) =
         let inline ff(a, b) = match GlobalConfig.Float32BackEnd.Solve_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
         let inline fd(a, b) = DM.Solve(a, b)
@@ -2073,6 +2123,7 @@ and DM =
         let inline r_c_d(a, b) = Solve_DMCons_DV(a, b)
         DM.Op_DM_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Solve a system of linear equations Ax = b, where the coefficient matrix `a` is symmetric
     static member SolveSymmetric (a:DM, b:DV) =
         let inline ff(a, b) = match GlobalConfig.Float32BackEnd.SolveSymmetric_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
         let inline fd(a, b) = DM.SolveSymmetric(a, b)
@@ -2084,6 +2135,7 @@ and DM =
         let inline r_c_d(a, b) = Solve_DMCons_DV(a, b)
         DM.Op_DM_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Add scalar `b` to matrix `a` at row `i` and column `j`
     static member AddItem (a:DM, i:int, j:int, b:D) =
         let inline ff(a, b) = let aa = Array2D.copy a in aa.[i, j] <- aa.[i, j] + b; aa
         let inline fd(a, b) = DM.AddItem(a, i, j, b)
@@ -2095,6 +2147,7 @@ and DM =
         let inline r_c_d(a, b) = AddItem_DMCons_D(i, j, b)
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
     
+    /// Add submatrix `b` to matrix `a`, where the upper left corner of `b` is positioned at row `i` and column `j`
     static member AddSubMatrix (a:DM, i:int, j:int, b:DM) =
         let inline ff(a:float32[,], bb:float32[,]) = 
             let aa = Array2D.copy a 
@@ -2114,6 +2167,7 @@ and DM =
         let inline r_c_d(a, b) = AddSubMatrix_DMCons_DM(i, j, b)
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Add the elements of vector `b` to the diagonal elements of matrix `a`
     static member AddDiagonal (a:DM, b:DV) =
         let inline ff(a:float32[,], b:float32[]) =
             let aa = Array2D.copy a
@@ -2129,6 +2183,7 @@ and DM =
         let inline r_c_d(a, b) = AddDiagonal_DMCons_DV(b)
         DM.Op_DM_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    /// Matrix inverse of `a`
     static member Inverse(a:DM) =
         let inline ff(a) = match GlobalConfig.Float32BackEnd.Inverse_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgInverse()
         let inline fd(a) = DM.Inverse(a)
@@ -2136,6 +2191,7 @@ and DM =
         let inline r(a) = Inverse_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
+    /// Determinant of matrix `a`
     static member Det(a:DM) =
         let inline ff(a) = match GlobalConfig.Float32BackEnd.Det_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgDet()
         let inline fd(a) = DM.Det(a)
@@ -2170,6 +2226,7 @@ and DM =
     static member Min (a:DM, b:D) = ((a + b) - abs (a - b)) / 2.f
     static member Min (a:D, b:DM) = ((a + b) - abs (a - b)) / 2.f
 
+    /// Index of the maximum element of matrix `a`
     static member MaxIndex (a:DM) =
         let a' = DM.op_Explicit(a)
         let mutable maxij = 0, 0
@@ -2180,6 +2237,7 @@ and DM =
         maxij
     static member Max (a:DM) = let maxij = DM.MaxIndex(a) in a.[fst maxij, snd maxij]
 
+    /// Index of the minimum element of matrix `a`
     static member MinIndex (a:DM) =
         let a' = DM.op_Explicit(a)
         let mutable minij = 0, 0
@@ -2190,6 +2248,7 @@ and DM =
         minij
     static member Min (a:DM) = let minij = DM.MinIndex(a) in a.[fst minij, snd minij]
 
+/// Operation types recorded in the evaluation trace
 and TraceOp =
     // Scalar-valued operations
     | Add_D_D                of D * D
@@ -2427,143 +2486,254 @@ and TraceOp =
     | Noop
 
 
+/// Functional-oriented operations on vectors. Implementing functionality similar to FSharp.Collections.Array.
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DV =
+    // Note: map operations are not implemented on purpose. To benefit from the performance of BLAS ops, supplied element-wise operations are used. For example: "exp v" instead of "DV.map exp v"
+    /// Creates a vector from array `a`
     let inline ofArray a = DV.OfArray(a)
+    /// Converts vector `v` into an array
     let inline toArray (v:DV) = v.ToArray()
+    /// Converts vector `v` into a row matrix
     let inline toRowMatrix (v:DV) = v.ToRowMatrix()
+    /// Converts vector `v` into a column matrix
     let inline toColMatrix (v:DV) = v.ToColMatrix()
+    /// Creates a copy of vector `v`
     let inline copy (v:DV) = v.Copy()
+    /// Creates a vector with `n` elements, each with value `v`
     let inline create n (v:'a) = 
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.create n (unbox<D>(box v)))
         elif at.Equals(typeof<float32>) then DV (Array.create n (unbox<float32>(box v)))
         else failwith "Unsupported type. Expecting D or float32."
+    /// Creates a vector with `n` zero elements
     let inline zeroCreate n = DV.ZeroN n
+    /// Empty vector
     let empty = DV.Zero
+    /// Creates a vector of `n` elements, where each element is defined by function `f`
     let inline init n (f:int->'a) = 
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.init n (unbox<int->D>(box f)))
         elif at.Equals(typeof<float32>) then DV (Array.init n (unbox<int->float32>(box f)))
         else failwith "Unsupported type. Expecting D or float32."
+    /// Iterates function `f` over the elements of vector `v`
     let inline iter (f:D->unit) (v:DV) = v |> toArray |> Array.iter f
+    /// Iterates function `f` over the elements of vector `v`. An element index is also supplied to `f`.
     let inline iteri (f:int->D->unit) (v:DV) = v |> toArray |> Array.iteri f
+    /// Iterates function `f` over the elements of vectors `v1` and `v2`
     let inline iter2 (f:D->D->unit) (v1:DV) (v2:DV) = Array.iter2 f (v1 |> toArray) (v2 |> toArray)
+    /// Iterates function `f` over the elements of vectors `v1` and `v2`. An element index is also supplied to `f`.
     let inline iteri2 (f:int->D->D->unit) (v1:DV) (v2:DV) = Array.iteri2 f (v1 |> toArray) (v2 |> toArray)
+    /// L1 norm of vector `v`.
     let inline l1norm (v:DV) = DV.L1Norm(v)
+    /// L2 norm of vector `v`.
     let inline l2norm (v:DV) = DV.L2Norm(v)
+    /// Squared L2 norm of vector `v`.
     let inline l2normSq (v:DV) = DV.L2NormSq(v)
+    /// Maximum of the elements of vector `v`.
     let inline max (v:DV) = DV.Max(v)
+    /// Index of the maximum element of vector `v`
+    let inline maxIndex (v:DV) = DV.MaxIndex(v)
+    /// Minimum of the elements of vector `v`
     let inline min (v:DV) = DV.Min(v)
+    /// Index of the minimum element of vector `v`
+    let inline minIndex (v:DV) = DV.MinIndex(v)
+    /// Average of the elements of vector `v`
     let inline average (v:DV) = DV.Sum(v) / v.Length
+    /// Normalize vector `v` to have zero mean and unit variance
     let inline normalize (v:DV) = DV.Normalize(v)
+    /// L2 norm of vector `v`. Same with DV.l2norm.
     let inline norm (v:DV) = DV.L2Norm(v)
+    /// Squared L2 norm of vector `v`. Same with DV.l2normSq.
     let inline normSq(v:DV) = DV.L2NormSq(v)
     // TODO: implement supNorm (infinity norm, with BLAS IDAMAX)
+    /// Creates a vector where elements of `v1` are followed by elements of `v2`
     let inline append (v1:DV) (v2:DV) = DV.Append(v1, v2)
+    /// Creates a vector where elements of `v2` are followed by elements of `v1`
     let inline prepend (v1:DV) (v2:DV) = DV.Append(v2, v1)
-    let inline print (v:DV) = v.ToString()
+    /// Splits vector `v` into a sequence of subvectors whose lengths are given in sequence `n`
     let inline split (n:seq<int>) (v:DV) = v.Split(n)
+    /// Sums the elements of vector `v`
     let inline sum (v:DV) = DV.Sum(v)
-    let inline standardBasis (n:int) (i:int) = DV(Array.init n (fun j -> if i = j then 1.f else 0.f))
+    /// Creates a vector with `n` elements where the `i`-th element is one and the rest of the elements are zero
+    let inline standardBasis (n:int) (i:int) = DV(standardBasis n i)
+    /// Creates a vector with `n` elements where the `i`-th element has value `v` and the rest of the elements are zero
+    let inline standardBasisVal (n:int) (i:int) (v:float32) = DV(standardBasisVal n i v)
+    // Experimental
+    let inline print (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
 
+/// Functional-oriented operations on matrices. Implementing functionality similar to FSharp.Collections.Array2D.
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DM =
+    /// Creates a matrix from 2D array `a`
     let inline ofArray2D a = DM.OfArray2D(a)
+    /// Converts matrix `m` into a 2D array
     let inline toArray2D (m:DM) = m.GetRows() |> Seq.map DV.toArray |> array2D
+    /// Creates a matrix with `m` rows from array `a`
     let inline ofArray m a = DM.OfArray(m, a)
+    /// Converts matrix `m` into an array by stacking its rows
     let inline toArray (m:DM) = m.GetRows() |> Seq.map DV.toArray |> Seq.fold Array.append [||]
+    /// Transpose of matrix `m`
     let inline transpose (m:DM) = DM.Transpose(m)
+    /// Creates a matrix from a sequence of row vectors `s`
     let inline ofRows s = DM.ofRows(s)
+    /// Creates a matrix from a sequence of column vectors `s`
     let inline ofCols (s:seq<DV>) = s |> ofRows |> transpose
+    /// Gets the sequence of row vectors in matrix `m`
     let inline toRows (m:DM) = m.GetRows()
+    /// Gets the sequence of column vectors in matrix `m`
     let inline toCols (m:DM) = m.GetCols()
+    /// Converts matrix `m` into a vector by stacking its rows
     let inline toVector (m:DM) = m.GetRows() |> Seq.fold DV.append DV.Zero
+    /// Creates a matrix with `m` rows from vector `v`
     let inline ofVector (m:int) (v:DV) = let n = v.Length / m in v |> DV.split (Array.create m n) |> DM.ofRows
+    /// Gets the column with index `j` of matrix `m`
     let inline col (j:int) (m:DM) = m.[*,j]
+    /// Gets the row with index `i` of matrix `m`
     let inline row (i:int) (m:DM) = m.[i,*]
+    /// Number of columns in matrix `m`
     let inline cols (m:DM) = m.Cols
+    /// Number of rows in matrix `m`
     let inline rows (m:DM) = m.Rows
+    /// Creates a matrix with `m` rows and `n` columns, where all entries have value `v`
     let inline create m n (v:'a) = 
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<float32>) then DM (Array2D.create m n (unbox<float32>(box v)))
         else failwith "Unsupported type. Expecting D or float32."
+    /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
+    /// Gets the diagonal of matrix `m`
     let inline diagonal (m:DM) = DM.Diagonal(m)
+    /// Zero matrix
     let empty = DM.Zero
+    /// Creates a matrix with `m` rows and `n` columns, where each element is given by function `f`
     let inline init m n (f:int->int->'a) = 
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.init m n (unbox<int->int->D>(box f)))
         elif at.Equals(typeof<float32>) then DM (Array2D.init m n (unbox<int->int->float32>(box f)))
         else failwith "Unsupported type. Expecting D or float32."
+    /// Creates a matrix with `m` rows, where each row is given by `f` as a vector
     let inline initRows (m:int) (f:int->DV) = Seq.init m f |> ofRows
+    /// Creates a matrix with `n` columns, where each column is given by `f` as a vector
     let inline initCols (n:int) (f:int->DV) = Seq.init n f |> ofCols
+    /// Inverse of matrix `m`
     let inline inverse (m:DM) = DM.Inverse(m)
+    /// Iterates function `f` over the entries of matrix `m`
     let inline iter (f:D->unit) (m:DM) = m |> toVector |> DV.iter f
+    /// Iterates function `f` over the entries of matrices `m1` and `m2`
     let inline iter2 (f:D->D->unit) (m1:DM) (m2:DM) = DV.iter2 f (m1 |> toVector) (m2 |> toVector)
+    /// Iterates function `f` over the entries of matrix `m`. Indices are also supplied to `f`.
     let inline iteri (f:int->int->D->unit) (m:DM) = m |> toArray2D |> Array2D.iteri f
+    /// Iterates function `f` over the columns of matrix `m`
     let inline iterCols (f:DV->unit) (m:DM) = m |> toCols |> Seq.iter f
+    /// Iterates function `f` over the rows of matrix `m`
     let inline iterRows (f:DV->unit) (m:DM) = m |> toRows |> Seq.iter f
+    /// Iterates function `f` over the columns of matrix `m`. Column indices are also supplied to `f`.
     let inline iteriCols (f:int->DV->unit) (m:DM) = m |> toCols |> Seq.iteri f
+    /// Iterates function `f` over the rows of matrix `m`. Row indices are also supplied to `f`.
     let inline iteriRows (f:int->DV->unit) (m:DM) = m |> toRows |> Seq.iteri f
+    /// Iterates function `f` over the columns of matrices `m1` and `m2`
     let inline iter2Cols (f:DV->DV->unit) (m1:DM) (m2:DM) = Seq.iter2 f (m1 |> toCols) (m2 |> toCols)
+    /// Iterates function `f` over the rows of matrices `m1` and `m2
     let inline iter2Rows (f:DV->DV->unit) (m1:DM) (m2:DM) = Seq.iter2 f (m1 |> toRows) (m2 |> toRows)
+    /// Iterates function `f` over the columns of matrices `m1` and `m2`. Column indices are also supplied to `f`.
     let inline iteri2Cols (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toCols) (m2 |> toCols)
+    /// Iterates function `f` over the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
     let inline iteri2Rows (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toRows) (m2 |> toRows)
+    /// Number of rows in matrix `m`. Same with DM.rows.
     let inline length1 (m:DM) = m.Rows
+    /// Number of columns in matrix `m`. Same with DM.cols.
     let inline length2 (m:DM) = m.Cols
+    /// Creates a copy of matrix `m`
     let inline copy (m:DM) = m.Copy()
+    /// Determinant of matrix `m`
     let inline det (m:DM) = DM.Det(m)
+    /// Maps function `f` to the columns of matrix `m`
     let inline mapCols (f:DV->DV) (m:DM) = m |> toCols |> Seq.map f |> ofCols
+    /// Maps function `f` to the rows of matrix `m`
     let inline mapRows (f:DV->DV) (m:DM) = m |> toRows |> Seq.map f |> ofRows
+    /// Maps function `f` to the columns of matrix `m`. Column indices are also supplied to `f`.
     let inline mapiCols (f:int->DV->DV) (m:DM) = m |> toCols |> Seq.mapi f |> ofCols
+    /// Maps function `f` to the rows of matrix `m`. Row indices are also supplied to `f`.
     let inline mapiRows (f:int->DV->DV) (m:DM) = m |> toRows |> Seq.mapi f |> ofRows
+    /// Maps function `f` to the columns of matrices `m1` and `m2`
     let inline map2Cols (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toCols) (m2 |> toCols)
+    /// Maps function `f` to the rows of matrices `m1` and `m2`
     let inline map2Rows (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toRows) (m2 |> toRows)
+    /// Maps function `f` to the columns of matrices `m1` and `m2`. Column indices are also supplied to `f`.
     let inline mapi2Cols (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toCols) (m2 |> toCols)
+    /// Maps function `f` to the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
     let inline mapi2Rows (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toRows) (m2 |> toRows)
+    /// Maximum of the entries of matrix `m`
     let inline max (m:DM) = DM.Max(m)
+    /// Index of the maximum entry of matrix `m`
+    let inline maxIndex (m:DM) = DM.MaxIndex(m)
+    /// Minimum of the entries of matrix `m`
     let inline min (m:DM) = DM.Min(m)
+    /// Index of the minimum entry of matrix `m`
+    let inline minIndex (m:DM) = DM.MinIndex(m)
+    /// Average of the entries of matrix `m`
     let inline average (m:DM) = DM.Sum(m) / m.Length
+    /// Normalizes matrix `m` to have zero mean and unit variance
     let inline normalize (m:DM) = DM.Normalize(m)
-    let inline print (m:DM) = m.ToString()
+    /// Solve a system of linear equations Ax = b, where the coefficient matrix `m` has general form
     let inline solve (m:DM) (v:DV) = DM.Solve(m, v)
+    /// Solve a system of linear equations Ax = b, where the coefficient matrix `m` is symmetric
     let inline solveSymmetric (m:DM) (v:DV) = DM.SolveSymmetric(m, v)
+    /// Sums the elements of matrix `m`
     let inline sum (m:DM) = DM.Sum(m)
+    /// Trace of matrix `m`
     let inline trace (m:DM) = DM.Trace(m)
+    /// Append row `v` to matrix `m`
     let inline appendRow (v:DV) (m:DM) = let rows = m |> toRows in Seq.append rows (seq [v]) |> ofRows
+    /// Prepend row `v` to matrix `m`
     let inline prependRow (v:DV) (m:DM) = let rows = m |> toRows in Seq.append (seq [v]) rows |> ofRows
+    /// Append column `v` to matrix `m`
     let inline appendCol (v:DV) (m:DM) = let cols = m |> toCols in Seq.append cols (seq [v]) |> ofCols
+    /// Prepend column `v` to matrix `m`
     let inline prependCol (v:DV) (m:DM) = let cols = m |> toCols in Seq.append (seq [v]) cols |> ofCols
+    /// Experimental
+    let inline print (m:DM) = m.ToString()
     let inline visualize (m:DM) = m.Visualize()
 
+/// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
 module DOps =
+    /// Explicit conversion between types where it is permitted. For example: DV -> float[], float[,] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
+    /// Create a vector from sequence `v`
     let inline vector (v:seq<_>) = 
         match v with
         | :? seq<D> as v ->
             v |> Seq.toArray |> DV.ofArray
         | _ ->
             v |> Seq.toArray |> Array.Parallel.map float32 |> DV
+    /// Create a matrix form sequence of sequences `m`
     let inline matrix (m:seq<seq<_>>) = 
         match m with
         | :? seq<seq<D>> as m ->
             m |> array2D |> DM.ofArray2D
         | _ ->
             m |> array2D |> Array2D.Parallel.map float32 |> DM
+    /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
     let inline makeForward i (t:^a) (p:^a) = 
         (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
+    /// Make reverse AD type, with tag `i` and primal `p`
     let inline makeReverse i (p:^a) = 
         (^a : (member GetReverse : uint32 -> ^a) p, i)
+    /// Get the primal value of `d`
     let inline primal (d:^a when ^a : (member P : ^a)) = (^a : (member P : ^a) d)
+    /// Get the tangent value of `d`
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
+    /// Get the adjoint value of `d`
     let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
+    /// Get the primal and tangent values of `d`, as a tuple
     let inline primalTangent d = d |> primal, d |> tangent
+    /// Pushes the adjoint `v` backward through the evaluation trace of `d`
     let reversePush (v:obj) (d:obj) =
         let inline bx v d = box v, box d
         let rec pushRec (ds:(obj*obj) list) =
@@ -2842,9 +3012,8 @@ module DOps =
                             | Sigmoid_DM(a) -> pushRec ((bx (d.A .* d.P .* (1.f - d.P)) a) :: t) // d.P = DM.Sigmoid(a.P)
                             | _ -> pushRec t
                         else pushRec t
-
         pushRec [(v, d)]
-
+    /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:obj) =
         let rec resetRec (ds:obj list) =
             match ds with
@@ -3105,29 +3274,36 @@ module DOps =
                             | _ -> resetRec t
                         else resetRec t
         resetRec [d]
-
+    /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
     let reverseProp (v:obj) (d:obj) =
         d |> reverseReset
         d |> reversePush v
 
+/// Forward and reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
 module DiffOps =
+    /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff' f x =
         x |> makeForward GlobalTagger.Next (D 1.f) |> f |> primalTangent
 
+    /// First derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff f x = diff' f x |> snd
 
+    /// Second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff2 f x =
         diff (diff f) x
 
+    /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff2'' f x =
         let v, d = diff' f x
         let d2 = diff2 f x
         (v, d, d2)
 
+    /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff2' f x =
         diff2'' f x |> fsttrd
 
+    /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diffn n f x =
         if n < 0 then ErrorMessages.InvalidArgDiffn()
         elif n = 0 then x |> f
@@ -3138,9 +3314,11 @@ module DiffOps =
                 | _ -> d (n - 1) (diff f)
             x |> d n f
 
+    /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diffn' n f x =
         (x |> f, diffn n f x)
 
+    /// Original value and gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
     let inline grad' f x =
         let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
@@ -3148,19 +3326,25 @@ module DiffOps =
         z |> reversePush (D 1.f)
         (z |> primal, xa |> adjoint)
 
-    let inline grad f x = // TODO: optimize
+    /// Gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
+    let inline grad f x =
         grad' f x |> snd
 
+    /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Forward AD.
     let inline jacobianv' f x v =
         x |> makeForward GlobalTagger.Next v |> f |> primalTangent
 
-    let inline jacobianv f x v = // TODO: optimize
+    /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Forward AD.
+    let inline jacobianv f x v =
         jacobianv' f x v |> snd
 
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
     let inline gradv f x v = jacobianv f x v
 
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
     let inline gradv' f x v = jacobianv' f x v
 
+    /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass). Reverse AD.
     let inline jacobianTv'' (f:'a->'b) (x:'a) =
         let xa = x |> makeReverse GlobalTagger.Next
         let z = f xa
@@ -3172,13 +3356,16 @@ module DiffOps =
                 xa |> adjoint
         (r1, r2)
 
+    /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Reverse AD.
     let inline jacobianTv' f x v =
         let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
 
-    let inline jacobianTv f x v = // TODO: optimize
+    /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Reverse AD.
+    let inline jacobianTv f x v =
         jacobianTv' f x v |> snd
 
+    /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
     let inline jacobian' f (x:DV) =
         let o:DV = x |> f |> primal
         if x.Length > o.Length then
@@ -3187,68 +3374,87 @@ module DiffOps =
         else
             (o, Array.init x.Length (fun i -> jacobianv f x (DV.standardBasis x.Length i)) |> DM.ofCols)
 
+    /// Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
     let inline jacobian f x =
         jacobian' f x |> snd
 
+    /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
     let inline jacobianT' f x =
         jacobian' f x |> fun (r, j) -> (r, DM.transpose j)
 
+    /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
     let inline jacobianT f x =
         jacobianT' f x |> snd
 
+    /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
     let inline gradhessian f x =
         jacobian' (grad f) x
 
+    /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
     let inline gradhessian' f x =
         let g, h = gradhessian f x
         (x |> f , g, h)
 
+    /// Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
     let inline hessian f x =
         jacobian (grad f) x
 
+    /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
     let inline hessian' f x =
         (x |> f, hessian f x)
 
+    /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
     let inline gradhessianv' f x v =
         let gv, hv = grad' (fun xx -> jacobianv f xx v) x
         (x |> f, gv, hv)
 
+    /// Gradient-vector product (directional derivative) and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
     let inline gradhessianv f x v =
         gradhessianv' f x v |> sndtrd
 
+    /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
     let inline hessianv' f x v =
         gradhessianv' f x v |> fsttrd
 
+    /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
     let inline hessianv f x v =
         hessianv' f x v |> snd
 
+    /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`. Reverse-on-forward AD.
     let inline laplacian' f x = // TODO: reimplement faster
         let v, h = hessian' f x
         (v, DM.trace h)
 
+    /// Laplacian of a vector-to-scalar function `f`, at point `x`. Reverse-on-forward AD.
     let inline laplacian f x =
         laplacian' f x |> snd
 
+    /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curl' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurl()
         v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
 
+    /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curl f x =
         curl' f x |> snd
 
+    /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix. Forward AD.
     let inline div' f x =
         let v, j = jacobianT' f x
         if j.Rows <> j.Cols then ErrorMessages.InvalidArgDiv()
         v, DM.trace j
 
+    /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix. Forward AD.
     let inline div f x =
         div' f x |> snd
 
+    /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curldiv' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurlDiv()
         v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
 
+    /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curldiv f x =
         curldiv' f x |> sndtrd

@@ -36,8 +36,8 @@
 //   www.bcl.hamilton.ie
 //
 
-/// Symbolic differentiation
-namespace DiffSharp.Symbolic.Float32
+/// Symbolic differentiation module
+module DiffSharp.Symbolic.Float32
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns

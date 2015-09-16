@@ -37,8 +37,8 @@
 //
 
 
-/// Numerical differentiation
-namespace DiffSharp.Numerical.Float32
+/// Numerical differentiation module
+module DiffSharp.Numerical.Float32
 
 open DiffSharp.Util
 open DiffSharp.Config
