@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 
@@ -23,13 +23,13 @@ We start by defining our neural network structure.
 
 *)
 
-open DiffSharp.AD
-open FsAlg.Generic
+open DiffSharp.AD.Float64
+open DiffSharp.Util
 
 // A layer of neurons
 type Layer =
-    {W:Matrix<D>  // Weight matrix
-     b:Vector<D>} // Bias vector
+    {W:DM  // Weight matrix
+     b:DV} // Bias vector
 
 // A feedforward network of neuron layers
 type Network =
@@ -69,11 +69,11 @@ for each layer and passing the activation vector (output) of each layer as the i
 
 let sigmoid (x:D) = 1. / (1. + exp -x)
 
-let runLayer (x:Vector<D>) (l:Layer) =
+let runLayer (x:DV) (l:Layer) =
     l.W * x + l.b
-    |> Vector.map sigmoid
+    |> DV.Sigmoid
 
-let runNetwork (x:Vector<D>) (n:Network) =
+let runNetwork (x:DV) (n:Network) =
     Array.fold runLayer x n.layers
 
 
@@ -84,8 +84,8 @@ let rnd = System.Random()
 // l : number of inputs and number of neurons in each subsequent layer
 let createNetwork (l:int[]) =
     {layers = Array.init (l.Length - 1) (fun i ->
-        {W = Matrix.init l.[i + 1] l.[i] (fun _ _ -> D (-0.5 + rnd.NextDouble()))
-         b = Vector.init l.[i + 1] (fun _ -> D (-0.5 + rnd.NextDouble()))})}
+        {W = DM.init l.[i + 1] l.[i] (fun _ _ -> D (-0.5 + rnd.NextDouble()))
+         b = DV.init l.[i + 1] (fun _ -> D (-0.5 + rnd.NextDouble()))})}
 (**
 
 This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
@@ -128,7 +128,7 @@ It is important to note that the backpropagation algorithm is just a special cas
 // epsilon: error threshold
 // timeout: maximum number of iterations
 // t: training set consisting of input and output vectors
-let backprop (n:Network) eta epsilon timeout (t:(Vector<_>*Vector<_>)[]) =
+let backprop (n:Network) eta epsilon timeout (t:(DV*DV)[]) =
     let i = DiffSharp.Util.GlobalTagger.Next
     seq {for j in 0 .. timeout do
             for l in n.layers do

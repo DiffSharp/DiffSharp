@@ -80,6 +80,7 @@
     </None>
     <Content Include="packages.config" />
     <Content Include="app.config" />
+    <None Include="Script1.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Quotations.Evaluator">

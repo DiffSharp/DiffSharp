@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 Stochastic Gradient Descent
@@ -36,20 +36,17 @@ Let us implement stochastic gradient descent with the DiffSharp library, using c
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 let rnd = new System.Random()
 
 // Stochastic gradient descent
 // f: function, w0: starting weights, eta: step size, epsilon: threshold, t: training set
-let sgd f w0 (eta:D) epsilon (t:(Vector<float>*Vector<float>)[]) =
-    let ta = Array.map (fun (x, y) -> Vector.map D x, Vector.map D y) t
+let sgd f w0 (eta:D) epsilon (t:(DV*DV)[]) =
     let rec desc w =
-        let x, y = ta.[rnd.Next(ta.Length)]
-        let g = grad (fun wi -> Vector.normSq (y - (f wi x))) w
-        if Vector.normSq g < epsilon then w else desc (w - eta * g)
+        let x, y = t.[rnd.Next(t.Length)]
+        let g = grad (fun wi -> DV.normSq (y - (f wi x))) w
+        if DV.normSq g < epsilon then w else desc (w - eta * g)
     desc w0
 
 (**
@@ -71,7 +68,7 @@ to the points $(0.5, 2), (3.2, 1), (5.2, 4)$.
 *)
 
 // Model function
-let inline f (w:Vector<_>) (x:Vector<_>) =
+let inline f (w:DV) (x:DV) =
     w.[0] * x.[0] * x.[0] + w.[1] * x.[0] + w.[2] 
 
 // Points
@@ -80,10 +77,10 @@ let points = [|0.5, 2.
                5.2, 4.|]
 
 // Construct training set using the points
-let train = Array.map (fun x -> (vector [fst x]), (vector [snd x])) points
+let train = Array.map (fun x -> (toDV [fst x]), (toDV [snd x])) points
 
 // Find w minimizing the error of fit
-let wopt = sgd f (vector [D 0.; D 0.; D 0.]) (D 0.0001) (D 0.01) train |> Vector.map float
+let wopt = sgd f (toDV [0.; 0.; 0.]) (D 0.0001) (D 0.01) train
 
 (*** hide, define-output: o ***)
 printf "val wopt : Vector<float> = Vector [|0.3874125148; -1.77368708; 2.745850698|]"
@@ -97,7 +94,7 @@ We can plot the points in the training set and the fitted curve.
 
 open FSharp.Charting
 
-Chart.Combine([Chart.Line([for x in 0. .. 0.1 .. 6. -> (x, f wopt (vector [x]))])
+Chart.Combine([Chart.Line([for x in 0. .. 0.1 .. 6. -> (x, float <|f wopt (toDV [x]))])
                Chart.Point(points, MarkerSize = 10)])
 
 (**

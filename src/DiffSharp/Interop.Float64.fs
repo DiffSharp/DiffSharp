@@ -36,7 +36,8 @@
 //   www.bcl.hamilton.ie
 //
 
-module DiffSharp.Interop.Float64
+/// Interoperability layer, for C# and other CLR languages
+namespace DiffSharp.Interop.Float64
 
 open DiffSharp.Util
 

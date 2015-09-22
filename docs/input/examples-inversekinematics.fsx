@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 #load "EventEx-0.1.fsx"
 
 (**
@@ -51,39 +51,37 @@ We will make use of the **DiffSharp.AD.Reverse** module for calculating the Jaco
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 // Set the lengths of the arm segments
 let l1 = 4.5
 let l2 = 2.5
 
 // Set the initial angles
-let mutable a = vector [D 1.1; D -0.9]
+let mutable a = toDV [D 1.1; D -0.9]
 
 // Transform angles into (x1, y1) and (x2, y2) positions
-let transform (a:Vector<D>) =
+let transform (a:DV) =
     let x1, y1 = l1 * cos a.[0], l1 * sin a.[0]
     let x2, y2 = x1 + l2 * cos (a.[0] + a.[1]), y1 + l2 * sin (a.[0] + a.[1])
-    vector [x1; y1; x2; y2]
+    toDV [x1; y1; x2; y2]
     
 // Forward kinematics of the tip of the arm (x2, y2)
-let inline forwardK (a:Vector<D>) =
+let inline forwardK (a:DV) =
     let t = transform a
-    vector [t.[2]; t.[3]]
+    toDV [t.[2]; t.[3]]
 
 // Inverse kinematics using inverse Jacobian-vector product
 // target is the target position of the tip (x2, y2)
 // eta is the update coefficient
 // timeout is the maximum number of iterations
-let inverseK (target:Vector<D>) (eta:D) (timeout:int) =
+let inverseK (target:DV) (eta:D) (timeout:int) =
     seq {for i in 0 .. timeout do
             let pos, j = jacobian' forwardK a
             let error = target - pos
-            let da = (Matrix.inverse j) * error
+            let da = (DM.inverse j) * error
             a <- a + eta * da
-            yield (Vector.norm error, a)
+            yield (DV.norm error, a)
             }
     |> Seq.takeWhile (fun x -> fst x > D 0.4)
     |> Seq.map snd
@@ -96,9 +94,9 @@ Let us take the end point of the robot arm to positions $(4.5, 4.5) \to (5.0, 0.
 
 *)
 
-let movement1 = inverseK (vector [D 5.0; D 0.0]) (D 0.025) 100000
-let movement2 = inverseK (vector [D 3.5; D -4.0]) (D 0.025) 100000
-let movement3 = inverseK (vector [D 4.5; D 4.5]) (D 0.025) 100000
+let movement1 = inverseK (toDV [5.0; 0.0]) (D 0.025) 100000
+let movement2 = inverseK (toDV [3.5; -4.0]) (D 0.025) 100000
+let movement3 = inverseK (toDV [4.5; 4.5]) (D 0.025) 100000
 
 (*** hide, define-output: o ***)
 printf "val movement1 : seq<Vector<D>>
@@ -114,11 +112,11 @@ The following code draws the movement of the arm.
 
 open FSharp.Charting
 
-let armPoints (a:Vector<D>) =
-    let t = a |> transform |> Vector.map primal |> Vector.map float
+let armPoints (a:DV) =
+    let t = a |> transform |> primal |> convert
     seq [0., 0.; t.[0], t.[1]; t.[2], t.[3]]
 
-let drawArmLive (aa:seq<Vector<D>>) =
+let drawArmLive (aa:seq<DV>) =
     let pp = aa |> Array.ofSeq |> Array.map armPoints
     let pp2 = Array.copy pp
     Chart.Combine(
@@ -153,13 +151,13 @@ Using this method with the same arm positions gives us the following result:
 
 
 // Inverse kinematics using transposed Jacobian-vector product
-let inverseK' (target:Vector<D>) (eta:D) (timeout:int) =
+let inverseK' (target:DV) (eta:D) (timeout:int) =
     seq {for i in 0 .. timeout do
             let pos, jTv = jacobianTv'' forwardK a
             let error = target - pos
             let da = jTv error
             a <- a + eta * da
-            yield (Vector.norm error, a)
+            yield (DV.norm error, a)
             }
     |> Seq.takeWhile (fun x -> fst x > D 0.4)
     |> Seq.map snd

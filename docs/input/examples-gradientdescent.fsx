@@ -25,27 +25,25 @@ Using the DiffSharp library, the following code implements gradient descent with
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 // Gradient descent
 // f: function, x0: starting point, eta: step size, epsilon: threshold
 let gd f x0 eta epsilon =
     let rec desc x =
         let g = grad f x
-        if Vector.normSq g < epsilon then x else desc (x - eta * g)
+        if DV.normSq g < epsilon then x else desc (x - eta * g)
     desc x0
 
 (**
 Let us find a minimum of $f(x, y) = (\sin x + \cos y)$.
 *)
 
-let inline f (x:Vector<_>) =  sin x.[0] + cos x.[1]
+let inline f (x:DV) =  sin x.[0] + cos x.[1]
 
 // Find the minimum of f
 // Start from (1, 1), step size 0.9, threshold 0.00001
-let xmin = gd f (vector [D 1.; D 1.]) (D 0.9) (D 0.00001)
+let xmin = gd f (toDV [D 1.; D 1.]) (D 0.9) (D 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)

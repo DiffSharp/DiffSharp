@@ -37,7 +37,7 @@
 //
 
 /// Interoperability layer, for C# and other CLR languages
-module DiffSharp.Interop.Float32
+namespace DiffSharp.Interop.Float32
 
 open DiffSharp.Util
 

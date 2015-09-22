@@ -231,7 +231,7 @@ let main argv =
               x |> Array.sumBy (fun v -> exp (sin v))
               x |> Array.sumBy (fun v -> exp (cos v))|]
         let fvvD (x:DV) =
-            vector [x .* log (x / 2.) |> DV.sum; exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
+            toDV [x .* log (x / 2.) |> DV.sum; exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
 
         printb 1 29 "original functions"
         let res_fss,      dur_fss =      duration noriginal (fun () -> fss x)
@@ -363,12 +363,12 @@ let main argv =
         printfn "Benchmarking finished: %A\n" finished
         printfn "Total duration: %A\n" duration
 
-        let row_originals  = vector [dur_fss;      dur_fss;       dur_fss;       dur_fvs;      dur_fvs;       dur_fvs;         dur_fvs;          dur_fvs;             dur_fvs;              dur_fvs;           dur_fvv;          dur_fvv;           dur_fvv;           dur_fvv]
-        let row_originalsD = vector [dur_fssD;     dur_fssD;      dur_fssD;      dur_fvsD;     dur_fvsD;      dur_fvsD;        dur_fvsD;         dur_fvsD;            dur_fvsD;             dur_fvsD;          dur_fvvD;         dur_fvvD;          dur_fvvD;          dur_fvvD]
-        let row_AD         = vector [dur_diff_AD;  dur_diff2_AD;  dur_diffn_AD;  dur_grad_AD;  dur_gradv_AD;  dur_hessian_AD;  dur_hessianv_AD;  dur_gradhessian_AD;  dur_gradhessianv_AD;  dur_laplacian_AD;  dur_jacobian_AD;  dur_jacobianv_AD;  dur_jacobianT_AD;  dur_jacobianTv_AD]
-        let row_N          = vector [dur_diff_N;   dur_diff2_N;   dur_diffn_N;   dur_grad_N;   dur_gradv_N;   dur_hessian_N;   dur_hessianv_N;   dur_gradhessian_N;   dur_gradhessianv_N;   dur_laplacian_N;   dur_jacobian_N;   dur_jacobianv_N;   dur_jacobianT_N;   dur_jacobianTv_N]
-        let row'_AD        = vector [dur_diff'_AD; dur_diff2'_AD; dur_diffn'_AD; dur_grad'_AD; dur_gradv'_AD; dur_hessian'_AD; dur_hessianv'_AD; dur_gradhessian'_AD; dur_gradhessianv'_AD; dur_laplacian'_AD; dur_jacobian'_AD; dur_jacobianv'_AD; dur_jacobianT'_AD; dur_jacobianTv'_AD]
-        let row'_N         = vector [dur_diff'_N;  dur_diff2'_N;  dur_diffn'_N;  dur_grad'_N;  dur_gradv'_N;  dur_hessian'_N;  dur_hessianv'_N;  dur_gradhessian'_N;  dur_gradhessianv'_N;  dur_laplacian'_N;  dur_jacobian'_N;  dur_jacobianv'_N;  dur_jacobianT'_N;  dur_jacobianTv'_N]
+        let row_originals  = toDV [dur_fss;      dur_fss;       dur_fss;       dur_fvs;      dur_fvs;       dur_fvs;         dur_fvs;          dur_fvs;             dur_fvs;              dur_fvs;           dur_fvv;          dur_fvv;           dur_fvv;           dur_fvv]
+        let row_originalsD = toDV [dur_fssD;     dur_fssD;      dur_fssD;      dur_fvsD;     dur_fvsD;      dur_fvsD;        dur_fvsD;         dur_fvsD;            dur_fvsD;             dur_fvsD;          dur_fvvD;         dur_fvvD;          dur_fvvD;          dur_fvvD]
+        let row_AD         = toDV [dur_diff_AD;  dur_diff2_AD;  dur_diffn_AD;  dur_grad_AD;  dur_gradv_AD;  dur_hessian_AD;  dur_hessianv_AD;  dur_gradhessian_AD;  dur_gradhessianv_AD;  dur_laplacian_AD;  dur_jacobian_AD;  dur_jacobianv_AD;  dur_jacobianT_AD;  dur_jacobianTv_AD]
+        let row_N          = toDV [dur_diff_N;   dur_diff2_N;   dur_diffn_N;   dur_grad_N;   dur_gradv_N;   dur_hessian_N;   dur_hessianv_N;   dur_gradhessian_N;   dur_gradhessianv_N;   dur_laplacian_N;   dur_jacobian_N;   dur_jacobianv_N;   dur_jacobianT_N;   dur_jacobianTv_N]
+        let row'_AD        = toDV [dur_diff'_AD; dur_diff2'_AD; dur_diffn'_AD; dur_grad'_AD; dur_gradv'_AD; dur_hessian'_AD; dur_hessianv'_AD; dur_gradhessian'_AD; dur_gradhessianv'_AD; dur_laplacian'_AD; dur_jacobian'_AD; dur_jacobianv'_AD; dur_jacobianT'_AD; dur_jacobianTv'_AD]
+        let row'_N         = toDV [dur_diff'_N;  dur_diff2'_N;  dur_diffn'_N;  dur_grad'_N;  dur_gradv'_N;  dur_hessian'_N;  dur_hessianv'_N;  dur_gradhessian'_N;  dur_gradhessianv'_N;  dur_laplacian'_N;  dur_jacobian'_N;  dur_jacobianv'_N;  dur_jacobianT'_N;  dur_jacobianTv'_N]
 
 
         let bench = DM.ofRows [row_AD ./ row_originalsD

@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 Helmholtz Energy Function
@@ -9,7 +9,7 @@ Helmholtz Energy Function
 The following formula, giving the [Helmholtz free energy](http://en.wikipedia.org/wiki/Helmholtz_free_energy) of a mixed fluid based on the [Peng-Robinson equation of state](http://en.wikipedia.org/wiki/Equation_of_state#Peng-Robinson_equation_of_state), has been used in automatic differentiation literature for benchmarking gradient calculations:
 
 $$$
- f(\mathbf{x}) = R \, T \sum_{i = 0}^{n} \log \frac{x_i}{1 - \mathbf{b^T} \mathbf{x}} - \frac{\mathbf{x^T} \mathbf{A} \mathbf{x}}{\sqrt{8} \mathbf{b^T} \mathbf{x}} \log \frac{1 + (1 + \sqrt{2}) \mathbf{b^T} \mathbf{x}}{1 + (1 - \sqrt{2}) \mathbf{b^T} \mathbf{x}} \; ,
+ f(\mathbf{x}) = R \, T \sum_{i = 0}^{n} x_i \log \frac{x_i}{1 - \mathbf{b^T} \mathbf{x}} - \frac{\mathbf{x^T} \mathbf{A} \mathbf{x}}{\sqrt{8} \mathbf{b^T} \mathbf{x}} \log \frac{1 + (1 + \sqrt{2}) \mathbf{b^T} \mathbf{x}}{1 + (1 - \sqrt{2}) \mathbf{b^T} \mathbf{x}} \; ,
 
 where $R$ is the universal gas constant, $T$ is the absolute temperature, $\mathbf{b} \in \mathbb{R}^n$ is a vector of constants, $\mathbf{A} \in \mathbb{R}^{n \times n}$ is a symmetric matrix of constants, and $\mathbf{x} \in \mathbb{R}^n$ is the vector of independent variables describing the system.
 
@@ -18,16 +18,14 @@ In practice, gradients of formulae such as this need to be evaluated at thousand
 Let us compute the gradient of this function with the **DiffSharp.AD.Reverse** module. $f: \mathbb{R}^n \to \mathbb{R}$ being a scalar valued function of many variables, this is an ideal case for using reverse mode AD, which needs only one forward and one reverse evaluation of $f$ to compute all the partial derivatives $\frac{\partial f}{\partial x_i}$.
 *)
 
-open DiffSharp.AD.Reverse
-open DiffSharp.AD.Reverse.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 let rnd = System.Random()
 
-let helmholtz R T (b:Vector<D>) (A:Matrix<D>) (x:Vector<D>) =
+let helmholtz R T (b:DV) (A:DM) (x:DV) =
     let bx = b * x
     let oneminbx = 1. - bx
-    R * T * (Vector.sumBy (fun a -> a * log (a / oneminbx)) x) 
+    R * T * DV.sum(x .* log (x / oneminbx))
     - ((x * A * x) / (bx * sqrt 8.)) 
     * log ((1. + (1. + sqrt 2.) * bx) / (1. + (1. - sqrt 2.) * bx))
 
@@ -35,9 +33,9 @@ let helmholtz R T (b:Vector<D>) (A:Matrix<D>) (x:Vector<D>) =
 let testHelmholtz n =
     let R = 1.
     let T = 1.
-    let b = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
-    let A = Matrix.init n n (fun _ _ -> D (0.1 * rnd.NextDouble()))
-    let x = Vector.init n (fun _ -> D (0.1 * rnd.NextDouble()))
+    let b = DV.init n (fun _ -> D (0.1 * rnd.NextDouble()))
+    let A = DM.init n n (fun _ _ -> D (0.1 * rnd.NextDouble()))
+    let x = DV.init n (fun _ -> D (0.1 * rnd.NextDouble()))
     grad (helmholtz R T b A) x
 
 // Compute the gradient with 6 variables
@@ -92,7 +90,7 @@ Chart.Line([for n in 1 .. 50 -> duration 100 (fun _ -> testHelmholtz n)])
 Let us compare this with the performance of numerical differentiation (**DiffSharp.Numerical**) and forward mode AD (**DiffSharp.AD.Forward** and **DiffSharp.AD.Specialized.ForwardG**).
 *)
 
-open DiffSharp.Numerical.Vector
+open DiffSharp.Numerical.Float64
 
 let helmholtzFloat R T (b:Vector<float>) (A:Matrix<float>) (x:Vector<float>) =
     let bx = b * x

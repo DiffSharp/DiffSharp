@@ -1,6 +1,5 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
 
 (**
 
@@ -51,7 +50,7 @@ printf "val lim : float = nan"
 Using the DiffSharp library, we can generate a sequence of repeated applications of l'Hôpital's rule.
 *)
 
-open DiffSharp.AD
+open DiffSharp.AD.Float64
 
 // Differentiate f(x) and g(x) n times and evaluate the division
 let lhopital f g n x = diffn n f x / diffn n g x

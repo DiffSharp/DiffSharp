@@ -19,17 +19,14 @@ Newton's method converges faster than gradient descent, but this comes at the co
 Using the DiffSharp library, we can compute the exact Hessian via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardReverse** module, which provides the **gradhessian** operation returning the gradient and the Hessian of a function at a given point using only one forward evaluation.
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
-
+open DiffSharp.AD.Float64
 
 // Newton's method
 // f: function, x0: starting point, eta: step size, epsilon: threshold
 let Newton f x0 (eta:D) epsilon =
     let rec desc x =
         let g, h = gradhessian f x
-        if Vector.normSq g < epsilon then x else desc (x - eta * (Matrix.inverse h) * g)
+        if DV.normSq g < epsilon then x else desc (x - eta * (DM.inverse h) * g)
     desc x0
 
 (**
@@ -43,9 +40,9 @@ around the point $(0, 0)$.
 
 *)
 
-let f (x:Vector<D>) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
+let f (x:DV) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
 
-let xmin = Newton f (vector [D 0.; D 0.]) (D 1.) (D 0.001)
+let xmin = Newton f (toDV [0.; 0.]) (D 1.) (D 0.001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)

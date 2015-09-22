@@ -1,6 +1,6 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 Hamiltonian Monte Carlo
@@ -39,9 +39,7 @@ where $\delta$ is the integration step size.
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 // Leapfrog integrator
 // u: potential energy function
@@ -49,7 +47,7 @@ open FsAlg.Generic
 // d: integration step size
 // steps: number of integration steps
 // (x0, p0): initial position and momentum vectors
-let leapFrog u k (d:D) steps (x0, p0) =
+let leapFrog (u:DV->D) (k:DV->D) (d:D) steps (x0, p0) =
     let hd = d / 2.
     [1..steps] 
     |> List.fold (fun (x, p) _ ->
@@ -98,13 +96,13 @@ Starting from a given value of $\mathbf{x}$, the algorithm proceeds via the step
 // hsteps: number of steps for Hamiltonian dynamics
 // x0: initial state
 // f: target distribution function
-let hmc n hdelta hsteps (x0:Vector<_>) (f:Vector<D>->D) =
+let hmc n hdelta hsteps (x0:DV) (f:DV->D) =
     let u x = -log (f x) // potential energy
-    let k p = 0.5 * Vector.fold (fun acc a -> acc + a * a) (D 0.) p // kinetic energy
+    let k p = (p * p) / D 2. // kinetic energy
     let hamilton x p = u x + k p
     let x = ref x0
     [|for i in 1..n do
-        let p = Vector.init x0.Length (fun _ -> rndn() |> D)
+        let p = DV.init x0.Length (fun _ -> rndn() |> D)
         let x', p' = leapFrog u k hdelta hsteps (!x, p)
         if rnd() < float (exp ((hamilton !x p) - (hamilton x' p'))) then x := x'
         yield !x|]
@@ -126,8 +124,8 @@ where $\mathbf{\mu}$ is the mean vector and $\mathbf{\Sigma}$ is the covariance 
 // mu: mean vector
 // sigma: covariance matrix
 // x: variable vector
-let multiNormal mu sigma (x:Vector<D>) =
-    let s = sigma |> Matrix.inverse
+let multiNormal mu sigma (x:DV) =
+    let s = sigma |> DM.inverse
     exp (-((x - mu) * s * (x - mu)) / D 2.)
 
 
@@ -140,8 +138,8 @@ Here we plot 10000 samples from the bivariate case with $\mathbf{\mu} = \begin{b
 // Take 10000 samples from a bivariate normal distribution
 // mu1 = 0, mu2 = 0, correlation = 0.8
 let samples = 
-    multiNormal (vector [D 0.; D 0.]) (matrix [[D 1.; D 0.8]; [D 0.8; D 1.]])
-    |> hmc 10000 (D 0.1) 10 (vector [D 0.; D 0.])
+    multiNormal (toDV [D 0.; D 0.]) (toDM [[D 1.; D 0.8]; [D 0.8; D 1.]])
+    |> hmc 10000 (D 0.1) 10 (toDV [D 0.; D 0.])
 
 
 open FSharp.Charting
