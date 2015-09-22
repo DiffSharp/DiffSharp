@@ -210,9 +210,9 @@ type D =
     static member Pow (a:D, b:D) =
         let inline ff(a, b) = a ** b
         let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at * cp * b / ap // cp = ap ** b
+        let inline df_da(cp, ap, at) = at * (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp * (at * bp / ap + bt * log ap) // cp = ap ** bp
+        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) * (at * bp + ap * bt * log ap)
         let inline r_d_d(a, b) = Pow_D_D(a, b)
         let inline r_d_c(a, b) = Pow_D_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_D(a, b)
@@ -408,14 +408,14 @@ and DV =
     /// Tangent value of this DV
     member d.T =
         match d with
-        | DV(_) -> DV Array.empty
+        | DV(_) -> DV.ZeroN d.Length
         | DVF(_,at,_) -> at
         | DVR(_,_,_,_,_) -> failwith "Cannot get tangent value of DVR."
     /// Adjoint value of this DV
     member d.A
         with get() =
             match d with
-            | DV(_) -> DV Array.empty
+            | DV(_) -> DV.ZeroN d.Length
             | DVF(_,_,_) -> failwith "Cannot get adjoint value of DVF."
             | DVR(_,a,_,_,_) -> !a
         and set(v) =
@@ -808,9 +808,9 @@ and DV =
     static member Pow (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_V_V((fun x y -> x ** y), a, b)
         let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* cp .* b ./ ap // cp = ap ** b
+        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.f)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* ((at .* bp ./ ap) + (bt .* log ap)) // cp = ap ** bp
+        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) .* ((at .* bp) + (ap .* bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_DV(a, b)
         let inline r_d_c(a, b) = Pow_DV_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
@@ -928,9 +928,9 @@ and DV =
     static member Pow (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> v ** b), a)
         let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (cp * b) ./ ap // cp = ap ** b
+        let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* (((at * bp) ./ ap) + bt * log ap) // cp = ap ** bp
+        let inline df_dab(cp, ap:DV, at:DV, bp:D, bt:D) = (ap ** (bp - D 1.f)) .* ((at * bp) + (ap * bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_D(a, b)
         let inline r_d_c(a, b) = Pow_DV_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_D(a, b)
@@ -940,9 +940,9 @@ and DV =
     static member Pow (a:D, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_V((fun v -> a ** v), b)
         let inline fd(a:D, b:DV) = DV.Pow(a, b)
-        let inline df_da(cp, ap, at) = at * (cp .* b) / ap // cp = ap ** b
+        let inline df_da(cp, ap:D, at:D) = (at * (DV.Pow(ap, b - D 1.f))) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* (((at * bp) / ap) + bt * log ap) // cp = ap ** bp
+        let inline df_dab(cp, ap:D, at:D, bp:DV, bt:DV) = (DV.Pow(ap, bp - D 1.f)) .* ((at * bp) + (ap * bt * log ap))
         let inline r_d_d(a, b) = Pow_D_DV(a, b)
         let inline r_d_c(a, b) = Pow_D_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_DV(a, b)
@@ -1288,14 +1288,14 @@ and DM =
     /// Tangent value of this DM
     member d.T =
         match d with
-        | DM(_) -> DM Array2D.empty
+        | DM(_) -> DM.ZeroMN d.Rows d.Cols
         | DMF(_,at,_) -> at
         | DMR(_,_,_,_,_) -> failwith "Cannot get tangent value of DMR."
     /// Adjoint value of this DM
     member d.A
         with get() =
             match d with
-            | DM(_) -> DM Array2D.empty
+            | DM(_) -> DM.ZeroMN d.Rows d.Cols
             | DMF(_,_,_) -> failwith "Cannot get adjoint value of DMF."
             | DMR(_,a,_,_,_) -> !a
         and set(v) =
@@ -1767,9 +1767,9 @@ and DM =
     static member Pow (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map2_F_M_M((fun x y -> x ** y), a, b)
         let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* cp .* b ./ ap // cp = ap ** b
+        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.f)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* ((at .* bp ./ ap) + (bt .* log ap)) // cp = ap ** bp
+        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) .* (at .* bp + ap .* bt .* log ap)
         let inline r_d_d(a, b) = Pow_DM_DM(a, b)
         let inline r_d_c(a, b) = Pow_DM_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_DM(a, b)
@@ -1877,9 +1877,9 @@ and DM =
     static member Pow (a:DM, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_M((fun v -> v ** b), a)
         let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (cp * b) ./ ap // cp = ap ** b
+        let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* (((at * bp) ./ ap) + bt * log ap) // cp = ap ** bp
+        let inline df_dab(cp, ap:DM, at:DM, bp:D, bt:D) = (ap ** (bp - D 1.f)) .* ((at * bp) + (ap * bt .* log ap))
         let inline r_d_d(a, b) = Pow_DM_D(a, b)
         let inline r_d_c(a, b) = Pow_DM_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_D(a, b)
@@ -1888,9 +1888,9 @@ and DM =
     static member Pow (a:D, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32BackEnd.Map_F_M((fun v -> a ** v), b)
         let inline fd(a:D, b:DM) = DM.Pow(a, b)
-        let inline df_da(cp, ap, at) = at * (cp .* b) / ap // cp = ap ** b
+        let inline df_da(cp, ap:D, at:D) = at * (DM.Pow(ap, b - D 1.f)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = cp .* (((at * bp) / ap) + bt * log ap) // cp = ap ** bp
+        let inline df_dab(cp, ap:D, at:D, bp:DM, bt:DM) = (DM.Pow(ap, bp - D 1.f)) .* ((at * bp) + (ap * bt * log ap))
         let inline r_d_d(a, b) = Pow_D_DM(a, b)
         let inline r_d_c(a, b) = Pow_D_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_DM(a, b)
@@ -2506,7 +2506,7 @@ module DV =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.create n (unbox<D>(box v)))
         elif at.Equals(typeof<float32>) then DV (Array.create n (unbox<float32>(box v)))
-        else failwith "Unsupported type. Expecting D or float32."
+        else failwith "Unsupported type. Expecting D or float32.f"
     /// Creates a vector with `n` zero elements
     let inline zeroCreate n = DV.ZeroN n
     /// Empty vector
@@ -2516,7 +2516,7 @@ module DV =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.init n (unbox<int->D>(box f)))
         elif at.Equals(typeof<float32>) then DV (Array.init n (unbox<int->float32>(box f)))
-        else failwith "Unsupported type. Expecting D or float32."
+        else failwith "Unsupported type. Expecting D or float32.f"
     /// Iterates function `f` over the elements of vector `v`
     let inline iter (f:D->unit) (v:DV) = v |> toArray |> Array.iter f
     /// Iterates function `f` over the elements of vector `v`. An element index is also supplied to `f`.
@@ -2552,14 +2552,20 @@ module DV =
     let inline append (v1:DV) (v2:DV) = DV.Append(v1, v2)
     /// Creates a vector where elements of `v2` are followed by elements of `v1`
     let inline prepend (v1:DV) (v2:DV) = DV.Append(v2, v1)
+    /// Concatenates the given sequence of vectors `v` into one vector
+    let inline concat (v:seq<DV>) = Seq.fold append DV.Zero v
     /// Splits vector `v` into a sequence of subvectors whose lengths are given in sequence `n`
     let inline split (n:seq<int>) (v:DV) = v.Split(n)
+    /// Splits vector `v` into `n` subvectors of equal length. The length of vector `v` must be an integer multiple of `n`.
+    let inline splitEqual (n:int) (v:DV) = v.Split(Array.create n (v.Length / n))
     /// Sums the elements of vector `v`
     let inline sum (v:DV) = DV.Sum(v)
     /// Creates a vector with `n` elements where the `i`-th element is one and the rest of the elements are zero
     let inline standardBasis (n:int) (i:int) = DV(standardBasis n i)
     /// Creates a vector with `n` elements where the `i`-th element has value `v` and the rest of the elements are zero
     let inline standardBasisVal (n:int) (i:int) (v:float32) = DV(standardBasisVal n i v)
+    /// Gets the unit vector codirectional with vector `v`
+    let inline unitVector (v:DV) = v / DV.L2Norm(v)
     // Experimental
     let inline print (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
@@ -2603,7 +2609,7 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<float32>) then DM (Array2D.create m n (unbox<float32>(box v)))
-        else failwith "Unsupported type. Expecting D or float32."
+        else failwith "Unsupported type. Expecting D or float32.f"
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
     /// Gets the diagonal of matrix `m`
@@ -2615,7 +2621,7 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.init m n (unbox<int->int->D>(box f)))
         elif at.Equals(typeof<float32>) then DM (Array2D.init m n (unbox<int->int->float32>(box f)))
-        else failwith "Unsupported type. Expecting D or float32."
+        else failwith "Unsupported type. Expecting D or float32.f"
     /// Creates a matrix with `m` rows, where each row is given by `f` as a vector
     let inline initRows (m:int) (f:int->DV) = Seq.init m f |> ofRows
     /// Creates a matrix with `n` columns, where each column is given by `f` as a vector
@@ -2703,17 +2709,17 @@ module DM =
 /// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
 module DOps =
-    /// Explicit conversion between types where it is permitted. For example: DV -> float[], float[,] -> DM
+    /// Explicit conversion between types where it is permitted. For example: DV -> float32[], float32[,] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
     /// Create a vector from sequence `v`
-    let inline vector (v:seq<_>) = 
+    let inline toDV (v:seq<_>) = 
         match v with
         | :? seq<D> as v ->
             v |> Seq.toArray |> DV.ofArray
         | _ ->
             v |> Seq.toArray |> Array.Parallel.map float32 |> DV
     /// Create a matrix form sequence of sequences `m`
-    let inline matrix (m:seq<seq<_>>) = 
+    let inline toDM (m:seq<seq<_>>) = 
         match m with
         | :? seq<seq<D>> as m ->
             m |> array2D |> DM.ofArray2D
@@ -2752,7 +2758,7 @@ module DOps =
                             | Add_D_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | Sub_D_D(a, b) -> pushRec ((bx d.A a) :: (bx -d.A b) :: t)
                             | Sub_D_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DCons_D(a) -> pushRec ((bx -d.A a) :: t)
+                            | Sub_DCons_D(b) -> pushRec ((bx -d.A b) :: t)
                             | Mul_D_D(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (d.A * a.P) b) :: t)
                             | Mul_D_DCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
                             | Div_D_D(a, b) -> pushRec ((bx (d.A / b.P) a) :: (bx (d.A * (-a.P / (b.P * b.P))) b) :: t)
@@ -2764,7 +2770,7 @@ module DOps =
                             | Atan2_D_D(a, b) -> let denom = a.P * a.P + b.P * b.P in pushRec ((bx (d.A * b.P / denom) a) :: (bx (d.A * (-a.P) / denom) b) :: t)
                             | Atan2_D_DCons(a, cons) -> pushRec ((bx (d.A * cons / (a.P * a.P + cons * cons)) a) :: t)
                             | Atan2_DCons_D(cons, b) -> pushRec ((bx (d.A * (-cons) / (cons * cons + b.P * b.P)) b) :: t)
-                            | Log_D(a) -> pushRec ((bx (d.A / d.P) a) :: t)
+                            | Log_D(a) -> pushRec ((bx (d.A / a.P) a) :: t)
                             | Log10_D(a) -> pushRec ((bx (d.A / (a.P * log10ValFloat32)) a) :: t)
                             | Exp_D(a) -> pushRec ((bx (d.A * d.P) a) :: t) // d.P = exp a.P
                             | Sin_D(a) -> pushRec ((bx (d.A * cos a.P) a) :: t)
@@ -2798,6 +2804,7 @@ module DOps =
                             | LogSumExp_DV(a) -> pushRec ((bx ((d.A / exp d.P) * exp a.P) a) :: t) // d.P = DV.LogSumExp(a.P)
                             | _ -> pushRec t
                         else pushRec t
+                    | _ -> pushRec t
                 | :? DV as d ->
                     match d with
                     | DVR(_,_,o,_,_) ->
@@ -2827,6 +2834,9 @@ module DOps =
                             | Mul_DM_DV(a, b) -> pushRec ((bx (d.A &* b.P) a) :: (bx (DM.Transpose(a.P) * d.A) b) :: t)
                             | Mul_DM_DVCons(a, cons) -> pushRec ((bx (d.A &* cons) a) :: t)
                             | Mul_DMCons_DV(cons, b) -> pushRec ((bx (DM.Transpose(cons) * d.A) b) :: t)
+                            | Mul_DV_DM(a, b) -> pushRec ((bx (d.A * DM.Transpose(b.P)) a) :: (bx (a.P &* d.A) b) :: t)
+                            | Mul_DV_DMCons(a, cons) -> pushRec ((bx (d.A * DM.Transpose(cons)) a) :: t)
+                            | Mul_DVCons_DM(cons, b) -> pushRec ((bx (cons &* d.A) b) :: t)
                             | Div_Had_DV_DV(a, b) -> pushRec ((bx (d.A ./ b.P) a) :: (bx (d.A .* (-a.P ./ (b.P .* b.P))) b) :: t)
                             | Div_Had_DV_DVCons(a, cons) -> pushRec ((bx (d.A ./ cons) a) :: t)
                             | Div_Had_DVCons_DV(cons, b) -> pushRec ((bx (d.A .* (-cons ./ (b.P .* b.P))) b) :: t)
@@ -2913,6 +2923,7 @@ module DOps =
                             | Sigmoid_DV(a) -> pushRec ((bx (d.A .* d.P .* (1.f - d.P)) a) :: t) // d.P = DV.Sigmoid(a.P)
                             | _ -> pushRec t
                         else pushRec t
+                    | _ -> pushRec t
                 | :? DM as d ->
                     match d with
                     | DMR(_,_,o,_,_) ->
@@ -3012,6 +3023,8 @@ module DOps =
                             | Sigmoid_DM(a) -> pushRec ((bx (d.A .* d.P .* (1.f - d.P)) a) :: t) // d.P = DM.Sigmoid(a.P)
                             | _ -> pushRec t
                         else pushRec t
+                    | _ -> pushRec t
+                | _ -> pushRec t
         pushRec [(v, d)]
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:obj) =
@@ -3031,7 +3044,7 @@ module DOps =
                             | Add_D_DCons(a) -> resetRec (box a :: t)
                             | Sub_D_D(a, b) -> resetRec (box a :: box b :: t)
                             | Sub_D_DCons(a) -> resetRec (box a :: t)
-                            | Sub_DCons_D(a) -> resetRec (box a :: t)
+                            | Sub_DCons_D(b) -> resetRec (box b :: t)
                             | Mul_D_D(a, b) -> resetRec (box a :: box b :: t)
                             | Mul_D_DCons(a, _) -> resetRec (box a :: t)
                             | Div_D_D(a, b) -> resetRec (box a :: box b :: t)
@@ -3077,6 +3090,7 @@ module DOps =
                             | LogSumExp_DV(a) -> resetRec (box a :: t)
                             | _ -> resetRec t
                         else resetRec t
+                    | _ -> resetRec t
                 | :? DV as d ->
                     match d with
                     | DVR(_,_,o,_,_) ->
@@ -3177,6 +3191,7 @@ module DOps =
                             | Sigmoid_DV(a) -> resetRec (box a :: t)
                             | _ -> resetRec t
                         else resetRec t
+                    | _ -> resetRec t
                 | :? DM as d ->
                     match d with
                     | DMR(_,_,o,_,_) ->
@@ -3273,6 +3288,8 @@ module DOps =
                             | Sigmoid_DM(a) -> resetRec (box a :: t)
                             | _ -> resetRec t
                         else resetRec t
+                    | _ -> resetRec t
+                | _ -> resetRec t
         resetRec [d]
     /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
     let reverseProp (v:obj) (d:obj) =
@@ -3374,6 +3391,7 @@ module DiffOps =
         else
             (o, Array.init x.Length (fun i -> jacobianv f x (DV.standardBasis x.Length i)) |> DM.ofCols)
 
+
     /// Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
     let inline jacobian f x =
         jacobian' f x |> snd
@@ -3433,7 +3451,7 @@ module DiffOps =
     let inline curl' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurl()
-        v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
+        v, toDV [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
 
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curl f x =
@@ -3453,7 +3471,7 @@ module DiffOps =
     let inline curldiv' f x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurlDiv()
-        v, vector [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
+        v, toDV [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
 
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
     let inline curldiv f x =
