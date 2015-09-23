@@ -2525,13 +2525,15 @@ module DV =
     let inline iter2 (f:D->D->unit) (v1:DV) (v2:DV) = Array.iter2 f (v1 |> toArray) (v2 |> toArray)
     /// Iterates function `f` over the elements of vectors `v1` and `v2`. An element index is also supplied to `f`.
     let inline iteri2 (f:int->D->D->unit) (v1:DV) (v2:DV) = Array.iteri2 f (v1 |> toArray) (v2 |> toArray)
-    /// L1 norm of vector `v`.
+    /// Length of vector `v`
+    let inline length (v:DV) = v.Length
+    /// L1 norm of vector `v`
     let inline l1norm (v:DV) = DV.L1Norm(v)
-    /// L2 norm of vector `v`.
+    /// L2 norm of vector `v`
     let inline l2norm (v:DV) = DV.L2Norm(v)
-    /// Squared L2 norm of vector `v`.
+    /// Squared L2 norm of vector `v`
     let inline l2normSq (v:DV) = DV.L2NormSq(v)
-    /// Maximum of the elements of vector `v`.
+    /// Maximum of the elements of vector `v`
     let inline max (v:DV) = DV.Max(v)
     /// Index of the maximum element of vector `v`
     let inline maxIndex (v:DV) = DV.MaxIndex(v)

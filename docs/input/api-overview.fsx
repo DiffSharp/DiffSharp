@@ -5,7 +5,7 @@
 API Overview
 ============
 
-The following table gives an overview of the differentiation API provided by the DiffSharp library.
+The following table gives an overview of the differentiation API provided by DiffSharp.
 
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
@@ -113,7 +113,7 @@ The main functionality in DiffSharp is provided by the **DiffSharp.AD** namespac
 - **DiffSharp.Symbolic**: Symbolic differentiation using code quotations
 - **DiffSharp.Interop**: Nested AD wrapper for easier [use from C#](csharp.html) and other non-functional languages
 
-All namespaces have **Float32** and **Float64** modules for 32- or 64-bit floating point precision. (E.g. **DiffSharp.AD.Float32**, **DiffSharp.Interop.Float64**. )
+All these namespaces have **Float32** and **Float64** modules, giving you 32- or 64-bit floating point precision. (E.g. **DiffSharp.AD.Float32**, **DiffSharp.Interop.Float64**. )
 
 For brief explanations of these implementations, please refer to the [Nested AD](gettingstarted-nestedad.html), [Numerical Differentiation](gettingstarted-numericaldifferentiation.html), and [Symbolic Differentiation](gettingstarted-symbolicdifferentiation.html) pages.
 
@@ -139,11 +139,15 @@ val b : D = D 0.987765946"
 
 (**
 
-Currently, the library provides the following operations:
+The library provides the following differentiation operations:
 
 ##### diff : $\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`diff f x`** returns the first derivative of a scalar-to-scalar function `f`, at the point `x`.
+diff f x
+
+(**
+The first derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the derivative evaluated at $x$
 
@@ -153,14 +157,22 @@ $$$
 ----------------------
 
 ##### diff' : $\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+*)
 
-**`diff' f x`** returns the original value and the first derivative of a scalar-to-scalar function `f`, at the point `x`.
+diff' f x
+
+(**
+The original value and the first derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diff2 : $\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`diff2 f x`** returns the second derivative of a scalar-to-scalar function `f`, at the point `x`.
+diff2 f x
+
+(**
+The second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 For a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the second derivative evaluated at $x$
 
@@ -170,20 +182,32 @@ $$$
 ----------------------
 
 ##### diff2' : $\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+*)
 
-**`diff2' f x`** returns the original value and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
+diff2' f x
+
+(**
+The original value and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diff2'' : $\color{red}{(\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R} \times \mathbb{R})}$
+*)
 
-**`diff2'' f x`** returns the original value, the first derivative, and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
+diff2'' f x
+
+(**
+The original value, the first derivative, and the second derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### diffn : $\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`diffn n f x`** returns the `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
+diffn n f x
+
+(**
+The `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 For $n \in \mathbb{N}$, a function $f(a): \mathbb{R} \to \mathbb{R}$, and $x \in \mathbb{R}$, this gives the n-th derivative evaluated at $x$
 
@@ -193,14 +217,22 @@ $$$
 ----------------------
 
 ##### diffn' : $\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+*)
 
-**`diffn' n f x`** returns the original value and the `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
+diffn' n f x
+
+(**
+The original value and the `n`-th derivative of a scalar-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### grad : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}$
+*)
 
-**`grad f x`** returns the [gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
+grad f x
+
+(**
+The [gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
 
@@ -210,14 +242,22 @@ $$$
 ----------------------
 
 ##### grad' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}$
+*)
 
-**`grad' f x`** returns the original value and the gradient of a vector-to-scalar function `f`, at the point `x`.
+grad' f x
+
+(**
+The original value and the gradient of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`gradv f x v`** returns the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+gradv f x v
+
+(**
+The [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -229,14 +269,22 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward** module in
 ----------------------
 
 ##### gradv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+*)
 
-**`gradv' f x v`** returns the original value and the gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+gradv' f x v
+
+(**
+The original value and the gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### hessian : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times n}}$
+*)
 
-**`hessian f x`** returns the [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
+hessian f x
+
+(**
+The [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
 
@@ -251,14 +299,22 @@ $$$
 ----------------------
 
 ##### hessian' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^{n \times n})}$
+*)
 
-**`hessian' f x`** returns the original value and the Hessian of a vector-to-scalar function `f`, at the point `x`.
+hessian' f x
+
+(**
+The original value and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### hessianv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}$
+*)
 
-**`hessianv f x v`** returns the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+hessianv f x v
+
+(**
+The [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -270,38 +326,62 @@ This value can be computed efficiently by the **DiffSharp.AD.ForwardReverse** mo
 ----------------------
 
 ##### hessianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}$
+*)
 
-**`hessianv' f x v`** returns the original value and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+hessianv' f x v
+
+(**
+The original value and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### gradhessian : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^n \times \mathbb{R}^{n \times n})}$
+*)
 
-**`gradhessian f x`** returns the gradient and the Hessian of a vector-to-scalar function `f`, at the point `x`.
+gradhessian f x
+
+(**
+The gradient and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradhessian' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n \times \mathbb{R}^{n \times n})}$
+*)
 
-**`gradhessian' f x`** returns the original value, the gradient, and the Hessian of a vector-to-scalar function `f`, at the point `x`.
+gradhessian' f x
+
+(**
+The original value, the gradient, and the Hessian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### gradhessianv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R}^n)}$
+*)
 
-**`gradhessianv f x v`** returns the gradient-vector product (directional derivative) and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+gradhessianv f x v
+
+(**
+The gradient-vector product (directional derivative) and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### gradhessianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R} \times \mathbb{R}^n)}$
+*)
 
-**`gradhessianv' f x v`** returns the original value, the gradient-vector product (directional derivative), and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+gradhessianv' f x v
+
+(**
+The original value, the gradient-vector product (directional derivative), and the Hessian-vector product of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### laplacian : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`laplacian f x`** returns the [Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
+laplacian f x
+
+(**
+The [Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
 
@@ -315,14 +395,22 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward2** module, 
 ----------------------
 
 ##### laplacian' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+*)
 
-**`laplacian' f x`** returns the original value and the Laplacian of a vector-to-scalar function `f`, at the point `x`.
+laplacian' f x
+
+(**
+The original value and the Laplacian of a vector-to-scalar function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobian : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{m \times n}}$
+*)
 
-**`jacobian f x`** returns the [Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
+jacobian f x
+
+(**
+The [Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -336,14 +424,22 @@ $$$
 ----------------------
 
 ##### jacobian' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^{m \times n})}$
+*)
 
-**`jacobian' f x`** returns the original value and the Jacobian of a vector-to-vector function `f`, at the point `x`.
+jacobian' f x
+
+(**
+The original value and the Jacobian of a vector-to-vector function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobianv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^m}$
+*)
 
-**`jacobianv f x v`** returns the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
+jacobianv f x v
+
+(**
+The Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -355,14 +451,22 @@ This value can be computed efficiently by the **DiffSharp.AD.Forward** module in
 ----------------------
 
 ##### jacobianv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^m)}$
+*)
 
-**`jacobianv' f x v`** returns the original value and the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
+jacobianv' f x v
+
+(**
+The original value and the Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### jacobianT : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times m}}$
+*)
 
-**`jacobianT f x`** returns the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
+jacobianT f x
+
+(**
+The transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -376,14 +480,22 @@ $$$
 ----------------------
 
 ##### jacobianT' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^{n \times m})}$
+*)
 
-**`jacobianT' f x`** returns the original value and the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
+jacobianT' f x
+
+(**
+The original value and the transposed Jacobian of a vector-to-vector function `f`, at the point `x`.
 
 ----------------------
 
 ##### jacobianTv : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{\mathbb{R}^n}$
+*)
 
-**`jacobianTv f x v`** returns the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
+jacobianTv f x v
+
+(**
+The transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this gives the matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -395,22 +507,34 @@ This value can be computed efficiently by the **DiffSharp.AD.Reverse** module in
 ----------------------
 
 ##### jacobianTv' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n \to \mathbb{R}^m} \to \color{blue}{(\mathbb{R}^m \times \mathbb{R}^n)}$
+*)
 
-**`jacobianTv' f x v`** returns the original value and the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
+jacobianTv' f x v
+
+(**
+The original value and the transposed Jacobian-vector product of a vector-to-vector function `f`, at the point `x`, along the vector `v`.
 
 ----------------------
 
 ##### jacobianTv'' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^m \times (\mathbb{R}^m \to \mathbb{R}^n))}$
+*)
 
-**`jacobianTv'' f x`** returns the original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. 
+jacobianTv'' f x
+
+(**
+The original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. 
 
 Of the returned pair, the first is the original value of `f` at the point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can be used to compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of the reverse mode AD, with the given vector, without repeating the forward pass).
 
 This can be computed efficiently by the **DiffSharp.AD.Reverse** module in a matrix-free way (without computing the full Jacobian matrix).
 
 ##### curl : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{\mathbb{R}^3}$
+*)
 
-**`curl f x`** returns the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
+curl f x
+
+(**
+The [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this gives
 
@@ -418,12 +542,20 @@ $$$
   \left( \textrm{curl} \, \mathbf{F} \right)_{\mathbf{x}} = \left( \nabla \times \mathbf{F} \right)_{\mathbf{x}}= \left. \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \right|_{\mathbf{a}\; = \; \mathbf{x}} \; .
 
 ##### curl' : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R}^3)}$
+*)
 
-**`curl' f x`** returns the original value and the curl of a vector-to-vector function `f`, at the point `x`.
+curl' f x
+
+(**
+The original value and the curl of a vector-to-vector function `f`, at the point `x`.
 
 ##### div : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^n) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}$
+*)
 
-**`div f x`** returns the [divergence](http://en.wikipedia.org/wiki/Divergence) of a vector-to-vector function `f`, at the point `x`.
+div f x
+
+(**
+The [divergence](http://en.wikipedia.org/wiki/Divergence) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives
 
@@ -433,100 +565,153 @@ $$$
 which is the trace of the Jacobian matrix evaluated at $\mathbf{x}$.
 
 ##### div' : $\color{red}{(\mathbb{R}^n \to \mathbb{R}^n) \to \mathbb{R}^n} \to \color{blue}{(\mathbb{R}^n \times \mathbb{R})}$
+*)
 
-**`div' f x`** returns the original value and the divergence of a vector-to-vector function `f`, at the point `x`.
+div' f x
+
+(**
+The original value and the divergence of a vector-to-vector function `f`, at the point `x`.
 
 ##### curldiv : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R})}$
+*)
 
-**`curldiv f x`** returns the curl and the divergence of a vector-to-vector function `f`, at the point `x`.
+curldiv f x
+
+(**
+The curl and the divergence of a vector-to-vector function `f`, at the point `x`.
 
 ##### curldiv' : $\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{(\mathbb{R}^3 \times \mathbb{R}^3 \times \mathbb{R})}$
+*)
 
-**`curldiv' f x`** returns the original value, the curl, and the divergence of a vector-to-vector function `f`, at the point `x`.
+curldiv' f x
 
-Vector and Matrix versus float[] and float[,]
----------------------------------------------
+(**
+The original value, the curl, and the divergence of a vector-to-vector function `f`, at the point `x`.
 
-When a differentiation module such as **DiffSharp.AD** is opened, the default operations involving vectors or matrices handle these via **float[]** and **float[,]** arrays.
+Linear Algebra Operations
+-------------------------
 
+The library provides the **D**, **DV**, and **DM** types for scalar, vector, and matrix values. The underlying linear algebra operations when using these types are performed by
+
+The following sections show only a small selection of operations commonly used with these types. For a full list of supported operations, please see the [API Reference](reference/index.html).
+
+### Vector Operations
+
+#### Creating Vectors
+*)
+
+open DiffSharp.AD.Float64
+open DiffSharp.Util
+
+let v1 = toDV [1.; 2.; 3.] // Create DV from sequence of floats
+let v2 = DV.create 3 1.    // Create DV of length 3, each element with value 1.
+let v3 = DV.init 3 (fun i -> exp (float i)) // Create DV of length 3, compute elements by a function
+
+(**
+#### Basic Operations
+*)
+
+let v4  = v1 + v2  // Vector addition
+let v5  = v1 - v2  // Vector subtraction
+let v6  = v1 * v2  // Vector inner (dot, scalar) product
+let v8  = v1 &* v2 // Vector outer (dyadic, tensor) product
+let v7  = v1 .* v2 // Element-wise (Hadamard) product
+let v9  = v1 ./ v2 // Element-wise division
+let v10 = v1 ** v2 // Element-wise exponentiation
+let v11 = atan2 v1 v2 // Element-wise atan2
+let v12 = v1 + 2.  // Add scalar to vector
+let v13 = v1 - 2.  // Subtract scalar from vector
+let v14 = 2. - v1  // Subtract each element of vector from scalar
+let v15 = v1 * 2.  // Vector-scalar multiplication
+let v16 = v1 / 2.  // Vector-scalar division
+let v17 = 2. / v1  // Divide each element of vector by scalar
+let v18 = -v1      // Unary negation
+let v19 = log v1
+let v20 = log10 v1
+let v21 = exp v1
+let v22 = sin v1
+let v23 = cos v1
+let v24 = tan v1
+let v25 = sqrt v1
+let v26 = sinh v1
+let v27 = cosh v1
+let v28 = tanh v1
+let v29 = asin v1
+let v30 = acos v1
+let v31 = atan v1
+let v32 = abs v1
+let v33 = signum v1
+let v34 = floor v1
+let v35 = ceil v1
+let v36 = round v1
+let v37 = softmax v1
+let v38 = softplus v1
+let v39 = softsign v1
+let v40 = logsumexp v1
+let v41 = sigmoid v1
+let v42 = reLU v1
+
+(**
+#### Vector Norms
+*)
+
+let n1 = DV.l1norm v1   // L1 norm
+let n2 = DV.l2norm v1   // L2 norm
+let n3 = DV.l2normSq v1 // Squared L2 norm
+
+(**
+#### Accessing Elements & Conversions
+*)
+
+let e1 = v1.[0]    // 1st element of v1
+let e2 = v1.[..1]  // Slice of v1, until 2nd element
+let e3 = v1.[1..2] // Slice of v2, between 2nd and 3rd elements
+let v43 = DV [|1.; 2.; 3.|]       // Create DV from float[]
+let v44 = toDV [|1.; 2.; 3.|]     // Create DV from sequence of floats
+let v45 = toDV [1.; 2.; 3.]       // Create DV from sequence of floats
+let v46 = toDV [D 1.; D 2.; D 3.] // Create DV from sequence of Ds
+let a1:float[] = convert v1       // Convert DV to array of floats
+
+(**
+#### Splitting and Concatenating
+*)
+
+let ss1 = DV.splitEqual 3 (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into 3 vectors of equal length
+let ss2 = DV.split [2; 4] (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into vectors of given lengths
+let cc1 = DV.concat ss1 // Concatenate sequence of DVs into one
+
+(**
+#### Mathematica and MATLAB Strings
+*)
+
+let s1 = v1.ToMathematicaString()
+let s2 = v1.ToMatlabString()
+
+(**
+#### Other Operations
+*)
+
+let len = DV.length v1 // Length of DV
+let min = DV.min v1    // Minimum element of DV
+let max = DV.max v1    // Maximum element of DV
+let sum = DV.sum v1    // Sum of elements of DV
+let v47 = DV.unitVector v1 // Unit vector codirectional with v1
+let v48 = DV.normalize v1  // Normalize vector to have zero mean and unit variance
+
+(**
+### Matrix Operations
+
+#### Creating Matrices
 *)
 
 open DiffSharp.AD.Float64
 
-// Gradient of a vector-to-scalar function
-// g1: D[] -> D[]
-// i.e., take the function arguments as a D[] and return the gradient as a D[]
-// Inner lambda expression: D[] -> D
-let g1 = grad (fun (x:DV) -> sin (x.[0] * x.[1]))
-
-// Compute the gradient at (1, 2)
-// g1val: D[]
-let g1val = g1 [|D 1.; D 2.|]
-
-// Jacobian of a vector-to-vector function
-// j1: D[] -> D[,]
-// i.e., take the function arguments as a D[] and return the Jacobian as a D[,]
-// Inner lambda expression: D[] -> D[]
-let j1 = jacobian (fun x -> [|sin x.[0]; cos x.[1]|])
-
-// Compute the Jacobian at (1, 2)
-let j1val = j1 [|D 1.; D 2.|]
-
-(*** hide, define-output: o2 ***)
-printf "val g1 : (D [] -> D [])
-val g1val : D [] = [|D -0.8322936731; D -0.4161468365|]
-val j1 : (D [] -> D [,])
-val j1val : D [,] = [[D 0.5403023059; D 0.0]
-                     [D 0.0; D -0.9092974268]]"
-(*** include-output: o2 ***)
+let m1 = toDM [[1.; 2.]; [3.; 4.]]
+let m2 = DM.create 2 2 1.
+let m3 = DM.init 2 2 (fun i j -> exp (float (i + j)))
 
 (**
-
-In addition to this, every module provides a **Vector** submodule containing versions of the same differentiation operators using the **Vector** and **Matrix** types instead of **float[]** and **float[,]**. This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on [Gradient Descent](examples-gradientdescent.html).
-
-Vector and Matrix operations are handled through the [FsAlg Linear Algebra Library](http://gbaydin.github.io/FsAlg/), which supports most of the commonly used linear algebra operations, including matrix–vector operations, matrix inverse, determinants, eigenvalues, LU and QR decompositions. Please see the API reference of FsAlg for a complete list of supported linear algebra operations.
-
+#### Basic Operations
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
-
-// Gradient of a vector-to-scalar function
-// g2: Vector<D> -> Vector<D>
-// i.e., take the function arguments as a Vector<D> and return the gradient as a Vector<D>
-// Inner lambda expression: Vector<D> -> D
-let g2 = grad (fun x -> sin (x.[0] * x.[1]))
-
-// Compute the gradient at (1, 2)
-// g2val: Vector<D>
-let g2val = g2 (vector [D 1.; D 2.])
-
-// Compute the negative of the gradient vector
-let g2valb = -g2val
-
-// Scale the gradient vector
-let g2valc = D 0.2 * g2val
-
-// Get the norm of the gradient vector
-let g2vald = Vector.norm g2val
-
-// Jacobian of a vector-to-vector function
-// j2: Vector<D> -> Matrix<D>
-// i.e., take the function arguments as a Vector<D> and return the Jacobian as a Matrix<D>
-// Inner lambda expression: Vector<D> -> Vector<D>
-let j2 = jacobian (fun x -> vector [sin x.[0]; cos x.[1]])
-
-// Compute the Jacobian at (1, 2)
-let j2val = j2 (vector [D 1.; D 2.])
-
-(*** hide, define-output: o3 ***)
-printf "val g2 : (Vector<D> -> Vector<D>)
-val g2val : Vector<D> = Vector [|D -0.8322936731; D -0.4161468365|]
-val g2valb : Vector<D> = Vector [|D 0.8322936731; D 0.4161468365|]
-val g2valc : Vector<D> = Vector [|D -0.1664587346; D -0.08322936731|]
-val g2vald : D = D 0.9305326151
-val j2 : (Vector<D> -> Matrix<D>)
-val j2val : Matrix<D> = Matrix [[D 0.5403023059; D 0.0]
-                                [D 0.0; D -0.9092974268]]"
-(*** include-output: o3 ***)
+let m4 = m1 + m2
