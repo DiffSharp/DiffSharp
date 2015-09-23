@@ -2652,6 +2652,8 @@ module DM =
     let inline iteri2Cols (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toCols) (m2 |> toCols)
     /// Iterates function `f` over the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
     let inline iteri2Rows (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toRows) (m2 |> toRows)
+    /// Total number of elements in matrix `m`
+    let inline length (m:DM) = m.Length
     /// Number of rows in matrix `m`. Same with DM.rows.
     let inline length1 (m:DM) = m.Rows
     /// Number of columns in matrix `m`. Same with DM.cols.

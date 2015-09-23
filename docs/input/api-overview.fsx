@@ -591,7 +591,7 @@ The original value, the curl, and the divergence of a vector-to-vector function 
 Linear Algebra Operations
 -------------------------
 
-The library provides the **D**, **DV**, and **DM** types for scalar, vector, and matrix values. The underlying linear algebra operations when using these types are performed by
+The library provides the **D**, **DV**, and **DM** types for scalar, vector, and matrix values. The underlying computations when using these types are performed by a high-performance linear algebra backend, which by default uses OpenBLAS for BLAS/LAPACK operations and specialized parallel implementations for non-BLAS operations.
 
 The following sections show only a small selection of operations commonly used with these types. For a full list of supported operations, please see the [API Reference](reference/index.html).
 
@@ -603,100 +603,101 @@ The following sections show only a small selection of operations commonly used w
 open DiffSharp.AD.Float64
 open DiffSharp.Util
 
-let v1 = toDV [1.; 2.; 3.] // Create DV from sequence of floats
-let v2 = DV.create 3 1.    // Create DV of length 3, each element with value 1.
-let v3 = DV.init 3 (fun i -> exp (float i)) // Create DV of length 3, compute elements by a function
+let v = toDV [1.; 2.; 3.] // Create DV from sequence of floats
+let v = DV.zeroCreate 3   // Create DV of length 3, elements zero
+let v = DV.create 3 1.    // Create DV of length 3, each element with value 1.
+let v = DV.init 3 f       // Create DV of length 3, compute elements by function f:int->float
 
 (**
 #### Basic Operations
 *)
 
-let v4  = v1 + v2  // Vector addition
-let v5  = v1 - v2  // Vector subtraction
-let v6  = v1 * v2  // Vector inner (dot, scalar) product
-let v8  = v1 &* v2 // Vector outer (dyadic, tensor) product
-let v7  = v1 .* v2 // Element-wise (Hadamard) product
-let v9  = v1 ./ v2 // Element-wise division
-let v10 = v1 ** v2 // Element-wise exponentiation
-let v11 = atan2 v1 v2 // Element-wise atan2
-let v12 = v1 + 2.  // Add scalar to vector
-let v13 = v1 - 2.  // Subtract scalar from vector
-let v14 = 2. - v1  // Subtract each element of vector from scalar
-let v15 = v1 * 2.  // Vector-scalar multiplication
-let v16 = v1 / 2.  // Vector-scalar division
-let v17 = 2. / v1  // Divide each element of vector by scalar
-let v18 = -v1      // Unary negation
-let v19 = log v1
-let v20 = log10 v1
-let v21 = exp v1
-let v22 = sin v1
-let v23 = cos v1
-let v24 = tan v1
-let v25 = sqrt v1
-let v26 = sinh v1
-let v27 = cosh v1
-let v28 = tanh v1
-let v29 = asin v1
-let v30 = acos v1
-let v31 = atan v1
-let v32 = abs v1
-let v33 = signum v1
-let v34 = floor v1
-let v35 = ceil v1
-let v36 = round v1
-let v37 = softmax v1
-let v38 = softplus v1
-let v39 = softsign v1
-let v40 = logsumexp v1
-let v41 = sigmoid v1
-let v42 = reLU v1
+let v = v1 + v2  // Vector addition
+let v = v1 - v2  // Vector subtraction
+let v = v1 * v2  // Vector inner (dot, scalar) product
+let v = v1 &* v2 // Vector outer (dyadic, tensor) product
+let v = v1 .* v2 // Element-wise (Hadamard) product
+let v = v1 ./ v2 // Element-wise division
+let v = v1 ** v2 // Element-wise exponentiation
+let v = atan2 v1 v2 // Element-wise atan2
+let v = v1 + 2.  // Add scalar to vector
+let v = v1 - 2.  // Subtract scalar from vector
+let v = 2. - v1  // Subtract each element of vector from scalar
+let v = v1 * 2.  // Vector-scalar multiplication
+let v = v1 / 2.  // Vector-scalar division
+let v = 2. / v1  // Divide scalar by each element of vector
+let v = -v1      // Unary negation
+let v = log v1
+let v = log10 v1
+let v = exp v1
+let v = sin v1
+let v = cos v1
+let v = tan v1
+let v = sqrt v1
+let v = sinh v1
+let v = cosh v1
+let v = tanh v1
+let v = asin v1
+let v = acos v1
+let v = atan v1
+let v = abs v1
+let v = signum v1
+let v = floor v1
+let v = ceil v1
+let v = round v1
+let v = softmax v1
+let v = softplus v1
+let v = softsign v1
+let v = logsumexp v1
+let v = sigmoid v1
+let v = reLU v1
 
 (**
 #### Vector Norms
 *)
 
-let n1 = DV.l1norm v1   // L1 norm
-let n2 = DV.l2norm v1   // L2 norm
-let n3 = DV.l2normSq v1 // Squared L2 norm
+let s = DV.l1norm v1   // L1 norm
+let s = DV.l2norm v1   // L2 norm
+let s = DV.l2normSq v1 // Squared L2 norm
 
 (**
 #### Accessing Elements & Conversions
 *)
 
-let e1 = v1.[0]    // 1st element of v1
-let e2 = v1.[..1]  // Slice of v1, until 2nd element
-let e3 = v1.[1..2] // Slice of v2, between 2nd and 3rd elements
-let v43 = DV [|1.; 2.; 3.|]       // Create DV from float[]
-let v44 = toDV [|1.; 2.; 3.|]     // Create DV from sequence of floats
-let v45 = toDV [1.; 2.; 3.]       // Create DV from sequence of floats
-let v46 = toDV [D 1.; D 2.; D 3.] // Create DV from sequence of Ds
-let a1:float[] = convert v1       // Convert DV to array of floats
+let s = v1.[0]    // Element 0
+let v = v1.[..1]  // Slice of v1, until element 1
+let v = v1.[1..2] // Slice of v2, between elements 1 and 2
+let v = DV [|1.; 2.; 3.|]       // Create DV from float[]
+let v = toDV [|1.; 2.; 3.|]     // Create DV from sequence of floats
+let v = toDV [1.; 2.; 3.]       // Create DV from sequence of floats
+let v = toDV [D 1.; D 2.; D 3.] // Create DV from sequence of Ds
+let a:float[] = convert v1       // Convert DV to array of floats
 
 (**
 #### Splitting and Concatenating
 *)
 
-let ss1 = DV.splitEqual 3 (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into 3 vectors of equal length
-let ss2 = DV.split [2; 4] (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into vectors of given lengths
-let cc1 = DV.concat ss1 // Concatenate sequence of DVs into one
+let vs = DV.splitEqual 3 (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into 3 vectors of equal length
+let vs = DV.split [2; 4] (toDV [1.; 2.; 3.; 4.; 5.; 6.]) // Split DV into vectors of given lengths
+let v  = DV.concat ss // Concatenate sequence of DVs into one
 
 (**
 #### Mathematica and MATLAB Strings
 *)
 
-let s1 = v1.ToMathematicaString()
-let s2 = v1.ToMatlabString()
+let st = v1.ToMathematicaString()
+let st = v1.ToMatlabString()
 
 (**
 #### Other Operations
 *)
 
-let len = DV.length v1 // Length of DV
-let min = DV.min v1    // Minimum element of DV
-let max = DV.max v1    // Maximum element of DV
-let sum = DV.sum v1    // Sum of elements of DV
-let v47 = DV.unitVector v1 // Unit vector codirectional with v1
-let v48 = DV.normalize v1  // Normalize vector to have zero mean and unit variance
+let s = DV.length v1 // Length of DV
+let s = DV.min v1    // Minimum element of DV
+let s = DV.max v1    // Maximum element of DV
+let s = DV.sum v1    // Sum of elements of DV
+let v = DV.unitVector v1 // Unit vector codirectional with v1
+let v = DV.normalize v1  // Normalize elements to have zero mean and unit variance
 
 (**
 ### Matrix Operations
@@ -705,13 +706,114 @@ let v48 = DV.normalize v1  // Normalize vector to have zero mean and unit varian
 *)
 
 open DiffSharp.AD.Float64
+open DiffSharp.Util
 
-let m1 = toDM [[1.; 2.]; [3.; 4.]]
-let m2 = DM.create 2 2 1.
-let m3 = DM.init 2 2 (fun i j -> exp (float (i + j)))
+let m = toDM [[1.; 2.]; [3.; 4.]] // Create DM from sequence of sequences of floats
+let m = DM.zeroCreate 2 2         // Create DM of size 2x2, each element zero
+let m = DM.create 2 2 1.          // Create DM of size 2x2, each element with value 1.
+let m = DM.init 2 2 f             // Create DM of size 2x2, compute elements by function f:int->int->float
+let m = DM.initRows 2 f           // Create DM of 2 rows, init rows by function f:int->DV
+let m = DM.initCols 2 f           // Create DM of 2 rows, init columns by function f:int->DV
 
 (**
 #### Basic Operations
 *)
 
-let m4 = m1 + m2
+let m  = m1 + m2  // Matrix addition
+let m  = m1 - m2  // Matrix subtraction
+let m  = m1 * m2  // Matrix multiplication
+let m  = m1 .* m2 // Element-wise (Hadamard) product
+let m  = m1 ./ m2 // Element-wise division
+let m  = m1 ** m2 // Element-wise exponentiation
+let m = atan2 m1 m2 // Element-wise atan2
+
+let m = m1 * v // Matrix-vector product
+let m = v * m1 // Vector-matrix product
+
+let m = m1 + 2. // Add scalar to matrix
+let m = m1 - 2. // Subtract scalar from matrix
+let m = 2. - m1 // Subtract each element of matrix from scalar
+let m = m1 * 2. // Matrix-scalar multiplication
+let m = m1 / 2. // Matrix-scalar division
+let m = 2. / m1 // Divide scalar by each element of matrix
+let m = -m1
+let m = log m1
+let m = log10 m1
+let m = exp m1
+let m = sin m1
+let m = cos m1
+let m = tan m1
+let m = sqrt m1
+let m = sinh m1
+let m = cosh m1
+let m = tanh m1
+let m = asin m1
+let m = acos m1
+let m = atan m1
+let m = abs m1
+let m = signum m1
+let m = floor m1
+let m = ceil m1
+let m = round m1
+let m = softplus m1
+let m = softsign m1
+let m = sigmoid m1
+let m = reLU m1
+
+(**
+#### Matrix Operations
+*)
+
+let s = DM.det m1              // Determinant
+let m = DM.inverse m1          // Inverse
+let m = DM.transpose m1        // Transpose
+let s = DM.trace m1            // Trace
+let v = DM.diagonal m1         // Diagonal
+let x = DM.solve m1 v          // Solve system of linear equations
+let x = DM.solveSymmetric m1 v // Solve system of linear equations (symmetric)
+
+(**
+#### Accessing Elements & Conversions
+*)
+
+let s  = m1.[0, 0]      // Element at 0, 0
+let m  = m1.[0..1, 1..] // Slice, between rows 0 and 1, columns 1 and beyond
+let m  = m1.[*, 0..1]   // Slice, all rows, between columns 0 and 1
+let v  = m1.[0, *]      // Slice, row 0 as a DV
+let v  = m1.[*, 1]      // Slice, column 1 as a DV
+let vs = DM.toRows m1   // Return all rows as a sequence of DVs
+let m  = DM.ofRows [toDV [1.; 2.]; toDV [3.; 4.]] // Create matrix from row vectors
+let vs = DM.toCols m1   // Return all columns as a sequence of DVs
+let m  = DM.ofCols [toDV [1.; 3.]; toDV [2.; 4.]] // Create matrix from column vectors
+let m  = DM (array2D [[1.; 2.]; [3.; 4.]]) // Create DM from float[,]
+let m  = toDM [|[|1.; 2.|]; [|3.; 4.|]|] // Create DM from sequence of sequences of floats
+let m  = toDM [[1.; 2.]; [3.; 4.]]       // Create DM from sequence of sequences of floats
+let m  = toDM [[D 1.; D 2.]; [D 3.; D 4.]] // Create DM from sequence of sequences of Ds
+let v  = DM.toVector m1   // Convert DM to DV by stacking rows of matrix
+let m  = DM.ofVector 2 v2 // Convert DV to a DM with a given number of rows
+let m  = DM.appendRow v m  // Append row to matrix
+let m  = DM.prependRow v m // Prepend row to matrix
+let m  = DM.appendCol v m  // Append column to matrix
+let m  = DM.prependCol v m // Prepend column to matrix
+let a:float[,] = convert m1 // Convert DM to float[,]
+
+(**
+#### Mathematica and MATLAB Strings
+*)
+
+let st = m1.ToMathematicaString()
+let st = m1.ToMatlabString()
+
+(**
+#### Other Operations
+*)
+
+let s = DM.rows m1 // Number of rows
+let s = DM.cols m1 // Number of columns
+let s = DM.length m1 // Total number of elements
+let s = DM.min m1 // Minimum element of DM
+let s = DM.max m1 // Maximum element of DM
+let s = DM.sum m1 // Sum of elements of DM
+let m = DM.normalize // Normalize elements to have zero mean and unit variance
+let m = DM.mapRows f m1 // Map function f:DV->DV to rows of matrix
+let m = DM.mapCols f m1 // Map function f:DV->DV to columns of matrix
