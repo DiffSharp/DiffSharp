@@ -68,18 +68,21 @@ let printb i t name =
 
 type options = {
     repetitions : int;
+    vectorSize : int;
     fileName : string;
     help : bool;
     changed : bool;
     }
 
 let minRepetitions = 1000
+let minVectorSize = 1
 
 let dateTimeString (d:System.DateTime) =
     sprintf "%s%s%s%s%s%s" (d.Year.ToString()) (d.Month.ToString("D2")) (d.Day.ToString("D2")) (d.Hour.ToString("D2")) (d.Minute.ToString("D2")) (d.Second.ToString("D2"))
 
 let defaultOptions = {
-    repetitions = 50000; // > 100000 seems to work fine
+    repetitions = 10000; // > 100000 seems to work fine
+    vectorSize = 10;
     fileName = sprintf "DiffSharpBenchmark%s.txt" (dateTimeString System.DateTime.Now)
     help = false;
     changed = false;
@@ -107,10 +110,26 @@ let rec parseArgsRec args optionsSoFar =
                 else
                     parseArgsRec xss {optionsSoFar with repetitions = reps; changed = true}
             else
-                eprintfn "Option -r was followed by an invalid input."
+                eprintfn "Option -r was followed by an invalid value."
                 parseArgsRec xs optionsSoFar
         | _ ->
             eprintfn "Option -r needs to be followed by a number."
+            parseArgsRec xs optionsSoFar
+    | "/vsize"::xs | "-vsize"::xs ->
+        match xs with
+        | s::xss ->
+            let couldparse, size = System.Int32.TryParse s
+            if couldparse then
+                if size < minVectorSize then
+                    eprintfn "Given value for -vsize was too small, using the minimum: %i." minVectorSize
+                    parseArgsRec xss {optionsSoFar with vectorSize = minVectorSize; changed = true}
+                else
+                    parseArgsRec xss {optionsSoFar with vectorSize = size; changed = true}
+            else
+                eprintfn "Option -vsize was followed by an invalid value."
+                parseArgsRec xs optionsSoFar
+        | _ ->
+            eprintfn "Option -vsize needs to be followed by a number."
             parseArgsRec xs optionsSoFar
     | x::xs ->
         eprintfn "Option \"%s\" is unrecognized." x
@@ -124,7 +143,7 @@ let parseArgs args =
 [<EntryPoint>]
 let main argv = 
 
-    let benchmarkver = "1.0.7"
+    let benchmarkver = "1.0.8"
 
     printfn "DiffSharp Benchmarks"
 
@@ -135,11 +154,14 @@ let main argv =
 
     if ops.help then
         printfn "Runs a series of benchmarks testing the operations in the DiffSharp library.\n"
-        printfn "dsbench [-r repetitions] [-f filename]\n"
+        printfn "dsbench [-r repetitions] [-vsize size] [-f filename]\n"
         printfn "  -r repetitions  Specifies the number of repetitions."
         printfn "                  Higher values give more accurate results, through averaging."
         printfn "                  Default: %i" defaultOptions.repetitions
         printfn "                  Minimum:  %i" minRepetitions
+        printfn "  -vsize size     Specifies the size of vector arguments for multivariate functions."
+        printfn "                  Default: %i" defaultOptions.vectorSize
+        printfn "                  Minimum:  %i" minVectorSize
         printfn "  -f filename     Specifies the name of the output file."
         printfn "                  If the file exists, it will be overwritten."
         printfn "                  Default: DiffSharpBenchmark + current time + .txt"
@@ -155,6 +177,7 @@ let main argv =
         let fileName = ops.fileName
 
         printfn "Repetitions: %A" n
+        printfn "Vector size: %A" ops.vectorSize
         printfn "Output file name: %s\n" fileName
 
         printfn "Benchmarking module version: %s" benchmarkver
@@ -212,10 +235,10 @@ let main argv =
             v
 
 
-        let xv = Array.init 10 (fun _ -> rnd.NextDouble())
+        let xv = Array.init ops.vectorSize (fun _ -> rnd.NextDouble())
         let xvD = DV xv
 
-        let vv = Array.init 10 (fun _ -> rnd.NextDouble())
+        let vv = Array.init ops.vectorSize (fun _ -> rnd.NextDouble())
         let vvD = DV vv
 
         let zv = Array.init 3 (fun _ -> rnd.NextDouble())
@@ -224,14 +247,14 @@ let main argv =
         let fvs (x:float[]) =
             x |> Array.sumBy (fun v -> v * log (v / 2.))
         let fvsD (x:DV) =
-            x .* (log (x / 2.)) |> DV.sum
+            x * (log (x / 2.))
 
         let fvv (x:float[]) =
             [|x |> Array.sumBy (fun v -> v * log (v / 2.))
               x |> Array.sumBy (fun v -> exp (sin v))
               x |> Array.sumBy (fun v -> exp (cos v))|]
         let fvvD (x:DV) =
-            toDV [x .* log (x / 2.) |> DV.sum; exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
+            toDV [x * log (x / 2.); exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
 
         printb 1 29 "original functions"
         let res_fss,      dur_fss =      duration noriginal (fun () -> fss x)
