@@ -26,7 +26,7 @@ open DiffSharp.AD.Float64
 let Newton f x0 (eta:D) epsilon =
     let rec desc x =
         let g, h = gradhessian f x
-        if DV.normSq g < epsilon then x else desc (x - eta * (DM.inverse h) * g)
+        if DV.l2norm g < epsilon then x else desc (x - eta * (DM.inverse h) * g)
     desc x0
 
 (**

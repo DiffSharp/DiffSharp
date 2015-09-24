@@ -21,7 +21,7 @@ keep decreasing and the sequence $\mathbf{x}_n$ usually converges to a local min
 
 In practice, using a fixed step size $\eta$ yields suboptimal performance and there are adaptive algorithms that select a locally optimal step size $\eta$ on each iteration.
 
-The following code implements gradient descent with fixed step size, stopping when the squared [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
+The following code implements gradient descent with fixed step size, stopping when the [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
 
 *)
 
@@ -32,7 +32,7 @@ open DiffSharp.AD.Float64
 let gd f x0 eta epsilon =
     let rec desc x =
         let g = grad f x
-        if DV.normSq g < epsilon then x else desc (x - eta * g)
+        if DV.l2norm g < epsilon then x else desc (x - eta * g)
     desc x0
 
 (**
