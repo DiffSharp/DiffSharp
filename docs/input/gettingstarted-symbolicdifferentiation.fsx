@@ -5,7 +5,7 @@
 Symbolic Differentiation
 ========================
 
-In addition to AD, the DiffSharp library also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of mathematical expressions using rules of differential calculus.
+In addition to AD, the DiffSharp library also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of closed-form expressions using rules of differential calculus.
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
@@ -14,10 +14,10 @@ DiffSharp.Symbolic
 
 This is a symbolic differentiation module, used with the [**Expr**](http://msdn.microsoft.com/en-us/library/ee370577.aspx) type representing F# code expressions. A common way of generating F# code expressions is to use [code quotations](http://msdn.microsoft.com/en-us/library/dd233212.aspx), with the <@ and @> symbols delimiting an expression.
 
-Symbolic differentiation operators construct the wanted derivative as a new expression and return this as a compiled function that can be used subsequently for evaluating the derivative. Once the compiled derivative function is returned, it is significantly faster to run it for computing the derivative at any point, compared to the initial time it takes to generate the function. You can see example compilation and running times on the [Benchmarks](benchmarks.html) page.
+Symbolic differentiation operators construct the wanted derivative as a new expression and return this as a compiled function that can be used subsequently for evaluating the derivative. Once the derivative expression is compiled and returned, it is significantly faster to run it with specific numerical arguments, compared to the initial time it takes to compile the function. You can see example compilation and running times on the [Benchmarks](benchmarks.html) page.
 *)
 
-open DiffSharp.Symbolic
+open DiffSharp.Symbolic.Float64
 
 // Derivative of Sin(3 * Sqrt(x))
 // This returns a compiled function that gives the derivative
@@ -38,7 +38,7 @@ let f x = sin (3. * sqrt x)
 let df = diff <@ f @> 2.
 
 (**
-Different from the **DiffSharp.AD** and **DiffSharp.Numerical** parts of the library, functions with vector domains are expected to be in curried form, instead of taking an array as a parameter.
+Different from the **DiffSharp.AD** and **DiffSharp.Numerical** parts of the library, multivariate functions are expected to be in [curried](https://msdn.microsoft.com/en-us/library/dd233213.aspx?f=255&MSPPError=-2147217396) form.
 *)
 
 // g: float -> float -> float
