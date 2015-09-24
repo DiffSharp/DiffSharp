@@ -138,6 +138,7 @@ and internal ADDV = DiffSharp.AD.Float64.DV
 
 and DV(v:ADDV) =
     new(v:float[]) = DV(ADDV.DV(v))
+    new(v:D[]) = DV(DiffSharp.AD.Float64.DOps.toDV(v |> Array.map D.DtoADD))
     member internal this.toADDV() = v
     static member internal ADDVtoDV (v:ADDV) = new DV(v)
     static member internal DVtoADDV (v:DV) = v.toADDV()
@@ -145,6 +146,9 @@ and DV(v:ADDV) =
     member d.P = d.toADDV().P |> DV.ADDVtoDV
     member d.T = d.toADDV().T |> DV.ADDVtoDV
     member d.A = d.toADDV().A |> DV.ADDVtoDV
+
+    member d.Item
+        with get i = d.toADDV().[i] |> D.ADDtoD
 
     override d.ToString() =
         let rec s (d:ADDV) =
@@ -155,7 +159,7 @@ and DV(v:ADDV) =
         s (d.toADDV())
     static member op_Implicit(d:DV):float[] = ADDV.op_Explicit(d.toADDV())
     static member op_Implicit(a:float[]):DV = DV(a)
-    static member Zero = DV(Array.empty)
+    static member Zero = DV(Array.empty<float>)
     // DV - DV binary operations
     static member (+) (a:DV, b:DV) = DV(a.toADDV() + b.toADDV())
     static member (-) (a:DV, b:DV) = DV(a.toADDV() - b.toADDV())
@@ -253,6 +257,9 @@ and DM(m:ADDM) =
     member d.P = d.toADDM().P |> DM.ADDMtoDM
     member d.T = d.toADDM().T |> DM.ADDMtoDM
     member d.A = d.toADDM().A |> DM.ADDMtoDM
+
+    member d.Item
+        with get (i, j) = d.toADDM().[i, j] |> D.ADDtoD
 
     override d.ToString() =
         let rec s (d:ADDM) =
