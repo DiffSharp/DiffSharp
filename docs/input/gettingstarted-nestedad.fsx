@@ -5,17 +5,17 @@
 Nested AD
 =========
 
-The main functionality of DiffSharp is found under the **DiffSharp.AD** namespace. Opening this namespace allows you to automatically evaluate derivatives of code via forward and/or reverse AD. Internally, for any case involving a function $f: \mathbb{R}^n \to \mathbb{R}^m$, DiffSharp uses forward AD when $n \ll m$ and reverse AD when $n \gg m$. Combinations such as reverse-on-forward or forward-on-reverse AD ...
+The main functionality of DiffSharp is found under the **DiffSharp.AD** namespace. Opening this namespace allows you to automatically evaluate derivatives of code via forward and/or reverse AD. Internally, for any case involving a function $f: \mathbb{R}^n \to \mathbb{R}^m$, DiffSharp uses forward AD when $n \ll m$ and reverse AD when $n \gg m$. Combinations such as reverse-on-forward or forward-on-reverse AD can be also handled.
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 Background
 ----------
 
-The library supports nested invocations of differentiation operations. So, for example, you can compute higher-order derivatives or take derivatives of functions that are themselves internally computing derivatives. 
+The library supports nested invocations of differentiation operations. So, for example, you can compute exact higher-order derivatives or take derivatives of functions that are themselves internally computing derivatives. 
 *)
 
-open DiffSharp.AD
+open DiffSharp.AD.Float64
 
 let y x = sin (sqrt x)
 
@@ -30,7 +30,9 @@ let d3 = diff d2
 
 (**
 
-Moreover, DiffSharp can handle cases such as computing the derivative of a function $f$ that takes an argument $x$, which, in turn, computes the derivative of another function $g$ nested inside $f$ that has a free reference to $x$, the argument to the surrounding function.
+Nesting capability means more than just being able to compute higher-order derivatives of one function.
+
+DiffSharp can handle complex nested cases such as computing the derivative of a function $f$ that takes an argument $x$, which, in turn, computes the derivative of another function $g$ nested inside $f$ that has a free reference to $x$, the argument to the surrounding function.
 
 $$$
   \frac{d}{dx} \left. \left( x \left( \left. \frac{d}{dy} x y \; \right|_{y=3} \right) \right) \right|_{x=2}
@@ -51,7 +53,7 @@ $$$
 
 for functions $f$ and $g$ and a gradient-based minimization procedure $\mathbf{min}$.
 
-Correctly nesting AD in a functional framework is achieved through the method of "tagging", which serves to prevent a class of bugs called "perturbation confusion" where a system fails to distinguish between distinct perturbations introduced by distinct invocations of differentiation operations. You can refer to the following articles, among others, to understand the bug and its solution:
+Correctly nesting AD in a functional framework is achieved through the method of "tagging", which serves to prevent a class of bugs called "perturbation confusion" where a system fails to distinguish between distinct perturbations introduced by distinct invocations of differentiation operations. You can refer to the following articles, among others, to understand the issue and how it should be handled correctly:
 
 
 _Jeffrey Mark Siskind and Barak A. Pearlmutter. Perturbation Confusion and Referential Transparency: Correct Functional Implementation of Forward-Mode AD. In Proceedings of the 17th International Workshop on Implementation and Application of Functional Languages (IFL2005), Dublin, Ireland, Sep. 19-21, 2005._
@@ -63,13 +65,13 @@ _Barak A. Pearlmutter and Jeffrey Mark Siskind. Reverse-Mode AD in a functional 
 Forward and Reverse AD Operations
 ---------------------------------
 
-DiffSharp automatically selects forward or reverse AD, or any combination of these, for a given operation. (If you need, you can force only forward or only reverse AD by using **DiffSharp.AD.Forward** or **DiffSharp.AD.Reverse**.)
+DiffSharp automatically selects forward or reverse AD, or a combination of these, for a given operation.
 
 The following are just a small selection of operations.
 
 *)
 
-open DiffSharp.AD
+open DiffSharp.AD.Float64
 
 // f: D -> D
 let f (x:D) = sin (3. * sqrt x)
@@ -78,47 +80,47 @@ let f (x:D) = sin (3. * sqrt x)
 // Uses forward AD
 let df = diff f (D 2.)
 
-// g: D[] -> D
-let g (x:D[]) = sin (x.[0] * x.[1])
+// g: DV -> D
+let g (x:DV) = sin (x.[0] * x.[1])
 
 // Directional derivative of g at (2, 3) with direction (4, 1)
 // Uses forward AD
-let ddg = gradv g [|D 2.; D 3.|] [|D 4.; D 1.|]
+let ddg = gradv g (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Gradient of g at (2, 3)
 // Uses reverse AD
-let gg = grad g [|D 2.; D 3.|]
+let gg = grad g (toDV [2.; 3.])
 
 // Hessian-vector product of g at (2, 3) with vector (4, 1)
 // Uses reverse-on-forward AD
-let hvg = hessianv g [|D 2.; D 3.|] [|D 4.; D 1.|]
+let hvg = hessianv g (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Hessian of g at (2, 3)
 // Uses reverse-on-forward AD
-let hg = hessian g [|D 2.; D 3.|]
+let hg = hessian g (toDV [2.; 3.])
 
-// h: D[] -> D[]
-let h (x:D[]) = [| sin x.[0]; cos x.[1] |]
+// h: DV -> DV
+let h (x:DV) = toDV [sin x.[0]; cos x.[1]]
 
 // Jacobian-vector product of h at (2, 3) with vector (4, 1)
 // Uses forward AD
-let jvh = jacobianv h [|D 2.; D 3.|] [|D 4.; D 1.|]
+let jvh = jacobianv h (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Transposed Jacobian-vector product of h at (2, 3) with vector (4, 1)
 // Uses reverse AD
-let tjvh = jacobianTv h [|D 2.; D 3.|] [|D 4.; D 1.|]
+let tjvh = jacobianTv h (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Jacobian of h at (2, 3)
 // Uses forward or reverse AD depending on the number of inputs and outputs
-let jh = jacobian h [|D 2.; D 3.|]
+let jh = jacobian h (toDV [2.; 3.])
 
 (**
 Using the Reverse AD Trace
 --------------------------
 
-In addition to the differentiation API that uses reverse AD (such as **grad**, **jacobianTv** ), you can make use of the exposed [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. Reverse AD automatically builds a global trace (or "tape", in AD literature) of all executed numeric operations, which subsequently allows a reverse sweep of these operations for propagating adjoint values in reverse. 
+In addition to the high-level differentiation API that uses reverse AD (such as **grad**, **jacobianTv** ), you can make use of the exposed low-level [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. Reverse AD automatically builds a global trace (or "tape", in AD literature) of all executed numeric operations, which allows a subsequent reverse sweep of these operations for propagating adjoint values in reverse. 
 
-The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks, which is essentially just a special case of reverse AD. You can see an implementation of the backpropagation algorithm using reverse AD in the [neural networks](examples-neuralnetworks.html) example.
+The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks, which is essentially just a special case of reverse AD. (You can see an implementation of the backpropagation algorithm using reverse AD in the [neural networks example](examples-neuralnetworks.html).)
 
 For example, consider the computation
 
@@ -164,14 +166,14 @@ In order to write code using low-level AD functionality, you should understand t
 You can get access to adjoints as follows.
 *)
 
-open DiffSharp.AD
+open DiffSharp.AD.Float64
 
 // Get a fresh global tag for this run of reverse AD
 let i = DiffSharp.Util.GlobalTagger.Next
 
 // Initialize input values for reverse AD
-let a = D 0.5 |> makeDR i
-let b = D 1.2 |> makeDR i
+let a = D 0.5 |> makeReverse i
+let b = D 1.2 |> makeReverse i
 
 // Perform a series of operations involving the D type
 let e = (sin a) * (a + b)
@@ -186,29 +188,27 @@ let deda = a.A
 let dedb = b.A
 
 (*** hide, define-output: o2 ***)
-printf "val a : D =
-  DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},550202u)
+printf "val a : D = DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u)
 val b : D =
-  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},550202u)
+  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3657u)
 val e : D =
   DR
     (D 0.8150234156,{contents = D 1.0;},
-     Mul
+     Mul_D_D
        (DR
           (D 0.4794255386,{contents = D 1.7;},
-           Sin
+           Sin_D
              (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},
-                 550202u)),{contents = 0u;},550202u),
+                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u)),
+           {contents = 0u;},3657u),
         DR
           (D 1.7,{contents = D 0.4794255386;},
-           Add
+           Add_D_D
              (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},
-                 550202u),
+                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u),
               DR
                 (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},
-                 550202u)),{contents = 0u;},550202u)),{contents = 0u;},550202u)
+                 3657u)),{contents = 0u;},3657u)),{contents = 0u;},3657u)
 val deda : D = D 1.971315894
 val dedb : D = D 0.4794255386"
 (*** include-output: o2 ***)
@@ -221,8 +221,8 @@ In addition to the partial derivatives of the dependent variable $e$ with respec
 let i' = DiffSharp.Util.GlobalTagger.Next
 
 // Initialize input values for reverse AD
-let a' = D 0.5 |> makeDR i'
-let b' = D 1.2 |> makeDR i'
+let a' = D 0.5 |> makeReverse i'
+let b' = D 1.2 |> makeReverse i'
 
 // Perform a series of operations involving the D type
 let c' = sin a'
@@ -241,41 +241,40 @@ let de'dd' = d'.A
 
 (*** hide, define-output: o3 ***)
 printf "val a' : D =
-  DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},550203u)
+  DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)
 val b' : D =
-  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},550203u)
+  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3659u)
 val c' : D =
   DR
     (D 0.4794255386,{contents = D 1.7;},
-     Sin
-       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},550203u)),
-     {contents = 0u;},550203u)
+     Sin_D
+       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)),
+     {contents = 0u;},3659u)
 val d' : D =
   DR
     (D 1.7,{contents = D 0.4794255386;},
-     Add
-       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},550203u),
-        DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},550203u)),
-     {contents = 0u;},550203u)
+     Add_D_D
+       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u),
+        DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3659u)),
+     {contents = 0u;},3659u)
 val e' : D =
   DR
     (D 0.8150234156,{contents = D 1.0;},
-     Mul
+     Mul_D_D
        (DR
           (D 0.4794255386,{contents = D 1.7;},
-           Sin
+           Sin_D
              (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},
-                 550203u)),{contents = 0u;},550203u),
+                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)),
+           {contents = 0u;},3659u),
         DR
           (D 1.7,{contents = D 0.4794255386;},
-           Add
+           Add_D_D
              (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},
-                 550203u),
+                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u),
               DR
                 (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},
-                 550203u)),{contents = 0u;},550203u)),{contents = 0u;},550203u)
+                 3659u)),{contents = 0u;},3659u)),{contents = 0u;},3659u)
 val de'da' : D = D 1.971315894
 val de'db' : D = D 0.4794255386
 val de'dc' : D = D 1.7

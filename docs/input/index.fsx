@@ -27,21 +27,21 @@ DiffSharp is implemented in the F# language and [can be used from C#](csharp.htm
 Current Features and Roadmap
 ----------------------------
 
-At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.
-
 The following features are up and running:
 
-- Nested AD with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level
-- Matrix-free Jacobian- and Hessian-vector products
-- [OpenBLAS](https://github.com/xianyi/OpenBLAS/wiki) backend for highly optimized native BLAS and LAPACK operations
-- Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)
-- Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)
+- _Nested AD with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
+- _Matrix-free Jacobian- and Hessian-vector products_
+- _[OpenBLAS](https://github.com/xianyi/OpenBLAS/wiki) backend for highly optimized native BLAS and LAPACK operations_
+- _Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)_
+- _Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)_
 
 We are working on the following features for the next release:
 
-- GPU backend using CUDA and cuBLAS
-- Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)
-- AD via syntax tree transformation, using code quotations
+- _GPU backend using CUDA and cuBLAS_
+- _Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)_
+- _AD via syntax tree transformation, using code quotations_
+
+At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.
 
 How to Get
 ----------
