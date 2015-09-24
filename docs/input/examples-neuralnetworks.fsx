@@ -15,9 +15,9 @@
 Neural Networks
 ===============
 
-[Artificial neural networks](http://en.wikipedia.org/wiki/Artificial_neural_network) are computational architectures based on the properties of biological neural systems, capable of learning and pattern recognition.
+[Artificial neural networks](http://en.wikipedia.org/wiki/Artificial_neural_network) are computational models inspired by biological nervous systems, capable of approximating functions depending on a large number of inputs. A network is defined by a connectivity structure and a set of weights between interconnected processing units ("neurons"). Optimizing, or tuning, the set of weights for a given task makes neural networks capable of learning.
 
-Let us create a [feedforward neural network](http://en.wikipedia.org/wiki/Feedforward_neural_network) model and use the DiffSharp library for implementing the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) algorithm for training it. 
+Let's create a [feedforward neural network](http://en.wikipedia.org/wiki/Feedforward_neural_network) and use DiffSharp for implementing the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) algorithm for training it. As mentioned before, backpropagation is just a special case of reverse mode AD.
 
 We start by defining our neural network structure.
 
@@ -222,5 +222,8 @@ val train3 : seq<float>"
         <img src="img/examples-neuralnetworks-chart2.png" alt="Chart" style="width:550px"/>
     </div>
 </div>
+
+The Obligatory MNIST Example
+----------------------------
 
 *)
