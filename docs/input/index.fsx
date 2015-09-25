@@ -91,7 +91,7 @@ If you would like to cite this library, please use the following information:
 
 _Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767_ ([link](http://arxiv.org/abs/1502.05767)) ([BibTeX](misc/adml2015.bib))
 
-You can also check our [**recent poster**](http://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf) for the [MLOSS Workshop](http://mloss.org/workshop/icml15/) at the International Conference on Machine Learning 2015. For in-depth material, you can check our [publications page](http://www.bcl.hamilton.ie/publications/) and the [autodiff.org](http://www.autodiff.org/) website. 
+You can also check our [**recent poster**](http://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf) for the [Machine Learning Open Source Software Workshop](http://mloss.org/workshop/icml15/) at the International Conference on Machine Learning 2015. For in-depth material, you can check our [publications page](http://www.bcl.hamilton.ie/publications/) and the [autodiff.org](http://www.autodiff.org/) website. 
 
 Other sources:
 

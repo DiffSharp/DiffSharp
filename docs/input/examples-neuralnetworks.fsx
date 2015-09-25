@@ -28,8 +28,8 @@ open DiffSharp.Util
 
 // A layer of neurons
 type Layer =
-    {W:DM  // Weight matrix
-     b:DV} // Bias vector
+    {mutable W:DM  // Weight matrix
+     mutable b:DV} // Bias vector
 
 // A feedforward network of neuron layers
 type Network =
@@ -50,16 +50,11 @@ where $w_i$ are synapse weights associated with each input, $b$ is a bias, and $
     </div>
 </div>
 
-The activation function is commonly taken as the [sigmoid function](http://en.wikipedia.org/wiki/Sigmoid_function)
+A conventional choice for the activation function had been the [sigmoid](http://en.wikipedia.org/wiki/Sigmoid_function) $\sigma (z) = 1 / (1 + e^{-z})$ for a long period because of its simple derivative and gain control properties. Recently the hyperbolic tangent $\tanh$ and the [rectified linear unit](https://en.wikipedia.org/wiki/Rectifier_(neural_networks)) $\textrm{ReLU}(z) = \max(0, z)$ have been more popular choices due to their convergence and training performance characteristics.
 
-$$$
-  \sigma (z) = \frac{1}{1 + e^{-z}} \; ,
+Now let's write the network evaluation code and a function for creating a given network configuration and initializing the weights and biases with small random values. In practice, proper weight initialization would depend on the network structure and the type of activation functions used, as it has been demonstrated to have an important effect on training convergence.
 
-due to its "nice" and simple derivative and gain control properties.
-
-Now let us write the network evaluation code and a function for creating a given network configuration and initializing the weights and biases with small random values.
-
-A pleasant way of implementing network evaluation is to use linear algebra, where we have a weight matrix $\mathbf{W}^l$ holding the weights of all neurons in layer $l$. The elements of this matrix $w_{ij}$ represent the weight between the $j$-th neuron in layer $l - 1$ and the $i$-th neuron in layer $l$. We also have a bias vector $\mathbf{b}^l$ holding the biases of all neurons in layer $l$ (one bias per neuron). Then network evaluation is just a matter of computing the activation
+Network evaluation is implemented using linear algebra, where we have a weight matrix $\mathbf{W}^l$ holding the weights of all neurons in layer $l$. The elements of this matrix $w_{ij}$ represent the weight between the $j$-th neuron in layer $l - 1$ and the $i$-th neuron in layer $l$. We also have a bias vector $\mathbf{b}^l$ holding the biases of all neurons in layer $l$ (one bias per neuron). Thus evaluating the network is just a matter of computing the activation
 
 $$$
   \mathbf{a}^l = \mathbf{W}^l \mathbf{a}^{l - 1} + \mathbf{b}^l \; ,
@@ -67,11 +62,8 @@ $$$
 for each layer and passing the activation vector (output) of each layer as the input to the next layer, until we have the network output as the output vector of the last layer.
 *)
 
-let sigmoid (x:D) = 1. / (1. + exp -x)
-
 let runLayer (x:DV) (l:Layer) =
-    l.W * x + l.b
-    |> DV.Sigmoid
+    l.W * x + l.b |> sigmoid
 
 let runNetwork (x:DV) (n:Network) =
     Array.fold runLayer x n.layers
@@ -88,9 +80,9 @@ let createNetwork (l:int[]) =
          b = DV.init l.[i + 1] (fun _ -> D (-0.5 + rnd.NextDouble()))})}
 (**
 
-This gives us a highly scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
+This gives us an easily scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
 
-For example, using the code
+For example,
 
 *)
 
@@ -108,7 +100,7 @@ would give us the following network with 3 input nodes, a hidden layer with 4 ne
 
 We can also have more than one hidden layer.
 
-For training networks, we will make use of reverse mode AD for propagating the error at the output $E$ backwards through the network synapse weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will then use in an update rule
+For training networks, we will make use of reverse mode AD for propagating an error $E$ at the output backwards through the network weights. This will give us the partial derivative of the error at the output with respect to each weight $w_i$ and bias $b_i$ in the network, which we will then use in an update rule
 
 $$$
  \begin{eqnarray*}
@@ -118,7 +110,7 @@ $$$
 
 where $\eta$ is the learning rate.
 
-It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Nested AD](gettingstarted-nestedad.html) page for an explanation of the usage of adjoints and their backwards propagation.
+It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Nested AD](gettingstarted-nestedad.html) page for an explanation of the low-level usage of adjoints and their backwards propagation.
 
 *)
 
@@ -132,35 +124,36 @@ let backprop (n:Network) eta epsilon timeout (t:(DV*DV)[]) =
     let i = DiffSharp.Util.GlobalTagger.Next
     seq {for j in 0 .. timeout do
             for l in n.layers do
-                l.W |> Matrix.replace (makeDR i)
-                l.b |> Vector.replace (makeDR i) 
+                l.W <- l.W |> makeReverse i
+                l.b <- l.b |> makeReverse i
 
-            let error = t |> Array.sumBy (fun (x, y) -> Vector.normSq (y - runNetwork x n))
+            let error = t |> Array.sumBy (fun (x, y) -> DV.l2normSq (y - runNetwork x n))
             error |> reverseProp (D 1.) // Propagate adjoint value 1 backward
 
             for l in n.layers do
-                l.W |> Matrix.replace (fun (x:D) -> x.P - eta * x.A)
-                l.b |> Vector.replace (fun (x:D) -> x.P - eta * x.A)
+                l.W <- l.W.P - eta * l.W.A
+                l.b <- l.b.P - eta * l.b.A
 
+            printfn "Iteration %i, error %f" j (float error)
             if j = timeout then printfn "Failed to converge within %i steps." timeout
             yield float error}
     |> Seq.takeWhile ((<) epsilon)
 
 (**
 
-Using reverse mode AD here has two big advantages: it makes the backpropagation code succinct and straightforward to write and maintain; and it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
+Using reverse mode AD here has two big advantages: (1) it makes the backpropagation code succinct and straightforward to write and maintain; and (2) it allows us to freely choose activation functions without the burden of coding their derivatives or modifying the backpropagation code accordingly.
 
-We can now test the algorithm by training some networks. 
+We can now test the algorithm by training some networks.
 
 It is known that [linearly separable](http://en.wikipedia.org/wiki/Linear_separability) rules such as [logical disjunction](http://en.wikipedia.org/wiki/Logical_disjunction) can be learned by a single neuron.
 
 *)
 open FSharp.Charting
 
-let trainOR = [|vector [D 0.; D 0.], vector [D 0.]
-                vector [D 0.; D 1.], vector [D 1.]
-                vector [D 1.; D 0.], vector [D 1.]
-                vector [D 1.; D 1.], vector [D 1.]|]
+let trainOR = [|toDV [0.; 0.], toDV [0.]
+                toDV [0.; 1.], toDV [1.]
+                toDV [1.; 0.], toDV [1.]
+                toDV [1.; 1.], toDV [1.]|]
 
 // 2 inputs, one layer with one neuron
 let net2 = createNetwork [|2; 1|]
@@ -172,9 +165,8 @@ let train2 = backprop net2 0.9 0.005 10000 trainOR
 Chart.Line train2
 
 (*** hide, define-output: o ***)
-printf "val net2 : Network =
-  {l = [|{n = [|{w = Vector [|D -0.3042126283; D -0.2509630955|];
-                 b = D 0.4165584179;}|];}|];}
+printf "val net2 : Network = {layers = [|{W = DM [[0.230677625; 0.1414874814]];
+                                  b = DV [|0.4233988253|];}|];}
 val train2 : seq<float>"
 (*** include-output: o ***)
 
@@ -190,10 +182,10 @@ Linearly inseparable problems such as [exclusive or](http://en.wikipedia.org/wik
     
 *)
 
-let trainXOR = [|vector [D 0.; D 0.], vector [D 0.]
-                 vector [D 0.; D 1.], vector [D 1.]
-                 vector [D 1.; D 0.], vector [D 1.]
-                 vector [D 1.; D 1.], vector [D 0.]|]
+let trainXOR = [|toDV [0.; 0.], toDV [0.]
+                 toDV [0.; 1.], toDV [1.]
+                 toDV [1.; 0.], toDV [1.]
+                 toDV [1.; 1.], toDV [0.]|]
 
 // 2 inputs, 3 neurons in a hidden layer, 1 neuron in the output layer
 let net3 = createNetwork [|2; 3; 1|]
@@ -207,12 +199,12 @@ Chart.Line train3
 (*** hide, define-output: o2 ***)
 printf "val net3 : Network =
   {layers =
-    [|{W = Matrix [[D 0.3691323418; D -0.4268625504]
-                   [D 0.2538574085; D 0.4656410399]
-                   [D 0.3023036475; D -0.09005093509]];
-       b = Vector [|D -0.1326141556; D 0.1238703284; D 0.461187453|];};
-      {W = Matrix [[D 0.1193747351; D 0.4290782972; D -0.1465413457]];
-       b = Vector [|D -0.4840164538|];}|];}
+    [|{W = DM [[-0.04536837132; -0.3447727025]
+               [-0.07626016418; 0.06522091877]
+               [0.2581558948; 0.1597980939]];
+       b = DV [|-0.3051199176; 0.2980325892; 0.4621827649|];};
+      {W = DM [[-0.347911722; 0.2696812725; 0.2704776571]];
+       b = DV [|-0.1477482923|];}|];}
 val train3 : seq<float>"
 (*** include-output: o2 ***)
 
@@ -223,6 +215,24 @@ val train3 : seq<float>"
     </div>
 </div>
 
+Some Performance Tricks
+-----------------------
+
+High performance neural network implementations propagate matrices, instead of vectors, through the network. In other words, instead of treating the traning data as a set of input vectors $\mathbf{x}_i \in \mathbb{R}^n$ and target vectors $\mathbf{y}_i \in \mathbb{R}^m$, $i = 1 \dots d$, we can have one input matrix $\mathbf{X} \in \mathbb{R}^{n\times d}$ and a target matrix $\mathbf{Y} \in \mathbb{R}^{m\times d}$, where $d$ is the number of examples in the training set. In DiffSharp, as in other linear algebra libraries, computing matrix-matrix multiplications are significantly faster than computing a series of matrix-vector multiplications.
+
+For simplifying network evaluation further, and therefore making things even faster, we can implement the bias of each neuron as just another weight of an input that is constantly $1$. For accomplishing this, we just have to add an extra row of $1$s to our input matrix, giving $\mathbf{X} \in \mathbb{R}^{(n+1)\times d}$. This is sometimes known as the "bias trick".
+*)
+
+// A layer of neurons
+type Layer =
+    {mutable W:DM  // Weight matrix
+     mutable b:DV} // Bias vector
+
+// A feedforward network of neuron layers
+type Network =
+    {layers:Layer[]} // The layers forming this network
+
+(**
 The Obligatory MNIST Example
 ----------------------------
 

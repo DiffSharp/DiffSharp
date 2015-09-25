@@ -1,0 +1,9 @@
+0.7.*
+- In-place operations
+- CUDA/CuBLAS backend
+
+0.8.*
+- Tensor/multidimensional array
+
+0.9.*
+- AD via syntax tree transformation
