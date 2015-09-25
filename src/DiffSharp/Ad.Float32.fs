@@ -2612,6 +2612,10 @@ module DM =
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<float32>) then DM (Array2D.create m n (unbox<float32>(box v)))
         else failwith "Unsupported type. Expecting D or float32.f"
+    /// Creates a matrix with `m` rows, where all rows are equal to `v`
+    let inline createRows (m:int) (v:DV) = v |> Array.create m |> ofRows
+    /// Creates a matrix with `n` columns, where all columns are equal to `v`
+    let inline createCols (n:int) (v:DV) = v |> Array.create n |> ofCols
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
     /// Gets the diagonal of matrix `m`
