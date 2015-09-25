@@ -547,7 +547,7 @@ and DV =
             DVF(DV.OfArray(ap), DV.OfArray(at), ai)
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array.Parallel.map (fun x -> x.P)
-            let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV(a), ref 0u, ai)
+            let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV_ofDs(a), ref 0u, ai)
 
     static member inline Op_DV_DV (a, ff, fd, df, r) =
         match a with
@@ -1440,7 +1440,7 @@ and DM =
             DMF(DM.OfArray2D(ap), DM.OfArray2D(at), ai)
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array2D.map (fun x -> x.P)
-            let cp = DM.OfArray2D(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofD(a), ref 0u, ai)
+            let cp = DM.OfArray2D(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDs(a), ref 0u, ai)
     // Creates a matrix with `m` rows from array `a`, filling columns from left to right and rows from top to bottom. The number of columns will be deduced from `m` and the length of `a`. The length of `a` must be an integer multiple of `m`.
     static member OfArray (m:int, a:D[]) =
         let n = a.Length / m
@@ -1456,7 +1456,14 @@ and DM =
             DMF(DM.ofRows(ap), DM.ofRows(at), ai)
         | DVR(_,_,_,_,ai) ->
             let ap = s |> Seq.map (fun x -> x.P)
-            let cp = DM.ofRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(s |> Seq.toArray), ref 0u, ai)
+            let cp = DM.ofRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDVs(s |> Seq.toArray), ref 0u, ai)
+
+    static member ofRows (m:int, a:DV) =
+        match a with
+        | DV(ap) -> Array.create m ap |> array2D |> DM
+        | DVF(ap,at,ai) -> DMF(DM.ofRows(m, ap), DM.ofRows(m, at), ai)
+        | DVR(ap,_,_,_,ai) ->
+            let cp = DM.ofRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
 
     static member inline Op_DM_DM (a, ff, fd, df, r) =
         match a with
@@ -2154,9 +2161,9 @@ and DM =
 //            Parallel.For(0, b.Rows, fun ii -> 
 //                Parallel.For(0, b.Cols, fun jj ->
 //                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore) |> ignore
-            for ii = 0 to b.Rows - 1 do
-                    Parallel.For(0, b.Cols, fun jj ->
-                        aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore
+            Parallel.For(0, b.Rows, fun ii ->
+                for jj = 0 to b.Cols - 1 do
+                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore
             aa
         let inline fd(a, b) = DM.AddSubMatrix(a, i, j, b)
         let inline df_da(cp, ap, at) = at
@@ -2371,7 +2378,7 @@ and TraceOp =
     | Floor_DV               of DV
     | Ceil_DV                of DV
     | Round_DV               of DV
-    | Make_DV                of D[]
+    | Make_DV_ofDs            of D[]
     | SliceRow_DM            of DM * int * int
     | SliceCol_DM            of DM * int * int
     | Solve_DM_DV            of DM * DV
@@ -2465,8 +2472,9 @@ and TraceOp =
     | Ceil_DM                of DM
     | Round_DM               of DM
     | Transpose_DM           of DM
-    | Make_DM_ofD            of D[,]
-    | Make_DM_ofDV           of DV[]
+    | Make_DM_ofDs           of D[,]
+    | Make_DM_ofDV           of DV
+    | Make_DM_ofDVs          of DV[]
     | AddItem_DM_D           of DM * int * int * D
     | AddItem_DM_DCons       of DM
     | AddItem_DMCons_D       of int * int * D
@@ -2613,9 +2621,9 @@ module DM =
         elif at.Equals(typeof<float32>) then DM (Array2D.create m n (unbox<float32>(box v)))
         else failwith "Unsupported type. Expecting D or float32.f"
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
-    let inline createRows (m:int) (v:DV) = v |> Array.create m |> ofRows
+    let inline createRows (m:int) (v:DV) = DM.ofRows(m, v)
     /// Creates a matrix with `n` columns, where all columns are equal to `v`
-    let inline createCols (n:int) (v:DV) = v |> Array.create n |> ofCols
+    let inline createCols (n:int) (v:DV) = DM.ofRows(n, v) |> transpose
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
     /// Gets the diagonal of matrix `m`
@@ -2891,7 +2899,7 @@ module DOps =
                             //| Floor_DV(_) -> pushRec t
                             //| Ceil_DV(_) -> pushRec t
                             //| Round_DV(_) -> pushRec t
-                            | Make_DV(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i] v))) t |> pushRec
+                            | Make_DV_ofDs(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i] v))) t |> pushRec
                             | SliceRow_DM(a, i, j) ->
                                 a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowMatrix())
                                 pushRec ((bx DM.Zero a) :: t)
@@ -3011,8 +3019,9 @@ module DOps =
                             //| Ceil_DM(_) -> pushRec t
                             //| Round_DM(_) -> pushRec t
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
-                            | Make_DM_ofD(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toVector |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
-                            | Make_DM_ofDV(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))) t |> pushRec
+                            | Make_DM_ofDs(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toVector |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
+                            | Make_DM_ofDV(a) -> t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))) |> pushRec
+                            | Make_DM_ofDVs(a) -> t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))) |> pushRec
                             | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)
                             | AddItem_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | AddItem_DMCons_D(i, j, b) -> pushRec ((bx d.A.[i, j] b) :: t)
@@ -3177,7 +3186,7 @@ module DOps =
                             | Floor_DV(a) -> resetRec (box a :: t)
                             | Ceil_DV(a) -> resetRec (box a :: t)
                             | Round_DV(a) -> resetRec (box a :: t)
-                            | Make_DV(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
+                            | Make_DV_ofDs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
                             | SliceRow_DM(a,_,_) -> resetRec (box a :: t)
                             | SliceCol_DM(a,_,_) -> resetRec (box a :: t)
                             | Solve_DM_DV(a, b) -> resetRec (box a :: box b :: t)
@@ -3278,8 +3287,9 @@ module DOps =
                             | Ceil_DM(a) -> resetRec (box a :: t)
                             | Round_DM(a) -> resetRec (box a :: t)
                             | Transpose_DM(a) -> resetRec (box a :: t)
-                            | Make_DM_ofD(a) -> resetRec (List.append (a |> Array2D.toArray |> Array.map box |> List.ofArray) t) 
-                            | Make_DM_ofDV(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
+                            | Make_DM_ofDs(a) -> resetRec (List.append (a |> Array2D.toArray |> Array.map box |> List.ofArray) t)
+                            | Make_DM_ofDV(a) -> resetRec (box a :: t)
+                            | Make_DM_ofDVs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
                             | AddItem_DM_D(a, _, _, b) -> resetRec (box a :: box b :: t)
                             | AddItem_DM_DCons(a) -> resetRec (box a :: t)
                             | AddItem_DMCons_D(_, _, b) -> resetRec (box b :: t)
