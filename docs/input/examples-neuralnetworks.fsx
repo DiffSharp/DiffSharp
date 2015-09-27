@@ -7,7 +7,7 @@
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#E0EBEB">
-        <b>Please note:</b> the code in this example is provided for illustrating the basics and therefore kept simple and unoptimized. It is not intended for production use. It will be replaced with a better version supporting more complex cases.
+        <b>Please note:</b> this is an introductory example and therefore the code is kept very simple. More advanced cases, including recurrent and convolutional networks, will be released as part of a separate library built on top of DiffSharp.
     </div>
     </div>
 </div>
@@ -29,7 +29,8 @@ open DiffSharp.Util
 // A layer of neurons
 type Layer =
     {mutable W:DM  // Weight matrix
-     mutable b:DV} // Bias vector
+     mutable b:DV  // Bias vector
+     a:DV->DV}     // Activation function
 
 // A feedforward network of neuron layers
 type Network =
@@ -63,7 +64,7 @@ for each layer and passing the activation vector (output) of each layer as the i
 *)
 
 let runLayer (x:DV) (l:Layer) =
-    l.W * x + l.b |> sigmoid
+    l.W * x + l.b |> l.a
 
 let runNetwork (x:DV) (n:Network) =
     Array.fold runLayer x n.layers
@@ -76,8 +77,9 @@ let rnd = System.Random()
 // l : number of inputs and number of neurons in each subsequent layer
 let createNetwork (l:int[]) =
     {layers = Array.init (l.Length - 1) (fun i ->
-        {W = DM.init l.[i + 1] l.[i] (fun _ _ -> D (-0.5 + rnd.NextDouble()))
-         b = DV.init l.[i + 1] (fun _ -> D (-0.5 + rnd.NextDouble()))})}
+        {W = DM.init l.[i + 1] l.[i] (fun _ _ -> -0.5 + rnd.NextDouble())
+         b = DV.init l.[i + 1] (fun _ -> -0.5 + rnd.NextDouble())
+         a = sigmoid})}
 (**
 
 This gives us an easily scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers. The network is fully connected, meaning that each neuron in a layer receives the outputs of all the neurons in the previous layer as its input.
@@ -110,7 +112,14 @@ $$$
 
 where $\eta$ is the learning rate.
 
-It is important to note that the backpropagation algorithm is just a special case of reverse mode AD, with which it shares a common history. Please see the [Nested AD](gettingstarted-nestedad.html) page for an explanation of the low-level usage of adjoints and their backwards propagation.
+We will use the [quadratic error](https://en.wikipedia.org/wiki/Mean_squared_error)
+
+$$$
+ E = \sum_i \Vert \mathbf{y}_i - \mathbf{a}(\mathbf{x}_i) \Vert^{2} \; ,
+
+where $\mathbf{y}_i$ are the training targets and $\mathbf{a}(\mathbf{x}_i)$ are the vectors of outputs at the last layer of the network when training inputs $\mathbf{x}_i$ are supplied to the first layer.
+
+Please see the [Nested AD](gettingstarted-nestedad.html) page for a better understanding of the low-level usage of adjoints and their backwards propagation.
 
 *)
 
@@ -119,20 +128,21 @@ It is important to note that the backpropagation algorithm is just a special cas
 // eta: learning rate
 // epsilon: error threshold
 // timeout: maximum number of iterations
-// t: training set consisting of input and output vectors
-let backprop (n:Network) eta epsilon timeout (t:(DV*DV)[]) =
+// x: training input vectors
+// y: training target vectors
+let backprop (n:Network) eta epsilon timeout (x:DV[]) (y:DV[]) =
     let i = DiffSharp.Util.GlobalTagger.Next
     seq {for j in 0 .. timeout do
             for l in n.layers do
                 l.W <- l.W |> makeReverse i
                 l.b <- l.b |> makeReverse i
 
-            let error = t |> Array.sumBy (fun (x, y) -> DV.l2normSq (y - runNetwork x n))
+            let error = Array.map2 (fun x y -> DV.l2normSq (y - runNetwork x n)) x y |> Array.sum
             error |> reverseProp (D 1.) // Propagate adjoint value 1 backward
 
             for l in n.layers do
-                l.W <- l.W.P - eta * l.W.A
-                l.b <- l.b.P - eta * l.b.A
+                l.W <- primal (l.W.P - eta * l.W.A)
+                l.b <- primal (l.b.P - eta * l.b.A)
 
             printfn "Iteration %i, error %f" j (float error)
             if j = timeout then printfn "Failed to converge within %i steps." timeout
@@ -150,27 +160,29 @@ It is known that [linearly separable](http://en.wikipedia.org/wiki/Linear_separa
 *)
 open FSharp.Charting
 
-let trainOR = [|toDV [0.; 0.], toDV [0.]
-                toDV [0.; 1.], toDV [1.]
-                toDV [1.; 0.], toDV [1.]
-                toDV [1.; 1.], toDV [1.]|]
+let ORx = [|toDV [0.; 0.]
+            toDV [0.; 1.]
+            toDV [1.; 0.]
+            toDV [1.; 1.]|]
+let ORy = [|toDV [0.]
+            toDV [1.]
+            toDV [1.]
+            toDV [1.]|]
 
 // 2 inputs, one layer with one neuron
 let net2 = createNetwork [|2; 1|]
 
 // Train
-let train2 = backprop net2 0.9 0.005 10000 trainOR
+let train2 = backprop net2 0.9 0.005 10000 ORx ORy
 
 // Plot the error during training
 Chart.Line train2
 
-(*** hide, define-output: o ***)
-printf "val net2 : Network = {layers = [|{W = DM [[0.230677625; 0.1414874814]];
-                                  b = DV [|0.4233988253|];}|];}
-val train2 : seq<float>"
-(*** include-output: o ***)
+(**
 
-(** 
+    [lang=cs]
+    val net2 : Network = {layers = [|{W = DM [[0.230677625; 0.1414874814]];
+                                      b = DV [|0.4233988253|];}|];}
 
 <div class="row">
     <div class="span6 offset1">
@@ -182,33 +194,37 @@ Linearly inseparable problems such as [exclusive or](http://en.wikipedia.org/wik
     
 *)
 
-let trainXOR = [|toDV [0.; 0.], toDV [0.]
-                 toDV [0.; 1.], toDV [1.]
-                 toDV [1.; 0.], toDV [1.]
-                 toDV [1.; 1.], toDV [0.]|]
+let XORx = [|toDV [0.; 0.]
+             toDV [0.; 1.]
+             toDV [1.; 0.]
+             toDV [1.; 1.]|]
+let XORy = [|toDV [0.]
+             toDV [1.]
+             toDV [1.]
+             toDV [0.]|]
 
 // 2 inputs, 3 neurons in a hidden layer, 1 neuron in the output layer
 let net3 = createNetwork [|2; 3; 1|]
 
 // Train
-let train3 = backprop net3 0.9 0.005 10000 trainXOR
+let train3 = backprop net3 0.9 0.005 10000 XORx XORy
 
 // Plot the error during training
 Chart.Line train3
 
-(*** hide, define-output: o2 ***)
-printf "val net3 : Network =
-  {layers =
-    [|{W = DM [[-0.04536837132; -0.3447727025]
-               [-0.07626016418; 0.06522091877]
-               [0.2581558948; 0.1597980939]];
-       b = DV [|-0.3051199176; 0.2980325892; 0.4621827649|];};
-      {W = DM [[-0.347911722; 0.2696812725; 0.2704776571]];
-       b = DV [|-0.1477482923|];}|];}
-val train3 : seq<float>"
-(*** include-output: o2 ***)
-
 (**
+
+    [lang=cs]
+    val net3 : Network =
+      {layers =
+        [|{W = DM [[-0.04536837132; -0.3447727025]
+                   [-0.07626016418; 0.06522091877]
+                   [0.2581558948; 0.1597980939]];
+           b = DV [|-0.3051199176; 0.2980325892; 0.4621827649|];};
+          {W = DM [[-0.347911722; 0.2696812725; 0.2704776571]];
+           b = DV [|-0.1477482923|];}|];}
+
+
 <div class="row">
     <div class="span6 offset1">
         <img src="img/examples-neuralnetworks-chart2.png" alt="Chart" style="width:550px"/>
@@ -218,22 +234,313 @@ val train3 : seq<float>"
 Some Performance Tricks
 -----------------------
 
-High performance neural network implementations propagate matrices, instead of vectors, through the network. In other words, instead of treating the traning data as a set of input vectors $\mathbf{x}_i \in \mathbb{R}^n$ and target vectors $\mathbf{y}_i \in \mathbb{R}^m$, $i = 1 \dots d$, we can have one input matrix $\mathbf{X} \in \mathbb{R}^{n\times d}$ and a target matrix $\mathbf{Y} \in \mathbb{R}^{m\times d}$, where $d$ is the number of examples in the training set. In DiffSharp, as in other linear algebra libraries, computing matrix-matrix multiplications are significantly faster than computing a series of matrix-vector multiplications.
+For higher training performance, it is better to propagate matrices, instead of vectors, through the network. In other words, instead of treating the traning data as a set of input vectors $\mathbf{x}_i \in \mathbb{R}^n$ and target vectors $\mathbf{y}_i \in \mathbb{R}^m$, $i = 1 \dots d$, we can have an input matrix $\mathbf{X} \in \mathbb{R}^{n\times d}$ and a target matrix $\mathbf{Y} \in \mathbb{R}^{m\times d}$, where $d$ is the number of examples in the training set. In this scheme, vectors $\mathbf{x}_i$ form the columns of the input matrix $\mathbf{X}$, and propagating $\mathbf{X}$ through the layers computes the network's output for all $\mathbf{x}_i$ simultaneously. In DiffSharp, as in other linear algebra libraries, computing matrix-matrix multiplications are a lot more efficient than computing a series of matrix-vector multiplications.
 
-For simplifying network evaluation further, and therefore making things even faster, we can implement the bias of each neuron as just another weight of an input that is constantly $1$. For accomplishing this, we just have to add an extra row of $1$s to our input matrix, giving $\mathbf{X} \in \mathbb{R}^{(n+1)\times d}$. This is sometimes known as the "bias trick".
+Let's modify the network evaluation code to propagate matrices.
 *)
 
 // A layer of neurons
-type Layer =
+type Layer' =
     {mutable W:DM  // Weight matrix
-     mutable b:DV} // Bias vector
+     mutable b:DV  // Bias vector
+     a:DM->DM}     // Activation function
 
 // A feedforward network of neuron layers
-type Network =
-    {layers:Layer[]} // The layers forming this network
+type Network' =
+    {layers:Layer'[]} // The layers forming this network
+
+let runLayer' (x:DM) (l:Layer') =
+    l.W * x + (DM.createCols x.Cols l.b) |> l.a
+
+let runNetwork' (x:DM) (n:Network') =
+    Array.fold runLayer' x n.layers
+
+(**
+The backpropagation code given previously computes the loss over the whole set of training cases at each iteration and uses simple gradient descent to iteratively decrease this loss. When the training set is large, this leads to training time bottlenecks. 
+
+In practice, backpropagation is combined with stochastic gradient descent (SGD), which makes the duration of each training iteration independent from the training set size (also see the [SGD example](examples-stochasticgradientdescent.html)). Furthermore, instead of using one random case at a time to compute the loss, SGD is used with "minibatches" of more than one case (a small number compared to the full training set size). Minibatches allow us to exploit the matrix-matrix multiplication trick for performance and also have the added benefit of smoothing the SGD estimation of the true gradient.
+
+Backpropagation combined with SGD and minibatches is the de facto standard for training neural networks.
+*)
+
+// Backpropagation with SGD and minibatches
+// n: network
+// eta: learning rate
+// epsilon: error threshold
+// timeout: maximum number of iterations
+// mbsize: minibatch size
+// loss: loss function
+// x: training input matrix
+// y: training target matrix
+let backprop' (n:Network') (eta:float) epsilon timeout mbsize loss (x:DM) (y:DM) =
+    let i = DiffSharp.Util.GlobalTagger.Next
+    let mutable b = 0
+    let batches = x.Cols / mbsize
+    let mutable j = 0
+    while j < timeout do
+        b <- 0
+        while b < batches do
+            let mbX = x.[*, (b * mbsize)..((b + 1) * mbsize - 1)]
+            let mbY = y.[*, (b * mbsize)..((b + 1) * mbsize - 1)]
+
+            for l in n.layers do
+                l.W <- l.W |> makeReverse i
+                l.b <- l.b |> makeReverse i
+
+            let error:D = loss (runNetwork' mbX n) mbY
+            error |> reverseProp (D 1.)
+
+            for l in n.layers do
+                l.W <- primal (l.W.P - eta * l.W.A)
+                l.b <- primal (l.b.P - eta * l.b.A)
+
+            printfn "Epoch %i, minibatch %i, error %f" j b (float error)
+            b <- b + 1
+            if float error >= epsilon then j <- timeout
+        j <- j + 1
 
 (**
 The Obligatory MNIST Example
 ----------------------------
 
+The MNIST (for "Mixed National Institute of Standards and Technology") database of handwritten digits is
+
+
+The following code reads the standard MNIST files into matrices.
+*)
+
+open System.IO
+
+type MNIST =
+    static member Load(filename, items) =
+        let d = new BinaryReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+        let magicnumber = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+        match magicnumber with
+        | 2049 -> // Labels
+            let maxitems = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+            d.ReadBytes(min items maxitems)
+            |> Array.map float |> DV
+            |> DM.ofDV 1
+        | 2051 -> // Images
+            let maxitems = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+            let rows = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+            let cols = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+            let n = min items maxitems
+            d.ReadBytes(n * rows * cols)
+            |> Array.map float |> DV
+            |> DM.ofDV n
+            |> DM.transpose
+        | _ -> failwith "Given file is not in the MNIST format."
+    static member Load(filename) = MNIST.Load(filename, System.Int32.MaxValue)
+
+(**
+Let's load 10,000 training images
+*)
+
+let mnistTrainX = MNIST.Load("C:/datasets/MNIST/train-images.idx3-ubyte", 10000)
+let mnistTrainY = MNIST.Load("C:/datasets/MNIST/train-labels.idx1-ubyte", 10000)
+
+(**
+Loss
+*)
+
+let cross (x:DM) (y:DM) =
+    (x |> DM.toCols |> Seq.mapi (fun i v -> (logsumexp v) - v.[int (float y.[0, i])]) |> Seq.sum) / x.Cols
+
+(**
+Create a network
+*)
+
+let l0 = {W = DM.init 300 785 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
+          b = DV.init 300 (fun _ -> 0.)
+          a = tanh}
+
+let l1 = {W = DM.init 10 300 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
+          b = DV.init 10 (fun _ -> 0.)
+          a = id}
+
+let nn = {layers = [|l0; l1|]}
+
+(**
+Train
+*)
+
+//backprop' nn 0.1 0.005 1000 1000 cross mnistTrainX mnistTrainY
+
+(**
+Test
+*)
+
+let mnistTestX = MNIST.Load("C:/datasets/MNIST/t10k-images.idx3-ubyte", 5)
+let mnistTestY = MNIST.Load("C:/datasets/MNIST/t10k-labels.idx1-ubyte", 5)
+
+let testY = runNetwork' mnistTestX nn |> primal
+let testError = cross testY mnistTestY
+let testPredict = testY |> DM.toCols |> Seq.map DV.maxIndex |> Seq.toArray
+
+for i = 0 to testY.Cols - 1 do
+    printfn "Predicted label: %i" testPredict.[i]
+    printfn "Image:\n %s" ((mnistTestX.[*,i] |> DM.ofDV 28).Visualize())
+
+(**
+    [lang=cs]
+    Predicted label: 7
+    Image:
+     DM : 28 x 28
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+          ■■■■■■                
+          ■■■■■■■■■■■■■■■■      
+          ■■■■■■■■■■■■■■■■      
+                ■ ■■■■ ■■■      
+                      ■■■       
+                      ■■■       
+                     ■■■■       
+                    ■■■■        
+                    ■■■         
+                    ■■■         
+                   ■■■          
+                  ■■■■          
+                  ■■■           
+                 ■■■■           
+                ■■■■            
+               ■■■■             
+               ■■■■             
+              ■■■■■             
+              ■■■■■             
+              ■■■               
+                            
+
+    Predicted label: 2
+    Image:
+     DM : 28 x 28
+                            
+                            
+                            
+              ■■■■■■■           
+             ■■■■■■■■           
+            ■■■■■■■■■■          
+           ■■■■    ■■■          
+           ■■■    ■■■■          
+                  ■■■■          
+                 ■■■■           
+                ■■■■■           
+                ■■■■            
+               ■■■■             
+               ■■■              
+              ■■■■              
+             ■■■■               
+             ■■■■               
+            ■■■■                
+            ■■■                 
+            ■■■■         ■■■■■  
+            ■■■■■■■■■■■■■■■■■■■ 
+            ■■■■■■■■■■■■■■■■■■■ 
+             ■■■■■■■■■■■■       
+                            
+                            
+                            
+                            
+                            
+
+    Predicted label: 1
+    Image:
+     DM : 28 x 28
+                            
+                            
+                            
+                            
+                    ■■■         
+                    ■■■         
+                    ■■          
+                   ■■■          
+                   ■■■          
+                   ■■           
+                  ■■■           
+                  ■■■           
+                  ■■■           
+                 ■■■            
+                 ■■■            
+                 ■■■            
+                ■■■             
+                ■■■             
+                ■■■             
+                ■■■             
+               ■■■■             
+               ■■■              
+               ■■■              
+               ■■               
+                            
+                            
+                            
+                            
+
+    Predicted label: 0
+    Image:
+     DM : 28 x 28
+                            
+                            
+                            
+                            
+                 ■■■            
+                 ■■■■           
+                ■■■■■           
+              ■■■■■■■■■         
+              ■■■■■■■■■■        
+             ■■■■■■■■■■■        
+            ■■■■■■■■■■■■■       
+            ■■■■■■    ■■■■      
+            ■■■■      ■■■■      
+            ■■■        ■■■      
+            ■■         ■■■■     
+           ■■■        ■■■■      
+           ■■■       ■■■■■      
+           ■■■      ■■■■■■      
+           ■■■     ■■■■■■       
+           ■■■■■■■■■■■■■        
+           ■■■■■■■■■■■■■        
+            ■■■■■■■■■■          
+            ■■■■■■■■■           
+              ■■■■■■            
+                            
+                            
+                            
+                            
+
+    Predicted label: 4
+    Image:
+     DM : 28 x 28
+                            
+                            
+                            
+                            
+                            
+              ■■       ■■       
+              ■■       ■■       
+              ■■       ■■       
+             ■■■       ■■       
+            ■■■        ■■       
+            ■■■        ■■       
+           ■■■        ■■■       
+           ■■■       ■■■■       
+           ■■        ■■■        
+           ■■        ■■■        
+           ■■        ■■■        
+           ■■■■■■■■■■■■■        
+           ■■■■■■■■■■■■         
+             ■■■■■  ■■■         
+                    ■■■■        
+                    ■■■         
+                    ■■■         
+                    ■■■         
+                    ■■■         
+                    ■■          
+                            
+                            
+                        
 *)

@@ -482,12 +482,12 @@ and DV =
             let aps = ap.Split(n)
             let ii = n |> Seq.mapFold (fun s i -> s, s + i) 0 |> fst
             Seq.mapi (fun i p -> DVR(p, ref (DV.ZeroN p.Length), Split_DV(d, ii |> Seq.item i), ref 0u, ai)) aps
-    member d.ToRowMatrix() =
+    member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
-        | DVF(ap,at,ai) -> DMF(ap.ToRowMatrix(), at.ToRowMatrix(), ai)
-        | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowMatrix() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
-    member d.ToColMatrix() = DM.Transpose(d.ToRowMatrix())
+        | DVF(ap,at,ai) -> DMF(ap.ToRowDM(), at.ToRowDM(), ai)
+        | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowDM() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
+    member d.ToColDM() = DM.Transpose(d.ToRowDM())
 
     override d.ToString() =
         let (d':float[]) = DV.op_Explicit(d)
@@ -1445,7 +1445,7 @@ and DM =
     static member OfArray (m:int, a:D[]) =
         let n = a.Length / m
         Array2D.init m n (fun i j -> a.[i * n + j]) |> DM.OfArray2D
-    static member ofRows (s:seq<DV>) = 
+    static member OfRows (s:seq<DV>) = 
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match Seq.head s with
         | DV(_) ->
@@ -1453,17 +1453,17 @@ and DM =
         | DVF(_,_,ai) ->
             let ap = s |> Seq.map (fun x -> x.P)
             let at = s |> Seq.map (fun x -> x.T)
-            DMF(DM.ofRows(ap), DM.ofRows(at), ai)
+            DMF(DM.OfRows(ap), DM.OfRows(at), ai)
         | DVR(_,_,_,_,ai) ->
             let ap = s |> Seq.map (fun x -> x.P)
-            let cp = DM.ofRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDVs(s |> Seq.toArray), ref 0u, ai)
+            let cp = DM.OfRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDVs(s |> Seq.toArray), ref 0u, ai)
 
-    static member ofRows (m:int, a:DV) =
+    static member OfRows (m:int, a:DV) =
         match a with
         | DV(ap) -> Array.create m ap |> array2D |> DM
-        | DVF(ap,at,ai) -> DMF(DM.ofRows(m, ap), DM.ofRows(m, at), ai)
+        | DVF(ap,at,ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
         | DVR(ap,_,_,_,ai) ->
-            let cp = DM.ofRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
+            let cp = DM.OfRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
 
     static member inline Op_DM_DM (a, ff, fd, df, r) =
         match a with
@@ -2504,9 +2504,9 @@ module DV =
     /// Converts vector `v` into an array
     let inline toArray (v:DV) = v.ToArray()
     /// Converts vector `v` into a row matrix
-    let inline toRowMatrix (v:DV) = v.ToRowMatrix()
+    let inline toRowDM (v:DV) = v.ToRowDM()
     /// Converts vector `v` into a column matrix
-    let inline toColMatrix (v:DV) = v.ToColMatrix()
+    let inline toColDM (v:DV) = v.ToColDM()
     /// Creates a copy of vector `v`
     let inline copy (v:DV) = v.Copy()
     /// Creates a vector with `n` elements, each with value `v`
@@ -2575,10 +2575,13 @@ module DV =
     /// Creates a vector with `n` elements where the `i`-th element has value `v` and the rest of the elements are zero
     let inline standardBasisVal (n:int) (i:int) (v:float) = DV(standardBasisVal n i v)
     /// Gets the unit vector codirectional with vector `v`
-    let inline unitVector (v:DV) = v / DV.L2Norm(v)
+    let inline unitDV (v:DV) = v / DV.L2Norm(v)
+    /// Creates a matrix with `m` rows from vector `v`
+    let inline toDM (m:int) (v:DV) = let n = v.Length / m in v |> split (Array.create m n) |> DM.OfRows
     // Experimental
     let inline print (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
+
 
 /// Functional-oriented operations on matrices. Implementing functionality similar to FSharp.Collections.Array2D.
 [<RequireQualifiedAccess>]
@@ -2595,7 +2598,7 @@ module DM =
     /// Transpose of matrix `m`
     let inline transpose (m:DM) = DM.Transpose(m)
     /// Creates a matrix from a sequence of row vectors `s`
-    let inline ofRows s = DM.ofRows(s)
+    let inline ofRows s = DM.OfRows(s)
     /// Creates a matrix from a sequence of column vectors `s`
     let inline ofCols (s:seq<DV>) = s |> ofRows |> transpose
     /// Gets the sequence of row vectors in matrix `m`
@@ -2603,9 +2606,9 @@ module DM =
     /// Gets the sequence of column vectors in matrix `m`
     let inline toCols (m:DM) = m.GetCols()
     /// Converts matrix `m` into a vector by stacking its rows
-    let inline toVector (m:DM) = m.GetRows() |> Seq.fold DV.append DV.Zero
+    let inline toDV (m:DM) = m.GetRows() |> Seq.fold DV.append DV.Zero
     /// Creates a matrix with `m` rows from vector `v`
-    let inline ofVector (m:int) (v:DV) = let n = v.Length / m in v |> DV.split (Array.create m n) |> DM.ofRows
+    let inline ofDV (m:int) (v:DV) = DV.toDM m v
     /// Gets the column with index `j` of matrix `m`
     let inline col (j:int) (m:DM) = m.[*,j]
     /// Gets the row with index `i` of matrix `m`
@@ -2621,9 +2624,9 @@ module DM =
         elif at.Equals(typeof<float>) then DM (Array2D.create m n (unbox<float>(box v)))
         else failwith "Unsupported type. Expecting D or float."
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
-    let inline createRows (m:int) (v:DV) = DM.ofRows(m, v)
+    let inline createRows (m:int) (v:DV) = DM.OfRows(m, v)
     /// Creates a matrix with `n` columns, where all columns are equal to `v`
-    let inline createCols (n:int) (v:DV) = DM.ofRows(n, v) |> transpose
+    let inline createCols (n:int) (v:DV) = DM.OfRows(n, v) |> transpose
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
     /// Gets the diagonal of matrix `m`
@@ -2643,9 +2646,9 @@ module DM =
     /// Inverse of matrix `m`
     let inline inverse (m:DM) = DM.Inverse(m)
     /// Iterates function `f` over the entries of matrix `m`
-    let inline iter (f:D->unit) (m:DM) = m |> toVector |> DV.iter f
+    let inline iter (f:D->unit) (m:DM) = m |> toDV |> DV.iter f
     /// Iterates function `f` over the entries of matrices `m1` and `m2`
-    let inline iter2 (f:D->D->unit) (m1:DM) (m2:DM) = DV.iter2 f (m1 |> toVector) (m2 |> toVector)
+    let inline iter2 (f:D->D->unit) (m1:DM) (m2:DM) = DV.iter2 f (m1 |> toDV) (m2 |> toDV)
     /// Iterates function `f` over the entries of matrix `m`. Indices are also supplied to `f`.
     let inline iteri (f:int->int->D->unit) (m:DM) = m |> toArray2D |> Array2D.iteri f
     /// Iterates function `f` over the columns of matrix `m`
@@ -2901,10 +2904,10 @@ module DOps =
                             //| Round_DV(_) -> pushRec t
                             | Make_DV_ofDs(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i] v))) t |> pushRec
                             | SliceRow_DM(a, i, j) ->
-                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowMatrix())
+                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowDM())
                                 pushRec ((bx DM.Zero a) :: t)
                             | SliceCol_DM(a, i, j) ->
-                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToColMatrix())
+                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToColDM())
                                 pushRec ((bx DM.Zero a) :: t)
                             | Solve_DM_DV(a, b) -> let ba = DM.Solve(DM.Transpose(a), d.A) in pushRec ((bx (-ba &* d.A) a) :: (bx (ba) b) :: t)
                             | Solve_DM_DVCons(a, cons) -> let ba = DM.Solve(DM.Transpose(a), d.A) in pushRec ((bx (-ba &* d.A) a) :: t)
@@ -3019,7 +3022,7 @@ module DOps =
                             //| Ceil_DM(_) -> pushRec t
                             //| Round_DM(_) -> pushRec t
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
-                            | Make_DM_ofDs(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toVector |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
+                            | Make_DM_ofDs(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
                             | Make_DM_ofDV(a) -> t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))) |> pushRec
                             | Make_DM_ofDVs(a) -> t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))) |> pushRec
                             | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)

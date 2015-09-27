@@ -3,7 +3,8 @@
 - CUDA/CuBLAS backend
 
 0.8.*
-- Tensor/multidimensional array
+- Tensor/multidimensional array, a la numpy.ndarray
+- Convolution ops
 
 0.9.*
 - AD via syntax tree transformation
