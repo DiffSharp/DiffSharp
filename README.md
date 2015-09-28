@@ -29,3 +29,11 @@ DiffSharp is released under the GNU Lesser General Public License (LGPL) version
 Permitting uses outside of these license terms may be considered on a by-case basis. Please contact Atilim Gunes Baydin and Barak A. Pearlmutter for licensing options at atilimgunes.baydin@nuim.ie and barak@cs.nuim.ie.
 
 This work is supported by Science Foundation Ireland grant 09/IN.1/I2637.
+
+Other Licenses
+--------------
+DiffSharp uses:
+
+* [OpenBLAS](http://www.openblas.net/) by Zhang Xianyi, Wang Qian, Werner Saar (BSD license) for BLAS/LAPACK operations
+* [F# Quotations Evaluator](http://fsprojects.github.io/FSharp.Quotations.Evaluator/) by Paul Westcott and others (Unlicense/public domain) for compiling code quotations
+
