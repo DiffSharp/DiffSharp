@@ -81,6 +81,9 @@
     <Content Include="packages.config" />
     <Content Include="app.config" />
     <None Include="Script1.fsx" />
+    <None Include="README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Quotations.Evaluator">
