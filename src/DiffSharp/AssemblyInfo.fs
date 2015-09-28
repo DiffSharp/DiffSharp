@@ -11,7 +11,7 @@ open System.Runtime.InteropServices;
 // associated with an assembly.
 [<assembly: AssemblyTitle("DiffSharp")>]
 [<assembly: AssemblyDescription("DiffSharp: Automatic Differentiation Library")>]
-[<assembly: AssemblyConfiguration("Debug")>]
+[<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
 [<assembly: AssemblyProduct("DiffSharp")>]
 [<assembly: AssemblyCopyright("Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
@@ -36,7 +36,9 @@ open System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the ‘*’ as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[<assembly: AssemblyVersion("0.6.3")>]
-[<assembly: AssemblyInformationalVersion("0.6.3")>]
-[<assembly: AssemblyFileVersion("0.6.3.*")>]
-()
+[<assembly: AssemblyVersion("0.7.0")>]
+[<assembly: AssemblyInformationalVersion("0.7.0")>]
+[<assembly: AssemblyFileVersion("0.7.0.*")>]
+
+do
+    ()

@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 // 
-// Released under LGPL license.
+// Released under the LGPL license.
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU Lesser General Public License as published by
@@ -36,10 +36,12 @@
 //   www.bcl.hamilton.ie
 //
 
-#light
 
-/// Various utility functions used all over the library
+/// Various utility functions
 module DiffSharp.Util
+
+open System.Threading.Tasks
+
 
 /// Gets the first term of a 3-tuple
 let inline fst3 (f, _, _) = f
@@ -56,108 +58,76 @@ let inline fsttrd (f, _, t) = (f, t)
 /// Gets the second and third terms of a 3-tuple
 let inline sndtrd (_, s, t) = (s, t)
 
-/// Checks whether the 2d array `m` has the same number of elements in both dimensions
-let (|Square|) (m:_[,]) =
-    match m with
-    | m when m.GetLength 0 = m.GetLength 1 -> m
-    | _ -> invalidArg "m" "Expecting a square 2d array"
-
-/// Gets the transpose of the 2d array `m`
-let inline transpose (m:_[,]) = Array2D.init (m.GetLength 1) (m.GetLength 0) (fun i j -> m.[j, i])
-
-/// Gets an array containing the diagonal elements of the square 2d array `m`
-let inline diagonal (Square m:_[,]) = Array.init (m.GetLength 0) (fun i -> m.[i, i])
-
-/// Gets the trace of the square matrix given in the 2d array `m`
-let inline trace (m:_[,]) = Array.sum (diagonal m)
-
-/// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are 0
-let inline standardBasis (n:int) (i:int) = Array.init n (fun j -> if i = j then LanguagePrimitives.GenericOne else LanguagePrimitives.GenericZero)
-
-/// Copies the upper triangular elements of the square matrix given in the 2d array `m` to the lower triangular part
-let inline copyUpperToLower (Square m:_[,]) =
-    let r = Array2D.copy m
-    let rows = r.GetLength 0
-    if rows > 1 then
-        for i = 1 to rows - 1 do
-            for j = 0 to i - 1 do
-                r.[i, j] <- r.[j, i]
-    r
-
-/// Finds an array that, when multiplied by an LU matrix `lu`, gives array `b`
-let inline matrixSolveHelper (lu:'a[,]) (b:'a[]) =
-    let n = lu.GetLength 0
-    let x = Array.copy b
-    for i = 1 to n - 1 do
-        let mutable sum = x.[i]
-        for j = 0 to i - 1 do
-            sum <- sum - lu.[i, j] * x.[j]
-        x.[i] <- sum
-    x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
-    for i in (n - 2) .. -1 .. 0 do
-        let mutable sum = x.[i]
-        for j = i + 1 to n - 1 do
-            sum <- sum - lu.[i, j] * x.[j]
-        x.[i] <- sum / lu.[i, i]
-    x
+/// Value of log 10.
+let log10ValFloat64 = log 10.
+let log10ValFloat32 = log 10.f
 
 /// Computes a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
     |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
 
-/// Checks whether a float contains an integer value
-let isInteger a = a = float (int a)
+/// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are zero
+let inline standardBasis (n:int) (i:int) = 
+    let s = Array.zeroCreate n
+    s.[i] <- LanguagePrimitives.GenericOne
+    s
 
-/// Checks whether a float is halfway between two integers
-let isHalfway a = abs (a % 1.) = 0.5
+/// Gets an array of size `n`, where the `i`-th element has value `v` and the rest of the elements are zero
+let inline standardBasisVal (n:int) (i:int) v = 
+    let s = Array.zeroCreate n
+    s.[i] <- v
+    s
 
-/// Value of log 10.
-let log10val = log 10.
+/// Copies the upper triangular elements of the square matrix given in the 2d array `m` to the lower triangular part
+let inline copyUpperToLower (m:_[,]) =
+    if (Array2D.length1 m) <> (Array2D.length2 m) then invalidArg "" "Expecting a square matrix."
+    let r = Array2D.copy m
+    let rows = r.GetLength 0
+    if rows > 1 then
+        Parallel.For(1, rows, fun i ->
+            Parallel.For(0, i, fun j ->
+                r.[i, j] <- r.[j, i]) |> ignore) |> ignore
+    r
+    
+let inline signummod x =
+    if x < LanguagePrimitives.GenericZero then -LanguagePrimitives.GenericOne
+    elif x > LanguagePrimitives.GenericZero then LanguagePrimitives.GenericOne
+    else LanguagePrimitives.GenericZero
 
-/// Global step size for numerical approximations
-let mutable StepSize = 0.00001
+let inline signum (x:'a) = (^a : (static member Sign : ^a -> ^a) x)
 
-/// Vector-to-scalar to scalar-to-scalar function transform. Given a vector-to-scalar function `f` and an evaluation point `x`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
-let inline fVStoSS i f x =
-    let xc = Array.copy x
-    fun xx ->
-        xc.[i] <- xx
-        f xc
+let inline logsumexp (x:^a) = (^a : (static member LogSumExp : ^a -> ^b) x)
+let inline softplus (x:^a) = (^a : (static member SoftPlus : ^a -> ^a) x)
+let inline softsign (x:^a) = (^a : (static member SoftSign : ^a -> ^a) x)
+let inline sigmoid (x:^a) = (^a : (static member Sigmoid : ^a -> ^a) x)
+let inline reLU (x:^a) = (^a : (static member ReLU : ^a -> ^a) x)
+let inline softmax (x:^a) = (^a : (static member SoftMax : ^a -> ^a) x)
+let inline maximum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Max : ^a * ^b -> ^c) x, y)
+let inline minimum (x: ^a) (y:^b) : ^c = ((^a or ^b) : (static member Min : ^a * ^b -> ^c) x, y)
 
-/// Vector-to-vector to scalar-to-vector function transform. Given a vector-to-vector function `f` and an evaluation point `x`, returns a scalar-to-vector version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`.
-let inline fVVtoSV i (f:_[]->_[]) x =
-    let xc = Array.copy x
-    fun xx ->
-        xc.[i] <- xx
-        f xc
+//type System.Single with
+//    static member LogSumExp(x:float32) = x
+//    static member SoftPlus(x) = log (1.f + exp x)
+//    static member SoftSign(x) = x / (1.f + abs x)
+//    static member Sigmoid(x) = 1.f / (1.f + exp -x)
+//    static member ReLU(x) = max 0.f x
+//
+//type System.Double with
+//    static member LogSumExp(x:float) = x
+//    static member SoftPlus(x) = log (1. + exp x)
+//    static member SoftSign(x) = x / (1. + abs x)
+//    static member Sigmoid(x) = 1. / (1. + exp -x)
+//    static member ReLU(x) = max 0. x
 
-/// Vector-to-vector to vector-to-scalar function transform. Given a vector-to-vector function `f`, returns a vector-to-scalar version of `f` supplying only the `i`-th output.
-let inline fVVtoVS i (f:_[]->_[]) =
-    fun xx -> (f xx).[i]
-
-/// Vector-to-vector to scalar-to-scalar function transform. Given a vector-to-vector function `f`, returns a scalar-to-scalar version of `f`, where the `i`-th variable is free and the rest of the variables have the constant values given in `x`, supplying only the `j`-th output.
-let inline fVVtoSS i j (f:'a[]->'b[]) (x:'a[]) =
-    let xc = Array.copy x
-    fun xx ->
-        xc.[i] <- xx
-        (f xc).[j]
-
-let invalidArgLog() = invalidArg "" "The derivative of log(x) is not defined for x <= 0."
-let invalidArgLog10() = invalidArg "" "The derivative of log10(x) is not defined for x <= 0."
-let invalidArgTan() = invalidArg "" "The derivative of tan(x) is not defined for x such that cos(x) = 0."
-let invalidArgSqrt() = invalidArg "" "The derivative of sqrt(x) is not defined for x <= 0."
-let invalidArgAsin() = invalidArg "" "The derivative of asin(x) is not defined for x such that abs(x) >= 1."
-let invalidArgAcos() = invalidArg "" "The derivative of acos(x) is not defined for x such that abs(x) >= 1."
-let invalidArgAbs() = invalidArg "" "The derivative of abs(x) is not defined for x = 0."
-let invalidArgFloor() = invalidArg "" "The derivative of floor(x) is not defined for integer values of x."
-let invalidArgCeil() = invalidArg "" "The derivative of ceil(x) is not defined for integer values of x."
-let invalidArgRound() = invalidArg "" "The derivative of round(x) is not defined for values of x halfway between integers."
-let invalidArgCurl() = invalidArg "" "Curl is supported only for functions with a three-by-three Jacobian matrix."
-let invalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
-let invalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
-let invalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
-
+module ErrorMessages =
+    let InvalidArgDiffn() = invalidArg "" "Order of differentiation cannot be negative."
+    let InvalidArgSolve() = invalidArg "" "Given system of linear equations has no solution."
+    let InvalidArgCurl() = invalidArg "" "Curl is supported only for functions with a three-by-three Jacobian matrix."
+    let InvalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
+    let InvalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
+    let InvalidArgInverse() = invalidArg "" "Cannot compute the inverse of the given matrix."
+    let InvalidArgDet() = invalidArg "" "Cannot compute the determinant of the given matrix."
 
 /// Tagger for generating incremental integers
 type Tagger =
@@ -170,3 +140,32 @@ type GlobalTagger() =
     static let T = new Tagger(0u)
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
+
+/// Extensions for the FSharp.Collections.Array module
+module Array =
+    module Parallel =
+        let map2 f (a1:_[]) (a2:_[]) =
+            let n = min a1.Length a2.Length
+            Array.Parallel.init n (fun i -> f a1.[i] a2.[i])
+
+/// Extensions for the FSharp.Collections.Array2D module
+module Array2D =
+    let empty<'T> = Array2D.zeroCreate<'T> 0 0
+    let isEmpty (array : 'T[,]) = (array.Length = 0)
+    let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray
+
+    module Parallel =
+        let init m n f =
+            let a = Array2D.zeroCreate m n
+            // Nested parallel fors caused problems with mutable variables
+            //Parallel.For(0, m, fun i ->
+            //    Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore) |> ignore
+            for i = 0 to m - 1 do
+                Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore
+            a
+        let map f (a:_[,]) =
+            init (Array2D.length1 a) (Array2D.length2 a) (fun i j -> f a.[i, j])
+        let map2 f (a1:_[,]) (a2:_[,]) =
+            let m = min (Array2D.length1 a1) (Array2D.length1 a2)
+            let n = min (Array2D.length2 a1) (Array2D.length2 a2)
+            init m n (fun i j -> f a1.[i, j] a2.[i, j])

@@ -1,7 +1,6 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 Hamiltonian Monte Carlo
@@ -9,9 +8,9 @@ Hamiltonian Monte Carlo
 
 [Hamiltonian Monte Carlo](http://en.wikipedia.org/wiki/Hybrid_Monte_Carlo) (HMC) is a type of [Markov chain Monte Carlo](http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) (MCMC) algorithm for obtaining random samples from probability distributions for which direct sampling is difficult. HMC makes use of [Hamiltonian mechanics](http://en.wikipedia.org/wiki/Hamiltonian_mechanics) for efficiently exploring target distributions and provides better convergence characteristics that avoid the slow exploration of random sampling (in alternatives such as the [Metropolis-Hastings algorithm](http://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
-The advantages of HMC come at the cost of evaluating gradients of distribution functions, which need to be worked out and supplied by the user. Using the DiffSharp library, we can design an HMC algorithm that only needs the target distribution as its input, computing the needed gradients efficiently through AD.
+The advantages of HMC come at the cost of evaluating gradients of distribution functions, which need to be worked out and supplied by the user. Using DiffSharp, we can design an HMC algorithm that only needs the target distribution function as its input, which **can be implemented freely using the full expressivity of the programming language including control flow and subprocedures**, computing the needed gradients efficiently through reverse mode AD.
 
-Let us demonstrate how an AD-HMC can be implemented.
+Let's demonstrate how an AD-HMC can be implemented.
 
 First we need a scheme for integrating Hamiltonian dynamics with discretized time. The [Leapfrog algorithm]() is the common choice, due to its [symplectic](http://en.wikipedia.org/wiki/Symplectic_integrator) property and straightforward implementation.
 
@@ -40,9 +39,7 @@ where $\delta$ is the integration step size.
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 // Leapfrog integrator
 // u: potential energy function
@@ -50,7 +47,7 @@ open FsAlg.Generic
 // d: integration step size
 // steps: number of integration steps
 // (x0, p0): initial position and momentum vectors
-let leapFrog u k (d:D) steps (x0, p0) =
+let leapFrog (u:DV->D) (k:DV->D) (d:D) steps (x0, p0) =
     let hd = d / 2.
     [1..steps] 
     |> List.fold (fun (x, p) _ ->
@@ -79,7 +76,7 @@ let rec rndn() =
 
 Now we have everything ready for our HMC implementation.
 
-Briefly, the the essence of HMC is to sample the state space with Hamiltonian dynamics via using the potential energy term
+Briefly, the the essence of HMC is to sample the state space with Hamiltonian dynamics by using the potential energy term
 
 $$$
   U(\mathbf{x}) = - \textrm{log} \, f(\mathbf{x})\;,
@@ -89,7 +86,7 @@ where $f(\mathbf{x})$ is the target density. The kinetic energy term is commonly
 $$$
   K(\mathbf{p}) = \frac{\mathbf{p}^T \mathbf{p}}{2}\; .
 
-Starting from a given value of $\mathbf{x}$, the algorithm proceeds via the steps of sampling a random momentum $\mathbf{p}$, running the Hamiltonian dynamics for a set number of steps to arrive at $\mathbf{x}^*$ and $\mathbf{p}^*$, and testing a Metropolis acceptance criterion for updating $\mathbf{x} \leftarrow \mathbf{x}^*$.
+Starting from a given value of $\mathbf{x}$, the algorithm proceeds by repeating the steps of: sampling a random momentum $\mathbf{p}$; running the Hamiltonian dynamics for a set number of steps to arrive at $\mathbf{x}^*$ and $\mathbf{p}^*$; and testing a Metropolis acceptance criterion for updating $\mathbf{x} \leftarrow \mathbf{x}^*$.
 
 *)
 
@@ -99,22 +96,22 @@ Starting from a given value of $\mathbf{x}$, the algorithm proceeds via the step
 // hsteps: number of steps for Hamiltonian dynamics
 // x0: initial state
 // f: target distribution function
-let hmc n hdelta hsteps (x0:Vector<_>) (f:Vector<D>->D) =
+let hmc n hdelta hsteps (x0:DV) (f:DV->D) =
     let u x = -log (f x) // potential energy
-    let k p = 0.5 * Vector.fold (fun acc a -> acc + a * a) (D 0.) p // kinetic energy
+    let k p = (p * p) / D 2. // kinetic energy
     let hamilton x p = u x + k p
     let x = ref x0
     [|for i in 1..n do
-        let p = Vector.init x0.Length (fun _ -> rndn() |> D)
+        let p = DV.init x0.Length (fun _ -> rndn() |> D)
         let x', p' = leapFrog u k hdelta hsteps (!x, p)
         if rnd() < float (exp ((hamilton !x p) - (hamilton x' p'))) then x := x'
         yield !x|]
 
 (**
 
-Whereas the classical HMC requires the user to supply the log-density and also its gradient, in our implementation we need to supply only the target density function. The rest is taken care of by the reverse mode AD module **DiffSharp.AD.Reverse**. This has two main advantages: AD computes the exact gradient efficiently and it is also applicable to complex density functions where closed-form expressions for the gradient cannot be formulated.
+Whereas the classical HMC requires the user to supply the log-density and also its gradient, in our implementation we need to supply only the target density function. The rest is taken care of by reverse AD. This has two main advantages: (1) AD computes the exact gradient efficiently and (2) it is applicable to complex density functions where closed-form expressions for the gradient cannot be formulated.
 
-Let us now test this HMC algorithm with a [multivariate normal distribution](http://en.wikipedia.org/wiki/Multivariate_normal_distribution), which has the density
+Let's now test this HMC algorithm with a [multivariate normal distribution](http://en.wikipedia.org/wiki/Multivariate_normal_distribution), which has the density
 
 $$$
   f_{\mathbf{x}}(x_1,\dots,x_k) = \frac{1}{\sqrt{(2\pi)^k \left|\mathbf{\Sigma}\right|}} \textrm{exp} \left( -\frac{1}{2} (\mathbf{x} - \mathbf{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \mathbf{\mu}) \right)\;,
@@ -127,8 +124,8 @@ where $\mathbf{\mu}$ is the mean vector and $\mathbf{\Sigma}$ is the covariance 
 // mu: mean vector
 // sigma: covariance matrix
 // x: variable vector
-let multiNormal mu sigma (x:Vector<D>) =
-    let s = sigma |> Matrix.inverse
+let multiNormal mu sigma (x:DV) =
+    let s = sigma |> DM.inverse
     exp (-((x - mu) * s * (x - mu)) / D 2.)
 
 
@@ -141,8 +138,8 @@ Here we plot 10000 samples from the bivariate case with $\mathbf{\mu} = \begin{b
 // Take 10000 samples from a bivariate normal distribution
 // mu1 = 0, mu2 = 0, correlation = 0.8
 let samples = 
-    multiNormal (vector [D 0.; D 0.]) (matrix [[D 1.; D 0.8]; [D 0.8; D 1.]])
-    |> hmc 10000 (D 0.1) 10 (vector [D 0.; D 0.])
+    multiNormal (toDV [0.; 0.]) (toDM [[1.; 0.8]; [0.8; 1.]])
+    |> hmc 10000 (D 0.1) 10 (toDV [0.; 0.])
 
 
 open FSharp.Charting

@@ -1,12 +1,11 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
 Numerical Differentiation
 =========================
 
-In addition to AD, the DiffSharp library also implements [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation).
+In addition to AD, DiffSharp also implements [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation).
 
 Numerical differentiation is based on finite difference approximations of derivative values, using values of the original function evaluated at some sample points. Unlike AD, numerical differentiation gives only approximate results and is unstable due to truncation and roundoff errors.
 
@@ -15,7 +14,7 @@ For a complete list of the available differentiation operations, please refer to
 DiffSharp.Numerical
 -------------------
 
-This is a numerical differentiation module, used with the regular **float** numeric type.
+This is a numerical differentiation module, used with the regular **float** or **float32** numeric types for scalars, **float[]** or **float32[]** for vectors, and **float[,]** or **float[,]** for matrices.
 
 Currently the library uses the 1st order central difference
 
@@ -35,7 +34,7 @@ $$$
 for the **grad**, **hessian**, **laplacian**, and **jacobian** operations, where $ 0 < h \ll 1 $. 
 *)
 
-open DiffSharp.Numerical
+open DiffSharp.Numerical.Float64
 
 // f: float -> float
 let f x = sin (3. * sqrt x)
@@ -56,12 +55,14 @@ let h (x:float[]) = [| sin x.[0]; cos x.[1] |]
 let jh = jacobian h [|2.; 3.|]
 
 (**
-The default step size is $h = 10^{-5}$ and it can be changed by changing the mutable value **DiffSharp.Util.StepSize**.
+The default step size is $h = 10^{-5}$ and it can be changed by using the method **DiffSharp.Config.GlobalConfig.SetEpsilon**.
+
+Adaptive step size techniques are planned to be implemented in a future release.
 *)
 
 let v1 = diff sin 0.2
 
-DiffSharp.Util.StepSize <- 0.001
+DiffSharp.Config.GlobalConfig.SetEpsilon(0.001)
 
 let v2 = diff sin 0.2
 

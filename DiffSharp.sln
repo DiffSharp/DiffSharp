@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{CD409EFB-0AE4-41E5-9987-C99C5F061588}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2010-4E20-9FBF-21A543466EEB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B9A8E07A-17A4-4051-8B2D-1D7027B35865}"
 	ProjectSection(SolutionItems) = preProject
 		docs\input\api-overview.fsx = docs\input\api-overview.fsx
 		docs\input\benchmarks.fsx = docs\input\benchmarks.fsx
@@ -22,14 +22,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB94C44B-2
 		docs\input\examples-newtonsmethod.fsx = docs\input\examples-newtonsmethod.fsx
 		docs\input\examples-stochasticgradientdescent.fsx = docs\input\examples-stochasticgradientdescent.fsx
 		docs\input\gettingstarted-nestedad.fsx = docs\input\gettingstarted-nestedad.fsx
-		docs\input\gettingstarted-nonnestedad.fsx = docs\input\gettingstarted-nonnestedad.fsx
 		docs\input\gettingstarted-numericaldifferentiation.fsx = docs\input\gettingstarted-numericaldifferentiation.fsx
 		docs\input\gettingstarted-symbolicdifferentiation.fsx = docs\input\gettingstarted-symbolicdifferentiation.fsx
 		docs\input\gettingstarted-typeinference.fsx = docs\input\gettingstarted-typeinference.fsx
 		docs\input\index.fsx = docs\input\index.fsx
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{59F0F3F9-E967-4002-8E75-F37D03AF01A8}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Dsbench", "tests\Dsbench\Dsbench.fsproj", "{0577D15F-366A-4EB7-9BAF-73C42A38CA33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteropTest", "tests\InteropTest\InteropTest.csproj", "{73EDFD98-0114-4271-A92A-0F9735ED7425}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,14 +38,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD409EFB-0AE4-41E5-9987-C99C5F061588}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59F0F3F9-E967-4002-8E75-F37D03AF01A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

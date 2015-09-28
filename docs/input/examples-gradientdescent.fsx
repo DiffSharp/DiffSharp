@@ -1,14 +1,13 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
 Gradient Descent
 ================
 
-The [gradient descent algorithm](http://en.wikipedia.org/wiki/Gradient_descent) is an optimization algorithm for finding a local minimum of a function near a starting point, taking successive steps in the direction of the negative of the gradient.
+The [gradient descent algorithm](http://en.wikipedia.org/wiki/Gradient_descent) is an optimization algorithm for finding a local minimum of a scalar-valued function near a starting point, taking successive steps in the direction of the negative of the gradient.
 
-For a function $f: \mathbb{R}^n \to \mathbb{R}$, starting from an initial point $\mathbf{x}_0$, the method works by computing succsessive points in the function domain
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, starting from an initial point $\mathbf{x}_0$, the method works by computing successive points in the function domain
 
 $$$
  \mathbf{x}_{n + 1} = \mathbf{x}_n - \eta \left( \nabla f \right)_{\mathbf{x}_n} \; ,
@@ -20,42 +19,40 @@ $$$
  
 keep decreasing and the sequence $\mathbf{x}_n$ usually converges to a local minimum.
 
-Generally speaking, using a fixed step size $\eta$ yields suboptimal performance and there are adaptive variations of the gradient descent algorithm that select a locally optimal step size $\eta$ on every iteration.
+In practice, using a fixed step size $\eta$ yields suboptimal performance and there are adaptive algorithms that select a locally optimal step size $\eta$ on each iteration.
 
-Using the DiffSharp library, the following code implements gradient descent with a fixed step size, stopping when the squared [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
+The following code implements gradient descent with fixed step size, stopping when the [norm](http://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the gradient falls below a given threshold.
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 // Gradient descent
 // f: function, x0: starting point, eta: step size, epsilon: threshold
 let gd f x0 eta epsilon =
     let rec desc x =
         let g = grad f x
-        if Vector.normSq g < epsilon then x else desc (x - eta * g)
+        if DV.l2norm g < epsilon then x else desc (x - eta * g)
     desc x0
 
 (**
-Let us find a minimum of $f(x, y) = (\sin x + \cos y)$.
+Let's find a minimum of $f(x, y) = (\sin x + \cos y)$.
 *)
 
-let inline f (x:Vector<_>) =  sin x.[0] + cos x.[1]
+let inline f (x:DV) =  sin x.[0] + cos x.[1]
 
 // Find the minimum of f
 // Start from (1, 1), step size 0.9, threshold 0.00001
-let xmin = gd f (vector [D 1.; D 1.]) (D 0.9) (D 0.00001)
+let xmin = gd f (toDV [1.; 1.]) (D 0.9) (D 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : Vector<D> = Vector [|D -1.57023951; D 3.141523675|]
-val fxmin : D = D -2.0"
+printf "val xmin : DV = DV [|-1.57023951; 3.141523675|]
+val fxmin : D = D -1.999999843"
 (*** include-output: o ***)
 
 (**
 
-A minimum, $f(x, y) = -2$, is found at $(x, y) = (-1.570787572, 3.141587977)$.
+A minimum, $f(x, y) = -2$, is found at $(x, y) = \left(-\frac{\pi}{2}, \pi\right)$.
 
 *)

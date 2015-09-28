@@ -1,5 +1,4 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
@@ -17,20 +16,17 @@ where $\eta > 0$ is the step size, $\left(\mathbf{H}_f\right)_{\mathbf{x}_n}^{-1
 
 Newton's method converges faster than gradient descent, but this comes at the cost of computing the Hessian of the function at each iteration. In practice, the Hessian is usually only approximated from the changes in the gradient, giving rise to [quasi-Netwon methods](http://en.wikipedia.org/wiki/Quasi-Newton_method) such as the [BFGS algorithm](http://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm).
 
-Using the DiffSharp library, we can compute the exact Hessian via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.ForwardReverse** module, which provides the **gradhessian** operation returning the gradient and the Hessian of a function at a given point using only one forward evaluation.
+Using DiffSharp, we can compute the exact Hessian efficiently via automatic differentiation. The following code implements Newton's method using the **DiffSharp.AD.Float64** module, which provides the **gradhessian** operation returning both the gradient and the Hessian of a function at a given point using forward-on-reverse AD.
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
-
+open DiffSharp.AD.Float64
 
 // Newton's method
 // f: function, x0: starting point, eta: step size, epsilon: threshold
 let Newton f x0 (eta:D) epsilon =
     let rec desc x =
         let g, h = gradhessian f x
-        if Vector.normSq g < epsilon then x else desc (x - eta * (Matrix.inverse h) * g)
+        if DV.l2norm g < epsilon then x else desc (x - eta * (DM.inverse h) * g)
     desc x0
 
 (**
@@ -44,13 +40,13 @@ around the point $(0, 0)$.
 
 *)
 
-let f (x:Vector<D>) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
+let f (x:DV) = (exp (x.[0] - 1)) + (exp (- x.[1] + 1)) + ((x.[0] - x.[1]) ** 2)
 
-let xmin = Newton f (vector [D 0.; D 0.]) (D 1.) (D 0.001)
+let xmin = Newton f (toDV [0.; 0.]) (D 1.) (D 0.001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : Vector<D> = Vector [|D 0.7958861818; D 1.203482609|]
+printf "val xmin : DV = DV [|0.7958861818; 1.203482609|]
 val fxmin : D = D 1.797388803"
 (*** include-output: o ***)
 

@@ -1,14 +1,13 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/FsAlg.dll"
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#r "../../packages/FSharp.Data.2.2.0/lib/net40/FSharp.Data.dll"
-#load "../../packages/FSharp.Charting.0.90.10/FSharp.Charting.fsx"
+#r "../../packages/FSharp.Data.2.2.5/lib/net40/FSharp.Data.dll"
+#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
 
 (**
 K-Means Clustering
 ==================
 
-[K-means clustering](http://en.wikipedia.org/wiki/K-means_clustering) is a popular method in [cluster analysis](http://en.wikipedia.org/wiki/Cluster_analysis) for partitioning a given set of observations into $k$ clusters, where the observations in the same cluster are more similar to each other than to those in other clusters.
+[K-means clustering](http://en.wikipedia.org/wiki/K-means_clustering) is a method in [cluster analysis](http://en.wikipedia.org/wiki/Cluster_analysis) for partitioning a given set of observations into $k$ clusters, where the observations in the same cluster are more similar to each other than to those in other clusters.
 
 Given $d$ observations $\{\mathbf{x}_1,\dots,\mathbf{x}_d\}$, the observations are assigned to $k$ clusters $\mathbf{S} = \{S_1,\dots,S_k\}$ so as to minimize
 
@@ -19,26 +18,23 @@ where $\mathbf{\mu}_i$ is the mean of the observations in $S_i$.
 
 The classical way of finding k-means partitionings is to use a heuristic algorithm cycling through an _assignment step_, where observations are assigned to the cluster of the mean that they are currently closest to, and an _update step_ where the means are updated as the centroids of the observations that are currently assigned to them, until assignments no longer change.
 
-Let us use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in another example. This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.
+Let's use an alternative approach and implement k-means clustering using the stochastic gradient descent algorithm that we introduced in another example. This variety of k-means clustering has been proposed in the literature for addressing large-scale learning tasks, due to its superior performance.
 
 We start with the generic stochastic gradient descent code, introduced in the [stochastic gradient descent example](examples-stochasticgradientdescent.html), which can be used for finding weights $\mathbf{w}$ optimizing a model function $f_{\mathbf{w}}: \mathbb{R}^n \to \mathbb{R}^m$ trained using a set of inputs $\mathbf{x}_i \in \mathbb{R}^n$ and outputs $\mathbf{y}_i \in \mathbb{R}^m$.
 
 *)
 
-open DiffSharp.AD
-open DiffSharp.AD.Vector
-open FsAlg.Generic
+open DiffSharp.AD.Float64
 
 let rnd = new System.Random()
 
 // Stochastic gradient descent
 // f: function, w0: starting weights, eta: step size, epsilon: threshold, t: training set
-let sgd f w0 (eta:D) epsilon (t:(Vector<float>*Vector<float>)[]) =
-    let ta = Array.map (fun (x, y) -> Vector.map D x, Vector.map D y) t
+let sgd f w0 (eta:D) epsilon (t:(DV*DV)[]) =
     let rec desc w =
-        let x, y = ta.[rnd.Next(ta.Length)]
-        let g = grad (fun wi -> Vector.normSq (y - (f wi x))) w
-        if Vector.normSq g < epsilon then w else desc (w - eta * g)
+        let x, y = t.[rnd.Next(t.Length)]
+        let g = grad (fun wi -> DV.l2norm (y - (f wi x))) w
+        if DV.l2norm g < epsilon then w else desc (w - eta * g)
     desc w0
 
 
@@ -59,34 +55,34 @@ is the closest of the current means to the given point $\mathbf{x}$, and the cur
 $$$
   \mathbf{w} = \left[ \mathbf{\mu}_1 \, \mathbf{\mu}_2 \, \dots \, \mathbf{\mu}_k \right] \; .
 
-A given set of $d$ observations are then supplied to the stochastic gradient descent algorithm as the training set consisting of pairs $(\mathbf{x}_i,\,0)$ (decreasing $f_{\mathbf{W}} (\mathbf{x}_i) \to 0\,$ for all $1 \le i \le d$).
+A given set of $d$ observations are then supplied to the stochastic gradient descent algorithm as the training set consisting of pairs $(\mathbf{x}_i,\,0)$ (thus decreasing $f_{\mathbf{W}} (\mathbf{x}_i) \to 0\,$ for all $1 \le i \le d$).
 
-An important thing to note here is that the **DiffSharp.AD.Reverse** module takes the derivative (via reverse mode AD) of this whole algorithm, which includes subprocedures, control flow, and random sampling, and makes the gradient calculations transparent. We do not need to concern ourselves with formulating the model in a closed-form expression for being able to define and then compute its derivative.
+An important thing to note here is that DiffSharp can **take the derivative (via reverse mode AD) of this whole algorithm, which includes subprocedures, control flow, and random sampling**, and makes the gradient calculations transparent. We do not need to concern ourselves with formulating the model in a closed-form expression for being able to define and then compute its gradient.
 
 *)
 
 // k-means clustering
 // k: number of partitions, eta: SGD step size, epsilon: SGD threshold, data: observations
-let kmeans k eta epsilon (data:Vector<float>[]) =
+let kmeans k eta epsilon (data:DV[]) =
     // (index of, squared distance to) the nearest mean to x
-    let inline nearestm (x:Vector<_>) (means:seq<Vector<_>>) =
-        means |> Seq.mapi (fun i m -> i, Vector.normSq (x - m)) |> Seq.minBy snd
+    let inline nearestm (x:DV) (means:seq<DV>) =
+        means |> Seq.mapi (fun i m -> i, DV.normSq (x - m)) |> Seq.minBy snd
     // Squared distance of x to the nearest of the means encoded in w
-    let inline dist (w:Vector<_>) (x:Vector<_>) = w |> Vector.splitEqual k |> nearestm x |> snd
-    let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> Vector.concat |> Vector.map D
-    let wopt = Array.zip data (Array.create data.Length (vector [0.])) |> sgd dist w0 (D eta) (D epsilon)
-    let means = Vector.splitEqual k (wopt |> Vector.map float)
+    let inline dist (w:DV) (x:DV) = w |> DV.splitEqual k |> nearestm x |> snd
+    let w0 = Seq.init k (fun _ -> data.[rnd.Next(data.Length)]) |> DV.concat
+    let wopt = Array.zip data (Array.create data.Length (toDV [0.])) |> sgd dist w0 (D eta) (D epsilon)
+    let means = DV.splitEqual k wopt
     let assign = Array.map (fun d -> (nearestm d means |> fst, d)) data
     Array.init k (fun i -> assign |> Array.filter (fun (j, d) -> i = j) |> Array.map snd)
 
 (**
 
-Now let us test the algorithm in two-dimensions, using a set of randomly generated points.
+Now let's test the algorithm in two-dimensions, using a set of randomly generated points.
 
 *)
 
 // Generate 200 random points
-let data = Array.init 200 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
+let data = Array.init 200 (fun _ -> (DV.init 2 (fun _ -> rnd.NextDouble())))
 
 // Partition the data into 5 clusters
 let clusters = kmeans 5 0.01 0.01 data
@@ -97,9 +93,9 @@ let clusters = kmeans 5 0.01 0.01 data
 
 open FSharp.Charting
 
-let plotClusters (c:Vector<float>[][]) =
+let plotClusters (c:DV[][]) =
     List.init c.Length (fun i -> 
-        Chart.Point(Array.map (fun (d:Vector<_>) -> d.[0], d.[1]) c.[i], MarkerSize = 10))
+        Chart.Point(Array.map (fun (d:DV) -> float d.[0], float d.[1]) c.[i], MarkerSize = 10))
     |> Chart.Combine
 
 plotClusters clusters
@@ -117,7 +113,7 @@ Compared to the commonly used batch-update k-means algorithm running through all
 *)
 
 // Generate 10000 random points
-let data2 = Array.init 10000 (fun _ -> (Vector.init 2 (fun _ -> rnd.NextDouble())))
+let data2 = Array.init 10000 (fun _ -> (DV.init 2 (fun _ -> rnd.NextDouble())))
 
 // Partition the data into 8 clusters
 let clusters2 = kmeans 8 0.01 0.01 data2
@@ -142,7 +138,7 @@ let iris = new CsvProvider<"./resources/iris.csv">()
 
 let irisData = 
     iris.Rows
-    |> Seq.map (fun r -> vector [float r.``Sepal Width``; float r.``Petal Length``])
+    |> Seq.map (fun r -> toDV [float r.``Sepal Width``; float r.``Petal Length``])
     |> Seq.toArray
 
 let irisClusters = kmeans 3 0.01 0.01 irisData

@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 // 
-// Released under LGPL license.
+// Released under the LGPL license.
 //
 //   DiffSharp is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU Lesser General Public License as published by
@@ -40,11 +40,11 @@
 // Script for generating library documentation
 //
 
-#I "../packages/FSharp.Compiler.Service.0.0.87/lib/net40/"
+#I "../packages/FSharp.Compiler.Service.0.0.90/lib/net45/"
 #r "FSharp.Compiler.Service.dll"
-#I "../packages/FSharpVSPowerTools.Core.1.8.0/lib/net45"
+#I "../packages/FSharpVSPowerTools.Core.1.9.0/lib/net45"
 #r "FSharpVSPowerTools.Core.dll"
-#I "../packages/FSharp.Formatting.2.9.1/lib/net40/"
+#I "../packages/FSharp.Formatting.2.10.3/lib/net40/"
 #r "CSharpFormat.dll"
 #r "FSharp.CodeFormat.dll"
 #r "FSharp.Literate.dll"
@@ -92,7 +92,6 @@ Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates
 Literate.ProcessScriptFile(relative "input/api-overview.fsx", relative "input/templates/template.html", relative "output/api-overview.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/gettingstarted-typeinference.fsx", relative "input/templates/template.html", relative "output/gettingstarted-typeinference.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/gettingstarted-nestedad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-nestedad.html", replacements = tags, fsiEvaluator = FsiEvaluator())
-Literate.ProcessScriptFile(relative "input/gettingstarted-nonnestedad.fsx", relative "input/templates/template.html", relative "output/gettingstarted-nonnestedad.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/gettingstarted-symbolicdifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-symbolicdifferentiation.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/gettingstarted-numericaldifferentiation.fsx", relative "input/templates/template.html", relative "output/gettingstarted-numericaldifferentiation.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/benchmarks.fsx", relative "input/templates/template.html", relative "output/benchmarks.html", replacements = tags)
@@ -101,10 +100,10 @@ Literate.ProcessScriptFile(relative "input/examples-gradientdescent.fsx", relati
 Literate.ProcessScriptFile(relative "input/examples-inversekinematics.fsx", relative "input/templates/template.html", relative "output/examples-inversekinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-hamiltonianmontecarlo.fsx", relative "input/templates/template.html", relative "output/examples-hamiltonianmontecarlo.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-helmholtzenergyfunction.fsx", relative "input/templates/template.html", relative "output/examples-helmholtzenergyfunction.html", replacements = tags)
-Literate.ProcessScriptFile(relative "input/examples-kinematics.fsx", relative "input/templates/template.html", relative "output/examples-kinematics.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/examples-kinematics.fsx", relative "input/templates/template.html", relative "output/examples-kinematics.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-kmeansclustering.fsx", relative "input/templates/template.html", relative "output/examples-kmeansclustering.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-lhopitalsrule.fsx", relative "input/templates/template.html", relative "output/examples-lhopitalsrule.html", replacements = tags, fsiEvaluator = FsiEvaluator())
-Literate.ProcessScriptFile(relative "input/examples-neuralnetworks.fsx", relative "input/templates/template.html", relative "output/examples-neuralnetworks.html", replacements = tags, fsiEvaluator = FsiEvaluator())
+Literate.ProcessScriptFile(relative "input/examples-neuralnetworks.fsx", relative "input/templates/template.html", relative "output/examples-neuralnetworks.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/examples-newtonsmethod.fsx", relative "input/templates/template.html", relative "output/examples-newtonsmethod.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 Literate.ProcessScriptFile(relative "input/examples-stochasticgradientdescent.fsx", relative "input/templates/template.html", relative "output/examples-stochasticgradientdescent.html", replacements = tags, fsiEvaluator = FsiEvaluator())
 

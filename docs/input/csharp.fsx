@@ -5,7 +5,7 @@ Interoperability with Other Languages
 
 As F# can interoperate seamlessly with C# and other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages), DiffSharp can be used with these languages as well. Your project should reference the **DiffSharp.dll** assembly, its dependencies, and also the **FSharp.Core.dll** assembly.
 
-For C# and other languages, the **DiffSharp.Interop** namespace provides a simple way of accessing the main functionality. (Without **DiffSharp.Interop**, you can still use the regular DiffSharp namespaces, but you will need to take care of issues such as converting to and from [**FSharp.Core.FSharpFunc**](https://msdn.microsoft.com/en-us/library/ee340302.aspx) objects.)
+For C# and other languages, the **DiffSharp.Interop** namespace provides a simpler way of using the library. (Without **DiffSharp.Interop**, you can still use the regular DiffSharp namespaces, but you will need to take care of issues such as converting to and from [**FSharp.Core.FSharpFunc**](https://msdn.microsoft.com/en-us/library/ee340302.aspx) objects.)
 
 Using DiffSharp with C#
 =======================
@@ -13,20 +13,21 @@ Using DiffSharp with C#
 Nested Automatic Differentiation
 --------------------------------
 
-For using the nested forward and reverse AD capability, you need to write the part of your numeric code where you need deriatives (e.g. for optimization) using the **DiffSharp.Interop.D** numeric type, the results of which you may convert later to a standard type such as **double**. In other words, for any computation you do with the **D** numeric type, you can automatically get exact derivatives.
+For using the nested forward and reverse AD capability, you need to write the part of your numeric code where you need deriatives (e.g. for optimization) using the **D** (scalar), **DV** (vector), and **DM** (matrix) numeric types under **DiffSharp.Interop.Float32** for single precision or **DiffSharp.Interop.Float64** for double precision. You can later convert these values to the standard types of **float**, **float[]**, **float[,]** or **double**, **double[]**, **double[,]**. In other words, for any computation you do with the **D**, **DV**, and **DM** numeric types, you can automatically get exact derivatives. You will also get the benefit of the fast linear algebra computations provided by the BLAS/LAPACK backend (OpenBLAS by default).
 
-The **DiffSharp.Interop.AD** class provides common mathematical functions (e.g. **AD.Exp**, **AD.Sin**, **AD.Pow** ) for the **D** type, similar to the use of [**System.Math**](https://msdn.microsoft.com/en-us/library/System.Math(v=vs.110).aspx) class with the **double** type and other types.
+The **AD** class (under **DiffSharp.Interop.Float32** or **DiffSharp.Interop.Float64** ) provides common mathematical functions (e.g. **AD.Exp**, **AD.Sin**, **AD.Pow** ) for the **D**, **DV**, and **DM** types, similar to the use of the [**System.Math**](https://msdn.microsoft.com/en-us/library/System.Math(v=vs.110).aspx) class with the **double** type and other types.
 
-C# versions of the differentiation operations are also provided through the **DiffSharp.Interop.AD** wrapper class, which internally handles all necessary conversions to and from C# functions. The names of differentiation operations (e.g. **diff**, **grad**, **hessian** ) remain the same, but their first letters are capitalized (e.g. **AD.Diff**, **AD.Grad**, **AD.Hessian** ). Please see the [API Overview](api-overview.html) page for general information about the differentiation API.
+C# versions of the differentiation operations are also provided through the **AD** wrapper class, which internally handles all necessary conversions to and from C# functions. The names of differentiation operations (e.g. **diff**, **grad**, **hessian** ) remain the same, but their first letters are capitalized (e.g. **AD.Diff**, **AD.Grad**, **AD.Hessian** ). Please see the [API Overview](api-overview.html) page for general information about the differentiation API.
 
-Here is a simple example illustrating the use of the **D** type and the computation of derivatives.
+Here is a simple example illustrating the creation of values and the computation of derivatives.
 
     [lang=csharp]
-    // Open DiffSharp interop
-    using DiffSharp.Interop;
+    // Use DiffSharp interop
+    using DiffSharp.Interop.Float64;
 
     class Program
     {
+        
         // Define a function whose derivative you need
         // F(x) = Sin(x^2 - Exp(x))
         public static D F(D x)
@@ -47,23 +48,38 @@ Here is a simple example illustrating the use of the **D** type and the computat
             D db = dF(2.3);
             D dc = dF(1.4);
 
-            // Creation and conversion of D values
-
+            // Construction and casting of D (scalar) values
             // Construct new D
             D a = new D(4.1);
-
             // Cast double to D
             D b = (D)4.1;
-
             // Cast D to double
-            double c = (double)a;
+            double c = (double)b;
+
+            // Construction and casting of DV (vector) values
+            // Construct new DV
+            DV va = new DV(new double[] { 1, 2, 3 });
+            // Cast double[] to DV
+            double[] vaa = new double[] { 1, 2, 3 };
+            DV vb = (DV)vaa;
+            // Cast DV to double[]
+            double[] vc = (double[])vb;
+
+            // Construction and casting of DM (matrix) values
+            // Construct new DM
+            DM ma = new DM(new double[,] { { 1, 2 }, { 3, 4 } });
+            // Cast double[,] to DM
+            double[,] maa = new double[,] { { 1, 2 }, { 3, 4 } };
+            DM mb = (DM)maa;
+            // Cast DM to double[,]
+            double[,] mc = (double[,])mb;
         }
     }
 
 Differentiation operations can be nested, meaning that you can compute higher-order derivatives and differentiate functions that are themselves internally making use of differentiation (also see [Nested AD](gettingstarted-nestedad.html)).
 
     [lang=csharp]
-    using DiffSharp.Interop;
+    using DiffSharp.Interop.Float64;
 
     class Program
     {
@@ -91,7 +107,7 @@ Differentiation operations can be nested, meaning that you can compute higher-or
 A convenient way of writing functions is to use [C# lambda expressions](https://msdn.microsoft.com/en-us/library/bb397687.aspx) with which you can define local anonymous functions.
 
     [lang=csharp]
-    using DiffSharp.Interop;
+    using DiffSharp.Interop.Float64;
 
     class Program
     {
@@ -109,6 +125,7 @@ A convenient way of writing functions is to use [C# lambda expressions](https://
             // This is the same with above, defining the function inline
             var b = AD.Diff(x => AD.Sin(x * x - AD.Exp(x)), 3);
         }
+    }
 
 DiffSharp can handle nested cases such as computing the derivative of a function $f$ that takes an argument $x$, which, in turn, computes the derivative of another function $g$ nested inside $f$ that has a free reference to $x$, the argument to the surrounding function.
 
@@ -127,7 +144,7 @@ for functions $f$ and $g$ and a gradient-based minimization procedure $\mathbf{m
 
 ### Differentiation Operations
 
-Currently the following operations are supported by **DiffSharp.Interop.AD**:
+Currently the following operations are supported by **DiffSharp.Interop**:
 
 ### AD.Diff
 #### First derivative of a scalar-to-scalar function
@@ -225,7 +242,7 @@ $$$
 
 #### Gradient of a vector-to-scalar function
 
-Syntax: `public static Func<D[],D[]> AD.Grad(Func<D[], D> f)`
+Syntax: `public static Func<DV,DV> AD.Grad(Func<DV,D> f)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [gradient](http://en.wikipedia.org/wiki/Gradient)
 
@@ -237,11 +254,11 @@ $$$
     var gf = AD.Grad(x => AD.Sin(x[0] * x[1]));
 
     // Evaluate gf at a point
-    var v = gf(new D[] { 3, 2 });
+    var v = gf(new DV(new double[] { 3, 2 }));
 
 #### Gradient of a vector-to-scalar function evaluated at a point
 
-Syntax: `public static D[] AD.Grad(Func<D[],D> f, D[] x)`
+Syntax: `public static DV AD.Grad(Func<DV,D> f, DV x)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the gradient evaluated at $\mathbf{x}$
 
@@ -250,13 +267,13 @@ $$$
 
     [lang=csharp]
     // Gradient of a vector-to-scalar function at a point
-    var v = AD.Grad(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
+    var v = AD.Grad(x => AD.Sin(x[0] * x[1]), new DV(new double[] { 3, 2 }));
 
 ### AD.Gradv
 
 #### Gradient-vector product (directional derivative)
 
-Syntax: `public static D AD.Gradv(Func<D[],D> f, D[] x, D[] v)`
+Syntax: `public static D AD.Gradv(Func<DV,D> f, DV x, DV v)`
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -267,13 +284,13 @@ With AD, this value is computed efficiently in one forward evaluation of the fun
 
     [lang=csharp]
     // Gradient-vector product of a vector-to-scalar function
-    var v = AD.Gradv(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 }, new D[] { 5, 3 } );
+    var v = AD.Gradv(x => AD.Sin(x[0] * x[1]), new DV(new double[] { 3, 2 }), new DV(new double[] { 5, 3 }));
 
 ### AD.Hessian
 
 #### Hessian of a vector-to-scalar function
 
-Syntax: `public static Func<D[],D[,]> AD.Hessian(Func<D[],D> f)`
+Syntax: `public static Func<DV,DM> AD.Hessian(Func<DV,D> f)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [Hessian matrix](http://en.wikipedia.org/wiki/Hessian_matrix)
 
@@ -290,11 +307,11 @@ $$$
     var hf = AD.Hessian(x => AD.Sin(x[0] * x[1]));
 
     // Evaluate hf at a point
-    var v = hf(new D[] { 3, 2 });
+    var v = hf(new DV(new double[] { 3, 2 }));
 
 #### Hessian of a vector-to-scalar function evaluated at a point
 
-Syntax: `public static D[,] AD.Hessian(Func<D[],D> f, D[] x)`
+Syntax: `public static DM AD.Hessian(Func<DV,D> f, DV x)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the Hessian matrix evaluated at $\mathbf{x}$
 
@@ -308,13 +325,13 @@ $$$
 
     [lang=csharp]
     // Hessian of a vector-to-scalar function at a point
-    var v = AD.Hessian(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
+    var v = AD.Hessian(x => AD.Sin(x[0] * x[1]), new DV(new double[] { 3, 2 }));
 
 ### AD.Hessianv
 
 #### Hessian-vector product
 
-Syntax: `public static D[] AD.Hessianv(Func<D[],D> f, D[] x, D[] v)`
+Syntax: `public static DV AD.Hessianv(Func<DV,D> f, DV x, DV v)`
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -325,13 +342,13 @@ With AD, this value is computed efficiently using one forward and one reverse ev
 
     [lang=csharp]
     // Hessian-vector product of a vector-to-scalar function
-    var hv = AD.Hessianv(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 }, new D[] { 5, 3 });
+    var hv = AD.Hessianv(x => AD.Sin(x[0] * x[1]), new DV(new double[] { 3, 2 }), new DV(new double[] { 5, 3 }));
 
 ### AD.Laplacian
 
 #### Laplacian of a vector-to-scalar function
 
-Syntax: `public static Func<D[],D> AD.Laplacian(Func<D[],D> f)`
+Syntax: `public static Func<DV,D> AD.Laplacian(Func<DV,D> f)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns a function that computes the sum of second derivatives evaluated at $\mathbf{x}$
 
@@ -347,11 +364,11 @@ With AD, this value is computed efficiently in a Matrix-free way, without comput
     var lf = AD.Laplacian(x => AD.Sin(x[0] * x[1]));
 
     // Evaluate lf at a point
-    var v = lf(new D[] { 3, 2 });
+    var v = lf(new DV(new double[] { 3, 2 }));
 
 #### Laplacian of a vector-to-scalar function evaluated at a point
 
-Syntax: `public static D AD.Laplacian(Func<D[],D> f, D[] x)`
+Syntax: `public static D AD.Laplacian(Func<DV,D> f, DV x)`
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the sum of second derivatives evaluated at $\mathbf{x}$
 
@@ -360,13 +377,13 @@ $$$
 
     [lang=csharp]
     // Laplacian of a vector-to-scalar function at a point
-    var v = AD.Laplacian(x => AD.Sin(x[0] * x[1]), new D[] { 3, 2 });
+    var v = AD.Laplacian(x => AD.Sin(x[0] * x[1]), new DV(new double[] { 3, 2 }));
 
 ### AD.Jacobian
 
 #### Jacobian of a vector-to-vector function
 
-Syntax: `public static Func<D[],D[,]> AD.Jacobian(Func<D[],D[]> f)`
+Syntax: `public static Func<DV,DM> AD.Jacobian(Func<DV,DV> f)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $m$-by-$n$ [Jacobian matrix](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
 
@@ -379,14 +396,14 @@ $$$
 
     [lang=csharp]
     // Jacobian of a vector-to-vector function
-    var jf = AD.Jacobian(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+    var jf = AD.Jacobian(x => new DV(new D[]{ AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }));
 
     // Evaluate jf at a point
-    var v = jf(new D[] { 3, 2, 4 });
+    var v = jf(new DV(new double[] { 3, 2, 4 }));
 
 #### Jacobian of a vector-to-vector function evaluated at a point
 
-Syntax: `public static D[,] AD.Jacobian(Func<D[],D[]> f, D[] x)`
+Syntax: `public static DM AD.Jacobian(Func<DV,DV> f, DV x)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -399,13 +416,13 @@ $$$
 
     [lang=csharp]
     // Jacobian of a vector-to-vector function at a point
-    var v = AD.Jacobian(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
+    var v = AD.Jacobian(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new double[] { 3, 2, 4 }));
 
 ### AD.Jacobianv
 
 #### Jacobian-vector product
 
-Syntax: `public static D[] AD.Jacobianv(Func<D[],D[]> f, D[] x, D[] v)`
+Syntax: `public static DV AD.Jacobianv(Func<DV,DV> f, DV x, DV v)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the Jacobian-vector product, that is, the matrix product of the Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -416,13 +433,13 @@ With AD, this value is computed efficiently in one forward evaluation of the fun
 
     [lang=csharp]
     // Jacobian-vector product of a vector-to-vector function
-    var v = AD.Jacobianv(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 }, new D[] { 1, 2, 3 });
+    var v = AD.Jacobianv(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new double[] { 3, 2, 4 }), new DV(new double[] { 1, 2, 3 }));
 
 ### AD.JacobianT
 
 #### Transposed Jacobian of a vector-to-vector function
 
-Syntax: `public static Func<D[],D[,]> AD.JacobianT(Func<D[],D[]> f)`
+Syntax: `public static Func<DV,DM> AD.JacobianT(Func<DV,DV> f)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $n$-by-$m$ transposed Jacobian matrix
 
@@ -435,14 +452,14 @@ $$$
 
     [lang=csharp]
     // Transposed Jacobian of a vector-to-vector function
-    var jf = AD.JacobianT(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+    var jf = AD.JacobianT(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }));
 
     // Evaluate jf at a point
-    var v = jf(new D[] { 3, 2, 4 });
+    var v = jf(new DV(new double[] { 3, 2, 4 }));
 
 #### Transposed Jacobian of a vector-to-vector function evaluated at a point
 
-Syntax: `public static D[,] AD.JacobianT(Func<D[],D[]> f, D[] x)`
+Syntax: `public static DM AD.JacobianT(Func<DV,DV> f, DV x)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the $n$-by-$m$ transposed Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -455,13 +472,13 @@ $$$
 
     [lang=csharp]
     // Transposed Jacobian of a vector-to-vector function at a point
-    var v = AD.JacobianT(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
+    var v = AD.JacobianT(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new D[] { 3, 2, 4 }));
 
 ### AD.JacobianTv
 
 #### Transposed Jacobian-vector product
 
-Syntax: `public static D[] AD.JacobianTv(Func<D[],D[]> f, D[] x, D[] v)`
+Syntax: `public static DV AD.JacobianTv(Func<DV,DV> f, DV x, DV v)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$, $\mathbf{x} \in \mathbb{R}^n$, and $\mathbf{v} \in \mathbb{R}^m$, this returns the matrix product of the transposed Jacobian of $\mathbf{F}$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -472,13 +489,13 @@ With AD, this value is computed efficiently in one forward and one reverse evalu
 
     [lang=csharp]
     // Transposed Jacobian-vector product of a vector-to-vector function
-    var v = AD.JacobianTv(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 }, new D[] { 1, 2, 3 });
+    var v = AD.JacobianTv(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new double[] { 3, 2, 4 }), new DV(new double[] { 1, 2, 3 }));
 
 ### AD.Curl
 
 #### Curl of a vector-to-vector function
 
-Syntax: `public static Func<D[],D[]> AD.Curl(Func<D[],D[]> f)`
+Syntax: `public static Func<DV,DV> AD.Curl(Func<DV,DV> f)`
 
 For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this returns a function that computes the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
 
@@ -487,14 +504,14 @@ $$$
   
     [lang=csharp]
     // Curl of a vector-to-vector function
-    var cf = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+    var cf = AD.Curl(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }));
 
     // Evaluate cf at a point
-    var v = cf(new D[] { 3, 2, 4 });
+    var v = cf(new DV (new double[] { 3, 2, 4 }));
 
 #### Curl of a vector-to-vector function evaluated at a point
 
-Syntax: `public static D[] AD.Curl(Func<D[],D[]> f, D[] x)`
+Syntax: `public static DV AD.Curl(Func<DV,DV> f, DV x)`
 
 For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this returns the curl evaluated at $\mathbf{x}$
 
@@ -503,13 +520,13 @@ $$$
 
     [lang=csharp]
     // Curl of a vector-to-vector function at a point
-    var v = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
+    var v = AD.Curl(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new double[] { 3, 2, 4 }));
 
 ### AD.Div
 
 #### Divergence of a vector-to-vector function
 
-Syntax: `public static Func<D[],D> AD.Div(Func<D[],D[]> f)`
+Syntax: `public static Func<DV,D> AD.Div(Func<DV,D[]> f)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this returns a function that computes the [divergence](http://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
 
@@ -518,14 +535,14 @@ $$$
 
     [lang=csharp]
     // Divergence of a vector-to-vector function
-    var df = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] });
+    var df = AD.Curl(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }));
 
     // Evaluate df at a point
-    var v = df(new D[] { 3, 2, 4 });
+    var v = df(new DV(new double[] { 3, 2, 4 }));
 
 #### Divergence of a vector-to-vector function evaluated at a point
 
-Syntax: `public static D AD.Div(Func<D[],D[]> f, D[] x)`
+Syntax: `public static D AD.Div(Func<DV,DV> f, DV x)`
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this returns the trace of the Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -534,14 +551,14 @@ $$$
 
     [lang=csharp]
     // Divergence of a vector-to-vector function at a point
-    var v = AD.Curl(x => new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }, new D[] { 3, 2, 4 });
+    var v = AD.Curl(x => new DV(new D[] { AD.Sin(x[0] * x[1]), x[0] - x[1], x[2] }), new DV(new double[] { 3, 2, 4 }));
 
 Numerical Differentiation
 -------------------------
 
-**DiffSharp.Interop** also provides access to [numerical differentiation](gettingstarted-numericaldifferentiation.html), through the **DiffSharp.Interop.Numerical** class.
+**DiffSharp.Interop** also provides [numerical differentiation](gettingstarted-numericaldifferentiation.html), through the **DiffSharp.Interop.Float32.Numerical** (for single precision) and **DiffSharp.Interop.Float64.Numerical** (for double precision) classes.
 
-Numerical differentiation operations are used with the **double** numeric type, and the common mathematical functions can be accessed using the [**System.Math**](https://msdn.microsoft.com/en-us/library/System.Math(v=vs.110).aspx) class as usual (e.g. **Math.Exp**, **Math.Sin**, **Math.Pow** ).
+Numerical differentiation operations are used with the **float** or **double** numeric type, and the common mathematical functions can be accessed using the [**System.Math**](https://msdn.microsoft.com/en-us/library/System.Math(v=vs.110).aspx) class as usual (e.g. **Math.Exp**, **Math.Sin**, **Math.Pow** ).
 
 Currently, the following operations are supported:
 
@@ -561,7 +578,8 @@ Currently, the following operations are supported:
 Here are some examples:
 
     [lang=csharp]
-    using DiffSharp.Interop;
+    using System;
+    using DiffSharp.Interop.Float64;
 
     class Program
     {
