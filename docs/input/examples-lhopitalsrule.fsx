@@ -47,7 +47,7 @@ printf "val lim : float = nan"
 
 (**
  
-Using the DiffSharp library, we can generate a sequence of repeated applications of l'Hôpital's rule.
+Using DiffSharp, we can generate a sequence of repeated applications of l'Hôpital's rule.
 *)
 
 open DiffSharp.AD.Float64
@@ -152,6 +152,6 @@ printf "val lim4 : D = D 0.5"
 
 (**
 
-It should be noted that there are cases where repeated applications of l'Hôpital's rule do not lead to an answer, without a transformation of variables.
+It should be noted that there are cases where repeated applications of l'Hôpital's rule do not lead to an answer without a transformation of variables.
 
 *)
