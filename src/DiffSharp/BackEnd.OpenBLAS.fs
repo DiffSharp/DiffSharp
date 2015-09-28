@@ -67,39 +67,39 @@ module OpenBLAS =
 
     module BLAS =
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="isamax_")>]
+        [<DllImport("libopenblas", EntryPoint="isamax_")>]
         extern int isamax_(int *n, float32 *x, int *incx);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="saxpy_")>]
+        [<DllImport("libopenblas", EntryPoint="saxpy_")>]
         extern void saxpy_(int *n, float32 *a, float32 *x, int *incx, float32 *y, int *incy);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sscal_")>]
+        [<DllImport("libopenblas", EntryPoint="sscal_")>]
         extern void sscal_(int *n, float32 *alpha, float32 *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sdot_")>]
+        [<DllImport("libopenblas", EntryPoint="sdot_")>]
         extern float32 sdot_(int *n, float32 *x, int *incx, float32 *y, int *incy);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sger_")>]
+        [<DllImport("libopenblas", EntryPoint="sger_")>]
         extern void sger_(int *m, int *n, float32 *alpha, float32 *x, int *incx, float32 *y, int *incy, float32 *a, int *lda)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sasum_")>]
+        [<DllImport("libopenblas", EntryPoint="sasum_")>]
         extern float32 sasum_(int *n, float32 *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="snrm2_")>]
+        [<DllImport("libopenblas", EntryPoint="snrm2_")>]
         extern float32 snrm2_(int *n, float32 *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sgemm_")>]
+        [<DllImport("libopenblas", EntryPoint="sgemm_")>]
         extern void sgemm_(char *transa, char *transb, int *m, int *n, int *k, float32 *alpha, float32 *a, int *lda, float32 *b, int *ldb, float32 *beta, float32 *c, int *ldc);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sgemv_")>]
+        [<DllImport("libopenblas", EntryPoint="sgemv_")>]
         extern void sgemv_(char *trans, int *m, int *n, float32 *alpha, float32 *a, int *lda, float32 *x, int *incx, float32 *beta, float32 *y, int *incy)
 
         let isamax(x:float32[]) =
@@ -230,39 +230,39 @@ module OpenBLAS =
             sgemv_(&&arg_trans, &&arg_m, &&arg_n, &&arg_alpha, arg_a.Ptr, &&arg_lda, arg_x.Ptr, &&arg_incx, &&arg_beta, arg_y.Ptr, &&arg_incy)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="idamax_")>]
+        [<DllImport("libopenblas", EntryPoint="idamax_")>]
         extern int idamax_(int *n, float *x, int *incx);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="daxpy_")>]
+        [<DllImport("libopenblas", EntryPoint="daxpy_")>]
         extern void daxpy_(int *n, float *a, float *x, int *incx, float *y, int *incy);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dscal_")>]
+        [<DllImport("libopenblas", EntryPoint="dscal_")>]
         extern void dscal_(int *n, float *alpha, float *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="ddot_")>]
+        [<DllImport("libopenblas", EntryPoint="ddot_")>]
         extern float ddot_(int *n, float *x, int *incx, float *y, int *incy);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dger_")>]
+        [<DllImport("libopenblas", EntryPoint="dger_")>]
         extern void dger_(int *m, int *n, float *alpha, float *x, int *incx, float *y, int *incy, float *a, int *lda)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dasum_")>]
+        [<DllImport("libopenblas", EntryPoint="dasum_")>]
         extern float dasum_(int *n, float *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dnrm2_")>]
+        [<DllImport("libopenblas", EntryPoint="dnrm2_")>]
         extern float dnrm2_(int *n, float *x, int *incx)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dgemm_")>]
+        [<DllImport("libopenblas", EntryPoint="dgemm_")>]
         extern void dgemm_(char *transa, char *transb, int *m, int *n, int *k, float *alpha, float *a, int *lda, float *b, int *ldb, float *beta, float *c, int *ldc);
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dgemv_")>]
+        [<DllImport("libopenblas", EntryPoint="dgemv_")>]
         extern void dgemv_(char *trans, int *m, int *n, float *alpha, float *a, int *lda, float *x, int *incx, float *beta, float *y, int *incy)
 
         let idamax(x:float[]) =
@@ -394,19 +394,19 @@ module OpenBLAS =
 
     module LAPACK =
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sgesv_")>]
+        [<DllImport("libopenblas", EntryPoint="sgesv_")>]
         extern void sgesv_(int *n, int *nrhs, float32 *a, int *lda, int *ipiv, float32 *b, int *ldb, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="ssysv_")>]
+        [<DllImport("libopenblas", EntryPoint="ssysv_")>]
         extern void ssysv_(char *uplo, int *n, int *nrhs, float32 *a, int *lda, int *ipiv, float32 *b, int *ldb, float32 *work, int *lwork, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sgetrf_")>]
+        [<DllImport("libopenblas", EntryPoint="sgetrf_")>]
         extern void sgetrf_(int *m, int *n, float32 *a, int *lda, int *ipiv, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="sgetri_")>]
+        [<DllImport("libopenblas", EntryPoint="sgetri_")>]
         extern void sgetri_(int *n, float32 *a, int *lda, int *ipiv, float32 *work, int *lwork, int *info)
 
         let sgesv(a:float32[,], b:float32[]) =
@@ -485,19 +485,19 @@ module OpenBLAS =
                 None
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dgesv_")>]
+        [<DllImport("libopenblas", EntryPoint="dgesv_")>]
         extern void dgesv_(int *n, int *nrhs, float *a, int *lda, int *ipiv, float *b, int *ldb, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dsysv_")>]
+        [<DllImport("libopenblas", EntryPoint="dsysv_")>]
         extern void dsysv_(char *uplo, int *n, int *nrhs, float *a, int *lda, int *ipiv, float *b, int *ldb, float *work, int *lwork, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dgetrf_")>]
+        [<DllImport("libopenblas", EntryPoint="dgetrf_")>]
         extern void dgetrf_(int *m, int *n, float *a, int *lda, int *ipiv, int *info)
 
         [<SuppressUnmanagedCodeSecurity>]
-        [<DllImport("libopenblas.dll", EntryPoint="dgetri_")>]
+        [<DllImport("libopenblas", EntryPoint="dgetri_")>]
         extern void dgetri_(int *n, float *a, int *lda, int *ipiv, float *work, int *lwork, int *info)
 
         let dgesv(a:float[,], b:float[]) =

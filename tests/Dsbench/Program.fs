@@ -190,26 +190,26 @@ let main argv =
         let clr = System.Environment.Version.ToString()
         printfn ".NET CLR version: %s" clr
 
-        let cpu =
-            try
-                let mutable cpu = ""
-                let mos = new System.Management.ManagementObjectSearcher("SELECT * FROM Win32_Processor")
-                for mo in mos.Get() do
-                    cpu <- mo.["name"].ToString()
-                cpu
-            with
-                | _ -> "Unknown"
+        let cpu = "Unknown"
+//            try
+//                let mutable cpu = ""
+//                let mos = new System.Management.ManagementObjectSearcher("SELECT * FROM Win32_Processor")
+//                for mo in mos.Get() do
+//                    cpu <- mo.["name"].ToString()
+//                cpu
+//            with
+//                | _ -> "Unknown"
         printfn "CPU: %s" cpu
 
-        let ram =
-            try
-                let mutable ram = ""
-                let mos = new System.Management.ManagementObjectSearcher("SELECT * FROM CIM_OperatingSystem")
-                for mo in mos.Get() do
-                    ram <- mo.["TotalVisibleMemorySize"].ToString() + " bytes"
-                ram
-            with
-                | _ -> "Unknown"
+        let ram = "Unknown"
+//            try
+//                let mutable ram = ""
+//                let mos = new System.Management.ManagementObjectSearcher("SELECT * FROM CIM_OperatingSystem")
+//                for mo in mos.Get() do
+//                    ram <- mo.["TotalVisibleMemorySize"].ToString() + " bytes"
+//                ram
+//            with
+//                | _ -> "Unknown"
         printfn "RAM: %s\n" ram
 
         printfn "Press any key to start benchmarking..."
