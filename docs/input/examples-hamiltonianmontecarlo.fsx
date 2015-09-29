@@ -102,7 +102,7 @@ let hmc n hdelta hsteps (x0:DV) (f:DV->D) =
     let hamilton x p = u x + k p
     let x = ref x0
     [|for i in 1..n do
-        let p = DV.init x0.Length (fun _ -> rndn() |> D)
+        let p = DV.init x0.Length (fun _ -> rndn())
         let x', p' = leapFrog u k hdelta hsteps (!x, p)
         if rnd() < float (exp ((hamilton !x p) - (hamilton x' p'))) then x := x'
         yield !x|]
