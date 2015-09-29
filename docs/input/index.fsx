@@ -13,7 +13,7 @@ Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacob
 
 The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
 
-DiffSharp is implemented in the F# language and [can be used from C#](csharp.html) and the [other languages](http://en.wikipedia.org/wiki/List_of_CLI_languages) running on Mono or the .Net Framework, targeting the 64 bit platform. It is tested on Linux, Windows, and Mac OS X. We are working on interfaces/ports to other languages.
+DiffSharp is implemented in the F# language and [can be used from C#](csharp.html) and the [other languages](http://en.wikipedia.org/wiki/List_of_CLI_languages) running on Mono or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.
 
 <div class="row">
     <div class="span9">
@@ -46,7 +46,13 @@ At this point we are debugging algorithmic complexity and the APIs. We are hopin
 How to Get
 ----------
 
-You can install the library via NuGet. You can also download the source code or the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
+### Windows
+
+You can install the library via NuGet. You can also download the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
+
+For using DiffSharp, your project should target ".NET Framework 4.6" before installing the NuGet package. 
+
+Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the build configuration of your project, you should set "x64" as the platform target (don't forget to do this for all build configurations). If you are using F# interactive, you should run it in 64 bit mode. In Visual Studio, you can do this by selecting "Tools - Options - F# Tools - F# Interactive" and setting "64 bit F# Interactive" to "true" and restarting the IDE.
 
 <div class="row">
     <div class="span1"></div>
@@ -58,6 +64,12 @@ You can install the library via NuGet. You can also download the source code or 
     </div>
     <div class="span1"></div>
 </div>
+
+### Linux
+
+Please install the [libopenblas-dev](http://packages.ubuntu.com/precise/libopenblas-dev) package on your system. Once you have the file _libopenblas.so_ in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.
+
+Alternatively, you can download the Linux-specific binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
 Quick Usage Example
 -------------------
