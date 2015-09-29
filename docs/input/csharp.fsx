@@ -3,7 +3,7 @@
 Interoperability with Other Languages
 =====================================
 
-As F# can interoperate seamlessly with C# and other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages), DiffSharp can be used with these languages as well. Your project should reference the **DiffSharp.dll** assembly, its dependencies, and also the **FSharp.Core.dll** assembly.
+As F# can interoperate seamlessly with C# and other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages), DiffSharp can be used with these languages as well. Your project should reference the **DiffSharp.dll** assembly, its dependencies, and also the **FSharp.Core.dll** assembly. Please note that your project should target ".NET Framework 4.6" and have "x64" as the platform target. (Also see the installation instructions on the [main page](index.html).)
 
 For C# and other languages, the **DiffSharp.Interop** namespace provides a simpler way of using the library. (Without **DiffSharp.Interop**, you can still use the regular DiffSharp namespaces, but you will need to take care of issues such as converting to and from [**FSharp.Core.FSharpFunc**](https://msdn.microsoft.com/en-us/library/ee340302.aspx) objects.)
 
