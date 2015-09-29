@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DV - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DV</h1>
+<div class="xmldoc">
+<p>Functional-oriented operations on vectors. Implementing functionality similar to FSharp.Collections.Array.</p>
+
+
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '113', 113)" onmouseover="showTip(event, '113', 113)">
+            append(v1 v2)
+          </code>
+          <div class="tip" id="113">
+            <strong>Signature:</strong> v1:DV -&gt; v2:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector where elements of <code>v1</code> are followed by elements of <code>v2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '114', 114)" onmouseover="showTip(event, '114', 114)">
+            average(v)
+          </code>
+          <div class="tip" id="114">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Average of the elements of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '115', 115)" onmouseover="showTip(event, '115', 115)">
+            concat(v)
+          </code>
+          <div class="tip" id="115">
+            <strong>Signature:</strong> v:seq&lt;DV&gt; -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Concatenates the given sequence of vectors <code>v</code> into one vector</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '116', 116)" onmouseover="showTip(event, '116', 116)">
+            copy(v)
+          </code>
+          <div class="tip" id="116">
+            <strong>Signature:</strong> v:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a copy of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '117', 117)" onmouseover="showTip(event, '117', 117)">
+            create(n v)
+          </code>
+          <div class="tip" id="117">
+            <strong>Signature:</strong> n:int -&gt; v:&#39;a -&gt; DV<br />
+                          <strong>Type parameters:</strong> 'a          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector with <code>n</code> elements, each with value <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '118', 118)" onmouseover="showTip(event, '118', 118)">
+            empty
+          </code>
+          <div class="tip" id="118">
+            <strong>Signature:</strong> DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Empty vector</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '119', 119)" onmouseover="showTip(event, '119', 119)">
+            init(n f)
+          </code>
+          <div class="tip" id="119">
+            <strong>Signature:</strong> n:int -&gt; f:(int -&gt; &#39;a) -&gt; DV<br />
+                          <strong>Type parameters:</strong> 'a          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector of <code>n</code> elements, where each element is defined by function <code>f</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '120', 120)" onmouseover="showTip(event, '120', 120)">
+            iter(f v)
+          </code>
+          <div class="tip" id="120">
+            <strong>Signature:</strong> f:(D -&gt; unit) -&gt; v:DV -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the elements of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '121', 121)" onmouseover="showTip(event, '121', 121)">
+            iter2(f v1 v2)
+          </code>
+          <div class="tip" id="121">
+            <strong>Signature:</strong> f:(D -&gt; D -&gt; unit) -&gt; v1:DV -&gt; v2:DV -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the elements of vectors <code>v1</code> and <code>v2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '122', 122)" onmouseover="showTip(event, '122', 122)">
+            iteri(f v)
+          </code>
+          <div class="tip" id="122">
+            <strong>Signature:</strong> f:(int -&gt; D -&gt; unit) -&gt; v:DV -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the elements of vector <code>v</code>. An element index is also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '123', 123)" onmouseover="showTip(event, '123', 123)">
+            iteri2(f v1 v2)
+          </code>
+          <div class="tip" id="123">
+            <strong>Signature:</strong> f:(int -&gt; D -&gt; D -&gt; unit) -&gt; v1:DV -&gt; v2:DV -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the elements of vectors <code>v1</code> and <code>v2</code>. An element index is also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '124', 124)" onmouseover="showTip(event, '124', 124)">
+            l1norm(v)
+          </code>
+          <div class="tip" id="124">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>L1 norm of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '125', 125)" onmouseover="showTip(event, '125', 125)">
+            l2norm(v)
+          </code>
+          <div class="tip" id="125">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>L2 norm of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '126', 126)" onmouseover="showTip(event, '126', 126)">
+            l2normSq(v)
+          </code>
+          <div class="tip" id="126">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Squared L2 norm of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '127', 127)" onmouseover="showTip(event, '127', 127)">
+            length(v)
+          </code>
+          <div class="tip" id="127">
+            <strong>Signature:</strong> v:DV -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Length of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '128', 128)" onmouseover="showTip(event, '128', 128)">
+            max(v)
+          </code>
+          <div class="tip" id="128">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maximum of the elements of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '129', 129)" onmouseover="showTip(event, '129', 129)">
+            maxIndex(v)
+          </code>
+          <div class="tip" id="129">
+            <strong>Signature:</strong> v:DV -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Index of the maximum element of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '130', 130)" onmouseover="showTip(event, '130', 130)">
+            min(v)
+          </code>
+          <div class="tip" id="130">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Minimum of the elements of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '131', 131)" onmouseover="showTip(event, '131', 131)">
+            minIndex(v)
+          </code>
+          <div class="tip" id="131">
+            <strong>Signature:</strong> v:DV -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Index of the minimum element of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '132', 132)" onmouseover="showTip(event, '132', 132)">
+            norm(v)
+          </code>
+          <div class="tip" id="132">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>L2 norm of vector <code>v</code>. Same with DV.l2norm.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '133', 133)" onmouseover="showTip(event, '133', 133)">
+            normalize(v)
+          </code>
+          <div class="tip" id="133">
+            <strong>Signature:</strong> v:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Normalize vector <code>v</code> to have zero mean and unit variance</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '134', 134)" onmouseover="showTip(event, '134', 134)">
+            normSq(v)
+          </code>
+          <div class="tip" id="134">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Squared L2 norm of vector <code>v</code>. Same with DV.l2normSq.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '135', 135)" onmouseover="showTip(event, '135', 135)">
+            ofArray(a)
+          </code>
+          <div class="tip" id="135">
+            <strong>Signature:</strong> a:D [] -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector from array <code>a</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '136', 136)" onmouseover="showTip(event, '136', 136)">
+            prepend(v1 v2)
+          </code>
+          <div class="tip" id="136">
+            <strong>Signature:</strong> v1:DV -&gt; v2:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector where elements of <code>v2</code> are followed by elements of <code>v1</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '137', 137)" onmouseover="showTip(event, '137', 137)">
+            print(v)
+          </code>
+          <div class="tip" id="137">
+            <strong>Signature:</strong> v:DV -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '138', 138)" onmouseover="showTip(event, '138', 138)">
+            split(n v)
+          </code>
+          <div class="tip" id="138">
+            <strong>Signature:</strong> n:seq&lt;int&gt; -&gt; v:DV -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Splits vector <code>v</code> into a sequence of subvectors whose lengths are given in sequence <code>n</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '139', 139)" onmouseover="showTip(event, '139', 139)">
+            splitEqual(n v)
+          </code>
+          <div class="tip" id="139">
+            <strong>Signature:</strong> n:int -&gt; v:DV -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Splits vector <code>v</code> into <code>n</code> subvectors of equal length. The length of vector <code>v</code> must be an integer multiple of <code>n</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '140', 140)" onmouseover="showTip(event, '140', 140)">
+            standardBasis(n i)
+          </code>
+          <div class="tip" id="140">
+            <strong>Signature:</strong> n:int -&gt; i:int -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector with <code>n</code> elements where the <code>i</code>-th element is one and the rest of the elements are zero</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '141', 141)" onmouseover="showTip(event, '141', 141)">
+            standardBasisVal(n i v)
+          </code>
+          <div class="tip" id="141">
+            <strong>Signature:</strong> n:int -&gt; i:int -&gt; v:float32 -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector with <code>n</code> elements where the <code>i</code>-th element has value <code>v</code> and the rest of the elements are zero</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '142', 142)" onmouseover="showTip(event, '142', 142)">
+            sum(v)
+          </code>
+          <div class="tip" id="142">
+            <strong>Signature:</strong> v:DV -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Sums the elements of vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '143', 143)" onmouseover="showTip(event, '143', 143)">
+            toArray(v)
+          </code>
+          <div class="tip" id="143">
+            <strong>Signature:</strong> v:DV -&gt; D []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts vector <code>v</code> into an array</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '144', 144)" onmouseover="showTip(event, '144', 144)">
+            toColDM(v)
+          </code>
+          <div class="tip" id="144">
+            <strong>Signature:</strong> v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts vector <code>v</code> into a column matrix</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '145', 145)" onmouseover="showTip(event, '145', 145)">
+            toDM(m v)
+          </code>
+          <div class="tip" id="145">
+            <strong>Signature:</strong> m:int -&gt; v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows from vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '146', 146)" onmouseover="showTip(event, '146', 146)">
+            toRowDM(v)
+          </code>
+          <div class="tip" id="146">
+            <strong>Signature:</strong> v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts vector <code>v</code> into a row matrix</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '147', 147)" onmouseover="showTip(event, '147', 147)">
+            unitDV(v)
+          </code>
+          <div class="tip" id="147">
+            <strong>Signature:</strong> v:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the unit vector codirectional with vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '148', 148)" onmouseover="showTip(event, '148', 148)">
+            visualize(v)
+          </code>
+          <div class="tip" id="148">
+            <strong>Signature:</strong> v:DV -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '149', 149)" onmouseover="showTip(event, '149', 149)">
+            zeroCreate(n)
+          </code>
+          <div class="tip" id="149">
+            <strong>Signature:</strong> n:int -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a vector with <code>n</code> zero elements</p>
+
+
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="../gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+            <li><a href="../csharp.html">C# and Other Languages</a></li>
+            <li><a href="index.html">API Reference</a></li>
+            
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+</html>

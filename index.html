@@ -54,35 +54,51 @@
 
 <p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="http://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
 
-<p>Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Operations can be nested to any level, meaning that you can compute exact higher-order derivatives and differentiate functions that are internally making use of differentiation. Please see the <a href="api-overview.html">API Overview</a> page for a list of available operations.</p>
+<p>Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Diffsharp supports nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the <a href="api-overview.html">API Overview</a> page for a list of available operations.</p>
 
 <p>The library is under active development by <a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a> and <a href="http://bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a> mainly for research applications in machine learning, as part of their work at the <a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a>, Hamilton Institute, National University of Ireland Maynooth.</p>
 
-<p>DiffSharp is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono or the .Net Framework. It is tested on Linux, Windows, and Mac OS X. We are working on interfaces/ports to other languages.</p>
+<p>DiffSharp is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.</p>
 
 <div class="row">
     <div class="span9">
-    <div class="well well-small" id="nuget" style="background-color:#E0EBEB">
-        <b>As of version 0.6, DiffSharp supports nesting of AD operations.</b> This entails important changes in the library structure. Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can update your code.
+    <div class="well well-small" id="nuget" style="background-color:#C6AEC7">
+        Version 0.7 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version. (If you still need pre-0.7 documentation, <a href="http://diffsharp.github.io/DiffSharp/0.6.3/">here they are</a>).
     </div>
     </div>
 </div>
 
-<h2>Roadmap</h2>
+<h2>Current Features and Roadmap</h2>
 
-<p>At this point we are debugging algorithmic complexity and the APIs, while much better overhead factors, parallelization, and GPU support are planned for a later release. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use the system in production.</p>
-
-<p>We are working on the following features:</p>
+<p>The following features are up and running:</p>
 
 <ul>
-<li>Native linear algebra providers (Intel MKL and CUDA) for faster matrix-vector operations</li>
-<li>Improved Hessian calculations exploiting structure (sparsity)</li>
-<li>AD via code transformation, using code quotations</li>
+<li><em>Nested AD with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level</em></li>
+<li><em>Matrix-free Jacobian- and Hessian-vector products</em></li>
+<li><em><a href="https://github.com/xianyi/OpenBLAS/wiki">OpenBLAS</a> backend for highly optimized native BLAS and LAPACK operations</em></li>
+<li><em>Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)</em></li>
+<li><em>Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)</em></li>
 </ul>
+
+<p>We are working on the following features for the next release:</p>
+
+<ul>
+<li><em>GPU backend using CUDA and cuBLAS</em></li>
+<li><em>Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)</em></li>
+<li><em>AD via syntax tree transformation, using code quotations</em></li>
+</ul>
+
+<p>At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.</p>
 
 <h2>How to Get</h2>
 
-<p>You can install the library via NuGet. You can also download the source code or the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
+<h3>Windows</h3>
+
+<p>You can install the library via NuGet. You can also download the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
+
+<p>For using DiffSharp, your project should target ".NET Framework 4.6" before installing the NuGet package.</p>
+
+<p>Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the build configuration of your project, you should set "x64" as the platform target (don't forget to do this for all build configurations). If you are using F# interactive, you should run it in 64 bit mode. In Visual Studio, you can do this by selecting "Tools - Options - F# Tools - F# Interactive" and setting "64 bit F# Interactive" to "true" and restarting the IDE.</p>
 
 <div class="row">
     <div class="span1"></div>
@@ -95,10 +111,15 @@
     <div class="span1"></div>
 </div>
 
+<h3>Linux</h3>
+
+<p>Please install the <a href="http://packages.ubuntu.com/precise/libopenblas-dev">libopenblas-dev</a> package on your system. Once you have the file <em>libopenblas.so</em> in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.</p>
+
+<p>Alternatively, you can download the Linux-specific binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
+
 <h2>Quick Usage Example</h2>
 
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l"> 1: </span>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
 <span class="l"> 4: </span>
@@ -115,56 +136,62 @@
 <span class="l">15: </span>
 <span class="l">16: </span>
 <span class="l">17: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="c">// Use mixed mode nested AD</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">AD</span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">// Use mixed mode nested AD</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">Float32</span>
 
 <span class="c">// A scalar-to-scalar function</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="f">f</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="f">sin</span> (<span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="f">sqrt</span> <span onmouseout="hideTip(event, 'fs4', 7)" onmouseover="showTip(event, 'fs4', 7)" class="i">x</span>)
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="f">f</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="f">sin</span> (<span onmouseout="hideTip(event, 'fs7', 7)" onmouseover="showTip(event, 'fs7', 7)" class="f">sqrt</span> <span onmouseout="hideTip(event, 'fs5', 8)" onmouseover="showTip(event, 'fs5', 8)" class="i">x</span>)
 
 <span class="c">// Derivative of f</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs7', 8)" onmouseover="showTip(event, 'fs7', 8)" class="f">df</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 9)" onmouseover="showTip(event, 'fs8', 9)" class="f">diff</span> <span onmouseout="hideTip(event, 'fs3', 10)" onmouseover="showTip(event, 'fs3', 10)" class="f">f</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs8', 9)" onmouseover="showTip(event, 'fs8', 9)" class="f">df</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 10)" onmouseover="showTip(event, 'fs9', 10)" class="f">diff</span> <span onmouseout="hideTip(event, 'fs4', 11)" onmouseover="showTip(event, 'fs4', 11)" class="f">f</span>
 
 <span class="c">// A vector-to-scalar function</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 11)" onmouseover="showTip(event, 'fs9', 11)" class="f">g</span> (<span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="i">x</span><span class="o">:</span>_[]) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="f">exp</span> (<span onmouseout="hideTip(event, 'fs10', 14)" onmouseover="showTip(event, 'fs10', 14)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs10', 15)" onmouseover="showTip(event, 'fs10', 15)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]) <span class="o">+</span> <span onmouseout="hideTip(event, 'fs10', 16)" onmouseover="showTip(event, 'fs10', 16)" class="i">x</span><span class="o">.</span>[<span class="n">2</span>]
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="f">g</span> (<span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="t">DV</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 15)" onmouseover="showTip(event, 'fs13', 15)" class="f">exp</span> (<span onmouseout="hideTip(event, 'fs11', 16)" onmouseover="showTip(event, 'fs11', 16)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs11', 17)" onmouseover="showTip(event, 'fs11', 17)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]) <span class="o">+</span> <span onmouseout="hideTip(event, 'fs11', 18)" onmouseover="showTip(event, 'fs11', 18)" class="i">x</span><span class="o">.</span>[<span class="n">2</span>]
 
 <span class="c">// Gradient of g</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs12', 17)" onmouseover="showTip(event, 'fs12', 17)" class="f">gg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 18)" onmouseover="showTip(event, 'fs13', 18)" class="f">grad</span> <span onmouseout="hideTip(event, 'fs9', 19)" onmouseover="showTip(event, 'fs9', 19)" class="f">g</span> 
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="f">gg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 20)" onmouseover="showTip(event, 'fs15', 20)" class="f">grad</span> <span onmouseout="hideTip(event, 'fs10', 21)" onmouseover="showTip(event, 'fs10', 21)" class="f">g</span> 
 
 <span class="c">// Hessian of g</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 20)" onmouseover="showTip(event, 'fs14', 20)" class="f">hg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 21)" onmouseover="showTip(event, 'fs15', 21)" class="f">hessian</span> <span onmouseout="hideTip(event, 'fs9', 22)" onmouseover="showTip(event, 'fs9', 22)" class="f">g</span>
-</pre>
-</td>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 22)" onmouseover="showTip(event, 'fs16', 22)" class="f">hg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs17', 23)" onmouseover="showTip(event, 'fs17', 23)" class="f">hessian</span> <span onmouseout="hideTip(event, 'fs10', 24)" onmouseover="showTip(event, 'fs10', 24)" class="f">g</span>
+</code></pre></td>
 </tr>
 </table>
 
 <h2>More Info and How to Cite</h2>
 
-<p>If you are using the library and would like to cite it, please use the following information:</p>
+<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="http://github.com/DiffSharp/DiffSharp">on GitHub</a>.</p>
+
+<p>If you would like to cite this library, please use the following information:</p>
 
 <p><em>Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767</em> (<a href="http://arxiv.org/abs/1502.05767">link</a>) (<a href="misc/adml2015.bib">BibTeX</a>)</p>
 
-<p>You can also check our <a href="http://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf"><strong>recent poster</strong></a> for the <a href="http://mloss.org/workshop/icml15/">MLOSS Workshop</a> at the International Conference on Machine Learning 2015. For in-depth material, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
+<p>You can also check our <a href="http://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf"><strong>recent poster</strong></a> for the <a href="http://mloss.org/workshop/icml15/">Machine Learning Open Source Software Workshop</a> at the International Conference on Machine Learning 2015. For in-depth material, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
 
-<p>If you are using DiffSharp, we would be very happy to hear about it and put a link to your work on this page.</p>
+<p>Other sources:</p>
+
+<ul>
+<li><a href="http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/">Introduction to Automatic Differentiation</a></li>
+<li><a href="https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/">Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?</a></li>
+</ul>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
-<div class="tip" id="fs3">val f : x:D -&gt; D<br /><br />Full name: Index.f</div>
-<div class="tip" id="fs4">val x : D</div>
-<div class="tip" id="fs5">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
-<div class="tip" id="fs6">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
-<div class="tip" id="fs7">val df : (D -&gt; D)<br /><br />Full name: Index.df</div>
-<div class="tip" id="fs8">val diff : f:(D -&gt; D) -&gt; x:D -&gt; D<br /><br />Full name: DiffSharp.AD.DiffOps.diff</div>
-<div class="tip" id="fs9">val g : x:D [] -&gt; D<br /><br />Full name: Index.g</div>
-<div class="tip" id="fs10">val x : D []</div>
-<div class="tip" id="fs11">val exp : value:&#39;T -&gt; &#39;T (requires member Exp)<br /><br />Full name: Microsoft.FSharp.Core.Operators.exp</div>
-<div class="tip" id="fs12">val gg : (D [] -&gt; D [])<br /><br />Full name: Index.gg</div>
-<div class="tip" id="fs13">val grad : f:(D [] -&gt; D) -&gt; x:D [] -&gt; D []<br /><br />Full name: DiffSharp.AD.DiffOps.grad</div>
-<div class="tip" id="fs14">val hg : (D [] -&gt; D [,])<br /><br />Full name: Index.hg</div>
-<div class="tip" id="fs15">val hessian : f:(D [] -&gt; D) -&gt; x:D [] -&gt; D [,]<br /><br />Full name: DiffSharp.AD.DiffOps.hessian</div>
+<div class="tip" id="fs3">module Float32<br /><br />from DiffSharp.AD</div>
+<div class="tip" id="fs4">val f : x:D -&gt; D<br /><br />Full name: Index.f</div>
+<div class="tip" id="fs5">val x : D</div>
+<div class="tip" id="fs6">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
+<div class="tip" id="fs7">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
+<div class="tip" id="fs8">val df : (D -&gt; D)<br /><br />Full name: Index.df</div>
+<div class="tip" id="fs9">val diff : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float32.DiffOps.diff</div>
+<div class="tip" id="fs10">val g : x:DV -&gt; D<br /><br />Full name: Index.g</div>
+<div class="tip" id="fs11">val x : DV</div>
+<div class="tip" id="fs12">Multiple items<br />union case DV.DV: float32 [] -&gt; DV<br /><br />--------------------<br />module DV<br /><br />from DiffSharp.AD.Float32<br /><br />--------------------<br />type DV =<br />&#160;&#160;| DV of float32 []<br />&#160;&#160;| DVF of DV * DV * uint32<br />&#160;&#160;| DVR of DV * DV ref * TraceOp * uint32 ref * uint32<br />&#160;&#160;member Copy : unit -&gt; DV<br />&#160;&#160;member GetForward : t:DV * i:uint32 -&gt; DV<br />&#160;&#160;member GetReverse : i:uint32 -&gt; DV<br />&#160;&#160;member GetSlice : lower:int option * upper:int option -&gt; DV<br />&#160;&#160;member Split : n:seq&lt;int&gt; -&gt; seq&lt;DV&gt;<br />&#160;&#160;member ToArray : unit -&gt; D []<br />&#160;&#160;member ToColDM : unit -&gt; DM<br />&#160;&#160;member ToMathematicaString : unit -&gt; string<br />&#160;&#160;member ToMatlabString : unit -&gt; string<br />&#160;&#160;member ToRowDM : unit -&gt; DM<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;member Visualize : unit -&gt; string<br />&#160;&#160;member A : DV<br />&#160;&#160;member F : uint32<br />&#160;&#160;member Item : i:int -&gt; D with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member P : DV<br />&#160;&#160;member T : DV<br />&#160;&#160;member A : DV with set<br />&#160;&#160;member F : uint32 with set<br />&#160;&#160;static member Abs : a:DV -&gt; DV<br />&#160;&#160;static member Acos : a:DV -&gt; DV<br />&#160;&#160;static member AddItem : a:DV * i:int * b:D -&gt; DV<br />&#160;&#160;static member AddSubVector : a:DV * i:int * b:DV -&gt; DV<br />&#160;&#160;static member Append : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member Asin : a:DV -&gt; DV<br />&#160;&#160;static member Atan : a:DV -&gt; DV<br />&#160;&#160;static member Atan2 : a:int * b:DV -&gt; DV<br />&#160;&#160;static member Atan2 : a:DV * b:int -&gt; DV<br />&#160;&#160;static member Atan2 : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member Atan2 : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member Atan2 : a:D * b:DV -&gt; DV<br />&#160;&#160;static member Atan2 : a:DV * b:D -&gt; DV<br />&#160;&#160;static member Atan2 : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member Ceiling : a:DV -&gt; DV<br />&#160;&#160;static member Cos : a:DV -&gt; DV<br />&#160;&#160;static member Cosh : a:DV -&gt; DV<br />&#160;&#160;static member Exp : a:DV -&gt; DV<br />&#160;&#160;static member Floor : a:DV -&gt; DV<br />&#160;&#160;static member L1Norm : a:DV -&gt; D<br />&#160;&#160;static member L2Norm : a:DV -&gt; D<br />&#160;&#160;static member L2NormSq : a:DV -&gt; D<br />&#160;&#160;static member Log : a:DV -&gt; DV<br />&#160;&#160;static member Log10 : a:DV -&gt; DV<br />&#160;&#160;static member LogSumExp : a:DV -&gt; D<br />&#160;&#160;static member Max : a:DV -&gt; D<br />&#160;&#160;static member Max : a:D * b:DV -&gt; DV<br />&#160;&#160;static member Max : a:DV * b:D -&gt; DV<br />&#160;&#160;static member Max : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member MaxIndex : a:DV -&gt; int<br />&#160;&#160;static member Min : a:DV -&gt; D<br />&#160;&#160;static member Min : a:D * b:DV -&gt; DV<br />&#160;&#160;static member Min : a:DV * b:D -&gt; DV<br />&#160;&#160;static member Min : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member MinIndex : a:DV -&gt; int<br />&#160;&#160;static member Normalize : a:DV -&gt; DV<br />&#160;&#160;static member OfArray : a:D [] -&gt; DV<br />&#160;&#160;static member Op_DV_D : a:DV * ff:(float32 [] -&gt; float32) * fd:(DV -&gt; D) * df:(D * DV * DV -&gt; D) * r:(DV -&gt; TraceOp) -&gt; D<br />&#160;&#160;static member Op_DV_DV : a:DV * ff:(float32 [] -&gt; float32 []) * fd:(DV -&gt; DV) * df:(DV * DV * DV -&gt; DV) * r:(DV -&gt; TraceOp) -&gt; DV<br />&#160;&#160;static member Op_DV_DV_D : a:DV * b:DV * ff:(float32 [] * float32 [] -&gt; float32) * fd:(DV * DV -&gt; D) * df_da:(D * DV * DV -&gt; D) * df_db:(D * DV * DV -&gt; D) * df_dab:(D * DV * DV * DV * DV -&gt; D) * r_d_d:(DV * DV -&gt; TraceOp) * r_d_c:(DV * DV -&gt; TraceOp) * r_c_d:(DV * DV -&gt; TraceOp) -&gt; D<br />&#160;&#160;static member Op_DV_DV_DM : a:DV * b:DV * ff:(float32 [] * float32 [] -&gt; float32 [,]) * fd:(DV * DV -&gt; DM) * df_da:(DM * DV * DV -&gt; DM) * df_db:(DM * DV * DV -&gt; DM) * df_dab:(DM * DV * DV * DV * DV -&gt; DM) * r_d_d:(DV * DV -&gt; TraceOp) * r_d_c:(DV * DV -&gt; TraceOp) * r_c_d:(DV * DV -&gt; TraceOp) -&gt; DM<br />&#160;&#160;static member Op_DV_DV_DV : a:DV * b:DV * ff:(float32 [] * float32 [] -&gt; float32 []) * fd:(DV * DV -&gt; DV) * df_da:(DV * DV * DV -&gt; DV) * df_db:(DV * DV * DV -&gt; DV) * df_dab:(DV * DV * DV * DV * DV -&gt; DV) * r_d_d:(DV * DV -&gt; TraceOp) * r_d_c:(DV * DV -&gt; TraceOp) * r_c_d:(DV * DV -&gt; TraceOp) -&gt; DV<br />&#160;&#160;static member Op_DV_D_DV : a:DV * b:D * ff:(float32 [] * float32 -&gt; float32 []) * fd:(DV * D -&gt; DV) * df_da:(DV * DV * DV -&gt; DV) * df_db:(DV * D * D -&gt; DV) * df_dab:(DV * DV * DV * D * D -&gt; DV) * r_d_d:(DV * D -&gt; TraceOp) * r_d_c:(DV * D -&gt; TraceOp) * r_c_d:(DV * D -&gt; TraceOp) -&gt; DV<br />&#160;&#160;static member Op_D_DV_DV : a:D * b:DV * ff:(float32 * float32 [] -&gt; float32 []) * fd:(D * DV -&gt; DV) * df_da:(DV * D * D -&gt; DV) * df_db:(DV * DV * DV -&gt; DV) * df_dab:(DV * D * D * DV * DV -&gt; DV) * r_d_d:(D * DV -&gt; TraceOp) * r_d_c:(D * DV -&gt; TraceOp) * r_c_d:(D * DV -&gt; TraceOp) -&gt; DV<br />&#160;&#160;static member Pow : a:int * b:DV -&gt; DV<br />&#160;&#160;static member Pow : a:DV * b:int -&gt; DV<br />&#160;&#160;static member Pow : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member Pow : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member Pow : a:D * b:DV -&gt; DV<br />&#160;&#160;static member Pow : a:DV * b:D -&gt; DV<br />&#160;&#160;static member Pow : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member ReLU : a:DV -&gt; DV<br />&#160;&#160;static member Round : a:DV -&gt; DV<br />&#160;&#160;static member Sigmoid : a:DV -&gt; DV<br />&#160;&#160;static member Sign : a:DV -&gt; DV<br />&#160;&#160;static member Sin : a:DV -&gt; DV<br />&#160;&#160;static member Sinh : a:DV -&gt; DV<br />&#160;&#160;static member SoftMax : a:DV -&gt; DV<br />&#160;&#160;static member SoftPlus : a:DV -&gt; DV<br />&#160;&#160;static member SoftSign : a:DV -&gt; DV<br />&#160;&#160;static member Sqrt : a:DV -&gt; DV<br />&#160;&#160;static member Sum : a:DV -&gt; D<br />&#160;&#160;static member Tan : a:DV -&gt; DV<br />&#160;&#160;static member Tanh : a:DV -&gt; DV<br />&#160;&#160;static member ZeroN : n:int -&gt; DV<br />&#160;&#160;static member Zero : DV<br />&#160;&#160;static member ( + ) : a:int * b:DV -&gt; DV<br />&#160;&#160;static member ( + ) : a:DV * b:int -&gt; DV<br />&#160;&#160;static member ( + ) : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member ( + ) : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member ( + ) : a:D * b:DV -&gt; DV<br />&#160;&#160;static member ( + ) : a:DV * b:D -&gt; DV<br />&#160;&#160;static member ( + ) : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member ( &amp;* ) : a:DV * b:DV -&gt; DM<br />&#160;&#160;static member ( / ) : a:int * b:DV -&gt; DV<br />&#160;&#160;static member ( / ) : a:DV * b:int -&gt; DV<br />&#160;&#160;static member ( / ) : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member ( / ) : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member ( / ) : a:D * b:DV -&gt; DV<br />&#160;&#160;static member ( / ) : a:DV * b:D -&gt; DV<br />&#160;&#160;static member ( ./ ) : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member ( .* ) : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member op_Explicit : d:float32 [] -&gt; DV<br />&#160;&#160;static member op_Explicit : d:DV -&gt; float32 []<br />&#160;&#160;static member ( * ) : a:int * b:DV -&gt; DV<br />&#160;&#160;static member ( * ) : a:DV * b:int -&gt; DV<br />&#160;&#160;static member ( * ) : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member ( * ) : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member ( * ) : a:D * b:DV -&gt; DV<br />&#160;&#160;static member ( * ) : a:DV * b:D -&gt; DV<br />&#160;&#160;static member ( * ) : a:DV * b:DV -&gt; D<br />&#160;&#160;static member ( - ) : a:int * b:DV -&gt; DV<br />&#160;&#160;static member ( - ) : a:DV * b:int -&gt; DV<br />&#160;&#160;static member ( - ) : a:float32 * b:DV -&gt; DV<br />&#160;&#160;static member ( - ) : a:DV * b:float32 -&gt; DV<br />&#160;&#160;static member ( - ) : a:D * b:DV -&gt; DV<br />&#160;&#160;static member ( - ) : a:DV * b:D -&gt; DV<br />&#160;&#160;static member ( - ) : a:DV * b:DV -&gt; DV<br />&#160;&#160;static member ( ~- ) : a:DV -&gt; DV<br /><br />Full name: DiffSharp.AD.Float32.DV</div>
+<div class="tip" id="fs13">val exp : value:&#39;T -&gt; &#39;T (requires member Exp)<br /><br />Full name: Microsoft.FSharp.Core.Operators.exp</div>
+<div class="tip" id="fs14">val gg : (DV -&gt; DV)<br /><br />Full name: Index.gg</div>
+<div class="tip" id="fs15">val grad : f:(&#39;a -&gt; D) -&gt; x:&#39;a -&gt; &#39;a (requires member GetReverse and member get_A)<br /><br />Full name: DiffSharp.AD.Float32.DiffOps.grad</div>
+<div class="tip" id="fs16">val hg : (DV -&gt; DM)<br /><br />Full name: Index.hg</div>
+<div class="tip" id="fs17">val hessian : f:(DV -&gt; D) -&gt; x:DV -&gt; DM<br /><br />Full name: DiffSharp.AD.Float32.DiffOps.hessian</div>
           
         </div>
         <div class="span3">
@@ -183,7 +210,6 @@
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
-            <li><a href="gettingstarted-nonnestedad.html">Non-nested AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>

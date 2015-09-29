@@ -54,35 +54,27 @@
 
 <p>Take the function <span class="math">\(x(t) = t^3 - 6 t^2 + 10t\)</span>, giving the position <span class="math">\(x\)</span> of a particle at time <span class="math">\(t\)</span>.</p>
 
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="c">// Position x(t)</span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">// Position x(t)</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="f">x</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">t</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs2', 3)" onmouseover="showTip(event, 'fs2', 3)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 4)" onmouseover="showTip(event, 'fs2', 4)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 5)" onmouseover="showTip(event, 'fs2', 5)" class="i">t</span> <span class="o">-</span> <span class="n">6.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 6)" onmouseover="showTip(event, 'fs2', 6)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 7)" onmouseover="showTip(event, 'fs2', 7)" class="i">t</span> <span class="o">+</span> <span class="n">10.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs2', 8)" onmouseover="showTip(event, 'fs2', 8)" class="i">t</span>
-</pre>
-</td>
+</code></pre></td>
 </tr>
 </table>
 
 <p>Plot <span class="math">\(x(t)\)</span> between <span class="math">\(t=0\)</span> and <span class="math">\(t=4\)</span>.</p>
 
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
 <span class="l">4: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="k">open</span> <span onmouseout="hideTip(event, 'fs3', 9)" onmouseover="showTip(event, 'fs3', 9)" class="i">FSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 10)" onmouseover="showTip(event, 'fs4', 10)" class="i">Charting</span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs3', 9)" onmouseover="showTip(event, 'fs3', 9)" class="i">FSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 10)" onmouseover="showTip(event, 'fs4', 10)" class="i">Charting</span>
 
 <span class="c">// Plot x(t) between t = 0 and t = 4</span>
 <span onmouseout="hideTip(event, 'fs5', 11)" onmouseover="showTip(event, 'fs5', 11)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 12)" onmouseover="showTip(event, 'fs6', 12)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 13)" onmouseover="showTip(event, 'fs2', 13)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 14)" onmouseover="showTip(event, 'fs2', 14)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs1', 15)" onmouseover="showTip(event, 'fs1', 15)" class="f">x</span> <span onmouseout="hideTip(event, 'fs2', 16)" onmouseover="showTip(event, 'fs2', 16)" class="i">t</span>)])<span class="o">.</span><span class="f">WithXAxis</span>(<span class="i">Title</span><span class="o">=</span><span class="s">&quot;t&quot;</span>)<span class="o">.</span><span class="f">WithYAxis</span>(<span class="i">Title</span><span class="o">=</span><span class="s">&quot;x&quot;</span>)
-</pre>
-</td>
+</code></pre></td>
 </tr>
 </table>
 
@@ -94,27 +86,22 @@
 
 <p>We can calculate the position <span class="math">\(x(t)\)</span>, the velocity <span class="math">\(v(t)=\frac{\partial x(t)}{\partial t}\)</span>, and the acceleration <span class="math">\(a(t)=\frac{\partial ^ 2 x(t)}{\partial t ^ 2}\)</span> of the particle at the same time, using the <strong>diff2''</strong> operation that returns the original value, the first derivative, and the second derivative of a given function.</p>
 
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
 <span class="l">4: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="k">open</span> <span onmouseout="hideTip(event, 'fs7', 17)" onmouseover="showTip(event, 'fs7', 17)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 18)" onmouseover="showTip(event, 'fs8', 18)" class="i">AD</span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs7', 17)" onmouseover="showTip(event, 'fs7', 17)" class="i">DiffSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 18)" onmouseover="showTip(event, 'fs8', 18)" class="i">AD</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs9', 19)" onmouseover="showTip(event, 'fs9', 19)" class="i">Float64</span>
 
 <span class="c">// diff2&#39;&#39; returns the tuple (original value, first derivative, second derivative)</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 19)" onmouseover="showTip(event, 'fs9', 19)" class="f">xva</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs10', 20)" onmouseover="showTip(event, 'fs10', 20)" class="p">D</span> <span class="o">&gt;</span><span class="o">&gt;</span> <span onmouseout="hideTip(event, 'fs11', 21)" onmouseover="showTip(event, 'fs11', 21)" class="f">diff2&#39;&#39;</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs12', 22)" onmouseover="showTip(event, 'fs12', 22)" class="i">t</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs12', 23)" onmouseover="showTip(event, 'fs12', 23)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 24)" onmouseover="showTip(event, 'fs12', 24)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 25)" onmouseover="showTip(event, 'fs12', 25)" class="i">t</span> <span class="o">-</span> <span class="n">6</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 26)" onmouseover="showTip(event, 'fs12', 26)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 27)" onmouseover="showTip(event, 'fs12', 27)" class="i">t</span> <span class="o">+</span> <span class="n">10</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 28)" onmouseover="showTip(event, 'fs12', 28)" class="i">t</span>)
-</pre>
-</td>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 20)" onmouseover="showTip(event, 'fs10', 20)" class="f">xva</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs11', 21)" onmouseover="showTip(event, 'fs11', 21)" class="p">D</span> <span class="o">&gt;</span><span class="o">&gt;</span> <span onmouseout="hideTip(event, 'fs12', 22)" onmouseover="showTip(event, 'fs12', 22)" class="f">diff2&#39;&#39;</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs13', 23)" onmouseover="showTip(event, 'fs13', 23)" class="i">t</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs13', 24)" onmouseover="showTip(event, 'fs13', 24)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 25)" onmouseover="showTip(event, 'fs13', 25)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 26)" onmouseover="showTip(event, 'fs13', 26)" class="i">t</span> <span class="o">-</span> <span class="n">6</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 27)" onmouseover="showTip(event, 'fs13', 27)" class="i">t</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 28)" onmouseover="showTip(event, 'fs13', 28)" class="i">t</span> <span class="o">+</span> <span class="n">10</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 29)" onmouseover="showTip(event, 'fs13', 29)" class="i">t</span>)
+</code></pre></td>
 </tr>
 </table>
 
 <p>The following gives us a combined plot of <span class="math">\(x(t)\)</span>, <span class="math">\(v(t)\)</span>, and <span class="math">\(a(t)\)</span>.</p>
 
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l"> 1: </span>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
 <span class="l"> 4: </span>
@@ -124,21 +111,18 @@
 <span class="l"> 8: </span>
 <span class="l"> 9: </span>
 <span class="l">10: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="c">// Functions for extracting the position, velocity, acceleration values from a 3-tuple</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs13', 29)" onmouseover="showTip(event, 'fs13', 29)" class="f">pos</span> (<span onmouseout="hideTip(event, 'fs14', 30)" onmouseover="showTip(event, 'fs14', 30)" class="i">x</span>, _, _) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 31)" onmouseover="showTip(event, 'fs14', 31)" class="i">x</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs15', 32)" onmouseover="showTip(event, 'fs15', 32)" class="f">float</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 33)" onmouseover="showTip(event, 'fs16', 33)" class="f">vel</span> (_, <span onmouseout="hideTip(event, 'fs17', 34)" onmouseover="showTip(event, 'fs17', 34)" class="i">v</span>, _) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs17', 35)" onmouseover="showTip(event, 'fs17', 35)" class="i">v</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs15', 36)" onmouseover="showTip(event, 'fs15', 36)" class="f">float</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs18', 37)" onmouseover="showTip(event, 'fs18', 37)" class="f">acc</span> (_, _, <span onmouseout="hideTip(event, 'fs19', 38)" onmouseover="showTip(event, 'fs19', 38)" class="i">a</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs19', 39)" onmouseover="showTip(event, 'fs19', 39)" class="i">a</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs15', 40)" onmouseover="showTip(event, 'fs15', 40)" class="f">float</span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">// Functions for extracting the position, velocity, acceleration values from a 3-tuple</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 30)" onmouseover="showTip(event, 'fs14', 30)" class="f">pos</span> (<span onmouseout="hideTip(event, 'fs15', 31)" onmouseover="showTip(event, 'fs15', 31)" class="i">x</span>, _, _) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 32)" onmouseover="showTip(event, 'fs15', 32)" class="i">x</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs16', 33)" onmouseover="showTip(event, 'fs16', 33)" class="f">float</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs17', 34)" onmouseover="showTip(event, 'fs17', 34)" class="f">vel</span> (_, <span onmouseout="hideTip(event, 'fs18', 35)" onmouseover="showTip(event, 'fs18', 35)" class="i">v</span>, _) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs18', 36)" onmouseover="showTip(event, 'fs18', 36)" class="i">v</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs16', 37)" onmouseover="showTip(event, 'fs16', 37)" class="f">float</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs19', 38)" onmouseover="showTip(event, 'fs19', 38)" class="f">acc</span> (_, _, <span onmouseout="hideTip(event, 'fs20', 39)" onmouseover="showTip(event, 'fs20', 39)" class="i">a</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs20', 40)" onmouseover="showTip(event, 'fs20', 40)" class="i">a</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs16', 41)" onmouseover="showTip(event, 'fs16', 41)" class="f">float</span>
 
 <span class="c">// Draw x(t), v(t), and a(t) between t = 0 and t = 4</span>
-<span onmouseout="hideTip(event, 'fs5', 41)" onmouseover="showTip(event, 'fs5', 41)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 42)" onmouseover="showTip(event, 'fs20', 42)" class="f">Combine</span>([<span onmouseout="hideTip(event, 'fs5', 43)" onmouseover="showTip(event, 'fs5', 43)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 44)" onmouseover="showTip(event, 'fs6', 44)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 45)" onmouseover="showTip(event, 'fs2', 45)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 46)" onmouseover="showTip(event, 'fs2', 46)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs13', 47)" onmouseover="showTip(event, 'fs13', 47)" class="f">pos</span> (<span onmouseout="hideTip(event, 'fs9', 48)" onmouseover="showTip(event, 'fs9', 48)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 49)" onmouseover="showTip(event, 'fs2', 49)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;x(t)&quot;</span>)
-               <span onmouseout="hideTip(event, 'fs5', 50)" onmouseover="showTip(event, 'fs5', 50)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 51)" onmouseover="showTip(event, 'fs6', 51)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 52)" onmouseover="showTip(event, 'fs2', 52)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 53)" onmouseover="showTip(event, 'fs2', 53)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs16', 54)" onmouseover="showTip(event, 'fs16', 54)" class="f">vel</span> (<span onmouseout="hideTip(event, 'fs9', 55)" onmouseover="showTip(event, 'fs9', 55)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 56)" onmouseover="showTip(event, 'fs2', 56)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;v(t)&quot;</span>)
-               <span onmouseout="hideTip(event, 'fs5', 57)" onmouseover="showTip(event, 'fs5', 57)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 58)" onmouseover="showTip(event, 'fs6', 58)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 59)" onmouseover="showTip(event, 'fs2', 59)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 60)" onmouseover="showTip(event, 'fs2', 60)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs18', 61)" onmouseover="showTip(event, 'fs18', 61)" class="f">acc</span> (<span onmouseout="hideTip(event, 'fs9', 62)" onmouseover="showTip(event, 'fs9', 62)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 63)" onmouseover="showTip(event, 'fs2', 63)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;a(t)&quot;</span>)])
+<span onmouseout="hideTip(event, 'fs5', 42)" onmouseover="showTip(event, 'fs5', 42)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 43)" onmouseover="showTip(event, 'fs21', 43)" class="f">Combine</span>([<span onmouseout="hideTip(event, 'fs5', 44)" onmouseover="showTip(event, 'fs5', 44)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 45)" onmouseover="showTip(event, 'fs6', 45)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 46)" onmouseover="showTip(event, 'fs2', 46)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 47)" onmouseover="showTip(event, 'fs2', 47)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs14', 48)" onmouseover="showTip(event, 'fs14', 48)" class="f">pos</span> (<span onmouseout="hideTip(event, 'fs10', 49)" onmouseover="showTip(event, 'fs10', 49)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 50)" onmouseover="showTip(event, 'fs2', 50)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;x(t)&quot;</span>)
+               <span onmouseout="hideTip(event, 'fs5', 51)" onmouseover="showTip(event, 'fs5', 51)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 52)" onmouseover="showTip(event, 'fs6', 52)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 53)" onmouseover="showTip(event, 'fs2', 53)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 54)" onmouseover="showTip(event, 'fs2', 54)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs17', 55)" onmouseover="showTip(event, 'fs17', 55)" class="f">vel</span> (<span onmouseout="hideTip(event, 'fs10', 56)" onmouseover="showTip(event, 'fs10', 56)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 57)" onmouseover="showTip(event, 'fs2', 57)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;v(t)&quot;</span>)
+               <span onmouseout="hideTip(event, 'fs5', 58)" onmouseover="showTip(event, 'fs5', 58)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 59)" onmouseover="showTip(event, 'fs6', 59)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs2', 60)" onmouseover="showTip(event, 'fs2', 60)" class="i">t</span> <span class="k">in</span> <span class="n">0.0</span><span class="o">..</span><span class="n">0.01</span><span class="o">..</span><span class="n">4.0</span> <span class="k">-&gt;</span> (<span onmouseout="hideTip(event, 'fs2', 61)" onmouseover="showTip(event, 'fs2', 61)" class="i">t</span>, <span onmouseout="hideTip(event, 'fs19', 62)" onmouseover="showTip(event, 'fs19', 62)" class="f">acc</span> (<span onmouseout="hideTip(event, 'fs10', 63)" onmouseover="showTip(event, 'fs10', 63)" class="f">xva</span> <span onmouseout="hideTip(event, 'fs2', 64)" onmouseover="showTip(event, 'fs2', 64)" class="i">t</span>))], <span class="i">Name</span><span class="o">=</span><span class="s">&quot;a(t)&quot;</span>)])
                <span class="o">.</span><span class="f">WithLegend</span>()<span class="o">.</span><span class="f">WithXAxis</span>(<span class="i">Title</span> <span class="o">=</span> <span class="s">&quot;t&quot;</span>)
-</pre>
-</td>
+</code></pre></td>
 </tr>
 </table>
 
@@ -156,18 +140,19 @@
 <div class="tip" id="fs6">static member Chart.Line : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart<br />static member Chart.Line : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart</div>
 <div class="tip" id="fs7">namespace DiffSharp</div>
 <div class="tip" id="fs8">namespace DiffSharp.AD</div>
-<div class="tip" id="fs9">val xva : (float -&gt; D * D * D)<br /><br />Full name: Examples-kinematics.xva</div>
-<div class="tip" id="fs10">union case D.D: float -&gt; D</div>
-<div class="tip" id="fs11">val diff2&#39;&#39; : f:(D -&gt; D) -&gt; x:D -&gt; D * D * D<br /><br />Full name: DiffSharp.AD.DiffOps.diff2&#39;&#39;</div>
-<div class="tip" id="fs12">val t : D</div>
-<div class="tip" id="fs13">val pos : x:D * &#39;a * &#39;b -&gt; float<br /><br />Full name: Examples-kinematics.pos</div>
-<div class="tip" id="fs14">val x : D</div>
-<div class="tip" id="fs15">Multiple items<br />val float : value:&#39;T -&gt; float (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.float<br /><br />--------------------<br />type float = System.Double<br /><br />Full name: Microsoft.FSharp.Core.float<br /><br />--------------------<br />type float&lt;&#39;Measure&gt; = float<br /><br />Full name: Microsoft.FSharp.Core.float&lt;_&gt;</div>
-<div class="tip" id="fs16">val vel : &#39;a * v:D * &#39;b -&gt; float<br /><br />Full name: Examples-kinematics.vel</div>
-<div class="tip" id="fs17">val v : D</div>
-<div class="tip" id="fs18">val acc : &#39;a * &#39;b * a:D -&gt; float<br /><br />Full name: Examples-kinematics.acc</div>
-<div class="tip" id="fs19">val a : D</div>
-<div class="tip" id="fs20">static member Chart.Combine : charts:seq&lt;ChartTypes.GenericChart&gt; -&gt; ChartTypes.GenericChart</div>
+<div class="tip" id="fs9">module Float64<br /><br />from DiffSharp.AD</div>
+<div class="tip" id="fs10">val xva : (float -&gt; D * D * D)<br /><br />Full name: Examples-kinematics.xva</div>
+<div class="tip" id="fs11">union case D.D: float -&gt; D</div>
+<div class="tip" id="fs12">val diff2&#39;&#39; : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a * &#39;a * &#39;a (requires member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff2&#39;&#39;</div>
+<div class="tip" id="fs13">val t : D</div>
+<div class="tip" id="fs14">val pos : x:D * &#39;a * &#39;b -&gt; float<br /><br />Full name: Examples-kinematics.pos</div>
+<div class="tip" id="fs15">val x : D</div>
+<div class="tip" id="fs16">Multiple items<br />val float : value:&#39;T -&gt; float (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.float<br /><br />--------------------<br />type float = System.Double<br /><br />Full name: Microsoft.FSharp.Core.float<br /><br />--------------------<br />type float&lt;&#39;Measure&gt; = float<br /><br />Full name: Microsoft.FSharp.Core.float&lt;_&gt;</div>
+<div class="tip" id="fs17">val vel : &#39;a * v:D * &#39;b -&gt; float<br /><br />Full name: Examples-kinematics.vel</div>
+<div class="tip" id="fs18">val v : D</div>
+<div class="tip" id="fs19">val acc : &#39;a * &#39;b * a:D -&gt; float<br /><br />Full name: Examples-kinematics.acc</div>
+<div class="tip" id="fs20">val a : D</div>
+<div class="tip" id="fs21">static member Chart.Combine : charts:seq&lt;ChartTypes.GenericChart&gt; -&gt; ChartTypes.GenericChart</div>
           
         </div>
         <div class="span3">
@@ -186,7 +171,6 @@
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="api-overview.html">API Overview</a></li>
             <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
-            <li><a href="gettingstarted-nonnestedad.html">Non-nested AD</a></li>
             <li><a href="gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>

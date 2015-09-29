@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DM - DiffSharp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="author" content="Atılım Güneş Baydin; Barak A. Pearlmutter">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="../misc/style.css" />
+    <script type="text/javascript" src="../misc/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-48900508-3', 'auto');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DM</h1>
+<div class="xmldoc">
+<p>Functional-oriented operations on matrices. Implementing functionality similar to FSharp.Collections.Array2D.</p>
+
+
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+            appendCol(v m)
+          </code>
+          <div class="tip" id="36">
+            <strong>Signature:</strong> v:DV -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Append column <code>v</code> to matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
+            appendRow(v m)
+          </code>
+          <div class="tip" id="37">
+            <strong>Signature:</strong> v:DV -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Append row <code>v</code> to matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
+            average(m)
+          </code>
+          <div class="tip" id="38">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Average of the entries of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
+            col(j m)
+          </code>
+          <div class="tip" id="39">
+            <strong>Signature:</strong> j:int -&gt; m:DM -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the column with index <code>j</code> of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
+            cols(m)
+          </code>
+          <div class="tip" id="40">
+            <strong>Signature:</strong> m:DM -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Number of columns in matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
+            copy(m)
+          </code>
+          <div class="tip" id="41">
+            <strong>Signature:</strong> m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a copy of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
+            create(m n v)
+          </code>
+          <div class="tip" id="42">
+            <strong>Signature:</strong> m:int -&gt; n:int -&gt; v:&#39;a -&gt; DM<br />
+                          <strong>Type parameters:</strong> 'a          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows and <code>n</code> columns, where all entries have value <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '43', 43)" onmouseover="showTip(event, '43', 43)">
+            createCols(n v)
+          </code>
+          <div class="tip" id="43">
+            <strong>Signature:</strong> n:int -&gt; v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>n</code> columns, where all columns are equal to <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '44', 44)" onmouseover="showTip(event, '44', 44)">
+            createRows(m v)
+          </code>
+          <div class="tip" id="44">
+            <strong>Signature:</strong> m:int -&gt; v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows, where all rows are equal to <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '45', 45)" onmouseover="showTip(event, '45', 45)">
+            det(m)
+          </code>
+          <div class="tip" id="45">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Determinant of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '46', 46)" onmouseover="showTip(event, '46', 46)">
+            diagonal(m)
+          </code>
+          <div class="tip" id="46">
+            <strong>Signature:</strong> m:DM -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the diagonal of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '47', 47)" onmouseover="showTip(event, '47', 47)">
+            empty
+          </code>
+          <div class="tip" id="47">
+            <strong>Signature:</strong> DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Zero matrix</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '48', 48)" onmouseover="showTip(event, '48', 48)">
+            init(m n f)
+          </code>
+          <div class="tip" id="48">
+            <strong>Signature:</strong> m:int -&gt; n:int -&gt; f:(int -&gt; int -&gt; &#39;a) -&gt; DM<br />
+                          <strong>Type parameters:</strong> 'a          </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows and <code>n</code> columns, where each element is given by function <code>f</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
+            initCols(n f)
+          </code>
+          <div class="tip" id="49">
+            <strong>Signature:</strong> n:int -&gt; f:(int -&gt; DV) -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>n</code> columns, where each column is given by <code>f</code> as a vector</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
+            initRows(m f)
+          </code>
+          <div class="tip" id="50">
+            <strong>Signature:</strong> m:int -&gt; f:(int -&gt; DV) -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows, where each row is given by <code>f</code> as a vector</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
+            inverse(m)
+          </code>
+          <div class="tip" id="51">
+            <strong>Signature:</strong> m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Inverse of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '52', 52)" onmouseover="showTip(event, '52', 52)">
+            iter(f m)
+          </code>
+          <div class="tip" id="52">
+            <strong>Signature:</strong> f:(D -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the entries of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '53', 53)" onmouseover="showTip(event, '53', 53)">
+            iter2(f m1 m2)
+          </code>
+          <div class="tip" id="53">
+            <strong>Signature:</strong> f:(D -&gt; D -&gt; unit) -&gt; m1:DM -&gt; m2:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the entries of matrices <code>m1</code> and <code>m2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '54', 54)" onmouseover="showTip(event, '54', 54)">
+            iter2Cols(f m1 m2)
+          </code>
+          <div class="tip" id="54">
+            <strong>Signature:</strong> f:(DV -&gt; DV -&gt; unit) -&gt; m1:DM -&gt; m2:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the columns of matrices <code>m1</code> and <code>m2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '55', 55)" onmouseover="showTip(event, '55', 55)">
+            iter2Rows(f m1 m2)
+          </code>
+          <div class="tip" id="55">
+            <strong>Signature:</strong> f:(DV -&gt; DV -&gt; unit) -&gt; m1:DM -&gt; m2:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the rows of matrices <code>m1</code> and `m2</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '56', 56)" onmouseover="showTip(event, '56', 56)">
+            iterCols(f m)
+          </code>
+          <div class="tip" id="56">
+            <strong>Signature:</strong> f:(DV -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the columns of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '57', 57)" onmouseover="showTip(event, '57', 57)">
+            iteri(f m)
+          </code>
+          <div class="tip" id="57">
+            <strong>Signature:</strong> f:(int -&gt; int -&gt; D -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the entries of matrix <code>m</code>. Indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '58', 58)" onmouseover="showTip(event, '58', 58)">
+            iteri2Cols(f m1 m2)
+          </code>
+          <div class="tip" id="58">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV -&gt; unit) -&gt; m1:DM -&gt; m2:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the columns of matrices <code>m1</code> and <code>m2</code>. Column indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '59', 59)" onmouseover="showTip(event, '59', 59)">
+            iteri2Rows(f m1 m2)
+          </code>
+          <div class="tip" id="59">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV -&gt; unit) -&gt; m1:DM -&gt; m2:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the rows of matrices <code>m1</code> and <code>m2</code>. Row indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
+            iteriCols(f m)
+          </code>
+          <div class="tip" id="60">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the columns of matrix <code>m</code>. Column indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '61', 61)" onmouseover="showTip(event, '61', 61)">
+            iteriRows(f m)
+          </code>
+          <div class="tip" id="61">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the rows of matrix <code>m</code>. Row indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '62', 62)" onmouseover="showTip(event, '62', 62)">
+            iterRows(f m)
+          </code>
+          <div class="tip" id="62">
+            <strong>Signature:</strong> f:(DV -&gt; unit) -&gt; m:DM -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Iterates function <code>f</code> over the rows of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '63', 63)" onmouseover="showTip(event, '63', 63)">
+            length(m)
+          </code>
+          <div class="tip" id="63">
+            <strong>Signature:</strong> m:DM -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Total number of elements in matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '64', 64)" onmouseover="showTip(event, '64', 64)">
+            length1(m)
+          </code>
+          <div class="tip" id="64">
+            <strong>Signature:</strong> m:DM -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Number of rows in matrix <code>m</code>. Same with DM.rows.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '65', 65)" onmouseover="showTip(event, '65', 65)">
+            length2(m)
+          </code>
+          <div class="tip" id="65">
+            <strong>Signature:</strong> m:DM -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Number of columns in matrix <code>m</code>. Same with DM.cols.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '66', 66)" onmouseover="showTip(event, '66', 66)">
+            map2Cols(f m1 m2)
+          </code>
+          <div class="tip" id="66">
+            <strong>Signature:</strong> f:(DV -&gt; DV -&gt; DV) -&gt; m1:DM -&gt; m2:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the columns of matrices <code>m1</code> and <code>m2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '67', 67)" onmouseover="showTip(event, '67', 67)">
+            map2Rows(f m1 m2)
+          </code>
+          <div class="tip" id="67">
+            <strong>Signature:</strong> f:(DV -&gt; DV -&gt; DV) -&gt; m1:DM -&gt; m2:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the rows of matrices <code>m1</code> and <code>m2</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '68', 68)" onmouseover="showTip(event, '68', 68)">
+            mapCols(f m)
+          </code>
+          <div class="tip" id="68">
+            <strong>Signature:</strong> f:(DV -&gt; DV) -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the columns of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '69', 69)" onmouseover="showTip(event, '69', 69)">
+            mapi2Cols(f m1 m2)
+          </code>
+          <div class="tip" id="69">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV -&gt; DV) -&gt; m1:DM -&gt; m2:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the columns of matrices <code>m1</code> and <code>m2</code>. Column indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '70', 70)" onmouseover="showTip(event, '70', 70)">
+            mapi2Rows(f m1 m2)
+          </code>
+          <div class="tip" id="70">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV -&gt; DV) -&gt; m1:DM -&gt; m2:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the rows of matrices <code>m1</code> and <code>m2</code>. Row indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '71', 71)" onmouseover="showTip(event, '71', 71)">
+            mapiCols(f m)
+          </code>
+          <div class="tip" id="71">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV) -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the columns of matrix <code>m</code>. Column indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '72', 72)" onmouseover="showTip(event, '72', 72)">
+            mapiRows(f m)
+          </code>
+          <div class="tip" id="72">
+            <strong>Signature:</strong> f:(int -&gt; DV -&gt; DV) -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the rows of matrix <code>m</code>. Row indices are also supplied to <code>f</code>.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
+            mapRows(f m)
+          </code>
+          <div class="tip" id="73">
+            <strong>Signature:</strong> f:(DV -&gt; DV) -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maps function <code>f</code> to the rows of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '74', 74)" onmouseover="showTip(event, '74', 74)">
+            max(m)
+          </code>
+          <div class="tip" id="74">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Maximum of the entries of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '75', 75)" onmouseover="showTip(event, '75', 75)">
+            maxIndex(m)
+          </code>
+          <div class="tip" id="75">
+            <strong>Signature:</strong> m:DM -&gt; int * int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Index of the maximum entry of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
+            min(m)
+          </code>
+          <div class="tip" id="76">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Minimum of the entries of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '77', 77)" onmouseover="showTip(event, '77', 77)">
+            minIndex(m)
+          </code>
+          <div class="tip" id="77">
+            <strong>Signature:</strong> m:DM -&gt; int * int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Index of the minimum entry of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '78', 78)" onmouseover="showTip(event, '78', 78)">
+            normalize(m)
+          </code>
+          <div class="tip" id="78">
+            <strong>Signature:</strong> m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Normalizes matrix <code>m</code> to have zero mean and unit variance</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '79', 79)" onmouseover="showTip(event, '79', 79)">
+            ofArray(m a)
+          </code>
+          <div class="tip" id="79">
+            <strong>Signature:</strong> m:int -&gt; a:D [] -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows from array <code>a</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '80', 80)" onmouseover="showTip(event, '80', 80)">
+            ofArray2D(a)
+          </code>
+          <div class="tip" id="80">
+            <strong>Signature:</strong> a:D [,] -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix from 2D array <code>a</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '81', 81)" onmouseover="showTip(event, '81', 81)">
+            ofCols(s)
+          </code>
+          <div class="tip" id="81">
+            <strong>Signature:</strong> s:seq&lt;DV&gt; -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix from a sequence of column vectors <code>s</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '82', 82)" onmouseover="showTip(event, '82', 82)">
+            ofDV(m v)
+          </code>
+          <div class="tip" id="82">
+            <strong>Signature:</strong> m:int -&gt; v:DV -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows from vector <code>v</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '83', 83)" onmouseover="showTip(event, '83', 83)">
+            ofRows(s)
+          </code>
+          <div class="tip" id="83">
+            <strong>Signature:</strong> s:seq&lt;DV&gt; -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix from a sequence of row vectors <code>s</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '84', 84)" onmouseover="showTip(event, '84', 84)">
+            prependCol(v m)
+          </code>
+          <div class="tip" id="84">
+            <strong>Signature:</strong> v:DV -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Prepend column <code>v</code> to matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '85', 85)" onmouseover="showTip(event, '85', 85)">
+            prependRow(v m)
+          </code>
+          <div class="tip" id="85">
+            <strong>Signature:</strong> v:DV -&gt; m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Prepend row <code>v</code> to matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '86', 86)" onmouseover="showTip(event, '86', 86)">
+            print(m)
+          </code>
+          <div class="tip" id="86">
+            <strong>Signature:</strong> m:DM -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Experimental</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '87', 87)" onmouseover="showTip(event, '87', 87)">
+            row(i m)
+          </code>
+          <div class="tip" id="87">
+            <strong>Signature:</strong> i:int -&gt; m:DM -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the row with index <code>i</code> of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '88', 88)" onmouseover="showTip(event, '88', 88)">
+            rows(m)
+          </code>
+          <div class="tip" id="88">
+            <strong>Signature:</strong> m:DM -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Number of rows in matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '89', 89)" onmouseover="showTip(event, '89', 89)">
+            solve(m v)
+          </code>
+          <div class="tip" id="89">
+            <strong>Signature:</strong> m:DM -&gt; v:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Solve a system of linear equations Ax = b, where the coefficient matrix <code>m</code> has general form</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '90', 90)" onmouseover="showTip(event, '90', 90)">
+            solveSymmetric(m v)
+          </code>
+          <div class="tip" id="90">
+            <strong>Signature:</strong> m:DM -&gt; v:DV -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Solve a system of linear equations Ax = b, where the coefficient matrix <code>m</code> is symmetric</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '91', 91)" onmouseover="showTip(event, '91', 91)">
+            sum(m)
+          </code>
+          <div class="tip" id="91">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Sums the elements of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '92', 92)" onmouseover="showTip(event, '92', 92)">
+            toArray(m)
+          </code>
+          <div class="tip" id="92">
+            <strong>Signature:</strong> m:DM -&gt; D []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts matrix <code>m</code> into an array by stacking its rows</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '93', 93)" onmouseover="showTip(event, '93', 93)">
+            toArray2D(m)
+          </code>
+          <div class="tip" id="93">
+            <strong>Signature:</strong> m:DM -&gt; D [,]<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts matrix <code>m</code> into a 2D array</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '94', 94)" onmouseover="showTip(event, '94', 94)">
+            toCols(m)
+          </code>
+          <div class="tip" id="94">
+            <strong>Signature:</strong> m:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the sequence of column vectors in matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '95', 95)" onmouseover="showTip(event, '95', 95)">
+            toDV(m)
+          </code>
+          <div class="tip" id="95">
+            <strong>Signature:</strong> m:DM -&gt; DV<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Converts matrix <code>m</code> into a vector by stacking its rows</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '96', 96)" onmouseover="showTip(event, '96', 96)">
+            toRows(m)
+          </code>
+          <div class="tip" id="96">
+            <strong>Signature:</strong> m:DM -&gt; seq&lt;DV&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Gets the sequence of row vectors in matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '97', 97)" onmouseover="showTip(event, '97', 97)">
+            trace(m)
+          </code>
+          <div class="tip" id="97">
+            <strong>Signature:</strong> m:DM -&gt; D<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Trace of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '98', 98)" onmouseover="showTip(event, '98', 98)">
+            transpose(m)
+          </code>
+          <div class="tip" id="98">
+            <strong>Signature:</strong> m:DM -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Transpose of matrix <code>m</code></p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '99', 99)" onmouseover="showTip(event, '99', 99)">
+            visualize(m)
+          </code>
+          <div class="tip" id="99">
+            <strong>Signature:</strong> m:DM -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '100', 100)" onmouseover="showTip(event, '100', 100)">
+            zeroCreate(m n)
+          </code>
+          <div class="tip" id="100">
+            <strong>Signature:</strong> m:int -&gt; n:int -&gt; DM<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          <p>Creates a matrix with <code>m</code> rows and <code>n</code> columns, where all entries are zero</p>
+
+
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <a href="../index.html"><img src="../img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="../index.html">Home Page</a></li>
+            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
+            <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
+            
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="../gettingstarted-typeinference.html">Type Inference</a></li>
+            <li><a href="../api-overview.html">API Overview</a></li>
+            <li><a href="../gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="../gettingstarted-numericaldifferentiation.html">Numerical Differentiation</a></li>
+            <li><a href="../gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
+            <li><a href="../benchmarks.html">Benchmarks</a></li>
+            <li><a href="../csharp.html">C# and Other Languages</a></li>
+            <li><a href="index.html">API Reference</a></li>
+            
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="../examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="../examples-newtonsmethod.html">Newton's Method</a></li>
+            <li><a href="../examples-stochasticgradientdescent.html">Stochastic Gradient Descent</a></li>
+            <li><a href="../examples-kmeansclustering.html">K-Means Clustering</a></li>
+            <li><a href="../examples-hamiltonianmontecarlo.html">Hamiltonian Monte Carlo</a></li>
+            <li><a href="../examples-neuralnetworks.html">Neural Networks</a></li>
+            <li>Neural Turing Machines (to come)</li>
+            <li>Probabilistic Programming<br>(to come)</li>
+
+            <li class="nav-header">Dynamical Systems</li>
+            <li>Stability Analysis (to come)</li>
+
+            <li class="nav-header">Control</li>
+            <li><a href="../examples-inversekinematics.html">Inverse Kinematics</a></li>
+            <li>Adaptive Control (to come)</li>
+
+            <li class="nav-header">Physics</li>
+            <li><a href="../examples-kinematics.html">Kinematics</a></li>
+            <li>Leapfrog Integration (to come)</li>
+            <li><a href="../examples-helmholtzenergyfunction.html">Helmholtz Energy Function</a></li>
+
+            <li class="nav-header">Math</li>
+            <li><a href="../examples-lhopitalsrule.html">l'Hôpital's Rule</a></li>
+
+            <li class="nav-header">Makers</li>
+            <li class="divider"></li>
+            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=10059115; 
+    var sc_invisible=1; 
+    var sc_security="92275ee1"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="web stats"
+    href="http://statcounter.com/free-web-stats/"
+    target="_blank"><img class="statcounter"
+    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    alt="web stats"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+  </body>
+</html>

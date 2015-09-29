@@ -1,5 +1,6 @@
 //
 // Benchmark for gradient calculations with AD and numerical differentiation
+// Runs with DiffSharp 0.5.7
 //
 // Atilim Gunes Baydin
 // atilimgunes.baydin@nuim.ie
