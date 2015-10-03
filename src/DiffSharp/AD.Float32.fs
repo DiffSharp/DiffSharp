@@ -848,8 +848,8 @@ and DV =
         let inline df_db(cp, bp, bt) = a * bt
         let inline df_dab(cp, ap, at, bp, bt) = (at * bp) + (ap * bt)
         let inline r_d_d(a, b) = Mul_DV_D(b, a)
-        let inline r_d_c(a, b) = Mul_DV_DCons(b, a)
-        let inline r_c_d(a, b) = Mul_DVCons_D(b, a)
+        let inline r_d_c(a, b) = Mul_DVCons_D(b, a)
+        let inline r_c_d(a, b) = Mul_DV_DCons(b, a)
         DV.Op_D_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     /// Divide vector `a` by scalar `b`
