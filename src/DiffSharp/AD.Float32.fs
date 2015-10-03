@@ -349,7 +349,7 @@ type D =
         let inline ff(a) = abs a
         let inline fd(a) = abs a
         let inline df(cp, ap, at) = at * D.Sign(ap)
-        let inline r(a) = Sign_D(a)
+        let inline r(a) = Abs_D(a)
         D.Op_D_D (a, ff, fd, df, r)
     static member Sign (a:D) =
         let inline ff(a) = signummod a
@@ -2807,11 +2807,11 @@ module DOps =
                             | Asin_D(a) -> pushRec ((bx (d.A / sqrt (D 1.f - a.P * a.P)) a) :: t)
                             | Acos_D(a) -> pushRec ((bx (-d.A / sqrt (D 1.f - a.P * a.P)) a) :: t)
                             | Atan_D(a) -> pushRec ((bx (d.A / (D 1.f + a.P * a.P)) a) :: t)
-                            | Abs_D(a) -> pushRec ((bx (d.A * float32 (sign (float32 a.P))) a) :: t)
-                            //| Sign_D(_) -> pushRec t
-                            //| Floor_D(_) -> pushRec t
-                            //| Ceil_D(_) -> pushRec t
-                            //| Round_D(_) -> pushRec t
+                            | Abs_D(a) -> pushRec ((bx (d.A * D.Sign(a.P)) a) :: t)
+                            | Sign_D(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Floor_D(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Ceil_D(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Round_D(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Mul_Dot_DV_DV(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (d.A * a.P) b) :: t)
                             | Mul_Dot_DV_DVCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
                             | Sum_DV(a) -> pushRec ((bx (DV.create a.Length d.A) a) :: t)
