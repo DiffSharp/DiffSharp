@@ -2902,10 +2902,10 @@ module DOps =
                             | Acos_DV(a) -> pushRec ((bx (-d.A ./ sqrt (D 1. - (a.P .* a.P))) a) :: t)
                             | Atan_DV(a) -> pushRec ((bx (d.A ./ (D 1. + (a.P .* a.P))) a) :: t)
                             | Abs_DV(a) -> pushRec ((bx (d.A .* DV.Sign a.P) a) :: t)
-                            //| Sign_DV(_) -> pushRec t
-                            //| Floor_DV(_) -> pushRec t
-                            //| Ceil_DV(_) -> pushRec t
-                            //| Round_DV(_) -> pushRec t
+                            | Sign_DV(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Floor_DV(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Ceil_DV(a) -> pushRec ((bx DV.Zero a) :: t)
+                            | Round_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Make_DV_ofDs(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i] v))) t |> pushRec
                             | SliceRow_DM(a, i, j) ->
                                 a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowDM())
@@ -3021,10 +3021,10 @@ module DOps =
                             | Acos_DM(a) -> pushRec ((bx (-d.A ./ sqrt (D 1. - (a.P .* a.P))) a) :: t)
                             | Atan_DM(a) -> pushRec ((bx (d.A ./ (D 1. + (a.P .* a.P))) a) :: t)
                             | Abs_DM(a) -> pushRec ((bx (d.A .* DM.Sign a.P) a) :: t)
-                            //| Sign_DM(_) -> pushRec t
-                            //| Floor_DM(_) -> pushRec t
-                            //| Ceil_DM(_) -> pushRec t
-                            //| Round_DM(_) -> pushRec t
+                            | Sign_DM(a) -> pushRec ((bx DM.Zero a) :: t)
+                            | Floor_DM(a) -> pushRec ((bx DM.Zero a) :: t)
+                            | Ceil_DM(a) -> pushRec ((bx DM.Zero a) :: t)
+                            | Round_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
                             | Make_DM_ofDs(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
                             | Make_DM_ofDV(a) -> t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))) |> pushRec
