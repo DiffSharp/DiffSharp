@@ -2906,7 +2906,7 @@ module DOps =
                             | Floor_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Ceil_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Round_DV(a) -> pushRec ((bx DV.Zero a) :: t)
-                            | Make_DV_ofDs(a) -> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i] v))) t |> pushRec
+                            | Make_DV_ofDs(a) -> pushRec (t |> List.append (a |> Array.mapi (fun i v -> (bx d.A.[i] v)) |> List.ofArray))
                             | SliceRow_DM(a, i, j) ->
                                 a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowDM())
                                 pushRec ((bx DM.Zero a) :: t)
@@ -3026,9 +3026,9 @@ module DOps =
                             | Ceil_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Round_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
-                            | Make_DM_ofDs(a) -> List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray) |> pushRec // Check
-                            | Make_DM_ofDV(a) -> t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))) |> pushRec
-                            | Make_DM_ofDVs(a) -> t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))) |> pushRec
+                            | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
+                            | Make_DM_ofDV(a) -> pushRec (t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))))
+                            | Make_DM_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
                             | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)
                             | AddItem_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | AddItem_DMCons_D(i, j, b) -> pushRec ((bx d.A.[i, j] b) :: t)
