@@ -469,19 +469,6 @@ and DV =
             Array.Parallel.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
         | DVR(ap,_,_,_,ai) ->
             Array.Parallel.init ap.Length (fun i -> DR(ap.[i], ref (D 0.f), Item_DV(d, i), ref 0u, ai))
-    member d.Split(n:seq<int>) =
-        match d with
-        | DV(ap) ->
-            seq {let i = ref 0; 
-                 for j in n do yield Array.sub ap !i j |> DV; i := !i + j}
-        | DVF(ap,at,ai) ->
-            let aps = ap.Split(n)
-            let ats = at.Split(n)
-            Seq.map2 (fun p t -> DVF(p, t, ai)) aps ats
-        | DVR(ap,_,_,_,ai) ->
-            let aps = ap.Split(n)
-            let ii = n |> Seq.mapFold (fun s i -> s, s + i) 0 |> fst
-            Seq.mapi (fun i p -> DVR(p, ref (DV.ZeroN p.Length), Split_DV(d, ii |> Seq.item i), ref 0u, ai)) aps
     member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
@@ -548,6 +535,20 @@ and DV =
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array.Parallel.map (fun x -> x.P)
             let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV_ofDs(a), ref 0u, ai)
+    static member Split(d:DV, n:seq<int>) =
+        match d with
+        | DV(ap) ->
+            seq {let i = ref 0; 
+                 for j in n do yield Array.sub ap !i j |> DV; i := !i + j}
+        | DVF(ap,at,ai) ->
+            let aps = DV.Split(ap, n)
+            let ats = DV.Split(at, n)
+            Seq.map2 (fun p t -> DVF(p, t, ai)) aps ats
+        | DVR(ap,_,_,_,ai) ->
+            let aps = DV.Split(ap, n)
+            let ii = n |> Seq.mapFold (fun s i -> s, s + i) 0 |> fst |> Array.ofSeq
+            Seq.mapi (fun i p -> DVR(p, ref (DV.ZeroN p.Length), Split_DV(d, ii.[i]), ref 0u, ai)) aps
+
 
     static member inline Op_DV_DV (a, ff, fd, df, r) =
         match a with
@@ -986,9 +987,9 @@ and DV =
     
     /// Add subvector `b` to vector `a`, starting from index `i`
     static member AddSubVector (a:DV, i:int, b:DV) =
-        let inline ff(a, b:_[]) = 
+        let inline ff(a:_[], b:_[]) = 
             let aa = Array.copy a 
-            Parallel.For(0, b.Length, fun j -> aa.[i + j] <- b.[j]) |> ignore
+            Parallel.For(0, b.Length, fun j -> aa.[i + j] <- aa.[i + j] + b.[j]) |> ignore
             aa
         let inline fd(a, b) = DV.AddSubVector(a, i, b)
         let inline df_da(cp, ap, at) = at
@@ -2567,9 +2568,9 @@ module DV =
     /// Concatenates the given sequence of vectors `v` into one vector
     let inline concat (v:seq<DV>) = Seq.fold append DV.Zero v
     /// Splits vector `v` into a sequence of subvectors whose lengths are given in sequence `n`
-    let inline split (n:seq<int>) (v:DV) = v.Split(n)
+    let inline split (n:seq<int>) (v:DV) = DV.Split(v, n)
     /// Splits vector `v` into `n` subvectors of equal length. The length of vector `v` must be an integer multiple of `n`.
-    let inline splitEqual (n:int) (v:DV) = v.Split(Array.create n (v.Length / n))
+    let inline splitEqual (n:int) (v:DV) = DV.Split(v, Array.create n (v.Length / n))
     /// Sums the elements of vector `v`
     let inline sum (v:DV) = DV.Sum(v)
     /// Creates a vector with `n` elements where the `i`-th element is one and the rest of the elements are zero
