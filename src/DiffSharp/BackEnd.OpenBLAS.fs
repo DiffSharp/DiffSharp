@@ -792,6 +792,21 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
+            member o.ReshapeCopy_M_V(x) = // Non-BLAS
+                if Array2D.isEmpty x then
+                    Array.empty<float32>
+                else
+                    let r = Array.zeroCreate<float32> x.Length
+                    Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
+                    r
+            member o.ReshapeCopy_V_M(m, x) = // Non-BLAS
+                if Array.isEmpty x then
+                    Array2D.empty<float32>
+                else
+                    let n = x.Length / m
+                    let r = Array2D.zeroCreate<float32> m n
+                    Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
+                    r
 
     type Float64BackEnd() =
         interface BackEnd<float> with
@@ -1010,3 +1025,18 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
+            member o.ReshapeCopy_M_V(x) = // Non-BLAS
+                if Array2D.isEmpty x then
+                    Array.empty<float>
+                else
+                    let r = Array.zeroCreate<float> x.Length
+                    Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float>)
+                    r
+            member o.ReshapeCopy_V_M(m, x) = // Non-BLAS
+                if Array.isEmpty x then
+                    Array2D.empty<float>
+                else
+                    let n = x.Length / m
+                    let r = Array2D.zeroCreate<float> m n
+                    Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float>)
+                    r

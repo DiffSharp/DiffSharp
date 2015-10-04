@@ -556,6 +556,12 @@ and DV =
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DVF(cp, df(cp, ap, at), ai)
         | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DVR(cp, ref (DV.ZeroN cp.Length), r(a), ref 0u, ai)
 
+    static member inline Op_DV_DM (a, ff, fd, df, r) =
+        match a with
+        | DV(ap)                      -> DM(ff(ap))
+        | DVF(ap, at, ai)             -> let cp = fd(ap) in DMF(cp, df(cp, ap, at), ai)
+        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r(a), ref 0u, ai)
+
     static member inline Op_DV_D (a, ff, fd, df, r) =
         match a with
         | DV(ap)                      -> D(ff(ap))
@@ -1213,6 +1219,13 @@ and DV =
             let inline r_d_c(a, b) = Append_DV_DVCons(a)
             let inline r_c_d(a, b) = Append_DVCons_DV(b)
             DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
+
+    static member ReshapeToDM (m:int, a:DV) =
+        let inline ff(a) = GlobalConfig.Float64BackEnd.ReshapeCopy_V_M(m, a)
+        let inline fd(a) = DV.ReshapeToDM(m, a)
+        let inline df(cp, ap, at) = DV.ReshapeToDM(m, at)
+        let inline r(a) = ReshapeCopy_DV_DM(a)
+        DV.Op_DV_DM (a, ff, fd, df, r)
 
     static member ReLU (a:DV) =
         let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(max 0., a)
@@ -2191,6 +2204,13 @@ and DM =
         let inline r_c_d(a, b) = AddDiagonal_DMCons_DV(b)
         DM.Op_DM_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    static member ReshapeToDV(a:DM) =
+        let inline ff(a) = GlobalConfig.Float64BackEnd.ReshapeCopy_M_V(a)
+        let inline fd(a) = DM.ReshapeToDV(a)
+        let inline df(cp, ap, at) = DM.ReshapeToDV(at)
+        let inline r(a) = ReshapeCopy_DM_DV(a)
+        DM.Op_DM_DV (a, ff, fd, df, r)
+
     /// Matrix inverse of `a`
     static member Inverse(a:DM) =
         let inline ff(a) = match GlobalConfig.Float64BackEnd.Inverse_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgInverse()
@@ -2395,6 +2415,7 @@ and TraceOp =
     | AddSubVector_DV_DV     of DV * int * DV
     | AddSubVector_DV_DVCons of DV
     | AddSubVector_DVCons_DV of int * DV
+    | ReshapeCopy_DM_DV      of DM
     | Slice_DV               of DV * int
     | Diagonal_DM            of DM
     | ReLU_DV                of DV
@@ -2487,6 +2508,7 @@ and TraceOp =
     | AddDiagonal_DM_DV      of DM * DV
     | AddDiagonal_DM_DVCons  of DM
     | AddDiagonal_DMCons_DV  of DV
+    | ReshapeCopy_DV_DM      of DV
     | Inverse_DM             of DM
     | Det_DM                 of DM
     | ReLU_DM                of DM
@@ -2579,8 +2601,10 @@ module DV =
     let inline standardBasisVal (n:int) (i:int) (v:float) = DV(standardBasisVal n i v)
     /// Gets the unit vector codirectional with vector `v`
     let inline unitDV (v:DV) = v / DV.L2Norm(v)
+    /// Converts matrix `m` into a vector by stacking its rows
+    let inline ofDM (m:DM) = DM.ReshapeToDV(m)
     /// Creates a matrix with `m` rows from vector `v`
-    let inline toDM (m:int) (v:DV) = let n = v.Length / m in v |> split (Array.create m n) |> DM.OfRows
+    let inline toDM (m:int) (v:DV) = DV.ReshapeToDM(m, v)
     // Experimental
     let inline print (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
@@ -2597,7 +2621,7 @@ module DM =
     /// Creates a matrix with `m` rows from array `a`
     let inline ofArray m a = DM.OfArray(m, a)
     /// Converts matrix `m` into an array by stacking its rows
-    let inline toArray (m:DM) = m.GetRows() |> Seq.map DV.toArray |> Seq.fold Array.append [||]
+    let inline toArray (m:DM) = DM.ReshapeToDV(m) |> DV.toArray
     /// Transpose of matrix `m`
     let inline transpose (m:DM) = DM.Transpose(m)
     /// Creates a matrix from a sequence of row vectors `s`
@@ -2609,9 +2633,9 @@ module DM =
     /// Gets the sequence of column vectors in matrix `m`
     let inline toCols (m:DM) = m.GetCols()
     /// Converts matrix `m` into a vector by stacking its rows
-    let inline toDV (m:DM) = m.GetRows() |> Seq.fold DV.append DV.Zero
+    let inline toDV (m:DM) = DM.ReshapeToDV(m)
     /// Creates a matrix with `m` rows from vector `v`
-    let inline ofDV (m:int) (v:DV) = DV.toDM m v
+    let inline ofDV (m:int) (v:DV) = DV.ReshapeToDM(m, v)
     /// Gets the column with index `j` of matrix `m`
     let inline col (j:int) (m:DM) = m.[*,j]
     /// Gets the row with index `i` of matrix `m`
@@ -2937,6 +2961,7 @@ module DOps =
                             | AddSubVector_DV_DV(a, i, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i..(i + b.Length - 1)]) b) :: t)
                             | AddSubVector_DV_DVCons(a) -> pushRec ((bx d.A a) :: t)
                             | AddSubVector_DVCons_DV(i, b) -> pushRec ((bx (d.A.[i..(i + b.Length - 1)]) b) :: t)
+                            | ReshapeCopy_DM_DV(a) -> pushRec ((bx (DV.ReshapeToDM(a.Rows, d.A)) a) :: t)
                             | Slice_DV(a, i) ->
                                 a.A <- DV.AddSubVector(a.A, i, d.A)
                                 pushRec ((bx DV.Zero a) :: t)
@@ -3043,6 +3068,7 @@ module DOps =
                             | AddDiagonal_DM_DV(a, b) -> pushRec ((bx d.A a) :: (bx (DM.Diagonal(d.A)) b) :: t)
                             | AddDiagonal_DM_DVCons(a) -> pushRec ((bx d.A a) :: t)
                             | AddDiagonal_DMCons_DV(b) -> pushRec ((bx (DM.Diagonal(d.A)) b) :: t)
+                            | ReshapeCopy_DV_DM(a) -> pushRec ((bx (DM.ReshapeToDV(d.A)) a) :: t)
                             | Inverse_DM(a) -> let dpt = DM.Transpose(d.P) in pushRec ((bx (-dpt * d.A * dpt) a) :: t) // d.P = DM.Inverse(a.P)
                             | ReLU_DM(a) -> pushRec ((bx (d.A .* ((DM.Sign(a.P) + 1.) / 2.)) a) :: t)
                             | Sigmoid_DM(a) -> pushRec ((bx (d.A .* d.P .* (1. - d.P)) a) :: t) // d.P = DM.Sigmoid(a.P)
@@ -3210,6 +3236,7 @@ module DOps =
                             | AddSubVector_DV_DV(a,_,b) -> resetRec (box a :: box b :: t)
                             | AddSubVector_DV_DVCons(a) -> resetRec (box a :: t)
                             | AddSubVector_DVCons_DV(_,b) -> resetRec (box b :: t)
+                            | ReshapeCopy_DM_DV(a) -> resetRec (box a :: t)
                             | Slice_DV(a,_) -> resetRec (box a :: t)
                             | Diagonal_DM(a) -> resetRec (box a :: t)
                             | ReLU_DV(a) -> resetRec (box a :: t)
@@ -3309,6 +3336,7 @@ module DOps =
                             | AddDiagonal_DM_DV(a, b) -> resetRec (box a :: box b :: t)
                             | AddDiagonal_DM_DVCons(a) -> resetRec (box a :: t)
                             | AddDiagonal_DMCons_DV(b) -> resetRec (box b :: t)
+                            | ReshapeCopy_DV_DM(a) -> resetRec (box a :: t)
                             | Inverse_DM(a) -> resetRec (box a :: t)
                             | ReLU_DM(a) -> resetRec (box a :: t)
                             | Sigmoid_DM(a) -> resetRec (box a :: t)

@@ -59,6 +59,7 @@ type BackEnd<'T> =
     abstract member Diagonal_M : 'T[,] -> 'T[]
     abstract member Map_F_V : ('T -> 'T) * 'T[] -> 'T[]
     abstract member Map2_F_V_V : ('T -> 'T -> 'T) * 'T[] * 'T[] -> 'T[]
+    abstract member ReshapeCopy_M_V : 'T[,] -> 'T[]
 
     abstract member Mul_Out_V_V : 'T[] * 'T[] -> 'T[,]
     abstract member Add_M_M : 'T[,] * 'T[,] -> 'T[,]
@@ -73,3 +74,4 @@ type BackEnd<'T> =
     abstract member Transpose_M : 'T[,] -> 'T[,]
     abstract member Map_F_M : ('T -> 'T) * 'T[,] -> 'T[,]
     abstract member Map2_F_M_M : ('T -> 'T -> 'T) * 'T[,] * 'T[,] -> 'T[,]
+    abstract member ReshapeCopy_V_M : int * 'T[] -> 'T[,]
