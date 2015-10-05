@@ -2608,6 +2608,7 @@ module DV =
     // Experimental
     let inline print (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
+    let inline visualizeAsDM (m:int) (v:DV) = DV.ReshapeToDM(m, v).Visualize()
 
 
 /// Functional-oriented operations on matrices. Implementing functionality similar to FSharp.Collections.Array2D.
@@ -2753,6 +2754,8 @@ module DM =
     /// Experimental
     let inline print (m:DM) = m.ToString()
     let inline visualize (m:DM) = m.Visualize()
+    let inline visualizeAsDV (m:DM) = DM.ReshapeToDV(m).Visualize()
+
 
 /// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
