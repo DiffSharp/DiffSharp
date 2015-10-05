@@ -807,6 +807,16 @@ module OpenBLAS =
                     let r = Array2D.zeroCreate<float32> m n
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
                     r
+            member o.RepeatReshapeCopy_V_M(m, x) = //Non-BLAS
+                if Array.isEmpty x then
+                    Array2D.empty<float32>
+                else
+                    let n = x.Length
+                    let r = Array2D.zeroCreate<float32> m n
+                    let xbytes = n * sizeof<float32>
+                    for i = 0 to m - 1 do
+                        Buffer.BlockCopy(x, 0, r, i * xbytes, xbytes)
+                    r
 
     type Float64BackEnd() =
         interface BackEnd<float> with
@@ -1039,4 +1049,14 @@ module OpenBLAS =
                     let n = x.Length / m
                     let r = Array2D.zeroCreate<float> m n
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float>)
+                    r
+            member o.RepeatReshapeCopy_V_M(m, x) = //Non-BLAS
+                if Array.isEmpty x then
+                    Array2D.empty<float>
+                else
+                    let n = x.Length
+                    let r = Array2D.zeroCreate<float> m n
+                    let xbytes = n * sizeof<float>
+                    for i = 0 to m - 1 do
+                        Buffer.BlockCopy(x, 0, r, i * xbytes, xbytes)
                     r

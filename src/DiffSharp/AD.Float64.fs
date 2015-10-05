@@ -504,18 +504,6 @@ and DV =
             if i < d.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
-    member d.Visualize() =
-        let (d':DV) = DV.Normalize(d.P) |> DV.Sign
-        let sb = System.Text.StringBuilder()
-        match d with
-        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
-        | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
-        | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
-        for i = 0 to d.Length - 1 do
-            if d'.[i] < D 0. then sb.Append(" ") |> ignore
-            else sb.Append("■") |> ignore
-        sb.AppendLine() |> ignore
-        sb.ToString()
     static member Zero = DV Array.empty
     static member ZeroN n = DV(Array.zeroCreate n)
     static member op_Explicit(d:DV):float[] =
@@ -524,6 +512,17 @@ and DV =
         | DVF(ap,_,_) -> DV.op_Explicit(ap)
         | DVR(ap,_,_,_,_) -> DV.op_Explicit(ap)
     static member op_Explicit(d) = DV(d)
+    member d.Visualize() =
+        let (d':float[]) = DV.Normalize(d.P) |> DV.op_Explicit
+        let sb = System.Text.StringBuilder()
+        match d with
+        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
+        | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
+        | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
+        for i = 0 to d.Length - 1 do
+            sb.Append(grayscaleChar d'.[i]) |> ignore
+        sb.AppendLine() |> ignore
+        sb.ToString()
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
@@ -1423,19 +1422,6 @@ and DM =
             if i < d.Rows - 1 then sb.Append("; ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
-    member d.Visualize() =
-        let (d':DM) = DM.Normalize(d.P) |> DM.Sign
-        let sb = System.Text.StringBuilder()
-        match d with
-        | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
-        | DMF(_) -> sb.AppendLine(sprintf "DMF: %i x %i" d.Rows d.Cols) |> ignore
-        | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
-        for i = 0 to d.Rows - 1 do
-            for j = 0 to d.Cols - 1 do
-                if d'.[i, j] < D 0. then sb.Append(" ") |> ignore
-                else sb.Append("■") |> ignore
-            sb.AppendLine() |> ignore
-        sb.ToString()
     static member Zero = DM Array2D.empty
     static member ZeroMN m n = DM (Array2D.zeroCreate m n)
     static member op_Explicit(d:DM):float[,] =
@@ -1444,6 +1430,18 @@ and DM =
         | DMF(ap,_,_) -> DM.op_Explicit(ap)
         | DMR(ap,_,_,_,_) -> DM.op_Explicit(ap)
     static member op_Explicit(d:float[,]) = DM(d)
+    member d.Visualize() =
+        let (d':float[,]) = DM.Normalize(d.P) |> DM.op_Explicit
+        let sb = System.Text.StringBuilder()
+        match d with
+        | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
+        | DMF(_) -> sb.AppendLine(sprintf "DMF: %i x %i" d.Rows d.Cols) |> ignore
+        | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
+        for i = 0 to d.Rows - 1 do
+            for j = 0 to d.Cols - 1 do
+                sb.Append(grayscaleChar d'.[i, j]) |> ignore
+            sb.AppendLine() |> ignore
+        sb.ToString()
     static member OfArray2D (a:D[,]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0, 0] with
@@ -1474,7 +1472,7 @@ and DM =
 
     static member OfRows (m:int, a:DV) =
         match a with
-        | DV(ap) -> Array.create m ap |> array2D |> DM
+        | DV(ap) -> DM(GlobalConfig.Float64BackEnd.RepeatReshapeCopy_V_M(m, ap))
         | DVF(ap,at,ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
         | DVR(ap,_,_,_,ai) ->
             let cp = DM.OfRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
@@ -2606,7 +2604,7 @@ module DV =
     /// Creates a matrix with `m` rows from vector `v`
     let inline toDM (m:int) (v:DV) = DV.ReshapeToDM(m, v)
     // Experimental
-    let inline print (v:DV) = v.ToString()
+    let inline toString (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
     let inline visualizeAsDM (m:int) (v:DV) = DV.ReshapeToDM(m, v).Visualize()
 
@@ -2662,7 +2660,7 @@ module DM =
     /// Zero matrix
     let empty = DM.Zero
     /// Returns true if matrix `m` is empty, otherwise returns false
-    let isEmpty (m:DM) = m.Rows = 0 && m.Cols = 0
+    let isEmpty (m:DM) = m.Length = 0
     /// Creates a matrix with `m` rows and `n` columns, where each element is given by function `f`
     let inline init m n (f:int->int->'a) = 
         let at = typeof<'a>
@@ -2752,7 +2750,7 @@ module DM =
     /// Prepend column `v` to matrix `m`
     let inline prependCol (v:DV) (m:DM) = let cols = m |> toCols in Seq.append (seq [v]) cols |> ofCols
     /// Experimental
-    let inline print (m:DM) = m.ToString()
+    let inline toString (m:DM) = m.ToString()
     let inline visualize (m:DM) = m.Visualize()
     let inline visualizeAsDV (m:DM) = DM.ReshapeToDV(m).Visualize()
 
@@ -3056,7 +3054,10 @@ module DOps =
                             | Round_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
                             | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
-                            | Make_DM_ofDV(a) -> pushRec (t |> List.append (List.init d.A.Rows (fun i -> (bx d.A.[i, *] a))))
+                            | Make_DM_ofDV(a) -> 
+                                d.A.GetRows() |> Seq.iter (fun v -> a.A <- a.A + v.A)
+                                pushRec ((bx DV
+                                .Zero a) :: t)
                             | Make_DM_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
                             | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)
                             | AddItem_DM_DCons(a) -> pushRec ((bx d.A a) :: t)

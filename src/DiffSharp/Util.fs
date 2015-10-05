@@ -89,6 +89,41 @@ let inline copyUpperToLower (m:_[,]) =
             Parallel.For(0, i, fun j ->
                 r.[i, j] <- r.[j, i]) |> ignore) |> ignore
     r
+
+let inline grayscaleChar x =
+//    if   x < -2.f   then " "
+//    elif x < -0.66f then "."
+//    elif x < 0.66f  then "▪"
+//    elif x < 2.f    then "■"
+//    else                 "█"
+    match box x with
+    | :? float32 as x->
+        if   x < -2.f  then " "
+        elif x < -1.6f then "."
+        elif x < -1.2f then ":"
+        elif x < -0.8f then "*"
+        elif x < -0.4f then "$"
+        elif x < 0.f   then "T"
+        elif x < 0.4f  then "V"
+        elif x < 0.8f  then "X"
+        elif x < 1.2f  then "H"
+        elif x < 1.6f  then "N"
+        elif x < 2.0f  then "M"
+        else                "■"
+    | :? float as x->
+        if   x < -2.  then " "
+        elif x < -1.6 then "."
+        elif x < -1.2 then ":"
+        elif x < -0.8 then "*"
+        elif x < -0.4 then "$"
+        elif x < 0.   then "T"
+        elif x < 0.4  then "V"
+        elif x < 0.8  then "X"
+        elif x < 1.2  then "H"
+        elif x < 1.6  then "N"
+        elif x < 2.0  then "M"
+        else               "■"
+    | _ -> " "
     
 let inline signummod x =
     if x < LanguagePrimitives.GenericZero then -LanguagePrimitives.GenericOne

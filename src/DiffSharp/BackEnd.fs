@@ -75,3 +75,4 @@ type BackEnd<'T> =
     abstract member Map_F_M : ('T -> 'T) * 'T[,] -> 'T[,]
     abstract member Map2_F_M_M : ('T -> 'T -> 'T) * 'T[,] * 'T[,] -> 'T[,]
     abstract member ReshapeCopy_V_M : int * 'T[] -> 'T[,]
+    abstract member RepeatReshapeCopy_V_M : int * 'T[] -> 'T[,]
