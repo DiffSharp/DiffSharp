@@ -51,10 +51,13 @@ type Config =
      Float32EpsilonRec2 : float32
      Float64EpsilonRec2 : float
      Float32VisualizationContrast : float32
-     Float64VisualizationContrast : float}
+     Float64VisualizationContrast : float
+     GrayscaleRamp : string[]}
 
 /// Global configuration
 type GlobalConfig() =
+    static let GrayscaleRampUnicode = [|" "; "·"; "▴"; "▪"; "●"; "♦"; "■"; "█"|]
+    static let GrayscaleRampASCII = [|" "; "·"; ":"; "*"; "$"; "T"; "V"; "X"; "H"; "N"; "M"|]
     static let mutable C =
         let eps = 0.00001
         {Float32BackEnd = OpenBLAS.Float32BackEnd()
@@ -66,7 +69,8 @@ type GlobalConfig() =
          Float32EpsilonRec2 = 0.5f / (float32 eps)
          Float64EpsilonRec2 = 0.5 / eps
          Float32VisualizationContrast = 1.2f
-         Float64VisualizationContrast = 1.2}
+         Float64VisualizationContrast = 1.2
+         GrayscaleRamp = GrayscaleRampUnicode}
 
     static member Float32BackEnd = C.Float32BackEnd
     static member Float64BackEnd = C.Float64BackEnd
@@ -78,13 +82,14 @@ type GlobalConfig() =
     static member Float64EpsilonRec2 = C.Float64EpsilonRec2
     static member Float32VisualizationContrast = C.Float32VisualizationContrast
     static member Float64VisualizationContrast = C.Float64VisualizationContrast
+    static member GrayscaleRamp = C.GrayscaleRamp
     static member SetBackEnd(backend:string) =
         match backend with
         | "OpenBLAS" ->
             C <- {C with
                     Float32BackEnd = OpenBLAS.Float32BackEnd()
                     Float64BackEnd = OpenBLAS.Float64BackEnd()}
-        | _ -> invalidArg "" "Unsupported back end."
+        | _ -> invalidArg "" "Unsupported backend. Try: OpenBLAS"
     static member SetEpsilon(e:float32) = 
         C <- {C with
                 Float32Epsilon = e
@@ -109,3 +114,12 @@ type GlobalConfig() =
         C <- {C with
                 Float32VisualizationContrast = float32 c
                 Float64VisualizationContrast = c}
+    static member SetVisualizationRamp(ramp:string) =
+        match ramp with
+        | "ASCII" ->
+            C <- {C with
+                    GrayscaleRamp = GrayscaleRampASCII}
+        | "Unicode" ->
+            C <- {C with
+                    GrayscaleRamp = GrayscaleRampUnicode}
+        | _ -> invalidArg "" "Unsupported ramp. Try: ASCII or Unicode"

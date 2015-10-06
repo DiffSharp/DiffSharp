@@ -39,7 +39,6 @@
 /// Nested forward and reverse mode automatic differentiation module
 module DiffSharp.AD.Float32
 
-open DiffSharp.Extensions
 open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
@@ -513,17 +512,6 @@ and DV =
         | DVF(ap,_,_) -> DV.op_Explicit(ap)
         | DVR(ap,_,_,_,_) -> DV.op_Explicit(ap)
     static member op_Explicit(d) = DV(d)
-    member d.Visualize() =
-        let (d':float32[]) = DV.Normalize(d.P) |> DV.op_Explicit
-        let sb = System.Text.StringBuilder()
-        match d with
-        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
-        | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
-        | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
-        for i = 0 to d.Length - 1 do
-            sb.Append(grayscaleFloat32 d'.[i]) |> ignore
-        sb.AppendLine() |> ignore
-        sb.ToString()
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
@@ -1303,6 +1291,25 @@ and DV =
         let e = exp a'
         e / DV.Sum(e)
 
+    member d.Visualize() =
+        let (d':float32[]) = ((GlobalConfig.Float32VisualizationContrast * (DV.Normalize(d.P) - 0.5f)) + 0.5f) |> DV.op_Explicit
+        let sb = System.Text.StringBuilder()
+        match d with
+        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
+        | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
+        | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
+        let ramp = GlobalConfig.GrayscaleRamp
+        let rampl = ramp.Length
+        let ramplf = float32 rampl
+        for i = 0 to d.Length - 1 do
+            let c = int (d'.[i] * ramplf) - 1
+            let c = max 0 c
+            let c = min (rampl - 1) c
+            sb.Append(ramp.[c]) |> ignore
+        sb.AppendLine() |> ignore
+        sb.ToString()
+
+
 /// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 and DM =
     | DM of float32[,] // Primal
@@ -1447,18 +1454,6 @@ and DM =
         | DMF(ap,_,_) -> DM.op_Explicit(ap)
         | DMR(ap,_,_,_,_) -> DM.op_Explicit(ap)
     static member op_Explicit(d:float32[,]) = DM(d)
-    member d.Visualize() =
-        let (d':float32[,]) = DM.Normalize(d.P) |> DM.op_Explicit
-        let sb = System.Text.StringBuilder()
-        match d with
-        | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
-        | DMF(_) -> sb.AppendLine(sprintf "DMF: %i x %i" d.Rows d.Cols) |> ignore
-        | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
-        for i = 0 to d.Rows - 1 do
-            for j = 0 to d.Cols - 1 do
-                sb.Append(grayscaleFloat32 d'.[i, j]) |> ignore
-            sb.AppendLine() |> ignore
-        sb.ToString()
     static member OfArray2D (a:D[,]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0, 0] with
@@ -2307,6 +2302,26 @@ and DM =
                 if a'.[i, j] < minv then minij <- (i, j); minv <- a'.[i, j])) |> ignore)) |> ignore
         minij
     static member Min (a:DM) = let minij = DM.MinIndex(a) in a.[fst minij, snd minij]
+
+    member d.Visualize() =
+        let (d':float32[,]) = ((GlobalConfig.Float32VisualizationContrast * (DM.Normalize(d.P) - 0.5f)) + 0.5f) |> DM.op_Explicit
+        let sb = System.Text.StringBuilder()
+        match d with
+        | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
+        | DMF(_) -> sb.AppendLine(sprintf "DMF: %i x %i" d.Rows d.Cols) |> ignore
+        | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
+        let ramp = GlobalConfig.GrayscaleRamp
+        let rampl = ramp.Length
+        let ramplf = float32 rampl
+        for i = 0 to d.Rows - 1 do
+            for j = 0 to d.Cols - 1 do
+                let c = int (d'.[i, j] * ramplf) - 1
+                let c = max 0 c
+                let c = min (rampl - 1) c
+                sb.Append(ramp.[c]) |> ignore
+            sb.AppendLine() |> ignore
+        sb.ToString()
+
 
 /// Operation types recorded in the evaluation trace
 and TraceOp =

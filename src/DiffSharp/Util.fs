@@ -90,28 +90,6 @@ let inline copyUpperToLower (m:_[,]) =
                 r.[i, j] <- r.[j, i]) |> ignore) |> ignore
     r
             
-let grayscaleFloat32 =
-    //let chars = [|" "; "·"; ":"; "*"; "$"; "T"; "V"; "X"; "H"; "N"; "M"; "■"|]
-    let chars = [|" "; "·"; "▴"; "▪"; "●"; "■"; "█"|]
-    let charsl = float32 chars.Length
-    fun (x:float32) -> // x should be normalized between [0, 1]
-        let x = Config.GlobalConfig.Float32VisualizationContrast * (x - 0.5f) + 0.5f
-        let i = int (x * charsl) - 1
-        let i = max 0 i
-        let i = min (chars.Length - 1) i
-        chars.[i]
-
-let grayscaleFloat64 =
-    //let chars = [|" "; "."; ":"; "*"; "$"; "T"; "V"; "X"; "H"; "N"; "M"; "■"|]
-    let chars = [|" "; "·"; "▴"; "▪"; "●"; "■"; "█"|]
-    let charsl = float chars.Length
-    fun (x:float) -> // x should be normalized between [0, 1]
-        let x = Config.GlobalConfig.Float64VisualizationContrast * (x - 0.5) + 0.5
-        let i = int (x * charsl) - 1
-        let i = max 0 i
-        let i = min (chars.Length - 1) i
-        chars.[i]
-
 let inline signummod x =
     if x < LanguagePrimitives.GenericZero then -LanguagePrimitives.GenericOne
     elif x > LanguagePrimitives.GenericZero then LanguagePrimitives.GenericOne
@@ -163,3 +141,32 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
+
+/// Extensions for the FSharp.Collections.Array module
+module Array =
+    module Parallel =
+        let map2 f (a1:_[]) (a2:_[]) =
+            let n = min a1.Length a2.Length
+            Array.Parallel.init n (fun i -> f a1.[i] a2.[i])
+
+/// Extensions for the FSharp.Collections.Array2D module
+module Array2D =
+    let empty<'T> = Array2D.zeroCreate<'T> 0 0
+    let isEmpty (array : 'T[,]) = (array.Length = 0)
+    let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray
+
+    module Parallel =
+        let init m n f =
+            let a = Array2D.zeroCreate m n
+            // Nested parallel fors caused problems with mutable variables
+            //Parallel.For(0, m, fun i ->
+            //    Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore) |> ignore
+            for i = 0 to m - 1 do
+                Parallel.For(0, n, fun j -> a.[i, j] <- f i j) |> ignore
+            a
+        let map f (a:_[,]) =
+            init (Array2D.length1 a) (Array2D.length2 a) (fun i j -> f a.[i, j])
+        let map2 f (a1:_[,]) (a2:_[,]) =
+            let m = min (Array2D.length1 a1) (Array2D.length1 a2)
+            let n = min (Array2D.length2 a1) (Array2D.length2 a2)
+            init m n (fun i j -> f a1.[i, j] a2.[i, j])

@@ -39,7 +39,6 @@
 /// Interoperability layer, for C# and other CLR languages
 namespace DiffSharp.Interop.Float64
 
-open DiffSharp.Extensions
 open DiffSharp.Util
 
 type internal ADD = DiffSharp.AD.Float64.D
