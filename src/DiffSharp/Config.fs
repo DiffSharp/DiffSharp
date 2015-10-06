@@ -49,20 +49,24 @@ type Config =
      Float32EpsilonRec : float32
      Float64EpsilonRec : float
      Float32EpsilonRec2 : float32
-     Float64EpsilonRec2 : float}
+     Float64EpsilonRec2 : float
+     Float32VisualizationContrast : float32
+     Float64VisualizationContrast : float}
 
 /// Global configuration
 type GlobalConfig() =
     static let mutable C =
         let eps = 0.00001
-        {Float32BackEnd = OpenBLAS.Float32BackEnd(); 
-         Float64BackEnd = OpenBLAS.Float64BackEnd(); 
-         Float32Epsilon = (float32 eps);
-         Float64Epsilon = eps;
-         Float32EpsilonRec = 1.f / (float32 eps);
+        {Float32BackEnd = OpenBLAS.Float32BackEnd()
+         Float64BackEnd = OpenBLAS.Float64BackEnd()
+         Float32Epsilon = (float32 eps)
+         Float64Epsilon = eps
+         Float32EpsilonRec = 1.f / (float32 eps)
          Float64EpsilonRec = 1. / eps
-         Float32EpsilonRec2 = 0.5f / (float32 eps);
-         Float64EpsilonRec2 = 0.5 / eps}
+         Float32EpsilonRec2 = 0.5f / (float32 eps)
+         Float64EpsilonRec2 = 0.5 / eps
+         Float32VisualizationContrast = 1.2f
+         Float64VisualizationContrast = 1.2}
 
     static member Float32BackEnd = C.Float32BackEnd
     static member Float64BackEnd = C.Float64BackEnd
@@ -72,33 +76,36 @@ type GlobalConfig() =
     static member Float64EpsilonRec = C.Float64EpsilonRec
     static member Float32EpsilonRec2 = C.Float32EpsilonRec2
     static member Float64EpsilonRec2 = C.Float64EpsilonRec2
+    static member Float32VisualizationContrast = C.Float32VisualizationContrast
+    static member Float64VisualizationContrast = C.Float64VisualizationContrast
     static member SetBackEnd(backend:string) =
         match backend with
         | "OpenBLAS" ->
-            C <- {Float32BackEnd = OpenBLAS.Float32BackEnd(); 
-                  Float64BackEnd = OpenBLAS.Float64BackEnd(); 
-                  Float32Epsilon = C.Float32Epsilon;
-                  Float64Epsilon = C.Float64Epsilon;
-                  Float32EpsilonRec = C.Float32EpsilonRec;
-                  Float64EpsilonRec = C.Float64EpsilonRec;
-                  Float32EpsilonRec2 = C.Float32EpsilonRec2;
-                  Float64EpsilonRec2 = C.Float64EpsilonRec2}
+            C <- {C with
+                    Float32BackEnd = OpenBLAS.Float32BackEnd()
+                    Float64BackEnd = OpenBLAS.Float64BackEnd()}
         | _ -> invalidArg "" "Unsupported back end."
     static member SetEpsilon(e:float32) = 
-        C <- {Float32BackEnd = C.Float32BackEnd; 
-              Float64BackEnd = C.Float64BackEnd; 
-              Float32Epsilon = e;
-              Float64Epsilon = (float e);
-              Float32EpsilonRec = 1.f / e;
-              Float64EpsilonRec = 1. / (float e);
-              Float32EpsilonRec2 = 0.5f / e;
-              Float64EpsilonRec2 = 0.5 / (float e)}
+        C <- {C with
+                Float32Epsilon = e
+                Float64Epsilon = float e
+                Float32EpsilonRec = 1.f / e
+                Float64EpsilonRec = 1. / (float e)
+                Float32EpsilonRec2 = 0.5f / e
+                Float64EpsilonRec2 = 0.5 / (float e)}
     static member SetEpsilon(e:float) = 
-        C <- {Float32BackEnd = C.Float32BackEnd; 
-              Float64BackEnd = C.Float64BackEnd; 
-              Float32Epsilon = (float32 e);
-              Float64Epsilon = e;
-              Float32EpsilonRec = 1.f / (float32 e);
-              Float64EpsilonRec = 1. / e;
-              Float32EpsilonRec2 = 0.5f / (float32 e);
-              Float64EpsilonRec2 = 0.5 / e}
+        C <- {C with
+                Float32Epsilon = float32 e
+                Float64Epsilon = e;
+                Float32EpsilonRec = 1.f / (float32 e)
+                Float64EpsilonRec = 1. / e
+                Float32EpsilonRec2 = 0.5f / (float32 e)
+                Float64EpsilonRec2 = 0.5 / e}
+    static member SetVisualizationContrast(c:float32) =
+        C <- {C with
+                Float32VisualizationContrast = c
+                Float64VisualizationContrast = float c}
+    static member SetVisualizationContrast(c:float) =
+        C <- {C with
+                Float32VisualizationContrast = float32 c
+                Float64VisualizationContrast = c}

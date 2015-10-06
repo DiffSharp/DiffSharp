@@ -39,6 +39,7 @@
 /// Nested forward and reverse mode automatic differentiation module
 module DiffSharp.AD.Float64
 
+open DiffSharp.Extensions
 open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
@@ -520,7 +521,7 @@ and DV =
         | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
         | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
         for i = 0 to d.Length - 1 do
-            sb.Append(grayscaleChar d'.[i]) |> ignore
+            sb.Append(grayscaleFloat64 d'.[i]) |> ignore
         sb.AppendLine() |> ignore
         sb.ToString()
     static member OfArray (a:D[]) =
@@ -1250,12 +1251,28 @@ and DV =
         let inline df(cp:D, ap:DV, at:DV) = (at * (exp ap)) / exp cp // cp = DV.LogSumExp(ap)
         let inline r(a) = LogSumExp_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
-    /// Normalize vector `a` to have zero mean and unit variance
+
+    static member Mean (a:DV) =
+        DV.Sum(a) / a.Length
+    static member Variance (a:DV) =
+        let a' = a - DV.Mean(a)
+        DV.Sum(a' .* a') / (a.Length - 1)
+    static member StandardDev (a:DV) =
+        DV.Variance(a) |> sqrt
+    static member Standardize (a:DV) =
+        let sd = DV.StandardDev(a)
+        if sd = D 0. then
+            a * (D 0.)
+        else
+            (a - DV.Mean(a)) / DV.StandardDev(a)
     static member Normalize (a:DV) =
-        let mu = DV.Sum(a) / a.Length
-        let s = a - mu
-        let sigma = DV.Sum(s .* s) / a.Length
-        (a - mu) / sigma
+        let min = DV.Min(a)
+        let range = DV.Max(a) - min
+        if range = D 0. then
+            a * (D 0.)
+        else
+            (a - min) / range
+
     static member Max (a:DV, b:DV) = ((a + b) + abs (b - a)) / 2.
     static member Max (a:DV, b:D) = ((a + b) + abs (b - a)) / 2.
     static member Max (a:D, b:DV) = ((a + b) + abs (b - a)) / 2.
@@ -1439,7 +1456,7 @@ and DM =
         | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
         for i = 0 to d.Rows - 1 do
             for j = 0 to d.Cols - 1 do
-                sb.Append(grayscaleChar d'.[i, j]) |> ignore
+                sb.Append(grayscaleFloat64 d'.[i, j]) |> ignore
             sb.AppendLine() |> ignore
         sb.ToString()
     static member OfArray2D (a:D[,]) =
@@ -2240,11 +2257,28 @@ and DM =
         DM.Op_DM_DM (a, ff, fd, df, r)
     static member SoftPlus (a:DM) = log (1. + exp a)
     static member SoftSign (a:DM) = a ./ (1. + abs a)
+
+    static member Mean (a:DM) =
+        DM.Sum(a) / a.Length
+    static member Variance (a:DM) =
+        let a' = a - DM.Mean(a)
+        DM.Sum(a' .* a') / (a.Length - 1)
+    static member StandardDev (a:DM) =
+        DM.Variance(a) |> sqrt
+    static member Standardize (a:DM) =
+        let sd = DM.StandardDev(a)
+        if sd = D 0. then
+            a * (D 0.)
+        else
+            (a - DM.Mean(a)) / DM.StandardDev(a)
     static member Normalize (a:DM) =
-        let mu = DM.Sum(a) / a.Length
-        let s = a - mu
-        let sigma = DM.Sum(s .* s) / a.Length
-        (a - mu) / sigma
+        let min = DM.Min(a)
+        let range = DM.Max(a) - min
+        if range = D 0. then
+            a * (D 0.)
+        else
+            (a - min) / range
+
     static member Max (a:DM, b:DM) = ((a + b) + abs (b - a)) / 2.
     static member Max (a:DM, b:D) = ((a + b) + abs (b - a)) / 2.
     static member Max (a:D, b:DM) = ((a + b) + abs (b - a)) / 2.
@@ -2270,7 +2304,7 @@ and DM =
         let mutable minv = a'.[0, 0]
         Parallel.For (0, a.Rows, (fun i -> 
             Parallel.For (0, a.Cols, (fun j ->
-                if a'.[i, j] > minv then minij <- (i, j); minv <- a'.[i, j])) |> ignore)) |> ignore
+                if a'.[i, j] < minv then minij <- (i, j); minv <- a'.[i, j])) |> ignore)) |> ignore
         minij
     static member Min (a:DM) = let minij = DM.MinIndex(a) in a.[fst minij, snd minij]
 
@@ -2572,9 +2606,17 @@ module DV =
     let inline min (v:DV) = DV.Min(v)
     /// Index of the minimum element of vector `v`
     let inline minIndex (v:DV) = DV.MinIndex(v)
-    /// Average of the elements of vector `v`
-    let inline average (v:DV) = DV.Sum(v) / v.Length
-    /// Normalize vector `v` to have zero mean and unit variance
+    /// Mean of vector `v`
+    let inline mean (v:DV) = DV.Mean(v)
+    /// Average of vector `v`. Same with mean.
+    let average = mean
+    /// Standard deviation of vector `v`
+    let inline standardDev (v:DV) = DV.StandardDev(v)
+    /// Variance of vector `v`
+    let inline variance (v:DV) = DV.Variance(v)
+    /// Shift and scale the elements of vector `v` to have zero mean and unit variance
+    let inline standardize (v:DV) = DV.Standardize(v)
+    /// Shift and scale the elements of vector `v` to be in the range [0, 1]
     let inline normalize (v:DV) = DV.Normalize(v)
     /// L2 norm of vector `v`. Same with DV.l2norm.
     let inline norm (v:DV) = DV.L2Norm(v)
@@ -2729,9 +2771,17 @@ module DM =
     let inline min (m:DM) = DM.Min(m)
     /// Index of the minimum entry of matrix `m`
     let inline minIndex (m:DM) = DM.MinIndex(m)
-    /// Average of the entries of matrix `m`
-    let inline average (m:DM) = DM.Sum(m) / m.Length
-    /// Normalizes matrix `m` to have zero mean and unit variance
+    /// Mean of matrix `m`
+    let inline mean (m:DM) = DM.Mean(m)
+    /// Average of matrix `m`. Same with mean.
+    let average = mean
+    /// Standard deviation of matrix `m`
+    let inline standardDev (m:DM) = DM.StandardDev(m)
+    /// Variance of matrix `m`
+    let inline variance (m:DM) = DM.Variance(m)
+    /// Shift and scale the elements of matrix `m` to have zero mean and unit variance
+    let inline standardize (m:DM) = DM.Standardize(m)
+    /// Shift and scale the elements of matrix `m` to be in the range [0, 1]
     let inline normalize (m:DM) = DM.Normalize(m)
     /// Solve a system of linear equations Ax = b, where the coefficient matrix `m` has general form
     let inline solve (m:DM) (v:DV) = DM.Solve(m, v)

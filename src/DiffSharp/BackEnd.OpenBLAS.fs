@@ -46,7 +46,7 @@ open System.Runtime.InteropServices
 open FSharp.NativeInterop
 open System.Security
 open System.Threading.Tasks
-open DiffSharp.Util
+open DiffSharp.Extensions
 
 /// Backend using OpenBLAS library for BLAS and LAPACK operations, and parallel threads for non-BLAS operations
 module OpenBLAS =

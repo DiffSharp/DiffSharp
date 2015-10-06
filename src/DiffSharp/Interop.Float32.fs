@@ -39,6 +39,7 @@
 /// Interoperability layer, for C# and other CLR languages
 namespace DiffSharp.Interop.Float32
 
+open DiffSharp.Extensions
 open DiffSharp.Util
 
 type internal ADD = DiffSharp.AD.Float32.D
@@ -157,6 +158,7 @@ and DV(v:ADDV) =
             | DiffSharp.AD.Float32.DVF(p,t,_) -> sprintf "DVF (%A, %A)" (s p) (s t)
             | DiffSharp.AD.Float32.DVR(p,a,_,_,_) -> sprintf "DVR (%A, %A)" (s p) (s !a)
         s (d.toADDV())
+    member d.Visualize() = d.toADDV().Visualize()
     static member op_Implicit(d:DV):float32[] = ADDV.op_Explicit(d.toADDV())
     static member op_Implicit(a:float32[]):DV = DV(a)
     static member Zero = DV(Array.empty<float32>)
@@ -239,12 +241,16 @@ and DV(v:ADDV) =
     static member L1Norm (a:DV) = D(ADDV.L1Norm(a.toADDV()))
     static member L2Norm (a:DV) = D(ADDV.L2Norm(a.toADDV()))
     static member L2NormSq (a:DV) = D(ADDV.L2NormSq(a.toADDV()))
-    static member Normalize (a:DV) = DV(ADDV.Normalize(a.toADDV()))
     static member Max (a:DV) = D(ADDV.Max(a.toADDV()))
     static member MaxIndex (a:DV) = ADDV.MaxIndex(a.toADDV())
     static member Min (a:DV) = D(ADDV.Min(a.toADDV()))
     static member MinIndex (a:DV) = ADDV.MinIndex(a.toADDV())
     static member SoftMax (a:DV) = DV(ADDV.SoftMax(a.toADDV()))
+    static member Mean (a:DV) = D(ADDV.Mean(a.toADDV()))
+    static member StandardDev (a:DV) = D(ADDV.StandardDev(a.toADDV()))
+    static member Variance (a:DV) = D(ADDV.Variance(a.toADDV()))
+    static member Normalize (a:DV) = DV(ADDV.Normalize(a.toADDV()))
+    static member Standardize (a:DV) = DV(ADDV.Standardize(a.toADDV()))
 
 and ADDM = DiffSharp.AD.Float32.DM
 
@@ -268,6 +274,7 @@ and DM(m:ADDM) =
             | DiffSharp.AD.Float32.DMF(p,t,_) -> sprintf "DMF (%A, %A)" (s p) (s t)
             | DiffSharp.AD.Float32.DMR(p,a,_,_,_) -> sprintf "DMR (%A, %A)" (s p) (s !a)
         s (d.toADDM())
+    member d.Visualize() = d.toADDM().Visualize()
     static member op_Implicit(d:DM):float32[,] = ADDM.op_Explicit(d.toADDM())
     static member op_Implicit(a:float32[,]):DM = DM(a)
     static member Zero = DM(Array2D.empty)
@@ -354,17 +361,19 @@ and DM(m:ADDM) =
     static member Sigmoid (a:DM) = DM(ADDM.Sigmoid(a.toADDM()))
     static member SoftPlus (a:DM) = DM(ADDM.SoftPlus(a.toADDM()))
     static member SoftSign (a:DM) = DM(ADDM.SoftSign(a.toADDM()))
-    static member Normalize (a:DM) = DM(ADDM.Normalize(a.toADDM()))
     static member Max (a:DM, b:DM) = DM(ADDM.Max(a.toADDM(), b.toADDM()))
     static member Min (a:DM, b:DM) = DM(ADDM.Min(a.toADDM(), b.toADDM()))
     static member Max (a:DM, b:D) = DM(ADDM.Max(a.toADDM(), b.toADD()))
     static member Max (a:D, b:DM) = DM(ADDM.Max(a.toADD(), b.toADDM()))
     static member Min (a:DM, b:D) = DM(ADDM.Min(a.toADDM(), b.toADD()))
     static member Min (a:D, b:DM) = DM(ADDM.Min(a.toADD(), b.toADDM()))
-    static member MaxIndex (a:DV) = ADDV.MaxIndex(a.toADDV())
-    static member MinIndex (a:DV) = ADDV.MinIndex(a.toADDV())
-    static member SoftMax (a:DV) = DV(ADDV.SoftMax(a.toADDV()))
-
+    static member MaxIndex (a:DM) = ADDM.MaxIndex(a.toADDM())
+    static member MinIndex (a:DM) = ADDM.MinIndex(a.toADDM())
+    static member Mean (a:DM) = D(ADDM.Mean(a.toADDM()))
+    static member StandardDev (a:DM) = D(ADDM.StandardDev(a.toADDM()))
+    static member Variance (a:DM) = D(ADDM.Variance(a.toADDM()))
+    static member Normalize (a:DM) = DM(ADDM.Normalize(a.toADDM()))
+    static member Standardize (a:DM) = DM(ADDM.Standardize(a.toADDM()))
 
 /// Nested forward and reverse mode automatic differentiation module
 type AD =
@@ -466,6 +475,11 @@ type AD =
     static member inline Max(a:'T, b:'U):^V = ((^T or ^U) : (static member Max : ^T * ^U -> ^V) a, b)
     static member inline Min(a:'T, b:'U):^V = ((^T or ^U) : (static member Min : ^T * ^U -> ^V) a, b)
     static member inline Signum(a:'T) = (^T : (static member Sign : ^T -> ^T) a)
+    static member inline Mean(a:'T) = (^T : (static member Mean : ^T -> D) a)
+    static member inline StandardDev(a:'T) = (^T : (static member StandardDev : ^T -> D) a)
+    static member inline Variance(a:'T) = (^T : (static member Variance : ^T -> D) a)
+    static member inline Normalize(a:'T) = (^T : (static member Normalize : ^T -> ^T) a)
+    static member inline Standardize(a:'T) = (^T : (static member Standardize : ^T -> ^T) a)
     static member L1Norm(a:DV) = D(ADDV.L1Norm(a.toADDV()))
     static member L2Norm(a:DV) = D(ADDV.L2Norm(a.toADDV()))
     static member L2NormSq(a:DV) = D(ADDV.L2NormSq(a.toADDV()))
@@ -477,6 +491,7 @@ type AD =
     static member Solve (a:DM, b:DV) = DV(ADDM.Solve(a.toADDM(), b.toADDV()))
     static member SolveSymmetric (a:DM, b:DV) = DV(ADDM.SolveSymmetric(a.toADDM(), b.toADDV()))
     static member Inverse (a:DM) = DM(ADDM.Inverse(a.toADDM()))
+
 
 /// Numerical differentiation module
 type Numerical =
