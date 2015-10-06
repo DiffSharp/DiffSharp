@@ -2584,7 +2584,8 @@ module DV =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.create n (unbox<D>(box v)))
         elif at.Equals(typeof<float>) then DV (Array.create n (unbox<float>(box v)))
-        else failwith "Unsupported type. Expecting D or float"
+        elif at.Equals(typeof<int>) then DV (Array.create n (unbox<int>(box v) |> float))
+        else failwith "Unsupported type. Expecting D, float, or int."
     /// Creates a vector with `n` zero elements
     let inline zeroCreate n = DV.ZeroN n
     /// Empty vector
@@ -2594,7 +2595,8 @@ module DV =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.init n (unbox<int->D>(box f)))
         elif at.Equals(typeof<float>) then DV (Array.init n (unbox<int->float>(box f)))
-        else failwith "Unsupported type. Expecting D or float"
+        elif at.Equals(typeof<int>) then DV ((Array.init n (unbox<int->int>(box f))) |> Array.map float)
+        else failwith "Unsupported type. Expecting D, float, or int."
     /// Returns true if vector `v` is empty, otherwise returns false
     let isEmpty (v:DV) = v.Length = 0
     /// Iterates function `f` over the elements of vector `v`
@@ -2705,7 +2707,8 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<float>) then DM (Array2D.create m n (unbox<float>(box v)))
-        else failwith "Unsupported type. Expecting D or float"
+        elif at.Equals(typeof<int>) then DM (Array2D.create m n (unbox<int>(box v) |> float))
+        else failwith "Unsupported type. Expecting D, float, or int."
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
     let inline createRows (m:int) (v:DV) = DM.OfRows(m, v)
     /// Creates a matrix with `n` columns, where all columns are equal to `v`
@@ -2723,7 +2726,8 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.init m n (unbox<int->int->D>(box f)))
         elif at.Equals(typeof<float>) then DM (Array2D.init m n (unbox<int->int->float>(box f)))
-        else failwith "Unsupported type. Expecting D or float"
+        elif at.Equals(typeof<int>) then DM ((Array2D.init m n (unbox<int->int->int>(box f))) |> Array2D.map float)
+        else failwith "Unsupported type. Expecting D, float, or int."
     /// Creates a matrix with `m` rows, where each row is given by `f` as a vector
     let inline initRows (m:int) (f:int->DV) = Seq.init m f |> ofRows
     /// Creates a matrix with `n` columns, where each column is given by `f` as a vector
