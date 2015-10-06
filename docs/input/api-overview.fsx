@@ -817,3 +817,125 @@ let s = DM.sum m1 // Sum of elements of DM
 let m = DM.normalize // Normalize elements to have zero mean and unit variance
 let m = DM.mapRows f m1 // Map function f:DV->DV to rows of matrix
 let m = DM.mapCols f m1 // Map function f:DV->DV to columns of matrix
+
+(**
+Visualizations
+--------------
+
+The library provides visualization functionality for the DV and DM types that can be useful in an interactive console environment. The visualizations are normalized, meaning they represent the full range of the data with different visual intensities.
+*)
+
+open DiffSharp.AD.Float64
+
+// Create a vector
+let v = DV.init 40 (fun i -> sin ((float i) /2.))
+
+// Create a matrix
+let m = DM.init 20 20 (fun i j -> 1. / exp (((float i) ** 2. + (float j) ** 2.) / 400.))
+
+// Visualize and print to console
+v |> DV.visualize |> printfn "%s"
+m |> DM.visualize |> printfn "%s"
+
+
+(**
+    [lang=cs]
+    DV : 40
+    ▴●■■■♦▪·    -▪♦■■■●▴·   ·▴●■■■♦▪-    ·▪♦
+
+    DM : 20 x 20
+    ■■■■■■■♦♦♦●●▪▪▴▴---·
+    ■■■■■■■♦♦♦●●▪▪▴▴---·
+    ■■■■■■♦♦♦●●●▪▪▴▴--··
+    ■■■■■■♦♦♦●●●▪▪▴▴--··
+    ■■■■■♦♦♦♦●●▪▪▪▴▴--··
+    ■■■■♦♦♦♦●●●▪▪▴▴---··
+    ■■♦♦♦♦♦●●●▪▪▪▴▴---··
+    ♦♦♦♦♦♦●●●●▪▪▴▴▴--···
+    ♦♦♦♦♦●●●●▪▪▪▴▴---·· 
+    ♦♦●●●●●●▪▪▪▴▴---··· 
+    ●●●●●●▪▪▪▪▴▴▴---··  
+    ●●●●▪▪▪▪▪▴▴▴---···  
+    ▪▪▪▪▪▪▪▴▴▴▴---···   
+    ▪▪▪▪▪▴▴▴▴----···    
+    ▴▴▴▴▴▴▴▴----···     
+    ▴▴▴▴▴------···      
+    ---------····       
+    -------·····        
+    --········          
+    ········            
+
+There is a global configuration setting for changing the contrast of visualizations, using **DiffSharp.Config.GlobalConfig.SetVisualizationContrast**.
+
+*)
+
+DiffSharp.Config.GlobalConfig.SetVisualizationContrast(9.)
+
+(**
+
+    [lang=cs]
+    DV : 40
+    ▴██████      ██████       ██████      ██
+
+    DM : 20 x 20
+    ██████████████♦-    
+    ██████████████♦-    
+    ██████████████●·    
+    ██████████████●·    
+    ██████████████▪     
+    █████████████♦-     
+    █████████████●·     
+    ████████████♦▴      
+    ████████████▪·      
+    ███████████●-       
+    ██████████●-        
+    █████████●-         
+    ███████♦▪-          
+    █████♦●▴·           
+    ♦♦●●▪-·             
+    --··                
+                    
+                    
+                    
+                    
+
+The visualization palette uses Unicode symbols by default. You can change it to an ASCII palette if you prefer so, or if your console font does not render the Unicode palette correctly.
+*)
+
+// The default Unicode palette
+DiffSharp.Config.GlobalConfig.SetVisualizationPalette("Unicode")
+
+// The ASCII palette
+DiffSharp.Config.GlobalConfig.SetVisualizationPalette("ASCII")
+DiffSharp.Config.GlobalConfig.SetVisualizationContrast(1.)
+
+v |> DV.visualize |> printfn "%s"
+m |> DM.visualize |> printfn "%s"
+
+(**
+    [lang=cs]
+    DV : 40
+    TXNNNXY:    :YHNNHVT.   .TVHNNHY:    :YX
+
+    DM : 20 x 20
+    NNNNNNHHHXXVVYTTxx::
+    NNNNNNHHHXXVYYTTxx::
+    NNNNNNHHXXVVYYTTxx::
+    NNNNNHHHXXVVYYTTxx::
+    NNNNHHHHXXVVYYTTx::.
+    NNNHHHHXXVVYYTTxx::.
+    HHHHHHXXXVVYYTTxx::.
+    HHHHHXXXVVYYTTxx:::.
+    HHXXXXXVVYYYTTxx::..
+    XXXXXVVVYYYTTxx:::..
+    XXVVVVVYYYTTxxx::.. 
+    VVVVVYYYYTTTxx::... 
+    VYYYYYYTTTxxx:::..  
+    YYYYYTTTTxxx:::...  
+    TTTTTTTxxxx:::...   
+    TTTTTxxxx::::...    
+    xxxxxxx::::....     
+    xxxx::::::....      
+    ::::::::....        
+    ::::......          
+*)

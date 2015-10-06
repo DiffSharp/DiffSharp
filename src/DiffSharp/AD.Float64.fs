@@ -1298,14 +1298,14 @@ and DV =
         | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
         | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
         | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
-        let ramp = GlobalConfig.GrayscaleRamp
-        let rampl = ramp.Length
-        let ramplf = float rampl
+        let palette = GlobalConfig.GrayscalePalette
+        let palettel = palette.Length
+        let palettelf = float palettel
         for i = 0 to d.Length - 1 do
-            let c = int (d'.[i] * ramplf) - 1
+            let c = int (d'.[i] * palettelf) - 1
             let c = max 0 c
-            let c = min (rampl - 1) c
-            sb.Append(ramp.[c]) |> ignore
+            let c = min (palettel - 1) c
+            sb.Append(palette.[c]) |> ignore
         sb.AppendLine() |> ignore
         sb.ToString()
 
@@ -2310,15 +2310,15 @@ and DM =
         | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
         | DMF(_) -> sb.AppendLine(sprintf "DMF: %i x %i" d.Rows d.Cols) |> ignore
         | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
-        let ramp = GlobalConfig.GrayscaleRamp
-        let rampl = ramp.Length
-        let ramplf = float rampl
+        let palette = GlobalConfig.GrayscalePalette
+        let palettel = palette.Length
+        let palettelf = float palettel
         for i = 0 to d.Rows - 1 do
             for j = 0 to d.Cols - 1 do
-                let c = int (d'.[i, j] * ramplf) - 1
+                let c = int (d'.[i, j] * palettelf) - 1
                 let c = max 0 c
-                let c = min (rampl - 1) c
-                sb.Append(ramp.[c]) |> ignore
+                let c = min (palettel - 1) c
+                sb.Append(palette.[c]) |> ignore
             sb.AppendLine() |> ignore
         sb.ToString()
 
