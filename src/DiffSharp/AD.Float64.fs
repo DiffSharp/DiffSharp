@@ -3124,7 +3124,7 @@ module DOps =
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
                             | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
                             | Make_DM_ofDV(a) -> 
-                                d.A.GetRows() |> Seq.iter (fun v -> a.A <- a.A + v.A)
+                                d.A.GetRows() |> Seq.iter (fun v -> a.A <- a.A + v)
                                 pushRec ((bx DV
                                 .Zero a) :: t)
                             | Make_DM_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
