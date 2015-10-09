@@ -69,7 +69,7 @@ Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the b
 
 Please install the [libopenblas-dev](http://packages.ubuntu.com/precise/libopenblas-dev) package on your system. Once you have the file _libopenblas.so_ in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.
 
-Alternatively, you can download the Linux-specific binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
+Alternatively, you can download the Linux-specific pack of binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
 Quick Usage Example
 -------------------
