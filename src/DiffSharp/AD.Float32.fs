@@ -1200,8 +1200,8 @@ and DV =
         else
             let inline ff(a, b) = Array.append a b
             let inline fd(a, b) = DV.Append(a, b)
-            let inline df_da(cp, ap, at) = DV.Append(at, b)
-            let inline df_db(cp, bp, bt) = DV.Append(a, bt)
+            let inline df_da(cp, ap, at) = DV.Append(at, DV.ZeroN b.Length)
+            let inline df_db(cp, bp, bt) = DV.Append(DV.ZeroN a.Length, bt)
             let inline df_dab(cp, ap, at, bp, bt) = DV.Append(at, bt)
             let inline r_d_d(a, b) = Append_DV_DV(a, b)
             let inline r_d_c(a, b) = Append_DV_DVCons(a)
@@ -3013,9 +3013,8 @@ module DOps =
                             | Solve_DMCons_DV(cons, b) -> let ba = DM.Solve(DM.Transpose(cons), d.A) in pushRec ((bx ba b) :: t)
                             | Append_DV_DV(a, b) ->
                                 a.A <- a.A + d.A.[..(a.Length - 1)]
-                                pushRec ((bx DV.Zero a) :: t)
                                 b.A <- b.A + d.A.[a.Length..]
-                                pushRec ((bx DV.Zero b) :: t)
+                                pushRec ((bx DV.Zero a) :: (bx DV.Zero b) :: t)
                             | Append_DV_DVCons(a) ->
                                 a.A <- a.A + d.A.[..(a.Length - 1)]
                                 pushRec ((bx DV.Zero a) :: t)
