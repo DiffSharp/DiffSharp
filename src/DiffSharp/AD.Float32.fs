@@ -1306,7 +1306,6 @@ and DV =
             let c = max 0 c
             let c = min (palettel - 1) c
             sb.Append(palette.[c]) |> ignore
-        sb.AppendLine() |> ignore
         sb.ToString()
 
 
@@ -1420,7 +1419,7 @@ and DM =
         for i = 0 to d.Rows - 1 do
             for j = 0 to d.Cols - 1 do
                 sb.Append(sprintf "% 9.3g " d'.[i, j]) |> ignore
-            if i < d.Rows - 1 then sb.AppendLine("") |> ignore
+            if i < d.Rows - 1 then sb.AppendLine() |> ignore
         sb.ToString()
     member d.ToMathematicaString() =
         let (d':float32[,]) = DM.op_Explicit(d)
@@ -2319,7 +2318,7 @@ and DM =
                 let c = max 0 c
                 let c = min (palettel - 1) c
                 sb.Append(palette.[c]) |> ignore
-            sb.AppendLine() |> ignore
+            if i < d.Rows - 1 then sb.AppendLine() |> ignore
         sb.ToString()
 
 
