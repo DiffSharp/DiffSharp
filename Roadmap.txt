@@ -1,4 +1,6 @@
 0.7.*
+- GEMV/GEMM ops with vector addition
+- Iterate to fixed point
 - In-place operations
 - CUDA/CuBLAS backend
 
