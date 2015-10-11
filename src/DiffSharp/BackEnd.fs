@@ -36,10 +36,10 @@
 //   www.bcl.hamilton.ie
 //
 
-namespace DiffSharp.BackEnd
+namespace DiffSharp.Backend
 
 /// Interface for DiffSharp backends
-type BackEnd<'T> =
+type Backend<'T> =
     abstract member Mul_Dot_V_V : 'T[] * 'T[] -> 'T
     abstract member L1Norm_V : ('T[]) -> 'T
     abstract member L2Norm_V : ('T[]) -> 'T

@@ -38,12 +38,12 @@
 
 namespace DiffSharp.Config
 
-open DiffSharp.BackEnd
+open DiffSharp.Backend
 
 /// Record type holding configuration parameters
 type Config =
-    {Float32BackEnd : BackEnd<float32>
-     Float64BackEnd : BackEnd<float>
+    {Float32Backend : Backend<float32>
+     Float64Backend : Backend<float>
      Float32Epsilon : float32
      Float64Epsilon : float
      Float32EpsilonRec : float32
@@ -60,8 +60,8 @@ type GlobalConfig() =
     static let GrayscalePaletteASCII = [|" "; "."; ":"; "x"; "T"; "Y"; "V"; "X"; "H"; "N"; "M"|]
     static let mutable C =
         let eps = 0.00001
-        {Float32BackEnd = OpenBLAS.Float32BackEnd()
-         Float64BackEnd = OpenBLAS.Float64BackEnd()
+        {Float32Backend = OpenBLAS.Float32Backend()
+         Float64Backend = OpenBLAS.Float64Backend()
          Float32Epsilon = (float32 eps)
          Float64Epsilon = eps
          Float32EpsilonRec = 1.f / (float32 eps)
@@ -72,8 +72,8 @@ type GlobalConfig() =
          Float64VisualizationContrast = 1.2
          GrayscalePalette = GrayscalePaletteUnicode}
 
-    static member Float32BackEnd = C.Float32BackEnd
-    static member Float64BackEnd = C.Float64BackEnd
+    static member Float32Backend = C.Float32Backend
+    static member Float64Backend = C.Float64Backend
     static member Float32Epsilon = C.Float32Epsilon
     static member Float64Epsilon = C.Float64Epsilon
     static member Float32EpsilonRec = C.Float32EpsilonRec
@@ -83,12 +83,12 @@ type GlobalConfig() =
     static member Float32VisualizationContrast = C.Float32VisualizationContrast
     static member Float64VisualizationContrast = C.Float64VisualizationContrast
     static member GrayscalePalette = C.GrayscalePalette
-    static member SetBackEnd(backend:string) =
+    static member SetBackend(backend:string) =
         match backend with
         | "OpenBLAS" ->
             C <- {C with
-                    Float32BackEnd = OpenBLAS.Float32BackEnd()
-                    Float64BackEnd = OpenBLAS.Float64BackEnd()}
+                    Float32Backend = OpenBLAS.Float32Backend()
+                    Float64Backend = OpenBLAS.Float64Backend()}
         | _ -> invalidArg "" "Unsupported backend. Try: OpenBLAS"
     static member SetEpsilon(e:float32) = 
         C <- {C with

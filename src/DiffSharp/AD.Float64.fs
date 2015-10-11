@@ -736,7 +736,7 @@ and DV =
 
     /// Element-wise addition of `a` and `b`
     static member (+) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Add_V_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Add_V_V(a, b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = bt
@@ -748,7 +748,7 @@ and DV =
 
     /// Element-wise subtraction of `a` and `b`
     static member (-) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_V_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_V_V(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = -bt
@@ -760,7 +760,7 @@ and DV =
 
     /// Inner (dot, scalar) product of `a` and `b`
     static member (*) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_Dot_V_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_Dot_V_V(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -772,7 +772,7 @@ and DV =
 
     /// Element-wise (Hadamard, Schur) product of `a` and `b`
     static member (.*) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_V_V((*), a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_V_V((*), a, b)
         let inline fd(a, b) = a .* b
         let inline df_da(cp, ap, at) = at .* b
         let inline df_db(cp, bp, bt) = a .* bt
@@ -784,7 +784,7 @@ and DV =
 
     /// Outer (dyadic, tensor) product of `a` and `b`
     static member (&*) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_Out_V_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_Out_V_V(a, b)
         let inline fd(a, b) = a &* b
         let inline df_da(cp, ap, at) = at &* b
         let inline df_db(cp, bp, bt) = a &* bt
@@ -796,7 +796,7 @@ and DV =
 
     /// Element-wise (Hadamard, Schur) division of `a` and `b`
     static member (./) (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_V_V((/), a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_V_V((/), a, b)
         let inline fd(a, b) = a ./ b
         let inline df_da(cp, ap, at) = at ./ b
         let inline df_db(cp, bp, bt) = -bt .* cp ./ bp // cp = ap / bp
@@ -808,7 +808,7 @@ and DV =
 
     /// Element-wise power of `a` and `b`
     static member Pow (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_V_V((fun x y -> x ** y), a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_V_V((fun x y -> x ** y), a, b)
         let inline fd(a, b) = a ** b
         let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
@@ -820,7 +820,7 @@ and DV =
     
     /// Element-wise atan2 of `a` and `b`
     static member Atan2 (a:DV, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_V_V(atan2, a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_V_V(atan2, a, b)
         let inline fd(a, b) = atan2 a b
         let inline df_da(cp, ap, at) = (at .* b) ./ ((ap .* ap) + (b .* b))
         let inline df_db(cp, bp, bt) = (-bt .* a) ./ ((a .* a) + (bp .* bp))
@@ -832,7 +832,7 @@ and DV =
 
     /// Multiply vector `a` by scalar `b`
     static member (*) (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_V(b, a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_V(b, a)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -844,7 +844,7 @@ and DV =
 
     /// Multiply vector `b` by scalar `a`
     static member (*) (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_V(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -856,7 +856,7 @@ and DV =
 
     /// Divide vector `a` by scalar `b`
     static member (/) (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_V(1. / b, a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_V(1. / b, a)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt * cp / bp // cp = a / bp
@@ -868,7 +868,7 @@ and DV =
 
     /// Generate a vector where each element is scalar `a` divided by the corresponding element of vector `b`
     static member (/) (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> a / v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> a / v), b)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt .* (cp ./ bp) // cp = a / bp
@@ -880,7 +880,7 @@ and DV =
 
     /// Add scalar `b` to vector `a`
     static member (+) (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> v + b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> v + b), a)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DV.OfArray(Array.create a.Length bt)
@@ -892,7 +892,7 @@ and DV =
 
     /// Add scalar `a` to vector `b`
     static member (+) (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> a + v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> a + v), b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = DV.OfArray(Array.create b.Length at)
         let inline df_db(cp, bp, bt) = bt
@@ -904,7 +904,7 @@ and DV =
 
     /// Subtract scalar `b` from vector `a`
     static member (-) (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_V_S(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_V_S(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DV.OfArray(Array.create a.Length -bt)
@@ -916,7 +916,7 @@ and DV =
 
     /// Generate a vector where each element is the corresponding element of vector `b` subtracted from scalar `a`
     static member (-) (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_S_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_S_V(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = DV.OfArray(Array.create b.Length at)
         let inline df_db(cp, bp, bt) = -bt
@@ -928,7 +928,7 @@ and DV =
 
     /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Pow (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> v ** b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> v ** b), a)
         let inline fd(a, b) = a ** b
         let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D 1.)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
@@ -940,7 +940,7 @@ and DV =
 
     /// Generate a vector where scalar `a` is raised to the power of each corresponding element of vector `b`
     static member Pow (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> a ** v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> a ** v), b)
         let inline fd(a:D, b:DV) = DV.Pow(a, b)
         let inline df_da(cp, ap:D, at:D) = (at * (DV.Pow(ap, b - D 1.))) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
@@ -952,7 +952,7 @@ and DV =
 
     /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Atan2 (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> atan2 v b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> atan2 v b), a)
         let inline fd(a:DV, b:D) = DV.Atan2(a, b)
         let inline df_da(cp, ap, at) = (at * b) ./ ((ap .* ap) + (b * b))
         let inline df_db(cp, bp, bt) = (-bt * a) ./ ((a .* a) + (bp * bp))
@@ -964,7 +964,7 @@ and DV =
 
     /// Generate a vector where scalar `a` is raised to the power of each corresponding element of vector `b`
     static member Atan2 (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> atan2 a v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> atan2 a v), b)
         let inline fd(a:D, b:DV) = DV.Atan2(a, b)
         let inline df_da(cp, ap, at) = (at * b) ./ ((ap * ap) + (b .* b))
         let inline df_db(cp, bp, bt) = (-bt * a) ./ ((a * a) + (bp .* bp))
@@ -1034,133 +1034,133 @@ and DV =
     static member Atan2 (a:int, b:DV) = DV.Atan2(D (float a), b)
 
     static member Log (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(log, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(log, a)
         let inline fd(a) = log a
         let inline df(cp, ap, at) = at ./ ap
         let inline r(a) = Log_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Log10 (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(log10, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(log10, a)
         let inline fd(a) = log10 a
         let inline df(cp, ap:DV, at:DV) = at ./ (ap * log10ValFloat64)
         let inline r(a) = Log10_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Exp (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(exp, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(exp, a)
         let inline fd(a) = exp a
         let inline df(cp, ap, at) = at .* cp // cp = exp ap
         let inline r(a) = Exp_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
     
     static member Sin (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(sin, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(sin, a)
         let inline fd(a) = sin a
         let inline df(cp, ap:DV, at:DV) = at .* cos ap
         let inline r(a) = Sin_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Cos (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(cos, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(cos, a)
         let inline fd(a) = cos a
         let inline df(cp, ap:DV, at:DV) = -at .* sin ap
         let inline r(a) = Cos_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Tan (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(tan, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(tan, a)
         let inline fd(a) = tan a
         let inline df(cp, ap:DV, at:DV) = let cosa = cos ap in at ./ (cosa .* cosa)
         let inline r(a) = Tan_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member (~-) (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Mul_S_V(-1., a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Mul_S_V(-1., a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sqrt (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(sqrt, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(sqrt, a)
         let inline fd(a) = sqrt a
         let inline df(cp:DV, ap:DV, at:DV) = at ./ (D 2. * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sinh (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(sinh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(sinh, a)
         let inline fd(a) = sinh a
         let inline df(cp:DV, ap:DV, at:DV) = at .* cosh ap
         let inline r(a) = Sinh_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Cosh (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(cosh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(cosh, a)
         let inline fd(a) = cosh a
         let inline df(cp:DV, ap:DV, at:DV) = at .* sinh ap
         let inline r(a) = Cosh_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Tanh (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(tanh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(tanh, a)
         let inline fd(a) = tanh a
         let inline df(cp:DV, ap:DV, at:DV) = let cosha = cosh ap in at ./ (cosha .* cosha)
         let inline r(a) = Tanh_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Asin (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(asin, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(asin, a)
         let inline fd(a) = asin a
         let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D 1. - (ap .* ap))
         let inline r(a) = Asin_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Acos (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(acos, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(acos, a)
         let inline fd(a) = acos a
         let inline df(cp:DV, ap:DV, at:DV) = -at ./ sqrt (D 1. - (ap .* ap))
         let inline r(a) = Acos_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Atan (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(atan, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(atan, a)
         let inline fd(a) = atan a
         let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D 1. + (ap .* ap))
         let inline r(a) = Atan_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Abs (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(abs, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(abs, a)
         let inline fd(a) = abs a
         let inline df(cp, ap, at) = at .* (DV.Sign ap)
         let inline r(a) = Abs_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sign (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(signummod, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(signummod, a)
         let inline fd(a) = DV.Sign a
         let inline df(cp, ap, at) = DV.ZeroN a.Length
         let inline r(a) = Sign_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Floor (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(floor, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(floor, a)
         let inline fd(a) = floor a
         let inline df(cp, ap, at) = DV.ZeroN a.Length
         let inline r(a) = Floor_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Ceiling (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(ceil, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(ceil, a)
         let inline fd(a) = ceil a
         let inline df(cp, ap, at) = DV.ZeroN a.Length
         let inline r(a) = Ceil_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Round (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(round, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(round, a)
         let inline fd(a) = round a
         let inline df(cp, ap, at) = DV.ZeroN a.Length
         let inline r(a) = Round_DV(a)
@@ -1168,7 +1168,7 @@ and DV =
 
     /// L1 norm of vector `a`
     static member L1Norm (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.L1Norm_V(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.L1Norm_V(a)
         let inline fd(a) = DV.L1Norm(a)
         let inline df(cp, ap, at) = at * DV.Sign(ap)
         let inline r(a) = L1Norm_DV(a)
@@ -1176,7 +1176,7 @@ and DV =
 
     /// Squared L2 norm of vector `a`
     static member L2NormSq (a:DV) =
-        let inline ff(a) = let l2norm = GlobalConfig.Float64BackEnd.L2Norm_V(a) in l2norm * l2norm
+        let inline ff(a) = let l2norm = GlobalConfig.Float64Backend.L2Norm_V(a) in l2norm * l2norm
         let inline fd(a) = DV.L2NormSq(a)
         let inline df(cp, ap, at) = (D 2.) * (ap * at)
         let inline r(a) = L2NormSq_DV(a)
@@ -1184,7 +1184,7 @@ and DV =
 
     /// L2 norm of vector `a`
     static member L2Norm (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.L2Norm_V(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.L2Norm_V(a)
         let inline fd(a) = DV.L2Norm(a)
         let inline df(cp, ap, at) = (ap * at) / cp // cp = DV.L2Norm(ap)
         let inline r(a) = L2Norm_DV(a)
@@ -1192,7 +1192,7 @@ and DV =
 
     /// Sum of the elements of vector `a`
     static member Sum (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Sum_V(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Sum_V(a)
         let inline fd(a) = DV.Sum(a)
         let inline df(cp, ap, at) = DV.Sum(at)
         let inline r(a) = Sum_DV(a)
@@ -1216,21 +1216,21 @@ and DV =
             DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member ReshapeToDM (m:int, a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.ReshapeCopy_V_M(m, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.ReshapeCopy_V_M(m, a)
         let inline fd(a) = DV.ReshapeToDM(m, a)
         let inline df(cp, ap, at) = DV.ReshapeToDM(m, at)
         let inline r(a) = ReshapeCopy_DV_DM(a)
         DV.Op_DV_DM (a, ff, fd, df, r)
 
     static member ReLU (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V(max 0., a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(max 0., a)
         let inline fd(a) = DV.ReLU(a)
         let inline df(cp, ap, at) = (1. + DV.Sign(ap)) / 2.
         let inline r(a) = ReLU_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sigmoid (a:DV) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_V((fun v -> 1. / (1. + exp -v)), a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V((fun v -> 1. / (1. + exp -v)), a)
         let inline fd(a) = DV.Sigmoid(a)
         let inline df(cp:DV, ap, at) = cp .* (1. - cp)
         let inline r(a) = Sigmoid_DV(a)
@@ -1240,8 +1240,8 @@ and DV =
     static member LogSumExp (a:DV) =
         let inline ff(a) = 
             let m = Array.max a
-            let aa = GlobalConfig.Float64BackEnd.Sub_V_S(a, m)
-            m + log (GlobalConfig.Float64BackEnd.Map_F_V(exp, aa) |> Array.sum)
+            let aa = GlobalConfig.Float64Backend.Sub_V_S(a, m)
+            m + log (GlobalConfig.Float64Backend.Map_F_V(exp, aa) |> Array.sum)
         let inline fd(a) = DV.LogSumExp(a)
         let inline df(cp:D, ap:DV, at:DV) = (at * (exp ap)) / exp cp // cp = DV.LogSumExp(ap)
         let inline r(a) = LogSumExp_DV(a)
@@ -1494,7 +1494,7 @@ and DM =
 
     static member OfRows (m:int, a:DV) =
         match a with
-        | DV(ap) -> DM(GlobalConfig.Float64BackEnd.RepeatReshapeCopy_V_M(m, ap))
+        | DV(ap) -> DM(GlobalConfig.Float64Backend.RepeatReshapeCopy_V_M(m, ap))
         | DVF(ap,at,ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
         | DVR(ap,_,_,_,ai) ->
             let cp = DM.OfRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
@@ -1723,7 +1723,7 @@ and DM =
 
     /// Element-wise addition of `a` and `b`
     static member (+) (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Add_M_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Add_M_M(a, b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = bt
@@ -1735,7 +1735,7 @@ and DM =
 
     /// Element-wise subtraction of `a` and `b`
     static member (-) (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_M_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_M_M(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = -bt
@@ -1747,7 +1747,7 @@ and DM =
 
     /// Matrix product of `a` and `b`
     static member (*) (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_M_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_M_M(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -1759,7 +1759,7 @@ and DM =
 
     /// Element-wise (Hadamard, Schur) product of `a` and `b`
     static member (.*) (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_Had_M_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_Had_M_M(a, b)
         let inline fd(a, b) = a .* b
         let inline df_da(cp, ap, at) = at .* b
         let inline df_db(cp, bp, bt) = a .* bt
@@ -1771,7 +1771,7 @@ and DM =
 
     /// Right-multiply matrix `a` by vector `b`
     static member (*) (a:DM, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_M_V(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_M_V(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -1783,7 +1783,7 @@ and DM =
 
     /// Left-multiply matrix `b` by vector `a`
     static member (*) (a:DV, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_V_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_V_M(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -1795,7 +1795,7 @@ and DM =
 
     /// Element-wise (Hadamard, Schur) division `a` and `b`
     static member (./) (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_M_M((/), a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_M_M((/), a, b)
         let inline fd(a, b) = a ./ b
         let inline df_da(cp, ap, at) = at ./ b
         let inline df_db(cp, bp, bt) = -bt .* cp ./ bp // cp = ap / bp
@@ -1806,7 +1806,7 @@ and DM =
         DM.Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member Pow (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_M_M((fun x y -> x ** y), a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_M_M((fun x y -> x ** y), a, b)
         let inline fd(a, b) = a ** b
         let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
@@ -1817,7 +1817,7 @@ and DM =
         DM.Op_DM_DM_DM(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
     
     static member Atan2 (a:DM, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map2_F_M_M(atan2, a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_M_M(atan2, a, b)
         let inline fd(a, b) = atan2 a b
         let inline df_da(cp, ap, at) = (at .* b) ./ ((ap .* ap) + (b .* b))
         let inline df_db(cp, bp, bt) = (-bt .* a) ./ ((a .* a) + (bp .* bp))
@@ -1828,7 +1828,7 @@ and DM =
         DM.Op_DM_DM_DM(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (*) (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_M(b, a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_M(b, a)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -1839,7 +1839,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (*) (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_M(a, b)
         let inline fd(a, b) = a * b
         let inline df_da(cp, ap, at) = at * b
         let inline df_db(cp, bp, bt) = a * bt
@@ -1850,7 +1850,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (/) (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Mul_S_M(1. / b, a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Mul_S_M(1. / b, a)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt * cp / bp // cp = a / bp
@@ -1861,7 +1861,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (/) (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> a / v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> a / v), b)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt .* (cp ./ bp) // cp = a / bp
@@ -1872,7 +1872,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (+) (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> v + b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> v + b), a)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DM.OfArray2D(Array2D.create a.Rows a.Cols bt)
@@ -1883,7 +1883,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (+) (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> a + v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> a + v), b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = DM.OfArray2D(Array2D.create b.Rows b.Cols at)
         let inline df_db(cp, bp, bt) = bt
@@ -1894,7 +1894,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (-) (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_M_S(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_M_S(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DM.OfArray2D(Array2D.create a.Rows a.Cols -bt)
@@ -1905,7 +1905,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (-) (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Sub_S_M(a, b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Sub_S_M(a, b)
         let inline fd(a, b) = a - b
         let inline df_da(cp, ap, at) = DM.OfArray2D(Array2D.create b.Rows b.Cols at)
         let inline df_db(cp, bp, bt) = -bt
@@ -1916,7 +1916,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member Pow (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> v ** b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> v ** b), a)
         let inline fd(a, b) = a ** b
         let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D 1.)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
@@ -1927,7 +1927,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member Pow (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> a ** v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> a ** v), b)
         let inline fd(a:D, b:DM) = DM.Pow(a, b)
         let inline df_da(cp, ap:D, at:D) = at * (DM.Pow(ap, b - D 1.)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
@@ -1938,7 +1938,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member Atan2 (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> atan2 v b), a)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> atan2 v b), a)
         let inline fd(a:DM, b:D) = DM.Atan2(a, b)
         let inline df_da(cp, ap, at) = (at * b) ./ ((ap .* ap) + (b * b))
         let inline df_db(cp, bp, bt) = (-bt * a) ./ ((a .* a) + (bp * bp))
@@ -1949,7 +1949,7 @@ and DM =
         DM.Op_DM_D_DM(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member Atan2 (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> atan2 a v), b)
+        let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> atan2 a v), b)
         let inline fd(a:D, b:DM) = DM.Atan2(a, b)
         let inline df_da(cp, ap, at) = (at * b) ./ ((ap * ap) + (b .* b))
         let inline df_db(cp, bp, bt) = (-bt * a) ./ ((a * a) + (bp .* bp))
@@ -1992,133 +1992,133 @@ and DM =
     static member Atan2 (a:int, b:DM) = DM.Atan2(D (float a), b)
 
     static member Log (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(log, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(log, a)
         let inline fd(a) = log a
         let inline df(cp, ap, at) = at ./ ap
         let inline r(a) = Log_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Log10 (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(log10, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(log10, a)
         let inline fd(a) = log10 a
         let inline df(cp, ap:DM, at:DM) = at ./ (ap * log10ValFloat64)
         let inline r(a) = Log10_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Exp (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(exp, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(exp, a)
         let inline fd(a) = exp a
         let inline df(cp, ap, at) = at .* cp // cp = exp ap
         let inline r(a) = Exp_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Sin (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(sin, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(sin, a)
         let inline fd(a) = sin a
         let inline df(cp, ap:DM, at:DM) = at .* cos ap
         let inline r(a) = Sin_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Cos (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(cos, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(cos, a)
         let inline fd(a) = cos a
         let inline df(cp, ap:DM, at:DM) = -at .* sin ap
         let inline r(a) = Cos_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Tan (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(tan, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(tan, a)
         let inline fd(a) = tan a
         let inline df(cp, ap:DM, at:DM) = let cosa = cos ap in at ./ (cosa .* cosa)
         let inline r(a) = Tan_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member (~-) (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Mul_S_M(-1., a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Mul_S_M(-1., a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Sqrt (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(sqrt, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(sqrt, a)
         let inline fd(a) = sqrt a
         let inline df(cp:DM, ap:DM, at:DM) = at ./ (D 2. * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Sinh (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(sinh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(sinh, a)
         let inline fd(a) = sinh a
         let inline df(cp:DM, ap:DM, at:DM) = at .* cosh ap
         let inline r(a) = Sinh_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Cosh (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(cosh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(cosh, a)
         let inline fd(a) = cosh a
         let inline df(cp:DM, ap:DM, at:DM) = at .* sinh ap
         let inline r(a) = Cosh_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Tanh (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(tanh, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(tanh, a)
         let inline fd(a) = tanh a
         let inline df(cp:DM, ap:DM, at:DM) = let cosha = cosh ap in at ./ (cosha .* cosha)
         let inline r(a) = Tanh_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Asin (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(asin, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(asin, a)
         let inline fd(a) = asin a
         let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D 1. - (ap .* ap))
         let inline r(a) = Asin_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Acos (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(acos, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(acos, a)
         let inline fd(a) = acos a
         let inline df(cp:DM, ap:DM, at:DM) = -at ./ sqrt (D 1. - (ap .* ap))
         let inline r(a) = Acos_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Atan (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(atan, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(atan, a)
         let inline fd(a) = atan a
         let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D 1. + (ap .* ap))
         let inline r(a) = Atan_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Abs (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(abs, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(abs, a)
         let inline fd(a) = abs a
         let inline df(cp, ap, at) = at .* (DM.Sign ap)
         let inline r(a) = Abs_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Sign (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(signummod, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(signummod, a)
         let inline fd(a) = DM.Sign a
         let inline df(cp, ap, at) = DM.ZeroMN a.Rows a.Cols
         let inline r(a) = Sign_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Floor (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(floor, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(floor, a)
         let inline fd(a) = floor a
         let inline df(cp, ap, at) = DM.ZeroMN a.Rows a.Cols
         let inline r(a) = Floor_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Ceiling (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(ceil, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(ceil, a)
         let inline fd(a) = ceil a
         let inline df(cp, ap, at) = DM.ZeroMN a.Rows a.Cols
         let inline r(a) = Ceil_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Round (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(round, a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(round, a)
         let inline fd(a) = round a
         let inline df(cp, ap, at) = DM.ZeroMN a.Rows a.Cols
         let inline r(a) = Round_DM(a)
@@ -2126,7 +2126,7 @@ and DM =
 
     /// Transpose of matrix `a`
     static member Transpose(a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Transpose_M(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Transpose_M(a)
         let inline fd(a) = DM.Transpose(a)
         let inline df(cp, ap, at) = DM.Transpose(at)
         let inline r(a) = Transpose_DM(a)
@@ -2134,7 +2134,7 @@ and DM =
 
     /// Diagonal of matrix `a`
     static member Diagonal(a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Diagonal_M(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Diagonal_M(a)
         let inline fd(a) = DM.Diagonal(a)
         let inline df(cp, ap, at) = DM.Diagonal(at)
         let inline r(a) = Diagonal_DM(a)
@@ -2146,7 +2146,7 @@ and DM =
 
     /// Sum of the entries of matrix `a`
     static member Sum(a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Sum_M(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Sum_M(a)
         let inline fd(a) = DM.Sum(a)
         let inline df(cp, ap, at) = DM.Sum(at)
         let inline r(a) = Sum_DM(a)
@@ -2154,7 +2154,7 @@ and DM =
 
     /// Solve a system of linear equations Ax = b, where the coefficient matrix `a` has general form
     static member Solve (a:DM, b:DV) =
-        let inline ff(a, b) = match GlobalConfig.Float64BackEnd.Solve_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
+        let inline ff(a, b) = match GlobalConfig.Float64Backend.Solve_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
         let inline fd(a, b) = DM.Solve(a, b)
         let inline df_da(cp, ap, at) = DM.Solve(ap, -at * cp) // cp = DM.Solve(ap, b)
         let inline df_db(cp, bp, bt) = DM.Solve(a, bt)
@@ -2166,7 +2166,7 @@ and DM =
 
     /// Solve a system of linear equations Ax = b, where the coefficient matrix `a` is symmetric
     static member SolveSymmetric (a:DM, b:DV) =
-        let inline ff(a, b) = match GlobalConfig.Float64BackEnd.SolveSymmetric_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
+        let inline ff(a, b) = match GlobalConfig.Float64Backend.SolveSymmetric_M_V(a, b) with Some(x) -> x | _ -> ErrorMessages.InvalidArgSolve()
         let inline fd(a, b) = DM.SolveSymmetric(a, b)
         let inline df_da(cp, ap, at) = DM.SolveSymmetric(ap, -at * cp) // cp = DM.Solve(ap, b)
         let inline df_db(cp, bp, bt) = DM.SolveSymmetric(a, bt)
@@ -2225,7 +2225,7 @@ and DM =
         DM.Op_DM_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member ReshapeToDV(a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.ReshapeCopy_M_V(a)
+        let inline ff(a) = GlobalConfig.Float64Backend.ReshapeCopy_M_V(a)
         let inline fd(a) = DM.ReshapeToDV(a)
         let inline df(cp, ap, at) = DM.ReshapeToDV(at)
         let inline r(a) = ReshapeCopy_DM_DV(a)
@@ -2233,7 +2233,7 @@ and DM =
 
     /// Matrix inverse of `a`
     static member Inverse(a:DM) =
-        let inline ff(a) = match GlobalConfig.Float64BackEnd.Inverse_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgInverse()
+        let inline ff(a) = match GlobalConfig.Float64Backend.Inverse_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgInverse()
         let inline fd(a) = DM.Inverse(a)
         let inline df(cp, ap, at) = -cp * at * cp
         let inline r(a) = Inverse_DM(a)
@@ -2241,21 +2241,21 @@ and DM =
 
     /// Determinant of matrix `a`
     static member Det(a:DM) =
-        let inline ff(a) = match GlobalConfig.Float64BackEnd.Det_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgDet()
+        let inline ff(a) = match GlobalConfig.Float64Backend.Det_M(a) with Some(x) -> x | _ -> ErrorMessages.InvalidArgDet()
         let inline fd(a) = DM.Det(a)
         let inline df(cp, ap, at) = cp * DM.Trace(DM.Inverse(ap) * at)
         let inline r(a) = Det_DM(a)
         DM.Op_DM_D (a, ff, fd, df, r)
 
     static member ReLU (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M(max 0., a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(max 0., a)
         let inline fd(a) = DM.ReLU(a)
         let inline df(cp, ap, at) = (1. + DM.Sign(ap)) / 2.
         let inline r(a) = ReLU_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
         
     static member Sigmoid (a:DM) =
-        let inline ff(a) = GlobalConfig.Float64BackEnd.Map_F_M((fun v -> 1. / (1. + exp -v)), a)
+        let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M((fun v -> 1. / (1. + exp -v)), a)
         let inline fd(a) = DM.Sigmoid(a)
         let inline df(cp:DM, ap, at) = cp .* (1. - cp)
         let inline r(a) = Sigmoid_DM(a)

@@ -241,12 +241,12 @@ module DiffOps =
     /// Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let jacobian f =
         let fj = jacobianT f
-        fun x -> fj x |> GlobalConfig.Float32BackEnd.Transpose_M
+        fun x -> fj x |> GlobalConfig.Float32Backend.Transpose_M
 
     /// Original value and Jacobian of a vector-to-vector function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let jacobian' f =
         let fj = jacobianT' f
-        fun x -> fj x |> fun (r, j) -> (r, GlobalConfig.Float32BackEnd.Transpose_M j)
+        fun x -> fj x |> fun (r, j) -> (r, GlobalConfig.Float32Backend.Transpose_M j)
 
     /// Laplacian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let laplacian (f:Expr) =
@@ -307,13 +307,13 @@ module DiffOps =
     let inline div' f x =
         let v, j = jacobianT' f x
         if Array2D.length1 j <> Array2D.length2 j then ErrorMessages.InvalidArgDiv()
-        v, GlobalConfig.Float32BackEnd.Sum_V(GlobalConfig.Float32BackEnd.Diagonal_M(j))
+        v, GlobalConfig.Float32Backend.Sum_V(GlobalConfig.Float32Backend.Diagonal_M(j))
 
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
     let inline div f x =
         let j = jacobianT f x
         if Array2D.length1 j <> Array2D.length2 j then ErrorMessages.InvalidArgDiv()
-        GlobalConfig.Float32BackEnd.Sum_V(GlobalConfig.Float32BackEnd.Diagonal_M(j))
+        GlobalConfig.Float32Backend.Sum_V(GlobalConfig.Float32Backend.Diagonal_M(j))
 
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv' f x =

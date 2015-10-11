@@ -39,7 +39,7 @@
 #nowarn "9"
 #nowarn "51"
 
-namespace DiffSharp.BackEnd
+namespace DiffSharp.Backend
 
 open System
 open System.Runtime.InteropServices
@@ -575,8 +575,8 @@ module OpenBLAS =
             else
                 None
 
-    type Float32BackEnd() =
-        interface BackEnd<float32> with
+    type Float32Backend() =
+        interface Backend<float32> with
             member o.Add_V_V(x, y) =
                 if Array.isEmpty x then
                     Array.copy y
@@ -595,7 +595,7 @@ module OpenBLAS =
                     x'
             member o.Sub_V_V(x, y) =
                 if Array.isEmpty x then
-                    (o :> BackEnd<float32>).Mul_S_V(-1.f, y)
+                    (o :> Backend<float32>).Mul_S_V(-1.f, y)
                 elif Array.isEmpty y then
                     Array.copy x
                 else
@@ -616,24 +616,24 @@ module OpenBLAS =
                     z
             member o.Sub_S_V(alpha, x) = // Non-BLAS
                 if alpha = 0.f then 
-                    (o :> BackEnd<float32>).Mul_S_V(-1.f, x)
+                    (o :> Backend<float32>).Mul_S_V(-1.f, x)
                 else
-                    (o :> BackEnd<float32>).Map_F_V((fun v -> alpha - v), x)
+                    (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
             member o.Sub_V_S(x, alpha) = // Non-BLAS
                 if alpha = 0.f then
                     x
                 else
-                    (o :> BackEnd<float32>).Map_F_V((fun v -> v - alpha), x)
+                    (o :> Backend<float32>).Map_F_V((fun v -> v - alpha), x)
             member o.Sub_S_M(alpha, x) = // Non-BLAS
                 if alpha = 0.f then 
-                    (o :> BackEnd<float32>).Mul_S_M(-1.f, x)
+                    (o :> Backend<float32>).Mul_S_M(-1.f, x)
                 else
-                    (o :> BackEnd<float32>).Map_F_M((fun v -> alpha - v), x)
+                    (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
             member o.Sub_M_S(x, alpha) = // Non-BLAS
                 if alpha = 0.f then
                     x
                 else
-                    (o :> BackEnd<float32>).Map_F_M((fun v -> v - alpha), x)
+                    (o :> Backend<float32>).Map_F_M((fun v -> v - alpha), x)
             member o.Map_F_V(f, x) = // Non-BLAS
                 if Array.isEmpty x then
                     Array.empty
@@ -693,7 +693,7 @@ module OpenBLAS =
                     x'
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    (o :> BackEnd<float32>).Mul_S_M(-1.f, y)
+                    (o :> Backend<float32>).Mul_S_M(-1.f, y)
                 elif Array2D.isEmpty y then
                     Array2D.copy x
                 else
@@ -713,7 +713,7 @@ module OpenBLAS =
                 elif Array2D.isEmpty y then
                     Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
                 else
-                    (o :> BackEnd<float32>).Map2_F_M_M((*), x, y)
+                    (o :> Backend<float32>).Map2_F_M_M((*), x, y)
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
                     Array.empty
@@ -818,8 +818,8 @@ module OpenBLAS =
                         Buffer.BlockCopy(x, 0, r, i * xbytes, xbytes)
                     r
 
-    type Float64BackEnd() =
-        interface BackEnd<float> with
+    type Float64Backend() =
+        interface Backend<float> with
             member o.Add_V_V(x, y) =
                 if Array.isEmpty x then
                     Array.copy y
@@ -838,7 +838,7 @@ module OpenBLAS =
                     x'
             member o.Sub_V_V(x, y) =
                 if Array.isEmpty x then
-                    (o :> BackEnd<float>).Mul_S_V(-1., y)
+                    (o :> Backend<float>).Mul_S_V(-1., y)
                 elif Array.isEmpty y then
                     Array.copy x
                 else
@@ -859,24 +859,24 @@ module OpenBLAS =
                     z
             member o.Sub_S_V(alpha, x) = // Non-BLAS
                 if alpha = 0. then 
-                    (o :> BackEnd<float>).Mul_S_V(-1., x)
+                    (o :> Backend<float>).Mul_S_V(-1., x)
                 else
-                    (o :> BackEnd<float>).Map_F_V((fun v -> alpha - v), x)
+                    (o :> Backend<float>).Map_F_V((fun v -> alpha - v), x)
             member o.Sub_V_S(x, alpha) = // Non-BLAS
                 if alpha = 0. then
                     x
                 else
-                    (o :> BackEnd<float>).Map_F_V((fun v -> v - alpha), x)
+                    (o :> Backend<float>).Map_F_V((fun v -> v - alpha), x)
             member o.Sub_S_M(alpha, x) = // Non-BLAS
                 if alpha = 0. then 
-                    (o :> BackEnd<float>).Mul_S_M(-1., x)
+                    (o :> Backend<float>).Mul_S_M(-1., x)
                 else
-                    (o :> BackEnd<float>).Map_F_M((fun v -> alpha - v), x)
+                    (o :> Backend<float>).Map_F_M((fun v -> alpha - v), x)
             member o.Sub_M_S(x, alpha) = // Non-BLAS
                 if alpha = 0. then
                     x
                 else
-                    (o :> BackEnd<float>).Map_F_M((fun v -> v - alpha), x)
+                    (o :> Backend<float>).Map_F_M((fun v -> v - alpha), x)
             member o.Map_F_V(f, x) = // Non-BLAS
                 if Array.isEmpty x then
                     Array.empty
@@ -936,7 +936,7 @@ module OpenBLAS =
                     x'
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    (o :> BackEnd<float>).Mul_S_M(-1., y)
+                    (o :> Backend<float>).Mul_S_M(-1., y)
                 elif Array2D.isEmpty y then
                     Array2D.copy x
                 else
@@ -956,7 +956,7 @@ module OpenBLAS =
                 elif Array2D.isEmpty y then
                     Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
                 else
-                    (o :> BackEnd<float>).Map2_F_M_M((*), x, y)
+                    (o :> Backend<float>).Map2_F_M_M((*), x, y)
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
                     Array.empty
