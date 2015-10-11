@@ -56,6 +56,14 @@ type D =
         | D(_) -> d
         | DF(ap,_,_) -> ap
         | DR(ap,_,_,_,_) -> ap
+    /// Deepest primal value of this D
+    member d.PD =
+        let rec prec x =
+            match x with
+            | D(_) -> x
+            | DF(xp,_,_) -> prec xp
+            | DR(xp,_,_,_,_) -> prec xp
+        prec d
     /// Tangent value of this D
     member d.T =
         match d with
@@ -96,12 +104,7 @@ type D =
 
     static member Zero = D 0.f
     static member One = D 1.f
-    static member op_Explicit(d:D):float32 =
-        match d with
-        | D(ap) -> ap
-        | DF(ap,_,_) -> float32 ap
-        | DR(ap,_,_,_,_) -> float32 ap
-    static member op_Explicit(d:float32) = D(d)
+    static member op_Explicit(d:D):float32 = let (D(ap)) = d.PD in ap
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -405,6 +408,14 @@ and DV =
         | DV(_) -> d
         | DVF(ap,_,_) -> ap
         | DVR(ap,_,_,_,_) -> ap
+    /// Deepest primal value of this DV
+    member d.PD =
+        let rec prec x =
+            match x with
+            | DV(_) -> x
+            | DVF(xp,_,_) -> prec xp
+            | DVR(xp,_,_,_,_) -> prec xp
+        prec d
     /// Tangent value of this DV
     member d.T =
         match d with
@@ -506,11 +517,7 @@ and DV =
         sb.ToString()
     static member Zero = DV Array.empty
     static member ZeroN n = DV(Array.zeroCreate n)
-    static member op_Explicit(d:DV):float32[] =
-        match d with
-        | DV(ap) -> ap
-        | DVF(ap,_,_) -> DV.op_Explicit(ap)
-        | DVR(ap,_,_,_,_) -> DV.op_Explicit(ap)
+    static member op_Explicit(d:DV):float32[] = let (DV(ap)) = d.PD in ap
     static member op_Explicit(d) = DV(d)
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
@@ -1321,6 +1328,14 @@ and DM =
         | DM(_) -> d
         | DMF(ap,_,_) -> ap
         | DMR(ap,_,_,_,_) -> ap
+    /// Deepest primal value of this DM
+    member d.PD =
+        let rec prec x =
+            match x with
+            | DM(_) -> x
+            | DMF(xp,_,_) -> prec xp
+            | DMR(xp,_,_,_,_) -> prec xp
+        prec d
     /// Tangent value of this DM
     member d.T =
         match d with
@@ -1447,11 +1462,7 @@ and DM =
         sb.ToString()
     static member Zero = DM Array2D.empty
     static member ZeroMN m n = DM (Array2D.zeroCreate m n)
-    static member op_Explicit(d:DM):float32[,] =
-        match d with
-        | DM(ap) -> ap
-        | DMF(ap,_,_) -> DM.op_Explicit(ap)
-        | DMR(ap,_,_,_,_) -> DM.op_Explicit(ap)
+    static member op_Explicit(d:DM):float32[,] = let (DM(ap)) = d.PD in ap
     static member op_Explicit(d:float32[,]) = DM(d)
     static member OfArray2D (a:D[,]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
@@ -2850,6 +2861,8 @@ module DOps =
         (^a : (member GetReverse : uint32 -> ^a) p, i)
     /// Get the primal value of `d`
     let inline primal (d:^a when ^a : (member P : ^a)) = (^a : (member P : ^a) d)
+    /// Get the deepest primal value of `d`
+    let inline primalDeep (d:^a when ^a : (member PD: ^a)) = (^a :(member PD :^a) d)
     /// Get the tangent value of `d`
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
     /// Get the adjoint value of `d`
