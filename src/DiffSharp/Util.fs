@@ -154,6 +154,10 @@ module Array2D =
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)
     let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray
+    let map2 f (a1:_[,]) (a2:_[,]) = 
+        let m = min (Array2D.length1 a1) (Array2D.length1 a2)
+        let n = min (Array2D.length2 a1) (Array2D.length2 a2)
+        Array2D.init m n (fun i j -> f a1.[i, j] a2.[i, j])
 
     module Parallel =
         let init m n f =

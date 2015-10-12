@@ -880,7 +880,7 @@ and DV =
 
     /// Add scalar `b` to vector `a`
     static member (+) (a:DV, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_V((fun v -> v + b), a)
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_S_V(b, a)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DV.OfArray(Array.create a.Length bt)
@@ -892,7 +892,7 @@ and DV =
 
     /// Add scalar `a` to vector `b`
     static member (+) (a:D, b:DV) =
-        let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_V((fun v -> a + v), b)
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_S_V(a, b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = DV.OfArray(Array.create b.Length at)
         let inline df_db(cp, bp, bt) = bt
@@ -1216,7 +1216,7 @@ and DV =
             DV.Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member ReshapeToDM (m:int, a:DV) =
-        let inline ff(a) = GlobalConfig.Float32Backend.ReshapeCopy_V_M(m, a)
+        let inline ff(a) = GlobalConfig.Float32Backend.ReshapeCopy_V_MRows(m, a)
         let inline fd(a) = DV.ReshapeToDM(m, a)
         let inline df(cp, ap, at) = DV.ReshapeToDM(m, at)
         let inline r(a) = ReshapeCopy_DV_DM(a)
@@ -1490,14 +1490,21 @@ and DM =
             DMF(DM.OfRows(ap), DM.OfRows(at), ai)
         | DVR(_,_,_,_,ai) ->
             let ap = s |> Seq.map (fun x -> x.P)
-            let cp = DM.OfRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDVs(s |> Seq.toArray), ref 0u, ai)
+            let cp = DM.OfRows(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DMRows_ofDVs(s |> Seq.toArray), ref 0u, ai)
 
     static member OfRows (m:int, a:DV) =
         match a with
-        | DV(ap) -> DM(GlobalConfig.Float32Backend.RepeatReshapeCopy_V_M(m, ap))
+        | DV(ap) -> DM(GlobalConfig.Float32Backend.RepeatReshapeCopy_V_MRows(m, ap))
         | DVF(ap,at,ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
         | DVR(ap,_,_,_,ai) ->
-            let cp = DM.OfRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDV(a), ref 0u, ai)
+            let cp = DM.OfRows(m, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DMRows_ofDV(a), ref 0u, ai)
+
+    static member OfCols (n:int, a:DV) =
+        match a with
+        | DV(ap) -> DM(GlobalConfig.Float32Backend.RepeatReshapeCopy_V_MCols(n, ap))
+        | DVF(ap,at,ai) -> DMF(DM.OfCols(n, ap), DM.OfCols(n, at), ai)
+        | DVR(ap,_,_,_,ai) ->
+            let cp = DM.OfCols(n, ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DMCols_ofDV(a), ref 0u, ai)
 
     static member inline Op_DM_DM (a, ff, fd, df, r) =
         match a with
@@ -1721,6 +1728,40 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_c_d(a, b), ref 0u, bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_c(a, b), ref 0u, ai) // ai > bi
 
+    static member inline Op_DV_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
+        match a with
+        | DV(ap) ->
+            match b with
+            | DM(bp)                  -> DM(ff(ap, bp))
+            | DMF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
+            | DMR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_c_d(a, b), ref 0u, bi)
+        | DVF(ap, at, ai) ->
+            match b with
+            | DM(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
+            | DMF(bp, bt, bi) ->
+                match compare ai bi with
+                | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
+                | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
+                | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
+            | DMR(bp,  _,  _,  _, bi) ->
+                match compare ai bi with
+                | -1                  -> let cp = fd(a, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_c_d(a, b), ref 0u, bi) // ai < bi
+                | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
+                | _                   -> failwith "Forward and reverse AD cannot run on the same level."
+        | DVR(ap,  _,  _,  _, ai) ->
+            match b with
+            | DM(_)                   -> let cp = fd(ap, b) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_c(a, b), ref 0u, ai)
+            | DMF(bp, bt, bi) ->
+                match compare ai bi with
+                | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
+                | 1                   -> let cp = fd(ap, b) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_c(a, b), ref 0u, ai) // ai > bi
+                | _                   -> failwith "Forward and reverse AD cannot run on the same level."
+            | DMR(bp,  _,  _,  _, bi) ->
+                match compare ai bi with
+                | 0                   -> let cp = fd(ap, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_d(a, b), ref 0u, ai) // ai = bi
+                | -1                  -> let cp = fd(a, bp) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_c_d(a, b), ref 0u, bi) // ai < bi
+                | _                   -> let cp = fd(ap, b) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), r_d_c(a, b), ref 0u, ai) // ai > bi
+
     /// Element-wise addition of `a` and `b`
     static member (+) (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Add_M_M(a, b)
@@ -1872,7 +1913,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (+) (a:DM, b:D) =
-        let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_M((fun v -> v + b), a)
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_S_M(b, a)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = at
         let inline df_db(cp, bp, bt) = DM.OfArray2D(Array2D.create a.Rows a.Cols bt)
@@ -1883,7 +1924,7 @@ and DM =
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (+) (a:D, b:DM) =
-        let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_M((fun v -> a + v), b)
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_S_M(a, b)
         let inline fd(a, b) = a + b
         let inline df_da(cp, ap, at) = DM.OfArray2D(Array2D.create b.Rows b.Cols at)
         let inline df_db(cp, bp, bt) = bt
@@ -1903,6 +1944,28 @@ and DM =
         let inline r_d_c(a, b) = Sub_DM_DCons(a)
         let inline r_c_d(a, b) = Sub_DMCons_D(b)
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
+
+    static member (+) (a:DV, b:DM) =
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_V_MCols(a, b)
+        let inline fd(a, b) = a + b
+        let inline df_da(cp, ap, at) = DM.OfCols(b.Cols, at)
+        let inline df_db(cp, bp, bt) = bt
+        let inline df_dab(cp, ap, at, bp, bt) = at + bt
+        let inline r_d_d(a, b) = Add_DMCols_DV(b, a)
+        let inline r_d_c(a, b) = Add_DMColsCons_DV(a)
+        let inline r_c_d(a, b) = Add_DMCols_DVCons(b)
+        DM.Op_DV_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
+
+    static member (+) (a:DM, b:DV) =
+        let inline ff(a, b) = GlobalConfig.Float32Backend.Add_V_MCols(b, a)
+        let inline fd(a, b) = a + b
+        let inline df_da(cp, ap, at) = at
+        let inline df_db(cp, bp, bt) = DM.OfCols(a.Cols, bt)
+        let inline df_dab(cp, ap, at, bp, bt) = at + bt
+        let inline r_d_d(a, b) = Add_DMCols_DV(a, b)
+        let inline r_d_c(a, b) = Add_DMCols_DVCons(a)
+        let inline r_c_d(a, b) = Add_DMColsCons_DV(b)
+        DM.Op_DM_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (-) (a:D, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Sub_S_M(a, b)
@@ -2225,7 +2288,7 @@ and DM =
         DM.Op_DM_DV_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member ReshapeToDV(a:DM) =
-        let inline ff(a) = GlobalConfig.Float32Backend.ReshapeCopy_M_V(a)
+        let inline ff(a) = GlobalConfig.Float32Backend.ReshapeCopy_MRows_V(a)
         let inline fd(a) = DM.ReshapeToDV(a)
         let inline df(cp, ap, at) = DM.ReshapeToDV(at)
         let inline r(a) = ReshapeCopy_DM_DV(a)
@@ -2513,6 +2576,9 @@ and TraceOp =
     | Add_DM_D               of DM * D
     | Add_DM_DCons           of DM
     | Add_DMCons_D           of D
+    | Add_DMCols_DV          of DM * DV
+    | Add_DMCols_DVCons      of DM
+    | Add_DMColsCons_DV      of DV
     | Sub_DM_D               of DM * D
     | Sub_DM_DCons           of DM
     | Sub_DMCons_D           of D
@@ -2552,8 +2618,9 @@ and TraceOp =
     | Round_DM               of DM
     | Transpose_DM           of DM
     | Make_DM_ofDs           of D[,]
-    | Make_DM_ofDV           of DV
-    | Make_DM_ofDVs          of DV[]
+    | Make_DMRows_ofDV       of DV
+    | Make_DMCols_ofDV       of DV
+    | Make_DMRows_ofDVs      of DV[]
     | AddItem_DM_D           of DM * int * int * D
     | AddItem_DM_DCons       of DM
     | AddItem_DMCons_D       of int * int * D
@@ -2722,7 +2789,7 @@ module DM =
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
     let inline createRows (m:int) (v:DV) = DM.OfRows(m, v)
     /// Creates a matrix with `n` columns, where all columns are equal to `v`
-    let inline createCols (n:int) (v:DV) = DM.OfRows(n, v) |> transpose
+    let inline createCols (n:int) (v:DV) = DM.OfCols(n, v)
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
     /// Gets the diagonal of matrix `m`
@@ -3089,6 +3156,14 @@ module DOps =
                             | Add_DM_D(a, b) -> pushRec ((bx d.A a) :: (bx (DM.Sum(d.A)) b) :: t)
                             | Add_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | Add_DMCons_D(b) -> pushRec ((bx (DM.Sum(d.A)) b) :: t)
+                            | Add_DMCols_DV(a, b) ->
+                                d.A.GetCols() |> Seq.iter (fun v -> b.A <- b.A + v)
+                                pushRec ((bx d.A a) :: (bx DV.Zero b) :: t)
+                            | Add_DMCols_DVCons(a) ->
+                                pushRec ((bx d.A a) :: t)
+                            | Add_DMColsCons_DV(b) ->
+                                d.A.GetCols() |> Seq.iter (fun v -> b.A <- b.A + v)
+                                pushRec ((bx DV.Zero b) :: t)
                             | Sub_DM_D(a, b) -> pushRec ((bx d.A a) :: (bx -(DM.Sum(d.A)) b) :: t)
                             | Sub_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | Sub_DMCons_D(b) -> pushRec ((bx -(DM.Sum(d.A)) b) :: t)
@@ -3134,10 +3209,13 @@ module DOps =
                             | Round_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
                             | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
-                            | Make_DM_ofDV(a) -> 
+                            | Make_DMRows_ofDV(a) ->
                                 d.A.GetRows() |> Seq.iter (fun v -> a.A <- a.A + v)
                                 pushRec ((bx DV.Zero a) :: t)
-                            | Make_DM_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
+                            | Make_DMCols_ofDV(a) ->
+                                d.A.GetCols() |> Seq.iter (fun v -> a.A <- a.A + v)
+                                pushRec ((bx DV.Zero a) :: t)
+                            | Make_DMRows_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
                             | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)
                             | AddItem_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
                             | AddItem_DMCons_D(i, j, b) -> pushRec ((bx d.A.[i, j] b) :: t)
@@ -3367,6 +3445,9 @@ module DOps =
                             | Add_DM_D(a, b) -> resetRec (box a :: box b :: t)
                             | Add_DM_DCons(a) -> resetRec (box a :: t)
                             | Add_DMCons_D(b) -> resetRec (box b :: t)
+                            | Add_DMCols_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DMCols_DVCons(a) -> resetRec (box a :: t)
+                            | Add_DMColsCons_DV(b) -> resetRec (box b :: t)
                             | Sub_DM_D(a, b) -> resetRec (box a :: box b :: t)
                             | Sub_DM_DCons(a) -> resetRec (box a :: t)
                             | Sub_DMCons_D(b) -> resetRec (box b :: t)
@@ -3406,8 +3487,9 @@ module DOps =
                             | Round_DM(a) -> resetRec (box a :: t)
                             | Transpose_DM(a) -> resetRec (box a :: t)
                             | Make_DM_ofDs(a) -> resetRec (List.append (a |> Array2D.toArray |> Array.map box |> List.ofArray) t)
-                            | Make_DM_ofDV(a) -> resetRec (box a :: t)
-                            | Make_DM_ofDVs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
+                            | Make_DMRows_ofDV(a) -> resetRec (box a :: t)
+                            | Make_DMCols_ofDV(a) -> resetRec (box a :: t)
+                            | Make_DMRows_ofDVs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
                             | AddItem_DM_D(a, _, _, b) -> resetRec (box a :: box b :: t)
                             | AddItem_DM_DCons(a) -> resetRec (box a :: t)
                             | AddItem_DMCons_D(_, _, b) -> resetRec (box b :: t)
