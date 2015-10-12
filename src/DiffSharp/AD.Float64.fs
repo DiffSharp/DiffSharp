@@ -2785,13 +2785,13 @@ module DM =
     /// Maps function `f` to the rows of matrix `m`. Row indices are also supplied to `f`.
     let inline mapiRows (f:int->DV->DV) (m:DM) = m |> toRows |> Seq.mapi f |> ofRows
     /// Maps function `f` to the columns of matrices `m1` and `m2`
-    let inline map2Cols (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toCols) (m2 |> toCols)
+    let inline map2Cols (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toCols) (m2 |> toCols) |> ofCols
     /// Maps function `f` to the rows of matrices `m1` and `m2`
-    let inline map2Rows (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toRows) (m2 |> toRows)
+    let inline map2Rows (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toRows) (m2 |> toRows) |> ofRows
     /// Maps function `f` to the columns of matrices `m1` and `m2`. Column indices are also supplied to `f`.
-    let inline mapi2Cols (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toCols) (m2 |> toCols)
+    let inline mapi2Cols (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toCols) (m2 |> toCols) |> ofCols
     /// Maps function `f` to the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
-    let inline mapi2Rows (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toRows) (m2 |> toRows)
+    let inline mapi2Rows (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toRows) (m2 |> toRows) |> ofRows
     /// Maximum of the entries of matrix `m`
     let inline max (m:DM) = DM.Max(m)
     /// Index of the maximum entry of matrix `m`
