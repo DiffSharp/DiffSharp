@@ -415,7 +415,13 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            Parallel.For(0, n, fun i -> Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore) |> ignore
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -506,7 +512,13 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            Parallel.For(0, n, fun i -> Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore) |> ignore
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -796,14 +808,15 @@ module OpenBLAS =
                 else
                     let m = Array2D.length2 x
                     let n = Array2D.length1 x
-                    Array2D.Parallel.init m n (fun i j -> x.[j, i])
+                    if x.Length > parallelizationThreshold then
+                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
+                    else
+                        Array2D.init m n (fun i j -> x.[j, i])
             member o.Sum_M(x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     0.f
                 else
-                    Array.Parallel.init (Array2D.length1 x) (fun i -> x.[i, *])
-                    |> Array.Parallel.map Array.sum
-                    |> Array.sum
+                    (o :> Backend<float32>).ReshapeCopy_MRows_V(x) |> Array.sum
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
@@ -1109,14 +1122,15 @@ module OpenBLAS =
                 else
                     let m = Array2D.length2 x
                     let n = Array2D.length1 x
-                    Array2D.Parallel.init m n (fun i j -> x.[j, i])
+                    if x.Length > parallelizationThreshold then
+                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
+                    else
+                        Array2D.init m n (fun i j -> x.[j, i])
             member o.Sum_M(x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     0.
                 else
-                    Array.Parallel.init (Array2D.length1 x) (fun i -> x.[i, *])
-                    |> Array.Parallel.map Array.sum
-                    |> Array.sum
+                    (o :> Backend<float>).ReshapeCopy_MRows_V(x) |> Array.sum
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
