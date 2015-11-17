@@ -7,7 +7,7 @@
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#E0EBEB">
-        <b>Please note:</b> this is an introductory example and therefore the code is kept very simple. More advanced cases, including recurrent and convolutional networks, will be released as part of a separate library built on top of DiffSharp.
+        <b>Please note:</b> this is an introductory example and therefore the code is kept very simple. More advanced cases, including recurrent and convolutional networks, will be released as part of the <a href="http://hypelib.github.io/Hype/">Hype</a> library built on top of DiffSharp.
     </div>
     </div>
 </div>
