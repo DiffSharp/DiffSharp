@@ -201,7 +201,7 @@ The original value, the first derivative, and the second derivative of a scalar-
 
 ----------------------
 
-##### diffn : $\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}$
+##### diffn : $\color{red}{\mathbb{N} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}$
 *)
 
 diffn n f x
@@ -216,7 +216,7 @@ $$$
 
 ----------------------
 
-##### diffn' : $\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
+##### diffn' : $\color{red}{\mathbb{N} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}$
 *)
 
 diffn' n f x
