@@ -45,13 +45,10 @@ open System
 open System.Runtime.InteropServices
 open FSharp.NativeInterop
 open System.Security
-open System.Threading.Tasks
 open DiffSharp.Util
 
 /// Backend using OpenBLAS library for BLAS and LAPACK operations, and parallel threads for non-BLAS operations
 module OpenBLAS =
-
-    let parallelizationThreshold = 10000
 
     type PinnedArray<'T when 'T : unmanaged> (array : 'T[]) =
         let h = GCHandle.Alloc(array, GCHandleType.Pinned)
@@ -415,13 +412,9 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            if m * n > parallelizationThreshold then
-                for i = 0 to n - 1 do
-                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
-            else
-                for i = 0 to n - 1 do
-                    for j = 0 to m - 1 do
-                        a'.[i, j] <- a.[j, i]
+            for i = 0 to n - 1 do
+                for j = 0 to m - 1 do
+                    a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -512,13 +505,9 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            if m * n > parallelizationThreshold then
-                for i = 0 to n - 1 do
-                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
-            else
-                for i = 0 to n - 1 do
-                    for j = 0 to m - 1 do
-                        a'.[i, j] <- a.[j, i]
+            for i = 0 to n - 1 do
+                for j = 0 to m - 1 do
+                    a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -659,34 +648,22 @@ module OpenBLAS =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map f x
-                    else
-                        Array.map f x
+                    Array.map f x
             member o.Map2_F_V_V(f, x, y) = // Non-BLAS
                 if Array.isEmpty x || Array.isEmpty y then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map2 f x y
-                    else
-                        Array.map2 f x y
+                    Array.map2 f x y
             member o.Map_F_M(f, x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map f x
-                    else
-                        Array2D.map f x
+                    Array2D.map f x
             member o.Map2_F_M_M(f, x, y) = // Non-BLAS
                 if Array2D.isEmpty x || Array2D.isEmpty y then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map2 f x y
-                    else
-                        Array2D.map2 f x y
+                    Array2D.map2 f x y
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
                     0.f
@@ -808,10 +785,7 @@ module OpenBLAS =
                 else
                     let m = Array2D.length2 x
                     let n = Array2D.length1 x
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
-                    else
-                        Array2D.init m n (fun i j -> x.[j, i])
+                    Array2D.init m n (fun i j -> x.[j, i])
             member o.Sum_M(x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     0.f
@@ -832,10 +806,7 @@ module OpenBLAS =
                     Array.empty
                 else
                     let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    if n > parallelizationThreshold then
-                        Array.Parallel.init n (fun i -> x.[i, i])
-                    else
-                        Array.init n (fun i -> x.[i, i])
+                    Array.init n (fun i -> x.[i, i])
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
@@ -973,34 +944,22 @@ module OpenBLAS =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map f x
-                    else
-                        Array.map f x
+                    Array.map f x
             member o.Map2_F_V_V(f, x, y) = // Non-BLAS
                 if Array.isEmpty x || Array.isEmpty y then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map2 f x y
-                    else
-                        Array.map2 f x y
+                    Array.map2 f x y
             member o.Map_F_M(f, x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map f x
-                    else
-                        Array2D.map f x
+                    Array2D.map f x
             member o.Map2_F_M_M(f, x, y) = // Non-BLAS
                 if Array2D.isEmpty x || Array2D.isEmpty y then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map2 f x y
-                    else
-                        Array2D.map2 f x y
+                    Array2D.map2 f x y
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
                     0.
@@ -1122,10 +1081,7 @@ module OpenBLAS =
                 else
                     let m = Array2D.length2 x
                     let n = Array2D.length1 x
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
-                    else
-                        Array2D.init m n (fun i j -> x.[j, i])
+                    Array2D.init m n (fun i j -> x.[j, i])
             member o.Sum_M(x) = // Non-BLAS
                 if Array2D.isEmpty x then
                     0.
@@ -1146,10 +1102,7 @@ module OpenBLAS =
                     Array.empty
                 else
                     let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    if n > parallelizationThreshold then
-                        Array.Parallel.init n (fun i -> x.[i, i])
-                    else
-                        Array.init n (fun i -> x.[i, i])
+                    Array.init n (fun i -> x.[i, i])
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
