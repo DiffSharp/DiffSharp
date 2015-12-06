@@ -47,8 +47,8 @@ let xmin = gd f (toDV [1.; 1.]) (D 0.9) (D 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : DV = DV [|-1.57023951; 3.141523675|]
-val fxmin : D = D -1.999999843"
+printf "val xmin : DV = DV [|-1.570790759; 3.141591964|]
+val fxmin : D = D -2.0"
 (*** include-output: o ***)
 
 (**
