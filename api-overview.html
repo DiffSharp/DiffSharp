@@ -266,7 +266,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <hr />
 
-<h5>diffn : <span class="math">\(\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}\)</span></h5>
+<h5>diffn : <span class="math">\(\color{red}{\mathbb{N} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 </pre></td>
@@ -283,7 +283,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <hr />
 
-<h5>diffn' : <span class="math">\(\color{red}{\mathbb{R} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
+<h5>diffn' : <span class="math">\(\color{red}{\mathbb{N} \to (\mathbb{R} \to \mathbb{R}) \to \mathbb{R}} \to \color{blue}{(\mathbb{R} \times \mathbb{R})}\)</span></h5>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 </pre></td>
@@ -1358,7 +1358,7 @@ xxxx:<span class="o">:</span><span class="o">:</span><span class="o">:</span><sp
 <div class="tip" id="fs2">namespace DiffSharp.AD</div>
 <div class="tip" id="fs3">module Float64<br /><br />from DiffSharp.AD</div>
 <div class="tip" id="fs4">val a : D<br /><br />Full name: Api-overview.a</div>
-<div class="tip" id="fs5">val diff : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff</div>
+<div class="tip" id="fs5">val diff : f:(D -&gt; &#39;c) -&gt; x:D -&gt; &#39;c (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff</div>
 <div class="tip" id="fs6">val x : D</div>
 <div class="tip" id="fs7">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sin</div>
 <div class="tip" id="fs8">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)<br /><br />Full name: Microsoft.FSharp.Core.Operators.sqrt</div>
@@ -1367,18 +1367,18 @@ xxxx:<span class="o">:</span><span class="o">:</span><span class="o">:</span><sp
 <div class="tip" id="fs11">val c : D<br /><br />Full name: Api-overview.c</div>
 <div class="tip" id="fs12">val diff&#39; : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a * &#39;a (requires member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff&#39;</div>
 <div class="tip" id="fs13">val printf : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printf</div>
-<div class="tip" id="fs14">val diff2 : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff2</div>
+<div class="tip" id="fs14">val diff2 : f:(D -&gt; &#39;c) -&gt; x:D -&gt; &#39;c (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff2</div>
 <div class="tip" id="fs15">val diff2&#39; : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a * &#39;a (requires member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff2&#39;</div>
 <div class="tip" id="fs16">val diff2&#39;&#39; : f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a * &#39;a * &#39;a (requires member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diff2&#39;&#39;</div>
-<div class="tip" id="fs17">val diffn : n:int -&gt; f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diffn</div>
+<div class="tip" id="fs17">val diffn : n:int -&gt; f:(D -&gt; &#39;c) -&gt; x:D -&gt; &#39;c (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diffn</div>
 <div class="tip" id="fs18">val diffn&#39; : n:int -&gt; f:(D -&gt; &#39;a) -&gt; x:D -&gt; &#39;a * &#39;a (requires member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.diffn&#39;</div>
-<div class="tip" id="fs19">val grad : f:(&#39;a -&gt; D) -&gt; x:&#39;a -&gt; &#39;a (requires member GetReverse and member get_A)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.grad</div>
+<div class="tip" id="fs19">val grad : f:(&#39;c -&gt; D) -&gt; x:&#39;c -&gt; &#39;c (requires member GetReverse and member get_A)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.grad</div>
 <div class="tip" id="fs20">val grad&#39; : f:(&#39;a -&gt; D) -&gt; x:&#39;a -&gt; D * &#39;a (requires member get_A and member GetReverse)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.grad&#39;</div>
-<div class="tip" id="fs21">val gradv : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; &#39;b (requires member GetForward and member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.gradv</div>
+<div class="tip" id="fs21">val gradv : f:(&#39;c -&gt; &#39;d) -&gt; x:&#39;c -&gt; v:&#39;c -&gt; &#39;d (requires member GetForward and member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.gradv</div>
 <div class="tip" id="fs22">val gradv&#39; : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; &#39;b * &#39;b (requires member GetForward and member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.gradv&#39;</div>
 <div class="tip" id="fs23">val hessian : f:(DV -&gt; D) -&gt; x:DV -&gt; DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.hessian</div>
 <div class="tip" id="fs24">val hessian&#39; : f:(DV -&gt; D) -&gt; x:DV -&gt; D * DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.hessian&#39;</div>
-<div class="tip" id="fs25">val hessianv : f:(&#39;a -&gt; D) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; &#39;a (requires member GetReverse and member get_A and member GetForward)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.hessianv</div>
+<div class="tip" id="fs25">val hessianv : f:(&#39;c -&gt; D) -&gt; x:&#39;c -&gt; v:&#39;c -&gt; &#39;c (requires member GetReverse and member get_A and member GetForward)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.hessianv</div>
 <div class="tip" id="fs26">val hessianv&#39; : f:(&#39;a -&gt; D) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; D * &#39;a (requires member GetReverse and member get_A and member GetForward)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.hessianv&#39;</div>
 <div class="tip" id="fs27">val gradhessian : f:(DV -&gt; D) -&gt; x:DV -&gt; DV * DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.gradhessian</div>
 <div class="tip" id="fs28">val gradhessian&#39; : f:(DV -&gt; D) -&gt; x:DV -&gt; D * DV * DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.gradhessian&#39;</div>
@@ -1388,11 +1388,11 @@ xxxx:<span class="o">:</span><span class="o">:</span><span class="o">:</span><sp
 <div class="tip" id="fs32">val laplacian&#39; : f:(DV -&gt; D) -&gt; x:DV -&gt; D * D<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.laplacian&#39;</div>
 <div class="tip" id="fs33">val jacobian : f:(DV -&gt; DV) -&gt; x:DV -&gt; DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobian</div>
 <div class="tip" id="fs34">val jacobian&#39; : f:(DV -&gt; DV) -&gt; x:DV -&gt; DV * DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobian&#39;</div>
-<div class="tip" id="fs35">val jacobianv : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; &#39;b (requires member GetForward and member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianv</div>
+<div class="tip" id="fs35">val jacobianv : f:(&#39;c -&gt; &#39;d) -&gt; x:&#39;c -&gt; v:&#39;c -&gt; &#39;d (requires member GetForward and member get_P and member get_T)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianv</div>
 <div class="tip" id="fs36">val jacobianv&#39; : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;a -&gt; &#39;b * &#39;b (requires member GetForward and member get_T and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianv&#39;</div>
 <div class="tip" id="fs37">val jacobianT : f:(DV -&gt; DV) -&gt; x:DV -&gt; DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianT</div>
 <div class="tip" id="fs38">val jacobianT&#39; : f:(DV -&gt; DV) -&gt; x:DV -&gt; DV * DM<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianT&#39;</div>
-<div class="tip" id="fs39">val jacobianTv : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;b -&gt; &#39;a (requires member get_A and member GetReverse and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianTv</div>
+<div class="tip" id="fs39">val jacobianTv : f:(&#39;c -&gt; &#39;d) -&gt; x:&#39;c -&gt; v:&#39;d -&gt; &#39;c (requires member get_A and member GetReverse and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianTv</div>
 <div class="tip" id="fs40">val jacobianTv&#39; : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; v:&#39;b -&gt; &#39;b * &#39;a (requires member GetReverse and member get_A and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianTv&#39;</div>
 <div class="tip" id="fs41">val jacobianTv&#39;&#39; : f:(&#39;a -&gt; &#39;b) -&gt; x:&#39;a -&gt; &#39;b * (&#39;b -&gt; &#39;a) (requires member GetReverse and member get_A and member get_P)<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.jacobianTv&#39;&#39;</div>
 <div class="tip" id="fs42">val curl : f:(DV -&gt; DV) -&gt; x:DV -&gt; DV<br /><br />Full name: DiffSharp.AD.Float64.DiffOps.curl</div>
