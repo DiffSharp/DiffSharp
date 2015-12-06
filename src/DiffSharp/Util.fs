@@ -151,6 +151,7 @@ module Array =
 
 /// Extensions for the FSharp.Collections.Array2D module
 module Array2D =
+    let copyFast (array : 'T[,]) =  array.Clone() :?> 'T[,]
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)
     let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray

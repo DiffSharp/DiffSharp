@@ -687,11 +687,11 @@ module OpenBLAS =
                     Array.sum x
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    Array2D.copy y
+                    Array2D.copyFast y
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let y' = Array2D.copy y
+                    let y' = Array2D.copyFast y
                     BLAS.saxpy'(1.f, x, y')
                     y'
             member o.Add_S_M(x, y) =
@@ -714,16 +714,16 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.sscal'(alpha, x')
                     x'
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
                     (o :> Backend<float32>).Mul_S_M(-1.f, y)
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.saxpy'(-1.f, y, x')
                     x'
             member o.Mul_M_M(x, y) =
@@ -811,7 +811,7 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.sgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -824,7 +824,7 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Some(0.f)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.sgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -983,11 +983,11 @@ module OpenBLAS =
                     Array.sum x
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    Array2D.copy y
+                    Array2D.copyFast y
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let y' = Array2D.copy y
+                    let y' = Array2D.copyFast y
                     BLAS.daxpy'(1., x, y')
                     y'
             member o.Add_S_M(x, y) =
@@ -1010,16 +1010,16 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.dscal'(alpha, x')
                     x'
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
                     (o :> Backend<float>).Mul_S_M(-1., y)
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.daxpy'(-1., y, x')
                     x'
             member o.Mul_M_M(x, y) =
@@ -1107,7 +1107,7 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.dgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -1120,7 +1120,7 @@ module OpenBLAS =
                 if Array2D.isEmpty x then
                     Some(0.)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.dgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
