@@ -45,13 +45,10 @@ open System
 open System.Runtime.InteropServices
 open FSharp.NativeInterop
 open System.Security
-open System.Threading.Tasks
 open DiffSharp.Util
 
 /// Backend using OpenBLAS library for BLAS and LAPACK operations, and parallel threads for non-BLAS operations
 module OpenBLAS =
-
-    let parallelizationThreshold = 10000
 
     type PinnedArray<'T when 'T : unmanaged> (array : 'T[]) =
         let h = GCHandle.Alloc(array, GCHandleType.Pinned)
@@ -394,6 +391,45 @@ module OpenBLAS =
             use arg_y = new PinnedArray<float>(y)
             dgemv_(&&arg_trans, &&arg_m, &&arg_n, &&arg_alpha, arg_a.Ptr, &&arg_lda, arg_x.Ptr, &&arg_incx, &&arg_beta, arg_y.Ptr, &&arg_incy)
 
+    module BLASExtensions =
+        [<SuppressUnmanagedCodeSecurity>]
+        [<DllImport("libopenblas", EntryPoint="cblas_somatcopy")>]
+        extern void cblas_somatcopy(int ordering, int trans, int rows, int cols, float32 alpha, float32 *a, int lda, float32 *b, int ldb)
+
+        // B <- alpha * transpose(A)
+        let somatcopyT(alpha:float32, a:float32[,], b:float32[,]) =
+            let m = Array2D.length1 a
+            let n = Array2D.length2 a
+            let arg_ordering = 101 // cblas.h: typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+            let arg_trans = 112 // cblas.h: typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+            let arg_rows = m
+            let arg_cols = n
+            let arg_alpha = alpha
+            use arg_a = new PinnedArray2D<float32>(a)
+            let arg_lda = n
+            use arg_b = new PinnedArray2D<float32>(b)
+            let arg_ldb = m
+            cblas_somatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_b.Ptr, arg_ldb)
+
+        [<SuppressUnmanagedCodeSecurity>]
+        [<DllImport("libopenblas", EntryPoint="cblas_domatcopy")>]
+        extern void cblas_domatcopy(int ordering, int trans, int rows, int cols, float alpha, float *a, int lda, float *b, int ldb)
+
+        // B <- alpha * transpose(A)
+        let domatcopyT(alpha:float, a:float[,], b:float[,]) =
+            let m = Array2D.length1 a
+            let n = Array2D.length2 a
+            let arg_ordering = 101 // cblas.h: typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+            let arg_trans = 112 // cblas.h: typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+            let arg_rows = m
+            let arg_cols = n
+            let arg_alpha = alpha
+            use arg_a = new PinnedArray2D<float>(a)
+            let arg_lda = n
+            use arg_b = new PinnedArray2D<float>(b)
+            let arg_ldb = m
+            cblas_domatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_b.Ptr, arg_ldb)
+
     module LAPACK =
         [<SuppressUnmanagedCodeSecurity>]
         [<DllImport("libopenblas", EntryPoint="sgesv_")>]
@@ -416,13 +452,9 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            if m * n > parallelizationThreshold then
-                for i = 0 to n - 1 do
-                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
-            else
-                for i = 0 to n - 1 do
-                    for j = 0 to m - 1 do
-                        a'.[i, j] <- a.[j, i]
+            for i = 0 to n - 1 do
+                for j = 0 to m - 1 do
+                    a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -570,13 +602,9 @@ module OpenBLAS =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
             let a' = Array2D.zeroCreate n m
-            if m * n > parallelizationThreshold then
-                for i = 0 to n - 1 do
-                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
-            else
-                for i = 0 to n - 1 do
-                    for j = 0 to m - 1 do
-                        a'.[i, j] <- a.[j, i]
+            for i = 0 to n - 1 do
+                for j = 0 to m - 1 do
+                    a'.[i, j] <- a.[j, i]
             let b' = Array.copy b
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
@@ -701,6 +729,7 @@ module OpenBLAS =
 
     type Float32Backend() =
         interface Backend<float32> with
+            // BLAS
             member o.Add_V_V(x, y) =
                 if Array.isEmpty x then
                     Array.copy y
@@ -710,6 +739,7 @@ module OpenBLAS =
                     let y' = Array.copy y
                     BLAS.saxpy(1.f, x, y')
                     y'
+            // BLAS
             member o.Add_S_V(x, y) =
                 if Array.isEmpty y then
                     Array.empty
@@ -717,6 +747,7 @@ module OpenBLAS =
                     let x' = Array.create y.Length x
                     BLAS.saxpy(1.f, y, x')
                     x'
+            // BLAS
             member o.Mul_S_V(alpha, x) =
                 if Array.isEmpty x then
                     Array.empty
@@ -724,6 +755,7 @@ module OpenBLAS =
                     let x' = Array.copy x
                     BLAS.sscal(alpha, x')
                     x'
+            // BLAS
             member o.Sub_V_V(x, y) =
                 if Array.isEmpty x then
                     (o :> Backend<float32>).Mul_S_V(-1.f, y)
@@ -733,11 +765,13 @@ module OpenBLAS =
                     let x' = Array.copy x
                     BLAS.saxpy(-1.f, y, x')
                     x'
+            // BLAS
             member o.Mul_Dot_V_V(x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     0.f
                 else
                     BLAS.sdot(x, y)
+            // BLAS
             member o.Mul_Out_V_V(x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     Array2D.empty
@@ -745,88 +779,90 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate x.Length y.Length
                     BLAS.sger(1.f, x, y, z)
                     z
-            member o.Sub_S_V(alpha, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_S_V(alpha, x) =
                 if alpha = 0.f then 
                     (o :> Backend<float32>).Mul_S_V(-1.f, x)
                 else
                     (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
-            member o.Sub_V_S(x, alpha) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_V_S(x, alpha) =
                 if alpha = 0.f then
                     x
                 else
                     (o :> Backend<float32>).Map_F_V((fun v -> v - alpha), x)
-            member o.Sub_S_M(alpha, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_S_M(alpha, x) =
                 if alpha = 0.f then 
                     (o :> Backend<float32>).Mul_S_M(-1.f, x)
                 else
                     (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
-            member o.Sub_M_S(x, alpha) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_M_S(x, alpha) =
                 if alpha = 0.f then
                     x
                 else
                     (o :> Backend<float32>).Map_F_M((fun v -> v - alpha), x)
-            member o.Map_F_V(f, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Map_F_V(f, x) =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map f x
-                    else
-                        Array.map f x
-            member o.Map2_F_V_V(f, x, y) = // Non-BLAS
+                    Array.map f x
+            // Non-BLAS
+            member o.Map2_F_V_V(f, x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map2 f x y
-                    else
-                        Array.map2 f x y
-            member o.Map_F_M(f, x) = // Non-BLAS
+                    Array.map2 f x y
+            // Non-BLAS
+            member o.Map_F_M(f, x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map f x
-                    else
-                        Array2D.map f x
-            member o.Map2_F_M_M(f, x, y) = // Non-BLAS
+                    Array2D.map f x
+            // Non-BLAS
+            member o.Map2_F_M_M(f, x, y) =
                 if Array2D.isEmpty x || Array2D.isEmpty y then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map2 f x y
-                    else
-                        Array2D.map2 f x y
+                    Array2D.map2 f x y
+            // BLAS
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                    BLAS.sasum(x)
+            // BLAS
             member o.L2Norm_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                     BLAS.snrm2(x)
+            // BLAS
             member o.SupNorm_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                     let i = BLAS.isamax(x)
                     abs x.[i - 1]
-            member o.Sum_V(x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sum_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                     Array.sum x
+            // BLAS
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    Array2D.copy y
+                    Array2D.copyFast y
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let y' = Array2D.copy y
+                    let y' = Array2D.copyFast y
                     BLAS.saxpy'(1.f, x, y')
                     y'
+            // BLAS
             member o.Add_S_M(x, y) =
                 if Array2D.isEmpty y then
                     Array2D.empty
@@ -834,6 +870,7 @@ module OpenBLAS =
                     let x' = Array2D.create (Array2D.length1 y) (Array2D.length2 y) x
                     BLAS.saxpy'(1.f, y, x')
                     x'
+            // BLAS
             member o.Add_V_MCols(x, y) =
                 if Array2D.isEmpty y then
                     Array2D.empty
@@ -843,22 +880,25 @@ module OpenBLAS =
                     let x' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(Array2D.length2 y, x)
                     BLAS.saxpy'(1.f, y, x')
                     x'
+            // BLAS
             member o.Mul_S_M(alpha, x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.sscal'(alpha, x')
                     x'
+            // BLAS
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
                     (o :> Backend<float32>).Mul_S_M(-1.f, y)
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.saxpy'(-1.f, y, x')
                     x'
+            // BLAS
             member o.Mul_M_M(x, y) =
                 if (Array2D.isEmpty x) || (Array2D.isEmpty y) then
                     Array2D.empty
@@ -866,6 +906,7 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 y)
                     BLAS.sgemm(1.f, x, y, 0.f, z)
                     z
+            // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
                 if Array.isEmpty z then
                     (o :> Backend<float32>).Mul_M_M(x, y)
@@ -876,13 +917,15 @@ module OpenBLAS =
                     let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(n, z)
                     BLAS.sgemm(1.f, x, y, 1.f, z')
                     z'
-            member o.Mul_Had_M_M(x, y) = // Non-BLAS
+            // Non-BLAS
+            member o.Mul_Had_M_M(x, y) =
                 if Array2D.isEmpty x then
                     Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
                 elif Array2D.isEmpty y then
                     Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
                 else
                     (o :> Backend<float32>).Map2_F_M_M((*), x, y)
+            // BLAS
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
                     Array.empty
@@ -892,6 +935,7 @@ module OpenBLAS =
                     let z = Array.zeroCreate (Array2D.length1 x)
                     BLAS.sgemv(1.f, x, y, 0.f, z)
                     z
+            // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
                 if Array2D.isEmpty x then
                     Array.empty
@@ -903,6 +947,7 @@ module OpenBLAS =
                     let z' = Array.copy z
                     BLAS.sgemv(1.f, x, y, 1.f, z')
                     z'
+            // BLAS
             member o.Mul_V_M(x, y) =
                 if Array.isEmpty x then
                     Array.zeroCreate (Array2D.length2 y)
@@ -912,45 +957,47 @@ module OpenBLAS =
                     let z = Array.zeroCreate (Array2D.length2 y)
                     BLAS.sgemv'(1.f, y, x, 0.f, z)
                     z
-            member o.Transpose_M(x) = // Non-BLAS
+            // BLAS extension
+            member o.Transpose_M(x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let m = Array2D.length2 x
-                    let n = Array2D.length1 x
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
-                    else
-                        Array2D.init m n (fun i j -> x.[j, i])
-            member o.Sum_M(x) = // Non-BLAS
+                    let m = Array2D.length1 x
+                    let n = Array2D.length2 x
+                    let x' = Array2D.zeroCreate<float32> n m
+                    BLASExtensions.somatcopyT(1.f, x, x')
+                    x'
+            // Non-BLAS
+            member o.Sum_M(x) =
                 if Array2D.isEmpty x then
                     0.f
                 else
                     (o :> Backend<float32>).ReshapeCopy_MRows_V(x) |> Array.sum
+            // LAPACK
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
                     LAPACK.sgesv(x, y)
+            // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
                     LAPACK.ssysv(x, y)
+            // Non-BLAS
             member o.Diagonal_M(x) =
                 if Array2D.isEmpty x then
                     Array.empty
                 else
                     let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    if n > parallelizationThreshold then
-                        Array.Parallel.init n (fun i -> x.[i, i])
-                    else
-                        Array.init n (fun i -> x.[i, i])
+                    Array.init n (fun i -> x.[i, i])
+            // LAPACK
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.sgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -959,11 +1006,12 @@ module OpenBLAS =
                         | Some(inv) -> Some(inv)
                         | _ -> None
                     | _ -> None
+            // LAPACK
             member o.Det_M(x) =
                 if Array2D.isEmpty x then
                     Some(0.f)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.sgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -976,14 +1024,16 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
-            member o.ReshapeCopy_MRows_V(x) = // Non-BLAS
+            // Non-BLAS
+            member o.ReshapeCopy_MRows_V(x) =
                 if Array2D.isEmpty x then
                     Array.empty<float32>
                 else
                     let r = Array.zeroCreate<float32> x.Length
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
                     r
-            member o.ReshapeCopy_V_MRows(m, x) = // Non-BLAS
+            // Non-BLAS
+            member o.ReshapeCopy_V_MRows(m, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float32>
                 else
@@ -991,7 +1041,8 @@ module OpenBLAS =
                     let r = Array2D.zeroCreate<float32> m n
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
                     r
-            member o.RepeatReshapeCopy_V_MRows(m, x) = // Non-BLAS
+            // Non-BLAS
+            member o.RepeatReshapeCopy_V_MRows(m, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float32>
                 else
@@ -1001,7 +1052,8 @@ module OpenBLAS =
                     for i = 0 to m - 1 do
                         Buffer.BlockCopy(x, 0, r, i * xbytes, xbytes)
                     r
-            member o.RepeatReshapeCopy_V_MCols(n, x) = // Non-BLAS
+            // Non-BLAS
+            member o.RepeatReshapeCopy_V_MCols(n, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float32>
                 else
@@ -1015,6 +1067,7 @@ module OpenBLAS =
 
     type Float64Backend() =
         interface Backend<float> with
+            // BLAS
             member o.Add_V_V(x, y) =
                 if Array.isEmpty x then
                     Array.copy y
@@ -1024,6 +1077,7 @@ module OpenBLAS =
                     let y' = Array.copy y
                     BLAS.daxpy(1., x, y')
                     y'
+            // BLAS
             member o.Add_S_V(x, y) =
                 if Array.isEmpty y then
                     Array.empty
@@ -1031,6 +1085,7 @@ module OpenBLAS =
                     let x' = Array.create y.Length x
                     BLAS.daxpy(1., y, x')
                     x'
+            // BLAS
             member o.Mul_S_V(alpha, x) =
                 if Array.isEmpty x then
                     Array.empty
@@ -1038,6 +1093,7 @@ module OpenBLAS =
                     let x' = Array.copy x
                     BLAS.dscal(alpha, x')
                     x'
+            // BLAS
             member o.Sub_V_V(x, y) =
                 if Array.isEmpty x then
                     (o :> Backend<float>).Mul_S_V(-1., y)
@@ -1047,11 +1103,13 @@ module OpenBLAS =
                     let x' = Array.copy x
                     BLAS.daxpy(-1., y, x')
                     x'
+            // BLAS
             member o.Mul_Dot_V_V(x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     0.
                 else
                     BLAS.ddot(x, y)
+            // BLAS
             member o.Mul_Out_V_V(x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     Array2D.empty
@@ -1059,88 +1117,90 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate x.Length y.Length
                     BLAS.dger(1., x, y, z)
                     z
-            member o.Sub_S_V(alpha, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_S_V(alpha, x) =
                 if alpha = 0. then 
                     (o :> Backend<float>).Mul_S_V(-1., x)
                 else
                     (o :> Backend<float>).Map_F_V((fun v -> alpha - v), x)
-            member o.Sub_V_S(x, alpha) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_V_S(x, alpha) =
                 if alpha = 0. then
                     x
                 else
                     (o :> Backend<float>).Map_F_V((fun v -> v - alpha), x)
-            member o.Sub_S_M(alpha, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_S_M(alpha, x) =
                 if alpha = 0. then 
                     (o :> Backend<float>).Mul_S_M(-1., x)
                 else
                     (o :> Backend<float>).Map_F_M((fun v -> alpha - v), x)
-            member o.Sub_M_S(x, alpha) = // Non-BLAS
+            // Non-BLAS
+            member o.Sub_M_S(x, alpha) =
                 if alpha = 0. then
                     x
                 else
                     (o :> Backend<float>).Map_F_M((fun v -> v - alpha), x)
-            member o.Map_F_V(f, x) = // Non-BLAS
+            // Non-BLAS
+            member o.Map_F_V(f, x) =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map f x
-                    else
-                        Array.map f x
-            member o.Map2_F_V_V(f, x, y) = // Non-BLAS
+                    Array.map f x
+            // Non-BLAS
+            member o.Map2_F_V_V(f, x, y) =
                 if Array.isEmpty x || Array.isEmpty y then
                     Array.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array.Parallel.map2 f x y
-                    else
-                        Array.map2 f x y
-            member o.Map_F_M(f, x) = // Non-BLAS
+                    Array.map2 f x y
+            // Non-BLAS
+            member o.Map_F_M(f, x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map f x
-                    else
-                        Array2D.map f x
-            member o.Map2_F_M_M(f, x, y) = // Non-BLAS
+                    Array2D.map f x
+            // Non-BLAS
+            member o.Map2_F_M_M(f, x, y) =
                 if Array2D.isEmpty x || Array2D.isEmpty y then
                     Array2D.empty
                 else
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.map2 f x y
-                    else
-                        Array2D.map2 f x y
+                    Array2D.map2 f x y
+            // BLAS
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
                     0.
                 else
                    BLAS.dasum(x)
+            // BLAS
             member o.L2Norm_V(x) =
                 if Array.isEmpty x then
                     0.
                 else
                     BLAS.dnrm2(x)
+            // BLAS
             member o.SupNorm_V(x) =
                 if Array.isEmpty x then
                     0.
                 else
                     let i = BLAS.idamax(x)
                     abs x.[i - 1]
-            member o.Sum_V(x) = // Non-BLAS
+            // Non-BLAS
+            member o.Sum_V(x) =
                 if Array.isEmpty x then
                     0.
                 else
                     Array.sum x
+            // BLAS
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
-                    Array2D.copy y
+                    Array2D.copyFast y
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let y' = Array2D.copy y
+                    let y' = Array2D.copyFast y
                     BLAS.daxpy'(1., x, y')
                     y'
+            // BLAS
             member o.Add_S_M(x, y) =
                 if Array2D.isEmpty y then
                     Array2D.empty
@@ -1148,6 +1208,7 @@ module OpenBLAS =
                     let x' = Array2D.create (Array2D.length1 y) (Array2D.length2 y) x
                     BLAS.daxpy'(1., y, x')
                     x'
+            // BLAS
             member o.Add_V_MCols(x, y) =
                 if Array2D.isEmpty y then
                     Array2D.empty
@@ -1157,22 +1218,25 @@ module OpenBLAS =
                     let x' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(Array2D.length2 y, x)
                     BLAS.daxpy'(1., y, x')
                     x'
+            // BLAS
             member o.Mul_S_M(alpha, x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.dscal'(alpha, x')
                     x'
+            // BLAS
             member o.Sub_M_M(x, y) =
                 if Array2D.isEmpty x then
                     (o :> Backend<float>).Mul_S_M(-1., y)
                 elif Array2D.isEmpty y then
-                    Array2D.copy x
+                    Array2D.copyFast x
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     BLAS.daxpy'(-1., y, x')
                     x'
+            // BLAS
             member o.Mul_M_M(x, y) =
                 if (Array2D.isEmpty x) || (Array2D.isEmpty y) then
                     Array2D.empty
@@ -1180,6 +1244,7 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 y)
                     BLAS.dgemm(1., x, y, 0., z)
                     z
+            // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
                 if Array.isEmpty z then
                     (o :> Backend<float>).Mul_M_M(x, y)
@@ -1190,13 +1255,15 @@ module OpenBLAS =
                     let z' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(n, z)
                     BLAS.dgemm(1., x, y, 1., z')
                     z'
-            member o.Mul_Had_M_M(x, y) = // Non-BLAS
+            // Non-BLAS
+            member o.Mul_Had_M_M(x, y) =
                 if Array2D.isEmpty x then
                     Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
                 elif Array2D.isEmpty y then
                     Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
                 else
                     (o :> Backend<float>).Map2_F_M_M((*), x, y)
+            // BLAS
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
                     Array.empty
@@ -1206,6 +1273,7 @@ module OpenBLAS =
                     let z = Array.zeroCreate (Array2D.length1 x)
                     BLAS.dgemv(1., x, y, 0., z)
                     z
+            // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
                 if Array2D.isEmpty x then
                     Array.empty
@@ -1217,6 +1285,7 @@ module OpenBLAS =
                     let z' = Array.copy z
                     BLAS.dgemv(1., x, y, 1., z')
                     z'
+            // BLAS
             member o.Mul_V_M(x, y) =
                 if Array.isEmpty x then
                     Array.zeroCreate (Array2D.length2 y)
@@ -1226,45 +1295,47 @@ module OpenBLAS =
                     let z = Array.zeroCreate (Array2D.length2 y)
                     BLAS.dgemv'(1., y, x, 0., z)
                     z
-            member o.Transpose_M(x) = // Non-BLAS
+            // BLAS extension
+            member o.Transpose_M(x) =
                 if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let m = Array2D.length2 x
-                    let n = Array2D.length1 x
-                    if x.Length > parallelizationThreshold then
-                        Array2D.Parallel.init m n (fun i j -> x.[j, i])
-                    else
-                        Array2D.init m n (fun i j -> x.[j, i])
-            member o.Sum_M(x) = // Non-BLAS
+                    let m = Array2D.length1 x
+                    let n = Array2D.length2 x
+                    let x' = Array2D.zeroCreate<float> n m
+                    BLASExtensions.domatcopyT(1., x, x')
+                    x'
+            // Non-BLAS
+            member o.Sum_M(x) =
                 if Array2D.isEmpty x then
                     0.
                 else
                     (o :> Backend<float>).ReshapeCopy_MRows_V(x) |> Array.sum
+            // LAPACK
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
                     LAPACK.dgesv(x, y)
+            // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
                     LAPACK.dsysv(x, y)
+            // Non-BLAS
             member o.Diagonal_M(x) =
                 if Array2D.isEmpty x then
                     Array.empty
                 else
                     let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    if n > parallelizationThreshold then
-                        Array.Parallel.init n (fun i -> x.[i, i])
-                    else
-                        Array.init n (fun i -> x.[i, i])
+                    Array.init n (fun i -> x.[i, i])
+            // LAPACK
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
                     Some(Array2D.empty)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.dgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -1273,11 +1344,12 @@ module OpenBLAS =
                         | Some(inv) -> Some(inv)
                         | _ -> None
                     | _ -> None
+            // LAPACK
             member o.Det_M(x) =
                 if Array2D.isEmpty x then
                     Some(0.)
                 else
-                    let x' = Array2D.copy x
+                    let x' = Array2D.copyFast x
                     let ipiv = LAPACK.dgetrf(x')
                     match ipiv with
                     | Some(ipiv) ->
@@ -1290,14 +1362,16 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
-            member o.ReshapeCopy_MRows_V(x) = // Non-BLAS
+            // Non-BLAS
+            member o.ReshapeCopy_MRows_V(x) =
                 if Array2D.isEmpty x then
                     Array.empty<float>
                 else
                     let r = Array.zeroCreate<float> x.Length
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float>)
                     r
-            member o.ReshapeCopy_V_MRows(m, x) = // Non-BLAS
+            // Non-BLAS
+            member o.ReshapeCopy_V_MRows(m, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float>
                 else
@@ -1305,7 +1379,8 @@ module OpenBLAS =
                     let r = Array2D.zeroCreate<float> m n
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float>)
                     r
-            member o.RepeatReshapeCopy_V_MRows(m, x) = // Non-BLAS
+            // Non-BLAS
+            member o.RepeatReshapeCopy_V_MRows(m, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float>
                 else
@@ -1315,7 +1390,8 @@ module OpenBLAS =
                     for i = 0 to m - 1 do
                         Buffer.BlockCopy(x, 0, r, i * xbytes, xbytes)
                     r
-            member o.RepeatReshapeCopy_V_MCols(n, x) = // Non-BLAS
+            // Non-BLAS
+            member o.RepeatReshapeCopy_V_MCols(n, x) =
                 if Array.isEmpty x then
                     Array2D.empty<float>
                 else

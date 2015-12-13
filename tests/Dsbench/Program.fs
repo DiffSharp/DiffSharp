@@ -143,7 +143,7 @@ let parseArgs args =
 [<EntryPoint>]
 let main argv = 
 
-    let benchmarkver = "1.0.8"
+    let benchmarkver = "1.0.9"
 
     printfn "DiffSharp Benchmarks"
 
@@ -248,6 +248,7 @@ let main argv =
             x |> Array.sumBy (fun v -> v * log (v / 2.))
         let fvsD (x:DV) =
             x * (log (x / 2.))
+        let _, _ =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
 
         let fvv (x:float[]) =
             [|x |> Array.sumBy (fun v -> v * log (v / 2.))
@@ -255,6 +256,7 @@ let main argv =
               x |> Array.sumBy (fun v -> exp (cos v))|]
         let fvvD (x:DV) =
             toDV [x * log (x / 2.); exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
+        let _, _ =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian fvvD xvD)
 
         printb 1 29 "original functions"
         let res_fss,      dur_fss =      duration noriginal (fun () -> fss x)
