@@ -84,6 +84,7 @@
     <None Include="README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="managed_cuda_backend.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Quotations.Evaluator">
