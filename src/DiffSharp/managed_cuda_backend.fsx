@@ -296,6 +296,9 @@ open FSharp.NativeInterop
 open System.Security
 open System.Threading.Tasks
 
+#nowarn "9"
+#nowarn "51"
+
 [<SuppressUnmanagedCodeSecurity>]
 [<DllImport(@"C:\Users\Marko\Documents\Visual Studio 2015\Projects\Automatic Differentiation\packages\DiffSharp.0.7.5\build\libopenblas.dll", EntryPoint="sgesv_")>]
 extern void sgesv_(int *n, int *nrhs, float32 *a, int *lda, int *ipiv, float32 *b, int *ldb, int *info)
@@ -312,10 +315,6 @@ extern void sgetrf_(int *m, int *n, float32 *a, int *lda, int *ipiv, int *info)
 [<DllImport(@"C:\Users\Marko\Documents\Visual Studio 2015\Projects\Automatic Differentiation\packages\DiffSharp.0.7.5\build\libopenblas.dll", EntryPoint="sgetri_")>]
 extern void sgetri_(int *n, float32 *a, int *lda, int *ipiv, float32 *work, int *lwork, int *info)
 
-#nowarn "9"
-#nowarn "51"
-
-let parallelizationThreshold = 50000
 type PinnedArray<'T when 'T : unmanaged> (array : 'T[]) =
     let h = GCHandle.Alloc(array, GCHandleType.Pinned)
     let ptr = Marshal.UnsafeAddrOfPinnedArrayElement(array, 0)
@@ -330,6 +329,92 @@ type PinnedArray2D<'T when 'T : unmanaged> (array : 'T[,]) =
     interface IDisposable with
         member this.Dispose() = h.Free()
 
+module BLASExtensions =
+    type Layout = // cblas.h: typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+        | R = 101
+        | C = 102
+
+    type Transpose = // cblas.h: typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+        | NT = 111
+        | T = 112
+        | CT = 113
+
+    [<SuppressUnmanagedCodeSecurity>]
+    [<DllImport("libopenblas", EntryPoint="cblas_somatcopy")>]
+    extern void cblas_somatcopy(int ordering, int trans, int rows, int cols, float32 alpha, float32 *a, int lda, float32 *b, int ldb)
+
+    // B <- alpha * transpose(A)
+    let somatcopyT(alpha:float32, a:float32[,], b:float32[,]) =
+        let m = Array2D.length1 a
+        let n = Array2D.length2 a
+        let arg_ordering =  Layout.R |> int
+        let arg_trans = Transpose.T |> int
+        let arg_rows = m
+        let arg_cols = n
+        let arg_alpha = alpha
+        use arg_a = new PinnedArray2D<float32>(a)
+        let arg_lda = n
+        use arg_b = new PinnedArray2D<float32>(b)
+        let arg_ldb = m
+        cblas_somatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_b.Ptr, arg_ldb)
+
+    [<SuppressUnmanagedCodeSecurity>]
+    [<DllImport("libopenblas", EntryPoint="cblas_domatcopy")>]
+    extern void cblas_domatcopy(int ordering, int trans, int rows, int cols, float alpha, float *a, int lda, float *b, int ldb)
+
+    // B <- alpha * transpose(A)
+    let domatcopyT(alpha:float, a:float[,], b:float[,]) =
+        let m = Array2D.length1 a
+        let n = Array2D.length2 a
+        let arg_ordering =  Layout.R |> int
+        let arg_trans = Transpose.T |> int
+        let arg_rows = m
+        let arg_cols = n
+        let arg_alpha = alpha
+        use arg_a = new PinnedArray2D<float>(a)
+        let arg_lda = n
+        use arg_b = new PinnedArray2D<float>(b)
+        let arg_ldb = m
+        cblas_domatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_b.Ptr, arg_ldb)
+
+    [<SuppressUnmanagedCodeSecurity>]
+    [<DllImport("libopenblas", EntryPoint="cblas_simatcopy")>]
+    extern void cblas_simatcopy(int ordering, int trans, int rows, int cols, float32 alpha, float32 *ab, int lda, int ldb)
+
+    // AB <- alpha * transpose(AB)
+    let simatcopyT(alpha:float32, ab:float32[,]) =
+        let m = Array2D.length1 ab
+        let n = Array2D.length2 ab
+        let arg_ordering =  Layout.R |> int
+        let arg_trans = Transpose.T |> int
+        let arg_rows = m
+        let arg_cols = n
+        let arg_alpha = alpha
+        use arg_ab = new PinnedArray2D<float32>(ab)
+        let arg_lda = n
+        let arg_ldb = m
+        cblas_simatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_ab.Ptr, arg_lda, arg_ldb)
+
+    [<SuppressUnmanagedCodeSecurity>]
+    [<DllImport("libopenblas", EntryPoint="cblas_dimatcopy")>]
+    extern void cblas_dimatcopy(int ordering, int trans, int rows, int cols, float alpha, float *ab, int lda, int ldb)
+
+    // B <- alpha * transpose(A)
+    let dimatcopyT(alpha:float, ab:float[,]) =
+        let m = Array2D.length1 ab
+        let n = Array2D.length2 ab
+        let arg_ordering =  Layout.R |> int
+        let arg_trans = Transpose.T |> int
+        let arg_rows = m
+        let arg_cols = n
+        let arg_alpha = alpha
+        use arg_ab = new PinnedArray2D<float>(ab)
+        let arg_lda = n
+        let arg_ldb = m
+        cblas_dimatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_ab.Ptr, arg_lda, arg_ldb)
+
+
+
 // Compared to the LAPACK sgesv, there are slight numerical deviations on the order of 1e-4 relative to the size of the inputs for this function.
 // To get the equivalent of sgesv, getrf (LU factorization) and getrs (solver) have to be called seperately.
 
@@ -338,6 +423,9 @@ type PinnedArray2D<'T when 'T : unmanaged> (array : 'T[,]) =
 let sgesv(a:float32[,], b:float32[]) =
     let m = Array2D.length1 a
     let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> b.Length then failwith "The length of b does not equal the dimensions of a"
 
     let b' = Array.copy b
 
@@ -372,7 +460,12 @@ let sgesv(a:float32[,], b:float32[]) =
         None
 
 let ssysv(a:float32[,], b:float32[]) =
-    let n = Array2D.length1 a
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> b.Length then failwith "The length of b does not equal the dimensions of a"
+
     let ipiv = Array.zeroCreate<float32> n
     let work = Array.zeroCreate<float32> 1
 
@@ -408,10 +501,10 @@ let sgetrf(a:float32[,]) =
     let m = Array2D.length1 a
     let n = Array2D.length2 a
 
+    if m <> n then failwith "The matrix is not square"
+
     use d_ipiv = new_dev<int> (min m n)
 
-    let m = Array2D.length1 a
-    let n = Array2D.length2 a
     let arg_m = m
     let arg_n = n
     let arg_lda = m
@@ -427,40 +520,12 @@ let sgetrf(a:float32[,]) =
     s.Getrf(m,n,d_a,arg_lda,workspace,d_ipiv,d_info)
 
     if d_info.[SizeT 0] = 0 then
+        c.Geam(Operation.Transpose,Operation.Transpose,m,n,1.0f,d_a,n,d_a,n,0.0f,d_nta,n) // Transpose using geam.
+        d_nta.CopyToHost(a)
         Some(to_host d_ipiv)
     else
         None
 
-// The MKL Lapack manual states that the sgetri (matrix inversion) function requires sgetrf to factorize the matrix before being called.
-// Maybe it would be good for this one to replace sgetrf as it returns both the LU and the pivots matrices.
-let sgetrf2(a:float32[,]) =
-    let m = Array2D.length1 a
-    let n = Array2D.length2 a
-
-    use d_ipiv = new_dev<int> (min m n)
-
-    let m = Array2D.length1 a
-    let n = Array2D.length2 a
-    let arg_m = m
-    let arg_n = n
-    let arg_lda = m
-    
-    use d_nta = to_dev' a
-    use d_a = new_dev<float32> a.Length
-    c.Geam(Operation.Transpose,Operation.Transpose,m,n,1.0f,d_nta,n,d_nta,n,0.0f,d_a,n) // Transpose using geam.
-
-    let Lwork = s.GetrfBufferSize(m,n,d_a,arg_lda)
-    use workspace = new_dev<float32> Lwork
-    
-    use d_info = to_dev [|0|]
-    s.Getrf(m,n,d_a,arg_lda,workspace,d_ipiv,d_info)
-
-    if d_info.[SizeT 0] = 0 then
-        let h_a = Array2D.zeroCreate<float32> m n
-        d_a.CopyToHost(h_a)
-        Some(h_a,to_host d_ipiv)
-    else
-        None
 
 // Strangely enough, cuSolver does not have a matrix inverse, but cuBlas does.
 // Has no transpose step as I assume it is intended to be called after sgetrf.
@@ -468,12 +533,20 @@ let sgetrf2(a:float32[,]) =
 // Does this function intend to mutate a and ipiv?
 // Given that it returns a value I am assuming that it does not.
 let sgetri(a:float32[,], ipiv:int[]) =
-    use d_a = to_dev' a
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> ipiv.Length then failwith "The length of b does not equal the dimensions of a"
+
+    use d_nta = to_dev' a
+    use d_a = new_dev<float32> a.Length
+    c.Geam(Operation.Transpose,Operation.Transpose,n,n,1.0f,d_nta,n,d_nta,n,0.0f,d_a,n) // Transpose using geam.
+
     use d_ar_a = new_dev<CUdeviceptr> 1
     d_ar_a.[SizeT 0] <- d_a.DevicePointer
     use d_ipiv = to_dev ipiv
 
-    let n = Array2D.length1 a
     use d_work = new_dev<float32> (n * n)
     use d_ar_work = new_dev<CUdeviceptr> 1
     d_ar_work.[SizeT 0] <- d_work.DevicePointer
@@ -485,21 +558,159 @@ let sgetri(a:float32[,], ipiv:int[]) =
     use d_info = to_dev [|0|]
     c.GetriBatchedS(arg_n,d_ar_a,arg_lda,d_ipiv,d_ar_work,arg_ldc,d_info,1)
     if d_info.[SizeT 0] = 0 then
-        Some(to_host d_work)
+        c.Geam(Operation.Transpose,Operation.Transpose,n,n,1.0f,d_work,n,d_work,n,0.0f,d_a,n) // Transpose using geam.
+        d_a.CopyToHost(a)
+        Some a
     else
         None
 
-let n = 50
-let a' =   [|
-        [| 1.0f; -1.0f; -1.0f; -1.0f; -1.0f; |];
-        [| -1.0f; 2.0f; 0.0f; 0.0f; 0.0f; |];
-        [| -1.0f; 0.0f; 3.0f; 1.0f; 1.0f; |];
-        [| -1.0f; 0.0f; 1.0f; 4.0f; 2.0f; |];
-        [| -1.0f; 0.0f; 1.0f; 2.0f; 5.0f; |]
-          |]
-//let a = Array2D.init n n (fun x y -> a'.[x].[y])
-let a = Array2D.init n n (fun _ _ -> (rng.NextDouble()-0.5)*6.0 |> float32)
-let b = Array.init n (fun _ -> (rng.NextDouble()-0.5)*6.0 |> float32)
 
-let r0 = sgesv(a,b)
-let r1r = sgesv'(a,b)
+
+// Compared to the LAPACK sgesv, there are slight numerical deviations on the order of 1e-4 relative to the size of the inputs for this function.
+// To get the equivalent of sgesv, getrf (LU factorization) and getrs (solver) have to be called seperately.
+
+// There is also a call to geam (matrix matrix add function) purely for the sake of transposition to column major format.
+// It might be worth considering going to column major fully as both OpenBlas, Lapack and now these Cuda library functions use column major natively.
+let dgesv(a:float[,], b:float[]) =
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> b.Length then failwith "The length of b does not equal the dimensions of a"
+
+    let b' = Array.copy b
+
+    use d_b = to_dev b
+    let ipiv = Array.zeroCreate n
+    use d_ipiv = new_dev<int> n
+
+    let arg_n = n
+    let arg_nrhs = 1
+    let arg_lda = n
+    let arg_ldb = n
+    
+    use d_nta = to_dev' a
+    use d_a = new_dev<float> a.Length
+    c.Geam(Operation.Transpose,Operation.Transpose,m,n,1.0,d_nta,n,d_nta,n,0.0,d_a,n) // Transpose using geam.
+
+    let Lwork = s.GetrfBufferSize(m,n,d_a,arg_lda)
+    use workspace = new_dev<float> Lwork
+    
+    use d_info = to_dev [|0|]
+    s.Getrf(m,n,d_a,arg_lda,workspace,d_ipiv,d_info)
+
+    let factorization_par = d_info.[SizeT 0]
+    if factorization_par <> 0 then failwithf "Parameter %i in sgesv is incorrect." factorization_par
+    
+    s.Getrs(Operation.NonTranspose,arg_n,arg_nrhs,d_a,arg_lda,d_ipiv,d_b,arg_ldb,d_info)
+    d_b.CopyToHost(b')
+    
+    if d_info.[SizeT 0] = 0 then
+        Some(b')
+    else
+        None
+
+let dsysv(a:float[,], b:float[]) =
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+    let ipiv = Array.zeroCreate<float> n
+    let work = Array.zeroCreate<float> 1
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> b.Length then failwith "The length of b does not equal the dimensions of a"
+
+    use d_nta = to_dev' a
+    use d_a = new_dev<float> a.Length
+    c.Geam(Operation.Transpose,Operation.Transpose,n,n,1.0,d_nta,n,d_nta,n,0.0,d_a,n) // Transpose using geam.
+
+    use d_ipiv = new_dev<int> n
+    use d_b = to_dev b
+
+    let arg_n = n
+    let arg_nrhs = 1
+    let arg_lda = n
+    let arg_ldb = n
+
+    let Lwork = s.PotrfBufferSize(FillMode.Upper,n,d_nta,arg_lda)
+    use d_work = new_dev<float> Lwork
+    use d_info = to_dev [|0|]
+
+    s.Potrf(FillMode.Upper,arg_n,d_a,arg_lda,d_work,Lwork,d_info)
+
+    let factorization_par = d_info.[SizeT 0]
+    if factorization_par <> 0 then failwithf "Parameter %i in ssysv is incorrect." factorization_par
+
+    s.Potrs(FillMode.Upper,arg_n,arg_nrhs,d_a,arg_lda,d_b,arg_ldb,d_info)
+
+    if d_info.[SizeT 0] = 0 then
+        Some(to_host d_b)
+    else
+        None
+
+let dgetrf(a:float[,]) =
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+
+    use d_ipiv = new_dev<int> (min m n)
+
+    let arg_m = m
+    let arg_n = n
+    let arg_lda = m
+    
+    use d_nta = to_dev' a
+    use d_a = new_dev<float> a.Length
+    c.Geam(Operation.Transpose,Operation.Transpose,m,n,1.0,d_nta,n,d_nta,n,0.0,d_a,n) // Transpose using geam.
+
+    let Lwork = s.GetrfBufferSize(m,n,d_a,arg_lda)
+    use workspace = new_dev<float> Lwork
+    
+    use d_info = to_dev [|0|]
+    s.Getrf(m,n,d_a,arg_lda,workspace,d_ipiv,d_info)
+
+    if d_info.[SizeT 0] = 0 then
+        c.Geam(Operation.Transpose,Operation.Transpose,m,n,1.0,d_a,n,d_a,n,0.0,d_nta,n) // Transpose using geam.
+        d_nta.CopyToHost(a)
+        Some(to_host d_ipiv)
+    else
+        None
+
+
+// Strangely enough, cuSolver does not have a matrix inverse, but cuBlas does.
+// Has no transpose step as I assume it is intended to be called after sgetrf.
+
+// Does this function intend to mutate a and ipiv?
+// Given that it returns a value I am assuming that it does not.
+let dgetri(a:float[,], ipiv:int[]) =
+    let m = Array2D.length1 a
+    let n = Array2D.length2 a
+
+    if m <> n then failwith "The matrix is not square"
+    if m <> ipiv.Length then failwith "The length of ipiv does not equal the dimensions of a"
+
+    use d_nta = to_dev' a
+    use d_a = new_dev<float> a.Length
+    c.Geam(Operation.Transpose,Operation.Transpose,n,n,1.0,d_nta,n,d_nta,n,0.0,d_a,n) // Transpose using geam.
+
+    use d_ar_a = new_dev<CUdeviceptr> 1
+    d_ar_a.[SizeT 0] <- d_a.DevicePointer
+    use d_ipiv = to_dev ipiv
+
+    use d_work = new_dev<float> (n * n)
+    use d_ar_work = new_dev<CUdeviceptr> 1
+    d_ar_work.[SizeT 0] <- d_work.DevicePointer
+
+    let arg_n = n
+    let arg_lda = n
+    let arg_ldc = n
+    let arg_lwork = n * n
+    use d_info = to_dev [|0|]
+    c.GetriBatchedS(arg_n,d_ar_a,arg_lda,d_ipiv,d_ar_work,arg_ldc,d_info,1)
+    if d_info.[SizeT 0] = 0 then
+        c.Geam(Operation.Transpose,Operation.Transpose,n,n,1.0,d_work,n,d_work,n,0.0,d_a,n) // Transpose using geam.
+        d_a.CopyToHost(a)
+        Some a
+    else
+        None
+
