@@ -411,6 +411,7 @@ module OpenBLAS =
         [<DllImport("libopenblas", EntryPoint="sgetri_")>]
         extern void sgetri_(int *n, float32 *a, int *lda, int *ipiv, float32 *work, int *lwork, int *info)
 
+        // This function works fine, but it is anomalous as it backs up the arguments inside the body unlike the others. See comments for ssysv.
         let sgesv(a:float32[,], b:float32[]) =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
@@ -438,37 +439,72 @@ module OpenBLAS =
             else
                 None
 
+        // This function is broken. The function mutates a and never uses b'. -Fixed. Modified it to be immutable. -Unfixed.
+        // Also it needs a trasposition step for a to transform it into column major. -Fixed.
+        // As a consequence it no longer mutates a. Should it?
+
+        // Also unlike the potrf, it performs no boundary checking at all like the rest of the Openblas functions.
+        // More importantly it performs no check for symmetry. Be warned. -Possible TODO.
+
+        // Extra note: I've fixed the functions after this one to be immutable and then unfixed them once I saw that the library is backing them up
+        // before the call. This one is the exception as I do not see it doing any backups. Is this intended?
         let ssysv(a:float32[,], b:float32[]) =
             let n = Array2D.length1 a
-            let b' = Array.copy b
+            let m = n
+
+            let a' = Array2D.zeroCreate n n
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
+
             let ipiv = Array.zeroCreate n
             let work = Array.zeroCreate 1
-            let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed
+            let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed. 
+            //Marko's Note: No. Unlike the cuBLAS variant it will not check for symetry at all.
+
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
             let mutable arg_lwork = 1
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float32>(a)
+            use arg_a = new PinnedArray2D<float32>(a')
             use arg_ipiv = new PinnedArray<int>(ipiv)
-            use arg_b = new PinnedArray<float32>(b)
+            use arg_b = new PinnedArray<float32>(b |> Array.copy) // Remove |> Array.copy if mutability is the intended behavior.
             use arg_work = new PinnedArray<float32>(work)
             ssysv_(&&arg_uplo, &&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
         let sgetrf(a:float32[,]) =
-            let m = Array2D.length1 a
-            let n = Array2D.length2 a
+            // Note: These let m and n statements are reversed from the previous version.
+            // I tried reversing m and n in the sgetrf_ call to make the function run in row major format, but that does not work here.
+            // It needs an explicit transpose to col major.
+            // For this function, its arguments are backed before the call.
+            let n = Array2D.length1 a
+            let m = Array2D.length2 a
+
+            let a' = Array2D.zeroCreate m n
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
+
             let ipiv = Array.zeroCreate (min m n)
             let mutable arg_m = m
             let mutable arg_n = n
             let mutable arg_lda = m
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float32>(a)
+            use arg_a = new PinnedArray2D<float32>(a')
             use arg_ipiv = new PinnedArray<int>(ipiv)
             sgetrf_(&&arg_m, &&arg_n, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, &&arg_info)
             if arg_info = 0 then
@@ -476,6 +512,10 @@ module OpenBLAS =
             else
                 None
 
+        // Has no transpose as I am assuming it would be called after sgetrf like the MKL Lapack manual states.
+        // It might need a transpose back to row major after the call though.
+        
+        // Has arguments backed up before the call.
         let sgetri(a:float32[,], ipiv:int[]) =
             let n = Array2D.length1 a
             let work = Array.zeroCreate (n * n)
@@ -488,9 +528,23 @@ module OpenBLAS =
             use arg_work = new PinnedArray<float32>(work)
             sgetri_(&&arg_n, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
+                // The output of this function might need a tranpose back to row major.
+                // Uncomment the block and remove Some(a) if this would be the intended behavior.
+                (*
+                let a' = Array2D.zeroCreate n n
+                if n * n > parallelizationThreshold then
+                    for i = 0 to n - 1 do
+                        Parallel.For(0, n, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+                else
+                    for i = 0 to n - 1 do
+                        for j = 0 to n - 1 do
+                            a'.[i, j] <- a.[j, i]
+                Some(a')
+                *)
                 Some(a)
             else
                 None
+
 
         [<SuppressUnmanagedCodeSecurity>]
         [<DllImport("libopenblas", EntryPoint="dgesv_")>]
@@ -508,6 +562,10 @@ module OpenBLAS =
         [<DllImport("libopenblas", EntryPoint="dgetri_")>]
         extern void dgetri_(int *n, float *a, int *lda, int *ipiv, float *work, int *lwork, int *info)
 
+        // The following is just a clone of the above adapted for doubles.
+        // TODO: Find a more efficient CPU transpose algorithm. I do not think the current one is cache friendly.
+
+        // This function works fine, but it is anomalous as it backs up the arguments inside the body unlike the others. See comments for ssysv.
         let dgesv(a:float[,], b:float[]) =
             let m = Array2D.length1 a
             let n = Array2D.length2 a
@@ -535,37 +593,72 @@ module OpenBLAS =
             else
                 None
 
+        // This function is broken. The function mutates a and never uses b'. -Fixed. Modified it to be immutable. -Unfixed.
+        // Also it needs a trasposition step for a to transform it into column major. -Fixed.
+        // As a consequence it no longer mutates a. Should it?
+
+        // Also unlike the potrf, it performs no boundary checking at all like the rest of the Openblas functions.
+        // More importantly it performs no check for symmetry. Be warned. -Possible TODO.
+
+        // Extra note: I've fixed the functions after this one to be immutable and then unfixed them once I saw that the library is backing them up
+        // before the call. This one is the exception as I do not see it doing any backups. Is this intended?
         let dsysv(a:float[,], b:float[]) =
             let n = Array2D.length1 a
-            let b' = Array.copy b
+            let m = n
+
+            let a' = Array2D.zeroCreate n n
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
+
             let ipiv = Array.zeroCreate n
             let work = Array.zeroCreate 1
-            let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed
+            let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed. 
+            //Marko's Note: No. Unlike the cuBLAS variant it will not check for symetry at all.
+
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
             let mutable arg_lwork = 1
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float>(a)
+            use arg_a = new PinnedArray2D<float>(a')
             use arg_ipiv = new PinnedArray<int>(ipiv)
-            use arg_b = new PinnedArray<float>(b)
+            use arg_b = new PinnedArray<float>(b |> Array.copy) // Remove |> Array.copy if mutability is the intended behavior.
             use arg_work = new PinnedArray<float>(work)
             dsysv_(&&arg_uplo, &&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
         let dgetrf(a:float[,]) =
-            let m = Array2D.length1 a
-            let n = Array2D.length2 a
+            // Note: These let m and n statements are reversed from the previous version.
+            // I tried reversing m and n in the sgetrf_ call to make the function run in row major format, but that does not work here.
+            // It needs an explicit transpose to col major.
+            // For this function, its arguments are backed before the call.
+            let n = Array2D.length1 a
+            let m = Array2D.length2 a
+
+            let a' = Array2D.zeroCreate m n
+            if m * n > parallelizationThreshold then
+                for i = 0 to n - 1 do
+                    Parallel.For(0, m, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+            else
+                for i = 0 to n - 1 do
+                    for j = 0 to m - 1 do
+                        a'.[i, j] <- a.[j, i]
+
             let ipiv = Array.zeroCreate (min m n)
             let mutable arg_m = m
             let mutable arg_n = n
             let mutable arg_lda = m
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float>(a)
+            use arg_a = new PinnedArray2D<float>(a')
             use arg_ipiv = new PinnedArray<int>(ipiv)
             dgetrf_(&&arg_m, &&arg_n, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, &&arg_info)
             if arg_info = 0 then
@@ -573,6 +666,10 @@ module OpenBLAS =
             else
                 None
 
+        // Has no transpose as I am assuming it would be called after sgetrf like the MKL Lapack manual states.
+        // It might need a transpose back to row major after the call though.
+        
+        // Has arguments backed up before the call.
         let dgetri(a:float[,], ipiv:int[]) =
             let n = Array2D.length1 a
             let work = Array.zeroCreate (n * n)
@@ -585,6 +682,19 @@ module OpenBLAS =
             use arg_work = new PinnedArray<float>(work)
             dgetri_(&&arg_n, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
+                // The output of this function might need a tranpose back to row major.
+                // Uncomment the block and remove Some(a) if this would be the intended behavior.
+                (*
+                let a' = Array2D.zeroCreate n n
+                if n * n > parallelizationThreshold then
+                    for i = 0 to n - 1 do
+                        Parallel.For(0, n, fun j -> a'.[i, j] <- a.[j, i]) |> ignore
+                else
+                    for i = 0 to n - 1 do
+                        for j = 0 to n - 1 do
+                            a'.[i, j] <- a.[j, i]
+                Some(a')
+                *)
                 Some(a)
             else
                 None

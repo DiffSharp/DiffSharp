@@ -84,8 +84,23 @@
     <None Include="README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="hessian_test.fsx" />
+    <None Include="Tools\place_these_executables_in_same_folder_as_Cudafy.NET.dll_" />
+    <None Include="Tools\CudafyViewer.exe" />
+    <None Include="Tools\cudafycl.exe" />
+    <Content Include="Readme\README.txt" />
+    <Content Include="Readme\ILSpy-license.txt" />
+    <Content Include="Readme\example_source_code.cs.txt" />
+    <Content Include="Readme\CUDAfy-License.txt" />
+    <Content Include="Readme\CUDA.NET.Readme.txt" />
+    <None Include="cudafy_test.fsx" />
+    <None Include="managed_cuda_backend.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Cudafy.NET">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\CUDAfy.NET.1.29.5576.13786\lib\net40\Cudafy.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Quotations.Evaluator">
       <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.6\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
       <Private>True</Private>
