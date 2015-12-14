@@ -1,15 +1,15 @@
 ﻿#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
-
 open DiffSharp.AD.Float32
 open DiffSharp.Config
+open DiffSharp.Util
 
-let v1 = [||]
-let v2 = [|2.0|]
+let m = array2D [[]]
+let s = 0.f
 
-let r = Array2D.zeroCreate v1.Length v2.Length
-for i = 0 to v1.Length - 1 do
-    for j = 0 to v2.Length - 1 do
-        r.[i, j] <- v1.[i] * v2.[j]
-let r2 = GlobalConfig.Float64Backend.Mul_Out_V_V(v1, v2)
-
+let r = 
+    if m.Length = 0 then
+        Array2D.empty
+    else
+        m |> Array2D.map (fun x -> x - s)
+let r2 = GlobalConfig.Float32Backend.Sub_M_S(m, s)

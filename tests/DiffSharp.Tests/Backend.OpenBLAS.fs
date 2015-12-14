@@ -158,6 +158,105 @@ let ``OpenBLAS.32.Mul_Out_V_V``(v1:float32[], v2:float32[]) =
             rr
     Util.(=~)(Float32Backend.Mul_Out_V_V(v1, v2), r)
 
+[<Property>]
+let ``OpenBLAS.32.Add_M_M``(m:float32[,]) = 
+    let r = m |> Array2D.map (fun x -> 2.f * x)
+    Util.(=~)(Float32Backend.Add_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Add_S_M``(s:float32, m:float32[,]) = 
+    let r = 
+        if Array2D.isEmpty m then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> s + x)
+    Util.(=~)(Float32Backend.Add_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Add_V_MCols``(v:float32[]) =
+    let m = v.Length
+    let n = 3
+    let r = 
+        if m = 0 then
+            Array2D.empty
+        else
+        let rr = Array2D.zeroCreate v.Length n
+        for i = 0 to m - 1 do
+            for j = 0 to n - 1 do
+                rr.[i, j] <- v.[i]
+        rr
+    Util.(=~)(Float32Backend.Add_V_MCols(v, Array2D.zeroCreate m n), r)
+
+[<Property>]
+let ``OpenBLAS.32.Sub_M_M``(m:float32[,]) =
+    if not (Util.IsNice(m)) then
+        true
+    else
+        let r = 
+            if m.Length = 0 then
+                Array2D.empty
+            else
+                Array2D.zeroCreate (Array2D.length1 m) (Array2D.length2 m)
+        Util.(=~)(Float32Backend.Sub_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Sub_M_S``(m:float32[,], s:float32) =
+    let r = 
+        if m.Length = 0 then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> x - s)
+    Util.(=~)(Float32Backend.Sub_M_S(m, s), r)
+
+[<Property>]
+let ``OpenBLAS.32.Sub_S_M``(s:float32, m:float32[,]) =
+    let r = 
+        if m.Length = 0 then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> s - x)
+    Util.(=~)(Float32Backend.Sub_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Mul_S_M``(s:float32, m:float32[,]) = 
+    if not (Util.IsNice(s)) then 
+        true
+    else
+        let r = 
+            if (s = 0.f) then
+                Array2D.zeroCreate (Array2D.length1 m) (Array2D.length2 m)
+            elif m.Length = 0 then
+                Array2D.empty
+            else
+                m |> Array2D.map (fun x -> s * x)
+        Util.(=~)(Float32Backend.Mul_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Mul_Had_M_M``(m:float32[,]) = 
+    let r = m |> Array2D.map (fun x -> x * x)
+    Util.(=~)(Float32Backend.Mul_Had_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Transpose_M``(mm:float32[,]) = 
+    let m = (Array2D.length1 mm)
+    let n = (Array2D.length2 mm)
+    let r = Array2D.zeroCreate n m
+    for i = 0 to n - 1 do
+        for j = 0 to m - 1 do
+            r.[i, j] <- mm.[j, i]
+    Util.(=~)(Float32Backend.Transpose_M(mm), r)
+
+[<Property>]
+let ``OpenBLAS.32.Map_F_M``(m:float32[,]) = 
+    let f (x:float32) = sin (exp x)
+    let r = m |> Array2D.map f
+    Util.(=~)(Float32Backend.Map_F_M(f, m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Map2_F_M_M``(m:float32[,]) = 
+    let f (x1:float32) (x2:float32) = sin (exp x1) + cos x2
+    let r = Array2D.map2 f m m
+    Util.(=~)(Float32Backend.Map2_F_M_M(f, m, m), r)
 
 // float64
 [<Property>]
@@ -266,6 +365,106 @@ let ``OpenBLAS.64.Mul_Out_V_V``(v1:float[], v2:float[]) =
             rr
     Util.(=~)(Float64Backend.Mul_Out_V_V(v1, v2), r)
 
+[<Property>]
+let ``OpenBLAS.64.Add_M_M``(m:float[,]) = 
+    let r = m |> Array2D.map (fun x -> 2. * x)
+    Util.(=~)(Float64Backend.Add_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Add_S_M``(s:float, m:float[,]) = 
+    let r = 
+        if Array2D.isEmpty m then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> s + x)
+    Util.(=~)(Float64Backend.Add_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Add_V_MCols``(v:float[]) =
+    let m = v.Length
+    let n = 3
+    let r = 
+        if m = 0 then
+            Array2D.empty
+        else
+        let rr = Array2D.zeroCreate v.Length n
+        for i = 0 to m - 1 do
+            for j = 0 to n - 1 do
+                rr.[i, j] <- v.[i]
+        rr
+    Util.(=~)(Float64Backend.Add_V_MCols(v, Array2D.zeroCreate m n), r)
+
+[<Property>]
+let ``OpenBLAS.64.Sub_M_M``(m:float[,]) =
+    if not (Util.IsNice(m)) then
+        true
+    else
+        let r = 
+            if m.Length = 0 then
+                Array2D.empty
+            else
+                Array2D.zeroCreate (Array2D.length1 m) (Array2D.length2 m)
+        Util.(=~)(Float64Backend.Sub_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Sub_M_S``(m:float[,], s:float) =
+    let r = 
+        if m.Length = 0 then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> x - s)
+    Util.(=~)(Float64Backend.Sub_M_S(m, s), r)
+
+[<Property>]
+let ``OpenBLAS.64.Sub_S_M``(s:float, m:float[,]) =
+    let r = 
+        if m.Length = 0 then
+            Array2D.empty
+        else
+            m |> Array2D.map (fun x -> s - x)
+    Util.(=~)(Float64Backend.Sub_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Mul_S_M``(s:float, m:float[,]) = 
+    if not (Util.IsNice(s)) then 
+        true
+    else
+        let r = 
+            if (s = 0.) then
+                Array2D.zeroCreate (Array2D.length1 m) (Array2D.length2 m)
+            elif m.Length = 0 then
+                Array2D.empty
+            else
+                m |> Array2D.map (fun x -> s * x)
+        Util.(=~)(Float64Backend.Mul_S_M(s, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Mul_Had_M_M``(m:float[,]) = 
+    let r = m |> Array2D.map (fun x -> x * x)
+    Util.(=~)(Float64Backend.Mul_Had_M_M(m, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Transpose_M``(mm:float[,]) = 
+    let m = (Array2D.length1 mm)
+    let n = (Array2D.length2 mm)
+    let r = Array2D.zeroCreate n m
+    for i = 0 to n - 1 do
+        for j = 0 to m - 1 do
+            r.[i, j] <- mm.[j, i]
+    Util.(=~)(Float64Backend.Transpose_M(mm), r)
+
+[<Property>]
+let ``OpenBLAS.64.Map_F_M``(m:float[,]) = 
+    let f (x:float) = sin (exp x)
+    let r = m |> Array2D.map f
+    Util.(=~)(Float64Backend.Map_F_M(f, m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Map2_F_M_M``(m:float[,]) = 
+    let f (x1:float) (x2:float) = sin (exp x1) + cos x2
+    let r = Array2D.map2 f m m
+    Util.(=~)(Float64Backend.Map2_F_M_M(f, m, m), r)
+
 //
 // Hard-coded tests
 //
@@ -281,20 +480,36 @@ let m64_3 = array2D [[ 0.62406; 2.19092; 1.93734;-7.41726];
                      [ 2.19092; 7.18858; 9.21412; 1.83647];
                      [ 1.93734; 9.21412; 4.14575;-3.85926];
                      [-7.41726; 1.83647;-3.85926;-0.00381]]
+let m64_4 = array2D [[ 9.24230; 51.73230; 58.05327; 6.48088]
+                     [-85.19758; 77.22825; 98.64351; 41.80417]
+                     [-53.66380; 4.36692; 16.46500; 89.06226]]
+let m64_5 = array2D [[4.25136; 46.74136; 53.06233; 1.48994]
+                     [-85.5446; 76.88123; 98.29649; 41.45715]
+                     [-47.68089; 10.34983; 22.44791; 95.04517]
+                     [24.47297; -53.78882; -63.5988; -2.08733]]
+let m64_6 = array2D [[-0.03792; 0.02867;-0.09172;-0.04912]
+                     [ 0.02512;-0.68486; 0.39513;-1.19806]
+                     [ 0.00872; 0.64692;-0.30733; 0.95965]
+                     [-0.12831;-0.03091; 0.02872;-0.10736]]
 let v64_1 =         [|-4.99094;-0.34702; 5.98291;-6.16668|]
 let v64_2 =         [|53.45586; 37.97145; 46.78062|]
 let v64_3 =         [|-368.78194; 547.68320; 647.37647; -156.33702|]
 let v64_4 =         [|-0.06652; 9.86439;-8.02472; 1.48504|]
 let v64_5 =         [| 2.04706; 1.31825;-1.70990; 0.78788|]
+let s64_1 = 556.04485
 
 let m32_1 = m64_1 |> Array2D.map float32
 let m32_2 = m64_2 |> Array2D.map float32
 let m32_3 = m64_3 |> Array2D.map float32
+let m32_4 = m64_4 |> Array2D.map float32
+let m32_5 = m64_5 |> Array2D.map float32
+let m32_6 = m64_6 |> Array2D.map float32
 let v32_1 = v64_1 |> Array.map float32
 let v32_2 = v64_2 |> Array.map float32
 let v32_3 = v64_3 |> Array.map float32
 let v32_4 = v64_4 |> Array.map float32
 let v32_5 = v64_5 |> Array.map float32
+let s32_1 = s64_1 |> float32
 
 // float32
 
@@ -316,4 +531,24 @@ let ``OpenBLAS.32.Solve_M_V``() =
 let ``OpenBLAS.32.SolveSymmetric_M_V``() = 
     match Float32Backend.SolveSymmetric_M_V(m32_3, v32_1) with
     | Some(s) -> Util.(=~)(s, v32_5)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.32.Mul_M_M``() = 
+    Util.(=~)(Float32Backend.Mul_M_M(m32_1, m32_2), m32_4)
+
+[<Property>]
+let ``OpenBLAS.32.Mul_M_M_Add_V_MCols``() = 
+    Util.(=~)(Float32Backend.Mul_M_M_Add_V_MCols(m32_2, m32_2, v32_1), m32_5)
+
+[<Property>]
+let ``OpenBLAS.32.Inverse_M``() =
+    match Float32Backend.Inverse_M(m32_2) with
+    | Some(s) -> Util.(=~)(s, m32_6)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.32.Det_M``() =
+    match Float32Backend.Det_M(m32_2) with
+    | Some(s) -> Util.(=~)(s, s32_1)
     | _ -> false
