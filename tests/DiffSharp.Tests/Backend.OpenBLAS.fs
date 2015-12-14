@@ -491,6 +491,8 @@ let m64_6 = array2D [[-0.03792; 0.02867;-0.09172;-0.04912]
                      [ 0.02512;-0.68486; 0.39513;-1.19806]
                      [ 0.00872; 0.64692;-0.30733; 0.95965]
                      [-0.12831;-0.03091; 0.02872;-0.10736]]
+let m64_7 = array2D [[-4.99094;-0.34702]
+                     [ 5.98291;-6.16668]]
 let v64_1 =         [|-4.99094;-0.34702; 5.98291;-6.16668|]
 let v64_2 =         [|53.45586; 37.97145; 46.78062|]
 let v64_3 =         [|-368.78194; 547.68320; 647.37647; -156.33702|]
@@ -504,6 +506,7 @@ let m32_3 = m64_3 |> Array2D.map float32
 let m32_4 = m64_4 |> Array2D.map float32
 let m32_5 = m64_5 |> Array2D.map float32
 let m32_6 = m64_6 |> Array2D.map float32
+let m32_7 = m64_7 |> Array2D.map float32
 let v32_1 = v64_1 |> Array.map float32
 let v32_2 = v64_2 |> Array.map float32
 let v32_3 = v64_3 |> Array.map float32
@@ -512,7 +515,6 @@ let v32_5 = v64_5 |> Array.map float32
 let s32_1 = s64_1 |> float32
 
 // float32
-
 [<Property>]
 let ``OpenBLAS.32.Mul_M_V``() = 
     Util.(=~)(Float32Backend.Mul_M_V(m32_1, v32_1), v32_2)
@@ -552,3 +554,92 @@ let ``OpenBLAS.32.Det_M``() =
     match Float32Backend.Det_M(m32_2) with
     | Some(s) -> Util.(=~)(s, s32_1)
     | _ -> false
+
+[<Property>]
+let ``OpenBLAS.32.ReshapeCopy_V_MRows``() = 
+    Util.(=~)(Float32Backend.ReshapeCopy_V_MRows(2, v32_1), m32_7)
+
+[<Property>]
+let ``OpenBLAS.32.RepeatReshapeCopy_V_MRows``() =
+    let m = 2
+    let n = v32_1.Length
+    let r = Array2D.zeroCreate m n
+    for i = 0 to m - 1 do
+        for j = 0 to n - 1 do
+            r.[i, j] <- v32_1.[j]
+    Util.(=~)(Float32Backend.RepeatReshapeCopy_V_MRows(m, v32_1), r)
+
+[<Property>]
+let ``OpenBLAS.32.RepeatReshapeCopy_V_MCols``() =
+    let m = v32_1.Length
+    let n = 2
+    let r = Array2D.zeroCreate m n
+    for i = 0 to m - 1 do
+        for j = 0 to n - 1 do
+            r.[i, j] <- v32_1.[i]
+    Util.(=~)(Float32Backend.RepeatReshapeCopy_V_MCols(n, v32_1), r)
+
+// float64
+[<Property>]
+let ``OpenBLAS.64.Mul_M_V``() = 
+    Util.(=~)(Float64Backend.Mul_M_V(m64_1, v64_1), v64_2)
+
+[<Property>]
+let ``OpenBLAS.64.Mul_V_M``() = 
+    Util.(=~)(Float64Backend.Mul_V_M(v64_2, m64_1), v64_3)
+
+[<Property>]
+let ``OpenBLAS.64.Solve_M_V``() = 
+    match Float64Backend.Solve_M_V(m64_2, v64_1) with
+    | Some(s) -> Util.(=~)(s, v64_4)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.64.SolveSymmetric_M_V``() = 
+    match Float64Backend.SolveSymmetric_M_V(m64_3, v64_1) with
+    | Some(s) -> Util.(=~)(s, v64_5)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.64.Mul_M_M``() = 
+    Util.(=~)(Float64Backend.Mul_M_M(m64_1, m64_2), m64_4)
+
+[<Property>]
+let ``OpenBLAS.64.Mul_M_M_Add_V_MCols``() = 
+    Util.(=~)(Float64Backend.Mul_M_M_Add_V_MCols(m64_2, m64_2, v64_1), m64_5)
+
+[<Property>]
+let ``OpenBLAS.64.Inverse_M``() =
+    match Float64Backend.Inverse_M(m64_2) with
+    | Some(s) -> Util.(=~)(s, m64_6)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.64.Det_M``() =
+    match Float64Backend.Det_M(m64_2) with
+    | Some(s) -> Util.(=~)(s, s64_1)
+    | _ -> false
+
+[<Property>]
+let ``OpenBLAS.64.ReshapeCopy_V_MRows``() = 
+    Util.(=~)(Float64Backend.ReshapeCopy_V_MRows(2, v64_1), m64_7)
+
+[<Property>]
+let ``OpenBLAS.64.RepeatReshapeCopy_V_MRows``() =
+    let m = 2
+    let n = v64_1.Length
+    let r = Array2D.zeroCreate m n
+    for i = 0 to m - 1 do
+        for j = 0 to n - 1 do
+            r.[i, j] <- v64_1.[j]
+    Util.(=~)(Float64Backend.RepeatReshapeCopy_V_MRows(m, v64_1), r)
+
+[<Property>]
+let ``OpenBLAS.64.RepeatReshapeCopy_V_MCols``() =
+    let m = v64_1.Length
+    let n = 2
+    let r = Array2D.zeroCreate m n
+    for i = 0 to m - 1 do
+        for j = 0 to n - 1 do
+            r.[i, j] <- v64_1.[i]
+    Util.(=~)(Float64Backend.RepeatReshapeCopy_V_MCols(n, v64_1), r)

@@ -4,12 +4,13 @@ open DiffSharp.AD.Float32
 open DiffSharp.Config
 open DiffSharp.Util
 
-let m = array2D [[]]
-let s = 0.f
+let v64_1 =         [|-4.99094;-0.34702; 5.98291;-6.16668|]
+let v32_1 = v64_1 |> Array.map float32
 
-let r = 
-    if m.Length = 0 then
-        Array2D.empty
-    else
-        m |> Array2D.map (fun x -> x - s)
-let r2 = GlobalConfig.Float32Backend.Sub_M_S(m, s)
+let m = 2
+let n = v32_1.Length
+let r = Array2D.zeroCreate m n
+for i = 0 to m - 1 do
+    for j = 0 to n - 1 do
+        r.[i, j] <- v32_1.[j]
+let r2 = GlobalConfig.Float32Backend.RepeatReshapeCopy_V_MRows(m, v32_1)
