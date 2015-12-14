@@ -41,12 +41,12 @@ namespace DiffSharp.Backend
 /// Interface for DiffSharp backends
 type Backend<'T> =
     // Scalar valued
+    abstract member Mul_Dot_V_V : 'T[] * 'T[] -> 'T
     abstract member L1Norm_V : ('T[]) -> 'T
     abstract member L2Norm_V : ('T[]) -> 'T
-    abstract member Mul_Dot_V_V : 'T[] * 'T[] -> 'T
+    abstract member SupNorm_V : ('T[]) -> 'T
     abstract member Sum_V : ('T[]) -> 'T
     abstract member Sum_M : ('T[,]) -> 'T
-    abstract member SupNorm_V : ('T[]) -> 'T
     
     // Vector valued
     abstract member Add_V_V : 'T[] * 'T[] -> 'T[]
