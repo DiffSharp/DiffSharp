@@ -49,7 +49,6 @@ open DiffSharp.Util
 
 /// Backend using OpenBLAS library for BLAS and LAPACK operations, and parallel threads for non-BLAS operations
 module OpenBLAS =
-
     type PinnedArray<'T when 'T : unmanaged> (array : 'T[]) =
         let h = GCHandle.Alloc(array, GCHandleType.Pinned)
         let ptr = Marshal.UnsafeAddrOfPinnedArrayElement(array, 0)

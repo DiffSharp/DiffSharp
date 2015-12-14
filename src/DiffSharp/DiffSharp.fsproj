@@ -57,6 +57,7 @@
     <Compile Include="Util.fs" />
     <Compile Include="Backend.fs" />
     <Compile Include="Backend.OpenBLAS.fs" />
+    <Compile Include="Backend.Cuda.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="AD.Float32.fs" />
     <Compile Include="AD.Float64.fs" />
@@ -85,14 +86,49 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="managed_cuda_backend.fsx" />
+    <None Include="managed_cuda_kernels.fsx" />
+    <None Include="diffsharp_embedded_reber_v2.fsx" />
+    <None Include="embedded_reber.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="CudaBlas">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaBlas.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="CudaFFT">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaFFT.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="CudaRand">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaRand.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="CudaSolve">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaSolve.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="CudaSparse">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaSparse.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Quotations.Evaluator">
       <HintPath>..\..\packages\FSharp.Quotations.Evaluator.1.0.6\lib\net40\FSharp.Quotations.Evaluator.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="ManagedCuda">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\ManagedCuda.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NPP">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\NPP.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NVRTC">
+      <HintPath>..\..\..\..\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\NVRTC.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />

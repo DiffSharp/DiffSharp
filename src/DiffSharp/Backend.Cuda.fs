@@ -1,19 +1,7 @@
 ﻿#nowarn "9"
 #nowarn "51"
 
-#r @"C:\Users\Marko\Documents\Visual Studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\ManagedCuda.dll"
-#r @"C:\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\NVRTC.dll"
-#r @"C:\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaBlas.dll"
-#r @"C:\Users\Marko\documents\visual studio 2015\Projects\Automatic Differentiation\packages\ManagedCuda-75-x64.7.5.7\lib\net45\x64\CudaSolve.dll"
-
-#load "Backend.fs"
-open DiffSharp.Backend
-
-#load "Util.fs"
-open DiffSharp.Util
-
-#nowarn "9"
-#nowarn "51"
+namespace DiffSharp.Backend
 
 open System
 open System.Runtime.InteropServices
@@ -707,6 +695,8 @@ module Cuda =
                 None
 
     type Float32Backend() =
+        do (ctx.Context |> ignore)
+
         interface Backend<float32> with
             // Numerics
             member o.Add_V_V(x, y) =
@@ -1046,6 +1036,8 @@ module Cuda =
                     r
 
     type Float64Backend() =
+        do (ctx.Context |> ignore)
+        
         interface Backend<float> with
             // Numerics
             member o.Add_V_V(x, y) =
@@ -1382,7 +1374,3 @@ module Cuda =
                     for i = 0 to m - 1 do
                         Buffer.BlockCopy(rows.[i], 0, r, i * xbytes, xbytes)
                     r
-
-let a = Array2D.create 3 3 1.0f
-Cuda.Numerics.sscal'(2.0f,a)
-a

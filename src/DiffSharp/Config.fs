@@ -89,6 +89,10 @@ type GlobalConfig() =
             C <- {C with
                     Float32Backend = OpenBLAS.Float32Backend()
                     Float64Backend = OpenBLAS.Float64Backend()}
+        | "Cuda" ->
+            C <- {C with
+                    Float32Backend = Cuda.Float32Backend()
+                    Float64Backend = Cuda.Float64Backend()}
         | _ -> invalidArg "" "Unsupported backend. Try: OpenBLAS"
     static member SetEpsilon(e:float32) = 
         C <- {C with
