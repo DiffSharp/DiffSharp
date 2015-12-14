@@ -39,6 +39,7 @@
 module DiffSharp.Tests.Backend.OpenBLAS
 
 open FsCheck.NUnit
+open DiffSharp.Util
 open DiffSharp.Backend
 open DiffSharp.Tests
 
@@ -144,6 +145,19 @@ let ``OpenBLAS.32.ReshapeCopy_MRows_V``(m:float32[,]) =
             ri <- ri + 1
     Util.(=~)(Float32Backend.ReshapeCopy_MRows_V(m), r)
 
+[<Property>]
+let ``OpenBLAS.32.Mul_Out_V_V``(v1:float32[], v2:float32[]) = 
+    let r = 
+        if (v1.Length = 0) || (v2.Length = 0) then
+            Array2D.empty
+        else
+            let rr = Array2D.zeroCreate v1.Length v2.Length
+            for i = 0 to v1.Length - 1 do
+                for j = 0 to v2.Length - 1 do
+                    rr.[i, j] <- v1.[i] * v2.[j]
+            rr
+    Util.(=~)(Float32Backend.Mul_Out_V_V(v1, v2), r)
+
 
 // float64
 [<Property>]
@@ -239,6 +253,18 @@ let ``OpenBLAS.64.ReshapeCopy_MRows_V``(m:float[,]) =
             ri <- ri + 1
     Util.(=~)(Float64Backend.ReshapeCopy_MRows_V(m), r)
 
+[<Property>]
+let ``OpenBLAS.64.Mul_Out_V_V``(v1:float[], v2:float[]) = 
+    let r = 
+        if (v1.Length = 0) || (v2.Length = 0) then
+            Array2D.empty
+        else
+            let rr = Array2D.zeroCreate v1.Length v2.Length
+            for i = 0 to v1.Length - 1 do
+                for j = 0 to v2.Length - 1 do
+                    rr.[i, j] <- v1.[i] * v2.[j]
+            rr
+    Util.(=~)(Float64Backend.Mul_Out_V_V(v1, v2), r)
 
 //
 // Hard-coded tests

@@ -38,6 +38,7 @@
 
 namespace DiffSharp.Tests
 
+open DiffSharp.Util
 open FsCheck
 
 
@@ -81,5 +82,21 @@ type Util() =
             false
         else
             match Array.map2 (fun (x:float) (y:float) -> (Util.(=~)(x, y))) a b |> Array.tryFind not with
+            | Some(_) -> false
+            | _ -> true
+
+    static member (=~) (a:float32[,], b:float32[,]) =
+        if ((Array2D.length1 a) <> (Array2D.length1 b)) || ((Array2D.length2 a) <> (Array2D.length2 b))then
+            false
+        else
+            match Array2D.map2 (fun (x:float32) (y:float32) -> (Util.(=~)(x, y))) a b |> Array2D.tryFind not with
+            | Some(_) -> false
+            | _ -> true
+
+    static member (=~) (a:float[,], b:float[,]) =
+        if ((Array2D.length1 a) <> (Array2D.length1 b)) || ((Array2D.length2 a) <> (Array2D.length2 b))then
+            false
+        else
+            match Array2D.map2 (fun (x:float) (y:float) -> (Util.(=~)(x, y))) a b |> Array2D.tryFind not with
             | Some(_) -> false
             | _ -> true
