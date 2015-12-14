@@ -393,8 +393,27 @@ module OpenBLAS =
 
     module BLASExtensions =
         [<SuppressUnmanagedCodeSecurity>]
+        [<DllImport("libopenblas", EntryPoint="cblas_simatcopy")>]
+        extern void cblas_simatcopy(int ordering, int trans, int rows, int cols, float32 alpha, float32 *a, int lda, int ldb)
+
+        [<SuppressUnmanagedCodeSecurity>]
         [<DllImport("libopenblas", EntryPoint="cblas_somatcopy")>]
         extern void cblas_somatcopy(int ordering, int trans, int rows, int cols, float32 alpha, float32 *a, int lda, float32 *b, int ldb)
+
+        // A <- alpha * transpose(A)
+        // Only works for square matrices, modification of .NET array metadata might be needed for the correct in-memory transposition of non-square matrices
+        let simatcopyT(alpha:float32, a:float32[,]) =
+            let m = Array2D.length1 a
+            let n = Array2D.length2 a
+            let arg_ordering = 101 // cblas.h: typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+            let arg_trans = 112 // cblas.h: typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+            let arg_rows = m
+            let arg_cols = n
+            let arg_alpha = alpha
+            let arg_a = new PinnedArray2D<float32>(a)
+            let arg_lda = n
+            let arg_ldb = m
+            cblas_simatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_ldb)
 
         // B <- alpha * transpose(A)
         let somatcopyT(alpha:float32, a:float32[,], b:float32[,]) =
@@ -412,8 +431,27 @@ module OpenBLAS =
             cblas_somatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_b.Ptr, arg_ldb)
 
         [<SuppressUnmanagedCodeSecurity>]
+        [<DllImport("libopenblas", EntryPoint="cblas_dimatcopy")>]
+        extern void cblas_dimatcopy(int ordering, int trans, int rows, int cols, float alpha, float *a, int lda, int ldb)
+
+        [<SuppressUnmanagedCodeSecurity>]
         [<DllImport("libopenblas", EntryPoint="cblas_domatcopy")>]
         extern void cblas_domatcopy(int ordering, int trans, int rows, int cols, float alpha, float *a, int lda, float *b, int ldb)
+
+        // A <- alpha * transpose(A)
+        // Only works for square matrices, modification of .NET array metadata might be needed for the correct in-memory transposition of non-square matrices
+        let dimatcopyT(alpha:float, a:float[,]) =
+            let m = Array2D.length1 a
+            let n = Array2D.length2 a
+            let arg_ordering = 101 // cblas.h: typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+            let arg_trans = 112 // cblas.h: typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+            let arg_rows = m
+            let arg_cols = n
+            let arg_alpha = alpha
+            let arg_a = new PinnedArray2D<float>(a)
+            let arg_lda = n
+            let arg_ldb = m
+            cblas_dimatcopy(arg_ordering, arg_trans, arg_rows, arg_cols, arg_alpha, arg_a.Ptr, arg_lda, arg_ldb)
 
         // B <- alpha * transpose(A)
         let domatcopyT(alpha:float, a:float[,], b:float[,]) =
@@ -447,40 +485,35 @@ module OpenBLAS =
         [<DllImport("libopenblas", EntryPoint="sgetri_")>]
         extern void sgetri_(int *n, float32 *a, int *lda, int *ipiv, float32 *work, int *lwork, int *info)
 
+        // Only works for square matrices
         let sgesv(a:float32[,], b:float32[]) =
-            let m = Array2D.length1 a
-            let n = Array2D.length2 a
-            let a' = Array2D.zeroCreate n m
-            for i = 0 to n - 1 do
-                for j = 0 to m - 1 do
-                    a'.[i, j] <- a.[j, i]
-            let b' = Array.copy b
+            let n = Array2D.length1 a
+            BLASExtensions.simatcopyT(1.f, a)
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float32>(a')
+            use arg_a = new PinnedArray2D<float32>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
-            use arg_b = new PinnedArray<float32>(b')
+            use arg_b = new PinnedArray<float32>(b)
             sgesv_(&&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
         let ssysv(a:float32[,], b:float32[]) =
             let n = Array2D.length1 a
-            let b' = Array.copy b
             let ipiv = Array.zeroCreate n
-            let work = Array.zeroCreate 1
+            let work = Array.zeroCreate n
             let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
-            let mutable arg_lwork = 1
+            let mutable arg_lwork = work.Length
             let mutable arg_info = 0
             use arg_a = new PinnedArray2D<float32>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
@@ -488,7 +521,7 @@ module OpenBLAS =
             use arg_work = new PinnedArray<float32>(work)
             ssysv_(&&arg_uplo, &&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
@@ -513,7 +546,7 @@ module OpenBLAS =
             let work = Array.zeroCreate (n * n)
             let mutable arg_n = n
             let mutable arg_lda = n
-            let mutable arg_lwork = n * n
+            let mutable arg_lwork = work.Length
             let mutable arg_info = 0
             use arg_a = new PinnedArray2D<float32>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
@@ -540,40 +573,35 @@ module OpenBLAS =
         [<DllImport("libopenblas", EntryPoint="dgetri_")>]
         extern void dgetri_(int *n, float *a, int *lda, int *ipiv, float *work, int *lwork, int *info)
 
+        // Only works for square matrices
         let dgesv(a:float[,], b:float[]) =
-            let m = Array2D.length1 a
-            let n = Array2D.length2 a
-            let a' = Array2D.zeroCreate n m
-            for i = 0 to n - 1 do
-                for j = 0 to m - 1 do
-                    a'.[i, j] <- a.[j, i]
-            let b' = Array.copy b
+            let n = Array2D.length1 a
+            BLASExtensions.dimatcopyT(1., a)
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
             let mutable arg_info = 0
-            use arg_a = new PinnedArray2D<float>(a')
+            use arg_a = new PinnedArray2D<float>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
-            use arg_b = new PinnedArray<float>(b')
+            use arg_b = new PinnedArray<float>(b)
             dgesv_(&&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
         let dsysv(a:float[,], b:float[]) =
             let n = Array2D.length1 a
-            let b' = Array.copy b
             let ipiv = Array.zeroCreate n
-            let work = Array.zeroCreate 1
+            let work = Array.zeroCreate n
             let mutable arg_uplo = 'U' // Assume upper triangular. TODO: check if LAPACK implementation requires the lower triangle to be zeroed
             let mutable arg_n = n
             let mutable arg_nrhs = 1
             let mutable arg_lda = n
             let mutable arg_ldb = n
-            let mutable arg_lwork = 1
+            let mutable arg_lwork = work.Length
             let mutable arg_info = 0
             use arg_a = new PinnedArray2D<float>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
@@ -581,7 +609,7 @@ module OpenBLAS =
             use arg_work = new PinnedArray<float>(work)
             dsysv_(&&arg_uplo, &&arg_n, &&arg_nrhs, arg_a.Ptr, &&arg_lda, arg_ipiv.Ptr, arg_b.Ptr, &&arg_ldb, arg_work.Ptr, &&arg_lwork, &&arg_info)
             if arg_info = 0 then
-                Some(b')
+                Some(b)
             else
                 None
 
@@ -606,7 +634,7 @@ module OpenBLAS =
             let work = Array.zeroCreate (n * n)
             let mutable arg_n = n
             let mutable arg_lda = n
-            let mutable arg_lwork = n * n
+            let mutable arg_lwork = work.Length
             let mutable arg_info = 0
             use arg_a = new PinnedArray2D<float>(a)
             use arg_ipiv = new PinnedArray<int>(ipiv)
@@ -616,6 +644,7 @@ module OpenBLAS =
                 Some(a)
             else
                 None
+
 
     type Float32Backend() =
         interface Backend<float32> with
@@ -669,54 +698,6 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate x.Length y.Length
                     BLAS.sger(1.f, x, y, z)
                     z
-            // Non-BLAS
-            member o.Sub_S_V(alpha, x) =
-                if alpha = 0.f then 
-                    (o :> Backend<float32>).Mul_S_V(-1.f, x)
-                else
-                    (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
-            // Non-BLAS
-            member o.Sub_V_S(x, alpha) =
-                if alpha = 0.f then
-                    x
-                else
-                    (o :> Backend<float32>).Map_F_V((fun v -> v - alpha), x)
-            // Non-BLAS
-            member o.Sub_S_M(alpha, x) =
-                if alpha = 0.f then 
-                    (o :> Backend<float32>).Mul_S_M(-1.f, x)
-                else
-                    (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
-            // Non-BLAS
-            member o.Sub_M_S(x, alpha) =
-                if alpha = 0.f then
-                    x
-                else
-                    (o :> Backend<float32>).Map_F_M((fun v -> v - alpha), x)
-            // Non-BLAS
-            member o.Map_F_V(f, x) =
-                if Array.isEmpty x then
-                    Array.empty
-                else
-                    Array.map f x
-            // Non-BLAS
-            member o.Map2_F_V_V(f, x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
-                    Array.empty
-                else
-                    Array.map2 f x y
-            // Non-BLAS
-            member o.Map_F_M(f, x) =
-                if Array2D.isEmpty x then
-                    Array2D.empty
-                else
-                    Array2D.map f x
-            // Non-BLAS
-            member o.Map2_F_M_M(f, x, y) =
-                if Array2D.isEmpty x || Array2D.isEmpty y then
-                    Array2D.empty
-                else
-                    Array2D.map2 f x y
             // BLAS
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
@@ -736,12 +717,6 @@ module OpenBLAS =
                 else
                     let i = BLAS.isamax(x)
                     abs x.[i - 1]
-            // Non-BLAS
-            member o.Sum_V(x) =
-                if Array.isEmpty x then
-                    0.f
-                else
-                    Array.sum x
             // BLAS
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
@@ -807,14 +782,6 @@ module OpenBLAS =
                     let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(n, z)
                     BLAS.sgemm(1.f, x, y, 1.f, z')
                     z'
-            // Non-BLAS
-            member o.Mul_Had_M_M(x, y) =
-                if Array2D.isEmpty x then
-                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
-                elif Array2D.isEmpty y then
-                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
-                else
-                    (o :> Backend<float32>).Map2_F_M_M((*), x, y)
             // BLAS
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
@@ -857,31 +824,22 @@ module OpenBLAS =
                     let x' = Array2D.zeroCreate<float32> n m
                     BLASExtensions.somatcopyT(1.f, x, x')
                     x'
-            // Non-BLAS
-            member o.Sum_M(x) =
-                if Array2D.isEmpty x then
-                    0.f
-                else
-                    (o :> Backend<float32>).ReshapeCopy_MRows_V(x) |> Array.sum
             // LAPACK
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
-                    LAPACK.sgesv(x, y)
+                    let x' = Array2D.copyFast x
+                    let y' = Array.copy y
+                    LAPACK.sgesv(x', y')
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
-                    LAPACK.ssysv(x, y)
-            // Non-BLAS
-            member o.Diagonal_M(x) =
-                if Array2D.isEmpty x then
-                    Array.empty
-                else
-                    let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    Array.init n (fun i -> x.[i, i])
+                    let x' = Array2D.copyFast x
+                    let y' = Array.copy y
+                    LAPACK.ssysv(x', y')
             // LAPACK
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
@@ -914,6 +872,82 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
+            // Non-BLAS
+            member o.Sub_S_V(alpha, x) =
+                if alpha = 0.f then 
+                    (o :> Backend<float32>).Mul_S_V(-1.f, x)
+                else
+                    (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
+            // Non-BLAS
+            member o.Sub_V_S(x, alpha) =
+                if alpha = 0.f then
+                    x
+                else
+                    (o :> Backend<float32>).Map_F_V((fun v -> v - alpha), x)
+            // Non-BLAS
+            member o.Sub_S_M(alpha, x) =
+                if alpha = 0.f then 
+                    (o :> Backend<float32>).Mul_S_M(-1.f, x)
+                else
+                    (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
+            // Non-BLAS
+            member o.Sub_M_S(x, alpha) =
+                if alpha = 0.f then
+                    x
+                else
+                    (o :> Backend<float32>).Map_F_M((fun v -> v - alpha), x)
+            // Non-BLAS
+            member o.Map_F_V(f, x) =
+                if Array.isEmpty x then
+                    Array.empty
+                else
+                    Array.map f x
+            // Non-BLAS
+            member o.Map2_F_V_V(f, x, y) =
+                if Array.isEmpty x || Array.isEmpty y then
+                    Array.empty
+                else
+                    Array.map2 f x y
+            // Non-BLAS
+            member o.Map_F_M(f, x) =
+                if Array2D.isEmpty x then
+                    Array2D.empty
+                else
+                    Array2D.map f x
+            // Non-BLAS
+            member o.Map2_F_M_M(f, x, y) =
+                if Array2D.isEmpty x || Array2D.isEmpty y then
+                    Array2D.empty
+                else
+                    Array2D.map2 f x y
+            // Non-BLAS
+            member o.Sum_V(x) =
+                if Array.isEmpty x then
+                    0.f
+                else
+                    Array.sum x
+            // Non-BLAS
+            member o.Mul_Had_M_M(x, y) =
+                if Array2D.isEmpty x then
+                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
+                elif Array2D.isEmpty y then
+                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
+                else
+                    (o :> Backend<float32>).Map2_F_M_M((*), x, y)
+            // Non-BLAS
+            member o.Sum_M(x) =
+                if Array2D.isEmpty x then
+                    0.f
+                else
+                    (o :> Backend<float32>).ReshapeCopy_MRows_V(x) |> Array.sum
+            // Non-BLAS
+            member o.Diagonal_M(x) =
+                if Array2D.isEmpty x then
+                    Array.empty
+                else
+                    let n = min (Array2D.length1 x) (Array2D.length2 x)
+                    Array.init n (fun i -> x.[i, i])
+
             // Non-BLAS
             member o.ReshapeCopy_MRows_V(x) =
                 if Array2D.isEmpty x then
@@ -1007,54 +1041,6 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate x.Length y.Length
                     BLAS.dger(1., x, y, z)
                     z
-            // Non-BLAS
-            member o.Sub_S_V(alpha, x) =
-                if alpha = 0. then 
-                    (o :> Backend<float>).Mul_S_V(-1., x)
-                else
-                    (o :> Backend<float>).Map_F_V((fun v -> alpha - v), x)
-            // Non-BLAS
-            member o.Sub_V_S(x, alpha) =
-                if alpha = 0. then
-                    x
-                else
-                    (o :> Backend<float>).Map_F_V((fun v -> v - alpha), x)
-            // Non-BLAS
-            member o.Sub_S_M(alpha, x) =
-                if alpha = 0. then 
-                    (o :> Backend<float>).Mul_S_M(-1., x)
-                else
-                    (o :> Backend<float>).Map_F_M((fun v -> alpha - v), x)
-            // Non-BLAS
-            member o.Sub_M_S(x, alpha) =
-                if alpha = 0. then
-                    x
-                else
-                    (o :> Backend<float>).Map_F_M((fun v -> v - alpha), x)
-            // Non-BLAS
-            member o.Map_F_V(f, x) =
-                if Array.isEmpty x then
-                    Array.empty
-                else
-                    Array.map f x
-            // Non-BLAS
-            member o.Map2_F_V_V(f, x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
-                    Array.empty
-                else
-                    Array.map2 f x y
-            // Non-BLAS
-            member o.Map_F_M(f, x) =
-                if Array2D.isEmpty x then
-                    Array2D.empty
-                else
-                    Array2D.map f x
-            // Non-BLAS
-            member o.Map2_F_M_M(f, x, y) =
-                if Array2D.isEmpty x || Array2D.isEmpty y then
-                    Array2D.empty
-                else
-                    Array2D.map2 f x y
             // BLAS
             member o.L1Norm_V(x) =
                 if Array.isEmpty x then
@@ -1074,12 +1060,6 @@ module OpenBLAS =
                 else
                     let i = BLAS.idamax(x)
                     abs x.[i - 1]
-            // Non-BLAS
-            member o.Sum_V(x) =
-                if Array.isEmpty x then
-                    0.
-                else
-                    Array.sum x
             // BLAS
             member o.Add_M_M(x, y) =
                 if Array2D.isEmpty x then
@@ -1145,14 +1125,6 @@ module OpenBLAS =
                     let z' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(n, z)
                     BLAS.dgemm(1., x, y, 1., z')
                     z'
-            // Non-BLAS
-            member o.Mul_Had_M_M(x, y) =
-                if Array2D.isEmpty x then
-                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
-                elif Array2D.isEmpty y then
-                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
-                else
-                    (o :> Backend<float>).Map2_F_M_M((*), x, y)
             // BLAS
             member o.Mul_M_V(x, y) =
                 if Array2D.isEmpty x then
@@ -1195,31 +1167,22 @@ module OpenBLAS =
                     let x' = Array2D.zeroCreate<float> n m
                     BLASExtensions.domatcopyT(1., x, x')
                     x'
-            // Non-BLAS
-            member o.Sum_M(x) =
-                if Array2D.isEmpty x then
-                    0.
-                else
-                    (o :> Backend<float>).ReshapeCopy_MRows_V(x) |> Array.sum
             // LAPACK
             member o.Solve_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
-                    LAPACK.dgesv(x, y)
+                    let x' = Array2D.copyFast x
+                    let y' = Array.copy y
+                    LAPACK.dgesv(x', y')
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
                 if Array2D.isEmpty x || Array.isEmpty y then
                     None
                 else
-                    LAPACK.dsysv(x, y)
-            // Non-BLAS
-            member o.Diagonal_M(x) =
-                if Array2D.isEmpty x then
-                    Array.empty
-                else
-                    let n = min (Array2D.length1 x) (Array2D.length2 x)
-                    Array.init n (fun i -> x.[i, i])
+                    let x' = Array2D.copyFast x
+                    let y' = Array.copy y
+                    LAPACK.dsysv(x', y')
             // LAPACK
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
@@ -1252,6 +1215,82 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
+            // Non-BLAS
+            member o.Sub_S_V(alpha, x) =
+                if alpha = 0. then 
+                    (o :> Backend<float>).Mul_S_V(-1., x)
+                else
+                    (o :> Backend<float>).Map_F_V((fun v -> alpha - v), x)
+            // Non-BLAS
+            member o.Sub_V_S(x, alpha) =
+                if alpha = 0. then
+                    x
+                else
+                    (o :> Backend<float>).Map_F_V((fun v -> v - alpha), x)
+            // Non-BLAS
+            member o.Sub_S_M(alpha, x) =
+                if alpha = 0. then 
+                    (o :> Backend<float>).Mul_S_M(-1., x)
+                else
+                    (o :> Backend<float>).Map_F_M((fun v -> alpha - v), x)
+            // Non-BLAS
+            member o.Sub_M_S(x, alpha) =
+                if alpha = 0. then
+                    x
+                else
+                    (o :> Backend<float>).Map_F_M((fun v -> v - alpha), x)
+            // Non-BLAS
+            member o.Map_F_V(f, x) =
+                if Array.isEmpty x then
+                    Array.empty
+                else
+                    Array.map f x
+            // Non-BLAS
+            member o.Map2_F_V_V(f, x, y) =
+                if Array.isEmpty x || Array.isEmpty y then
+                    Array.empty
+                else
+                    Array.map2 f x y
+            // Non-BLAS
+            member o.Map_F_M(f, x) =
+                if Array2D.isEmpty x then
+                    Array2D.empty
+                else
+                    Array2D.map f x
+            // Non-BLAS
+            member o.Map2_F_M_M(f, x, y) =
+                if Array2D.isEmpty x || Array2D.isEmpty y then
+                    Array2D.empty
+                else
+                    Array2D.map2 f x y
+            // Non-BLAS
+            member o.Sum_V(x) =
+                if Array.isEmpty x then
+                    0.
+                else
+                    Array.sum x
+            // Non-BLAS
+            member o.Mul_Had_M_M(x, y) =
+                if Array2D.isEmpty x then
+                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
+                elif Array2D.isEmpty y then
+                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
+                else
+                    (o :> Backend<float>).Map2_F_M_M((*), x, y)
+            // Non-BLAS
+            member o.Sum_M(x) =
+                if Array2D.isEmpty x then
+                    0.
+                else
+                    (o :> Backend<float>).ReshapeCopy_MRows_V(x) |> Array.sum
+            // Non-BLAS
+            member o.Diagonal_M(x) =
+                if Array2D.isEmpty x then
+                    Array.empty
+                else
+                    let n = min (Array2D.length1 x) (Array2D.length2 x)
+                    Array.init n (fun i -> x.[i, i])
+
             // Non-BLAS
             member o.ReshapeCopy_MRows_V(x) =
                 if Array2D.isEmpty x then
