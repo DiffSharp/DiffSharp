@@ -39,6 +39,8 @@
 /// Nested forward and reverse mode automatic differentiation module
 module DiffSharp.AD.Float64
 
+#nowarn "77"
+
 open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
@@ -104,7 +106,13 @@ type D =
 
     static member Zero = D 0.
     static member One = D 1.
-    static member op_Explicit(d:D):float = let (D(ap)) = d.PD in ap
+    static member op_Explicit(d:D):float =
+        let rec prec x =
+            match x with
+            | D(p) -> p
+            | DF(xp,_,_) -> prec xp
+            | DR(xp,_,_,_,_) -> prec xp
+        prec d
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -517,7 +525,13 @@ and DV =
         sb.ToString()
     static member Zero = DV Array.empty
     static member ZeroN n = DV(Array.zeroCreate n)
-    static member op_Explicit(d:DV):float[] = let (DV(ap)) = d.PD in ap
+    static member op_Explicit(d:DV):float[] =
+        let rec prec x =
+            match x with
+            | DV(p) -> p
+            | DVF(xp,_,_) -> prec xp
+            | DVR(xp,_,_,_,_) -> prec xp
+        prec d
     static member op_Explicit(d) = DV(d)
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
@@ -1462,7 +1476,13 @@ and DM =
         sb.ToString()
     static member Zero = DM Array2D.empty
     static member ZeroMN m n = DM (Array2D.zeroCreate m n)
-    static member op_Explicit(d:DM):float[,] = let (DM(ap)) = d.PD in ap
+    static member op_Explicit(d:DM):float[,] =
+        let rec prec x =
+            match x with
+            | DM(p) -> p
+            | DMF(xp,_,_) -> prec xp
+            | DMR(xp,_,_,_,_) -> prec xp
+        prec d
     static member op_Explicit(d:float[,]) = DM(d)
     static member OfArray2D (a:D[,]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
