@@ -141,7 +141,6 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
-
 /// Extensions for the FSharp.Collections.Array module
 module Array =
     module Parallel =
@@ -154,7 +153,9 @@ module Array2D =
     let copyFast (array : 'T[,]) =  array.Clone() :?> 'T[,]
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)
-    let toArray (array : 'T [,]) = array |> Seq.cast<'T> |> Seq.toArray
+    let toArray (array : 'T[,]) = array |> Seq.cast<'T> |> Seq.toArray
+    let find (predicate : 'T -> bool) (array : 'T[,]) = array |> toArray |> Array.find predicate
+    let tryFind (predicate : 'T -> bool) (array : 'T[,]) = array |> toArray |> Array.tryFind predicate
     let map2 f (a1:_[,]) (a2:_[,]) = 
         let m = min (Array2D.length1 a1) (Array2D.length1 a2)
         let n = min (Array2D.length2 a1) (Array2D.length2 a2)
