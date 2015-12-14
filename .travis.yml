@@ -10,3 +10,7 @@ install:
 script:
   - xbuild /p:Configuration=Release /p:Platform=x64 /p:TargetFramework=net46 DiffSharp.sln
   - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
+notifications:
+  email:
+    on_success: never
+    on_failure: change
