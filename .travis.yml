@@ -1,0 +1,12 @@
+language: csharp
+solution: DiffSharp.sln
+os:
+  - linux
+mono:
+  - latest
+install:
+  - nuget restore DiffSharp.sln
+  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+script:
+  - xbuild /p:Configuration=Release DiffSharp.sln
+  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
