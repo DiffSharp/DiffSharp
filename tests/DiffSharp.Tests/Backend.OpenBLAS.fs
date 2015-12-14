@@ -104,6 +104,46 @@ let ``OpenBLAS.32.Sub_V_S``(v:float32[], s:float32) =
     let r = v |> Array.map (fun x -> x - s)
     Util.(=~)(Float32Backend.Sub_V_S(v, s), r)
 
+[<Property>]
+let ``OpenBLAS.32.Mul_S_V``(s:float32, v:float32[]) = 
+    if not (Util.IsNice(s)) then 
+        true
+    else
+        let r = 
+            if (s = 0.f) then
+                Array.zeroCreate v.Length
+            else
+                v |> Array.map (fun x -> s * x)
+        Util.(=~)(Float32Backend.Mul_S_V(s, v), r)
+
+[<Property>]
+let ``OpenBLAS.32.Diagonal_M``(m:float32[,]) = 
+    let n = min (Array2D.length1 m) (Array2D.length2 m)
+    let r = Array.init n (fun i -> m.[i, i])
+    Util.(=~)(Float32Backend.Diagonal_M(m), r)
+
+[<Property>]
+let ``OpenBLAS.32.Map_F_V``(v:float32[]) = 
+    let f (x:float32) = sin (exp x)
+    let r = v |> Array.map f
+    Util.(=~)(Float32Backend.Map_F_V(f, v), r)
+
+[<Property>]
+let ``OpenBLAS.32.Map2_F_V_V``(v:float32[]) = 
+    let f (x1:float32) (x2:float32) = sin (exp x1) + cos x2
+    let r = Array.map2 f v v
+    Util.(=~)(Float32Backend.Map2_F_V_V(f, v, v), r)
+
+[<Property>]
+let ``OpenBLAS.32.ReshapeCopy_MRows_V``(m:float32[,]) = 
+    let r = Array.zeroCreate m.Length
+    let mutable ri = 0
+    for i = 0 to (Array2D.length1 m) - 1 do
+        for j = 0 to (Array2D.length2 m) - 1 do
+            r.[ri] <- m.[i, j]
+            ri <- ri + 1
+    Util.(=~)(Float32Backend.ReshapeCopy_MRows_V(m), r)
+
 
 // float64
 [<Property>]
@@ -159,6 +199,46 @@ let ``OpenBLAS.64.Sub_V_S``(v:float[], s:float) =
     let r = v |> Array.map (fun x -> x - s)
     Util.(=~)(Float64Backend.Sub_V_S(v, s), r)
 
+[<Property>]
+let ``OpenBLAS.64.Mul_S_V``(s:float, v:float[]) = 
+    if not (Util.IsNice(s)) then 
+        true
+    else
+        let r = 
+            if (s = 0.) then
+                Array.zeroCreate v.Length
+            else
+                v |> Array.map (fun x -> s * x)
+        Util.(=~)(Float64Backend.Mul_S_V(s, v), r)
+
+[<Property>]
+let ``OpenBLAS.64.Diagonal_M``(m:float[,]) = 
+    let n = min (Array2D.length1 m) (Array2D.length2 m)
+    let r = Array.init n (fun i -> m.[i, i])
+    Util.(=~)(Float64Backend.Diagonal_M(m), r)
+
+[<Property>]
+let ``OpenBLAS.64.Map_F_V``(v:float[]) = 
+    let f (x:float) = sin (exp x)
+    let r = v |> Array.map f
+    Util.(=~)(Float64Backend.Map_F_V(f, v), r)
+
+[<Property>]
+let ``OpenBLAS.64.Map2_F_V_V``(v:float[]) = 
+    let f (x1:float) (x2:float) = sin (exp x1) + cos x2
+    let r = Array.map2 f v v
+    Util.(=~)(Float64Backend.Map2_F_V_V(f, v, v), r)
+
+[<Property>]
+let ``OpenBLAS.64.ReshapeCopy_MRows_V``(m:float[,]) = 
+    let r = Array.zeroCreate m.Length
+    let mutable ri = 0
+    for i = 0 to (Array2D.length1 m) - 1 do
+        for j = 0 to (Array2D.length2 m) - 1 do
+            r.[ri] <- m.[i, j]
+            ri <- ri + 1
+    Util.(=~)(Float64Backend.ReshapeCopy_MRows_V(m), r)
+
 
 //
 // Hard-coded tests
@@ -175,10 +255,11 @@ let m64_3 = array2D [[ 0.62406; 2.19092; 1.93734;-7.41726];
                      [ 2.19092; 7.18858; 9.21412; 1.83647];
                      [ 1.93734; 9.21412; 4.14575;-3.85926];
                      [-7.41726; 1.83647;-3.85926;-0.00381]]
-let v64_1 =          [|-4.99094;-0.34702; 5.98291;-6.16668|]
-let v64_2 =          [|53.45586; 37.97145; 46.78062|]
-let v64_3 =          [|-368.78194; 547.68320; 647.37647; -156.33702|]
-let v64_4 =          [|-0.06652; 9.86439; -8.02472; 1.48504|]
+let v64_1 =         [|-4.99094;-0.34702; 5.98291;-6.16668|]
+let v64_2 =         [|53.45586; 37.97145; 46.78062|]
+let v64_3 =         [|-368.78194; 547.68320; 647.37647; -156.33702|]
+let v64_4 =         [|-0.06652; 9.86439;-8.02472; 1.48504|]
+let v64_5 =         [| 2.04706; 1.31825;-1.70990; 0.78788|]
 
 let m32_1 = m64_1 |> Array2D.map float32
 let m32_2 = m64_2 |> Array2D.map float32
@@ -187,6 +268,7 @@ let v32_1 = v64_1 |> Array.map float32
 let v32_2 = v64_2 |> Array.map float32
 let v32_3 = v64_3 |> Array.map float32
 let v32_4 = v64_4 |> Array.map float32
+let v32_5 = v64_5 |> Array.map float32
 
 // float32
 
@@ -204,4 +286,8 @@ let ``OpenBLAS.32.Solve_M_V``() =
     | Some(s) -> Util.(=~)(s, v32_4)
     | _ -> false
 
-
+[<Property>]
+let ``OpenBLAS.32.SolveSymmetric_M_V``() = 
+    match Float32Backend.SolveSymmetric_M_V(m32_3, v32_1) with
+    | Some(s) -> Util.(=~)(s, v32_5)
+    | _ -> false
