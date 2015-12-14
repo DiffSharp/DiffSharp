@@ -427,7 +427,7 @@ type AD =
     /// Returns a specified number raised to the specified power.
     static member inline Pow(a:'T, b:'U) = a ** b
     /// Returns the angle whose tangent is the quotient of two specified numbers.
-    static member inline Atan2(a:'T, b:'U) = atan2 a b
+    static member inline Atan2(a:'T, b:'T) = atan2 a b
     /// Returns the logarithm of a specified number.
     static member inline Log(a:'T) = log a
     /// Returns the base 10 logarithm of a specified number.
