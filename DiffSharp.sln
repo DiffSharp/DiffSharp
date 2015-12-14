@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}"
 EndProject
@@ -32,6 +32,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Dsbench", "tests\Dsbench\Ds
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteropTest", "tests\InteropTest\InteropTest.csproj", "{73EDFD98-0114-4271-A92A-0F9735ED7425}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{89636F64-9969-474B-AA31-1FE21F8B6217}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89636F64-9969-474B-AA31-1FE21F8B6217}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89636F64-9969-474B-AA31-1FE21F8B6217}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89636F64-9969-474B-AA31-1FE21F8B6217}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89636F64-9969-474B-AA31-1FE21F8B6217}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
