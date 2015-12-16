@@ -62,7 +62,7 @@ In short, you have to make sure that you have the OpenBLAS binaries (_libopenbla
 
 On Linux, make sure that you have _libopenblas.so_ in the shared library search path. Also see the "Linux shared library search path" section on [this page](http://www.mono-project.com/docs/advanced/pinvoke/).
 
-On Windows, one way of accomplishing this is putting the _DiffSharp.dll_ and OpenBLAS binaries into the same folder with your .fsx script and calling
+On Windows, one way of accomplishing this is to put the _DiffSharp.dll_ and OpenBLAS binaries into the same folder with your .fsx script and call
 
     System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
