@@ -37,7 +37,7 @@ The following features are up and running:
 
 We are working on the following features for the next release:
 
-- _GPU backend using CUDA and cuBLAS_
+- _GPU backend using CUDA/OpenCL_
 - _Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)_
 - _AD via syntax tree transformation, using code quotations_
 
@@ -46,30 +46,7 @@ At this point we are debugging algorithmic complexity and the APIs. We are hopin
 How to Get
 ----------
 
-### Windows
-
-You can install the library via NuGet. You can also download the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
-
-For using DiffSharp, your project should target ".NET Framework 4.6" before installing the NuGet package. 
-
-Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the build configuration of your project, you should set "x64" as the platform target (don't forget to do this for all build configurations). If you are using F# interactive, you should run it in 64 bit mode. In Visual Studio, you can do this by selecting "Tools - Options - F# Tools - F# Interactive" and setting "64 bit F# Interactive" to "true" and restarting the IDE.
-
-<div class="row">
-    <div class="span1"></div>
-    <div class="span7">
-    <div class="well well-small" id="nuget">
-        The DiffSharp library <a href="https://www.nuget.org/packages/diffsharp">is available on NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
-        <pre>PM> Install-Package DiffSharp</pre>
-    </div>
-    </div>
-    <div class="span1"></div>
-</div>
-
-### Linux
-
-Please install the [libopenblas-dev](http://packages.ubuntu.com/precise/libopenblas-dev) package on your system. Once you have the file _libopenblas.so_ in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.
-
-Alternatively, you can download the Linux-specific pack of binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
+Please see the [download page](download.html) for installation instructions for Linux and Windows.
 
 Quick Usage Example
 -------------------
@@ -97,7 +74,7 @@ let hg = hessian g
 More Info and How to Cite
 -------------------------
 
-If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have [on GitHub](http://github.com/DiffSharp/DiffSharp).
+If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have [on GitHub](http://github.com/DiffSharp/DiffSharp). We also have a [Gitter chat room](https://gitter.im/DiffSharp/DiffSharp) that we follow.
 
 If you would like to cite this library, please use the following information:
 
@@ -107,7 +84,7 @@ You can also check our [**recent poster**](http://www.cs.nuim.ie/~gunes/files/IC
 
 Other sources:
 
-- [Introduction to Automatic Differentiation](http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/)
-- [Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?](https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/)
+- [Introduction to Automatic Differentiation](http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/) by Alexey Radul
+- [Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?](https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/) by Justin Domke
 
 *)
