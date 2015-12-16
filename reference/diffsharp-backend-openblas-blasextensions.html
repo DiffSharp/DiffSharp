@@ -60,39 +60,11 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '408', 408)" onmouseover="showTip(event, '408', 408)">
-            cblas_domatcopy (...)
-          </code>
-          <div class="tip" id="408">
-            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float * a:nativeptr&lt;float&gt; * lda:int * b:nativeptr&lt;float&gt; * ldb:int) -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '409', 409)" onmouseover="showTip(event, '409', 409)">
-            cblas_somatcopy (...)
-          </code>
-          <div class="tip" id="409">
-            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float32 * a:nativeptr&lt;float32&gt; * lda:int * b:nativeptr&lt;float32&gt; * ldb:int) -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
           <code onmouseout="hideTip(event, '410', 410)" onmouseover="showTip(event, '410', 410)">
-            domatcopyT (alpha, a, b)
+            cblas_dimatcopy (...)
           </code>
           <div class="tip" id="410">
-            <strong>Signature:</strong> (alpha:float * a:float [,] * b:float [,]) -&gt; unit<br />
+            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float * a:nativeptr&lt;float&gt; * lda:int * ldb:int) -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
@@ -103,9 +75,93 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '411', 411)" onmouseover="showTip(event, '411', 411)">
-            somatcopyT (alpha, a, b)
+            cblas_domatcopy (...)
           </code>
           <div class="tip" id="411">
+            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float * a:nativeptr&lt;float&gt; * lda:int * b:nativeptr&lt;float&gt; * ldb:int) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '412', 412)" onmouseover="showTip(event, '412', 412)">
+            cblas_simatcopy (...)
+          </code>
+          <div class="tip" id="412">
+            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float32 * a:nativeptr&lt;float32&gt; * lda:int * ldb:int) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '413', 413)" onmouseover="showTip(event, '413', 413)">
+            cblas_somatcopy (...)
+          </code>
+          <div class="tip" id="413">
+            <strong>Signature:</strong> (ordering:int * trans:int * rows:int * cols:int * alpha:float32 * a:nativeptr&lt;float32&gt; * lda:int * b:nativeptr&lt;float32&gt; * ldb:int) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '414', 414)" onmouseover="showTip(event, '414', 414)">
+            dimatcopyT (alpha, a)
+          </code>
+          <div class="tip" id="414">
+            <strong>Signature:</strong> (alpha:float * a:float [,]) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '415', 415)" onmouseover="showTip(event, '415', 415)">
+            domatcopyT (alpha, a, b)
+          </code>
+          <div class="tip" id="415">
+            <strong>Signature:</strong> (alpha:float * a:float [,] * b:float [,]) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '416', 416)" onmouseover="showTip(event, '416', 416)">
+            simatcopyT (alpha, a)
+          </code>
+          <div class="tip" id="416">
+            <strong>Signature:</strong> (alpha:float32 * a:float32 [,]) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '417', 417)" onmouseover="showTip(event, '417', 417)">
+            somatcopyT (alpha, a, b)
+          </code>
+          <div class="tip" id="417">
             <strong>Signature:</strong> (alpha:float32 * a:float32 [,] * b:float32 [,]) -&gt; unit<br />
                       </div>
         </td>
@@ -125,8 +181,8 @@
             <li class="nav-header">DiffSharp</li>
             <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
-            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="../download.html">Download and FAQ</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>

@@ -83,7 +83,7 @@
 <p>We are working on the following features for the next release:</p>
 
 <ul>
-<li><em>GPU backend using CUDA and cuBLAS</em></li>
+<li><em>GPU backend using CUDA/OpenCL</em></li>
 <li><em>Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)</em></li>
 <li><em>AD via syntax tree transformation, using code quotations</em></li>
 </ul>
@@ -92,30 +92,7 @@
 
 <h2>How to Get</h2>
 
-<h3>Windows</h3>
-
-<p>You can install the library via NuGet. You can also download the binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
-
-<p>For using DiffSharp, your project should target ".NET Framework 4.6" before installing the NuGet package.</p>
-
-<p>Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the build configuration of your project, you should set "x64" as the platform target (don't forget to do this for all build configurations). If you are using F# interactive, you should run it in 64 bit mode. In Visual Studio, you can do this by selecting "Tools - Options - F# Tools - F# Interactive" and setting "64 bit F# Interactive" to "true" and restarting the IDE.</p>
-
-<div class="row">
-    <div class="span1"></div>
-    <div class="span7">
-    <div class="well well-small" id="nuget">
-        The DiffSharp library <a href="https://www.nuget.org/packages/diffsharp">is available on NuGet</a>. To install, run the following command in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
-        <pre>PM> Install-Package DiffSharp</pre>
-    </div>
-    </div>
-    <div class="span1"></div>
-</div>
-
-<h3>Linux</h3>
-
-<p>Please install the <a href="http://packages.ubuntu.com/precise/libopenblas-dev">libopenblas-dev</a> package on your system. Once you have the file <em>libopenblas.so</em> in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.</p>
-
-<p>Alternatively, you can download the Linux-specific pack of binaries of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
+<p>Please see the <a href="download.html">download page</a> for installation instructions for Linux and Windows.</p>
 
 <h2>Quick Usage Example</h2>
 
@@ -160,7 +137,7 @@
 
 <h2>More Info and How to Cite</h2>
 
-<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="http://github.com/DiffSharp/DiffSharp">on GitHub</a>.</p>
+<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="http://github.com/DiffSharp/DiffSharp">on GitHub</a>. We also have a <a href="https://gitter.im/DiffSharp/DiffSharp">Gitter chat room</a> that we follow.</p>
 
 <p>If you would like to cite this library, please use the following information:</p>
 
@@ -171,8 +148,8 @@
 <p>Other sources:</p>
 
 <ul>
-<li><a href="http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/">Introduction to Automatic Differentiation</a></li>
-<li><a href="https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/">Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?</a></li>
+<li><a href="http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/">Introduction to Automatic Differentiation</a> by Alexey Radul</li>
+<li><a href="https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/">Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?</a> by Justin Domke</li>
 </ul>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
@@ -201,8 +178,8 @@
             <li class="nav-header">DiffSharp</li>
             <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
-            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="download.html">Download and FAQ</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>

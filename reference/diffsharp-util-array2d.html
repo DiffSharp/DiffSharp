@@ -109,10 +109,10 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
-            isEmpty array
+            find predicate array
           </code>
           <div class="tip" id="25">
-            <strong>Signature:</strong> array:&#39;T [,] -&gt; bool<br />
+            <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; array:&#39;T [,] -&gt; &#39;T<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
@@ -123,9 +123,23 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
-            map2 f a1 a2
+            isEmpty array
           </code>
           <div class="tip" id="26">
+            <strong>Signature:</strong> array:&#39;T [,] -&gt; bool<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+            map2 f a1 a2
+          </code>
+          <div class="tip" id="27">
             <strong>Signature:</strong> f:(&#39;a -&gt; &#39;b -&gt; &#39;c) -&gt; a1:&#39;a [,] -&gt; a2:&#39;b [,] -&gt; &#39;c [,]<br />
                           <strong>Type parameters:</strong> 'a, 'b, 'c          </div>
         </td>
@@ -136,11 +150,25 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
             toArray array
           </code>
-          <div class="tip" id="27">
+          <div class="tip" id="28">
             <strong>Signature:</strong> array:&#39;T [,] -&gt; &#39;T []<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
+            tryFind predicate array
+          </code>
+          <div class="tip" id="29">
+            <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; array:&#39;T [,] -&gt; &#39;T option<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
@@ -159,8 +187,8 @@
             <li class="nav-header">DiffSharp</li>
             <li class="divider"></li>
             <li><a href="../index.html">Home Page</a></li>
-            <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="../download.html">Download and FAQ</a></li>
             <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
             
             <li class="nav-header">Getting Started</li>
