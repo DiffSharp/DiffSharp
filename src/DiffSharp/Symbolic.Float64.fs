@@ -39,10 +39,10 @@
 /// Symbolic differentiation module
 module DiffSharp.Symbolic.Float64
 
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open Microsoft.FSharp.Quotations.ExprShape
+open FSharp.Quotations
+open FSharp.Quotations.Patterns
+open FSharp.Quotations.DerivedPatterns
+open FSharp.Quotations.ExprShape
 open FSharp.Quotations.Evaluator
 open DiffSharp.Util
 open DiffSharp.Config
