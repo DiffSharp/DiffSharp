@@ -659,12 +659,12 @@ module OpenBLAS =
                     BLAS.saxpy(1.f, x, y')
                     y'
             // BLAS
-            member o.Add_S_V(alpha, y) =
-                if Array.isEmpty y then
+            member o.Add_S_V(alpha, x) =
+                if Array.isEmpty x then
                     Array.empty
                 else
-                    let alpha' = Array.create y.Length alpha
-                    BLAS.saxpy(1.f, y, alpha')
+                    let alpha' = Array.create x.Length alpha
+                    BLAS.saxpy(1.f, x, alpha')
                     alpha'
             // BLAS
             member o.Mul_S_V(alpha, x) =
@@ -728,12 +728,12 @@ module OpenBLAS =
                     BLAS.saxpy'(1.f, x, y')
                     y'
             // BLAS
-            member o.Add_S_M(alpha, y) =
-                if Array2D.isEmpty y then
+            member o.Add_S_M(alpha, x) =
+                if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let alpha' = Array2D.create (Array2D.length1 y) (Array2D.length2 y) alpha
-                    BLAS.saxpy'(1.f, y, alpha')
+                    let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
+                    BLAS.saxpy'(1.f, x, alpha')
                     alpha'
             // BLAS
             member o.Add_V_MCols(x, y) =
@@ -1002,12 +1002,12 @@ module OpenBLAS =
                     BLAS.daxpy(1., x, y')
                     y'
             // BLAS
-            member o.Add_S_V(alpha, y) =
-                if Array.isEmpty y then
+            member o.Add_S_V(alpha, x) =
+                if Array.isEmpty x then
                     Array.empty
                 else
-                    let alpha' = Array.create y.Length alpha
-                    BLAS.daxpy(1., y, alpha')
+                    let alpha' = Array.create x.Length alpha
+                    BLAS.daxpy(1., x, alpha')
                     alpha'
             // BLAS
             member o.Mul_S_V(alpha, x) =
@@ -1071,12 +1071,12 @@ module OpenBLAS =
                     BLAS.daxpy'(1., x, y')
                     y'
             // BLAS
-            member o.Add_S_M(alpha, y) =
-                if Array2D.isEmpty y then
+            member o.Add_S_M(alpha, x) =
+                if Array2D.isEmpty x then
                     Array2D.empty
                 else
-                    let alpha' = Array2D.create (Array2D.length1 y) (Array2D.length2 y) alpha
-                    BLAS.daxpy'(1., y, alpha')
+                    let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
+                    BLAS.daxpy'(1., x, alpha')
                     alpha'
             // BLAS
             member o.Add_V_MCols(x, y) =
