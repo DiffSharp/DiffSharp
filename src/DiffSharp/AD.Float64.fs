@@ -389,13 +389,13 @@ type D =
     static member ReLU (a:D) =
         let inline ff(a) = max 0. a
         let inline fd(a) = D.ReLU(a)
-        let inline df(cp, ap, at) = (1. + D.Sign(ap)) / 2.
+        let inline df(cp, ap, at:D) = at * (1. + D.Sign(ap)) / 2.
         let inline r(a) = ReLU_D(a)
         D.Op_D_D (a, ff, fd, df, r)
     static member Sigmoid (a:D) =
         let inline ff(a) = 1. / (1. + exp -a)
         let inline fd(a) = D.Sigmoid(a)
-        let inline df(cp:D, ap, at) = cp * (1. - cp)
+        let inline df(cp:D, ap, at) = at * cp * (1. - cp)
         let inline r(a) = Sigmoid_D(a)
         D.Op_D_D (a, ff, fd, df, r)
     static member SoftPlus (a:D) = log (1. + exp a)
@@ -1240,16 +1240,17 @@ and DV =
     static member ReLU (a:DV) =
         let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V(max 0., a)
         let inline fd(a) = DV.ReLU(a)
-        let inline df(cp, ap, at) = (1. + DV.Sign(ap)) / 2.
+        let inline df(cp, ap, at) = at .* ((1. + DV.Sign(ap)) / 2.)
         let inline r(a) = ReLU_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sigmoid (a:DV) =
         let inline ff(a) = GlobalConfig.Float64Backend.Map_F_V((fun v -> 1. / (1. + exp -v)), a)
         let inline fd(a) = DV.Sigmoid(a)
-        let inline df(cp:DV, ap, at) = cp .* (1. - cp)
+        let inline df(cp:DV, ap, at) = at .* cp .* (1. - cp)
         let inline r(a) = Sigmoid_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
+
     static member SoftPlus (a:DV) = log (1. + exp a)    
     static member SoftSign (a:DV) = a ./ (1. + abs a)
     static member LogSumExp (a:DV) =
@@ -2337,16 +2338,17 @@ and DM =
     static member ReLU (a:DM) =
         let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M(max 0., a)
         let inline fd(a) = DM.ReLU(a)
-        let inline df(cp, ap, at) = (1. + DM.Sign(ap)) / 2.
+        let inline df(cp, ap, at) = at .* ((1. + DM.Sign(ap)) / 2.)
         let inline r(a) = ReLU_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
         
     static member Sigmoid (a:DM) =
         let inline ff(a) = GlobalConfig.Float64Backend.Map_F_M((fun v -> 1. / (1. + exp -v)), a)
         let inline fd(a) = DM.Sigmoid(a)
-        let inline df(cp:DM, ap, at) = cp .* (1. - cp)
+        let inline df(cp:DM, ap, at) = at .* cp .* (1. - cp)
         let inline r(a) = Sigmoid_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
+
     static member SoftPlus (a:DM) = log (1. + exp a)
     static member SoftSign (a:DM) = a ./ (1. + abs a)
 
