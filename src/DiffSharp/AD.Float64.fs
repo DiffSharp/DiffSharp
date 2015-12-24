@@ -483,11 +483,11 @@ and DV =
 
     member d.ToArray() =
         match d with
-        | DV(ap) -> ap |> Array.Parallel.map D
+        | DV(ap) -> ap |> Array.map D
         | DVF(ap,at,ai) ->
-            Array.Parallel.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
+            Array.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
         | DVR(ap,_,_,_,ai) ->
-            Array.Parallel.init ap.Length (fun i -> DR(ap.[i], ref (D 0.), Item_DV(d, i), ref 0u, ai))
+            Array.init ap.Length (fun i -> DR(ap.[i], ref (D 0.), Item_DV(d, i), ref 0u, ai))
     member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
@@ -536,13 +536,13 @@ and DV =
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
-        | D(_) -> DV(a |> Array.Parallel.map float)
+        | D(_) -> DV(a |> Array.map float)
         | DF(_,_,ai) ->
-            let ap = a |> Array.Parallel.map (fun x -> x.P)
-            let at = a |> Array.Parallel.map (fun x -> x.T)
+            let ap = a |> Array.map (fun x -> x.P)
+            let at = a |> Array.map (fun x -> x.T)
             DVF(DV.OfArray(ap), DV.OfArray(at), ai)
         | DR(_,_,_,_,ai) ->
-            let ap = a |> Array.Parallel.map (fun x -> x.P)
+            let ap = a |> Array.map (fun x -> x.P)
             let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV_ofDs(a), ref 0u, ai)
     static member Split(d:DV, n:seq<int>) =
         match d with
@@ -1004,7 +1004,8 @@ and DV =
     static member AddSubVector (a:DV, i:int, b:DV) =
         let inline ff(a:_[], b:_[]) = 
             let aa = Array.copy a 
-            Parallel.For(0, b.Length, fun j -> aa.[i + j] <- aa.[i + j] + b.[j]) |> ignore
+            for j = 0 to b.Length - 1 do
+                aa.[i + j] <- aa.[i + j] + b.[j]
             aa
         let inline fd(a, b) = DV.AddSubVector(a, i, b)
         let inline df_da(cp, ap, at) = at
@@ -1294,7 +1295,8 @@ and DV =
         let a' = DV.op_Explicit(a)
         let mutable maxi = 0
         let mutable maxv = a'.[0]
-        Parallel.For (0, a'.Length, (fun i -> if a'.[i] > maxv then maxi <- i; maxv <- a'.[i])) |> ignore
+        for i = 0 to a'.Length - 1 do
+            if a'.[i] > maxv then maxi <- i; maxv <- a'.[i]
         maxi
     static member Max (a:DV) = a.[DV.MaxIndex(a)]
         
@@ -1303,7 +1305,8 @@ and DV =
         let a' = DV.op_Explicit(a)
         let mutable mini = 0
         let mutable minv = a'.[0]
-        Parallel.For (0, a'.Length, (fun i -> if a'.[i] < minv then mini <- i; minv <- a'.[i])) |> ignore
+        for i = 0 to a'.Length - 1 do
+            if a'.[i] < minv then mini <- i; minv <- a'.[i]
         mini
     static member Min (a:DV) = a.[DV.MinIndex(a)]
 
@@ -2278,9 +2281,9 @@ and DM =
 //            Parallel.For(0, b.Rows, fun ii -> 
 //                Parallel.For(0, b.Cols, fun jj ->
 //                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore) |> ignore
-            Parallel.For(0, b.Rows, fun ii ->
+            for ii = 0 to b.Rows - 1 do
                 for jj = 0 to b.Cols - 1 do
-                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore
+                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]
             aa
         let inline fd(a, b) = DM.AddSubMatrix(a, i, j, b)
         let inline df_da(cp, ap, at) = at
@@ -2296,7 +2299,8 @@ and DM =
         let inline ff(a:float[,], b:float[]) =
             let aa = Array2D.copy a
             let n = min (Array2D.length1 a) (Array2D.length2 a) |> min b.Length
-            Parallel.For(0, n, fun i -> aa.[i, i] <- aa.[i, i] + b.[i]) |> ignore
+            for i = 0 to n - 1 do
+                aa.[i, i] <- aa.[i, i] + b.[i]
             aa
         let inline fd(a, b) = DM.AddDiagonal(a, b)
         let inline df_da(cp, ap, at) = at
@@ -2379,9 +2383,9 @@ and DM =
         let a' = DM.op_Explicit(a)
         let mutable maxij = 0, 0
         let mutable maxv = a'.[0, 0]
-        Parallel.For (0, a.Rows, (fun i -> 
-            Parallel.For (0, a.Cols, (fun j ->
-                if a'.[i, j] > maxv then maxij <- (i, j); maxv <- a'.[i, j])) |> ignore)) |> ignore
+        for i = 0 to a.Rows - 1 do
+            for j = 0 to a.Cols - 1 do
+                if a'.[i, j] > maxv then maxij <- (i, j); maxv <- a'.[i, j]
         maxij
     static member Max (a:DM) = let maxij = DM.MaxIndex(a) in a.[fst maxij, snd maxij]
 
@@ -2390,9 +2394,9 @@ and DM =
         let a' = DM.op_Explicit(a)
         let mutable minij = 0, 0
         let mutable minv = a'.[0, 0]
-        Parallel.For (0, a.Rows, (fun i -> 
-            Parallel.For (0, a.Cols, (fun j ->
-                if a'.[i, j] < minv then minij <- (i, j); minv <- a'.[i, j])) |> ignore)) |> ignore
+        for i = 0 to a.Rows - 1 do
+            for j = 0 to a.Cols - 1 do
+                if a'.[i, j] < minv then minij <- (i, j); minv <- a'.[i, j]
         minij
     static member Min (a:DM) = let minij = DM.MinIndex(a) in a.[fst minij, snd minij]
 
@@ -2932,14 +2936,14 @@ module DOps =
         | :? seq<D> as v ->
             v |> Seq.toArray |> DV.ofArray
         | _ ->
-            v |> Seq.toArray |> Array.Parallel.map float |> DV
+            v |> Seq.toArray |> Array.map float |> DV
     /// Create a matrix form sequence of sequences `m`
     let inline toDM (m:seq<seq<_>>) = 
         match m with
         | :? seq<seq<D>> as m ->
             m |> array2D |> DM.ofArray2D
         | _ ->
-            m |> array2D |> Array2D.Parallel.map float |> DM
+            m |> array2D |> Array2D.map float |> DM
     /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
     let inline makeForward i (t:^a) (p:^a) = 
         (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
