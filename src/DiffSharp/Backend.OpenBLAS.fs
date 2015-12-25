@@ -118,7 +118,7 @@ module OpenBLAS =
             saxpy_(&&arg_n, &&arg_alpha, arg_x.Ptr, &&arg_incx, arg_y.Ptr, &&arg_incy)
 
         // Y <- alpha * X + Y
-        let saxpy'(alpha:float32, x:float32[,], y:float32[,]) =
+        let saxpy2D(alpha:float32, x:float32[,], y:float32[,]) =
             let mutable arg_n = min x.Length y.Length
             let mutable arg_alpha = alpha
             let mutable arg_incx = 1
@@ -136,7 +136,7 @@ module OpenBLAS =
             sscal_(&&arg_n, &&arg_alpha, arg_x.Ptr, &&arg_incx)
 
         // X <- alpha * X
-        let sscal'(alpha:float32, x:float32[,]) =
+        let sscal2D(alpha:float32, x:float32[,]) =
             let mutable arg_n = x.Length
             let mutable arg_alpha = alpha
             let mutable arg_incx = 1
@@ -281,7 +281,7 @@ module OpenBLAS =
             daxpy_(&&arg_n, &&arg_alpha, arg_x.Ptr, &&arg_incx, arg_y.Ptr, &&arg_incy)
 
         // Y <- alpha * X + Y
-        let daxpy'(alpha:float, x:float[,], y:float[,]) =
+        let daxpy2D(alpha:float, x:float[,], y:float[,]) =
             let mutable arg_n = min x.Length y.Length
             let mutable arg_alpha = alpha
             let mutable arg_incx = 1
@@ -299,7 +299,7 @@ module OpenBLAS =
             dscal_(&&arg_n, &&arg_alpha, arg_x.Ptr, &&arg_incx)
 
         // X <- alpha * X
-        let dscal'(alpha:float, x:float[,]) =
+        let dscal2D(alpha:float, x:float[,]) =
             let mutable arg_n = x.Length
             let mutable arg_alpha = alpha
             let mutable arg_incx = 1
@@ -650,20 +650,25 @@ module OpenBLAS =
         interface Backend<float32> with
             // BLAS
             member o.Add_V_V(x, y) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
                     Array.copy y
-                elif Array.isEmpty y then
+                elif yl = 0 then
                     Array.copy x
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     let y' = Array.copy y
                     BLAS.saxpy(1.f, x, y')
                     y'
             // BLAS
             member o.Add_S_V(alpha, x) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                if xl = 0 then
                     Array.empty
                 else
-                    let alpha' = Array.create x.Length alpha
+                    let alpha' = Array.create xl alpha
                     BLAS.saxpy(1.f, x, alpha')
                     alpha'
             // BLAS
@@ -676,26 +681,36 @@ module OpenBLAS =
                     x'
             // BLAS
             member o.Sub_V_V(x, y) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
                     (o :> Backend<float32>).Mul_S_V(-1.f, y)
-                elif Array.isEmpty y then
+                elif yl = 0 then
                     Array.copy x
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     let x' = Array.copy x
                     BLAS.saxpy(-1.f, y, x')
                     x'
             // BLAS
             member o.Mul_Dot_V_V(x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
+                let xl = x.Length
+                let yl = y.Length
+                if (xl = 0) || (yl = 0) then
                     0.f
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     BLAS.sdot(x, y)
             // BLAS
             member o.Mul_Out_V_V(x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
+                let xl = x.Length
+                let yl = y.Length
+                if (xl = 0) || (yl = 0) then
                     Array2D.empty
                 else
-                    let z = Array2D.zeroCreate x.Length y.Length
+                    let z = Array2D.zeroCreate xl yl
                     BLAS.sger(1.f, x, y, z)
                     z
             // BLAS
@@ -719,13 +734,19 @@ module OpenBLAS =
                     abs x.[i - 1]
             // BLAS
             member o.Add_M_M(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
                     Array2D.copyFast y
-                elif Array2D.isEmpty y then
+                elif yl1 * yl2 = 0 then
                     Array2D.copyFast x
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     let y' = Array2D.copyFast y
-                    BLAS.saxpy'(1.f, x, y')
+                    BLAS.saxpy2D(1.f, x, y')
                     y'
             // BLAS
             member o.Add_S_M(alpha, x) =
@@ -733,17 +754,22 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
-                    BLAS.saxpy'(1.f, x, alpha')
+                    BLAS.saxpy2D(1.f, x, alpha')
                     alpha'
             // BLAS
             member o.Add_V_MCols(x, y) =
-                if Array2D.isEmpty y then
+                let xl = x.Length
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if yl1 * yl2 = 0 then
                     Array2D.empty
-                elif Array.isEmpty x then
+                elif xl = 0 then
                     y
+                elif xl <> yl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let x' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(Array2D.length2 y, x)
-                    BLAS.saxpy'(1.f, y, x')
+                    let x' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, x)
+                    BLAS.saxpy2D(1.f, y, x')
                     x'
             // BLAS
             member o.Mul_S_M(alpha, x) =
@@ -751,91 +777,133 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let x' = Array2D.copyFast x
-                    BLAS.sscal'(alpha, x')
+                    BLAS.sscal2D(alpha, x')
                     x'
             // BLAS
             member o.Sub_M_M(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
                     (o :> Backend<float32>).Mul_S_M(-1.f, y)
-                elif Array2D.isEmpty y then
+                elif yl1 * yl2 = 0 then
                     Array2D.copyFast x
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     let x' = Array2D.copyFast x
-                    BLAS.saxpy'(-1.f, y, x')
+                    BLAS.saxpy2D(-1.f, y, x')
                     x'
             // BLAS
             member o.Mul_M_M(x, y) =
-                if (Array2D.isEmpty x) || (Array2D.isEmpty y) then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 * yl1 * yl2 = 0 then
                     Array2D.empty
+                elif xl2 <> yl1 then
+                    ErrorMessages.InvalidArgMColsMRows()
                 else
-                    let z = Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 y)
+                    let z = Array2D.zeroCreate xl1 yl2
                     BLAS.sgemm(1.f, x, y, 0.f, z)
                     z
             // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
-                if Array.isEmpty z then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                let zl = z.Length
+                if zl = 0 then
                     (o :> Backend<float32>).Mul_M_M(x, y)
-                elif (Array2D.isEmpty x) || (Array2D.isEmpty y) then
+                elif xl1 * xl2 * yl1 * yl2 = 0 then
                     Array2D.empty
+                elif xl2 <> yl1 then
+                    ErrorMessages.InvalidArgMColsMRows()
+                elif zl <> xl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let n = (Array2D.length2 y)
-                    let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(n, z)
+                    let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, z)
                     BLAS.sgemm(1.f, x, y, 1.f, z')
                     z'
             // BLAS
             member o.Mul_M_V(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     Array.empty
-                elif Array.isEmpty y then
-                    Array.zeroCreate (Array2D.length1 x)
+                elif yl <> xl2 then
+                    ErrorMessages.InvalidArgVMCols()
                 else
-                    let z = Array.zeroCreate (Array2D.length1 x)
+                    let z = Array.zeroCreate xl1
                     BLAS.sgemv(1.f, x, y, 0.f, z)
                     z
             // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
-                if Array2D.isEmpty x then
-                    Array.empty
-                elif Array.isEmpty y then
-                    Array.zeroCreate (Array2D.length1 x)
-                elif Array.isEmpty z then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                let zl = z.Length
+                if zl = 0 then
                     (o :> Backend<float32>).Mul_M_V(x, y)
+                elif xl1 * xl2 * yl = 0 then
+                    Array.empty
+                elif yl <> xl2 then
+                    ErrorMessages.InvalidArgVMCols()
+                elif zl <> xl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let z' = Array.copy z
                     BLAS.sgemv(1.f, x, y, 1.f, z')
                     z'
             // BLAS
             member o.Mul_V_M(x, y) =
-                if Array.isEmpty x then
-                    Array.zeroCreate (Array2D.length2 y)
-                elif Array2D.isEmpty y then
+                let xl = x.Length
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl * yl1 * yl2 = 0 then
                     Array.empty
+                elif xl <> yl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let z = Array.zeroCreate (Array2D.length2 y)
+                    let z = Array.zeroCreate yl2
                     BLAS.sgemv'(1.f, y, x, 0.f, z)
                     z
             // BLAS extension
             member o.Transpose_M(x) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                if xl1 * xl2 = 0 then
                     Array2D.empty
                 else
-                    let m = Array2D.length1 x
-                    let n = Array2D.length2 x
-                    let x' = Array2D.zeroCreate<float32> n m
+                    let x' = Array2D.zeroCreate<float32> xl2 xl1
                     BLASExtensions.somatcopyT(1.f, x, x')
                     x'
             // LAPACK
             member o.Solve_M_V(x, y) =
-                if Array2D.isEmpty x || Array.isEmpty y then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     None
+                elif xl1 <> yl then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
                     LAPACK.sgesv(x', y')
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
-                if Array2D.isEmpty x || Array.isEmpty y then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     None
+                elif xl1 <> yl then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
@@ -904,8 +972,16 @@ module OpenBLAS =
                     Array.map f x
             // Non-BLAS
             member o.Map2_F_V_V(f, x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
-                    Array.empty
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
+                    let x' = Array.zeroCreate yl
+                    Array.map2 f x' y
+                elif yl = 0 then
+                    let y' = Array.zeroCreate xl
+                    Array.map2 f x y'
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     Array.map2 f x y
             // Non-BLAS
@@ -916,8 +992,18 @@ module OpenBLAS =
                     Array2D.map f x
             // Non-BLAS
             member o.Map2_F_M_M(f, x, y) =
-                if Array2D.isEmpty x || Array2D.isEmpty y then
-                    Array2D.empty
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
+                    let x' = Array2D.zeroCreate yl1 yl2
+                    Array2D.map2 f x' y
+                elif yl1 * yl2 = 0 then
+                    let y' = Array2D.zeroCreate xl1 xl2
+                    Array2D.map2 f x y'
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     Array2D.map2 f x y
             // Non-BLAS
@@ -928,12 +1014,18 @@ module OpenBLAS =
                     Array.sum x
             // Non-BLAS
             member o.Mul_Had_M_M(x, y) =
-                if Array2D.isEmpty x then
-                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
-                elif Array2D.isEmpty y then
-                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
+                    Array2D.zeroCreate yl1 yl2
+                elif yl1 * yl2 = 0 then
+                    Array2D.zeroCreate xl1 xl2
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
-                    (o :> Backend<float32>).Map2_F_M_M((*), x, y)
+                    Array2D.map2 (*) x y
             // Non-BLAS
             member o.Sum_M(x) =
                 if Array2D.isEmpty x then
@@ -993,20 +1085,25 @@ module OpenBLAS =
         interface Backend<float> with
             // BLAS
             member o.Add_V_V(x, y) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
                     Array.copy y
-                elif Array.isEmpty y then
+                elif yl = 0 then
                     Array.copy x
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     let y' = Array.copy y
                     BLAS.daxpy(1., x, y')
                     y'
             // BLAS
             member o.Add_S_V(alpha, x) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                if xl = 0 then
                     Array.empty
                 else
-                    let alpha' = Array.create x.Length alpha
+                    let alpha' = Array.create xl alpha
                     BLAS.daxpy(1., x, alpha')
                     alpha'
             // BLAS
@@ -1019,26 +1116,36 @@ module OpenBLAS =
                     x'
             // BLAS
             member o.Sub_V_V(x, y) =
-                if Array.isEmpty x then
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
                     (o :> Backend<float>).Mul_S_V(-1., y)
-                elif Array.isEmpty y then
+                elif yl = 0 then
                     Array.copy x
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     let x' = Array.copy x
                     BLAS.daxpy(-1., y, x')
                     x'
             // BLAS
             member o.Mul_Dot_V_V(x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
+                let xl = x.Length
+                let yl = y.Length
+                if (xl = 0) || (yl = 0) then
                     0.
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     BLAS.ddot(x, y)
             // BLAS
             member o.Mul_Out_V_V(x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
+                let xl = x.Length
+                let yl = y.Length
+                if (xl = 0) || (yl = 0) then
                     Array2D.empty
                 else
-                    let z = Array2D.zeroCreate x.Length y.Length
+                    let z = Array2D.zeroCreate xl yl
                     BLAS.dger(1., x, y, z)
                     z
             // BLAS
@@ -1062,13 +1169,19 @@ module OpenBLAS =
                     abs x.[i - 1]
             // BLAS
             member o.Add_M_M(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
                     Array2D.copyFast y
-                elif Array2D.isEmpty y then
+                elif yl1 * yl2 = 0 then
                     Array2D.copyFast x
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     let y' = Array2D.copyFast y
-                    BLAS.daxpy'(1., x, y')
+                    BLAS.daxpy2D(1., x, y')
                     y'
             // BLAS
             member o.Add_S_M(alpha, x) =
@@ -1076,17 +1189,22 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
-                    BLAS.daxpy'(1., x, alpha')
+                    BLAS.daxpy2D(1., x, alpha')
                     alpha'
             // BLAS
             member o.Add_V_MCols(x, y) =
-                if Array2D.isEmpty y then
+                let xl = x.Length
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if yl1 * yl2 = 0 then
                     Array2D.empty
-                elif Array.isEmpty x then
+                elif xl = 0 then
                     y
+                elif xl <> yl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let x' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(Array2D.length2 y, x)
-                    BLAS.daxpy'(1., y, x')
+                    let x' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(yl2, x)
+                    BLAS.daxpy2D(1., y, x')
                     x'
             // BLAS
             member o.Mul_S_M(alpha, x) =
@@ -1094,91 +1212,133 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let x' = Array2D.copyFast x
-                    BLAS.dscal'(alpha, x')
+                    BLAS.dscal2D(alpha, x')
                     x'
             // BLAS
             member o.Sub_M_M(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
                     (o :> Backend<float>).Mul_S_M(-1., y)
-                elif Array2D.isEmpty y then
+                elif yl1 * yl2 = 0 then
                     Array2D.copyFast x
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     let x' = Array2D.copyFast x
-                    BLAS.daxpy'(-1., y, x')
+                    BLAS.daxpy2D(-1., y, x')
                     x'
             // BLAS
             member o.Mul_M_M(x, y) =
-                if (Array2D.isEmpty x) || (Array2D.isEmpty y) then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 * yl1 * yl2 = 0 then
                     Array2D.empty
+                elif xl2 <> yl1 then
+                    ErrorMessages.InvalidArgMColsMRows()
                 else
-                    let z = Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 y)
+                    let z = Array2D.zeroCreate xl1 yl2
                     BLAS.dgemm(1., x, y, 0., z)
                     z
             // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
-                if Array.isEmpty z then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                let zl = z.Length
+                if zl = 0 then
                     (o :> Backend<float>).Mul_M_M(x, y)
-                elif (Array2D.isEmpty x) || (Array2D.isEmpty y) then
+                elif xl1 * xl2 * yl1 * yl2 = 0 then
                     Array2D.empty
+                elif xl2 <> yl1 then
+                    ErrorMessages.InvalidArgMColsMRows()
+                elif zl <> xl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let n = (Array2D.length2 y)
-                    let z' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(n, z)
+                    let z' = (o :> Backend<float>).RepeatReshapeCopy_V_MCols(yl2, z)
                     BLAS.dgemm(1., x, y, 1., z')
                     z'
             // BLAS
             member o.Mul_M_V(x, y) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     Array.empty
-                elif Array.isEmpty y then
-                    Array.zeroCreate (Array2D.length1 x)
+                elif yl <> xl2 then
+                    ErrorMessages.InvalidArgVMCols()
                 else
-                    let z = Array.zeroCreate (Array2D.length1 x)
+                    let z = Array.zeroCreate xl1
                     BLAS.dgemv(1., x, y, 0., z)
                     z
             // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
-                if Array2D.isEmpty x then
-                    Array.empty
-                elif Array.isEmpty y then
-                    Array.zeroCreate (Array2D.length1 x)
-                elif Array.isEmpty z then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                let zl = z.Length
+                if zl = 0 then
                     (o :> Backend<float>).Mul_M_V(x, y)
+                elif xl1 * xl2 * yl = 0 then
+                    Array.empty
+                elif yl <> xl2 then
+                    ErrorMessages.InvalidArgVMCols()
+                elif zl <> xl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let z' = Array.copy z
                     BLAS.dgemv(1., x, y, 1., z')
                     z'
             // BLAS
             member o.Mul_V_M(x, y) =
-                if Array.isEmpty x then
-                    Array.zeroCreate (Array2D.length2 y)
-                elif Array2D.isEmpty y then
+                let xl = x.Length
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl * yl1 * yl2 = 0 then
                     Array.empty
+                elif xl <> yl1 then
+                    ErrorMessages.InvalidArgVMRows()
                 else
-                    let z = Array.zeroCreate (Array2D.length2 y)
+                    let z = Array.zeroCreate yl2
                     BLAS.dgemv'(1., y, x, 0., z)
                     z
             // BLAS extension
             member o.Transpose_M(x) =
-                if Array2D.isEmpty x then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                if xl1 * xl2 = 0 then
                     Array2D.empty
                 else
-                    let m = Array2D.length1 x
-                    let n = Array2D.length2 x
-                    let x' = Array2D.zeroCreate<float> n m
+                    let x' = Array2D.zeroCreate<float> xl2 xl1
                     BLASExtensions.domatcopyT(1., x, x')
                     x'
             // LAPACK
             member o.Solve_M_V(x, y) =
-                if Array2D.isEmpty x || Array.isEmpty y then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     None
+                elif xl1 <> yl then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
                     LAPACK.dgesv(x', y')
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
-                if Array2D.isEmpty x || Array.isEmpty y then
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl = y.Length
+                if xl1 * xl2 * yl = 0 then
                     None
+                elif xl1 <> yl then
+                    ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
@@ -1247,8 +1407,16 @@ module OpenBLAS =
                     Array.map f x
             // Non-BLAS
             member o.Map2_F_V_V(f, x, y) =
-                if Array.isEmpty x || Array.isEmpty y then
-                    Array.empty
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then
+                    let x' = Array.zeroCreate yl
+                    Array.map2 f x' y
+                elif yl = 0 then
+                    let y' = Array.zeroCreate xl
+                    Array.map2 f x y'
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
                 else
                     Array.map2 f x y
             // Non-BLAS
@@ -1259,8 +1427,18 @@ module OpenBLAS =
                     Array2D.map f x
             // Non-BLAS
             member o.Map2_F_M_M(f, x, y) =
-                if Array2D.isEmpty x || Array2D.isEmpty y then
-                    Array2D.empty
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
+                    let x' = Array2D.zeroCreate yl1 yl2
+                    Array2D.map2 f x' y
+                elif yl1 * yl2 = 0 then
+                    let y' = Array2D.zeroCreate xl1 xl2
+                    Array2D.map2 f x y'
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
                     Array2D.map2 f x y
             // Non-BLAS
@@ -1271,12 +1449,18 @@ module OpenBLAS =
                     Array.sum x
             // Non-BLAS
             member o.Mul_Had_M_M(x, y) =
-                if Array2D.isEmpty x then
-                    Array2D.zeroCreate (Array2D.length1 y) (Array2D.length2 y)
-                elif Array2D.isEmpty y then
-                    Array2D.zeroCreate (Array2D.length1 x) (Array2D.length2 x)
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then
+                    Array2D.zeroCreate yl1 yl2
+                elif yl1 * yl2 = 0 then
+                    Array2D.zeroCreate xl1 xl2
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
                 else
-                    (o :> Backend<float>).Map2_F_M_M((*), x, y)
+                    Array2D.map2 (*) x y
             // Non-BLAS
             member o.Sum_M(x) =
                 if Array2D.isEmpty x then

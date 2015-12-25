@@ -126,8 +126,14 @@ module ErrorMessages =
     let InvalidArgCurl() = invalidArg "" "Curl is supported only for functions with a three-by-three Jacobian matrix."
     let InvalidArgDiv() = invalidArg "" "Div is defined only for functions with a square Jacobian matrix."
     let InvalidArgCurlDiv() = invalidArg "" "Curldiv is supported only for functions with a three-by-three Jacobian matrix."
-    let InvalidArgInverse() = invalidArg "" "Cannot compute the inverse of the given matrix."
-    let InvalidArgDet() = invalidArg "" "Cannot compute the determinant of the given matrix."
+    let InvalidArgInverse() = invalidArg "" "Cannot compute the inverse of given matrix."
+    let InvalidArgDet() = invalidArg "" "Cannot compute the determinant of given matrix."
+    let InvalidArgVV() = invalidArg "" "Vectors must have same length."
+    let InvalidArgMColsMRows() = invalidArg "" "Number of colums of first matrix must match number of rows of second matrix."
+    let InvalidArgMM() = invalidArg "" "Matrices must have same shape."
+    let InvalidArgVMRows() = invalidArg "" "Length of vector must match number of rows of matrix."
+    let InvalidArgVMCols() = invalidArg "" "Length of vector must match number of columns of matrix."
+    
 
 /// Tagger for generating incremental integers
 type Tagger =
