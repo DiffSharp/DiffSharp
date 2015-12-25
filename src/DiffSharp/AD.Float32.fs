@@ -117,7 +117,7 @@ type D =
         override d.CompareTo(other) =
             match other with
             | :? D as d2 -> compare ((float32) d) ((float32) d2)
-            | _ -> invalidArg "" "Cannot compare thid D with another type."
+            | _ -> invalidArg "" "Cannot compare this D with another type."
     override d.Equals(other) =
         match other with
         | :? D as d2 -> compare ((float32) d) ((float32) d2) = 0
