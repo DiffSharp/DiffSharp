@@ -2,18 +2,18 @@
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
 
 (**
-DiffSharp: Automatic Differentiation Library
-============================================
+DiffSharp: Differentiable Functional Programming
+================================================
 
-DiffSharp is an [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library. 
+DiffSharp is a functional [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library.
 
 AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from [numerical differentiation](http://en.wikipedia.org/wiki/Numerical_differentiation), which is prone to truncation and round-off errors, and [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which is affected by expression swell and cannot fully handle algorithmic control flow.
 
-Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Diffsharp supports nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
+Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
 
-The library is under active development by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
+The library is developed by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
 
-DiffSharp is implemented in the F# language and [can be used from C#](csharp.html) and the [other languages](http://en.wikipedia.org/wiki/List_of_CLI_languages) running on Mono or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.
+DiffSharp is implemented in the F# language and [can be used from C#](csharp.html) and the [other languages](http://en.wikipedia.org/wiki/List_of_CLI_languages) running on Mono, [.NET Core](http://dotnet.github.io/), or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.
 
 <div class="row">
     <div class="span9">
@@ -29,7 +29,7 @@ Current Features and Roadmap
 
 The following features are up and running:
 
-- _Nested AD with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
+- _Functional nested differentiation with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
 - _Matrix-free Jacobian- and Hessian-vector products_
 - _[OpenBLAS](https://github.com/xianyi/OpenBLAS/wiki) backend for highly optimized native BLAS and LAPACK operations_
 - _Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)_
@@ -38,6 +38,7 @@ The following features are up and running:
 We are working on the following features for the next release:
 
 - _GPU backend using CUDA/OpenCL_
+- _Generalization to tensors/multidimensional arrays_
 - _Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)_
 - _AD via syntax tree transformation, using code quotations_
 
@@ -86,5 +87,7 @@ Other sources:
 
 - [Introduction to Automatic Differentiation](http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/) by Alexey Radul
 - [Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?](https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/) by Justin Domke
+- [Differentiable Programming](http://edge.org/response-detail/26794) by David Dalrymple
+- [Neural Networks, Types, and Functional Programming](http://colah.github.io/posts/2015-09-NN-Types-FP/) by Christopher Olah
 
 *)

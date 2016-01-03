@@ -5,9 +5,9 @@
 Type Inference
 ==============
 
-The library is used through the **D**, **DV**, and **DM** types respectively for scalar, vector, and matrix values. These types are provided by the **DiffSharp.AD.Float32** or **DiffSharp.AD.Float64** modules for 32- or 64-bit floating point precision. On many current systems, 32-bit (single) precision floating point operations run twice as fast as 64-bit (double) precision. It is therefore recommended to use the 32-bit module if this precision is sufficient for your usage case.
+Differentiation can be applied to functions using the **D**, **DV**, and **DM** types respectively for scalar, vector, and matrix values. 32- and 64-bit floating point varieties of these types are provided by the **DiffSharp.AD.Float32** and **DiffSharp.AD.Float64** modules. On many current systems, 32-bit (single) precision floating point operations run significantly faster than 64-bit (double) precision. It is therefore recommended to use the 32-bit module if this precision is sufficient for your usage case.
 
-The library instantiates [dual numbers](http://en.wikipedia.org/wiki/Dual_number) (for forward AD) and/or [adjoints](http://en.wikipedia.org/wiki/Adjoint) (for reverse AD) as needed, automatically using the best one for a given differentiation operation.
+The library automatically instantiates [dual numbers](http://en.wikipedia.org/wiki/Dual_number) (for forward AD) and/or [adjoints](http://en.wikipedia.org/wiki/Adjoint) (for reverse AD) as needed, using the best one for a given differentiation operation.
 
 DiffSharp supports nested AD, which means that you can evaluate derivatives of functions that may themselves be internally using derivatives, up to arbitrary level. All emerging higher-order derivatives are automatically handled by the library and computed exactly and efficiently.
 

@@ -5,7 +5,7 @@
 API Overview
 ============
 
-The following table gives an overview of the differentiation API provided by DiffSharp.
+The following table gives an overview of the higher-order functional differentiation API provided by DiffSharp.
 
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
@@ -106,7 +106,7 @@ The following table gives an overview of the differentiation API provided by Dif
 
 **X**: Exact value; **A**: Numerical approximation
 
-The main functionality in DiffSharp is provided by the **DiffSharp.AD** namespace, which supports nesting and can combine forward and reverse AD as needed. We also implement symbolic and numerical differentiation. Currently the library provides the following namespaces:
+The main functionality in DiffSharp is provided by the **DiffSharp.AD** namespace, which supports nested compositions of forward and reverse AD. We also implement symbolic and numerical differentiation, mainly for performance comparisons. Currently the library provides the following namespaces:
 
 - **DiffSharp.AD**: Nested AD
 - **DiffSharp.Numerical**: Numerical differentiation with finite differences
@@ -822,7 +822,7 @@ let m = DM.mapCols f m1 // Map function f:DV->DV to columns of matrix
 Visualizations
 --------------
 
-The library provides visualization functionality for the DV and DM types that can be useful in an interactive console environment. The visualizations are normalized, meaning they represent the full range of the data with different visual intensities.
+The library provides visualization functionality for the DV and DM types that can be useful in an interactive console environment. The visualizations are normalized, meaning they map the full range of data to the full range of visual intensity.
 *)
 
 open DiffSharp.AD.Float64
