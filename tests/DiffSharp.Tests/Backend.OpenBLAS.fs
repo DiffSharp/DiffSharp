@@ -1,8 +1,8 @@
 ﻿//
 // This file is part of
-// DiffSharp: Automatic Differentiation Library
+// DiffSharp: Differentiable Functional Programming
 //
-// Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
+// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 // 
 // Released under the LGPL license.
 //

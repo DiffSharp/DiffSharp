@@ -10,11 +10,11 @@ open System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [<assembly: AssemblyTitle("DiffSharp")>]
-[<assembly: AssemblyDescription("DiffSharp: Automatic Differentiation Library")>]
+[<assembly: AssemblyDescription("DiffSharp: Differentiable Functional Programming")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
 [<assembly: AssemblyProduct("DiffSharp")>]
-[<assembly: AssemblyCopyright("Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
+[<assembly: AssemblyCopyright("Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
  

@@ -20,7 +20,7 @@ You can come and join the Gitter chat room, if you want to chat with us:
 
 ### License
 
-Copyright (c) 2014–2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
+Copyright (c) 2014–2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 
 Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
 

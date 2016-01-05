@@ -1,8 +1,8 @@
 ﻿//
 // This file is part of
-// DiffSharp: Automatic Differentiation Library
+// DiffSharp: Differentiable Functional Programming
 //
-// Copyright (c) 2014--2015, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
+// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
 // 
 // Released under the LGPL license.
 //
@@ -147,7 +147,7 @@ let main argv =
 
     printfn "DiffSharp Benchmarks"
 
-    printfn "Copyright (c) 2014, 2015, National University of Ireland Maynooth."
+    printfn "Copyright (c) 2014--2016, National University of Ireland Maynooth."
     printfn "Written by: Atilim Gunes Baydin, Barak A. Pearlmutter\n"
 
     let ops = parseArgs (List.ofArray argv)
@@ -417,7 +417,7 @@ let main argv =
 
         let stream = new System.IO.StreamWriter(fileName, false)
         stream.WriteLine("DiffSharp Benchmarks")
-        stream.WriteLine("Copyright (c) 2014, 2015, National University of Ireland Maynooth.")
+        stream.WriteLine("Copyright (c) 2014--2016, National University of Ireland Maynooth.")
         stream.WriteLine("Written by: Atilim Gunes Baydin, Barak A. Pearlmutter\r\n")
         stream.WriteLine(sprintf "Benchmarking module version: %s" benchmarkver)
         stream.WriteLine(sprintf "DiffSharp library version: %s\r\n" diffsharpver)
