@@ -1,4 +1,5 @@
 0.7.*
+- Fully generalize differentiation API type signatures
 - GEMV/GEMM ops with vector addition
 - Iterate to fixed point
 - In-place operations
