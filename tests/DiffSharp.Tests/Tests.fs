@@ -85,6 +85,12 @@ type Util() =
         else 
              abs (a - b) < eps64
 
+    static member (=~) (a:DiffSharp.AD.Float32.D, b:DiffSharp.AD.Float32.D) =
+        Util.(=~)(float32 a, float32 b)
+
+    static member (=~) (a:DiffSharp.AD.Float64.D, b:DiffSharp.AD.Float64.D) =
+        Util.(=~)(float a, float b)
+
     static member (=~) (a:float32[], b:float32[]) =
         if (a.Length = 0) && (b.Length = 0) then
             true

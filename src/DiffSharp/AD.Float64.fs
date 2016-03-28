@@ -404,6 +404,57 @@ type D =
     static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / 2.
     static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / 2.
 
+    static member FixedPoint (g:D->D->D) (a0:D) (b:D) =
+        let imax = DiffSharp.Config.GlobalConfig.FixedPointMaxIterations
+        let eps = D DiffSharp.Config.GlobalConfig.Float64FixedPointEpsilon
+
+        let mutable a = a0
+        let mutable i = 0
+
+        match b with
+        | D(bp) -> 
+            while i < imax do
+                i <- i + 1
+                if i >= imax then 
+                    //printfn "Fixed point iteration timeout, i = %i" i
+                    ignore()
+                else
+                    let aa = g a b
+                    if abs (aa - a) <= eps then 
+                        //printfn "Fixed point iteration converged, i = %i" i
+                        i <- imax
+                    a <- aa
+            D (float a)
+        | DF(bp, bt, bi) ->
+            while i < imax do
+                i <- i + 1
+                if i >= imax then 
+                    //printfn "Fixed point iteration timeout, i = %i" i
+                    ignore()
+                else
+                    let aa = g a b
+                    if (abs (aa.P - a.P) <= eps) && (abs (aa.T - a.T) <= eps) then 
+                        //printfn "Fixed point iteration converged, i = %i" i
+                        i <- imax
+                    a <- aa
+            DF(a.P, a.T, bi)
+        | DR(bp,_,_,_,bi) ->
+            let bfirst = DR(bp, ref (D 0.), Noop, ref 0u, bi) // Cut the connection between b and bfirst ("switch of graph construction" involving b beyond this point)
+            while i < imax do
+                i <- i + 1
+                if i >= imax then 
+                    //printfn "Fixed point iteration timeout, i = %i" i
+                    ignore()
+                else
+                    let aa = g a bfirst
+                    if abs (aa - a) <= eps then
+                        //printfn "Fixed point iteration converged, i = %i" i
+                        i <- imax
+                    a <- aa
+            let aprev = DR(a.P, ref (D 0.), Noop, ref 0u, bi)
+            let alast = g aprev bfirst
+            DR(a.P, ref (D 0.), FixedPoint_D(b, bfirst, aprev, alast), ref 0u, bi)
+
 /// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
 and DV =
     | DV of float[] // Primal
@@ -2472,6 +2523,7 @@ and TraceOp =
     | ReLU_D                 of D
     | Sigmoid_D              of D
     | LogSumExp_DV           of DV
+    | FixedPoint_D           of D * D * D * D
 
     // Vector-valued operations
     | Add_DV_DV              of DV * DV
@@ -2962,6 +3014,279 @@ module DOps =
     let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
     /// Get the primal and tangent values of `d`, as a tuple
     let inline primalTangent d = d |> primal, d |> tangent
+    /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
+    let reverseReset (d:obj) =
+        let rec resetRec (ds:obj list) =
+            match ds with
+            | [] -> ()
+            | d :: t ->
+                match d with
+                | :? D as d ->
+                    match d with
+                    | DR(_,_,o,_,_) ->
+                        d.A <- D 0.
+                        d.F <- d.F + 1u
+                        if d.F = 1u then
+                            match o with
+                            | Add_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_D_DCons(a) -> resetRec (box a :: t)
+                            | Sub_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_D_DCons(a) -> resetRec (box a :: t)
+                            | Sub_DCons_D(b) -> resetRec (box b :: t)
+                            | Mul_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_D_DCons(a, _) -> resetRec (box a :: t)
+                            | Div_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_D_DCons(a, _) -> resetRec (box a :: t)
+                            | Div_DCons_D(_, b) -> resetRec (box b :: t)
+                            | Pow_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_D_DCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DCons_D(_, b) -> resetRec (box b :: t)
+                            | Atan2_D_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_D_DCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DCons_D(_, b) -> resetRec (box b :: t)
+                            | Log_D(a) -> resetRec (box a :: t)
+                            | Log10_D(a) -> resetRec (box a :: t)
+                            | Exp_D(a) -> resetRec (box a :: t)
+                            | Sin_D(a) -> resetRec (box a :: t)
+                            | Cos_D(a) -> resetRec (box a :: t)
+                            | Tan_D(a) -> resetRec (box a :: t)
+                            | Neg_D(a) -> resetRec (box a :: t)
+                            | Sqrt_D(a) -> resetRec (box a :: t)
+                            | Sinh_D(a) -> resetRec (box a :: t)
+                            | Cosh_D(a) -> resetRec (box a :: t)
+                            | Tanh_D(a) -> resetRec (box a :: t)
+                            | Asin_D(a) -> resetRec (box a :: t)
+                            | Acos_D(a) -> resetRec (box a :: t)
+                            | Atan_D(a) -> resetRec (box a :: t)
+                            | Abs_D(a) -> resetRec (box a :: t)
+                            | Sign_D(a) -> resetRec (box a :: t)
+                            | Floor_D(a) -> resetRec (box a :: t)
+                            | Ceil_D(a) -> resetRec (box a :: t)
+                            | Round_D(a) -> resetRec (box a :: t)
+                            | Mul_Dot_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_Dot_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Sum_DV(a) -> resetRec (box a :: t)
+                            | L1Norm_DV(a) -> resetRec (box a :: t)
+                            | L2NormSq_DV(a) -> resetRec (box a :: t)
+                            | L2Norm_DV(a) -> resetRec (box a :: t)
+                            | Item_DV(a, _) -> resetRec (box a :: t)
+                            | Sum_DM(a) -> resetRec (box a :: t)
+                            | Item_DM(a, _, _) -> resetRec (box a :: t)
+                            | Det_DM(a) -> resetRec (box a :: t)
+                            | ReLU_D(a) -> resetRec (box a :: t)
+                            | Sigmoid_D(a) -> resetRec (box a :: t)
+                            | LogSumExp_DV(a) -> resetRec (box a :: t)
+                            | FixedPoint_D(b, _, _, _) -> resetRec (box b :: t)
+                            | _ -> resetRec t
+                        else resetRec t
+                    | _ -> resetRec t
+                | :? DV as d ->
+                    match d with
+                    | DVR(_,_,o,_,_) ->
+                        d.A <- DV.ZeroN d.Length
+                        d.F <- d.F + 1u
+                        if d.F = 1u then
+                            match o with
+                            | Add_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DV_DVCons(a) -> resetRec (box a :: t)
+                            | Add_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DV_DCons(a) -> resetRec (box a :: t)
+                            | Add_DVCons_D(b) -> resetRec (box b :: t)
+                            | Sub_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_DV_DVCons(a) -> resetRec (box a :: t)
+                            | Sub_DVCons_DV(a) -> resetRec (box a :: t)
+                            | Sub_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_DV_DCons(a) -> resetRec (box a :: t)
+                            | Sub_DVCons_D(b) -> resetRec (box b :: t)
+                            | Sub_D_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_D_DVCons(a) -> resetRec (box a :: t)
+                            | Sub_DCons_DV(b) -> resetRec (box b :: t)
+                            | Mul_Had_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_Had_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_DV_DCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DVCons_D(_, b) -> resetRec (box b :: t)
+                            | Mul_DM_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_DM_DVCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DMCons_DV(_, b) -> resetRec (box b :: t)
+                            | Mul_DV_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_DV_DMCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DVCons_DM(_, b) -> resetRec (box b :: t)
+                            | Div_Had_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_Had_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Div_Had_DVCons_DV(_, b) -> resetRec (box b :: t)
+                            | Div_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_DV_DCons(a, _) -> resetRec (box a :: t)
+                            | Div_DVCons_D(_, b) -> resetRec (box b :: t)
+                            | Div_D_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_D_DVCons(a, _) -> resetRec (box a :: t)
+                            | Div_DCons_DV(_, b) -> resetRec (box b :: t)
+                            | Pow_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DVCons_DV(_, b) -> resetRec (box b :: t)
+                            | Atan2_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DVCons_DV(_, b) -> resetRec (box b :: t)
+                            | Pow_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_DV_DCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DVCons_D(_, b) -> resetRec (box b :: t)
+                            | Pow_D_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_D_DVCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DCons_DV(_, b) -> resetRec (box b :: t)
+                            | Atan2_DV_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_DV_DCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DVCons_D(_, b) -> resetRec (box b :: t)
+                            | Atan2_D_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_D_DVCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DCons_DV(_, b) -> resetRec (box b :: t)
+                            | Log_DV(a) -> resetRec (box a :: t)
+                            | Log10_DV(a) -> resetRec (box a :: t)
+                            | Exp_DV(a) -> resetRec (box a :: t)
+                            | Sin_DV(a) -> resetRec (box a :: t)
+                            | Cos_DV(a) -> resetRec (box a :: t)
+                            | Tan_DV(a) -> resetRec (box a :: t)
+                            | Neg_DV(a) -> resetRec (box a :: t)
+                            | Sqrt_DV(a) -> resetRec (box a :: t)
+                            | Sinh_DV(a) -> resetRec (box a :: t)
+                            | Cosh_DV(a) -> resetRec (box a :: t)
+                            | Tanh_DV(a) -> resetRec (box a :: t)
+                            | Asin_DV(a) -> resetRec (box a :: t)
+                            | Acos_DV(a) -> resetRec (box a :: t)
+                            | Atan_DV(a) -> resetRec (box a :: t)
+                            | Abs_DV(a) -> resetRec (box a :: t)
+                            | Sign_DV(a) -> resetRec (box a :: t)
+                            | Floor_DV(a) -> resetRec (box a :: t)
+                            | Ceil_DV(a) -> resetRec (box a :: t)
+                            | Round_DV(a) -> resetRec (box a :: t)
+                            | Make_DV_ofDs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
+                            | SliceRow_DM(a,_,_) -> resetRec (box a :: t)
+                            | SliceCol_DM(a,_,_) -> resetRec (box a :: t)
+                            | Solve_DM_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Solve_DM_DVCons(a, _) -> resetRec (box a :: t)
+                            | Solve_DMCons_DV(_, b) -> resetRec (box b :: t)
+                            | Append_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Append_DV_DVCons(a) -> resetRec (box a :: t)
+                            | Append_DVCons_DV(b) -> resetRec (box b :: t)
+                            | Split_DV(a,_) -> resetRec (box a :: t)
+                            | AddItem_DV_D(a,_,b) -> resetRec (box a :: box b :: t)
+                            | AddItem_DV_DCons(a) -> resetRec (box a :: t)
+                            | AddItem_DVCons_D(_,b) -> resetRec (box b :: t)
+                            | AddSubVector_DV_DV(a,_,b) -> resetRec (box a :: box b :: t)
+                            | AddSubVector_DV_DVCons(a) -> resetRec (box a :: t)
+                            | AddSubVector_DVCons_DV(_,b) -> resetRec (box b :: t)
+                            | ReshapeCopy_DM_DV(a) -> resetRec (box a :: t)
+                            | Slice_DV(a,_) -> resetRec (box a :: t)
+                            | Diagonal_DM(a) -> resetRec (box a :: t)
+                            | ReLU_DV(a) -> resetRec (box a :: t)
+                            | Sigmoid_DV(a) -> resetRec (box a :: t)
+                            | _ -> resetRec t
+                        else resetRec t
+                    | _ -> resetRec t
+                | :? DM as d ->
+                    match d with
+                    | DMR(_,_,o,_,_) ->
+                        d.A <- DM.ZeroMN d.Rows d.Cols
+                        d.F <- d.F + 1u
+                        if d.F = 1u then
+                            match o with
+                            | Add_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DM_DMCons(a) -> resetRec (box a :: t)
+                            | Sub_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_DM_DMCons(a) -> resetRec (box a :: t)
+                            | Sub_DMCons_DM(a) -> resetRec (box a :: t)
+                            | Mul_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_DM_DMCons(a, _) -> resetRec (box a :: t)
+                            | Mul_Had_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_Had_DM_DMCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_DM_DCons(a, _) -> resetRec (box a :: t)
+                            | Mul_DMCons_D(_, b) -> resetRec (box b :: t)
+                            | Mul_Out_DV_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Mul_Out_DV_DVCons(a, _) -> resetRec (box a :: t)
+                            | Mul_Out_DVCons_DV(_, b) -> resetRec (box b :: t)
+                            | Div_Had_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_Had_DM_DMCons(a, _) -> resetRec (box a :: t)
+                            | Div_Had_DMCons_DM(_, b) -> resetRec (box b :: t)
+                            | Pow_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_DM_DMCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DMCons_DM(_, b) -> resetRec (box b :: t)
+                            | Atan2_DM_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_DM_DMCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DMCons_DM(_, b) -> resetRec (box b :: t)
+                            | Div_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_DM_DCons(a, _) -> resetRec (box a :: t)
+                            | Div_DMCons_D(_, b) -> resetRec (box b :: t)
+                            | Div_D_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Div_D_DMCons(a, _) -> resetRec (box a :: t)
+                            | Div_DCons_DM(_, b) -> resetRec (box b :: t)
+                            | Add_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DM_DCons(a) -> resetRec (box a :: t)
+                            | Add_DMCons_D(b) -> resetRec (box b :: t)
+                            | Add_DMCols_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | Add_DMCols_DVCons(a) -> resetRec (box a :: t)
+                            | Add_DMColsCons_DV(b) -> resetRec (box b :: t)
+                            | Sub_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_DM_DCons(a) -> resetRec (box a :: t)
+                            | Sub_DMCons_D(b) -> resetRec (box b :: t)
+                            | Sub_D_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Sub_D_DMCons(a) -> resetRec (box a :: t)
+                            | Sub_DCons_DM(b) -> resetRec (box b :: t)
+                            | Pow_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_DM_DCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DMCons_D(_, b) -> resetRec (box b :: t)
+                            | Pow_D_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Pow_D_DMCons(a, _) -> resetRec (box a :: t)
+                            | Pow_DCons_DM(_, b) -> resetRec (box b :: t)
+                            | Atan2_DM_D(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_DM_DCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DMCons_D(_, b) -> resetRec (box b :: t)
+                            | Atan2_D_DM(a, b) -> resetRec (box a :: box b :: t)
+                            | Atan2_D_DMCons(a, _) -> resetRec (box a :: t)
+                            | Atan2_DCons_DM(_, b) -> resetRec (box b :: t)
+                            | Log_DM(a) -> resetRec (box a :: t)
+                            | Log10_DM(a) -> resetRec (box a :: t)
+                            | Exp_DM(a) -> resetRec (box a :: t)
+                            | Sin_DM(a) -> resetRec (box a :: t)
+                            | Cos_DM(a) -> resetRec (box a :: t)
+                            | Tan_DM(a) -> resetRec (box a :: t)
+                            | Neg_DM(a) -> resetRec (box a :: t)
+                            | Sqrt_DM(a) -> resetRec (box a :: t)
+                            | Sinh_DM(a) -> resetRec (box a :: t)
+                            | Cosh_DM(a) -> resetRec (box a :: t)
+                            | Tanh_DM(a) -> resetRec (box a :: t)
+                            | Asin_DM(a) -> resetRec (box a :: t)
+                            | Acos_DM(a) -> resetRec (box a :: t)
+                            | Atan_DM(a) -> resetRec (box a :: t)
+                            | Abs_DM(a) -> resetRec (box a :: t)
+                            | Sign_DM(a) -> resetRec (box a :: t)
+                            | Floor_DM(a) -> resetRec (box a :: t)
+                            | Ceil_DM(a) -> resetRec (box a :: t)
+                            | Round_DM(a) -> resetRec (box a :: t)
+                            | Transpose_DM(a) -> resetRec (box a :: t)
+                            | Make_DM_ofDs(a) -> resetRec (List.append (a |> Array2D.toArray |> Array.map box |> List.ofArray) t)
+                            | Make_DMRows_ofDV(a) -> resetRec (box a :: t)
+                            | Make_DMCols_ofDV(a) -> resetRec (box a :: t)
+                            | Make_DMRows_ofDVs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
+                            | AddItem_DM_D(a, _, _, b) -> resetRec (box a :: box b :: t)
+                            | AddItem_DM_DCons(a) -> resetRec (box a :: t)
+                            | AddItem_DMCons_D(_, _, b) -> resetRec (box b :: t)
+                            | AddSubMatrix_DM_DM(a,_,_,b) -> resetRec (box a :: box b :: t)
+                            | AddSubMatrix_DM_DMCons(a) -> resetRec (box a :: t)
+                            | AddSubMatrix_DMCons_DM(_,_,b) -> resetRec (box b :: t)
+                            | Slice_DM(a,_,_) -> resetRec (box a :: t)
+                            | RowMatrix_DV(a) -> resetRec (box a :: t)
+                            | AddDiagonal_DM_DV(a, b) -> resetRec (box a :: box b :: t)
+                            | AddDiagonal_DM_DVCons(a) -> resetRec (box a :: t)
+                            | AddDiagonal_DMCons_DV(b) -> resetRec (box b :: t)
+                            | ReshapeCopy_DV_DM(a) -> resetRec (box a :: t)
+                            | Inverse_DM(a) -> resetRec (box a :: t)
+                            | ReLU_DM(a) -> resetRec (box a :: t)
+                            | Sigmoid_DM(a) -> resetRec (box a :: t)
+                            | _ -> resetRec t
+                        else resetRec t
+                    | _ -> resetRec t
+                | _ -> resetRec t
+        resetRec [d]
     /// Pushes the adjoint `v` backward through the evaluation trace of `d`
     let reversePush (v:obj) (d:obj) =
         let inline bx v d = box v, box d
@@ -3025,6 +3350,31 @@ module DOps =
                             | ReLU_D(a) -> pushRec ((bx (d.A * ((D.Sign(a.P) + 1.) / 2.)) a) :: t)
                             | Sigmoid_D(a) -> pushRec ((bx (d.A * d.P * (1. - d.P)) a) :: t) // d.P = D.Sigmoid(a.P)
                             | LogSumExp_DV(a) -> pushRec ((bx ((d.A / exp d.P) * exp a.P) a) :: t) // d.P = DV.LogSumExp(a.P)
+                            | FixedPoint_D(b, bfirst, aprev, alast) ->
+                                // Christianson (1994)
+                                let imax = DiffSharp.Config.GlobalConfig.FixedPointMaxIterations
+                                let eps = D DiffSharp.Config.GlobalConfig.Float64FixedPointEpsilon
+
+                                let mutable i = 0
+
+                                let r = d.A
+                                reverseReset alast
+                                pushRec [(box r, box alast)]
+
+                                while i < imax do
+                                    i <- i + 1
+                                    if i >= imax then 
+                                        //printfn "Fixed point reverse iteration timeout, i = %i" i
+                                        ignore()
+                                    else
+                                        if abs (aprev.A + r - alast.A) <= eps then
+                                            //printfn "Fixed point reverse iteration converged, i = %i" i
+                                            i <- imax
+                                        else
+                                            reverseReset alast
+                                            pushRec [(box (r + aprev.A), box alast)]
+
+                                pushRec ((bx (bfirst.A) b) :: t) // Propogate converged adjoint back towards the original b at the beginning of the fixed point iteration
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
@@ -3264,278 +3614,6 @@ module DOps =
                     | _ -> pushRec t
                 | _ -> pushRec t
         pushRec [(v, d)]
-    /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
-    let reverseReset (d:obj) =
-        let rec resetRec (ds:obj list) =
-            match ds with
-            | [] -> ()
-            | d :: t ->
-                match d with
-                | :? D as d ->
-                    match d with
-                    | DR(_,_,o,_,_) ->
-                        d.A <- D 0.
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
-                            match o with
-                            | Add_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_D_DCons(a) -> resetRec (box a :: t)
-                            | Sub_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_D_DCons(a) -> resetRec (box a :: t)
-                            | Sub_DCons_D(b) -> resetRec (box b :: t)
-                            | Mul_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_D_DCons(a, _) -> resetRec (box a :: t)
-                            | Div_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_D_DCons(a, _) -> resetRec (box a :: t)
-                            | Div_DCons_D(_, b) -> resetRec (box b :: t)
-                            | Pow_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_D_DCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DCons_D(_, b) -> resetRec (box b :: t)
-                            | Atan2_D_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_D_DCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DCons_D(_, b) -> resetRec (box b :: t)
-                            | Log_D(a) -> resetRec (box a :: t)
-                            | Log10_D(a) -> resetRec (box a :: t)
-                            | Exp_D(a) -> resetRec (box a :: t)
-                            | Sin_D(a) -> resetRec (box a :: t)
-                            | Cos_D(a) -> resetRec (box a :: t)
-                            | Tan_D(a) -> resetRec (box a :: t)
-                            | Neg_D(a) -> resetRec (box a :: t)
-                            | Sqrt_D(a) -> resetRec (box a :: t)
-                            | Sinh_D(a) -> resetRec (box a :: t)
-                            | Cosh_D(a) -> resetRec (box a :: t)
-                            | Tanh_D(a) -> resetRec (box a :: t)
-                            | Asin_D(a) -> resetRec (box a :: t)
-                            | Acos_D(a) -> resetRec (box a :: t)
-                            | Atan_D(a) -> resetRec (box a :: t)
-                            | Abs_D(a) -> resetRec (box a :: t)
-                            | Sign_D(a) -> resetRec (box a :: t)
-                            | Floor_D(a) -> resetRec (box a :: t)
-                            | Ceil_D(a) -> resetRec (box a :: t)
-                            | Round_D(a) -> resetRec (box a :: t)
-                            | Mul_Dot_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_Dot_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Sum_DV(a) -> resetRec (box a :: t)
-                            | L1Norm_DV(a) -> resetRec (box a :: t)
-                            | L2NormSq_DV(a) -> resetRec (box a :: t)
-                            | L2Norm_DV(a) -> resetRec (box a :: t)
-                            | Item_DV(a, _) -> resetRec (box a :: t)
-                            | Sum_DM(a) -> resetRec (box a :: t)
-                            | Item_DM(a, _, _) -> resetRec (box a :: t)
-                            | Det_DM(a) -> resetRec (box a :: t)
-                            | ReLU_D(a) -> resetRec (box a :: t)
-                            | Sigmoid_D(a) -> resetRec (box a :: t)
-                            | LogSumExp_DV(a) -> resetRec (box a :: t)
-                            | _ -> resetRec t
-                        else resetRec t
-                    | _ -> resetRec t
-                | :? DV as d ->
-                    match d with
-                    | DVR(_,_,o,_,_) ->
-                        d.A <- DV.ZeroN d.Length
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
-                            match o with
-                            | Add_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_DV_DVCons(a) -> resetRec (box a :: t)
-                            | Add_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_DV_DCons(a) -> resetRec (box a :: t)
-                            | Add_DVCons_D(b) -> resetRec (box b :: t)
-                            | Sub_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_DV_DVCons(a) -> resetRec (box a :: t)
-                            | Sub_DVCons_DV(a) -> resetRec (box a :: t)
-                            | Sub_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_DV_DCons(a) -> resetRec (box a :: t)
-                            | Sub_DVCons_D(b) -> resetRec (box b :: t)
-                            | Sub_D_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_D_DVCons(a) -> resetRec (box a :: t)
-                            | Sub_DCons_DV(b) -> resetRec (box b :: t)
-                            | Mul_Had_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_Had_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_DV_DCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DVCons_D(_, b) -> resetRec (box b :: t)
-                            | Mul_DM_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_DM_DVCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DMCons_DV(_, b) -> resetRec (box b :: t)
-                            | Mul_DV_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_DV_DMCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DVCons_DM(_, b) -> resetRec (box b :: t)
-                            | Div_Had_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_Had_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Div_Had_DVCons_DV(_, b) -> resetRec (box b :: t)
-                            | Div_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_DV_DCons(a, _) -> resetRec (box a :: t)
-                            | Div_DVCons_D(_, b) -> resetRec (box b :: t)
-                            | Div_D_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_D_DVCons(a, _) -> resetRec (box a :: t)
-                            | Div_DCons_DV(_, b) -> resetRec (box b :: t)
-                            | Pow_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DVCons_DV(_, b) -> resetRec (box b :: t)
-                            | Atan2_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DVCons_DV(_, b) -> resetRec (box b :: t)
-                            | Pow_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_DV_DCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DVCons_D(_, b) -> resetRec (box b :: t)
-                            | Pow_D_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_D_DVCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DCons_DV(_, b) -> resetRec (box b :: t)
-                            | Atan2_DV_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_DV_DCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DVCons_D(_, b) -> resetRec (box b :: t)
-                            | Atan2_D_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_D_DVCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DCons_DV(_, b) -> resetRec (box b :: t)
-                            | Log_DV(a) -> resetRec (box a :: t)
-                            | Log10_DV(a) -> resetRec (box a :: t)
-                            | Exp_DV(a) -> resetRec (box a :: t)
-                            | Sin_DV(a) -> resetRec (box a :: t)
-                            | Cos_DV(a) -> resetRec (box a :: t)
-                            | Tan_DV(a) -> resetRec (box a :: t)
-                            | Neg_DV(a) -> resetRec (box a :: t)
-                            | Sqrt_DV(a) -> resetRec (box a :: t)
-                            | Sinh_DV(a) -> resetRec (box a :: t)
-                            | Cosh_DV(a) -> resetRec (box a :: t)
-                            | Tanh_DV(a) -> resetRec (box a :: t)
-                            | Asin_DV(a) -> resetRec (box a :: t)
-                            | Acos_DV(a) -> resetRec (box a :: t)
-                            | Atan_DV(a) -> resetRec (box a :: t)
-                            | Abs_DV(a) -> resetRec (box a :: t)
-                            | Sign_DV(a) -> resetRec (box a :: t)
-                            | Floor_DV(a) -> resetRec (box a :: t)
-                            | Ceil_DV(a) -> resetRec (box a :: t)
-                            | Round_DV(a) -> resetRec (box a :: t)
-                            | Make_DV_ofDs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
-                            | SliceRow_DM(a,_,_) -> resetRec (box a :: t)
-                            | SliceCol_DM(a,_,_) -> resetRec (box a :: t)
-                            | Solve_DM_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Solve_DM_DVCons(a, _) -> resetRec (box a :: t)
-                            | Solve_DMCons_DV(_, b) -> resetRec (box b :: t)
-                            | Append_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Append_DV_DVCons(a) -> resetRec (box a :: t)
-                            | Append_DVCons_DV(b) -> resetRec (box b :: t)
-                            | Split_DV(a,_) -> resetRec (box a :: t)
-                            | AddItem_DV_D(a,_,b) -> resetRec (box a :: box b :: t)
-                            | AddItem_DV_DCons(a) -> resetRec (box a :: t)
-                            | AddItem_DVCons_D(_,b) -> resetRec (box b :: t)
-                            | AddSubVector_DV_DV(a,_,b) -> resetRec (box a :: box b :: t)
-                            | AddSubVector_DV_DVCons(a) -> resetRec (box a :: t)
-                            | AddSubVector_DVCons_DV(_,b) -> resetRec (box b :: t)
-                            | ReshapeCopy_DM_DV(a) -> resetRec (box a :: t)
-                            | Slice_DV(a,_) -> resetRec (box a :: t)
-                            | Diagonal_DM(a) -> resetRec (box a :: t)
-                            | ReLU_DV(a) -> resetRec (box a :: t)
-                            | Sigmoid_DV(a) -> resetRec (box a :: t)
-                            | _ -> resetRec t
-                        else resetRec t
-                    | _ -> resetRec t
-                | :? DM as d ->
-                    match d with
-                    | DMR(_,_,o,_,_) ->
-                        d.A <- DM.ZeroMN d.Rows d.Cols
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
-                            match o with
-                            | Add_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_DM_DMCons(a) -> resetRec (box a :: t)
-                            | Sub_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_DM_DMCons(a) -> resetRec (box a :: t)
-                            | Sub_DMCons_DM(a) -> resetRec (box a :: t)
-                            | Mul_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_DM_DMCons(a, _) -> resetRec (box a :: t)
-                            | Mul_Had_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_Had_DM_DMCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_DM_DCons(a, _) -> resetRec (box a :: t)
-                            | Mul_DMCons_D(_, b) -> resetRec (box b :: t)
-                            | Mul_Out_DV_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Mul_Out_DV_DVCons(a, _) -> resetRec (box a :: t)
-                            | Mul_Out_DVCons_DV(_, b) -> resetRec (box b :: t)
-                            | Div_Had_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_Had_DM_DMCons(a, _) -> resetRec (box a :: t)
-                            | Div_Had_DMCons_DM(_, b) -> resetRec (box b :: t)
-                            | Pow_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_DM_DMCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DMCons_DM(_, b) -> resetRec (box b :: t)
-                            | Atan2_DM_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_DM_DMCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DMCons_DM(_, b) -> resetRec (box b :: t)
-                            | Div_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_DM_DCons(a, _) -> resetRec (box a :: t)
-                            | Div_DMCons_D(_, b) -> resetRec (box b :: t)
-                            | Div_D_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Div_D_DMCons(a, _) -> resetRec (box a :: t)
-                            | Div_DCons_DM(_, b) -> resetRec (box b :: t)
-                            | Add_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_DM_DCons(a) -> resetRec (box a :: t)
-                            | Add_DMCons_D(b) -> resetRec (box b :: t)
-                            | Add_DMCols_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | Add_DMCols_DVCons(a) -> resetRec (box a :: t)
-                            | Add_DMColsCons_DV(b) -> resetRec (box b :: t)
-                            | Sub_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_DM_DCons(a) -> resetRec (box a :: t)
-                            | Sub_DMCons_D(b) -> resetRec (box b :: t)
-                            | Sub_D_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Sub_D_DMCons(a) -> resetRec (box a :: t)
-                            | Sub_DCons_DM(b) -> resetRec (box b :: t)
-                            | Pow_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_DM_DCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DMCons_D(_, b) -> resetRec (box b :: t)
-                            | Pow_D_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Pow_D_DMCons(a, _) -> resetRec (box a :: t)
-                            | Pow_DCons_DM(_, b) -> resetRec (box b :: t)
-                            | Atan2_DM_D(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_DM_DCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DMCons_D(_, b) -> resetRec (box b :: t)
-                            | Atan2_D_DM(a, b) -> resetRec (box a :: box b :: t)
-                            | Atan2_D_DMCons(a, _) -> resetRec (box a :: t)
-                            | Atan2_DCons_DM(_, b) -> resetRec (box b :: t)
-                            | Log_DM(a) -> resetRec (box a :: t)
-                            | Log10_DM(a) -> resetRec (box a :: t)
-                            | Exp_DM(a) -> resetRec (box a :: t)
-                            | Sin_DM(a) -> resetRec (box a :: t)
-                            | Cos_DM(a) -> resetRec (box a :: t)
-                            | Tan_DM(a) -> resetRec (box a :: t)
-                            | Neg_DM(a) -> resetRec (box a :: t)
-                            | Sqrt_DM(a) -> resetRec (box a :: t)
-                            | Sinh_DM(a) -> resetRec (box a :: t)
-                            | Cosh_DM(a) -> resetRec (box a :: t)
-                            | Tanh_DM(a) -> resetRec (box a :: t)
-                            | Asin_DM(a) -> resetRec (box a :: t)
-                            | Acos_DM(a) -> resetRec (box a :: t)
-                            | Atan_DM(a) -> resetRec (box a :: t)
-                            | Abs_DM(a) -> resetRec (box a :: t)
-                            | Sign_DM(a) -> resetRec (box a :: t)
-                            | Floor_DM(a) -> resetRec (box a :: t)
-                            | Ceil_DM(a) -> resetRec (box a :: t)
-                            | Round_DM(a) -> resetRec (box a :: t)
-                            | Transpose_DM(a) -> resetRec (box a :: t)
-                            | Make_DM_ofDs(a) -> resetRec (List.append (a |> Array2D.toArray |> Array.map box |> List.ofArray) t)
-                            | Make_DMRows_ofDV(a) -> resetRec (box a :: t)
-                            | Make_DMCols_ofDV(a) -> resetRec (box a :: t)
-                            | Make_DMRows_ofDVs(a) -> resetRec (List.append (a |> Array.map box |> List.ofArray) t)
-                            | AddItem_DM_D(a, _, _, b) -> resetRec (box a :: box b :: t)
-                            | AddItem_DM_DCons(a) -> resetRec (box a :: t)
-                            | AddItem_DMCons_D(_, _, b) -> resetRec (box b :: t)
-                            | AddSubMatrix_DM_DM(a,_,_,b) -> resetRec (box a :: box b :: t)
-                            | AddSubMatrix_DM_DMCons(a) -> resetRec (box a :: t)
-                            | AddSubMatrix_DMCons_DM(_,_,b) -> resetRec (box b :: t)
-                            | Slice_DM(a,_,_) -> resetRec (box a :: t)
-                            | RowMatrix_DV(a) -> resetRec (box a :: t)
-                            | AddDiagonal_DM_DV(a, b) -> resetRec (box a :: box b :: t)
-                            | AddDiagonal_DM_DVCons(a) -> resetRec (box a :: t)
-                            | AddDiagonal_DMCons_DV(b) -> resetRec (box b :: t)
-                            | ReshapeCopy_DV_DM(a) -> resetRec (box a :: t)
-                            | Inverse_DM(a) -> resetRec (box a :: t)
-                            | ReLU_DM(a) -> resetRec (box a :: t)
-                            | Sigmoid_DM(a) -> resetRec (box a :: t)
-                            | _ -> resetRec t
-                        else resetRec t
-                    | _ -> resetRec t
-                | _ -> resetRec t
-        resetRec [d]
     /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
     let reverseProp (v:obj) (d:obj) =
         d |> reverseReset

@@ -50,6 +50,9 @@ type Config =
      Float64EpsilonRec : float
      Float32EpsilonRec2 : float32
      Float64EpsilonRec2 : float
+     Float32FixedPointEpsilon : float32
+     Float64FixedPointEpsilon : float
+     FixedPointMaxIterations : int
      Float32VisualizationContrast : float32
      Float64VisualizationContrast : float
      GrayscalePalette : string[]}
@@ -60,6 +63,7 @@ type GlobalConfig() =
     static let GrayscalePaletteASCII = [|" "; "."; ":"; "x"; "T"; "Y"; "V"; "X"; "H"; "N"; "M"|]
     static let mutable C =
         let eps = 0.00001
+        let fpeps = 0.01
         {Float32Backend = OpenBLAS.Float32Backend()
          Float64Backend = OpenBLAS.Float64Backend()
          Float32Epsilon = (float32 eps)
@@ -68,6 +72,9 @@ type GlobalConfig() =
          Float64EpsilonRec = 1. / eps
          Float32EpsilonRec2 = 0.5f / (float32 eps)
          Float64EpsilonRec2 = 0.5 / eps
+         Float32FixedPointEpsilon = float32 fpeps
+         Float64FixedPointEpsilon = fpeps
+         FixedPointMaxIterations = 100
          Float32VisualizationContrast = 1.2f
          Float64VisualizationContrast = 1.2
          GrayscalePalette = GrayscalePaletteUnicode}
@@ -80,6 +87,9 @@ type GlobalConfig() =
     static member Float64EpsilonRec = C.Float64EpsilonRec
     static member Float32EpsilonRec2 = C.Float32EpsilonRec2
     static member Float64EpsilonRec2 = C.Float64EpsilonRec2
+    static member Float32FixedPointEpsilon = C.Float32FixedPointEpsilon
+    static member Float64FixedPointEpsilon = C.Float64FixedPointEpsilon
+    static member FixedPointMaxIterations = C.FixedPointMaxIterations
     static member Float32VisualizationContrast = C.Float32VisualizationContrast
     static member Float64VisualizationContrast = C.Float64VisualizationContrast
     static member GrayscalePalette = C.GrayscalePalette
@@ -106,6 +116,16 @@ type GlobalConfig() =
                 Float64EpsilonRec = 1. / e
                 Float32EpsilonRec2 = 0.5f / (float32 e)
                 Float64EpsilonRec2 = 0.5 / e}
+    static member SetFixedPointEpsilon(e:float32) =
+        C <- {C with 
+                Float32FixedPointEpsilon = e
+                Float64FixedPointEpsilon = float e}
+    static member SetFixedPointEpsilon(e:float) =
+        C <- {C with
+                Float32FixedPointEpsilon = float32 e
+                Float64FixedPointEpsilon = e}
+    static member SetFixedPointMaxIterations(i:int) =
+        C <- {C with FixedPointMaxIterations = i}
     static member SetVisualizationContrast(c:float32) =
         C <- {C with
                 Float32VisualizationContrast = c
