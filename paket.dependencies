@@ -1,0 +1,14 @@
+source https://www.nuget.org/api/v2/
+framework >= net46
+
+nuget FsCheck
+nuget FsCheck.NUnit
+nuget FSharp.Charting
+nuget FSharp.Compiler.Service
+nuget FSharp.Core
+nuget FSharp.Data
+nuget FSharp.Formatting
+nuget FSharp.Quotations.Evaluator
+nuget FSharpVSPowerTools.Core
+nuget NUnit ~> 2
+nuget NUnit.Runners ~> 2
