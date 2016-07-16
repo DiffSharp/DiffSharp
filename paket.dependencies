@@ -3,12 +3,9 @@ strategy: max
 framework >= net46
 redirects: on
 
-nuget FsCheck
 nuget FsCheck.NUnit
 nuget FSharp.Charting
 nuget FSharp.Core
 nuget FSharp.Data
 nuget FSharp.Formatting
 nuget FSharp.Quotations.Evaluator
-nuget NUnit ~> 2
-nuget NUnit.Runners ~> 2
