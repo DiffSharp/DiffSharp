@@ -73,6 +73,7 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <Import Project="$(SolutionDir)\.paket\paket.targets" />
   <ItemGroup>
     <Compile Include="FsCheckAddin.fs">
       <Paket>True</Paket>
