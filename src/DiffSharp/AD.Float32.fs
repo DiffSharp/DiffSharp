@@ -48,10 +48,11 @@ open System.Threading.Tasks
 let inline toNumber x = float32 x
 let inline fail_with_invalid_type_message () = failwith "Unsupported type. Expecting D, float32, or int."
 
-let [<Literal>] internal number0 = 0.f
-let [<Literal>] internal number1 = 1.f
-let [<Literal>] internal number2 = 2.f
-let [<Literal>] internal number0_5 = 0.5f
+let [<Literal>] internal numberMinus1 = -1.f
+let [<Literal>] internal number0_5    = 0.5f
+let [<Literal>] internal number0      = 0.f
+let [<Literal>] internal number1      = 1.f
+let [<Literal>] internal number2      = 2.f
 
 let inline Backend               () = global.DiffSharp.Config.GlobalConfig.Float32Backend
 let inline VisualizationContrast () = global.DiffSharp.Config.GlobalConfig.Float32VisualizationContrast
@@ -1157,7 +1158,7 @@ and DV =
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member (~-) (a:DV) =
-        let inline ff(a) = Backend().Mul_S_V(- number1, a)
+        let inline ff(a) = Backend().Mul_S_V(numberMinus1, a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DV(a)
@@ -2187,7 +2188,7 @@ and DM =
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member (~-) (a:DM) =
-        let inline ff(a) = Backend().Mul_S_M(- number1, a)
+        let inline ff(a) = Backend().Mul_S_M(numberMinus1, a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DM(a)
