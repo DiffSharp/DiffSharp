@@ -1305,7 +1305,7 @@ and DV =
         DV.Op_DV_DM (a, ff, fd, df, r)
 
     static member ReLU (a:DV) =
-        let inline ff(a) = Backend().Map_F_V(max 0.f, a)
+        let inline ff(a) = Backend().Map_F_V(max number0, a)
         let inline fd(a) = DV.ReLU(a)
         let inline df(cp, ap, at) = at .* ((number1 + DV.Sign(ap)) / number2)
         let inline r(a) = ReLU_DV(a)
@@ -2403,7 +2403,7 @@ and DM =
         DM.Op_DM_D (a, ff, fd, df, r)
 
     static member ReLU (a:DM) =
-        let inline ff(a) = Backend().Map_F_M(max 0.f, a)
+        let inline ff(a) = Backend().Map_F_M(max number0, a)
         let inline fd(a) = DM.ReLU(a)
         let inline df(cp, ap, at) = at .* ((number1 + DM.Sign(ap)) / number2)
         let inline r(a) = ReLU_DM(a)
