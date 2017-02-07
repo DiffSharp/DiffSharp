@@ -40,16 +40,13 @@
 // Script for generating library documentation
 //
 
-#I "../packages/FSharp.Compiler.Service.0.0.90/lib/net45/"
-#r "FSharp.Compiler.Service.dll"
-#I "../packages/FSharpVSPowerTools.Core.1.9.0/lib/net45"
-#r "FSharpVSPowerTools.Core.dll"
-#I "../packages/FSharp.Formatting.2.10.3/lib/net40/"
-#r "CSharpFormat.dll"
-#r "FSharp.CodeFormat.dll"
-#r "FSharp.Literate.dll"
-#r "FSharp.MetadataFormat.dll"
-#r "FSharp.Markdown.dll"
+#r "../packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
+#r "../packages/FSharpVSPowerTools.Core/lib/net45/FSharpVSPowerTools.Core.dll"
+#r "../packages/FSharp.Formatting/lib/net40/CSharpFormat.dll"
+#r "../packages/FSharp.Formatting/lib/net40/FSharp.CodeFormat.dll"
+#r "../packages/FSharp.Formatting/lib/net40/FSharp.Literate.dll"
+#r "../packages/FSharp.Formatting/lib/net40/FSharp.MetadataFormat.dll"
+#r "../packages/FSharp.Formatting/lib/net40/FSharp.Markdown.dll"
 
 
 open System.IO

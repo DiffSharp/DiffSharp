@@ -1,7 +1,7 @@
 ﻿(*** hide ***)
 #r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
-#r "../../packages/FSharp.Data.2.2.5/lib/net40/FSharp.Data.dll"
-#load "../../packages/FSharp.Charting.0.90.12/FSharp.Charting.fsx"
+#r "../../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
+#load "../../packages/FSharp.Charting/FSharp.Charting.fsx"
 
 (**
 K-Means Clustering
