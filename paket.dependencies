@@ -5,7 +5,8 @@ redirects: on
 
 nuget FsCheck.NUnit
 nuget FSharp.Charting
-nuget FSharp.Core
+nuget FSharp.Core 4.0.0.1
 nuget FSharp.Data
 nuget FSharp.Formatting
 nuget FSharp.Quotations.Evaluator
+nuget NUnit 2.6.4
