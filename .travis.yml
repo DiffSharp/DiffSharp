@@ -5,11 +5,9 @@ solution: DiffSharp.sln
 sudo: required 
 
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libopenblas-dev
-
-# xenial to attempt to get a fairly recent openblas
-dist: xenial 
+  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
+  - sudo apt-get update -qq -y
+  - sudo apt-get install libopenblas-dev -y
 
 os:
   - linux
