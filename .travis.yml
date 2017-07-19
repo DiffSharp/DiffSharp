@@ -5,7 +5,7 @@ solution: DiffSharp.sln
 sudo: required 
 
 before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
+  - sudo add-apt-repository ppa:nschloe/openblas-nightly -y
   - sudo apt-get update -qq -y
   - sudo apt-get install libopenblas-dev -y
 
