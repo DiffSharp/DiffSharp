@@ -45,7 +45,8 @@ open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
 
-/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD,
+/// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     | D of float32 // Primal
@@ -58,6 +59,7 @@ type D =
         | D(_) -> d
         | DF(ap,_,_) -> ap
         | DR(ap,_,_,_,_) -> ap
+
     /// Deepest primal value of this D
     member d.PD =
         let rec prec x =
@@ -66,12 +68,14 @@ type D =
             | DF(xp,_,_) -> prec xp
             | DR(xp,_,_,_,_) -> prec xp
         prec d
+
     /// Tangent value of this D
     member d.T =
         match d with
         | D(_) -> D 0.f
         | DF(_,at,_) -> at
         | DR(_,_,_,_,_) -> failwith "Cannot get tangent value of DR."
+
     /// Adjoint value of this D
     member d.A
         with get() =
@@ -84,6 +88,7 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set adjoint value of DF."
             | DR(_,a,_,_,_) -> a := v
+
     /// Fan-out counter of this D
     member d.F
         with get() =
@@ -96,8 +101,11 @@ type D =
             | D(_) -> failwith "Cannot set fan-out value of D."
             | DF(_,_,_) -> failwith "Cannot set fan-out value of DF."
             | DR(_,_,_,f,_) -> f := v
+
     member d.GetForward(t:D, i:uint32) = DF(d, t, i)
+
     member d.GetReverse(i:uint32) = DR(d, ref (D 0.f), Noop, ref 0u, i)
+
     member d.Copy() =
         match d with
         | D(ap) -> D(ap)
@@ -105,7 +113,9 @@ type D =
         | DR(ap,aa,at,af,ai) -> DR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
 
     static member Zero = D 0.f
+
     static member One = D 1.f
+
     static member op_Explicit(d:D):float32 =
         let rec prec x =
             match x with
@@ -113,20 +123,24 @@ type D =
             | DF(xp,_,_) -> prec xp
             | DR(xp,_,_,_,_) -> prec xp
         prec d
+
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
             | :? D as d2 -> compare ((float32) d) ((float32) d2)
             | _ -> invalidArg "" "Cannot compare this D with another type."
+
     override d.Equals(other) =
         match other with
         | :? D as d2 -> compare ((float32) d) ((float32) d2) = 0
         | _ -> false
+
     override d.GetHashCode() =
         match d with
         | D(ap) -> hash [|ap|]
         | DF(ap,at,ai) -> hash [|ap; at; ai|]
         | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
+
     override d.ToString() =
         let (d':float32) = D.op_Explicit(d)
         match d with
@@ -220,10 +234,10 @@ type D =
 
     static member Pow (a:D, b:D) =
         let inline ff(a, b) = a ** b
-        let inline fd(a, b) = a ** b
+        let inline fd(a:D, b:D) = a ** b
         let inline df_da(cp, ap, at) = at * (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) * (at * bp + ap * bt * log ap)
+        let inline df_dab(cp:D, ap:D, at:D, bp:D, bt:D) = (ap ** (bp - D 1.f)) * (at * bp + ap * bt * log ap)
         let inline r_d_d(a, b) = Pow_D_D(a, b)
         let inline r_d_c(a, b) = Pow_D_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_D(a, b)
@@ -368,30 +382,35 @@ type D =
         let inline df(cp, ap, at) = D 0.f
         let inline r(a) = Sign_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Floor (a:D) =
         let inline ff(a) = floor a
         let inline fd(a) = floor a
-        let inline df(cp, ap, at) = D 0.f
+        let inline df(cp:D, ap:D, at:D) = D 0.f
         let inline r(a) = Floor_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Ceiling (a:D) =
         let inline ff(a) = ceil a
         let inline fd(a) = ceil a
         let inline df(cp, ap, at) = D 0.f
         let inline r(a) = Ceil_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Round (a:D) =
-        let inline ff(a) = round a
-        let inline fd(a) = round a
-        let inline df(cp, ap, at) = D 0.f
-        let inline r(a) = Round_D(a)
+        let inline ff(a:float32) = round a
+        let inline fd(a:D) = round a
+        let inline df(cp:D, ap:D, at:D) = D 0.f
+        let inline r(a:D) = Round_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member ReLU (a:D) =
         let inline ff(a) = max 0.f a
         let inline fd(a) = D.ReLU(a)
         let inline df(cp, ap, at:D) = at * (1.f + D.Sign(ap)) / 2.f
         let inline r(a) = ReLU_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sigmoid (a:D) =
         let inline ff(a) = 1.f / (1.f + exp -a)
         let inline fd(a) = D.Sigmoid(a)
@@ -467,6 +486,7 @@ and DV =
         | DV(_) -> d
         | DVF(ap,_,_) -> ap
         | DVR(ap,_,_,_,_) -> ap
+
     /// Deepest primal value of this DV
     member d.PD =
         let rec prec x =
@@ -475,12 +495,14 @@ and DV =
             | DVF(xp,_,_) -> prec xp
             | DVR(xp,_,_,_,_) -> prec xp
         prec d
+
     /// Tangent value of this DV
     member d.T =
         match d with
         | DV(_) -> DV.ZeroN d.Length
         | DVF(_,at,_) -> at
         | DVR(_,_,_,_,_) -> failwith "Cannot get tangent value of DVR."
+
     /// Adjoint value of this DV
     member d.A
         with get() =
@@ -493,6 +515,7 @@ and DV =
             | DV(_) -> ()
             | DVF(_,_,_) -> failwith "Cannot set adjoint value of DVF."
             | DVR(_,a,_,_,_) -> a := v
+
     /// Fan-out counter of this DV
     member d.F
         with get() =
@@ -505,18 +528,23 @@ and DV =
             | DV(_) -> failwith "Cannot set fan-out value of DV."
             | DVF(_,_,_) -> failwith "Cannot set fan-out value of DVF."
             | DVR(_,_,_,f,_) -> f := v
+
     member d.GetForward(t:DV, i:uint32) = DVF(d, t, i)
+
     member d.GetReverse(i:uint32) = DVR(d, ref (DV.ZeroN d.Length), Noop, ref 0u, i)
+
     member d.Copy() =
         match d with
         | DV(ap) -> DV(Array.copy ap)
         | DVF(ap,at,ai) -> DVF(ap.Copy(), at.Copy(), ai)
         | DVR(ap,aa,at,af,ai) -> DVR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+
     member d.Length =
         match d with
         | DV(ap) -> ap.Length
         | DVF(ap,_,_) -> ap.Length
         | DVR(ap,_,_,_,_) -> ap.Length
+
     member d.Item
         with get i =
             match d with
@@ -539,11 +567,13 @@ and DV =
             Array.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
         | DVR(ap,_,_,_,ai) ->
             Array.init ap.Length (fun i -> DR(ap.[i], ref (D 0.f), Item_DV(d, i), ref 0u, ai))
+
     member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
         | DVF(ap,at,ai) -> DMF(ap.ToRowDM(), at.ToRowDM(), ai)
         | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowDM() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
+
     member d.ToColDM() = DM.Transpose(d.ToRowDM())
 
     override d.ToString() =
@@ -556,6 +586,7 @@ and DV =
         for i = 0 to d.Length - 1 do
             sb.Append(sprintf "% 9.3g " d'.[i]) |> ignore
         sb.ToString()
+
     member d.ToMathematicaString() =
         let (d':float32[]) = DV.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -565,6 +596,7 @@ and DV =
             if i < d.Length - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
+
     member d.ToMatlabString() =
         let (d':float32[]) = DV.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -574,8 +606,11 @@ and DV =
             if i < d.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+
     static member Zero = DV Array.empty
+
     static member ZeroN n = DV(Array.zeroCreate n)
+
     static member op_Explicit(d:DV):float32[] =
         let rec prec x =
             match x with
@@ -874,10 +909,10 @@ and DV =
     /// Element-wise power of `a` and `b`
     static member Pow (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Map2_F_V_V((fun x y -> x ** y), a, b)
-        let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.f)) .* b
+        let inline fd(a:DV, b:DV) = a ** b
+        let inline df_da(cp:DV, ap:DV, at:DV) = at .* (ap ** (b - D 1.f)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) .* ((at .* bp) + (ap .* bt .* log ap))
+        let inline df_dab(cp:DV, ap:DV, at:DV, bp:DV, bt:DV) = (ap ** (bp - D 1.f)) .* ((at .* bp) + (ap .* bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_DV(a, b)
         let inline r_d_c(a, b) = Pow_DV_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
@@ -994,7 +1029,7 @@ and DV =
     /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Pow (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_V((fun v -> v ** b), a)
-        let inline fd(a, b) = a ** b
+        let inline fd(a:DV, b:D) = a ** b
         let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
         let inline df_dab(cp, ap:DV, at:DV, bp:D, bt:D) = (ap ** (bp - D 1.f)) .* ((at * bp) + (ap * bt .* log ap))
@@ -1303,7 +1338,9 @@ and DV =
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member SoftPlus (a:DV) = log (1.f + exp a)    
+
     static member SoftSign (a:DV) = a ./ (1.f + abs a)
+
     static member LogSumExp (a:DV) =
         let inline ff(a) = 
             let m = Array.max a
@@ -1316,17 +1353,21 @@ and DV =
 
     static member Mean (a:DV) =
         DV.Sum(a) / a.Length
+
     static member Variance (a:DV) =
         let a' = a - DV.Mean(a)
         DV.Sum(a' .* a') / (a.Length - 1)
+
     static member StandardDev (a:DV) =
         DV.Variance(a) |> sqrt
+
     static member Standardize (a:DV) =
         let sd = DV.StandardDev(a)
         if sd = D 0.f then
             a * (D 0.f)
         else
             (a - DV.Mean(a)) / DV.StandardDev(a)
+
     static member Normalize (a:DV) =
         let min = DV.Min(a)
         let range = DV.Max(a) - min
@@ -1336,10 +1377,15 @@ and DV =
             (a - min) / range
 
     static member Max (a:DV, b:DV) = ((a + b) + abs (b - a)) / 2.f
+
     static member Max (a:DV, b:D) = ((a + b) + abs (b - a)) / 2.f
+
     static member Max (a:D, b:DV) = ((a + b) + abs (b - a)) / 2.f
+
     static member Min (a:DV, b:DV) = ((a + b) - abs (a - b)) / 2.f
+
     static member Min (a:DV, b:D) = ((a + b) - abs (a - b)) / 2.f
+
     static member Min (a:D, b:DV) = ((a + b) - abs (a - b)) / 2.f
 
     /// Index of the maximum element of vector `a`
@@ -1923,10 +1969,10 @@ and DM =
 
     static member Pow (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Map2_F_M_M((fun x y -> x ** y), a, b)
-        let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.f)) .* b
+        let inline fd(a:DM, b:DM) = a ** b
+        let inline df_da(cp:DM, ap:DM, at:DM) = at .* (ap ** (b - D 1.f)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.f)) .* (at .* bp + ap .* bt .* log ap)
+        let inline df_dab(cp:DM, ap:DM, at:DM, bp:DM, bt:DM) = (ap ** (bp - D 1.f)) .* (at .* bp + ap .* bt .* log ap)
         let inline r_d_d(a, b) = Pow_DM_DM(a, b)
         let inline r_d_c(a, b) = Pow_DM_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_DM(a, b)
@@ -2055,7 +2101,7 @@ and DM =
 
     static member Pow (a:DM, b:D) =
         let inline ff(a, b) = GlobalConfig.Float32Backend.Map_F_M((fun v -> v ** b), a)
-        let inline fd(a, b) = a ** b
+        let inline fd(a:DM, b:D) = a ** b
         let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D 1.f)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
         let inline df_dab(cp, ap:DM, at:DM, bp:D, bt:D) = (ap ** (bp - D 1.f)) .* ((at * bp) + (ap * bt .* log ap))
@@ -2726,14 +2772,19 @@ module DV =
     // Note: map operations are not implemented on purpose. To benefit from the performance of BLAS ops, supplied element-wise operations are used. For example: "exp v" instead of "DV.map exp v"
     /// Creates a vector from array `a`
     let inline ofArray a = DV.OfArray(a)
+
     /// Converts vector `v` into an array
     let inline toArray (v:DV) = v.ToArray()
+
     /// Converts vector `v` into a row matrix
     let inline toRowDM (v:DV) = v.ToRowDM()
+
     /// Converts vector `v` into a column matrix
     let inline toColDM (v:DV) = v.ToColDM()
+
     /// Creates a copy of vector `v`
     let inline copy (v:DV) = v.Copy()
+
     /// Creates a vector with `n` elements, each with value `v`
     let inline create n (v:'a) = 
         let at = typeof<'a>
@@ -2741,10 +2792,13 @@ module DV =
         elif at.Equals(typeof<float32>) then DV (Array.create n (unbox<float32>(box v)))
         elif at.Equals(typeof<int>) then DV (Array.create n (unbox<int>(box v) |> float32))
         else failwith "Unsupported type. Expecting D, float32, or int."
+
     /// Creates a vector with `n` zero elements
     let inline zeroCreate n = DV.ZeroN n
+
     /// Empty vector
     let empty = DV.Zero
+
     /// Creates a vector of `n` elements, where each element is defined by function `f`
     let inline init n (f:int->'a) = 
         let at = typeof<'a>
@@ -2752,71 +2806,104 @@ module DV =
         elif at.Equals(typeof<float32>) then DV (Array.init n (unbox<int->float32>(box f)))
         elif at.Equals(typeof<int>) then DV ((Array.init n (unbox<int->int>(box f))) |> Array.map float32)
         else failwith "Unsupported type. Expecting D, float32, or int."
+
     /// Returns true if vector `v` is empty, otherwise returns false
     let isEmpty (v:DV) = v.Length = 0
+
     /// Iterates function `f` over the elements of vector `v`
     let inline iter (f:D->unit) (v:DV) = v |> toArray |> Array.iter f
+
     /// Iterates function `f` over the elements of vector `v`. An element index is also supplied to `f`.
     let inline iteri (f:int->D->unit) (v:DV) = v |> toArray |> Array.iteri f
+
     /// Iterates function `f` over the elements of vectors `v1` and `v2`
     let inline iter2 (f:D->D->unit) (v1:DV) (v2:DV) = Array.iter2 f (v1 |> toArray) (v2 |> toArray)
+
     /// Iterates function `f` over the elements of vectors `v1` and `v2`. An element index is also supplied to `f`.
     let inline iteri2 (f:int->D->D->unit) (v1:DV) (v2:DV) = Array.iteri2 f (v1 |> toArray) (v2 |> toArray)
+
     /// Length of vector `v`
     let inline length (v:DV) = v.Length
+
     /// L1 norm of vector `v`
     let inline l1norm (v:DV) = DV.L1Norm(v)
+
     /// L2 norm of vector `v`
     let inline l2norm (v:DV) = DV.L2Norm(v)
+
     /// Squared L2 norm of vector `v`
     let inline l2normSq (v:DV) = DV.L2NormSq(v)
+
     /// Maximum of the elements of vector `v`
     let inline max (v:DV) = DV.Max(v)
+
     /// Index of the maximum element of vector `v`
     let inline maxIndex (v:DV) = DV.MaxIndex(v)
+
     /// Minimum of the elements of vector `v`
     let inline min (v:DV) = DV.Min(v)
+
     /// Index of the minimum element of vector `v`
     let inline minIndex (v:DV) = DV.MinIndex(v)
+
     /// Mean of vector `v`
     let inline mean (v:DV) = DV.Mean(v)
+
     /// Average of vector `v`. Same with mean.
     let average = mean
+
     /// Standard deviation of vector `v`
     let inline standardDev (v:DV) = DV.StandardDev(v)
+
     /// Variance of vector `v`
     let inline variance (v:DV) = DV.Variance(v)
+
     /// Shift and scale the elements of vector `v` to have zero mean and unit variance
     let inline standardize (v:DV) = DV.Standardize(v)
+
     /// Shift and scale the elements of vector `v` to be in the range [0, 1]
     let inline normalize (v:DV) = DV.Normalize(v)
+
     /// L2 norm of vector `v`. Same with DV.l2norm.
     let inline norm (v:DV) = DV.L2Norm(v)
+
     /// Squared L2 norm of vector `v`. Same with DV.l2normSq.
     let inline normSq(v:DV) = DV.L2NormSq(v)
+
     // TODO: implement supNorm (infinity norm, with BLAS IDAMAX)
     /// Creates a vector where elements of `v1` are followed by elements of `v2`
     let inline append (v1:DV) (v2:DV) = DV.Append(v1, v2)
+
     /// Creates a vector where elements of `v2` are followed by elements of `v1`
     let inline prepend (v1:DV) (v2:DV) = DV.Append(v2, v1)
+
     /// Concatenates the given sequence of vectors `v` into one vector
     let inline concat (v:seq<DV>) = Seq.fold append DV.Zero v
+
     /// Splits vector `v` into a sequence of subvectors whose lengths are given in sequence `n`
     let inline split (n:seq<int>) (v:DV) = DV.Split(v, n)
+
     /// Splits vector `v` into `n` subvectors of equal length. The length of vector `v` must be an integer multiple of `n`.
     let inline splitEqual (n:int) (v:DV) = DV.Split(v, Array.create n (v.Length / n))
+
     /// Sums the elements of vector `v`
     let inline sum (v:DV) = DV.Sum(v)
+
     /// Creates a vector with `n` elements where the `i`-th element is one and the rest of the elements are zero
     let inline standardBasis (n:int) (i:int) = DV(standardBasis n i)
+
     /// Creates a vector with `n` elements where the `i`-th element has value `v` and the rest of the elements are zero
     let inline standardBasisVal (n:int) (i:int) (v:float32) = DV(standardBasisVal n i v)
+
     /// Gets the unit vector codirectional with vector `v`
     let inline unitDV (v:DV) = v / DV.L2Norm(v)
+
     /// Converts matrix `m` into a vector by stacking its rows
     let inline ofDM (m:DM) = DM.ReshapeToDV(m)
+
     /// Creates a matrix with `m` rows from vector `v`
     let inline toDM (m:int) (v:DV) = DV.ReshapeToDM(m, v)
+
     // Experimental
     let inline toString (v:DV) = v.ToString()
     let inline visualize (v:DV) = v.Visualize()
@@ -2827,36 +2914,52 @@ module DV =
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DM =
+
     /// Creates a matrix from 2D array `a`
     let inline ofArray2D a = DM.OfArray2D(a)
+
     /// Converts matrix `m` into a 2D array
     let inline toArray2D (m:DM) = m.GetRows() |> Seq.map DV.toArray |> array2D
+
     /// Creates a matrix with `m` rows from array `a`
     let inline ofArray m a = DM.OfArray(m, a)
+
     /// Converts matrix `m` into an array by stacking its rows
     let inline toArray (m:DM) = DM.ReshapeToDV(m) |> DV.toArray
+
     /// Transpose of matrix `m`
     let inline transpose (m:DM) = DM.Transpose(m)
+
     /// Creates a matrix from a sequence of row vectors `s`
     let inline ofRows s = DM.OfRows(s)
+
     /// Creates a matrix from a sequence of column vectors `s`
     let inline ofCols (s:seq<DV>) = s |> ofRows |> transpose
+
     /// Gets the sequence of row vectors in matrix `m`
     let inline toRows (m:DM) = m.GetRows()
+
     /// Gets the sequence of column vectors in matrix `m`
     let inline toCols (m:DM) = m.GetCols()
+
     /// Converts matrix `m` into a vector by stacking its rows
     let inline toDV (m:DM) = DM.ReshapeToDV(m)
+
     /// Creates a matrix with `m` rows from vector `v`
     let inline ofDV (m:int) (v:DV) = DV.ReshapeToDM(m, v)
+
     /// Gets the column with index `j` of matrix `m`
     let inline col (j:int) (m:DM) = m.[*,j]
+
     /// Gets the row with index `i` of matrix `m`
     let inline row (i:int) (m:DM) = m.[i,*]
+
     /// Number of columns in matrix `m`
     let inline cols (m:DM) = m.Cols
+
     /// Number of rows in matrix `m`
     let inline rows (m:DM) = m.Rows
+
     /// Creates a matrix with `m` rows and `n` columns, where all entries have value `v`
     let inline create m n (v:'a) = 
         let at = typeof<'a>
@@ -2864,18 +2967,25 @@ module DM =
         elif at.Equals(typeof<float32>) then DM (Array2D.create m n (unbox<float32>(box v)))
         elif at.Equals(typeof<int>) then DM (Array2D.create m n (unbox<int>(box v) |> float32))
         else failwith "Unsupported type. Expecting D, float32, or int."
+
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
     let inline createRows (m:int) (v:DV) = DM.OfRows(m, v)
+
     /// Creates a matrix with `n` columns, where all columns are equal to `v`
     let inline createCols (n:int) (v:DV) = DM.OfCols(n, v)
+
     /// Creates a matrix with `m` rows and `n` columns, where all entries are zero
     let inline zeroCreate m n = DM.ZeroMN m n
+
     /// Gets the diagonal of matrix `m`
     let inline diagonal (m:DM) = DM.Diagonal(m)
+
     /// Zero matrix
     let empty = DM.Zero
+
     /// Returns true if matrix `m` is empty, otherwise returns false
     let isEmpty (m:DM) = m.Length = 0
+
     /// Creates a matrix with `m` rows and `n` columns, where each element is given by function `f`
     let inline init m n (f:int->int->'a) = 
         let at = typeof<'a>
@@ -2883,96 +2993,142 @@ module DM =
         elif at.Equals(typeof<float32>) then DM (Array2D.init m n (unbox<int->int->float32>(box f)))
         elif at.Equals(typeof<int>) then DM ((Array2D.init m n (unbox<int->int->int>(box f))) |> Array2D.map float32)
         else failwith "Unsupported type. Expecting D, float32, or int."
+
     /// Creates a matrix with `m` rows, where each row is given by `f` as a vector
     let inline initRows (m:int) (f:int->DV) = Seq.init m f |> ofRows
+
     /// Creates a matrix with `n` columns, where each column is given by `f` as a vector
     let inline initCols (n:int) (f:int->DV) = Seq.init n f |> ofCols
+
     /// Inverse of matrix `m`
     let inline inverse (m:DM) = DM.Inverse(m)
+
     /// Iterates function `f` over the entries of matrix `m`
     let inline iter (f:D->unit) (m:DM) = m |> toDV |> DV.iter f
+
     /// Iterates function `f` over the entries of matrices `m1` and `m2`
     let inline iter2 (f:D->D->unit) (m1:DM) (m2:DM) = DV.iter2 f (m1 |> toDV) (m2 |> toDV)
+
     /// Iterates function `f` over the entries of matrix `m`. Indices are also supplied to `f`.
     let inline iteri (f:int->int->D->unit) (m:DM) = m |> toArray2D |> Array2D.iteri f
+
     /// Iterates function `f` over the columns of matrix `m`
     let inline iterCols (f:DV->unit) (m:DM) = m |> toCols |> Seq.iter f
+
     /// Iterates function `f` over the rows of matrix `m`
     let inline iterRows (f:DV->unit) (m:DM) = m |> toRows |> Seq.iter f
+
     /// Iterates function `f` over the columns of matrix `m`. Column indices are also supplied to `f`.
     let inline iteriCols (f:int->DV->unit) (m:DM) = m |> toCols |> Seq.iteri f
+
     /// Iterates function `f` over the rows of matrix `m`. Row indices are also supplied to `f`.
     let inline iteriRows (f:int->DV->unit) (m:DM) = m |> toRows |> Seq.iteri f
+
     /// Iterates function `f` over the columns of matrices `m1` and `m2`
     let inline iter2Cols (f:DV->DV->unit) (m1:DM) (m2:DM) = Seq.iter2 f (m1 |> toCols) (m2 |> toCols)
+
     /// Iterates function `f` over the rows of matrices `m1` and `m2
     let inline iter2Rows (f:DV->DV->unit) (m1:DM) (m2:DM) = Seq.iter2 f (m1 |> toRows) (m2 |> toRows)
+
     /// Iterates function `f` over the columns of matrices `m1` and `m2`. Column indices are also supplied to `f`.
     let inline iteri2Cols (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toCols) (m2 |> toCols)
+
     /// Iterates function `f` over the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
     let inline iteri2Rows (f:int->DV->DV->unit) (m1:DM) (m2:DM) = Seq.iteri2 f (m1 |> toRows) (m2 |> toRows)
+
     /// Total number of elements in matrix `m`
     let inline length (m:DM) = m.Length
+
     /// Number of rows in matrix `m`. Same with DM.rows.
     let inline length1 (m:DM) = m.Rows
+
     /// Number of columns in matrix `m`. Same with DM.cols.
     let inline length2 (m:DM) = m.Cols
+
     /// Creates a copy of matrix `m`
     let inline copy (m:DM) = m.Copy()
+
     /// Determinant of matrix `m`
     let inline det (m:DM) = DM.Det(m)
+
     /// Maps function `f` to the columns of matrix `m`
     let inline mapCols (f:DV->DV) (m:DM) = m |> toCols |> Seq.map f |> ofCols
+
     /// Maps function `f` to the rows of matrix `m`
     let inline mapRows (f:DV->DV) (m:DM) = m |> toRows |> Seq.map f |> ofRows
+
     /// Maps function `f` to the columns of matrix `m`. Column indices are also supplied to `f`.
     let inline mapiCols (f:int->DV->DV) (m:DM) = m |> toCols |> Seq.mapi f |> ofCols
+
     /// Maps function `f` to the rows of matrix `m`. Row indices are also supplied to `f`.
     let inline mapiRows (f:int->DV->DV) (m:DM) = m |> toRows |> Seq.mapi f |> ofRows
+
     /// Maps function `f` to the columns of matrices `m1` and `m2`
     let inline map2Cols (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toCols) (m2 |> toCols) |> ofCols
+
     /// Maps function `f` to the rows of matrices `m1` and `m2`
     let inline map2Rows (f:DV->DV->DV) (m1:DM) (m2:DM) = Seq.map2 f (m1 |> toRows) (m2 |> toRows) |> ofRows
+
     /// Maps function `f` to the columns of matrices `m1` and `m2`. Column indices are also supplied to `f`.
     let inline mapi2Cols (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toCols) (m2 |> toCols) |> ofCols
+
     /// Maps function `f` to the rows of matrices `m1` and `m2`. Row indices are also supplied to `f`.
     let inline mapi2Rows (f:int->DV->DV->DV) (m1:DM) (m2:DM) = Seq.mapi2 f (m1 |> toRows) (m2 |> toRows) |> ofRows
+
     /// Maximum of the entries of matrix `m`
     let inline max (m:DM) = DM.Max(m)
+
     /// Index of the maximum entry of matrix `m`
     let inline maxIndex (m:DM) = DM.MaxIndex(m)
+
     /// Minimum of the entries of matrix `m`
     let inline min (m:DM) = DM.Min(m)
+
     /// Index of the minimum entry of matrix `m`
     let inline minIndex (m:DM) = DM.MinIndex(m)
+
     /// Mean of matrix `m`
     let inline mean (m:DM) = DM.Mean(m)
+
     /// Average of matrix `m`. Same with mean.
     let average = mean
+
     /// Standard deviation of matrix `m`
     let inline standardDev (m:DM) = DM.StandardDev(m)
+
     /// Variance of matrix `m`
     let inline variance (m:DM) = DM.Variance(m)
+
     /// Shift and scale the elements of matrix `m` to have zero mean and unit variance
     let inline standardize (m:DM) = DM.Standardize(m)
+
     /// Shift and scale the elements of matrix `m` to be in the range [0, 1]
     let inline normalize (m:DM) = DM.Normalize(m)
+
     /// Solve a system of linear equations Ax = b, where the coefficient matrix `m` has general form
     let inline solve (m:DM) (v:DV) = DM.Solve(m, v)
+
     /// Solve a system of linear equations Ax = b, where the coefficient matrix `m` is symmetric
     let inline solveSymmetric (m:DM) (v:DV) = DM.SolveSymmetric(m, v)
+
     /// Sums the elements of matrix `m`
     let inline sum (m:DM) = DM.Sum(m)
+
     /// Trace of matrix `m`
     let inline trace (m:DM) = DM.Trace(m)
+
     /// Append row `v` to matrix `m`
     let inline appendRow (v:DV) (m:DM) = let rows = m |> toRows in Seq.append rows (seq [v]) |> ofRows
+
     /// Prepend row `v` to matrix `m`
     let inline prependRow (v:DV) (m:DM) = let rows = m |> toRows in Seq.append (seq [v]) rows |> ofRows
+
     /// Append column `v` to matrix `m`
     let inline appendCol (v:DV) (m:DM) = let cols = m |> toCols in Seq.append cols (seq [v]) |> ofCols
+
     /// Prepend column `v` to matrix `m`
     let inline prependCol (v:DV) (m:DM) = let cols = m |> toCols in Seq.append (seq [v]) cols |> ofCols
+
     /// Experimental
     let inline toString (m:DM) = m.ToString()
     let inline visualize (m:DM) = m.Visualize()
@@ -2982,8 +3138,10 @@ module DM =
 /// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
 module DOps =
+
     /// Explicit conversion between types where it is permitted. For example: DV -> float32[], float32[,] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
+
     /// Create a vector from sequence `v`
     let inline toDV (v:seq<_>) = 
         match v with
@@ -2991,6 +3149,7 @@ module DOps =
             v |> Seq.toArray |> DV.ofArray
         | _ ->
             v |> Seq.toArray |> Array.map float32 |> DV
+
     /// Create a matrix form sequence of sequences `m`
     let inline toDM (m:seq<seq<_>>) = 
         match m with
@@ -2998,22 +3157,30 @@ module DOps =
             m |> array2D |> DM.ofArray2D
         | _ ->
             m |> array2D |> Array2D.map float32 |> DM
+
     /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
     let inline makeForward i (t:^a) (p:^a) = 
         (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
+
     /// Make reverse AD type, with tag `i` and primal `p`
     let inline makeReverse i (p:^a) = 
         (^a : (member GetReverse : uint32 -> ^a) p, i)
+
     /// Get the primal value of `d`
     let inline primal (d:^a when ^a : (member P : ^a)) = (^a : (member P : ^a) d)
+
     /// Get the deepest primal value of `d`
     let inline primalDeep (d:^a when ^a : (member PD: ^a)) = (^a :(member PD :^a) d)
+
     /// Get the tangent value of `d`
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
+
     /// Get the adjoint value of `d`
     let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
+
     /// Get the primal and tangent values of `d`, as a tuple
     let inline primalTangent d = d |> primal, d |> tangent
+
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:obj) =
         let rec resetRec (ds:obj list) =
@@ -3287,6 +3454,7 @@ module DOps =
                     | _ -> resetRec t
                 | _ -> resetRec t
         resetRec [d]
+
     /// Pushes the adjoint `v` backward through the evaluation trace of `d`
     let reversePush (v:obj) (d:obj) =
         let inline bx v d = box v, box d
@@ -3614,6 +3782,7 @@ module DOps =
                     | _ -> pushRec t
                 | _ -> pushRec t
         pushRec [(v, d)]
+
     /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
     let reverseProp (v:obj) (d:obj) =
         d |> reverseReset

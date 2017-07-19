@@ -45,12 +45,16 @@ open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
 
-/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode 
+/// AD, with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
-    | D of float // Primal
-    | DF of D * D * uint32 // Primal, tangent, tag
-    | DR of D * (D ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    /// Primal
+    | D of double 
+    /// Primal, tangent, tag (for forward mode)
+    | DF of primal: D * tanget: D * tag: uint32 
+    /// Primal, adjoint, state (for reverse mode)
+    | DR of primal: D * adjoint: (D ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32 
 
     /// Primal value of this D
     member d.P =
@@ -58,6 +62,7 @@ type D =
         | D(_) -> d
         | DF(ap,_,_) -> ap
         | DR(ap,_,_,_,_) -> ap
+
     /// Deepest primal value of this D
     member d.PD =
         let rec prec x =
@@ -66,12 +71,14 @@ type D =
             | DF(xp,_,_) -> prec xp
             | DR(xp,_,_,_,_) -> prec xp
         prec d
+
     /// Tangent value of this D
     member d.T =
         match d with
         | D(_) -> D 0.
         | DF(_,at,_) -> at
         | DR(_,_,_,_,_) -> failwith "Cannot get tangent value of DR."
+
     /// Adjoint value of this D
     member d.A
         with get() =
@@ -84,6 +91,7 @@ type D =
             | D(_) -> ()
             | DF(_,_,_) -> failwith "Cannot set adjoint value of DF."
             | DR(_,a,_,_,_) -> a := v
+
     /// Fan-out counter of this D
     member d.F
         with get() =
@@ -96,8 +104,11 @@ type D =
             | D(_) -> failwith "Cannot set fan-out value of D."
             | DF(_,_,_) -> failwith "Cannot set fan-out value of DF."
             | DR(_,_,_,f,_) -> f := v
+
     member d.GetForward(t:D, i:uint32) = DF(d, t, i)
+
     member d.GetReverse(i:uint32) = DR(d, ref (D 0.), Noop, ref 0u, i)
+
     member d.Copy() =
         match d with
         | D(ap) -> D(ap)
@@ -105,7 +116,9 @@ type D =
         | DR(ap,aa,at,af,ai) -> DR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
 
     static member Zero = D 0.
+
     static member One = D 1.
+
     static member op_Explicit(d:D):float =
         let rec prec x =
             match x with
@@ -113,20 +126,24 @@ type D =
             | DF(xp,_,_) -> prec xp
             | DR(xp,_,_,_,_) -> prec xp
         prec d
+
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
             | :? D as d2 -> compare ((float) d) ((float) d2)
             | _ -> invalidArg "" "Cannot compare this D with another type."
+
     override d.Equals(other) =
         match other with
         | :? D as d2 -> compare ((float) d) ((float) d2) = 0
         | _ -> false
+
     override d.GetHashCode() =
         match d with
         | D(ap) -> hash [|ap|]
         | DF(ap,at,ai) -> hash [|ap; at; ai|]
         | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
+
     override d.ToString() =
         let (d':float) = D.op_Explicit(d)
         match d with
@@ -220,10 +237,10 @@ type D =
 
     static member Pow (a:D, b:D) =
         let inline ff(a, b) = a ** b
-        let inline fd(a, b) = a ** b
+        let inline fd(a:D, b:D) = a ** b
         let inline df_da(cp, ap, at) = at * (ap ** (b - D 1.)) * b
         let inline df_db(cp, bp, bt) = bt * cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.)) * (at * bp + ap * bt * log ap)
+        let inline df_dab(cp:D, ap:D, at:D, bp:D, bt:D) = (ap ** (bp - D 1.)) * (at * bp + ap * bt * log ap)
         let inline r_d_d(a, b) = Pow_D_D(a, b)
         let inline r_d_c(a, b) = Pow_D_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_D(a, b)
@@ -278,108 +295,126 @@ type D =
         let inline df(cp, ap, at) = at / ap
         let inline r(a) = Log_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Log10 (a:D) =
         let inline ff(a) = log10 a
         let inline fd(a) = log10 a
         let inline df(cp, ap:D, at) = at / (ap * log10ValFloat64)
         let inline r(a) = Log10_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Exp (a:D) =
         let inline ff(a) = exp a
         let inline fd(a) = exp a
         let inline df(cp, ap, at) = at * cp // cp = exp ap
         let inline r(a) = Exp_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sin (a:D) =
         let inline ff(a) = sin a
         let inline fd(a) = sin a
         let inline df(cp, ap, at) = at * cos ap
         let inline r(a) = Sin_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Cos (a:D) =
         let inline ff(a) = cos a
         let inline fd(a) = cos a
         let inline df(cp, ap, at) = -at * sin ap
         let inline r(a) = Cos_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Tan (a:D) =
         let inline ff(a) = tan a
         let inline fd(a) = tan a
         let inline df(cp, ap, at) = let cosa = cos ap in at / (cosa * cosa)
         let inline r(a) = Tan_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member (~-) (a:D) =
         let inline ff(a) = -a
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sqrt (a:D) =
         let inline ff(a) = sqrt a
         let inline fd(a) = sqrt a
         let inline df(cp, ap, at) = at / ((D 2.) * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sinh (a:D) =
         let inline ff(a) = sinh a
         let inline fd(a) = sinh a
         let inline df(cp, ap, at) = at * cosh ap
         let inline r(a) = Sinh_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Cosh (a:D) =
         let inline ff(a) = cosh a
         let inline fd(a) = cosh a
         let inline df(cp, ap, at) = at * sinh ap
         let inline r(a) = Cosh_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Tanh (a:D) =
         let inline ff(a) = tanh a
         let inline fd(a) = tanh a
         let inline df(cp, ap, at) = let cosha = cosh ap in at / (cosha * cosha)
         let inline r(a) = Tanh_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Asin (a:D) =
         let inline ff(a) = asin a
         let inline fd(a) = asin a
         let inline df(cp, ap, at) = at / sqrt (D 1. - ap * ap)
         let inline r(a) = Asin_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Acos (a:D) =
         let inline ff(a) = acos a
         let inline fd(a) = acos a
         let inline df(cp, ap, at) = -at / sqrt (D 1. - ap * ap)
         let inline r(a) = Acos_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Atan (a:D) =
         let inline ff(a) = atan a
         let inline fd(a) = atan a
         let inline df(cp, ap, at) = at / (D 1. + ap * ap)
         let inline r(a) = Atan_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Abs (a:D) =
         let inline ff(a) = abs a
         let inline fd(a) = abs a
         let inline df(cp, ap, at) = at * D.Sign(ap)
         let inline r(a) = Abs_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sign (a:D) =
         let inline ff(a) = signummod a
         let inline fd(a) = D.Sign(a)
         let inline df(cp, ap, at) = D 0.
         let inline r(a) = Sign_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Floor (a:D) =
         let inline ff(a) = floor a
         let inline fd(a) = floor a
         let inline df(cp, ap, at) = D 0.
         let inline r(a) = Floor_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Ceiling (a:D) =
         let inline ff(a) = ceil a
         let inline fd(a) = ceil a
         let inline df(cp, ap, at) = D 0.
         let inline r(a) = Ceil_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Round (a:D) =
         let inline ff(a) = round a
         let inline fd(a) = round a
@@ -874,10 +909,10 @@ and DV =
     /// Element-wise power of `a` and `b`
     static member Pow (a:DV, b:DV) =
         let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_V_V((fun x y -> x ** y), a, b)
-        let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.)) .* b
+        let inline fd(a:DV, b:DV) = a ** b
+        let inline df_da(cp:DV, ap:DV, at:DV) = at .* (ap ** (b - D 1.)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.)) .* ((at .* bp) + (ap .* bt .* log ap))
+        let inline df_dab(cp:DV, ap:DV, at:DV, bp:DV, bt:DV) = (ap ** (bp - D 1.)) .* ((at .* bp) + (ap .* bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_DV(a, b)
         let inline r_d_c(a, b) = Pow_DV_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
@@ -994,7 +1029,7 @@ and DV =
     /// Generate a vector where each corresponding element of vector `a` is raised to the power of scalar `b`
     static member Pow (a:DV, b:D) =
         let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_V((fun v -> v ** b), a)
-        let inline fd(a, b) = a ** b
+        let inline fd(a:DV, b:D) = a ** b
         let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D 1.)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
         let inline df_dab(cp, ap:DV, at:DV, bp:D, bt:D) = (ap ** (bp - D 1.)) .* ((at * bp) + (ap * bt .* log ap))
@@ -1385,11 +1420,15 @@ and DV =
         sb.ToString()
 
 
-/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
+/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting 
+/// capability, using tags to avoid perturbation confusion
 and DM =
-    | DM of float[,] // Primal
-    | DMF of DM * DM * uint32 // Primal, tangent, tag
-    | DMR of DM * (DM ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    /// Primal
+    | DM of double[,] 
+    /// Primal, tangent, tag (for forward mode)
+    | DMF of primal: DM * tanget: DM * tag: uint32 
+    /// Primal, adjoint, state (for reverse mode)
+    | DMR of primal: DM * adjoint: (DM ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32
 
     /// Primal value of this DM
     member d.P =
@@ -1397,6 +1436,7 @@ and DM =
         | DM(_) -> d
         | DMF(ap,_,_) -> ap
         | DMR(ap,_,_,_,_) -> ap
+
     /// Deepest primal value of this DM
     member d.PD =
         let rec prec x =
@@ -1405,12 +1445,14 @@ and DM =
             | DMF(xp,_,_) -> prec xp
             | DMR(xp,_,_,_,_) -> prec xp
         prec d
+
     /// Tangent value of this DM
     member d.T =
         match d with
         | DM(_) -> DM.ZeroMN d.Rows d.Cols
         | DMF(_,at,_) -> at
         | DMR(_,_,_,_,_) -> failwith "Cannot get tangent value of DMR."
+
     /// Adjoint value of this DM
     member d.A
         with get() =
@@ -1423,6 +1465,7 @@ and DM =
             | DM(_) -> ()
             | DMF(_,_,_) -> failwith "Cannot set adjoint value of DMF."
             | DMR(_,a,_,_,_) -> a := v
+
     /// Fan-out value of this DM
     member d.F
         with get() =
@@ -1923,10 +1966,10 @@ and DM =
 
     static member Pow (a:DM, b:DM) =
         let inline ff(a, b) = GlobalConfig.Float64Backend.Map2_F_M_M((fun x y -> x ** y), a, b)
-        let inline fd(a, b) = a ** b
-        let inline df_da(cp, ap, at) = at .* (ap ** (b - D 1.)) .* b
+        let inline fd(a:DM, b:DM) = a ** b
+        let inline df_da(cp:DM, ap:DM, at:DM) = at .* (ap ** (b - D 1.)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap, at, bp, bt) = (ap ** (bp - D 1.)) .* (at .* bp + ap .* bt .* log ap)
+        let inline df_dab(cp:DM, ap:DM, at:DM, bp:DM, bt:DM) = (ap ** (bp - D 1.)) .* (at .* bp + ap .* bt .* log ap)
         let inline r_d_d(a, b) = Pow_DM_DM(a, b)
         let inline r_d_c(a, b) = Pow_DM_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_DM(a, b)
@@ -2055,7 +2098,7 @@ and DM =
 
     static member Pow (a:DM, b:D) =
         let inline ff(a, b) = GlobalConfig.Float64Backend.Map_F_M((fun v -> v ** b), a)
-        let inline fd(a, b) = a ** b
+        let inline fd(a:DM, b:D) = a ** b
         let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D 1.)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
         let inline df_dab(cp, ap:DM, at:DM, bp:D, bt:D) = (ap ** (bp - D 1.)) .* ((at * bp) + (ap * bt .* log ap))
@@ -2982,8 +3025,10 @@ module DM =
 /// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
 module DOps =
+
     /// Explicit conversion between types where it is permitted. For example: DV -> float[], float[,] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
+
     /// Create a vector from sequence `v`
     let inline toDV (v:seq<_>) = 
         match v with
@@ -2991,6 +3036,7 @@ module DOps =
             v |> Seq.toArray |> DV.ofArray
         | _ ->
             v |> Seq.toArray |> Array.map float |> DV
+
     /// Create a matrix form sequence of sequences `m`
     let inline toDM (m:seq<seq<_>>) = 
         match m with
@@ -2998,22 +3044,30 @@ module DOps =
             m |> array2D |> DM.ofArray2D
         | _ ->
             m |> array2D |> Array2D.map float |> DM
+
     /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
     let inline makeForward i (t:^a) (p:^a) = 
         (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
+
     /// Make reverse AD type, with tag `i` and primal `p`
     let inline makeReverse i (p:^a) = 
         (^a : (member GetReverse : uint32 -> ^a) p, i)
+
     /// Get the primal value of `d`
     let inline primal (d:^a when ^a : (member P : ^a)) = (^a : (member P : ^a) d)
+
     /// Get the deepest primal value of `d`
     let inline primalDeep (d:^a when ^a : (member PD: ^a)) = (^a :(member PD :^a) d)
+
     /// Get the tangent value of `d`
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
+
     /// Get the adjoint value of `d`
     let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
+
     /// Get the primal and tangent values of `d`, as a tuple
     let inline primalTangent d = d |> primal, d |> tangent
+
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:obj) =
         let rec resetRec (ds:obj list) =
@@ -3287,6 +3341,7 @@ module DOps =
                     | _ -> resetRec t
                 | _ -> resetRec t
         resetRec [d]
+
     /// Pushes the adjoint `v` backward through the evaluation trace of `d`
     let reversePush (v:obj) (d:obj) =
         let inline bx v d = box v, box d

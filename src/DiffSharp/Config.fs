@@ -92,7 +92,9 @@ type GlobalConfig() =
     static member FixedPointMaxIterations = C.FixedPointMaxIterations
     static member Float32VisualizationContrast = C.Float32VisualizationContrast
     static member Float64VisualizationContrast = C.Float64VisualizationContrast
+
     static member GrayscalePalette = C.GrayscalePalette
+
     static member SetBackend(backend:string) =
         match backend with
         | "OpenBLAS" ->
@@ -100,6 +102,7 @@ type GlobalConfig() =
                     Float32Backend = OpenBLAS.Float32Backend()
                     Float64Backend = OpenBLAS.Float64Backend()}
         | _ -> invalidArg "" "Unsupported backend. Try: OpenBLAS"
+
     static member SetEpsilon(e:float32) = 
         C <- {C with
                 Float32Epsilon = e
@@ -108,32 +111,39 @@ type GlobalConfig() =
                 Float64EpsilonRec = 1. / (float e)
                 Float32EpsilonRec2 = 0.5f / e
                 Float64EpsilonRec2 = 0.5 / (float e)}
+
     static member SetEpsilon(e:float) = 
         C <- {C with
                 Float32Epsilon = float32 e
-                Float64Epsilon = e;
+                Float64Epsilon = e
                 Float32EpsilonRec = 1.f / (float32 e)
                 Float64EpsilonRec = 1. / e
                 Float32EpsilonRec2 = 0.5f / (float32 e)
                 Float64EpsilonRec2 = 0.5 / e}
+
     static member SetFixedPointEpsilon(e:float32) =
         C <- {C with 
                 Float32FixedPointEpsilon = e
                 Float64FixedPointEpsilon = float e}
+
     static member SetFixedPointEpsilon(e:float) =
         C <- {C with
                 Float32FixedPointEpsilon = float32 e
                 Float64FixedPointEpsilon = e}
+
     static member SetFixedPointMaxIterations(i:int) =
         C <- {C with FixedPointMaxIterations = i}
+
     static member SetVisualizationContrast(c:float32) =
         C <- {C with
                 Float32VisualizationContrast = c
                 Float64VisualizationContrast = float c}
+
     static member SetVisualizationContrast(c:float) =
         C <- {C with
                 Float32VisualizationContrast = float32 c
                 Float64VisualizationContrast = c}
+
     static member SetVisualizationPalette(palette:string) =
         match palette with
         | "ASCII" ->
