@@ -2,6 +2,7 @@ language: csharp
 solution: DiffSharp.sln
 os:
   - linux
+  - osx
 mono:
   - latest
 script:
