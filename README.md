@@ -16,7 +16,9 @@ You can come and join the Gitter chat room, if you want to chat with us:
 
 ### Current build status
 
-[![Build status](https://ci.appveyor.com/api/projects/status/wxgs03g5g1affxrs?svg=true)](https://ci.appveyor.com/project/gbaydin/diffsharp)
+[![Build status (Windows)](https://ci.appveyor.com/api/projects/status/wxgs03g5g1affxrs?svg=true)](https://ci.appveyor.com/project/gbaydin/diffsharp)
+
+[![Build Status (Unix/Mono)](https://travis-ci.org/DiffSharp/DiffSharp.svg?branch=master)](https://travis-ci.org/DiffSharp/DiffSharp)
 
 ### License
 
