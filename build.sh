@@ -17,6 +17,9 @@
 #fi
 #sudo ldconfig
 
+sudo apt-get -y update
+sudo apt-get -y install libopenblas-dev
+
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib/OpenBLAS-v0.2.14-Linux64
 
 mono .paket/paket.bootstrapper.exe && \

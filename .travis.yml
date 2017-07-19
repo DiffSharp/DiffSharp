@@ -1,11 +1,19 @@
 language: csharp
 solution: DiffSharp.sln
+
+# sudo to install packages
+sudo: required 
+
+# xenial to attempt to get a fairly recent openblas
+dist: xenial 
+
 os:
   - linux
 mono:
   - latest
 script:
   - ./build.sh
+
 notifications:
   email:
     on_success: never
