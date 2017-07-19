@@ -5,10 +5,7 @@ os:
 mono:
   - latest
 script:
-  - mono .paket/paket.bootstrapper.exe
-  - mono .paket/paket.exe restore
-  - xbuild /p:Configuration=Release /p:Platform=x64 /p:TargetFramework=net46 DiffSharp.sln
-  - mono ./packages/NUnit.Runners/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
+  - ./build.sh
 notifications:
   email:
     on_success: never

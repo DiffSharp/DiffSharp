@@ -44,19 +44,19 @@ open System.Threading.Tasks
 
 
 /// Gets the first term of a 3-tuple
-let inline fst3 (f, _, _) = f
+let inline p13 (f, _, _) = f
 
 /// Gets the second term of a 3-tuple
-let inline snd3 (_, s, _) = s
+let inline p23 (_, s, _) = s
 
 /// Gets the tail of a 3-tuple
-let inline trd (_, _, t) = t
+let inline p33 (_, _, t) = t
 
 /// Gets the first and third terms of a 3-tuple
-let inline fsttrd (f, _, t) = (f, t)
+let inline drop2Of3 (f, _, t) = (f, t)
 
 /// Gets the second and third terms of a 3-tuple
-let inline sndtrd (_, s, t) = (s, t)
+let inline drop1Of3 (_, s, t) = (s, t)
 
 /// Value of log 10.
 let log10ValFloat64 = log 10.
@@ -65,7 +65,7 @@ let log10ValFloat32 = log 10.f
 /// Computes a combined hash code for the objects in array `o`
 let inline hash (o:obj[]) =
     Array.map (fun a -> a.GetHashCode()) o
-    |> Seq.fold (fun acc elem -> acc * 23 + elem) 17
+    |> Array.fold (fun acc elem -> acc * 23 + elem) 17
 
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are zero
 let inline standardBasis (n:int) (i:int) = 
@@ -136,9 +136,8 @@ module ErrorMessages =
     
 
 /// Tagger for generating incremental integers
-type Tagger =
-    val mutable LastTag : uint32
-    new(t) = {LastTag = t}
+type Tagger(t) =
+    member val LastTag = t with get,set
     member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
 
 /// Global tagger for nested D operations

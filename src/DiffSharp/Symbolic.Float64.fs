@@ -289,7 +289,7 @@ module DiffOps =
     /// Gradient and Hessian of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let gradhessian f =
         let fgh = gradhessian' f
-        fun x -> fgh x |> sndtrd
+        fun x -> fgh x |> drop1Of3
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curl' f x =
