@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0577d15f-366a-4eb7-9baf-73c42a38ca33</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -14,29 +14,6 @@
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>Dsbench</Name>
     <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x64</PlatformTarget>
-    <DocumentationFile>bin\Debug\DiffSharp.Tests.XML</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x64</PlatformTarget>
-    <DocumentationFile>bin\Release\DiffSharp.Tests.XML</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

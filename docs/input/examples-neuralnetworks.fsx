@@ -305,34 +305,35 @@ The following code reads the standard MNIST files into matrices.
 
 open System.IO
 
-type MNIST =
-    static member Load(filename, items) =
+module MNIST =
+
+    let Load(filename, numItems) =
         let d = new BinaryReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
         let magicnumber = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2049 -> // Labels
-            let maxitems = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
-            d.ReadBytes(min items maxitems)
+            let maxItems = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
+            d.ReadBytes(min numItems maxItems)
             |> Array.map float |> DV
             |> DM.ofDV 1
         | 2051 -> // Images
             let maxitems = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
             let rows = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
             let cols = d.ReadInt32() |> System.Net.IPAddress.NetworkToHostOrder
-            let n = min items maxitems
+            let n = min numItems maxitems
             d.ReadBytes(n * rows * cols)
             |> Array.map float |> DV
             |> DM.ofDV n
             |> DM.transpose
         | _ -> failwith "Given file is not in the MNIST format."
-    static member Load(filename) = MNIST.Load(filename, System.Int32.MaxValue)
+
 
 (**
 For a quick demonstration, let's start by loading 10,000 training images and their class labels.
 *)
 
-let mnistTrainX = MNIST.Load("C:/datasets/MNIST/train-images.idx3-ubyte", 10000)
-let mnistTrainY = MNIST.Load("C:/datasets/MNIST/train-labels.idx1-ubyte", 10000)
+let mnistTrainX = MNIST.Load("C:/datasets/MNIST/train-images-idx3-ubyte", 10000)
+let mnistTrainY = MNIST.Load("C:/datasets/MNIST/train-labels-idx1-ubyte", 10000)
 
 (**
 The first matrix, 784x10,000, contains one raster image of 784 pixels (28x28) in each column and the second matrix, 1x10,000, contains the class labels (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) of each of these images.
@@ -347,13 +348,13 @@ $$$
 for a vector $\mathbf{z}$ of length $K$, transforms real-valued scores $z_k$ into a vector $\mathbf{\sigma}$ of components $\sigma_j$ between zero and one, where $\textrm{sum}(\mathbf{\sigma}) = 1$. Thus, the resulting vector $\sigma$ is interpretable as normalized class probabilities.
 *)
 
-let l0 = {W = DM.init 300 784 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
-          b = DV.zeroCreate 300
-          a = tanh}
+let l0 = { W = DM.init 300 784 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
+           b = DV.zeroCreate 300
+           a = tanh}
 
-let l1 = {W = DM.init 10 300 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
-          b = DV.zeroCreate 10
-          a = DM.mapCols softmax}
+let l1 = { W = DM.init 10 300 (fun _ _ -> -0.075 + 0.15 * rnd.NextDouble())
+           b = DV.zeroCreate 10
+           a = DM.mapCols softmax}
 
 let nn = {layers = [|l0; l1|]}
 
@@ -384,8 +385,8 @@ backprop' nn 0.01 10 500 crossEntropy mnistTrainX mnistTrainY
 Let's test the trained network on a few digits from the test set.
 *)
 
-let mnistTestX = MNIST.Load("C:/datasets/MNIST/t10k-images.idx3-ubyte", 5)
-let mnistTestY = MNIST.Load("C:/datasets/MNIST/t10k-labels.idx1-ubyte", 5)
+let mnistTestX = MNIST.Load("C:/datasets/MNIST/t10k-images-idx3-ubyte", 5)
+let mnistTestY = MNIST.Load("C:/datasets/MNIST/t10k-labels-idx1-ubyte", 5)
 
 // Run the test set through the network
 let testY = runNetwork' mnistTestX nn |> primal
@@ -408,7 +409,7 @@ let testTrue = mnistTestY
 
 for i = 0 to testY.Cols - 1 do
     printfn "Predicted label: %i" testPredict.[i]
-    printfn "Image:\n %s" ((mnistTestX.[*,i] |> DM.ofDV 28).Visualize())
+    printfn "Image:\n %s" ((mnistTestX.[*,i] |> DV.toDM 28).Visualize())
 
 (**
     [lang=cs]

@@ -1,14 +1,21 @@
 language: csharp
 solution: DiffSharp.sln
+
+# sudo to install packages
+sudo: required 
+
+before_install:
+  - sudo add-apt-repository ppa:ginggs/julia-backports -y
+  - sudo apt-get update -y
+  - sudo apt-get install libopenblas-dev -y
+
 os:
   - linux
 mono:
   - latest
 script:
-  - mono .paket/paket.bootstrapper.exe
-  - mono .paket/paket.exe restore
-  - msbuild /p:Configuration=Release /p:Platform=x64 /p:TargetFramework=net46 DiffSharp.sln
-  - mono ./packages/NUnit.Runners/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
+  - ./build.sh
+
 notifications:
   email:
     on_success: never
