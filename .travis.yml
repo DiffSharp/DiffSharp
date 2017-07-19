@@ -5,8 +5,6 @@ os:
 mono:
   - latest
 script:
-  - sudo apt-get -y update
-  - sudo apt-get -y install libopenblas-dev
   - ./build.sh
 notifications:
   email:
