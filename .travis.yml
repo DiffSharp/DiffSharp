@@ -4,6 +4,10 @@ solution: DiffSharp.sln
 # sudo to install packages
 sudo: required 
 
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libopenblas-dev
+
 # xenial to attempt to get a fairly recent openblas
 dist: xenial 
 
