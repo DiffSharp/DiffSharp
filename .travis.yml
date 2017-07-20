@@ -5,15 +5,15 @@ solution: DiffSharp.sln
 sudo: required 
 
 before_install:
-  - sudo add-apt-repository ppa:ginggs/julia-backports -y
-  - sudo apt-get update -y
-  - sudo apt-get install libopenblas-dev -y
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository ppa:ginggs/julia-backports -y; sudo apt-get update -y; sudo apt-get install libopenblas-dev -y; fi
 
 os:
   - linux
   - osx
+
 mono:
   - latest
+
 script:
   - ./build.sh
 
