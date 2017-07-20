@@ -278,7 +278,7 @@ and DM(m:ADDM) =
     static member op_Implicit(a:float[,]):DM = DM(a)
     static member Zero = DM(Array2D.empty)
 
-    // DV - DV binary operations
+    // DM - DM binary operations
     static member (+) (a:DM, b:DM) = DM(a.toADDM() + b.toADDM())
     static member (-) (a:DM, b:DM) = DM(a.toADDM() - b.toADDM())
     static member (*) (a:DM, b:DM) = DM(a.toADDM() * b.toADDM())
@@ -286,6 +286,15 @@ and DM(m:ADDM) =
     static member (./) (a:DM, b:DM) = DM(a.toADDM() ./ b.toADDM())
     static member Pow (a:DM, b:DM) = DM(a.toADDM() ** b.toADDM())
     static member Atan2 (a:DM, b:DM) = DM(atan2 (a.toADDM()) (b.toADDM()))
+
+    // DM - DV binary operations
+    static member (+) (a:DV, b:DM) = DM(a.toADDV() + b.toADDM())
+    static member (+) (a:DM, b:DV) = DM(a.toADDM() + b.toADDV())
+    static member (-) (a:DV, b:DM) = DM(a.toADDV() - b.toADDM())
+    static member (-) (a:DM, b:DV) = DM(a.toADDM() - b.toADDV())
+    static member (*) (a:DM, b:DV) = DV(a.toADDM() * b.toADDV())
+    static member (*) (a:DV, b:DM) = DV(a.toADDV() * b.toADDM())
+
     // DV - D binary operations
     static member (+) (a:DM, b:D) = DM(a.toADDM() + b.toADD())
     static member (-) (a:DM, b:D) = DM(a.toADDM() - b.toADD())
