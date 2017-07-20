@@ -65,9 +65,8 @@ type number = float
 type dobj = interface end
 let bxd (x : dobj) = x
 
-
-/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode 
-/// AD, with nesting capability, using tags to avoid perturbation confusion
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD,
+/// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     /// Primal
@@ -329,28 +328,28 @@ type D =
     static member Exp (a:D) =
         let inline ff(a) = exp a
         let inline fd(a) = exp a
-        let inline df(cp, ap, at) = at * cp // cp = exp ap
+        let inline df(cp:D, ap:D, at:D) = at * cp // cp = exp ap
         let inline r(a) = Exp_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Sin (a:D) =
         let inline ff(a) = sin a
         let inline fd(a) = sin a
-        let inline df(cp, ap, at) = at * cos ap
+        let inline df(cp:D, ap:D, at:D) = at * cos ap
         let inline r(a) = Sin_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Cos (a:D) =
         let inline ff(a) = cos a
         let inline fd(a) = cos a
-        let inline df(cp, ap, at) = -at * sin ap
+        let inline df(cp:D, ap:D, at:D) = -at * sin ap
         let inline r(a) = Cos_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Tan (a:D) =
         let inline ff(a) = tan a
         let inline fd(a) = tan a
-        let inline df(cp, ap, at) = let cosa = cos ap in at / (cosa * cosa)
+        let inline df(cp:D, ap:D, at:D) = let cosa = cos ap in at / (cosa * cosa)
         let inline r(a) = Tan_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
@@ -390,8 +389,8 @@ type D =
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Asin (a:D) =
-        let inline ff(a) = asin a
-        let inline fd(a) = asin a
+        let inline ff(a:number) = asin a
+        let inline fd(a:D) = asin a
         let inline df(cp, ap, at) = at / sqrt (D one - ap * ap)
         let inline r(a) = Asin_D(a)
         D.Op_D_D (a, ff, fd, df, r)
@@ -427,7 +426,7 @@ type D =
     static member Floor (a:D) =
         let inline ff(a) = floor a
         let inline fd(a) = floor a
-        let inline df(cp, ap, at) = D zero
+        let inline df(cp:D, ap:D, at:D) = D zero
         let inline r(a) = Floor_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
@@ -444,22 +443,29 @@ type D =
         let inline df(cp, ap, at) = D zero
         let inline r(a) = Round_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member ReLU (a:D) =
         let inline ff(a) = max zero a
         let inline fd(a) = D.ReLU(a)
         let inline df(cp, ap, at:D) = at * (one + D.Sign(ap)) / two
         let inline r(a) = ReLU_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sigmoid (a:D) =
         let inline ff(a) = one / (one + exp -a)
         let inline fd(a) = D.Sigmoid(a)
         let inline df(cp:D, ap, at) = at * cp * (one - cp)
         let inline r(a) = Sigmoid_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member SoftPlus (a:D) = log (one + exp a)
+
     static member SoftSign (a:D) = a / (one + abs a)
+
     static member LogSumExp (a:D) = a
+
     static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / two
+
     static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / two
 
     static member FixedPoint (g:D->D->D) (a0:D) (b:D) =
@@ -527,6 +533,7 @@ and DV =
         | DV(_) -> d
         | DVF(ap,_,_) -> ap
         | DVR(ap,_,_,_,_) -> ap
+
     /// Deepest primal value of this DV
     member d.PD =
         let rec prec x =
@@ -535,12 +542,14 @@ and DV =
             | DVF(xp,_,_) -> prec xp
             | DVR(xp,_,_,_,_) -> prec xp
         prec d
+
     /// Tangent value of this DV
     member d.T =
         match d with
         | DV(_) -> DV.ZeroN d.Length
         | DVF(_,at,_) -> at
         | DVR(_,_,_,_,_) -> failwith "Cannot get tangent value of DVR."
+
     /// Adjoint value of this DV
     member d.A
         with get() =
@@ -553,6 +562,7 @@ and DV =
             | DV(_) -> ()
             | DVF(_,_,_) -> failwith "Cannot set adjoint value of DVF."
             | DVR(_,a,_,_,_) -> a := v
+
     /// Fan-out counter of this DV
     member d.F
         with get() =
@@ -565,18 +575,23 @@ and DV =
             | DV(_) -> failwith "Cannot set fan-out value of DV."
             | DVF(_,_,_) -> failwith "Cannot set fan-out value of DVF."
             | DVR(_,_,_,f,_) -> f := v
+
     member d.GetForward(t:DV, i:uint32) = DVF(d, t, i)
+
     member d.GetReverse(i:uint32) = DVR(d, ref (DV.ZeroN d.Length), Noop, ref 0u, i)
+
     member d.Copy() =
         match d with
         | DV(ap) -> DV(Array.copy ap)
         | DVF(ap,at,ai) -> DVF(ap.Copy(), at.Copy(), ai)
         | DVR(ap,aa,at,af,ai) -> DVR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+
     member d.Length =
         match d with
         | DV(ap) -> ap.Length
         | DVF(ap,_,_) -> ap.Length
         | DVR(ap,_,_,_,_) -> ap.Length
+
     member d.Item
         with get i =
             match d with
@@ -599,11 +614,13 @@ and DV =
             Array.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
         | DVR(ap,_,_,_,ai) ->
             Array.init ap.Length (fun i -> DR(ap.[i], ref (D zero), Item_DV(d, i), ref 0u, ai))
+
     member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
         | DVF(ap,at,ai) -> DMF(ap.ToRowDM(), at.ToRowDM(), ai)
         | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowDM() in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), RowMatrix_DV(d), ref 0u, ai)
+
     member d.ToColDM() = DM.Transpose(d.ToRowDM())
 
     override d.ToString() =
@@ -616,6 +633,7 @@ and DV =
         for i = 0 to d.Length - 1 do
             sb.Append(sprintf "% 9.3g " d'.[i]) |> ignore
         sb.ToString()
+
     member d.ToMathematicaString() =
         let (d':number[]) = DV.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -625,6 +643,7 @@ and DV =
             if i < d.Length - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
+
     member d.ToMatlabString() =
         let (d':number[]) = DV.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -634,8 +653,11 @@ and DV =
             if i < d.Length - 1 then sb.Append(" ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+
     static member Zero = DV Array.empty
+
     static member ZeroN n = DV(Array.zeroCreate n)
+
     static member op_Explicit(d:DV):number[] =
         let rec prec x =
             match x with
@@ -643,7 +665,9 @@ and DV =
             | DVF(xp,_,_) -> prec xp
             | DVR(xp,_,_,_,_) -> prec xp
         prec d
+
     static member op_Explicit(d) = DV(d)
+
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
@@ -655,6 +679,7 @@ and DV =
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array.map (fun x -> x.P)
             let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV_ofDs(a), ref 0u, ai)
+
     static member Split(d:DV, n:seq<int>) =
         match d with
         | DV(ap) ->
@@ -1363,7 +1388,9 @@ and DV =
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member SoftPlus (a:DV) = log (one + exp a)    
+
     static member SoftSign (a:DV) = a ./ (one + abs a)
+
     static member LogSumExp (a:DV) =
         let inline ff(a) = 
             let m = Array.max a
@@ -1376,17 +1403,21 @@ and DV =
 
     static member Mean (a:DV) =
         DV.Sum(a) / a.Length
+
     static member Variance (a:DV) =
         let a' = a - DV.Mean(a)
         DV.Sum(a' .* a') / (a.Length - 1)
+
     static member StandardDev (a:DV) =
         DV.Variance(a) |> sqrt
+
     static member Standardize (a:DV) =
         let sd = DV.StandardDev(a)
         if sd = D zero then
             a * (D zero)
         else
             (a - DV.Mean(a)) / DV.StandardDev(a)
+
     static member Normalize (a:DV) =
         let min = DV.Min(a)
         let range = DV.Max(a) - min
@@ -1505,28 +1536,35 @@ and DM =
             | DM(_) -> failwith "Cannot set fan-out value of DM."
             | DMF(_,_,_) -> failwith "Cannot set fan-out value of DMF."
             | DMR(_,_,_,f,_) -> f := v
+
     member d.GetForward(t:DM, i:uint32) = DMF(d, t, i)
+
     member d.GetReverse(i:uint32) = DMR(d, ref (DM.ZeroMN d.Rows d.Cols), Noop, ref 0u, i)
+
     member d.Copy() =
         match d with
         | DM(ap) -> DM(Array2D.copy ap)
         | DMF(ap,at,ai) -> DMF(ap.Copy(), at.Copy(), ai)
         | DMR(ap,aa,at,af,ai) -> DMR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+
     member d.Length =
         match d with
         | DM(ap) -> ap.Length
         | DMF(ap,_,_) -> ap.Length
         | DMR(ap,_,_,_,_) -> ap.Length
+
     member d.Rows =
         match d with
         | DM(ap) -> Array2D.length1 ap
         | DMF(ap,_,_) -> ap.Rows
         | DMR(ap,_,_,_,_) -> ap.Rows
+
     member d.Cols =
         match d with
         | DM(ap) -> Array2D.length2 ap
         | DMF(ap,_,_) -> ap.Cols
         | DMR(ap,_,_,_,_) -> ap.Cols
+
     member d.Item
         with get (i, j) =
             match d with
@@ -1543,6 +1581,7 @@ and DM =
         | DM(ap) -> DM(ap.[rowStart..rowFinish, colStart..colFinish])
         | DMF(ap,at,ai) -> DMF(ap.[rowStart..rowFinish, colStart..colFinish], at.[rowStart..rowFinish, colStart..colFinish], ai)
         | DMR(ap,_,_,_,ai) -> let cp = ap.[rowStart..rowFinish, colStart..colFinish] in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Slice_DM(d, rowStart, rowFinish), ref 0u, ai)
+
     member d.GetSlice(row, colStart, colFinish) =
         let colStart = defaultArg colStart 0
         let colFinish = defaultArg colFinish (d.Cols - 1)
@@ -1550,6 +1589,7 @@ and DM =
         | DM(ap) -> DV(ap.[row, colStart..colFinish])
         | DMF(ap,at,ai) -> DVF(ap.[row, colStart..colFinish], at.[row, colStart..colFinish], ai)
         | DMR(ap,_,_,_,ai) -> let cp = ap.[row, colStart..colFinish] in DVR(cp, ref (DV.ZeroN cp.Length), SliceRow_DM(d, row, colStart), ref 0u, ai)
+
     member d.GetSlice(rowStart, rowFinish, col) =
         let rowStart = defaultArg rowStart 0
         let rowFinish = defaultArg rowFinish (d.Rows - 1)
@@ -1560,6 +1600,7 @@ and DM =
 
     member d.GetRows() =
         seq {for i = 0 to d.Rows - 1 do yield d.[i,*]}
+
     member d.GetCols() =
         seq {for j = 0 to d.Cols - 1 do yield d.[*,j]}
 
@@ -1575,6 +1616,7 @@ and DM =
                 sb.Append(sprintf "% 9.3g " d'.[i, j]) |> ignore
             if i < d.Rows - 1 then sb.AppendLine() |> ignore
         sb.ToString()
+
     member d.ToMathematicaString() =
         let (d':number[,]) = DM.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -1588,6 +1630,7 @@ and DM =
             if i <> d.Rows - 1 then sb.Append(", ") |> ignore
         sb.Append("}") |> ignore
         sb.ToString()
+
     member d.ToMatlabString() =
         let (d':number[,]) = DM.op_Explicit(d)
         let sb = System.Text.StringBuilder()
@@ -1599,8 +1642,11 @@ and DM =
             if i < d.Rows - 1 then sb.Append("; ") |> ignore
         sb.Append("]") |> ignore
         sb.ToString()
+
     static member Zero = DM Array2D.empty
+
     static member ZeroMN m n = DM (Array2D.zeroCreate m n)
+
     static member op_Explicit(d:DM):number[,] =
         let rec prec x =
             match x with
@@ -1608,7 +1654,9 @@ and DM =
             | DMF(xp,_,_) -> prec xp
             | DMR(xp,_,_,_,_) -> prec xp
         prec d
+
     static member op_Explicit(d:number[,]) = DM(d)
+
     static member OfArray2D (a:D[,]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0, 0] with
@@ -1620,10 +1668,12 @@ and DM =
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array2D.map (fun x -> x.P)
             let cp = DM.OfArray2D(ap) in DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), Make_DM_ofDs(a), ref 0u, ai)
+
     // Creates a matrix with `m` rows from array `a`, filling columns from left to right and rows from top to bottom. The number of columns will be deduced from `m` and the length of `a`. The length of `a` must be an integer multiple of `m`.
     static member OfArray (m:int, a:D[]) =
         let n = a.Length / m
         Array2D.init m n (fun i j -> a.[i * n + j]) |> DM.OfArray2D
+
     static member OfRows (s:seq<DV>) = 
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match Seq.head s with
@@ -2784,7 +2834,8 @@ and TraceOp =
     | Inverse_DM             of DM
     | Det_DM                 of DM
     | ReLU_DM                of DM
-    | Sigmoid_DM             of DM    
+    | Sigmoid_DM             of DM
+    
     | Noop
 
 
@@ -2938,6 +2989,7 @@ module DV =
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DM =
+
     /// Creates a matrix from 2D array `a`
     let inline ofArray2D a = DM.OfArray2D(a)
 
@@ -3161,6 +3213,7 @@ module DM =
 /// D, DV, DM operations (automatically opened)
 [<AutoOpen>]
 module DOps =
+
     /// Explicit conversion between types where it is permitted. For example: DV -> number[], number[,] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
 
@@ -3205,6 +3258,7 @@ module DOps =
 
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:dobj) =
+        // Note, this uses an explicit worklist over (D|DV|DM) to make it tail-recursive
         let rec resetRec (ds:dobj list) =
             match ds with
             | [] -> ()
@@ -3477,19 +3531,21 @@ module DOps =
                 | _ -> resetRec t
         resetRec [d]
 
-    /// Pushes the adjoint `v` backward through the evaluation trace of `d`
-    let reversePush (v:dobj) (d:dobj) =
+    /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
+    let rec reverseProp (v:dobj) (d:dobj) =
         let inline bx v d = bxd v, bxd d
+        // Note, this uses an explicit worklist over (D*D|DV*DV|DM*DM) to make it tail-recursive
         let rec pushRec (ds:(dobj*dobj) list) =
             match ds with
             | [] -> ()
             | (v, d) :: t ->
-                match d with
-                | :? D as d ->
+                match d, v with
+                | (:? D as d), (:? D as v) ->
                     match d with
                     | DR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> D)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_D_D(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3548,8 +3604,7 @@ module DOps =
                                 let mutable i = 0
 
                                 let r = d.A
-                                reverseReset alast
-                                pushRec [bx r alast]
+                                reverseProp r alast
 
                                 while i < imax do
                                     i <- i + 1
@@ -3561,18 +3616,19 @@ module DOps =
                                             //printfn "Fixed point reverse iteration converged, i = %i" i
                                             i <- imax
                                         else
-                                            reverseReset alast
-                                            pushRec [bx (r + aprev.A) alast]
+                                            reverseProp (r + aprev.A) alast
 
                                 pushRec ((bx (bfirst.A) b) :: t) // Propogate converged adjoint back towards the original b at the beginning of the fixed point iteration
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
-                | :? DV as d ->
+
+                | (:? DV as d), (:? DV as v) ->
                     match d with
                     | DVR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> DV)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_DV_DV(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3687,11 +3743,13 @@ module DOps =
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
-                | :? DM as d ->
+
+                | (:? DM as d), (:? DM as v) ->
                     match d with
                     | DMR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> DM)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_DM_DM(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3803,12 +3861,8 @@ module DOps =
                         else pushRec t
                     | _ -> pushRec t
                 | _ -> pushRec t
+        reverseReset d
         pushRec [(v, d)]
-
-    /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
-    let reverseProp (v:dobj) (d:dobj) =
-        d |> reverseReset
-        d |> reversePush v
 
 /// Forward and reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
@@ -3853,8 +3907,7 @@ module DiffOps =
     let inline grad' f x =
         let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
-        z |> reverseReset
-        z |> reversePush (D one)
+        z |> reverseProp (D one)
         (z |> primal, xa |> adjoint)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
@@ -3882,8 +3935,7 @@ module DiffOps =
         let r1 = z |> primal
         let r2 =
             fun (v:'b) ->
-                z |> reverseReset
-                z |> reversePush v
+                z |> reverseProp v
                 xa |> adjoint
         (r1, r2)
 
