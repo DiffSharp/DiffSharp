@@ -184,8 +184,8 @@ let adjoints = e |> computeAdjoints
 
 // Read the adjoint values of the inputs
 // You can calculate all partial derivatives in just one reverse sweep!
-let deda = a.A(adjoints)
-let dedb = b.A(adjoints)
+let deda = adjoints.[a]
+let dedb = adjoints.[b]
 
 (*** hide, define-output: o2 ***)
 printf "val a : D = DR (D 0.5,Noop,219u)
@@ -223,10 +223,10 @@ let adjoints' = e' |> computeAdjoints
 
 // Read the adjoint values
 // You can calculate all partial derivatives in just one reverse sweep!
-let de'da' = a'.A(adjoints')
-let de'db' = b'.A(adjoints')
-let de'dc' = c'.A(adjoints')
-let de'dd' = d'.A(adjoints')
+let de'da' = adjoints'.[a']
+let de'db' = adjoints'.[b']
+let de'dc' = adjoints'.[c']
+let de'dd' = adjoints'.[d']
 
 (*** hide, define-output: o3 ***)
 printf "val a' : D = DR (D 0.5,Noop,221u)

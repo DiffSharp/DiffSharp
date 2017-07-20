@@ -140,8 +140,8 @@ let backprop (n:Network) eta epochs (x:DV[]) (y:DV[]) =
             let adjoints = computeAdjoints L // Propagate adjoint value 1 backward
 
             for l in n.layers do
-                l.W <- primal (l.W.P - eta * l.W.A(adjoints))
-                l.b <- primal (l.b.P - eta * l.b.A(adjoints))
+                l.W <- primal (l.W.P - eta * adjoints.[l.W])
+                l.b <- primal (l.b.P - eta * adjoints.[l.b])
 
             printfn "Iteration %i, loss %f" j (float L)
             yield float L}
@@ -287,8 +287,8 @@ let backprop' (n:Network') (eta:float) epochs mbsize loss (x:DM) (y:DM) =
             let adjoints = computeAdjoints L  
 
             for l in n.layers do
-                l.W <- primal (l.W.P - eta * l.W.A(adjoints))
-                l.b <- primal (l.b.P - eta * l.b.A(adjoints))
+                l.W <- primal (l.W.P - eta * adjoints.[l.W])
+                l.b <- primal (l.b.P - eta * adjoints.[l.b])
 
             printfn "Epoch %i, minibatch %i, loss %f" j b (float L)
             b <- b + 1
