@@ -69,9 +69,12 @@ let bxd (x : dobj) = x
 /// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
-    | D of number // Primal
-    | DF of D * D * uint32 // Primal, tangent, tag
-    | DR of D * (D ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    /// Primal
+    | D of number
+    /// Primal, tangent, tag (for forward mode)
+    | DF of primal: D * tanget: D * tag: uint32 
+    /// Primal, adjoint, state (for reverse mode)
+    | DR of primal: D * adjoint: (D ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32 
 
     interface dobj
 
@@ -356,18 +359,21 @@ type D =
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sqrt (a:D) =
         let inline ff(a) = sqrt a
         let inline fd(a) = sqrt a
         let inline df(cp, ap, at) = at / ((D two) * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Sinh (a:D) =
         let inline ff(a) = sinh a
         let inline fd(a) = sinh a
         let inline df(cp, ap, at) = at * cosh ap
         let inline r(a) = Sinh_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member Cosh (a:D) =
         let inline ff(a) = cosh a
         let inline fd(a) = cosh a
@@ -451,10 +457,15 @@ type D =
         let inline df(cp:D, ap, at) = at * cp * (one - cp)
         let inline r(a) = Sigmoid_D(a)
         D.Op_D_D (a, ff, fd, df, r)
+
     static member SoftPlus (a:D) = log (one + exp a)
+
     static member SoftSign (a:D) = a / (one + abs a)
+
     static member LogSumExp (a:D) = a
+
     static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / two
+
     static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / two
 
     static member FixedPoint (g:D->D->D) (a0:D) (b:D) =
@@ -654,7 +665,9 @@ and DV =
             | DVF(xp,_,_) -> prec xp
             | DVR(xp,_,_,_,_) -> prec xp
         prec d
+
     static member op_Explicit(d) = DV(d)
+
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
@@ -666,6 +679,7 @@ and DV =
         | DR(_,_,_,_,ai) ->
             let ap = a |> Array.map (fun x -> x.P)
             let cp = DV.OfArray(ap) in DVR(cp, ref (DV.ZeroN cp.Length), Make_DV_ofDs(a), ref 0u, ai)
+
     static member Split(d:DV, n:seq<int>) =
         match d with
         | DV(ap) ->
@@ -1462,11 +1476,15 @@ and DV =
         sb.ToString()
 
 
-/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
+/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting 
+/// capability, using tags to avoid perturbation confusion
 and DM =
-    | DM of number[,] // Primal
-    | DMF of DM * DM * uint32 // Primal, tangent, tag
-    | DMR of DM * (DM ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    /// Primal
+    | DM of number[,] 
+    /// Primal, tangent, tag (for forward mode)
+    | DMF of primal: DM * tanget: DM * tag: uint32 
+    /// Primal, adjoint, state (for reverse mode)
+    | DMR of primal: DM * adjoint: (DM ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32
 
     interface dobj
 
@@ -2825,6 +2843,7 @@ and TraceOp =
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DV =
+
     // Note: map operations are not implemented on purpose. To benefit from the performance of BLAS ops, supplied element-wise operations are used. For example: "exp v" instead of "DV.map exp v"
     /// Creates a vector from array `a`
     let inline ofArray a = DV.OfArray(a)
@@ -3239,6 +3258,7 @@ module DOps =
 
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
     let reverseReset (d:dobj) =
+        // Note, this uses an explicit worklist over (D|DV|DM) to make it tail-recursive
         let rec resetRec (ds:dobj list) =
             match ds with
             | [] -> ()
@@ -3511,19 +3531,21 @@ module DOps =
                 | _ -> resetRec t
         resetRec [d]
 
-    /// Pushes the adjoint `v` backward through the evaluation trace of `d`
-    let reversePush (v:dobj) (d:dobj) =
+    /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
+    let rec reverseProp (v:dobj) (d:dobj) =
         let inline bx v d = bxd v, bxd d
+        // Note, this uses an explicit worklist over (D*D|DV*DV|DM*DM) to make it tail-recursive
         let rec pushRec (ds:(dobj*dobj) list) =
             match ds with
             | [] -> ()
             | (v, d) :: t ->
-                match d with
-                | :? D as d ->
+                match d, v with
+                | (:? D as d), (:? D as v) ->
                     match d with
                     | DR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> D)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_D_D(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3582,8 +3604,7 @@ module DOps =
                                 let mutable i = 0
 
                                 let r = d.A
-                                reverseReset alast
-                                pushRec [bx r alast]
+                                reverseProp r alast
 
                                 while i < imax do
                                     i <- i + 1
@@ -3595,18 +3616,19 @@ module DOps =
                                             //printfn "Fixed point reverse iteration converged, i = %i" i
                                             i <- imax
                                         else
-                                            reverseReset alast
-                                            pushRec [(bx (r + aprev.A) alast)]
+                                            reverseProp (r + aprev.A) alast
 
                                 pushRec ((bx (bfirst.A) b) :: t) // Propogate converged adjoint back towards the original b at the beginning of the fixed point iteration
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
-                | :? DV as d ->
+
+                | (:? DV as d), (:? DV as v) ->
                     match d with
                     | DVR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> DV)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_DV_DV(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3721,11 +3743,13 @@ module DOps =
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
-                | :? DM as d ->
+
+                | (:? DM as d), (:? DM as v) ->
                     match d with
                     | DMR(_,_,o,_,_) ->
-                        d.A <- d.A + (v :?> DM)
+                        d.A <- d.A + v
                         d.F <- d.F - 1u
+                        // If all incoming parts of the adjoint have been received, then proceed to the children
                         if d.F = 0u then
                             match o with
                             | Add_DM_DM(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
@@ -3837,12 +3861,8 @@ module DOps =
                         else pushRec t
                     | _ -> pushRec t
                 | _ -> pushRec t
+        reverseReset d
         pushRec [(v, d)]
-
-    /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
-    let reverseProp (v:dobj) (d:dobj) =
-        d |> reverseReset
-        d |> reversePush v
 
 /// Forward and reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
@@ -3887,8 +3907,7 @@ module DiffOps =
     let inline grad' f x =
         let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
-        z |> reverseReset
-        z |> reversePush (D one)
+        z |> reverseProp (D one)
         (z |> primal, xa |> adjoint)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
@@ -3916,8 +3935,7 @@ module DiffOps =
         let r1 = z |> primal
         let r2 =
             fun (v:'b) ->
-                z |> reverseReset
-                z |> reversePush v
+                z |> reverseProp v
                 xa |> adjoint
         (r1, r2)
 
