@@ -18,7 +18,7 @@ DiffSharp is implemented in the F# language and [can be used from C#](csharp.htm
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#C6AEC7">
-        Version 0.7 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version. (If you still need pre-0.7 documentation, <a href="http://diffsharp.github.io/DiffSharp/0.6.3/">here they are</a>).
+        Version 1.0 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version.
     </div>
     </div>
 </div>
@@ -35,7 +35,7 @@ The following features are up and running:
 - _Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)_
 - _Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)_
 
-We are working on the following features for the next release:
+Possible future features include:
 
 - _GPU backend using CUDA/OpenCL_
 - _Generalization to tensors/multidimensional arrays_

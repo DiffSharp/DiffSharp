@@ -41,29 +41,34 @@ namespace DiffSharp.Interop.Float64
 
 open DiffSharp.Util
 
-type internal ADD = DiffSharp.AD.Float64.D
+module AD = DiffSharp.AD.Float64
+module Numerical = DiffSharp.Numerical.Float64
+type number = AD.number
 
-and D(x:ADD) =
-    new(x:float) = D(ADD.D(x))
-    member internal this.toADD() = x
+type internal ADD = AD.D
+type internal ADDV = AD.DV
+type internal ADDM = AD.DM
+
+type D(x:ADD) =
+    new(x:AD.number) = D(ADD.D(x))
+    member internal this.toADD() : ADD = x
     static member internal ADDtoD (x:ADD) = new D(x)
     static member internal DtoADD (x:D) = x.toADD()
 
     member d.P = d.toADD().P |> D.ADDtoD
     member d.T = d.toADD().T |> D.ADDtoD
-    member d.A = d.toADD().A |> D.ADDtoD
 
     override d.ToString() =
         let rec s (d:ADD) =
             match d with
-            | DiffSharp.AD.Float64.D(p) -> sprintf "D %A" p
-            | DiffSharp.AD.Float64.DF(p,t,_) -> sprintf "DF (%A, %A)" (s p) (s t)
-            | DiffSharp.AD.Float64.DR(p,a,_,_,_) -> sprintf "DR (%A, %A)"  (s p) (s !a)
+            | AD.D(p) -> sprintf "D %A" p
+            | AD.DF(p,t,_) -> sprintf "DF (%A, %A)" (s p) (s t)
+            | AD.DR(p,op,_) -> sprintf "DR (%A, %A)"  (s p) (op.ToString())
         s (d.toADD())
-    static member op_Implicit(d:D):float = float (d.toADD())
-    static member op_Implicit(a:float):D = D(a)
-    static member Zero = D(0.)
-    static member One = D(1.)
+    static member op_Explicit(d:D):AD.number = ADD.op_Explicit (d.toADD())
+    static member op_Implicit(a:AD.number):D = D(a)
+    static member Zero = ADD.Zero |> D.ADDtoD
+    static member One = ADD.One  |> D.ADDtoD
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
@@ -81,34 +86,34 @@ and D(x:ADD) =
     static member (/) (a:D, b:D) = D(a.toADD() / b.toADD())
     static member Pow (a:D, b:D) = D(a.toADD() ** b.toADD())
     static member Atan2 (a:D, b:D) = D(atan2 (a.toADD()) (b.toADD()))
-    // D - float binary operations
-    static member (+) (a:D, b:float) = a + (D b)
-    static member (-) (a:D, b:float) = a - (D b)
-    static member (*) (a:D, b:float) = a * (D b)
-    static member (/) (a:D, b:float) = a / (D b)
-    static member Pow (a:D, b:float) = a ** (D b)
-    static member Atan2 (a:D, b:float) = atan2 a (D b)
-    // float - D binary operations
-    static member (+) (a:float, b:D) = (D a) + b
-    static member (-) (a:float, b:D) = (D a) - b
-    static member (*) (a:float, b:D) = (D a) * b
-    static member (/) (a:float, b:D) = (D a) / b
-    static member Pow (a:float, b:D) = (D a) ** b
-    static member Atan2 (a:float, b:D) = atan2 (D a) b
+    // D -  binary operations
+    static member (+) (a:D, b:AD.number) = a + (D b)
+    static member (-) (a:D, b:AD.number) = a - (D b)
+    static member (*) (a:D, b:AD.number) = a * (D b)
+    static member (/) (a:D, b:AD.number) = a / (D b)
+    static member Pow (a:D, b:AD.number) = a ** (D b)
+    static member Atan2 (a:D, b:AD.number) = atan2 a (D b)
+    // AD.number - D binary operations
+    static member (+) (a:AD.number, b:D) = (D a) + b
+    static member (-) (a:AD.number, b:D) = (D a) - b
+    static member (*) (a:AD.number, b:D) = (D a) * b
+    static member (/) (a:AD.number, b:D) = (D a) / b
+    static member Pow (a:AD.number, b:D) = (D a) ** b
+    static member Atan2 (a:AD.number, b:D) = atan2 (D a) b
     // D - int binary operations
-    static member (+) (a:D, b:int) = a + (D (float b))
-    static member (-) (a:D, b:int) = a - (D (float b))
-    static member (*) (a:D, b:int) = a * (D (float b))
-    static member (/) (a:D, b:int) = a / (D (float b))
-    static member Pow (a:D, b:int) = D.Pow(a, (D (float b)))
-    static member Atan2 (a:D, b:int) = D.Atan2(a, (D (float b)))
+    static member (+) (a:D, b:int) = a + (D (AD.N.toNumber b))
+    static member (-) (a:D, b:int) = a - (D (AD.N.toNumber b))
+    static member (*) (a:D, b:int) = a * (D (AD.N.toNumber b))
+    static member (/) (a:D, b:int) = a / (D (AD.N.toNumber b))
+    static member Pow (a:D, b:int) = D.Pow(a, (D (AD.N.toNumber b)))
+    static member Atan2 (a:D, b:int) = D.Atan2(a, (D (AD.N.toNumber b)))
     // int - D binary operations
-    static member (+) (a:int, b:D) = (D (float a)) + b
-    static member (-) (a:int, b:D) = (D (float a)) - b
-    static member (*) (a:int, b:D) = (D (float a)) * b
-    static member (/) (a:int, b:D) = (D (float a)) / b
-    static member Pow (a:int, b:D) = D.Pow((D (float a)), b)
-    static member Atan2 (a:int, b:D) = D.Atan2((D (float a)), b)
+    static member (+) (a:int, b:D) = (D (AD.N.toNumber a)) + b
+    static member (-) (a:int, b:D) = (D (AD.N.toNumber a)) - b
+    static member (*) (a:int, b:D) = (D (AD.N.toNumber a)) * b
+    static member (/) (a:int, b:D) = (D (AD.N.toNumber a)) / b
+    static member Pow (a:int, b:D) = D.Pow((D (AD.N.toNumber a)), b)
+    static member Atan2 (a:int, b:D) = D.Atan2((D (AD.N.toNumber a)), b)
     // D unary operations
     static member Log (a:D) = D(log (a.toADD()))
     static member Log10 (a:D) = D(log10 (a.toADD()))
@@ -134,18 +139,15 @@ and D(x:ADD) =
     static member Max (a:D, b:D) = D(ADD.Max(a.toADD(), b.toADD()))
     static member Min (a:D, b:D) = D(ADD.Min(a.toADD(), b.toADD()))
 
-and internal ADDV = DiffSharp.AD.Float64.DV
-
 and DV(v:ADDV) =
-    new(v:float[]) = DV(ADDV.DV(v))
-    new(v:D[]) = DV(DiffSharp.AD.Float64.DOps.toDV(v |> Array.map D.DtoADD))
+    new(v:AD.number[]) = DV(ADDV.DV(v))
+    new(v:D[]) = DV(AD.DOps.toDV(v |> Array.map D.DtoADD))
     member internal this.toADDV() = v
     static member internal ADDVtoDV (v:ADDV) = new DV(v)
     static member internal DVtoADDV (v:DV) = v.toADDV()
 
     member d.P = d.toADDV().P |> DV.ADDVtoDV
     member d.T = d.toADDV().T |> DV.ADDVtoDV
-    member d.A = d.toADDV().A |> DV.ADDVtoDV
 
     member d.Item
         with get i = d.toADDV().[i] |> D.ADDtoD
@@ -153,14 +155,14 @@ and DV(v:ADDV) =
     override d.ToString() =
         let rec s (d:ADDV) =
             match d with
-            | DiffSharp.AD.Float64.DV(p) -> sprintf "DV %A" p
-            | DiffSharp.AD.Float64.DVF(p,t,_) -> sprintf "DVF (%A, %A)" (s p) (s t)
-            | DiffSharp.AD.Float64.DVR(p,a,_,_,_) -> sprintf "DVR (%A, %A)" (s p) (s !a)
+            | AD.DV(p) -> sprintf "DV %A" p
+            | AD.DVF(p,t,_) -> sprintf "DVF (%A, %A)" (s p) (s t)
+            | AD.DVR(p,op,_) -> sprintf "DVR (%A, %A)" (s p) (op.ToString())
         s (d.toADDV())
     member d.Visualize() = d.toADDV().Visualize()
-    static member op_Implicit(d:DV):float[] = ADDV.op_Explicit(d.toADDV())
-    static member op_Implicit(a:float[]):DV = DV(a)
-    static member Zero = DV(Array.empty<float>)
+    static member op_Explicit(d:DV):AD.number[] = ADDV.op_Explicit(d.toADDV())
+    static member op_Implicit(a:AD.number[]):DV = DV(a)
+    static member Zero = DV(Array.empty<AD.number>)
     // DV - DV binary operations
     static member (+) (a:DV, b:DV) = DV(a.toADDV() + b.toADDV())
     static member (-) (a:DV, b:DV) = DV(a.toADDV() - b.toADDV())
@@ -184,34 +186,34 @@ and DV(v:ADDV) =
     static member (/) (a:D, b:DV) = DV(a.toADD() / b.toADDV())
     static member Pow (a:D, b:DV) = DV(ADDV.Pow(a.toADD(), b.toADDV()))
     static member Atan2 (a:D, b:DV) = DV(ADDV.Atan2(a.toADD(), b.toADDV()))
-    // DV - float binary operations
-    static member (+) (a:DV, b:float) = a + (D b)
-    static member (-) (a:DV, b:float) = a - (D b)
-    static member (*) (a:DV, b:float) = a * (D b)
-    static member (/) (a:DV, b:float) = a / (D b)
-    static member Pow (a:DV, b:float) = a ** (D b)
-    static member Atan2 (a:DV, b:float) = DV.Atan2(a, D b)
-    // float - DV binary operations
-    static member (+) (a:float, b:DV) = (D a) + b
-    static member (-) (a:float, b:DV) = (D a) - b
-    static member (*) (a:float, b:DV) = (D a) * b
-    static member (/) (a:float, b:DV) = (D a) / b
-    static member Pow (a:float, b:DV) = DV.Pow(D a, b)
-    static member Atan2 (a:float, b:DV) = DV.Atan2(D a, b)
+    // DV - AD.number binary operations
+    static member (+) (a:DV, b:AD.number) = a + (D b)
+    static member (-) (a:DV, b:AD.number) = a - (D b)
+    static member (*) (a:DV, b:AD.number) = a * (D b)
+    static member (/) (a:DV, b:AD.number) = a / (D b)
+    static member Pow (a:DV, b:AD.number) = a ** (D b)
+    static member Atan2 (a:DV, b:AD.number) = DV.Atan2(a, D b)
+    // AD.number - DV binary operations
+    static member (+) (a:AD.number, b:DV) = (D a) + b
+    static member (-) (a:AD.number, b:DV) = (D a) - b
+    static member (*) (a:AD.number, b:DV) = (D a) * b
+    static member (/) (a:AD.number, b:DV) = (D a) / b
+    static member Pow (a:AD.number, b:DV) = DV.Pow(D a, b)
+    static member Atan2 (a:AD.number, b:DV) = DV.Atan2(D a, b)
     // DV - int binary operations
-    static member (+) (a:DV, b:int) = a + (D (float b))
-    static member (-) (a:DV, b:int) = a - (D (float b))
-    static member (*) (a:DV, b:int) = a * (D (float b))
-    static member (/) (a:DV, b:int) = a / (D (float b))
-    static member Pow (a:DV, b:int) = DV.Pow(a, (D (float b)))
-    static member Atan2 (a:DV, b:int) = DV.Atan2(a, (D (float b)))
+    static member (+) (a:DV, b:int) = a + (D (AD.N.toNumber b))
+    static member (-) (a:DV, b:int) = a - (D (AD.N.toNumber b))
+    static member (*) (a:DV, b:int) = a * (D (AD.N.toNumber b))
+    static member (/) (a:DV, b:int) = a / (D (AD.N.toNumber b))
+    static member Pow (a:DV, b:int) = DV.Pow(a, (D (AD.N.toNumber b)))
+    static member Atan2 (a:DV, b:int) = DV.Atan2(a, (D (AD.N.toNumber b)))
     // int - DV binary operations
-    static member (+) (a:int, b:DV) = (D (float a)) + b
-    static member (-) (a:int, b:DV) = (D (float a)) - b
-    static member (*) (a:int, b:DV) = (D (float a)) * b
-    static member (/) (a:int, b:DV) = (D (float a)) / b
-    static member Pow (a:int, b:DV) = DV.Pow((D (float a)), b)
-    static member Atan2 (a:int, b:DV) = DV.Atan2((D (float a)), b)
+    static member (+) (a:int, b:DV) = (D (AD.N.toNumber a)) + b
+    static member (-) (a:int, b:DV) = (D (AD.N.toNumber a)) - b
+    static member (*) (a:int, b:DV) = (D (AD.N.toNumber a)) * b
+    static member (/) (a:int, b:DV) = (D (AD.N.toNumber a)) / b
+    static member Pow (a:int, b:DV) = DV.Pow((D (AD.N.toNumber a)), b)
+    static member Atan2 (a:int, b:DV) = DV.Atan2((D (AD.N.toNumber a)), b)
     // DV unary operations
     static member Log (a:DV) = DV(log (a.toADDV()))
     static member Log10 (a:DV) = DV(log10 (a.toADDV()))
@@ -251,17 +253,14 @@ and DV(v:ADDV) =
     static member Normalize (a:DV) = DV(ADDV.Normalize(a.toADDV()))
     static member Standardize (a:DV) = DV(ADDV.Standardize(a.toADDV()))
 
-and ADDM = DiffSharp.AD.Float64.DM
-
 and DM(m:ADDM) =
-    new(m:float[,]) = DM(ADDM.DM(m))
+    new(m:AD.number[,]) = DM(ADDM.DM(m))
     member internal this.toADDM() = m
     static member internal ADDMtoDM (x:ADDM) = new DM(x)
     static member internal DMtoADDM (x:DM) = x.toADDM()
 
     member d.P = d.toADDM().P |> DM.ADDMtoDM
     member d.T = d.toADDM().T |> DM.ADDMtoDM
-    member d.A = d.toADDM().A |> DM.ADDMtoDM
 
     member d.Item
         with get (i, j) = d.toADDM().[i, j] |> D.ADDtoD
@@ -269,13 +268,13 @@ and DM(m:ADDM) =
     override d.ToString() =
         let rec s (d:ADDM) =
             match d with
-            | DiffSharp.AD.Float64.DM(p) -> sprintf "DM %A" p
-            | DiffSharp.AD.Float64.DMF(p,t,_) -> sprintf "DMF (%A, %A)" (s p) (s t)
-            | DiffSharp.AD.Float64.DMR(p,a,_,_,_) -> sprintf "DMR (%A, %A)" (s p) (s !a)
+            | AD.DM(p) -> sprintf "DM %A" p
+            | AD.DMF(p,t,_) -> sprintf "DMF (%A, %A)" (s p) (s t)
+            | AD.DMR(p,op,_) -> sprintf "DMR (%A, %A)" (s p) (op.ToString())
         s (d.toADDM())
     member d.Visualize() = d.toADDM().Visualize()
-    static member op_Implicit(d:DM):float[,] = ADDM.op_Explicit(d.toADDM())
-    static member op_Implicit(a:float[,]):DM = DM(a)
+    static member op_Explicit(d:DM):AD.number[,] = ADDM.op_Explicit(d.toADDM())
+    static member op_Implicit(a:AD.number[,]):DM = DM(a)
     static member Zero = DM(Array2D.empty)
 
     // DV - DV binary operations
@@ -300,34 +299,34 @@ and DM(m:ADDM) =
     static member (/) (a:D, b:DM) = DM(a.toADD() / b.toADDM())
     static member Pow (a:D, b:DM) = DM(ADDM.Pow(a.toADD(), b.toADDM()))
     static member Atan2 (a:D, b:DM) = DM(ADDM.Atan2(a.toADD(), b.toADDM()))
-    // DV - float binary operations
-    static member (+) (a:DM, b:float) = a + (D b)
-    static member (-) (a:DM, b:float) = a - (D b)
-    static member (*) (a:DM, b:float) = a * (D b)
-    static member (/) (a:DM, b:float) = a / (D b)
-    static member Pow (a:DM, b:float) = a ** (D b)
-    static member Atan2 (a:DM, b:float) = DM.Atan2(a, D b)
-    // float - DV binary operations
-    static member (+) (a:float, b:DM) = (D a) + b
-    static member (-) (a:float, b:DM) = (D a) - b
-    static member (*) (a:float, b:DM) = (D a) * b
-    static member (/) (a:float, b:DM) = (D a) / b
-    static member Pow (a:float, b:DM) = DM.Pow(D a, b)
-    static member Atan2 (a:float, b:DM) = DM.Atan2(D a, b)
+    // DV - number binary operations
+    static member (+) (a:DM, b:AD.number) = a + (D b)
+    static member (-) (a:DM, b:AD.number) = a - (D b)
+    static member (*) (a:DM, b:AD.number) = a * (D b)
+    static member (/) (a:DM, b:AD.number) = a / (D b)
+    static member Pow (a:DM, b:AD.number) = a ** (D b)
+    static member Atan2 (a:DM, b:AD.number) = DM.Atan2(a, D b)
+    // number - DV binary operations
+    static member (+) (a:AD.number, b:DM) = (D a) + b
+    static member (-) (a:AD.number, b:DM) = (D a) - b
+    static member (*) (a:AD.number, b:DM) = (D a) * b
+    static member (/) (a:AD.number, b:DM) = (D a) / b
+    static member Pow (a:AD.number, b:DM) = DM.Pow(D a, b)
+    static member Atan2 (a:AD.number, b:DM) = DM.Atan2(D a, b)
     // DV - int binary operations
-    static member (+) (a:DM, b:int) = a + (D (float b))
-    static member (-) (a:DM, b:int) = a - (D (float b))
-    static member (*) (a:DM, b:int) = a * (D (float b))
-    static member (/) (a:DM, b:int) = a / (D (float b))
-    static member Pow (a:DM, b:int) = DM.Pow(a, (D (float b)))
-    static member Atan2 (a:DM, b:int) = DM.Atan2(a, (D (float b)))
+    static member (+) (a:DM, b:int) = a + (D (AD.N.toNumber b))
+    static member (-) (a:DM, b:int) = a - (D (AD.N.toNumber b))
+    static member (*) (a:DM, b:int) = a * (D (AD.N.toNumber b))
+    static member (/) (a:DM, b:int) = a / (D (AD.N.toNumber b))
+    static member Pow (a:DM, b:int) = DM.Pow(a, (D (AD.N.toNumber b)))
+    static member Atan2 (a:DM, b:int) = DM.Atan2(a, (D (AD.N.toNumber b)))
     // int - DV binary operations
-    static member (+) (a:int, b:DM) = (D (float a)) + b
-    static member (-) (a:int, b:DM) = (D (float a)) - b
-    static member (*) (a:int, b:DM) = (D (float a)) * b
-    static member (/) (a:int, b:DM) = (D (float a)) / b
-    static member Pow (a:int, b:DM) = DM.Pow((D (float a)), b)
-    static member Atan2 (a:int, b:DM) = DM.Atan2((D (float a)), b)
+    static member (+) (a:int, b:DM) = (D (AD.N.toNumber a)) + b
+    static member (-) (a:int, b:DM) = (D (AD.N.toNumber a)) - b
+    static member (*) (a:int, b:DM) = (D (AD.N.toNumber a)) * b
+    static member (/) (a:int, b:DM) = (D (AD.N.toNumber a)) / b
+    static member Pow (a:int, b:DM) = DM.Pow((D (AD.N.toNumber a)), b)
+    static member Atan2 (a:int, b:DM) = DM.Atan2((D (AD.N.toNumber a)), b)
     // DV unary operations
     static member Log (a:DM) = DM(log (a.toADDM()))
     static member Log10 (a:DM) = DM(log10 (a.toADDM()))
@@ -374,95 +373,151 @@ and DM(m:ADDM) =
     static member Normalize (a:DM) = DM(ADDM.Normalize(a.toADDM()))
     static member Standardize (a:DM) = DM(ADDM.Standardize(a.toADDM()))
 
+and ADAdjoints = AD.Adjoints
+
+and Adjoints() =
+    let m = ADAdjoints()
+    member internal this.toADAdjoints() = m
+    member this.Item with get (d:D) = m.[d.toADD()] |> D.ADDtoD
+    member this.Item with get (d:DV) = m.[d.toADDV()] |> DV.ADDVtoDV
+    member this.Item with get (d:DM) = m.[d.toADDM()] |> DM.ADDMtoDM
+
+
 /// Nested forward and reverse mode automatic differentiation module
 type AD =
+
     /// First derivative of a scalar-to-scalar function `f`
-    static member Diff(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (DiffSharp.AD.Float64.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diff(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff(f:System.Func<D,D>, x:D) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diff(f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+
     /// Second derivative of a scalar-to-scalar function `f`
-    static member Diff2(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (DiffSharp.AD.Float64.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diff2(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff2(f:System.Func<D,D>, x:D) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diff2(f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+
     /// `n`-th derivative of a scalar-to-scalar function `f`
-    static member Diffn(n:int, f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (DiffSharp.AD.Float64.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diffn(n:int, f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diffn(n:int, f:System.Func<D,D>, x:D) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diffn(n:int, f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Gradv(f:System.Func<DV,D>, x:DV, v:DV) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.gradv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Gradv(f:System.Func<DV,D>, x:DV, v:DV) = D.ADDtoD <| AD.DiffOps.gradv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+
     /// Gradient of a vector-to-scalar function `f`
-    static member Grad(f:System.Func<DV,D>) = System.Func<DV,DV>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.grad (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DV.ADDVtoDV)
+    static member Grad(f:System.Func<DV,D>) = System.Func<DV,DV>(DV.DVtoADDV >> (AD.DiffOps.grad (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DV.ADDVtoDV)
+
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    static member Grad(f:System.Func<DV,D>, x:DV) = DV.ADDVtoDV <| DiffSharp.AD.Float64.DiffOps.grad ((DV.ADDVtoDV) >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Grad(f:System.Func<DV,D>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.grad ((DV.ADDVtoDV) >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+
     /// Laplacian of a vector-to-scalar function `f`
-    static member Laplacian(f:System.Func<DV,D>) = System.Func<DV,D>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Laplacian(f:System.Func<DV,D>) = System.Func<DV,D>(DV.DVtoADDV >> (AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    static member Laplacian(f:System.Func<DV,D>, x:DV) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Laplacian(f:System.Func<DV,D>, x:DV) = D.ADDtoD <| AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member Jacobianv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| DiffSharp.AD.Float64.DiffOps.jacobianv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Jacobianv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member JacobianTv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| DiffSharp.AD.Float64.DiffOps.jacobianTv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member JacobianTv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianTv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+
     /// Jacobian of a vector-to-vector function `f`
-    static member Jacobian(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+    static member Jacobian(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    static member Jacobian(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| DiffSharp.AD.Float64.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Jacobian(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+
     /// Transposed Jacobian of a vector-to-vector function `f`
-    static member JacobianT(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+    static member JacobianT(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    static member JacobianT(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| DiffSharp.AD.Float64.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member JacobianT(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+
     /// Hessian of a vector-to-scalar function `f`
-    static member Hessian(f:System.Func<DV,D>) = System.Func<DV,DM>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DM.ADDMtoDM)
+    static member Hessian(f:System.Func<DV,D>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DM.ADDMtoDM)
+
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    static member Hessian(f:System.Func<DV,D>, x:DV) = DM.ADDMtoDM <| DiffSharp.AD.Float64.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Hessian(f:System.Func<DV,D>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`
-    static member Hessianv(f:System.Func<DV,D>, x:DV, v:DV) = DV.ADDVtoDV <| DiffSharp.AD.Float64.DiffOps.hessianv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Hessianv(f:System.Func<DV,D>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.hessianv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+
     /// Curl of a vector-to-vector function `f`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<DV,DV>) = System.Func<DV,DV>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DV.ADDVtoDV)
+    static member Curl(f:System.Func<DV,DV>) = System.Func<DV,DV>(DV.DVtoADDV >> (AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DV.ADDVtoDV)
+
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<DV,DV>, x:DV) = DV.ADDVtoDV <| DiffSharp.AD.Float64.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Curl(f:System.Func<DV,DV>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+
     /// Divergence of a vector-to-vector function `f`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<DV,DV>) = System.Func<DV,D>(DV.DVtoADDV >> (DiffSharp.AD.Float64.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> D.ADDtoD)
+    static member Div(f:System.Func<DV,DV>) = System.Func<DV,D>(DV.DVtoADDV >> (AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> D.ADDtoD)
+
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<DV,DV>, x:DV) = D.ADDtoD <| DiffSharp.AD.Float64.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Div(f:System.Func<DV,DV>, x:DV) = D.ADDtoD <| AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+
     /// Returns a specified number raised to the specified power.
     static member inline Pow(a:'T, b:'U) = a ** b
+
     /// Returns the angle whose tangent is the quotient of two specified numbers.
     static member inline Atan2(a:'T, b:'T) = atan2 a b
+
     /// Returns the logarithm of a specified number.
     static member inline Log(a:'T) = log a
+
     /// Returns the base 10 logarithm of a specified number.
     static member inline Log10(a:'T) = log10 a
+
     /// Returns e raised to the specified power.
     static member inline Exp(a:'T) = exp a
+
     /// Returns the sine of the specified angle.
     static member inline Sin(a:'T) = sin a
+
     /// Returns the cosine of the specified angle.
     static member inline Cos(a:'T) = cos a
+
     /// Returns the tangent of the specified angle.
     static member inline Tan(a:'T) = tan a
+
     /// Returns the square root of a specified number.
     static member inline Sqrt(a:'T) = sqrt a
+
     /// Returns the hyperbolic sine of the specified angle.
     static member inline Sinh(a:'T) = sinh a
+
     /// Returns the hyperbolic cosine of the specified angle.
     static member inline Cosh(a:'T) = cosh a
+
     /// Returns the hyperbolic tangent of the specified angle.
     static member inline Tanh(a:'T) = tanh a
+
     /// Returns the angle whose sine is the specified number.
     static member inline Asin(a:'T) = asin a
+
     /// Returns the angle whose cosine is the specified number.
     static member inline Acos(a:'T) = acos a
+
     /// Returns the angle whose tangent is the specified number.
     static member inline Atan(a:'T) = atan a
+
     /// Returns the absolute value of a specified number.
     static member inline Abs(a:'T) = abs a
+
     /// Returns the largest integer less than or equal to the specified number.
     static member inline Floor(a:'T) = floor a
+
     /// Returns the smallest integer greater than or equal to the specified number.
     static member inline Ceiling(a:'T) = ceil a
+
     /// Rounds a value to the nearest integer or to the specified number of fractional digits.
     static member inline Round(a:'T) = round a
+
     /// Returns the larger of two specified numbers.
+    static member inline Max(a:'T, b:'T) = min a b
+
     /// Returns the smaller of two numbers.
     static member inline Min(a:'T, b:'T) = min a b
     static member inline LogSumExp(a:'T) = (^T : (static member LogSumExp : ^T -> ^U) a)
@@ -494,46 +549,67 @@ type AD =
 
 /// Numerical differentiation module
 type Numerical =
+
     /// First derivative of a scalar-to-scalar function `f`
-    static member Diff(f:System.Func<float,float>) = System.Func<float, float>(DiffSharp.Numerical.Float64.DiffOps.diff f.Invoke)
+    static member Diff(f:System.Func<AD.number,AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff f.Invoke)
+
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff(f:System.Func<float,float>, x:float) = DiffSharp.Numerical.Float64.DiffOps.diff f.Invoke x
+    static member Diff(f:System.Func<AD.number,AD.number>, x:AD.number) = Numerical.DiffOps.diff f.Invoke x
+
     /// Second derivative of a scalar-to-scalar function `f`
-    static member Diff2(f:System.Func<float,float>) = System.Func<float, float>(DiffSharp.Numerical.Float64.DiffOps.diff2 f.Invoke)
+    static member Diff2(f:System.Func<AD.number,AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff2 f.Invoke)
+
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff2(f:System.Func<float,float>, x:float) = DiffSharp.Numerical.Float64.DiffOps.diff2 f.Invoke x
+    static member Diff2(f:System.Func<AD.number,AD.number>, x:AD.number) = Numerical.DiffOps.diff2 f.Invoke x
+
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Gradv(f:System.Func<float[],float>, x:float[], v:float[]) = DiffSharp.Numerical.Float64.DiffOps.gradv f.Invoke x v
+    static member Gradv(f:System.Func<AD.number[],AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.gradv f.Invoke x v
+
     /// Gradient of a vector-to-scalar function `f`
-    static member Grad(f:System.Func<float[],float>) = System.Func<float[],float[]>(DiffSharp.Numerical.Float64.DiffOps.grad f.Invoke)
+    static member Grad(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number[]>(Numerical.DiffOps.grad f.Invoke)
+
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    static member Grad(f:System.Func<float[],float>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.grad f.Invoke x
+    static member Grad(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.grad f.Invoke x
+
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Hessianv(f:System.Func<float[],float>, x:float[], v:float[]) = DiffSharp.Numerical.Float64.DiffOps.hessianv f.Invoke x v
+    static member Hessianv(f:System.Func<AD.number[],AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.hessianv f.Invoke x v
+
     /// Hessian of a vector-to-scalar function `f`
-    static member Hessian(f:System.Func<float[],float>) = System.Func<float[],float[,]>(DiffSharp.Numerical.Float64.DiffOps.hessian f.Invoke)
+    static member Hessian(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.hessian f.Invoke)
+
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    static member Hessian(f:System.Func<float[],float>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.hessian f.Invoke x
+    static member Hessian(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.hessian f.Invoke x
+
     /// Laplacian of a vector-to-scalar function `f`
-    static member Laplacian(f:System.Func<float[],float>) = System.Func<float[],float>(DiffSharp.Numerical.Float64.DiffOps.laplacian f.Invoke)
+    static member Laplacian(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number>(Numerical.DiffOps.laplacian f.Invoke)
+
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    static member Laplacian(f:System.Func<float[],float>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.laplacian f.Invoke x
+    static member Laplacian(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.laplacian f.Invoke x
+
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member Jacobianv(f:System.Func<float[],float[]>, x:float[], v:float[]) = DiffSharp.Numerical.Float64.DiffOps.jacobianv f.Invoke x v
+    static member Jacobianv(f:System.Func<AD.number[],AD.number[]>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.jacobianv f.Invoke x v
+
     /// Jacobian of a vector-to-vector function `f`
-    static member Jacobian(f:System.Func<float[],float[]>) = System.Func<float[],float[,]>(DiffSharp.Numerical.Float64.DiffOps.jacobian f.Invoke)
+    static member Jacobian(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.jacobian f.Invoke)
+
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    static member Jacobian(f:System.Func<float[],float[]>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.jacobian f.Invoke x
+    static member Jacobian(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobian f.Invoke x
+
     /// Transposed Jacobian of a vector-to-vector function `f`
-    static member JacobianT(f:System.Func<float[],float[]>) = System.Func<float[],float[,]>(DiffSharp.Numerical.Float64.DiffOps.jacobianT f.Invoke)
+    static member JacobianT(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.jacobianT f.Invoke)
+
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    static member JacobianT(f:System.Func<float[],float[]>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.jacobianT f.Invoke x
+    static member JacobianT(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobianT f.Invoke x
+
     /// Curl of a vector-to-vector function `f`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<float[],float[]>) = System.Func<float[],float[]>(DiffSharp.Numerical.Float64.DiffOps.curl f.Invoke)
+    static member Curl(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[]>(Numerical.DiffOps.curl f.Invoke)
+
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<float[],float[]>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.curl f.Invoke x
+    static member Curl(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.curl f.Invoke x
+
     /// Divergence of a vector-to-vector function `f`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<float[],float[]>) = System.Func<float[],float>(DiffSharp.Numerical.Float64.DiffOps.div f.Invoke)
+    static member Div(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number>(Numerical.DiffOps.div f.Invoke)
+
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<float[],float[]>, x:float[]) = DiffSharp.Numerical.Float64.DiffOps.div f.Invoke x
+    static member Div(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.div f.Invoke x
 

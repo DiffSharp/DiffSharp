@@ -137,11 +137,11 @@ let backprop (n:Network) eta epochs (x:DV[]) (y:DV[]) =
                 l.b <- l.b |> makeReverse i
 
             let L = Array.map2 (fun x y -> DV.l2normSq (y - runNetwork x n)) x y |> Array.sum
-            L |> reverseProp (D 1.) // Propagate adjoint value 1 backward
+            let adjoints = computeAdjoints L // Propagate adjoint value 1 backward
 
             for l in n.layers do
-                l.W <- primal (l.W.P - eta * l.W.A)
-                l.b <- primal (l.b.P - eta * l.b.A)
+                l.W <- primal (l.W.P - eta * l.W.A(adjoints))
+                l.b <- primal (l.b.P - eta * l.b.A(adjoints))
 
             printfn "Iteration %i, loss %f" j (float L)
             yield float L}
@@ -284,11 +284,11 @@ let backprop' (n:Network') (eta:float) epochs mbsize loss (x:DM) (y:DM) =
                 l.b <- l.b |> makeReverse i
 
             let L:D = loss (runNetwork' mbX n) mbY
-            L |> reverseProp (D 1.)
+            let adjoints = computeAdjoints L  
 
             for l in n.layers do
-                l.W <- primal (l.W.P - eta * l.W.A)
-                l.b <- primal (l.b.P - eta * l.b.A)
+                l.W <- primal (l.W.P - eta * l.W.A(adjoints))
+                l.b <- primal (l.b.P - eta * l.b.A(adjoints))
 
             printfn "Epoch %i, minibatch %i, loss %f" j b (float L)
             b <- b + 1
