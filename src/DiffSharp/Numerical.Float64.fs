@@ -95,15 +95,15 @@ module DiffOps =
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline gradhessian f x =
-        gradhessian' f x |> sndtrd
+        gradhessian' f x |> drop1Of3
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
-        gradhessian' f x |> fsttrd
+        gradhessian' f x |> drop2Of3
                 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
-        gradhessian' f x |> trd
+        gradhessian' f x |> p33
 
     /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline hessianv' (f:float[]->float) (x:float[]) (v:float[]) =
@@ -124,7 +124,7 @@ module DiffOps =
 
     /// Gradient-vector product (directional derivative) and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
     let inline gradhessianv (f:float[]->float) x v =
-        gradhessianv' f x v |> sndtrd
+        gradhessianv' f x v |> drop1Of3
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`
     let inline laplacian' f x =
@@ -190,5 +190,5 @@ module DiffOps =
 
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv f x =
-        curldiv' f x |> sndtrd
+        curldiv' f x |> drop1Of3
 

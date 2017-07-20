@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>ab5af4d0-ec82-413d-a903-c53ce34d1cec</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -14,27 +14,6 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>DiffSharp</Name>
     <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\DiffSharp.XML</DocumentationFile>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\DiffSharp.XML</DocumentationFile>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -88,21 +67,21 @@
     <Compile Include="Symbolic.Float64.fs" />
     <Compile Include="Interop.Float32.fs" />
     <Compile Include="Interop.Float64.fs" />
-    <None Include="libgcc_s_seh-1.dll">
+    <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgcc_s_seh-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="libgfortran-3.dll">
+    <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgfortran-3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="libopenblas.dll">
+    <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libopenblas.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="libquadmath-0.dll">
+    <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libquadmath-0.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="paket.references" />
     <Content Include="app.config" />
-    <None Include="README.md">
+    <None Include="..\..\README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

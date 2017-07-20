@@ -488,7 +488,7 @@ module OpenBLAS =
         // Only works for square matrices
         let sgesv(a:float32[,], b:float32[]) =
             let n = Array2D.length1 a
-            BLASExtensions.simatcopyT(1.f, a)
+            BLASExtensions.simatcopyT(1.0f, a)
             let ipiv = Array.zeroCreate n
             let mutable arg_n = n
             let mutable arg_nrhs = 1
@@ -660,7 +660,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVV()
                 else
                     let y' = Array.copy y
-                    BLAS.saxpy(1.f, x, y')
+                    BLAS.saxpy(1.0f, x, y')
                     y'
             // BLAS
             member o.Add_S_V(alpha, x) =
@@ -669,7 +669,7 @@ module OpenBLAS =
                     Array.empty
                 else
                     let alpha' = Array.create xl alpha
-                    BLAS.saxpy(1.f, x, alpha')
+                    BLAS.saxpy(1.0f, x, alpha')
                     alpha'
             // BLAS
             member o.Mul_S_V(alpha, x) =
@@ -684,14 +684,14 @@ module OpenBLAS =
                 let xl = x.Length
                 let yl = y.Length
                 if xl = 0 then
-                    (o :> Backend<float32>).Mul_S_V(-1.f, y)
+                    (o :> Backend<float32>).Mul_S_V(-1.0f, y)
                 elif yl = 0 then
                     Array.copy x
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
                     let x' = Array.copy x
-                    BLAS.saxpy(-1.f, y, x')
+                    BLAS.saxpy(-1.0f, y, x')
                     x'
             // BLAS
             member o.Mul_Dot_V_V(x, y) =
@@ -711,7 +711,7 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let z = Array2D.zeroCreate xl yl
-                    BLAS.sger(1.f, x, y, z)
+                    BLAS.sger(1.0f, x, y, z)
                     z
             // BLAS
             member o.L1Norm_V(x) =
@@ -746,7 +746,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgMM()
                 else
                     let y' = Array2D.copyFast y
-                    BLAS.saxpy2D(1.f, x, y')
+                    BLAS.saxpy2D(1.0f, x, y')
                     y'
             // BLAS
             member o.Add_S_M(alpha, x) =
@@ -754,7 +754,7 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
-                    BLAS.saxpy2D(1.f, x, alpha')
+                    BLAS.saxpy2D(1.0f, x, alpha')
                     alpha'
             // BLAS
             member o.Add_V_MCols(x, y) =
@@ -769,7 +769,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, x)
-                    BLAS.saxpy2D(1.f, y, x')
+                    BLAS.saxpy2D(1.0f, y, x')
                     x'
             // BLAS
             member o.Mul_S_M(alpha, x) =
@@ -786,14 +786,14 @@ module OpenBLAS =
                 let yl1 = Array2D.length1 y
                 let yl2 = Array2D.length2 y
                 if xl1 * xl2 = 0 then
-                    (o :> Backend<float32>).Mul_S_M(-1.f, y)
+                    (o :> Backend<float32>).Mul_S_M(-1.0f, y)
                 elif yl1 * yl2 = 0 then
                     Array2D.copyFast x
                 elif (xl1 <> yl1) || (xl2 <> yl2) then
                     ErrorMessages.InvalidArgMM()
                 else
                     let x' = Array2D.copyFast x
-                    BLAS.saxpy2D(-1.f, y, x')
+                    BLAS.saxpy2D(-1.0f, y, x')
                     x'
             // BLAS
             member o.Mul_M_M(x, y) =
@@ -807,7 +807,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgMColsMRows()
                 else
                     let z = Array2D.zeroCreate xl1 yl2
-                    BLAS.sgemm(1.f, x, y, 0.f, z)
+                    BLAS.sgemm(1.0f, x, y, 0.f, z)
                     z
             // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
@@ -826,7 +826,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, z)
-                    BLAS.sgemm(1.f, x, y, 1.f, z')
+                    BLAS.sgemm(1.0f, x, y, 1.0f, z')
                     z'
             // BLAS
             member o.Mul_M_V(x, y) =
@@ -839,7 +839,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMCols()
                 else
                     let z = Array.zeroCreate xl1
-                    BLAS.sgemv(1.f, x, y, 0.f, z)
+                    BLAS.sgemv(1.0f, x, y, 0.f, z)
                     z
             // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
@@ -857,7 +857,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let z' = Array.copy z
-                    BLAS.sgemv(1.f, x, y, 1.f, z')
+                    BLAS.sgemv(1.0f, x, y, 1.0f, z')
                     z'
             // BLAS
             member o.Mul_V_M(x, y) =
@@ -870,7 +870,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let z = Array.zeroCreate yl2
-                    BLAS.sgemv'(1.f, y, x, 0.f, z)
+                    BLAS.sgemv'(1.0f, y, x, 0.f, z)
                     z
             // BLAS extension
             member o.Transpose_M(x) =
@@ -880,8 +880,9 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     let x' = Array2D.zeroCreate<float32> xl2 xl1
-                    BLASExtensions.somatcopyT(1.f, x, x')
+                    BLASExtensions.somatcopyT(1.0f, x, x')
                     x'
+
             // LAPACK
             member o.Solve_M_V(x, y) =
                 let xl1 = Array2D.length1 x
@@ -895,6 +896,7 @@ module OpenBLAS =
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
                     LAPACK.sgesv(x', y')
+
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
                 let xl1 = Array2D.length1 x
@@ -908,6 +910,7 @@ module OpenBLAS =
                     let x' = Array2D.copyFast x
                     let y' = Array.copy y
                     LAPACK.ssysv(x', y')
+
             // LAPACK
             member o.Inverse_M(x) =
                 if Array2D.isEmpty x then
@@ -922,6 +925,7 @@ module OpenBLAS =
                         | Some(inv) -> Some(inv)
                         | _ -> None
                     | _ -> None
+
             // LAPACK
             member o.Det_M(x) =
                 if Array2D.isEmpty x then
@@ -932,7 +936,7 @@ module OpenBLAS =
                     match ipiv with
                     | Some(ipiv) ->
                         let n = Array2D.length1 x
-                        let mutable det = 1.f
+                        let mutable det = 1.0f
                         for i = 0 to n - 1 do
                             if ipiv.[i] <> (i + 1) then
                                 det <- -det * x'.[i, i]
@@ -940,36 +944,42 @@ module OpenBLAS =
                                 det <- det * x'.[i, i]
                         Some(det)
                     | _ -> None
+
             // Non-BLAS
             member o.Sub_S_V(alpha, x) =
                 if alpha = 0.f then 
-                    (o :> Backend<float32>).Mul_S_V(-1.f, x)
+                    (o :> Backend<float32>).Mul_S_V(-1.0f, x)
                 else
                     (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
+
             // Non-BLAS
             member o.Sub_V_S(x, alpha) =
                 if alpha = 0.f then
                     x
                 else
                     (o :> Backend<float32>).Map_F_V((fun v -> v - alpha), x)
+
             // Non-BLAS
             member o.Sub_S_M(alpha, x) =
                 if alpha = 0.f then 
-                    (o :> Backend<float32>).Mul_S_M(-1.f, x)
+                    (o :> Backend<float32>).Mul_S_M(-1.0f, x)
                 else
                     (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
+
             // Non-BLAS
             member o.Sub_M_S(x, alpha) =
                 if alpha = 0.f then
                     x
                 else
                     (o :> Backend<float32>).Map_F_M((fun v -> v - alpha), x)
+
             // Non-BLAS
             member o.Map_F_V(f, x) =
                 if Array.isEmpty x then
                     Array.empty
                 else
                     Array.map f x
+
             // Non-BLAS
             member o.Map2_F_V_V(f, x, y) =
                 let xl = x.Length
@@ -984,6 +994,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVV()
                 else
                     Array.map2 f x y
+
             // Non-BLAS
             member o.Map_F_M(f, x) =
                 if Array2D.isEmpty x then
@@ -1006,12 +1017,14 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgMM()
                 else
                     Array2D.map2 f x y
+
             // Non-BLAS
             member o.Sum_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                     Array.sum x
+
             // Non-BLAS
             member o.Mul_Had_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -1026,12 +1039,14 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgMM()
                 else
                     Array2D.map2 (*) x y
+
             // Non-BLAS
             member o.Sum_M(x) =
                 if Array2D.isEmpty x then
                     0.f
                 else
                     (o :> Backend<float32>).ReshapeCopy_MRows_V(x) |> Array.sum
+
             // Non-BLAS
             member o.Diagonal_M(x) =
                 if Array2D.isEmpty x then
@@ -1048,6 +1063,7 @@ module OpenBLAS =
                     let r = Array.zeroCreate<float32> x.Length
                     Buffer.BlockCopy(x, 0, r, 0, x.Length * sizeof<float32>)
                     r
+
             // Non-BLAS
             member o.ReshapeCopy_V_MRows(m, x) =
                 if Array.isEmpty x then
