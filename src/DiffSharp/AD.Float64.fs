@@ -79,7 +79,7 @@ type D =
     interface dobj
 
     /// Make a reverse node
-    static member internal R(d,op,ai) = DR(d, ref D.Zero, op, ref 0u, ai)
+    static member R(d,op,ai) = DR(d, ref D.Zero, op, ref 0u, ai)
 
     /// Primal value of this D
     member d.P =
@@ -586,7 +586,7 @@ and DV =
     member d.GetReverse(i:uint32) = DV.R(d, Noop, i)
 
     /// Make a reverse node
-    static member internal R(d,op,ai) = DVR(d, ref (DV.ZeroN d.Length), op, ref 0u, ai)
+    static member R(d,op,ai) = DVR(d, ref (DV.ZeroN d.Length), op, ref 0u, ai)
 
     member d.Copy() =
         match d with
@@ -1550,7 +1550,7 @@ and DM =
     member d.GetReverse(i:uint32) = DM.R(d, Noop, i)
 
     /// Make a reverse node
-    static member internal R(cp,op,ai) = DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), op, ref 0u, ai)
+    static member R(cp,op,ai) = DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), op, ref 0u, ai)
 
     member d.Copy() =
         match d with
