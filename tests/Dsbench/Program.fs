@@ -103,21 +103,21 @@ let rec parseArgsRec args optionsSoFar =
             parseArgsRec xss {optionsSoFar with benchmarks= optionsSoFar.benchmarks @ [f]}
         | _ ->
             eprintfn "Option -b needs to be followed by a benchmark name (1, 2)."
-            parseArgsRec xs optionsSoFar
+            exit 1
     | ("/m" | "-m") ::xs -> 
         match xs with
         | (("auto" | "numeric") as f)::xss -> 
             parseArgsRec xss {optionsSoFar with modes = optionsSoFar.modes @ [f]}
         | _ ->
             eprintfn "Option -b needs to be followed by a mode name (auto,numeric)."
-            parseArgsRec xs optionsSoFar
+            exit 1
     | "/f"::xs | "-f"::xs ->
         match xs with
         | f::xss -> 
             parseArgsRec xss {optionsSoFar with fileName = f; changed = true}
         | _ ->
             eprintfn "Option -f needs to be followed by a file name."
-            parseArgsRec xs optionsSoFar
+            exit 1
     | "/r"::xs | "-r"::xs ->
         match xs with
         | r::xss ->
@@ -125,15 +125,15 @@ let rec parseArgsRec args optionsSoFar =
             if couldparse then
                 if reps < minRepetitions then
                     eprintfn "Given value for -r was too small, using the minimum: %i." minRepetitions
-                    parseArgsRec xss {optionsSoFar with repetitions = minRepetitions; changed = true}
+                    exit 1
                 else
                     parseArgsRec xss {optionsSoFar with repetitions = reps; changed = true}
             else
                 eprintfn "Option -r was followed by an invalid value."
-                parseArgsRec xs optionsSoFar
+                exit 1
         | _ ->
             eprintfn "Option -r needs to be followed by a number."
-            parseArgsRec xs optionsSoFar
+            exit 1
     | "/vsize"::xs | "-vsize"::xs ->
         match xs with
         | s::xss ->
@@ -141,15 +141,15 @@ let rec parseArgsRec args optionsSoFar =
             if couldparse then
                 if size < minVectorSize then
                     eprintfn "Given value for -vsize was too small, using the minimum: %i." minVectorSize
-                    parseArgsRec xss {optionsSoFar with vectorSize = minVectorSize; changed = true}
+                    exit 1
                 else
                     parseArgsRec xss {optionsSoFar with vectorSize = size; changed = true}
             else
                 eprintfn "Option -vsize was followed by an invalid value."
-                parseArgsRec xs optionsSoFar
+                exit 1
         | _ ->
             eprintfn "Option -vsize needs to be followed by a number."
-            parseArgsRec xs optionsSoFar
+            exit 1
     | x::xs ->
         eprintfn "Option \"%s\" is unrecognized." x
         parseArgsRec xs optionsSoFar
@@ -194,7 +194,7 @@ let main argv =
 
         let benchmarks = 
             match ops.benchmarks with 
-            | [] -> ["bench1"; "bench2"] 
+            | [] -> ["1"; "2"] 
             | xss -> xss
 
         let modes = 
@@ -202,8 +202,8 @@ let main argv =
             | [] -> [ "auto"; "numeric"] 
             | xss -> xss
 
-        let bench1 = List.contains "bench1" benchmarks 
-        let bench2 = List.contains "bench2" benchmarks 
+        let bench1 = List.contains "1" benchmarks 
+        let bench2 = List.contains "2" benchmarks 
         let auto = List.contains "auto" modes
         let numeric = List.contains "numeric" modes
 
