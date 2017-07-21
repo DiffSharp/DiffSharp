@@ -181,7 +181,7 @@ let main argv =
         printfn "Output file name: %s\n" fileName
 
         printfn "Benchmarking module version: %s" benchmarkver
-        let diffsharpver = System.Reflection.AssemblyName.GetAssemblyName("DiffSharp.dll").Version.ToString()
+        let diffsharpver = typeof<DiffSharp.AD.Float64.D>.Assembly.GetName().Version.ToString()
         printfn "DiffSharp library version: %s\n" diffsharpver
 
         let os = System.Environment.OSVersion.ToString()
