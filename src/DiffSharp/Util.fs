@@ -151,8 +151,22 @@ type UniqueTagger() =
     static let mutable t = 0 
     static member Next() = t <- t + 1; t
 
+type Stats() = 
+    static let mutable hit = 0L
+    static let mutable miss = 0L
+    static do 
+         System.AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> 
+            let total = hit + miss
+            printfn "inplace update statistics: hit = %d, total = %d, ratio = %f" hit total (float hit / float total))
+
+    static member InplaceOp(sz) = hit <- hit + int64 sz
+    static member CopyOp(sz) = miss <- miss + int64 sz
+
 /// Extensions for the FSharp.Collections.Array module
 module Array =
+    let copyFast (array : 'T[]) =  
+        Stats.CopyOp(Array.length array)
+        Array.copy array
     module Parallel =
         let map2 f (a1:_[]) (a2:_[]) =
             let n = min a1.Length a2.Length
@@ -160,7 +174,9 @@ module Array =
 
 /// Extensions for the FSharp.Collections.Array2D module
 module Array2D =
-    let copyFast (array : 'T[,]) =  array.Clone() :?> 'T[,]
+    let copyFast (array : 'T[,]) =  
+        Stats.CopyOp(Array2D.length1 array * Array2D.length2 array)
+        array.Clone() :?> 'T[,]
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
     let isEmpty (array : 'T[,]) = (array.Length = 0)
     let toArray (array : 'T[,]) = array |> Seq.cast<'T> |> Seq.toArray
@@ -186,3 +202,4 @@ module Array2D =
             let m = min (Array2D.length1 a1) (Array2D.length1 a2)
             let n = min (Array2D.length2 a1) (Array2D.length2 a2)
             init m n (fun i j -> f a1.[i, j] a2.[i, j])
+

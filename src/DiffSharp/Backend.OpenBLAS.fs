@@ -625,15 +625,27 @@ module OpenBLAS =
                 let xl = x.Length
                 let yl = y.Length
                 if xl = 0 then
-                    Array.copy y
+                    Array.copyFast y
                 elif yl = 0 then
-                    Array.copy x
+                    Array.copyFast x
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     BLAS.saxpy(1.0f, x, y')
                     y'
+
+            // BLAS - in place addition
+            member o.Add_V_V_Inplace(x, y) =
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then ()
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
+                else
+                    Stats.InplaceOp(y.Length)
+                    BLAS.saxpy(1.0f, x, y)
+
             // BLAS
             member o.Add_S_V(alpha, x) =
                 let xl = x.Length
@@ -643,14 +655,16 @@ module OpenBLAS =
                     let alpha' = Array.create xl alpha
                     BLAS.saxpy(1.0f, x, alpha')
                     alpha'
+
             // BLAS
             member o.Mul_S_V(alpha, x) =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    let x' = Array.copy x
+                    let x' = Array.copyFast x
                     BLAS.sscal(alpha, x')
                     x'
+
             // BLAS
             member o.Sub_V_V(x, y) =
                 let xl = x.Length
@@ -658,13 +672,14 @@ module OpenBLAS =
                 if xl = 0 then
                     (o :> Backend<float32>).Mul_S_V(-1.0f, y)
                 elif yl = 0 then
-                    Array.copy x
+                    Array.copyFast x
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
-                    let x' = Array.copy x
+                    let x' = Array.copyFast x
                     BLAS.saxpy(-1.0f, y, x')
                     x'
+
             // BLAS
             member o.Mul_Dot_V_V(x, y) =
                 let xl = x.Length
@@ -675,6 +690,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVV()
                 else
                     BLAS.sdot(x, y)
+
             // BLAS
             member o.Mul_Out_V_V(x, y) =
                 let xl = x.Length
@@ -691,12 +707,14 @@ module OpenBLAS =
                     0.f
                 else
                    BLAS.sasum(x)
+
             // BLAS
             member o.L2Norm_V(x) =
                 if Array.isEmpty x then
                     0.f
                 else
                     BLAS.snrm2(x)
+
             // BLAS
             member o.SupNorm_V(x) =
                 if Array.isEmpty x then
@@ -704,6 +722,7 @@ module OpenBLAS =
                 else
                     let i = BLAS.isamax(x)
                     abs x.[i - 1]
+
             // BLAS
             member o.Add_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -720,6 +739,19 @@ module OpenBLAS =
                     let y' = Array2D.copyFast y
                     BLAS.saxpy2D(1.0f, x, y')
                     y'
+
+            // BLAS in-place addition
+            member o.AlphaAdd_M_M_Inplace(alpha, x, y) =
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
+                else
+                    Stats.InplaceOp(yl1 * yl2)
+                    BLAS.saxpy2D(alpha, x, y)
+
             // BLAS
             member o.Add_S_M(alpha, x) =
                 if Array2D.isEmpty x then
@@ -728,6 +760,7 @@ module OpenBLAS =
                     let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
                     BLAS.saxpy2D(1.0f, x, alpha')
                     alpha'
+
             // BLAS
             member o.Add_V_MCols(x, y) =
                 let xl = x.Length
@@ -743,6 +776,7 @@ module OpenBLAS =
                     let x' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, x)
                     BLAS.saxpy2D(1.0f, y, x')
                     x'
+
             // BLAS
             member o.Mul_S_M(alpha, x) =
                 if Array2D.isEmpty x then
@@ -751,6 +785,7 @@ module OpenBLAS =
                     let x' = Array2D.copyFast x
                     BLAS.sscal2D(alpha, x')
                     x'
+
             // BLAS
             member o.Sub_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -767,6 +802,7 @@ module OpenBLAS =
                     let x' = Array2D.copyFast x
                     BLAS.saxpy2D(-1.0f, y, x')
                     x'
+
             // BLAS
             member o.Mul_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -781,6 +817,7 @@ module OpenBLAS =
                     let z = Array2D.zeroCreate xl1 yl2
                     BLAS.sgemm(1.0f, x, y, 0.f, z)
                     z
+
             // BLAS
             member o.Mul_M_M_Add_V_MCols(x, y, z) =
                 let xl1 = Array2D.length1 x
@@ -800,6 +837,7 @@ module OpenBLAS =
                     let z' = (o :> Backend<float32>).RepeatReshapeCopy_V_MCols(yl2, z)
                     BLAS.sgemm(1.0f, x, y, 1.0f, z')
                     z'
+
             // BLAS
             member o.Mul_M_V(x, y) =
                 let xl1 = Array2D.length1 x
@@ -813,6 +851,7 @@ module OpenBLAS =
                     let z = Array.zeroCreate xl1
                     BLAS.sgemv(1.0f, x, y, 0.f, z)
                     z
+
             // BLAS
             member o.Mul_M_V_Add_V(x, y, z) =
                 let xl1 = Array2D.length1 x
@@ -828,9 +867,10 @@ module OpenBLAS =
                 elif zl <> xl1 then
                     ErrorMessages.InvalidArgVMRows()
                 else
-                    let z' = Array.copy z
+                    let z' = Array.copyFast z
                     BLAS.sgemv(1.0f, x, y, 1.0f, z')
                     z'
+
             // BLAS
             member o.Mul_V_M(x, y) =
                 let xl = x.Length
@@ -844,6 +884,7 @@ module OpenBLAS =
                     let z = Array.zeroCreate yl2
                     BLAS.sgemv'(1.0f, y, x, 0.f, z)
                     z
+
             // BLAS extension
             member o.Transpose_M(x) =
                 let xl1 = Array2D.length1 x
@@ -866,7 +907,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     LAPACK.sgesv(x', y')
 
             // LAPACK
@@ -880,7 +921,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     LAPACK.ssysv(x', y')
 
             // LAPACK
@@ -973,6 +1014,7 @@ module OpenBLAS =
                     Array2D.empty
                 else
                     Array2D.map f x
+
             // Non-BLAS
             member o.Map2_F_M_M(f, x, y) =
                 let xl1 = Array2D.length1 x
@@ -1076,15 +1118,27 @@ module OpenBLAS =
                 let xl = x.Length
                 let yl = y.Length
                 if xl = 0 then
-                    Array.copy y
+                    Array.copyFast y
                 elif yl = 0 then
-                    Array.copy x
+                    Array.copyFast x
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     BLAS.daxpy(1., x, y')
                     y'
+
+            // BLAS - in-place addition
+            member o.Add_V_V_Inplace(x, y) =
+                let xl = x.Length
+                let yl = y.Length
+                if xl = 0 then()
+                elif xl <> yl then
+                    ErrorMessages.InvalidArgVV()
+                else
+                    Stats.InplaceOp(xl)
+                    BLAS.daxpy(1., x, y)
+
             // BLAS
             member o.Add_S_V(alpha, x) =
                 let xl = x.Length
@@ -1094,14 +1148,16 @@ module OpenBLAS =
                     let alpha' = Array.create xl alpha
                     BLAS.daxpy(1., x, alpha')
                     alpha'
+
             // BLAS
             member o.Mul_S_V(alpha, x) =
                 if Array.isEmpty x then
                     Array.empty
                 else
-                    let x' = Array.copy x
+                    let x' = Array.copyFast x
                     BLAS.dscal(alpha, x')
                     x'
+
             // BLAS
             member o.Sub_V_V(x, y) =
                 let xl = x.Length
@@ -1109,11 +1165,11 @@ module OpenBLAS =
                 if xl = 0 then
                     (o :> Backend<float>).Mul_S_V(-1., y)
                 elif yl = 0 then
-                    Array.copy x
+                    Array.copyFast x
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
-                    let x' = Array.copy x
+                    let x' = Array.copyFast x
                     BLAS.daxpy(-1., y, x')
                     x'
             // BLAS
@@ -1155,6 +1211,7 @@ module OpenBLAS =
                 else
                     let i = BLAS.idamax(x)
                     abs x.[i - 1]
+
             // BLAS
             member o.Add_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -1171,6 +1228,20 @@ module OpenBLAS =
                     let y' = Array2D.copyFast y
                     BLAS.daxpy2D(1., x, y')
                     y'
+
+            // BLAS
+            member o.AlphaAdd_M_M_Inplace(alpha, x, y) =
+                let xl1 = Array2D.length1 x
+                let xl2 = Array2D.length2 x
+                let yl1 = Array2D.length1 y
+                let yl2 = Array2D.length2 y
+                if xl1 * xl2 = 0 then ()
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
+                    ErrorMessages.InvalidArgMM()
+                else
+                    Stats.InplaceOp(yl1 * yl2)
+                    BLAS.daxpy2D(alpha, x, y)
+
             // BLAS
             member o.Add_S_M(alpha, x) =
                 if Array2D.isEmpty x then
@@ -1179,6 +1250,8 @@ module OpenBLAS =
                     let alpha' = Array2D.create (Array2D.length1 x) (Array2D.length2 x) alpha
                     BLAS.daxpy2D(1., x, alpha')
                     alpha'
+
+
             // BLAS
             member o.Add_V_MCols(x, y) =
                 let xl = x.Length
@@ -1218,6 +1291,7 @@ module OpenBLAS =
                     let x' = Array2D.copyFast x
                     BLAS.daxpy2D(-1., y, x')
                     x'
+
             // BLAS
             member o.Mul_M_M(x, y) =
                 let xl1 = Array2D.length1 x
@@ -1279,7 +1353,7 @@ module OpenBLAS =
                 elif zl <> xl1 then
                     ErrorMessages.InvalidArgVMRows()
                 else
-                    let z' = Array.copy z
+                    let z' = Array.copyFast z
                     BLAS.dgemv(1., x, y, 1., z')
                     z'
             // BLAS
@@ -1316,7 +1390,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     LAPACK.dgesv(x', y')
             // LAPACK
             member o.SolveSymmetric_M_V(x, y) =
@@ -1329,7 +1403,7 @@ module OpenBLAS =
                     ErrorMessages.InvalidArgVMRows()
                 else
                     let x' = Array2D.copyFast x
-                    let y' = Array.copy y
+                    let y' = Array.copyFast y
                     LAPACK.dsysv(x', y')
             // LAPACK
             member o.Inverse_M(x) =

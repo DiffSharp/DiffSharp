@@ -1,16 +1,16 @@
-1.1.*
-- Separate reverse tape from node descriptions
+1.0.*
+- Separate AD reverse tape from value descriptions
 
-1.2.*
+1.1.*
 - Fully generalize differentiation API type signatures
 - GEMV/GEMM ops with vector addition
 - Iterate to fixed point
 - In-place operations
 - CUDA/CuBLAS backend
 
-1.3.*
+1.2.*
 - Tensor/multidimensional array, a la numpy.ndarray
 - Convolution ops
 
-1.4.*
+1.3.*
 - AD via syntax tree transformation

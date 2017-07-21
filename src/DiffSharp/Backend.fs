@@ -48,6 +48,9 @@ type Backend<'T> =
     abstract member Sum_V : ('T[]) -> 'T
     abstract member Sum_M : ('T[,]) -> 'T
     
+    // Vector valued, in-place. 
+    abstract member Add_V_V_Inplace : 'T[] * 'T[] -> unit
+
     // Vector valued
     abstract member Add_V_V : 'T[] * 'T[] -> 'T[]
     abstract member Add_S_V : 'T * 'T[] -> 'T[]
@@ -64,6 +67,9 @@ type Backend<'T> =
     abstract member Map_F_V : ('T -> 'T) * 'T[] -> 'T[]
     abstract member Map2_F_V_V : ('T -> 'T -> 'T) * 'T[] * 'T[] -> 'T[]
     abstract member ReshapeCopy_MRows_V : 'T[,] -> 'T[]
+
+    // Matrix valued, in-place
+    abstract member AlphaAdd_M_M_Inplace : 'T * 'T[,] * 'T[,] -> unit
 
     // Matrix valued
     abstract member Mul_Out_V_V : 'T[] * 'T[] -> 'T[,]

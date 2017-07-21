@@ -67,18 +67,39 @@ let duration nm n f () =
 let printb i t name =
     printfn "Running benchmark %2i / %2i %s" i  t name
 
+let opArgNames = 
+     ["diff"; 
+      "diff2";
+      "diffn";
+      "computeAdjointsV";
+      "computeAdjointsM";
+      "gradV";
+      "gradv";
+      "hessian";
+      "hessianv";
+      "gradhessian";
+      "gradhessianv";
+      "laplacian";
+      "jacobian";
+      "jacobianv";
+      "jacobianT";
+      "jacobianTv"]
+
 type options = {
     benchmarks : string list
     modes : string list
+    opsToRun : string list
     repetitions : int
     vectorSize : int
+    matrixSize : int
     fileName : string
     help : bool
     changed : bool
     }
 
-let minRepetitions = 1000
+let minRepetitions = 1
 let minVectorSize = 1
+let minMatrixSize = 1
 
 let dateTimeString (d:System.DateTime) =
     sprintf "%s%s%s%s%s%s" (d.Year.ToString()) (d.Month.ToString("D2")) (d.Day.ToString("D2")) (d.Hour.ToString("D2")) (d.Minute.ToString("D2")) (d.Second.ToString("D2"))
@@ -86,8 +107,10 @@ let dateTimeString (d:System.DateTime) =
 let defaultOptions = {
     benchmarks = []
     modes = []
+    opsToRun = []
     repetitions = 10000 // > 100000 seems to work fine
     vectorSize = 10
+    matrixSize = 10
     fileName = sprintf "DiffSharpBenchmark%s.txt" (dateTimeString System.DateTime.Now)
     help = false
     changed = false
@@ -110,6 +133,13 @@ let rec parseArgsRec args optionsSoFar =
             parseArgsRec xss {optionsSoFar with modes = optionsSoFar.modes @ [f]}
         | _ ->
             eprintfn "Option -b needs to be followed by a mode name (auto,numeric)."
+            exit 1
+    | ("/o" | "-o") ::xs -> 
+        match xs with
+        | f::xss when List.contains f opArgNames ->
+            parseArgsRec xss {optionsSoFar with opsToRun = optionsSoFar.opsToRun @ [f]}
+        | _ ->
+            eprintfn "Option -o needs to be followed by a operation name (%s)." (String.concat "," opArgNames)
             exit 1
     | "/f"::xs | "-f"::xs ->
         match xs with
@@ -146,6 +176,22 @@ let rec parseArgsRec args optionsSoFar =
                     parseArgsRec xss {optionsSoFar with vectorSize = size; changed = true}
             else
                 eprintfn "Option -vsize was followed by an invalid value."
+                exit 1
+        | _ ->
+            eprintfn "Option -vsize needs to be followed by a number."
+            exit 1
+    | "/msize"::xs | "-msize"::xs ->
+        match xs with
+        | s::xss ->
+            let couldparse, size = System.Int32.TryParse s
+            if couldparse then
+                if size < minMatrixSize then
+                    eprintfn "Given value for -msize was too small, using the minimum: %i." minMatrixSize
+                    exit 1
+                else
+                    parseArgsRec xss {optionsSoFar with matrixSize = size; changed = true}
+            else
+                eprintfn "Option -msize was followed by an invalid value."
                 exit 1
         | _ ->
             eprintfn "Option -vsize needs to be followed by a number."
@@ -202,6 +248,11 @@ let main argv =
             | [] -> [ "auto"; "numeric"] 
             | xss -> xss
 
+        let opsToRun = 
+            match ops.opsToRun with 
+            | [] -> opArgNames
+            | xss -> xss
+
         let bench1 = List.contains "1" benchmarks 
         let bench2 = List.contains "2" benchmarks 
         let auto = List.contains "auto" modes
@@ -214,6 +265,9 @@ let main argv =
 
         printfn "Repetitions: %A" n
         printfn "Vector size: %A" ops.vectorSize
+        printfn "Matrix size: %A" ops.matrixSize
+        printfn "Ops to run : %s" (String.concat "," ops.opsToRun)
+        printfn "Modes : %s" (String.concat "," ops.modes)
         printfn "Output file name: %s\n" fileName
 
         printfn "Benchmarking module version: %s" benchmarkver
@@ -248,8 +302,8 @@ let main argv =
 //                | _ -> "Unknown"
         printfn "RAM: %s\n" ram
 
-        printfn "Press any key to start benchmarking..."
-        System.Console.ReadKey(true) |> ignore
+        //printfn "Press any key to start benchmarking..."
+        //System.Console.ReadKey(true) |> ignore
 
         let started = System.DateTime.Now
         printfn "\nBenchmarking started: %A" started
@@ -280,8 +334,12 @@ let main argv =
         let zv = Array.init 3 (fun _ -> rnd.NextDouble())
         let zvD = DV zv
 
+        let xm = Array2D.init ops.matrixSize ops.matrixSize (fun _ _ -> rnd.NextDouble())
+        let xmD = DM xm
+
         let fvs (x:float[]) =
             x |> Array.sumBy (fun v -> v * log (v / 2.))
+
         let fvsD (x:DV) =
             x * (log (x / 2.))
 
@@ -289,15 +347,34 @@ let main argv =
             [|x |> Array.sumBy (fun v -> v * log (v / 2.))
               x |> Array.sumBy (fun v -> exp (sin v))
               x |> Array.sumBy (fun v -> exp (cos v))|]
+
         let fvvD (x:DV) =
             toDV [x * log (x / 2.); exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
 
+        let fms (x:float[,]) =
+            x |> Array2D.map (fun v -> v * log (v / 2.))
+
+        let fmsD (x:DM) =
+            x * (log (x / 2.)) |> DM.max
+
+        let fmm (x:float[,]) =
+            [|x |> Array2D.map (fun v -> exp (sin v))
+              x |> Array2D.map (fun v -> exp (cos v))|]
+        let fmmD (x:DM) =
+            toDV [exp (sin x) |> DM.sum; exp (cos x) |> DM.sum]
+
         let run_fss =      duration "eval" noriginal (fun () -> fss x)
         let run_fssD =     duration "evalD" noriginal (fun () -> fssD xD)
-        let run_fvs =      duration "eval" noriginal (fun () -> fvs xv)
-        let run_fvsD =     duration "evalD" noriginal (fun () -> fvsD xvD)
-        let run_fvv =      duration "eval" noriginal (fun () -> fvv xv)
-        let run_fvvD =     duration "evalD" noriginal (fun () -> fvvD xvD)
+
+        let run_fvs =      duration "evalv" noriginal (fun () -> fvs xv)
+        let run_fvsD =     duration "evalvD" noriginal (fun () -> fvsD xvD)
+        let run_fvv =      duration "evalv" noriginal (fun () -> fvv xv)
+        let run_fvvD =     duration "evalvD" noriginal (fun () -> fvvD xvD)
+
+        let run_fms =      duration "evalm" noriginal (fun () -> fms xm)
+        let run_fmsD =     duration "evalmD" noriginal (fun () -> fmsD xmD)
+        let run_fmm =      duration "evalm" noriginal (fun () -> fmm xm)
+        let run_fmmD =     duration "evalmD" noriginal (fun () -> fmmD xmD)
 
         let run_diff_AD =  duration "diff (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diff fssD xD)
         let run_diff_N =   duration "diff (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff fss x)
@@ -310,6 +387,10 @@ let main argv =
 
         let run_grad_AD =  duration "grad (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
         let run_grad_N =   duration "grad (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad fvs xv)
+
+        let run_computeAdjoints_AD =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fvsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xvD)))
+
+        let run_computeAdjoints_AD_m =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fmsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xmD)))
         
         let run_gradv_AD = duration "gradv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv fvsD xvD vvD)
         let run_gradv_N =  duration "gradv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv fvs xv vv)
@@ -389,27 +470,45 @@ let main argv =
         printfn "Benchmarking finished: %A\n" finished
         printfn "Total duration: %A\n" duration
 
-        let row_originals  = 
-            let fss = run_fss()
-            let fvs = run_fvs()
-            toDV [fss;      fss;       fss;       fvs;      fvs;       fvs;         fvs;          fvs;             fvs;              fvs;           run_fvv();          run_fvv();           run_fvv();           run_fvv()]
-        let row_originalsD = 
-            let fssD = run_fssD()
-            let fvsD = run_fvsD()
-            toDV [fssD;     fssD;      fssD;      fvsD;     fvsD;      fvsD;        fvsD;         fvsD;            fvsD;             fvsD;          run_fvvD();         run_fvvD();          run_fvvD();          run_fvvD()]
-        let row_AD()         = toDV [run_diff_AD();  run_diff2_AD();  run_diffn_AD();  run_grad_AD();  run_gradv_AD();  run_hessian_AD();  run_hessianv_AD();  run_gradhessian_AD();  run_gradhessianv_AD();  run_laplacian_AD();  run_jacobian_AD();  run_jacobianv_AD();  run_jacobianT_AD();  run_jacobianTv_AD()]
-        let row_N()          = toDV [run_diff_N();   run_diff2_N();   run_diffn_N();   run_grad_N();   run_gradv_N();   run_hessian_N();   run_hessianv_N();   run_gradhessian_N();   run_gradhessianv_N();   run_laplacian_N();   run_jacobian_N();   run_jacobianv_N();   run_jacobianT_N();   run_jacobianTv_N()]
-        let row'_AD()        = toDV [run_diff'_AD(); run_diff2'_AD(); run_diffn'_AD(); run_grad'_AD(); run_gradv'_AD(); run_hessian'_AD(); run_hessianv'_AD(); run_gradhessian'_AD(); run_gradhessianv'_AD(); run_laplacian'_AD(); run_jacobian'_AD(); run_jacobianv'_AD(); run_jacobianT'_AD(); run_jacobianTv'_AD()]
-        let row'_N()         = toDV [run_diff'_N();  run_diff2'_N();  run_diffn'_N();  run_grad'_N();  run_gradv'_N();  run_hessian'_N();  run_hessianv'_N();  run_gradhessian'_N();  run_gradhessianv'_N();  run_laplacian'_N();  run_jacobian'_N();  run_jacobianv'_N();  run_jacobianT'_N();  run_jacobianTv'_N()]
+        let fss = lazy run_fss()
+        let fvs = lazy run_fvs()
+        let fvv = lazy run_fvv()
+        let fms = lazy run_fms()
+        let fmm = lazy run_fmm()
+        let fssD = lazy run_fssD()
+        let fvsD = lazy run_fvsD()
+        let fvvD = lazy run_fvvD()
+        let fmsD = lazy run_fmsD()
+        let fmmD = lazy run_fmmD()
+        let k v () = v
+        let K (vl: Lazy<_>) () = vl.Force()
 
+        let opNames        = ["diff";       "diff2";       "diffn";       "computeAdjointsV";       "computeAdjointsM";       "gradV";      "gradv";       "hessian";       "hessianv";       "gradhessian";       "gradhessianv";       "laplacian";       "jacobian";       "jacobianv";       "jacobianT";       "jacobianTv"]
+        let row_originals  = [K fss;        K fss;         K fss;         K fvs;                   K fms;                     K fvs;        K fvs;         K fvs;           K fvs;            K fvs;               K fvs;                K fvs;             K fvv;            K fvv;             K fvv;             K fvv]
+        let row_originalsD = [K fssD;       K fssD;        K fssD;        K fvsD;                  K fmsD;                    K fvsD;       K fvsD;        K fvsD;          K fvsD;           K fvsD;              K fvsD;               K fvsD;            K fvvD;           K fvvD;            K fvvD;            K fvvD]
+        let row_AD         = [run_diff_AD;  run_diff2_AD;  run_diffn_AD;  run_computeAdjoints_AD;  run_computeAdjoints_AD_m;  run_grad_AD;  run_gradv_AD;  run_hessian_AD;  run_hessianv_AD;  run_gradhessian_AD;  run_gradhessianv_AD;  run_laplacian_AD;  run_jacobian_AD;  run_jacobianv_AD;  run_jacobianT_AD;  run_jacobianTv_AD]
+        let row_N          = [run_diff_N;   run_diff2_N;   run_diffn_N;   k 0.0;                   k 0.0;                     run_grad_N;   run_gradv_N;   run_hessian_N;   run_hessianv_N;   run_gradhessian_N;   run_gradhessianv_N;   run_laplacian_N;   run_jacobian_N;   run_jacobianv_N;   run_jacobianT_N;   run_jacobianTv_N]
+        let row'_AD        = [run_diff'_AD; run_diff2'_AD; run_diffn'_AD; k 0.0;                   k 0.0;                     run_grad'_AD; run_gradv'_AD; run_hessian'_AD; run_hessianv'_AD; run_gradhessian'_AD; run_gradhessianv'_AD; run_laplacian'_AD; run_jacobian'_AD; run_jacobianv'_AD; run_jacobianT'_AD; run_jacobianTv'_AD]
+        let row'_N         = [run_diff'_N;  run_diff2'_N;  run_diffn'_N;  k 0.0;                   k 0.0;                     run_grad'_N;  run_gradv'_N;  run_hessian'_N;  run_hessianv'_N;  run_gradhessian'_N;  run_gradhessianv'_N;  run_laplacian'_N;  run_jacobian'_N;  run_jacobianv'_N;  run_jacobianT'_N;  run_jacobianTv'_N]
+        
+        if Set.ofList opNames <> Set.ofList opArgNames then failwith "opNames <> opArgNames - fix the benchmark program please"
+        let doOp op = List.contains op opsToRun
+        let opNames2        = opNames |> List.filter doOp
+        let row_originals  = List.zip opNames row_originals |> List.filter (fst >> doOp) |> List.map snd
+        let row_originalsD = List.zip opNames row_originalsD |> List.filter (fst >> doOp) |> List.map snd
+        let row_AD         = List.zip opNames row_AD |> List.filter (fst >> doOp) |> List.map snd
+        let row_N          = List.zip opNames row_N |> List.filter (fst >> doOp) |> List.map snd
+        let row'_AD        = List.zip opNames row'_AD |> List.filter (fst >> doOp) |> List.map snd
+        let row'_N         = List.zip opNames row'_N |> List.filter (fst >> doOp) |> List.map snd
+        let run fs = List.map (fun f -> f()) fs |> toDV
               
         let bench = 
             [ if bench1  then 
-                if auto then  yield row_AD() ./ row_originalsD
-                if numeric then yield  row_N()  ./ row_originals 
+                if auto then  yield run row_AD ./ run row_originalsD
+                if numeric then yield  run row_N  ./ run row_originals 
               if bench2 then 
-                if auto then yield row'_AD() ./ row_originalsD
-                if numeric then yield row'_N()  ./ row_originals ]
+                if auto then yield run row'_AD ./ run row_originalsD
+                if numeric then yield run row'_N  ./ run row_originals ]
             |> DM.ofRows 
 
         let score = float (DM.sum bench)
@@ -438,7 +537,7 @@ let main argv =
         stream.WriteLine(sprintf "Benchmark score: %A\r\n" score)
     
         stream.WriteLine("Benchmark matrix\r\n")
-        stream.WriteLine("Column labels: {diff, diff2, diffn, grad, gradv, hessian, hessianv, gradhessian, gradhessianv, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
+        stream.WriteLine("Column labels: {0}",String.concat ", " opNames2 )
         stream.WriteLine("Row labels: {0}", String.concat ", " [ if bench1 then 
                                                                     if auto then yield "DiffSharp.Bench1.AD"
                                                                     if numeric then yield "Diffsharp.Bench1.Numerical" 
