@@ -47,14 +47,15 @@ open DiffSharp.AD.Float64
 //    let after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime.Ticks
 //    f(), (float (after - before)) / (float n)
 
-let duration n f =
+let duration nm n f () =
     let s = new System.Diagnostics.Stopwatch()
+    printfn "* running %s" nm
     s.Start() |> ignore
     for i in 1..n do
         f() |> ignore
     s.Stop() |> ignore
     let dur = s.ElapsedTicks
-    f(), (float dur) / (float n)
+    (float dur) / (float n)
 
 //let printArray (s:System.IO.StreamWriter) (o:obj[]) =
 //    for a in o do
@@ -67,11 +68,13 @@ let printb i t name =
     printfn "Running benchmark %2i / %2i %s" i  t name
 
 type options = {
-    repetitions : int;
-    vectorSize : int;
-    fileName : string;
-    help : bool;
-    changed : bool;
+    benchmarks : string list
+    modes : string list
+    repetitions : int
+    vectorSize : int
+    fileName : string
+    help : bool
+    changed : bool
     }
 
 let minRepetitions = 1000
@@ -81,17 +84,33 @@ let dateTimeString (d:System.DateTime) =
     sprintf "%s%s%s%s%s%s" (d.Year.ToString()) (d.Month.ToString("D2")) (d.Day.ToString("D2")) (d.Hour.ToString("D2")) (d.Minute.ToString("D2")) (d.Second.ToString("D2"))
 
 let defaultOptions = {
-    repetitions = 10000; // > 100000 seems to work fine
-    vectorSize = 10;
+    benchmarks = []
+    modes = []
+    repetitions = 10000 // > 100000 seems to work fine
+    vectorSize = 10
     fileName = sprintf "DiffSharpBenchmark%s.txt" (dateTimeString System.DateTime.Now)
-    help = false;
-    changed = false;
+    help = false
+    changed = false
     }
 
 let rec parseArgsRec args optionsSoFar =
     match args with
     | [] -> optionsSoFar
     | "/h"::_ | "-h"::_ | "--help"::_ | "/?"::_ | "-?"::_ -> {optionsSoFar with help = true}
+    | ("/b" | "-b")::xs -> 
+        match xs with
+        | (("1" | "2") as f)::xss -> 
+            parseArgsRec xss {optionsSoFar with benchmarks= optionsSoFar.benchmarks @ [f]}
+        | _ ->
+            eprintfn "Option -b needs to be followed by a benchmark name (1, 2)."
+            parseArgsRec xs optionsSoFar
+    | ("/m" | "-m") ::xs -> 
+        match xs with
+        | (("auto" | "numeric") as f)::xss -> 
+            parseArgsRec xss {optionsSoFar with modes = optionsSoFar.modes @ [f]}
+        | _ ->
+            eprintfn "Option -b needs to be followed by a mode name (auto,numeric)."
+            parseArgsRec xs optionsSoFar
     | "/f"::xs | "-f"::xs ->
         match xs with
         | f::xss -> 
@@ -155,6 +174,8 @@ let main argv =
     if ops.help then
         printfn "Runs a series of benchmarks testing the operations in the DiffSharp library.\n"
         printfn "dsbench [-r repetitions] [-vsize size] [-f filename]\n"
+        printfn "  -b benchmark    Specifies the benchmark (1 or 2)."
+        printfn "  -m mode         Specifies the mode (auto or numeric)."
         printfn "  -r repetitions  Specifies the number of repetitions."
         printfn "                  Higher values give more accurate results, through averaging."
         printfn "                  Default: %i" defaultOptions.repetitions
@@ -170,6 +191,21 @@ let main argv =
         printfn "Use option -h for help on usage.\n"
     
         if not ops.changed then printfn "Using default options.\n"
+
+        let benchmarks = 
+            match ops.benchmarks with 
+            | [] -> ["bench1"; "bench2"] 
+            | xss -> xss
+
+        let modes = 
+            match ops.modes with 
+            | [] -> [ "auto"; "numeric"] 
+            | xss -> xss
+
+        let bench1 = List.contains "bench1" benchmarks 
+        let bench2 = List.contains "bench2" benchmarks 
+        let auto = List.contains "auto" modes
+        let numeric = List.contains "numeric" modes
 
         let n = ops.repetitions
         let nsymbolic = n / 1000
@@ -248,7 +284,6 @@ let main argv =
             x |> Array.sumBy (fun v -> v * log (v / 2.))
         let fvsD (x:DV) =
             x * (log (x / 2.))
-        let _, _ =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
 
         let fvv (x:float[]) =
             [|x |> Array.sumBy (fun v -> v * log (v / 2.))
@@ -256,160 +291,131 @@ let main argv =
               x |> Array.sumBy (fun v -> exp (cos v))|]
         let fvvD (x:DV) =
             toDV [x * log (x / 2.); exp (sin x) |> DV.sum; exp (cos x) |> DV.sum]
-        let _, _ =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian fvvD xvD)
 
-        printb 1 29 "original functions"
-        let res_fss,      dur_fss =      duration noriginal (fun () -> fss x)
-        let res_fssD,     dur_fssD =     duration noriginal (fun () -> fssD xD)
-        let res_fvs,      dur_fvs =      duration noriginal (fun () -> fvs xv)
-        let res_fvsD,     dur_fvsD =     duration noriginal (fun () -> fvsD xvD)
-        let res_fvv,      dur_fvv =      duration noriginal (fun () -> fvv xv)
-        let res_fvvD,     dur_fvvD =     duration noriginal (fun () -> fvvD xvD)
+        let run_fss =      duration "eval" noriginal (fun () -> fss x)
+        let run_fssD =     duration "evalD" noriginal (fun () -> fssD xD)
+        let run_fvs =      duration "eval" noriginal (fun () -> fvs xv)
+        let run_fvsD =     duration "evalD" noriginal (fun () -> fvsD xvD)
+        let run_fvv =      duration "eval" noriginal (fun () -> fvv xv)
+        let run_fvvD =     duration "evalD" noriginal (fun () -> fvvD xvD)
 
-        printb 2 29 "diff"
-        let res_diff_AD,  dur_diff_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diff fssD xD)
-        let res_diff_N,   dur_diff_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff fss x)
+        let run_diff_AD =  duration "diff (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diff fssD xD)
+        let run_diff_N =   duration "diff (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff fss x)
 
-        printb 3 29 "diff2"
-        let res_diff2_AD, dur_diff2_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diff2 fssD xD)
-        let res_diff2_N,  dur_diff2_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff2 fss x)
+        let run_diff2_AD = duration "diff2 (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diff2 fssD xD)
+        let run_diff2_N =  duration "diff2 (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff2 fss x)
 
-        printb 4 29 "diffn"
-        let res_diffn_AD, dur_diffn_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diffn 2 fssD xD)
-        let res_diffn_N,  dur_diffn_N =  0., 0.
+        let run_diffn_AD = duration "diffn (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diffn 2 fssD xD)
+        let run_diffn_N() =  0.
 
-        printb 5 29 "grad"
-        let res_grad_AD,  dur_grad_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
-        let res_grad_N,   dur_grad_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad fvs xv)
+        let run_grad_AD =  duration "grad (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
+        let run_grad_N =   duration "grad (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad fvs xv)
         
-        printb 6 29 "gradv"
-        let res_gradv_AD, dur_gradv_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv fvsD xvD vvD)
-        let res_gradv_N,  dur_gradv_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv fvs xv vv)
+        let run_gradv_AD = duration "gradv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv fvsD xvD vvD)
+        let run_gradv_N =  duration "gradv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv fvs xv vv)
 
-        printb 7 29 "hessian"
-        let res_hessian_AD,  dur_hessian_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian fvsD xvD)
-        let res_hessian_N,   dur_hessian_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian fvs xv)
+        let run_hessian_AD =  duration "hessian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian fvsD xvD)
+        let run_hessian_N =   duration "hessian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian fvs xv)
         
-        printb 8 29 "hessianv"
-        let res_hessianv_AD, dur_hessianv_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv fvsD xvD vvD)
-        let res_hessianv_N,  dur_hessianv_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv fvs xv vv)
+        let run_hessianv_AD = duration "hessianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv fvsD xvD vvD)
+        let run_hessianv_N =  duration "hessianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv fvs xv vv)
 
-        printb 9 29 "gradhessian"
-        let res_gradhessian_AD,  dur_gradhessian_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian fvsD xvD)
-        let res_gradhessian_N,   dur_gradhessian_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian fvs xv)
+        let run_gradhessian_AD =  duration "gradhessian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian fvsD xvD)
+        let run_gradhessian_N =   duration "gradhessian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian fvs xv)
         
-        printb 10 29 "gradhessianv"
-        let res_gradhessianv_AD, dur_gradhessianv_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv fvsD xvD vvD)
-        let res_gradhessianv_N,  dur_gradhessianv_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv fvs xv vv)
+        let run_gradhessianv_AD = duration "gradhessianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv fvsD xvD vvD)
+        let run_gradhessianv_N =  duration "gradhessianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv fvs xv vv)
 
-        printb 11 29 "laplacian"
-        let res_laplacian_AD,  dur_laplacian_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.laplacian fvsD xvD)
-        let res_laplacian_N,   dur_laplacian_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.laplacian fvs xv)
+        let run_laplacian_AD =  duration "laplacian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.laplacian fvsD xvD)
+        let run_laplacian_N =   duration "laplacian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.laplacian fvs xv)
 
-        printb 12 29 "jacobian"
-        let res_jacobian_AD,  dur_jacobian_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian fvvD xvD)
-        let res_jacobian_N,   dur_jacobian_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobian fvv xv)
+        let run_jacobian_AD =  duration "jacobian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian fvvD xvD)
+        let run_jacobian_N =   duration "jacobian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobian fvv xv)
 
-        printb 13 29 "jacobianv"
-        let res_jacobianv_AD,  dur_jacobianv_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv fvvD xvD vvD)
-        let res_jacobianv_N,   dur_jacobianv_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv fvv xv vv)
+        let run_jacobianv_AD =  duration "jacobianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv fvvD xvD vvD)
+        let run_jacobianv_N =   duration "jacobianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv fvv xv vv)
         
-        printb 14 29 "jacobianT"
-        let res_jacobianT_AD,  dur_jacobianT_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT fvvD xvD)
-        let res_jacobianT_N,   dur_jacobianT_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT fvv xv)
+        let run_jacobianT_AD =  duration "jacobianT (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT fvvD xvD)
+        let run_jacobianT_N =   duration "jacobianT (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT fvv xv)
 
-        printb 15 29 "jacobianTv"
-        let res_jacobianTv_AD,  dur_jacobianTv_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianTv fvvD xvD zvD)
-        let res_jacobianTv_N,   dur_jacobianTv_N =   0., 0.
+        let run_jacobianTv_AD =  duration "jacobianTv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianTv fvvD xvD zvD)
+        let run_jacobianTv_N () =   0.
 
 
-        //
-        //
-        //
+        let run_diff'_AD =  duration "diff' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diff' fssD xD)
+        let run_diff'_N =   duration "diff' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff' fss x)
 
-        printb 16 29 "diff'"
-        let res_diff'_AD,  dur_diff'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diff' fssD xD)
-        let res_diff'_N,   dur_diff'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff' fss x)
+        let run_diff2'_AD = duration "diff2' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diff2' fssD xD)
+        let run_diff2'_N =  duration "diff2' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff2' fss x)
 
-        printb 17 29 "diff2'"
-        let res_diff2'_AD, dur_diff2'_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diff2' fssD xD)
-        let res_diff2'_N,  dur_diff2'_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.diff2' fss x)
+        let run_diffn'_AD = duration "diffn' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.diffn' 2 fssD xD)
+        let run_diffn'_N() =  0.
 
-        printb 18 29 "diffn'"
-        let res_diffn'_AD, dur_diffn'_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.diffn' 2 fssD xD)
-        let res_diffn'_N,  dur_diffn'_N =  0., 0.
-
-        printb 19 29 "grad'"
-        let res_grad'_AD,  dur_grad'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.grad' fvsD xvD)
-        let res_grad'_N,   dur_grad'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad' fvs xv)
+        let run_grad'_AD =  duration "grad' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.grad' fvsD xvD)
+        let run_grad'_N =   duration "grad' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad' fvs xv)
         
-        printb 20 29 "gradv'"
-        let res_gradv'_AD, dur_gradv'_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv' fvsD xvD vvD)
-        let res_gradv'_N,  dur_gradv'_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv' fvs xv vv)
+        let run_gradv'_AD = duration "gradv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv' fvsD xvD vvD)
+        let run_gradv'_N =  duration "gradv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv' fvs xv vv)
 
-        printb 21 29 "hessian'"
-        let res_hessian'_AD,  dur_hessian'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian' fvsD xvD)
-        let res_hessian'_N,   dur_hessian'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian' fvs xv)
+        let run_hessian'_AD =  duration "hessian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian' fvsD xvD)
+        let run_hessian'_N =   duration "hessian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian' fvs xv)
         
-        printb 22 29 "hessianv'"
-        let res_hessianv'_AD, dur_hessianv'_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv' fvsD xvD vvD)
-        let res_hessianv'_N,  dur_hessianv'_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv' fvs xv vv)
+        let run_hessianv'_AD = duration "hessianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv' fvsD xvD vvD)
+        let run_hessianv'_N =  duration "hessianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv' fvs xv vv)
 
-        printb 23 29 "gradhessian'"
-        let res_gradhessian'_AD,  dur_gradhessian'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian' fvsD xvD)
-        let res_gradhessian'_N,   dur_gradhessian'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian' fvs xv)
+        let run_gradhessian'_AD =  duration "gradhessian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian' fvsD xvD)
+        let run_gradhessian'_N =   duration "gradhessian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian' fvs xv)
         
-        printb 24 29 "gradhessianv'"
-        let res_gradhessianv'_AD, dur_gradhessianv'_AD = duration n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv' fvsD xvD vvD)
-        let res_gradhessianv'_N,  dur_gradhessianv'_N =  duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv' fvs xv vv)
+        let run_gradhessianv'_AD = duration "gradhessianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv' fvsD xvD vvD)
+        let run_gradhessianv'_N =  duration "gradhessianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv' fvs xv vv)
 
-        printb 25 29 "laplacian'"
-        let res_laplacian'_AD,  dur_laplacian'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.laplacian' fvsD xvD)
-        let res_laplacian'_N,   dur_laplacian'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.laplacian' fvs xv)
+        let run_laplacian'_AD =  duration "laplacian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.laplacian' fvsD xvD)
+        let run_laplacian'_N =   duration "laplacian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.laplacian' fvs xv)
 
-        printb 26 29 "jacobian'"
-        let res_jacobian'_AD,  dur_jacobian'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian' fvvD xvD)
-        let res_jacobian'_N,   dur_jacobian'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobian' fvv xv)
+        let run_jacobian'_AD =  duration "jacobian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobian' fvvD xvD)
+        let run_jacobian'_N =   duration "jacobian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobian' fvv xv)
 
-        printb 27 29 "jacobianv'"
-        let res_jacobianv'_AD,  dur_jacobianv'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv' fvvD xvD vvD)
-        let res_jacobianv'_N,   dur_jacobianv'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv' fvv xv vv)
+        let run_jacobianv'_AD =  duration "jacobianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv' fvvD xvD vvD)
+        let run_jacobianv'_N =   duration "jacobianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv' fvv xv vv)
         
-        printb 28 29 "jacobianT'"
-        let res_jacobianT'_AD,  dur_jacobianT'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT' fvvD xvD)
-        let res_jacobianT'_N,   dur_jacobianT'_N =   duration n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT' fvv xv)
+        let run_jacobianT'_AD =  duration "jacobianT' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT' fvvD xvD)
+        let run_jacobianT'_N =   duration "jacobianT' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT' fvv xv)
 
-        printb 29 29 "jacobianTv'"
-        let res_jacobianTv'_AD,  dur_jacobianTv'_AD =  duration n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianTv' fvvD xvD zvD)
-        let res_jacobianTv'_N,   dur_jacobianTv'_N =   0., 0.
+        let run_jacobianTv'_AD =  duration "jacobianTv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianTv' fvvD xvD zvD)
+        let run_jacobianTv'_N () =   0.
 
         let finished = System.DateTime.Now
         let duration = finished - started
         printfn "Benchmarking finished: %A\n" finished
         printfn "Total duration: %A\n" duration
 
-        let row_originals  = toDV [dur_fss;      dur_fss;       dur_fss;       dur_fvs;      dur_fvs;       dur_fvs;         dur_fvs;          dur_fvs;             dur_fvs;              dur_fvs;           dur_fvv;          dur_fvv;           dur_fvv;           dur_fvv]
-        let row_originalsD = toDV [dur_fssD;     dur_fssD;      dur_fssD;      dur_fvsD;     dur_fvsD;      dur_fvsD;        dur_fvsD;         dur_fvsD;            dur_fvsD;             dur_fvsD;          dur_fvvD;         dur_fvvD;          dur_fvvD;          dur_fvvD]
-        let row_AD         = toDV [dur_diff_AD;  dur_diff2_AD;  dur_diffn_AD;  dur_grad_AD;  dur_gradv_AD;  dur_hessian_AD;  dur_hessianv_AD;  dur_gradhessian_AD;  dur_gradhessianv_AD;  dur_laplacian_AD;  dur_jacobian_AD;  dur_jacobianv_AD;  dur_jacobianT_AD;  dur_jacobianTv_AD]
-        let row_N          = toDV [dur_diff_N;   dur_diff2_N;   dur_diffn_N;   dur_grad_N;   dur_gradv_N;   dur_hessian_N;   dur_hessianv_N;   dur_gradhessian_N;   dur_gradhessianv_N;   dur_laplacian_N;   dur_jacobian_N;   dur_jacobianv_N;   dur_jacobianT_N;   dur_jacobianTv_N]
-        let row'_AD        = toDV [dur_diff'_AD; dur_diff2'_AD; dur_diffn'_AD; dur_grad'_AD; dur_gradv'_AD; dur_hessian'_AD; dur_hessianv'_AD; dur_gradhessian'_AD; dur_gradhessianv'_AD; dur_laplacian'_AD; dur_jacobian'_AD; dur_jacobianv'_AD; dur_jacobianT'_AD; dur_jacobianTv'_AD]
-        let row'_N         = toDV [dur_diff'_N;  dur_diff2'_N;  dur_diffn'_N;  dur_grad'_N;  dur_gradv'_N;  dur_hessian'_N;  dur_hessianv'_N;  dur_gradhessian'_N;  dur_gradhessianv'_N;  dur_laplacian'_N;  dur_jacobian'_N;  dur_jacobianv'_N;  dur_jacobianT'_N;  dur_jacobianTv'_N]
+        let row_originals  = 
+            let fss = run_fss()
+            let fvs = run_fvs()
+            toDV [fss;      fss;       fss;       fvs;      fvs;       fvs;         fvs;          fvs;             fvs;              fvs;           run_fvv();          run_fvv();           run_fvv();           run_fvv()]
+        let row_originalsD = 
+            let fssD = run_fssD()
+            let fvsD = run_fvsD()
+            toDV [fssD;     fssD;      fssD;      fvsD;     fvsD;      fvsD;        fvsD;         fvsD;            fvsD;             fvsD;          run_fvvD();         run_fvvD();          run_fvvD();          run_fvvD()]
+        let row_AD()         = toDV [run_diff_AD();  run_diff2_AD();  run_diffn_AD();  run_grad_AD();  run_gradv_AD();  run_hessian_AD();  run_hessianv_AD();  run_gradhessian_AD();  run_gradhessianv_AD();  run_laplacian_AD();  run_jacobian_AD();  run_jacobianv_AD();  run_jacobianT_AD();  run_jacobianTv_AD()]
+        let row_N()          = toDV [run_diff_N();   run_diff2_N();   run_diffn_N();   run_grad_N();   run_gradv_N();   run_hessian_N();   run_hessianv_N();   run_gradhessian_N();   run_gradhessianv_N();   run_laplacian_N();   run_jacobian_N();   run_jacobianv_N();   run_jacobianT_N();   run_jacobianTv_N()]
+        let row'_AD()        = toDV [run_diff'_AD(); run_diff2'_AD(); run_diffn'_AD(); run_grad'_AD(); run_gradv'_AD(); run_hessian'_AD(); run_hessianv'_AD(); run_gradhessian'_AD(); run_gradhessianv'_AD(); run_laplacian'_AD(); run_jacobian'_AD(); run_jacobianv'_AD(); run_jacobianT'_AD(); run_jacobianTv'_AD()]
+        let row'_N()         = toDV [run_diff'_N();  run_diff2'_N();  run_diffn'_N();  run_grad'_N();  run_gradv'_N();  run_hessian'_N();  run_hessianv'_N();  run_gradhessian'_N();  run_gradhessianv'_N();  run_laplacian'_N();  run_jacobian'_N();  run_jacobianv'_N();  run_jacobianT'_N();  run_jacobianTv'_N()]
 
+              
+        let bench = 
+            [ if bench1  then 
+                if auto then  yield row_AD() ./ row_originalsD
+                if numeric then yield  row_N()  ./ row_originals 
+              if bench2 then 
+                if auto then yield row'_AD() ./ row_originalsD
+                if numeric then yield row'_N()  ./ row_originals ]
+            |> DM.ofRows 
 
-        let bench = DM.ofRows [row_AD ./ row_originalsD
-                               row_N  ./ row_originals]
-
-        let bench' = DM.ofRows [row'_AD ./ row_originalsD
-                                row'_N  ./ row_originals]
-
-        let score:float = convert ((DV.sum row_AD)
-                                 + (DV.sum row_N)
-                                 + (DV.sum row'_AD)
-                                 + (DV.sum row'_N))
+        let score = float (DM.sum bench)
     
-        let score = score / (float System.TimeSpan.TicksPerSecond)
         let score = 1. / score
-        let score = int (score * 100000.)
+        let score = int (score * 100000000.)
 
         printfn "Benchmark score: %A\n" score
 
@@ -431,15 +437,16 @@ let main argv =
         stream.WriteLine(sprintf "Total duration: %A\r\n" duration)
         stream.WriteLine(sprintf "Benchmark score: %A\r\n" score)
     
-        stream.WriteLine("Benchmark matrix 1\r\n")
+        stream.WriteLine("Benchmark matrix\r\n")
         stream.WriteLine("Column labels: {diff, diff2, diffn, grad, gradv, hessian, hessianv, gradhessian, gradhessianv, laplacian, jacobian, jacobianv, jacobianT, jacobianTv}")
-        stream.WriteLine("Row labels: {DiffSharp.AD, Diffsharp.Numerical}")
+        stream.WriteLine("Row labels: {0}", String.concat ", " [ if bench1 then 
+                                                                    if auto then yield "DiffSharp.Bench1.AD"
+                                                                    if numeric then yield "Diffsharp.Bench1.Numerical" 
+                                                                 if bench2 then 
+                                                                    if auto then yield "DiffSharp.Bench2.AD"
+                                                                    if numeric then yield "Diffsharp.Bench2.Numerical" 
+                                                                 ])
         stream.WriteLine(sprintf "Values: %s" (bench.ToMathematicaString()))
-
-        stream.WriteLine("\n\nBenchmark matrix 2\r\n")
-        stream.WriteLine("Column labels: {diff', diff2', diffn', grad', gradv', hessian', hessianv', gradhessian', gradhessianv', laplacian', jacobian', jacobianv', jacobianT', jacobianTv'}")
-        stream.WriteLine("Row labels: {DiffSharp.AD, Diffsharp.Numerical}")
-        stream.WriteLine(sprintf "Values: %s" (bench'.ToMathematicaString()))
 
         stream.Flush()
         stream.Close()
