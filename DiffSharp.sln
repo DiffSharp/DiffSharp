@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{1168F126-A9CD-4E72-AD0B-8B9475D6C0F0}"
 	ProjectSection(SolutionItems) = preProject
@@ -41,6 +41,9 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{89636F64-9969-474B-AA31-1FE21F8B6217}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
