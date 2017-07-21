@@ -61,7 +61,6 @@
     <Compile Include="Tests.fs" />
     <Compile Include="Backend.OpenBLAS.fs" />
     <Compile Include="AD.Float32.fs" />
-    <Compile Include="Symbolic.fs" />
     <None Include="Script.fsx" />
     <Content Include="paket.references" />
     <Content Include="app.config" />
