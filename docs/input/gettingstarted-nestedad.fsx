@@ -180,35 +180,24 @@ let e = (sin a) * (a + b)
 
 // Propagate the adjoint value of 1 backward from e (or de/de = 1)
 // i.e., calculate partial derivatives of e with respect to other variables
-e |> reverseProp (D 1.)
+let adjoints = e |> computeAdjoints
 
 // Read the adjoint values of the inputs
 // You can calculate all partial derivatives in just one reverse sweep!
-let deda = a.A
-let dedb = b.A
+let deda = adjoints.[a]
+let dedb = adjoints.[b]
 
 (*** hide, define-output: o2 ***)
-printf "val a : D = DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u)
-val b : D =
-  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3657u)
+printf "val a : D = DR (D 0.5,Noop,219u)
+val b : D = DR (D 1.2,Noop,219u)
 val e : D =
   DR
-    (D 0.8150234156,{contents = D 1.0;},
+    (D 0.8150234156,
      Mul_D_D
-       (DR
-          (D 0.4794255386,{contents = D 1.7;},
-           Sin_D
-             (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u)),
-           {contents = 0u;},3657u),
-        DR
-          (D 1.7,{contents = D 0.4794255386;},
-           Add_D_D
-             (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3657u),
-              DR
-                (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},
-                 3657u)),{contents = 0u;},3657u)),{contents = 0u;},3657u)
+       (DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,219u)),219u),
+        DR (D 1.7,Add_D_D (DR (D 0.5,Noop,219u),DR (D 1.2,Noop,219u)),219u)),
+     219u)
+val adjoints : Adjoints
 val deda : D = D 1.971315894
 val dedb : D = D 0.4794255386"
 (*** include-output: o2 ***)
@@ -230,51 +219,29 @@ let d' = a' + b'
 let e' = c' * d' // e' = (sin a') * (a' + b')
 
 // Propagate the adjoint value of 1 backward from e
-e' |> reverseProp (D 1.)
+let adjoints' = e' |> computeAdjoints
 
 // Read the adjoint values
 // You can calculate all partial derivatives in just one reverse sweep!
-let de'da' = a'.A
-let de'db' = b'.A
-let de'dc' = c'.A
-let de'dd' = d'.A
+let de'da' = adjoints'.[a']
+let de'db' = adjoints'.[b']
+let de'dc' = adjoints'.[c']
+let de'dd' = adjoints'.[d']
 
 (*** hide, define-output: o3 ***)
-printf "val a' : D =
-  DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)
-val b' : D =
-  DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3659u)
-val c' : D =
-  DR
-    (D 0.4794255386,{contents = D 1.7;},
-     Sin_D
-       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)),
-     {contents = 0u;},3659u)
+printf "val a' : D = DR (D 0.5,Noop,221u)
+val b' : D = DR (D 1.2,Noop,221u)
+val c' : D = DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,221u)),221u)
 val d' : D =
-  DR
-    (D 1.7,{contents = D 0.4794255386;},
-     Add_D_D
-       (DR (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u),
-        DR (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},3659u)),
-     {contents = 0u;},3659u)
+  DR (D 1.7,Add_D_D (DR (D 0.5,Noop,221u),DR (D 1.2,Noop,221u)),221u)
 val e' : D =
   DR
-    (D 0.8150234156,{contents = D 1.0;},
+    (D 0.8150234156,
      Mul_D_D
-       (DR
-          (D 0.4794255386,{contents = D 1.7;},
-           Sin_D
-             (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u)),
-           {contents = 0u;},3659u),
-        DR
-          (D 1.7,{contents = D 0.4794255386;},
-           Add_D_D
-             (DR
-                (D 0.5,{contents = D 1.971315894;},Noop,{contents = 0u;},3659u),
-              DR
-                (D 1.2,{contents = D 0.4794255386;},Noop,{contents = 0u;},
-                 3659u)),{contents = 0u;},3659u)),{contents = 0u;},3659u)
+       (DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,221u)),221u),
+        DR (D 1.7,Add_D_D (DR (D 0.5,Noop,221u),DR (D 1.2,Noop,221u)),221u)),
+     221u)
+val adjoints' : Adjoints
 val de'da' : D = D 1.971315894
 val de'db' : D = D 0.4794255386
 val de'dc' : D = D 1.7

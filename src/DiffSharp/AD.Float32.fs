@@ -11,7 +11,7 @@
 //   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
-//   DiffSharp is distributed in the hope that it will be useful,
+//   DiffSharp is distributed in the hope that it will be useful, 
 //   but WITHOUT ANY WARRANTY; without even the implied warranty of
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //   GNU General Public License for more details.
@@ -35,6 +35,11 @@
 //
 //   www.bcl.hamilton.ie
 //
+//   Don Syme
+//   dsyme@microsoft.com
+//
+//   Microsoft Research, Cambridge, UK
+//
 
 /// Nested forward and reverse mode automatic differentiation module
 module DiffSharp.AD.Float32
@@ -44,143 +49,113 @@ module DiffSharp.AD.Float32
 open DiffSharp.Util
 open DiffSharp.Config
 open System.Threading.Tasks
+open System.Collections.Generic
 
-let inline toNumber x = float32 x
-let inline failWithInvalidTypeMessage () = failwith "Unsupported type. Expecting D, float32, or int."
-
-let [<Literal>] internal minus1 = -1.f
-let [<Literal>] internal half   = 0.5f
-let [<Literal>] internal zero   = 0.0f
-let [<Literal>] internal one    = 1.0f
-let [<Literal>] internal two    = 2.0f
-
+type number = float32
 let inline Backend<'T>               = GlobalConfig.Float32Backend
 let inline VisualizationContrast<'T> = GlobalConfig.Float32VisualizationContrast
 let inline FixedPointEpsilon<'T>     = GlobalConfig.Float32FixedPointEpsilon
-let inline log10Val<'T>              = log10ValFloat32
+module N = 
+    let inline toNumber x = float32 x
+    let inline failWithInvalidTypeMessage () = failwith "Unsupported type. Expecting D, float32, or int."
 
-type number = float32
+    let [<Literal>] internal minus1 = -1.f
+    let [<Literal>] internal half   = 0.5f
+    let [<Literal>] internal zero   = 0.0f
+    let [<Literal>] internal one    = 1.0f
+    let [<Literal>] internal two    = 2.0f
+
+    let inline log10Val<'T>              = log10ValFloat32
+
 
 /// A constraint used to ensure the evaluation stack is only over D, DV or DM
 type dobj = interface end
 let bxd (x : dobj) = x
 
-/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD,
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, 
 /// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     /// Primal
     | D of number
-    /// Primal, tangent, tag (for forward mode)
+    /// Primal, tangent, layer tag (for forward mode)
     | DF of primal: D * tanget: D * tag: uint32 
-    /// Primal, adjoint, state (for reverse mode)
-    | DR of primal: D * adjoint: (D ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32 
+    /// Primal, parent, layer tag (for reverse mode)
+    | DR of primal: D * parentOperation: TraceOp * tag: uint32 * uniq: int32
 
     interface dobj
 
     /// Make a reverse node
-    static member R(d,op,ai) = DR(d, ref D.Zero, op, ref 0u, ai)
+    static member R(d, op, ai) = DR(d, op, ai, UniqueTagger.Next())
 
     /// Primal value of this D
     member d.P =
         match d with
-        | D(_) -> d
-        | DF(ap,_,_) -> ap
-        | DR(ap,_,_,_,_) -> ap
+        | D _ -> d
+        | DF(ap, _, _) -> ap
+        | DR(ap, _, _, _) -> ap
 
     /// Deepest primal value of this D
     member d.PD =
         let rec prec x =
             match x with
-            | D(_) -> x
-            | DF(xp,_,_) -> prec xp
-            | DR(xp,_,_,_,_) -> prec xp
+            | D _ -> x
+            | DF(xp, _, _) -> prec xp
+            | DR(xp, _, _, _) -> prec xp
         prec d
 
     /// Tangent value of this D
     member d.T =
         match d with
-        | D(_) -> D zero
-        | DF(_,at,_) -> at
-        | DR(_,_,_,_,_) -> failwith "Cannot get tangent value of DR."
-
-    /// Adjoint value of this D
-    member d.A
-        with get() =
-            match d with
-            | D(_) -> D zero
-            | DF(_,_,_) -> failwith "Cannot get adjoint value of DF."
-            | DR(_,a,_,_,_) -> !a
-        and set(v) =
-            match d with
-            | D(_) -> ()
-            | DF(_,_,_) -> failwith "Cannot set adjoint value of DF."
-            | DR(_,a,_,_,_) -> a := v
-
-    /// Fan-out counter of this D
-    member d.F
-        with get() =
-            match d with
-            | D(_) -> failwith "Cannot get fan-out value of D."
-            | DF(_,_,_) -> failwith "Cannot get fan-out value of DF."
-            | DR(_,_,_,f,_) -> !f
-        and set(v) =
-            match d with
-            | D(_) -> failwith "Cannot set fan-out value of D."
-            | DF(_,_,_) -> failwith "Cannot set fan-out value of DF."
-            | DR(_,_,_,f,_) -> f := v
+        | D _ -> D.Zero
+        | DF(_, at, _) -> at
+        | DR _ -> failwith "Cannot get tangent value of DR."
 
     member d.GetForward(t:D, i:uint32) = DF(d, t, i)
 
     member d.GetReverse(i:uint32) = D.R(d, Noop, i)
 
-    member d.Copy() =
-        match d with
-        | D(ap) -> D(ap)
-        | DF(ap,at,ai) -> DF(ap.Copy(), at.Copy(), ai)
-        | DR(ap,aa,at,af,ai) -> DR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+    static member Zero = D N.zero
 
-    static member Zero = D zero
-
-    static member One = D one
+    static member One = D N.one
 
     static member op_Explicit(d:D):number =
         let rec prec x =
             match x with
             | D(p) -> p
-            | DF(xp,_,_) -> prec xp
-            | DR(xp,_,_,_,_) -> prec xp
+            | DF(xp, _, _) -> prec xp
+            | DR(xp, _, _, _) -> prec xp
         prec d
 
     interface System.IComparable with
         override d.CompareTo(other) =
             match other with
-            | :? D as d2 -> compare ((toNumber) d) ((toNumber) d2)
+            | :? D as d2 -> compare (N.toNumber d) (N.toNumber d2)
             | _ -> invalidArg "" "Cannot compare this D with another type."
 
     override d.Equals(other) =
         match other with
-        | :? D as d2 -> compare ((toNumber) d) ((toNumber) d2) = 0
+        | :? D as d2 -> compare (N.toNumber d) (N.toNumber d2) = 0
         | _ -> false
 
     override d.GetHashCode() =
         match d with
         | D(ap) -> hash [|ap|]
-        | DF(ap,at,ai) -> hash [|ap; at; ai|]
-        | DR(ap,_,ao,_,ai) -> hash [|ap; ao; ai|]
+        | DF(ap, at, ai) -> hash [|ap; at; ai|]
+        | DR(ap, ao, ai, _) -> hash [|ap; ao; ai|]
 
     override d.ToString() =
         let (d':number) = D.op_Explicit(d)
         match d with
-        | D(_) -> sprintf "D % e" d'
+        | D _ -> sprintf "D % e" d'
         | DF(_) -> sprintf "DF % e" d'
         | DR(_) -> sprintf "DR % e" d'
 
     static member inline Op_D_D (a, ff, fd, df, r) =
         match a with
-        | D(ap)                      -> D(ff(ap))
-        | DF(ap, at, ai)             -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
-        | DR(ap,_,_,_,ai)            -> D.R(fd(ap), r(a), ai)
+        | D(ap)                  -> D(ff(ap))
+        | DF(ap, at, ai)           -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
+        | DR(ap, _, ai, _)            -> D.R(fd(ap), r(a), ai)
 
     static member inline Op_D_D_D (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -188,29 +163,29 @@ type D =
             match b with
             | D(bp)                  -> D(ff(ap, bp))
             | DF(bp, bt, bi)         -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi)
-            | DR(bp,  _,  _,  _, bi) -> D.R(fd(a, bp), r_c_d(a, b), bi)
+            | DR(bp, _,  bi, _)         -> D.R(fd(a, bp), r_c_d(a, b), bi)
         | DF(ap, at, ai) ->
             match b with
-            | D(_)                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai)
+            | D _                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                  -> let cp = fd(ap, bp) in DF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                 -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                  -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                 -> D.R(fd(a, bp), r_c_d(a, b), bi) // ai < bi
                 | 1                  -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                  -> failwith "Forward and reverse AD cannot run on the same level."
-        | DR(ap,  _,  _,  _, ai) ->
+        | DR(ap, _,  ai, _) ->
             match b with
-            | D(_)                   -> D.R(fd(ap, b), r_d_c(a, b), ai)
+            | D _                   -> D.R(fd(ap, b), r_d_c(a, b), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                 -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                  -> D.R(fd(ap, b), r_d_c(a, b), ai) // ai > bi
                 | _                  -> failwith "Forward and reverse AD cannot run on the same level."
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                  -> D.R(fd(ap, bp), r_d_d(a, b), ai) // ai = bi
                 | -1                 -> D.R(fd(a, bp), r_c_d(a, b), bi) // ai < bi
@@ -263,9 +238,9 @@ type D =
     static member Pow (a:D, b:D) =
         let inline ff(a, b) = a ** b
         let inline fd(a:D, b:D) = a ** b
-        let inline df_da(cp, ap, at) = at * (ap ** (b - D one)) * b
+        let inline df_da(cp, ap, at) = at * (ap ** (b - D.One)) * b
         let inline df_db(cp, bp, bt) = bt * cp * log a // cp = a ** bp
-        let inline df_dab(cp:D, ap:D, at:D, bp:D, bt:D) = (ap ** (bp - D one)) * (at * bp + ap * bt * log ap)
+        let inline df_dab(cp:D, ap:D, at:D, bp:D, bt:D) = (ap ** (bp - D.One)) * (at * bp + ap * bt * log ap)
         let inline r_d_d(a, b) = Pow_D_D(a, b)
         let inline r_d_c(a, b) = Pow_D_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_D(a, b)
@@ -299,20 +274,20 @@ type D =
     static member Atan2 (a:number, b:D) = atan2 (D a) b
 
     // D - int binary operations
-    static member (+) (a:D, b:int) = a + (D (toNumber b))
-    static member (-) (a:D, b:int) = a - (D (toNumber b))
-    static member (*) (a:D, b:int) = a * (D (toNumber b))
-    static member (/) (a:D, b:int) = a / (D (toNumber b))
-    static member Pow (a:D, b:int) = a ** (D (toNumber b))
-    static member Atan2 (a:D, b:int) = atan2 a (D (toNumber b))
+    static member (+) (a:D, b:int) = a + (D (N.toNumber b))
+    static member (-) (a:D, b:int) = a - (D (N.toNumber b))
+    static member (*) (a:D, b:int) = a * (D (N.toNumber b))
+    static member (/) (a:D, b:int) = a / (D (N.toNumber b))
+    static member Pow (a:D, b:int) = a ** (D (N.toNumber b))
+    static member Atan2 (a:D, b:int) = atan2 a (D (N.toNumber b))
 
     // int - D binary operations
-    static member (+) (a:int, b:D) = (D (toNumber a)) + b
-    static member (-) (a:int, b:D) = (D (toNumber a)) - b
-    static member (*) (a:int, b:D) = (D (toNumber a)) * b
-    static member (/) (a:int, b:D) = (D (toNumber a)) / b
-    static member Pow (a:int, b:D) = (D (toNumber a)) ** b
-    static member Atan2 (a:int, b:D) = atan2 (D (toNumber a)) b
+    static member (+) (a:int, b:D) = (D (N.toNumber a)) + b
+    static member (-) (a:int, b:D) = (D (N.toNumber a)) - b
+    static member (*) (a:int, b:D) = (D (N.toNumber a)) * b
+    static member (/) (a:int, b:D) = (D (N.toNumber a)) / b
+    static member Pow (a:int, b:D) = (D (N.toNumber a)) ** b
+    static member Atan2 (a:int, b:D) = atan2 (D (N.toNumber a)) b
 
     static member Log (a:D) =
         let inline ff(a) = log a
@@ -324,7 +299,7 @@ type D =
     static member Log10 (a:D) =
         let inline ff(a) = log10 a
         let inline fd(a) = log10 a
-        let inline df(cp, ap:D, at) = at / (ap * log10Val)
+        let inline df(cp, ap:D, at) = at / (ap * N.log10Val)
         let inline r(a) = Log10_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
@@ -366,7 +341,7 @@ type D =
     static member Sqrt (a:D) =
         let inline ff(a) = sqrt a
         let inline fd(a) = sqrt a
-        let inline df(cp, ap, at) = at / ((D two) * cp) // cp = sqrt ap
+        let inline df(cp, ap, at) = at / ((D N.two) * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
@@ -394,21 +369,21 @@ type D =
     static member Asin (a:D) =
         let inline ff(a:number) = asin a
         let inline fd(a:D) = asin a
-        let inline df(cp, ap, at) = at / sqrt (D one - ap * ap)
+        let inline df(cp, ap, at) = at / sqrt (D.One - ap * ap)
         let inline r(a) = Asin_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Acos (a:D) =
         let inline ff(a) = acos a
         let inline fd(a) = acos a
-        let inline df(cp, ap, at) = -at / sqrt (D one - ap * ap)
+        let inline df(cp, ap, at) = -at / sqrt (D.One - ap * ap)
         let inline r(a) = Acos_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Atan (a:D) =
         let inline ff(a) = atan a
         let inline fd(a) = atan a
-        let inline df(cp, ap, at) = at / (D one + ap * ap)
+        let inline df(cp, ap, at) = at / (D.One + ap * ap)
         let inline r(a) = Atan_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
@@ -422,58 +397,58 @@ type D =
     static member Sign (a:D) =
         let inline ff(a) = signummod a
         let inline fd(a) = D.Sign(a)
-        let inline df(cp, ap, at) = D zero
+        let inline df(cp, ap, at) = D.Zero
         let inline r(a) = Sign_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Floor (a:D) =
         let inline ff(a) = floor a
         let inline fd(a) = floor a
-        let inline df(cp:D, ap:D, at:D) = D zero
+        let inline df(cp:D, ap:D, at:D) = D.Zero
         let inline r(a) = Floor_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Ceiling (a:D) =
         let inline ff(a) = ceil a
         let inline fd(a) = ceil a
-        let inline df(cp, ap, at) = D zero
+        let inline df(cp, ap, at) = D.Zero
         let inline r(a) = Ceil_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Round (a:D) =
         let inline ff(a) = round a
         let inline fd(a) = round a
-        let inline df(cp, ap, at) = D zero
+        let inline df(cp, ap, at) = D.Zero
         let inline r(a) = Round_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member ReLU (a:D) =
-        let inline ff(a) = max zero a
+        let inline ff(a) = max N.zero a
         let inline fd(a) = D.ReLU(a)
-        let inline df(cp, ap, at:D) = at * (one + D.Sign(ap)) / two
+        let inline df(cp, ap, at:D) = at * (N.one + D.Sign(ap)) / N.two
         let inline r(a) = ReLU_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
     static member Sigmoid (a:D) =
-        let inline ff(a) = one / (one + exp -a)
+        let inline ff(a) = N.one / (N.one + exp -a)
         let inline fd(a) = D.Sigmoid(a)
-        let inline df(cp:D, ap, at) = at * cp * (one - cp)
+        let inline df(cp:D, ap, at) = at * cp * (N.one - cp)
         let inline r(a) = Sigmoid_D(a)
         D.Op_D_D (a, ff, fd, df, r)
 
-    static member SoftPlus (a:D) = log (one + exp a)
+    static member SoftPlus (a:D) = log (N.one + exp a)
 
-    static member SoftSign (a:D) = a / (one + abs a)
+    static member SoftSign (a:D) = a / (N.one + abs a)
 
     static member LogSumExp (a:D) = a
 
-    static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / two
+    static member Max (a:D, b:D) = ((a + b) + abs (b - a)) / N.two
 
-    static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / two
+    static member Min (a:D, b:D) = ((a + b) - abs (a - b)) / N.two
 
     static member FixedPoint (g:D->D->D) (a0:D) (b:D) =
         let imax = DiffSharp.Config.GlobalConfig.FixedPointMaxIterations
-        let eps = D (FixedPointEpsilon)
+        let eps = D FixedPointEpsilon
 
         let mutable a = a0
         let mutable i = 0
@@ -491,7 +466,7 @@ type D =
                         //printfn "Fixed point iteration converged, i = %i" i
                         i <- imax
                     a <- aa
-            D (toNumber a)
+            D (N.toNumber a)
         | DF(bp, bt, bi) ->
             while i < imax do
                 i <- i + 1
@@ -505,7 +480,7 @@ type D =
                         i <- imax
                     a <- aa
             DF(a.P, a.T, bi)
-        | DR(bp,_,_,_,bi) ->
+        | DR(bp, _, bi, _) ->
             let bfirst = D.R(bp, Noop, bi) // Cut the connection between b and bfirst ("switch of graph construction" involving b beyond this point)
             while i < imax do
                 i <- i + 1
@@ -522,62 +497,37 @@ type D =
             let alast = g aprev bfirst
             D.R(a.P, FixedPoint_D(b, bfirst, aprev, alast), bi)
 
-/// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting capability, using tags to avoid perturbation confusion
+/// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting 
+/// capability, using tags to avoid perturbation confusion
 and DV =
     | DV of number[] // Primal
-    | DVF of DV * DV * uint32 // Primal, tangent, tag
-    | DVR of DV * (DV ref) * TraceOp * (uint32 ref) * uint32 // Primal, adjoint, parent operation, fan-out counter, tag
+    | DVF of DV * DV * uint32 // Primal, tangent, layer tag
+    | DVR of DV * TraceOp * uint32 * int32 // Primal, parent operation, tag, unique
 
     interface dobj
 
     /// Primal value of this DV
     member d.P =
         match d with
-        | DV(_) -> d
-        | DVF(ap,_,_) -> ap
-        | DVR(ap,_,_,_,_) -> ap
+        | DV _ -> d
+        | DVF(ap, _, _) -> ap
+        | DVR(ap, _, _, _) -> ap
 
     /// Deepest primal value of this DV
     member d.PD =
         let rec prec x =
             match x with
-            | DV(_) -> x
-            | DVF(xp,_,_) -> prec xp
-            | DVR(xp,_,_,_,_) -> prec xp
+            | DV _ -> x
+            | DVF(xp, _, _) -> prec xp
+            | DVR(xp, _, _, _) -> prec xp
         prec d
 
     /// Tangent value of this DV
     member d.T =
         match d with
-        | DV(_) -> DV.ZeroN d.Length
-        | DVF(_,at,_) -> at
-        | DVR(_,_,_,_,_) -> failwith "Cannot get tangent value of DVR."
-
-    /// Adjoint value of this DV
-    member d.A
-        with get() =
-            match d with
-            | DV(_) -> DV.ZeroN d.Length
-            | DVF(_,_,_) -> failwith "Cannot get adjoint value of DVF."
-            | DVR(_,a,_,_,_) -> !a
-        and set(v) =
-            match d with
-            | DV(_) -> ()
-            | DVF(_,_,_) -> failwith "Cannot set adjoint value of DVF."
-            | DVR(_,a,_,_,_) -> a := v
-
-    /// Fan-out counter of this DV
-    member d.F
-        with get() =
-            match d with
-            | DV(_) -> failwith "Cannot get fan-out value of DV."
-            | DVF(_,_,_) -> failwith "Cannot get fan-out value of DVF."
-            | DVR(_,_,_,f,_) -> !f
-        and set(v) =
-            match d with
-            | DV(_) -> failwith "Cannot set fan-out value of DV."
-            | DVF(_,_,_) -> failwith "Cannot set fan-out value of DVF."
-            | DVR(_,_,_,f,_) -> f := v
+        | DV _ -> DV.ZeroN d.Length
+        | DVF(_, at, _) -> at
+        | DVR _ -> failwith "Cannot get tangent value of DVR."
 
     /// Convert to use forward AD at this layer
     member d.GetForward(t:DV, i:uint32) = DVF(d, t, i)
@@ -586,48 +536,42 @@ and DV =
     member d.GetReverse(i:uint32) = DV.R(d, Noop, i)
 
     /// Make a reverse node
-    static member R(d,op,ai) = DVR(d, ref (DV.ZeroN d.Length), op, ref 0u, ai)
-
-    member d.Copy() =
-        match d with
-        | DV(ap) -> DV(Array.copy ap)
-        | DVF(ap,at,ai) -> DVF(ap.Copy(), at.Copy(), ai)
-        | DVR(ap,aa,at,af,ai) -> DVR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+    static member R(d, op, ai) = DVR(d, op, ai, UniqueTagger.Next())
 
     member d.Length =
         match d with
         | DV(ap) -> ap.Length
-        | DVF(ap,_,_) -> ap.Length
-        | DVR(ap,_,_,_,_) -> ap.Length
+        | DVF(ap, _, _) -> ap.Length
+        | DVR(ap, _, _, _) -> ap.Length
 
     member d.Item
         with get i =
             match d with
             | DV(ap) -> D(ap.[i])
-            | DVF(ap,at,ai) -> DF(ap.[i], at.[i], ai)
-            | DVR(ap,_,_,_,ai) -> D.R(ap.[i], Item_DV(d, i), ai)
+            | DVF(ap, at, ai) -> DF(ap.[i], at.[i], ai)
+            | DVR(ap, _, ai, _) -> D.R(ap.[i], Item_DV(d, i), ai)
 
     member d.GetSlice(lower, upper) =
         let l = defaultArg lower 0
         let u = defaultArg upper (d.Length - 1)
         match d with
         | DV(ap) -> DV(ap.[l..u])
-        | DVF(ap,at,ai) -> DVF(ap.[l..u], at.[l..u], ai)
-        | DVR(ap,_,_,_,ai) -> let cp = ap.[l..u] in DV.R(cp, Slice_DV(d, l), ai)
+        | DVF(ap, at, ai) -> DVF(ap.[l..u], at.[l..u], ai)
+        | DVR(ap, _, ai, _) -> let cp = ap.[l..u] in DV.R(cp, Slice_DV(d, l), ai)
 
     member d.ToArray() =
         match d with
         | DV(ap) -> ap |> Array.map D
-        | DVF(ap,at,ai) ->
+        | DVF(ap, at, ai) ->
             Array.init ap.Length (fun i -> DF(ap.[i], at.[i], ai))
-        | DVR(ap,_,_,_,ai) ->
+        | DVR(ap, _, ai, _) ->
             Array.init ap.Length (fun i -> D.R(ap.[i], Item_DV(d, i), ai))
 
     member d.ToRowDM() =
         match d with
         | DV(ap) -> seq [ap] |> array2D |> DM
-        | DVF(ap,at,ai) -> DMF(ap.ToRowDM(), at.ToRowDM(), ai)
-        | DVR(ap,_,_,_,ai) -> let cp = ap.ToRowDM() in DM.R(cp, RowMatrix_DV(d), ai)
+        | DVF(ap, at, ai) -> DMF(ap.ToRowDM(), at.ToRowDM(), ai)
+        | DVR(ap, _, ai, _) -> let cp = ap.ToRowDM() in DM.R(cp, RowMatrix_DV(d), ai)
 
     member d.ToColDM() = DM.Transpose(d.ToRowDM())
 
@@ -635,7 +579,7 @@ and DV =
         let (d':number[]) = DV.op_Explicit(d)
         let sb = System.Text.StringBuilder()
         match d with
-        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
+        | DV _ -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
         | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
         | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
         for i = 0 to d.Length - 1 do
@@ -670,8 +614,8 @@ and DV =
         let rec prec x =
             match x with
             | DV(p) -> p
-            | DVF(xp,_,_) -> prec xp
-            | DVR(xp,_,_,_,_) -> prec xp
+            | DVF(xp, _, _) -> prec xp
+            | DVR(xp, _, _, _) -> prec xp
         prec d
 
     static member op_Explicit(d) = DV(d)
@@ -679,12 +623,12 @@ and DV =
     static member OfArray (a:D[]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0] with
-        | D(_) -> DV(a |> Array.map toNumber)
-        | DF(_,_,ai) ->
+        | D _ -> DV(a |> Array.map N.toNumber)
+        | DF(_, _, ai) ->
             let ap = a |> Array.map (fun x -> x.P)
             let at = a |> Array.map (fun x -> x.T)
             DVF(DV.OfArray(ap), DV.OfArray(at), ai)
-        | DR(_,_,_,_,ai) ->
+        | DR(_, _, ai, _) ->
             let ap = a |> Array.map (fun x -> x.P)
             let cp = DV.OfArray(ap) in DV.R(cp, Make_DV_ofDs(a), ai)
 
@@ -693,11 +637,11 @@ and DV =
         | DV(ap) ->
             seq {let i = ref 0; 
                  for j in n do yield Array.sub ap !i j |> DV; i := !i + j}
-        | DVF(ap,at,ai) ->
+        | DVF(ap, at, ai) ->
             let aps = DV.Split(ap, n)
             let ats = DV.Split(at, n)
             Seq.map2 (fun p t -> DVF(p, t, ai)) aps ats
-        | DVR(ap,_,_,_,ai) ->
+        | DVR(ap, _, ai, _) ->
             let aps = DV.Split(ap, n)
             let ii = n |> Seq.mapFold (fun s i -> s, s + i) 0 |> fst |> Array.ofSeq
             Seq.mapi (fun i p -> DV.R(p, Split_DV(d, ii.[i]), ai)) aps
@@ -707,19 +651,19 @@ and DV =
         match a with
         | DV(ap)                      -> DV(ff(ap))
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DVF(cp, df(cp, ap, at), ai)
-        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DV.R(cp, r(a), ai)
+        | DVR(ap, _, ai, _)            -> let cp = fd(ap) in DV.R(cp, r(a), ai)
 
     static member inline Op_DV_DM (a, ff, fd, df, r) =
         match a with
         | DV(ap)                      -> DM(ff(ap))
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DMF(cp, df(cp, ap, at), ai)
-        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in DM.R(cp, r(a), ai)
+        | DVR(ap, _, ai, _)            -> let cp = fd(ap) in DM.R(cp, r(a), ai)
 
     static member inline Op_DV_D (a, ff, fd, df, r) =
         match a with
         | DV(ap)                      -> D(ff(ap))
         | DVF(ap, at, ai)             -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
-        | DVR(ap,_,_,_,ai)            -> let cp = fd(ap) in D.R(cp, r(a), ai)
+        | DVR(ap, _, ai, _)            -> let cp = fd(ap) in D.R(cp, r(a), ai)
 
     static member inline Op_DV_DV_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -727,29 +671,29 @@ and DV =
             match b with
             | DV(bp)                  -> DV(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DVF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
+            | DV _                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DV.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -761,29 +705,29 @@ and DV =
             match b with
             | DV(bp)                  -> DM(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
+            | DV _                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -795,29 +739,29 @@ and DV =
             match b with
             | DV(bp)                  -> D(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> D.R(fd(a, bp), r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> D.R(fd(a, bp), r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> D.R(fd(a, bp), r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> D.R(fd(ap, b), r_d_c(a, b), ai)
+            | DV _                   -> D.R(fd(ap, b), r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> D.R(fd(ap, b), r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> D.R(fd(ap, bp), r_d_d(a, b), ai) // ai = bi
                 | -1                  -> D.R(fd(a, bp), r_c_d(a, b), bi) // ai < bi
@@ -829,29 +773,29 @@ and DV =
             match b with
             | D(bp)                   -> DV(ff(ap, bp))
             | DF(bp, bt, bi)          -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DR(bp,  _,  _,  _, bi)  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
+            | DR(bp, _, bi, _)  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
-            | D(_)                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
+            | D _                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                    -> let cp = fd(ap, bp) in DVF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                   -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                   -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                    -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                    -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
-            | D(_)                    -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
+            | D _                    -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                   -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                    -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                    -> failwith "Forward and reverse AD cannot run on the same level."
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                    -> let cp = fd(ap, bp) in DV.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                   -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -864,29 +808,29 @@ and DV =
             match b with
             | DV(bp)                  -> DV(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
         | DF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DVF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DR(ap,  _,  _,  _, ai) ->
+        | DR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
+            | DV _                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DV.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -968,9 +912,9 @@ and DV =
     static member Pow (a:DV, b:DV) =
         let inline ff(a, b) = Backend.Map2_F_V_V((fun x y -> x ** y), a, b)
         let inline fd(a:DV, b:DV) = a ** b
-        let inline df_da(cp:DV, ap:DV, at:DV) = at .* (ap ** (b - D one)) .* b
+        let inline df_da(cp:DV, ap:DV, at:DV) = at .* (ap ** (b - D.One)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp:DV, ap:DV, at:DV, bp:DV, bt:DV) = (ap ** (bp - D one)) .* ((at .* bp) + (ap .* bt .* log ap))
+        let inline df_dab(cp:DV, ap:DV, at:DV, bp:DV, bt:DV) = (ap ** (bp - D.One)) .* ((at .* bp) + (ap .* bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_DV(a, b)
         let inline r_d_c(a, b) = Pow_DV_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
@@ -1014,7 +958,7 @@ and DV =
 
     /// Divide vector `a` by scalar `b`
     static member (/) (a:DV, b:D) =
-        let inline ff(a, b) = Backend.Mul_S_V(one / b, a)
+        let inline ff(a, b) = Backend.Mul_S_V(N.one / b, a)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt * cp / bp // cp = a / bp
@@ -1088,9 +1032,9 @@ and DV =
     static member Pow (a:DV, b:D) =
         let inline ff(a, b) = Backend.Map_F_V((fun v -> v ** b), a)
         let inline fd(a:DV, b:D) = a ** b
-        let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D one)) * b
+        let inline df_da(cp, ap:DV, at:DV) = at .* (ap ** (b - D.One)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap:DV, at:DV, bp:D, bt:D) = (ap ** (bp - D one)) .* ((at * bp) + (ap * bt .* log ap))
+        let inline df_dab(cp, ap:DV, at:DV, bp:D, bt:D) = (ap ** (bp - D.One)) .* ((at * bp) + (ap * bt .* log ap))
         let inline r_d_d(a, b) = Pow_DV_D(a, b)
         let inline r_d_c(a, b) = Pow_DV_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_D(a, b)
@@ -1100,9 +1044,9 @@ and DV =
     static member Pow (a:D, b:DV) =
         let inline ff(a, b) = Backend.Map_F_V((fun v -> a ** v), b)
         let inline fd(a:D, b:DV) = DV.Pow(a, b)
-        let inline df_da(cp, ap:D, at:D) = (at * (DV.Pow(ap, b - D one))) .* b
+        let inline df_da(cp, ap:D, at:D) = (at * (DV.Pow(ap, b - D.One))) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap:D, at:D, bp:DV, bt:DV) = (DV.Pow(ap, bp - D one)) .* ((at * bp) + (ap * bt * log ap))
+        let inline df_dab(cp, ap:D, at:D, bp:DV, bt:DV) = (DV.Pow(ap, bp - D.One)) .* ((at * bp) + (ap * bt * log ap))
         let inline r_d_d(a, b) = Pow_D_DV(a, b)
         let inline r_d_c(a, b) = Pow_D_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_DV(a, b)
@@ -1177,20 +1121,20 @@ and DV =
     static member Atan2 (a:number, b:DV) = DV.Atan2(D a, b)
 
     // DV - int binary operations
-    static member (+) (a:DV, b:int) = a + D (toNumber b)
-    static member (-) (a:DV, b:int) = a - D (toNumber b)
-    static member (*) (a:DV, b:int) = a * D (toNumber b)
-    static member (/) (a:DV, b:int) = a / D (toNumber b)
-    static member Pow (a:DV, b:int) = a ** D (toNumber b)
-    static member Atan2 (a:DV, b: int) = DV.Atan2(a, D (toNumber b))
+    static member (+) (a:DV, b:int) = a + D (N.toNumber b)
+    static member (-) (a:DV, b:int) = a - D (N.toNumber b)
+    static member (*) (a:DV, b:int) = a * D (N.toNumber b)
+    static member (/) (a:DV, b:int) = a / D (N.toNumber b)
+    static member Pow (a:DV, b:int) = a ** D (N.toNumber b)
+    static member Atan2 (a:DV, b: int) = DV.Atan2(a, D (N.toNumber b))
 
     // int - DV binary operations
-    static member (+) (a:int, b:DV) = (D (toNumber a)) + b
-    static member (-) (a:int, b:DV) = (D (toNumber a)) - b
-    static member (*) (a:int, b:DV) = (D (toNumber a)) * b
-    static member (/) (a:int, b:DV) = (D (toNumber a)) / b
-    static member Pow (a:int, b:DV) = DV.Pow(D (toNumber a), b)
-    static member Atan2 (a:int, b:DV) = DV.Atan2(D (toNumber a), b)
+    static member (+) (a:int, b:DV) = (D (N.toNumber a)) + b
+    static member (-) (a:int, b:DV) = (D (N.toNumber a)) - b
+    static member (*) (a:int, b:DV) = (D (N.toNumber a)) * b
+    static member (/) (a:int, b:DV) = (D (N.toNumber a)) / b
+    static member Pow (a:int, b:DV) = DV.Pow(D (N.toNumber a), b)
+    static member Atan2 (a:int, b:DV) = DV.Atan2(D (N.toNumber a), b)
 
     static member Log (a:DV) =
         let inline ff(a) = Backend.Map_F_V(log, a)
@@ -1202,7 +1146,7 @@ and DV =
     static member Log10 (a:DV) =
         let inline ff(a) = Backend.Map_F_V(log10, a)
         let inline fd(a) = log10 a
-        let inline df(cp, ap:DV, at:DV) = at ./ (ap * log10Val)
+        let inline df(cp, ap:DV, at:DV) = at ./ (ap * N.log10Val)
         let inline r(a) = Log10_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
@@ -1235,7 +1179,7 @@ and DV =
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member (~-) (a:DV) =
-        let inline ff(a) = Backend.Mul_S_V(minus1, a)
+        let inline ff(a) = Backend.Mul_S_V(N.minus1, a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DV(a)
@@ -1244,7 +1188,7 @@ and DV =
     static member Sqrt (a:DV) =
         let inline ff(a) = Backend.Map_F_V(sqrt, a)
         let inline fd(a) = sqrt a
-        let inline df(cp:DV, ap:DV, at:DV) = at ./ (D two * cp) // cp = sqrt ap
+        let inline df(cp:DV, ap:DV, at:DV) = at ./ (D N.two * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
@@ -1272,21 +1216,21 @@ and DV =
     static member Asin (a:DV) =
         let inline ff(a) = Backend.Map_F_V(asin, a)
         let inline fd(a) = asin a
-        let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D one - (ap .* ap))
+        let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D.One - (ap .* ap))
         let inline r(a) = Asin_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Acos (a:DV) =
         let inline ff(a) = Backend.Map_F_V(acos, a)
         let inline fd(a) = acos a
-        let inline df(cp:DV, ap:DV, at:DV) = -at ./ sqrt (D one - (ap .* ap))
+        let inline df(cp:DV, ap:DV, at:DV) = -at ./ sqrt (D.One - (ap .* ap))
         let inline r(a) = Acos_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Atan (a:DV) =
         let inline ff(a) = Backend.Map_F_V(atan, a)
         let inline fd(a) = atan a
-        let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D one + (ap .* ap))
+        let inline df(cp:DV, ap:DV, at:DV) = at ./ sqrt (D.One + (ap .* ap))
         let inline r(a) = Atan_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
@@ -1337,7 +1281,7 @@ and DV =
     static member L2NormSq (a:DV) =
         let inline ff(a) = let l2norm = Backend.L2Norm_V(a) in l2norm * l2norm
         let inline fd(a) = DV.L2NormSq(a)
-        let inline df(cp, ap, at) = (D two) * (ap * at)
+        let inline df(cp, ap, at) = (D N.two) * (ap * at)
         let inline r(a) = L2NormSq_DV(a)
         DV.Op_DV_D (a, ff, fd, df, r)
 
@@ -1382,22 +1326,22 @@ and DV =
         DV.Op_DV_DM (a, ff, fd, df, r)
 
     static member ReLU (a:DV) =
-        let inline ff(a) = Backend.Map_F_V(max zero, a)
+        let inline ff(a) = Backend.Map_F_V(max N.zero, a)
         let inline fd(a) = DV.ReLU(a)
-        let inline df(cp, ap, at) = at .* ((one + DV.Sign(ap)) / two)
+        let inline df(cp, ap, at) = at .* ((N.one + DV.Sign(ap)) / N.two)
         let inline r(a) = ReLU_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
     static member Sigmoid (a:DV) =
-        let inline ff(a) = Backend.Map_F_V((fun v -> one / (one + exp -v)), a)
+        let inline ff(a) = Backend.Map_F_V((fun v -> N.one / (N.one + exp -v)), a)
         let inline fd(a) = DV.Sigmoid(a)
-        let inline df(cp:DV, ap, at) = at .* cp .* (one - cp)
+        let inline df(cp:DV, ap, at) = at .* cp .* (N.one - cp)
         let inline r(a) = Sigmoid_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
-    static member SoftPlus (a:DV) = log (one + exp a)    
+    static member SoftPlus (a:DV) = log (N.one + exp a)    
 
-    static member SoftSign (a:DV) = a ./ (one + abs a)
+    static member SoftSign (a:DV) = a ./ (N.one + abs a)
 
     static member LogSumExp (a:DV) =
         let inline ff(a) = 
@@ -1421,25 +1365,25 @@ and DV =
 
     static member Standardize (a:DV) =
         let sd = DV.StandardDev(a)
-        if sd = D zero then
-            a * (D zero)
+        if sd = D.Zero then
+            a * (D.Zero)
         else
             (a - DV.Mean(a)) / DV.StandardDev(a)
 
     static member Normalize (a:DV) =
         let min = DV.Min(a)
         let range = DV.Max(a) - min
-        if range = D zero then
-            a * (D zero)
+        if range = D.Zero then
+            a * (D.Zero)
         else
             (a - min) / range
 
-    static member Max (a:DV, b:DV) = ((a + b) + abs (b - a)) / two
-    static member Max (a:DV, b:D) = ((a + b) + abs (b - a)) / two
-    static member Max (a:D, b:DV) = ((a + b) + abs (b - a)) / two
-    static member Min (a:DV, b:DV) = ((a + b) - abs (a - b)) / two
-    static member Min (a:DV, b:D) = ((a + b) - abs (a - b)) / two
-    static member Min (a:D, b:DV) = ((a + b) - abs (a - b)) / two
+    static member Max (a:DV, b:DV) = ((a + b) + abs (b - a)) / N.two
+    static member Max (a:DV, b:D) = ((a + b) + abs (b - a)) / N.two
+    static member Max (a:D, b:DV) = ((a + b) + abs (b - a)) / N.two
+    static member Min (a:DV, b:DV) = ((a + b) - abs (a - b)) / N.two
+    static member Min (a:DV, b:D) = ((a + b) - abs (a - b)) / N.two
+    static member Min (a:D, b:DV) = ((a + b) - abs (a - b)) / N.two
 
     /// Index of the maximum element of vector `a`
     static member MaxIndex (a:DV) =
@@ -1467,15 +1411,15 @@ and DV =
         e / DV.Sum(e)
 
     member d.Visualize() =
-        let (d':number[]) = ((VisualizationContrast * (DV.Normalize(d.P) - half)) + half) |> DV.op_Explicit
+        let (d':number[]) = ((VisualizationContrast * (DV.Normalize(d.P) - N.half)) + N.half) |> DV.op_Explicit
         let sb = System.Text.StringBuilder()
         match d with
-        | DV(_) -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
+        | DV _ -> sb.AppendLine(sprintf "DV : %i" d.Length) |> ignore
         | DVF(_) -> sb.AppendLine(sprintf "DVF: %i" d.Length) |> ignore
         | DVR(_) -> sb.AppendLine(sprintf "DVR: %i" d.Length) |> ignore
         let palette = GlobalConfig.GrayscalePalette
         let palettel = palette.Length
-        let palettelf = toNumber palettel
+        let palettelf = N.toNumber palettel
         for i = 0 to d.Length - 1 do
             let c = int (d'.[i] * palettelf) - 1
             let c = max 0 c
@@ -1488,11 +1432,11 @@ and DV =
 /// capability, using tags to avoid perturbation confusion
 and DM =
     /// Primal
-    | DM of number[,] 
-    /// Primal, tangent, tag (for forward mode)
+    | DM of number[, ] 
+    /// Primal, tangent, layer tag (for forward mode)
     | DMF of primal: DM * tanget: DM * tag: uint32 
-    /// Primal, adjoint, state (for reverse mode)
-    | DMR of primal: DM * adjoint: (DM ref) * parentOperation: TraceOp * fanOutCounter: (uint32 ref) * tag: uint32
+    /// Primal, parent, layer tag (for reverse mode)
+    | DMR of primal: DM * parentOperation: TraceOp * tag: uint32 * uniq: int32
 
     interface dobj
 
@@ -1500,88 +1444,56 @@ and DM =
     member d.P =
         match d with
         | DM(_) -> d
-        | DMF(ap,_,_) -> ap
-        | DMR(ap,_,_,_,_) -> ap
+        | DMF(ap, _, _) -> ap
+        | DMR(ap, _, _, _) -> ap
 
     /// Deepest primal value of this DM
     member d.PD =
         let rec prec x =
             match x with
             | DM(_) -> x
-            | DMF(xp,_,_) -> prec xp
-            | DMR(xp,_,_,_,_) -> prec xp
+            | DMF(xp, _, _) -> prec xp
+            | DMR(xp, _, _, _) -> prec xp
         prec d
 
     /// Tangent value of this DM
     member d.T =
         match d with
         | DM(_) -> DM.ZeroMN d.Rows d.Cols
-        | DMF(_,at,_) -> at
-        | DMR(_,_,_,_,_) -> failwith "Cannot get tangent value of DMR."
-
-    /// Adjoint value of this DM
-    member d.A
-        with get() =
-            match d with
-            | DM(_) -> DM.ZeroMN d.Rows d.Cols
-            | DMF(_,_,_) -> failwith "Cannot get adjoint value of DMF."
-            | DMR(_,a,_,_,_) -> !a
-        and set(v) =
-            match d with
-            | DM(_) -> ()
-            | DMF(_,_,_) -> failwith "Cannot set adjoint value of DMF."
-            | DMR(_,a,_,_,_) -> a := v
-
-    /// Fan-out value of this DM
-    member d.F
-        with get() =
-            match d with
-            | DM(_) -> failwith "Cannot get fan-out value of DM."
-            | DMF(_,_,_) -> failwith "Cannot get fan-out value of DMF."
-            | DMR(_,_,_,f,_) -> !f
-        and set(v) =
-            match d with
-            | DM(_) -> failwith "Cannot set fan-out value of DM."
-            | DMF(_,_,_) -> failwith "Cannot set fan-out value of DMF."
-            | DMR(_,_,_,f,_) -> f := v
+        | DMF(_, at, _) -> at
+        | DMR _ -> failwith "Cannot get tangent value of DMR."
 
     member d.GetForward(t:DM, i:uint32) = DMF(d, t, i)
 
     member d.GetReverse(i:uint32) = DM.R(d, Noop, i)
 
     /// Make a reverse node
-    static member R(cp,op,ai) = DMR(cp, ref (DM.ZeroMN cp.Rows cp.Cols), op, ref 0u, ai)
-
-    member d.Copy() =
-        match d with
-        | DM(ap) -> DM(Array2D.copy ap)
-        | DMF(ap,at,ai) -> DMF(ap.Copy(), at.Copy(), ai)
-        | DMR(ap,aa,at,af,ai) -> DMR(ap.Copy(), ref ((!aa).Copy()), at, ref (!af), ai)
+    static member R(cp, op, ai) = DMR(cp, op, ai, UniqueTagger.Next())
 
     member d.Length =
         match d with
         | DM(ap) -> ap.Length
-        | DMF(ap,_,_) -> ap.Length
-        | DMR(ap,_,_,_,_) -> ap.Length
+        | DMF(ap, _, _) -> ap.Length
+        | DMR(ap, _, _, _) -> ap.Length
 
     member d.Rows =
         match d with
         | DM(ap) -> Array2D.length1 ap
-        | DMF(ap,_,_) -> ap.Rows
-        | DMR(ap,_,_,_,_) -> ap.Rows
+        | DMF(ap, _, _) -> ap.Rows
+        | DMR(ap, _, _, _) -> ap.Rows
 
     member d.Cols =
         match d with
         | DM(ap) -> Array2D.length2 ap
-        | DMF(ap,_,_) -> ap.Cols
-        | DMR(ap,_,_,_,_) -> ap.Cols
+        | DMF(ap, _, _) -> ap.Cols
+        | DMR(ap, _, _, _) -> ap.Cols
 
     member d.Item
         with get (i, j) =
             match d with
             | DM(ap) -> D(ap.[i, j])
-            | DMF(ap,at,ai) -> DF(ap.[i,j], at.[i,j], ai)
-            | DMR(ap,_,_,_,ai) -> D.R(ap.[i,j], Item_DM(d, i, j), ai)
+            | DMF(ap, at, ai) -> DF(ap.[i, j], at.[i, j], ai)
+            | DMR(ap, _, ai, _) -> D.R(ap.[i, j], Item_DM(d, i, j), ai)
 
     member d.GetSlice(rowStart, rowFinish, colStart, colFinish) =
         let rowStart = defaultArg rowStart 0
@@ -1590,33 +1502,33 @@ and DM =
         let colFinish = defaultArg colFinish (d.Cols - 1)
         match d with
         | DM(ap) -> DM(ap.[rowStart..rowFinish, colStart..colFinish])
-        | DMF(ap,at,ai) -> DMF(ap.[rowStart..rowFinish, colStart..colFinish], at.[rowStart..rowFinish, colStart..colFinish], ai)
-        | DMR(ap,_,_,_,ai) -> let cp = ap.[rowStart..rowFinish, colStart..colFinish] in DM.R(cp, Slice_DM(d, rowStart, rowFinish), ai)
+        | DMF(ap, at, ai) -> DMF(ap.[rowStart..rowFinish, colStart..colFinish], at.[rowStart..rowFinish, colStart..colFinish], ai)
+        | DMR(ap, _, ai, _) -> let cp = ap.[rowStart..rowFinish, colStart..colFinish] in DM.R(cp, Slice_DM(d, rowStart, rowFinish), ai)
 
     member d.GetSlice(row, colStart, colFinish) =
         let colStart = defaultArg colStart 0
         let colFinish = defaultArg colFinish (d.Cols - 1)
         match d with
         | DM(ap) -> DV(ap.[row, colStart..colFinish])
-        | DMF(ap,at,ai) -> DVF(ap.[row, colStart..colFinish], at.[row, colStart..colFinish], ai)
-        | DMR(ap,_,_,_,ai) -> let cp = ap.[row, colStart..colFinish] in DV.R(cp, SliceRow_DM(d, row, colStart), ai)
+        | DMF(ap, at, ai) -> DVF(ap.[row, colStart..colFinish], at.[row, colStart..colFinish], ai)
+        | DMR(ap, _, ai, _) -> let cp = ap.[row, colStart..colFinish] in DV.R(cp, SliceRow_DM(d, row, colStart), ai)
 
     member d.GetSlice(rowStart, rowFinish, col) =
         let rowStart = defaultArg rowStart 0
         let rowFinish = defaultArg rowFinish (d.Rows - 1)
         match d with
         | DM(ap) -> DV(ap.[rowStart..rowFinish, col])
-        | DMF(ap,at,ai) -> DVF(ap.[rowStart..rowFinish, col], at.[rowStart..rowFinish, col], ai)
-        | DMR(ap,_,_,_,ai) -> let cp = ap.[rowStart..rowFinish, col] in DV.R(cp, SliceCol_DM(d, rowStart, col), ai)
+        | DMF(ap, at, ai) -> DVF(ap.[rowStart..rowFinish, col], at.[rowStart..rowFinish, col], ai)
+        | DMR(ap, _, ai, _) -> let cp = ap.[rowStart..rowFinish, col] in DV.R(cp, SliceCol_DM(d, rowStart, col), ai)
 
     member d.GetRows() =
-        seq {for i = 0 to d.Rows - 1 do yield d.[i,*]}
+        seq {for i = 0 to d.Rows - 1 do yield d.[i, *]}
 
     member d.GetCols() =
-        seq {for j = 0 to d.Cols - 1 do yield d.[*,j]}
+        seq {for j = 0 to d.Cols - 1 do yield d.[*, j]}
 
     override d.ToString() =
-        let (d':number[,]) = DM.op_Explicit(d)
+        let (d':number[, ]) = DM.op_Explicit(d)
         let sb = System.Text.StringBuilder()
         match d with
         | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
@@ -1629,7 +1541,7 @@ and DM =
         sb.ToString()
 
     member d.ToMathematicaString() =
-        let (d':number[,]) = DM.op_Explicit(d)
+        let (d':number[, ]) = DM.op_Explicit(d)
         let sb = System.Text.StringBuilder()
         sb.Append("{") |> ignore
         for i = 0 to d.Rows - 1 do
@@ -1643,7 +1555,7 @@ and DM =
         sb.ToString()
 
     member d.ToMatlabString() =
-        let (d':number[,]) = DM.op_Explicit(d)
+        let (d':number[, ]) = DM.op_Explicit(d)
         let sb = System.Text.StringBuilder()
         sb.Append("[") |> ignore
         for i = 0 to d.Rows - 1 do
@@ -1658,25 +1570,25 @@ and DM =
 
     static member ZeroMN m n = DM (Array2D.zeroCreate m n)
 
-    static member op_Explicit(d:DM):number[,] =
+    static member op_Explicit(d:DM):number[, ] =
         let rec prec x =
             match x with
             | DM(p) -> p
-            | DMF(xp,_,_) -> prec xp
-            | DMR(xp,_,_,_,_) -> prec xp
+            | DMF(xp, _, _) -> prec xp
+            | DMR(xp, _, _, _) -> prec xp
         prec d
 
-    static member op_Explicit(d:number[,]) = DM(d)
+    static member op_Explicit(d:number[, ]) = DM(d)
 
-    static member OfArray2D (a:D[,]) =
+    static member OfArray2D (a:D[, ]) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match a.[0, 0] with
-        | D(_) -> DM (a |> Array2D.map toNumber)
-        | DF(_,_,ai) ->
+        | D _ -> DM (a |> Array2D.map N.toNumber)
+        | DF(_, _, ai) ->
             let ap = a |> Array2D.map (fun x -> x.P)
             let at = a |> Array2D.map (fun x -> x.T)
             DMF(DM.OfArray2D(ap), DM.OfArray2D(at), ai)
-        | DR(_,_,_,_,ai) ->
+        | DR(_, _, ai, _) ->
             let ap = a |> Array2D.map (fun x -> x.P)
             let cp = DM.OfArray2D(ap) in DM.R(cp, Make_DM_ofDs(a), ai)
 
@@ -1688,47 +1600,47 @@ and DM =
     static member OfRows (s:seq<DV>) = 
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match Seq.head s with
-        | DV(_) ->
+        | DV _ ->
             s |> Seq.map DV.op_Explicit |> array2D |> DM
-        | DVF(_,_,ai) ->
+        | DVF(_, _, ai) ->
             let ap = s |> Seq.map (fun x -> x.P)
             let at = s |> Seq.map (fun x -> x.T)
             DMF(DM.OfRows(ap), DM.OfRows(at), ai)
-        | DVR(_,_,_,_,ai) ->
+        | DVR(_, _, ai, _) ->
             let ap = s |> Seq.map (fun x -> x.P)
             let cp = DM.OfRows(ap) in DM.R(cp, Make_DMRows_ofDVs(s |> Seq.toArray), ai)
 
     static member OfRows (m:int, a:DV) =
         match a with
         | DV(ap) -> DM(Backend.RepeatReshapeCopy_V_MRows(m, ap))
-        | DVF(ap,at,ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
-        | DVR(ap,_,_,_,ai) ->
+        | DVF(ap, at, ai) -> DMF(DM.OfRows(m, ap), DM.OfRows(m, at), ai)
+        | DVR(ap, _, ai, _) ->
             let cp = DM.OfRows(m, ap) in DM.R(cp, Make_DMRows_ofDV(a), ai)
 
     static member OfCols (n:int, a:DV) =
         match a with
         | DV(ap) -> DM(Backend.RepeatReshapeCopy_V_MCols(n, ap))
-        | DVF(ap,at,ai) -> DMF(DM.OfCols(n, ap), DM.OfCols(n, at), ai)
-        | DVR(ap,_,_,_,ai) ->
+        | DVF(ap, at, ai) -> DMF(DM.OfCols(n, ap), DM.OfCols(n, at), ai)
+        | DVR(ap, _, ai, _) ->
             let cp = DM.OfCols(n, ap) in DM.R(cp, Make_DMCols_ofDV(a), ai)
 
     static member inline Op_DM_DM (a, ff, fd, df, r) =
         match a with
         | DM(ap)                      -> DM(ff(ap))
         | DMF(ap, at, ai)             -> let cp = fd(ap) in DMF(cp, df(cp, ap, at), ai)
-        | DMR(ap,_,_,_,ai)            -> let cp = fd(ap) in DM.R(cp, r(a), ai)
+        | DMR(ap, _, ai, _)            -> let cp = fd(ap) in DM.R(cp, r(a), ai)
 
     static member inline Op_DM_DV (a, ff, fd, df, r) =
         match a with
         | DM(ap)                      -> DV(ff(ap))
         | DMF(ap, at, ai)             -> let cp = fd(ap) in DVF(cp, df(cp, ap, at), ai)
-        | DMR(ap,_,_,_,ai)            -> let cp = fd(ap) in DV.R(cp, r(a), ai)
+        | DMR(ap, _, ai, _)            -> let cp = fd(ap) in DV.R(cp, r(a), ai)
 
     static member inline Op_DM_D (a, ff, fd, df, r) =
         match a with
         | DM(ap)                      -> D(ff(ap))
         | DMF(ap, at, ai)             -> let cp = fd(ap) in DF(cp, df(cp, ap, at), ai)
-        | DMR(ap,_,_,_,ai)            -> let cp = fd(ap) in D.R(cp, r(a), ai)
+        | DMR(ap, _, ai, _)            -> let cp = fd(ap) in D.R(cp, r(a), ai)
 
     static member inline Op_DM_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d) =
         match a with
@@ -1736,7 +1648,7 @@ and DM =
             match b with
             | DM(bp)                  -> DM(ff(ap, bp))
             | DMF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DMR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DMR(bp, _, bi, _) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DMF(ap, at, ai) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
@@ -1745,12 +1657,12 @@ and DM =
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DMR(ap,  _,  _,  _, ai) ->
+        | DMR(ap, _, ai, _) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DMF(bp, bt, bi) ->
@@ -1758,7 +1670,7 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1770,29 +1682,29 @@ and DM =
             match b with
             | D(bp)                   -> DM(ff(ap, bp))
             | DF(bp, bt, bi)          -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DR(bp,  _,  _,  _, bi)  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DR(bp, _, bi, _)  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DMF(ap, at, ai) ->
             match b with
-            | D(_)                    -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
+            | D _                    -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DMR(ap,  _,  _,  _, ai) ->
+        | DMR(ap, _, ai, _) ->
             match b with
-            | D(_)                    -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
+            | D _                    -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DR(bp,  _,  _,  _, bi) ->
+            | DR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1804,7 +1716,7 @@ and DM =
             match b with
             | DM(bp)                  -> DM(ff(ap, bp))
             | DMF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DMR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DMR(bp, _, bi, _) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DF(ap, at, ai) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
@@ -1813,12 +1725,12 @@ and DM =
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DR(ap,  _,  _,  _, ai) ->
+        | DR(ap, _, ai, _) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DMF(bp, bt, bi) ->
@@ -1826,7 +1738,7 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1838,29 +1750,29 @@ and DM =
             match b with
             | DV(bp)                  -> DV(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
         | DMF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DVF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DMR(ap,  _,  _,  _, ai) ->
+        | DMR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
+            | DV _                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DV.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1872,7 +1784,7 @@ and DM =
             match b with
             | DM(bp)                  -> DV(ff(ap, bp))
             | DMF(bp, bt, bi)         -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi)
-            | DMR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
+            | DMR(bp, _, bi, _) -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai)
@@ -1881,12 +1793,12 @@ and DM =
                 | 0                   -> let cp = fd(ap, bp) in DVF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DVF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai)
             | DMF(bp, bt, bi) ->
@@ -1894,7 +1806,7 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DVF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DV.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DV.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DV.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1906,29 +1818,29 @@ and DM =
             match b with
             | DV(bp)                  -> DM(ff(ap, bp))
             | DVF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DVR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DVR(bp, _, bi, _) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DMF(ap, at, ai) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
+            | DV _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DMR(ap,  _,  _,  _, ai) ->
+        | DMR(ap, _, ai, _) ->
             match b with
-            | DV(_)                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
+            | DV _                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DVF(bp, bt, bi) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DVR(bp,  _,  _,  _, bi) ->
+            | DVR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -1940,7 +1852,7 @@ and DM =
             match b with
             | DM(bp)                  -> DM(ff(ap, bp))
             | DMF(bp, bt, bi)         -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi)
-            | DMR(bp,  _,  _,  _, bi) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
+            | DMR(bp, _, bi, _) -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi)
         | DVF(ap, at, ai) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai)
@@ -1949,12 +1861,12 @@ and DM =
                 | 0                   -> let cp = fd(ap, bp) in DMF(cp, df_dab(cp, ap, at, bp, bt), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | _                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DMF(cp, df_da(cp, ap, at), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-        | DVR(ap,  _,  _,  _, ai) ->
+        | DVR(ap, _, ai, _) ->
             match b with
             | DM(_)                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai)
             | DMF(bp, bt, bi) ->
@@ -1962,7 +1874,7 @@ and DM =
                 | -1                  -> let cp = fd(a, bp) in DMF(cp, df_db(cp, bp, bt), bi) // ai < bi
                 | 1                   -> let cp = fd(ap, b) in DM.R(cp, r_d_c(a, b), ai) // ai > bi
                 | _                   -> failwith "Forward and reverse AD cannot run on the same level."
-            | DMR(bp,  _,  _,  _, bi) ->
+            | DMR(bp, _, bi, _) ->
                 match compare ai bi with
                 | 0                   -> let cp = fd(ap, bp) in DM.R(cp, r_d_d(a, b), ai) // ai = bi
                 | -1                  -> let cp = fd(a, bp) in DM.R(cp, r_c_d(a, b), bi) // ai < bi
@@ -2055,9 +1967,9 @@ and DM =
     static member Pow (a:DM, b:DM) =
         let inline ff(a, b) = Backend.Map2_F_M_M((fun x y -> x ** y), a, b)
         let inline fd(a:DM, b:DM) = a ** b
-        let inline df_da(cp:DM, ap:DM, at:DM) = at .* (ap ** (b - D one)) .* b
+        let inline df_da(cp:DM, ap:DM, at:DM) = at .* (ap ** (b - D.One)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp .* log a // cp = a ** bp
-        let inline df_dab(cp:DM, ap:DM, at:DM, bp:DM, bt:DM) = (ap ** (bp - D one)) .* (at .* bp + ap .* bt .* log ap)
+        let inline df_dab(cp:DM, ap:DM, at:DM, bp:DM, bt:DM) = (ap ** (bp - D.One)) .* (at .* bp + ap .* bt .* log ap)
         let inline r_d_d(a, b) = Pow_DM_DM(a, b)
         let inline r_d_c(a, b) = Pow_DM_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_DM(a, b)
@@ -2097,7 +2009,7 @@ and DM =
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
     static member (/) (a:DM, b:D) =
-        let inline ff(a, b) = Backend.Mul_S_M(one / b, a)
+        let inline ff(a, b) = Backend.Mul_S_M(N.one / b, a)
         let inline fd(a, b) = a / b
         let inline df_da(cp, ap, at) = at / b
         let inline df_db(cp, bp, bt) = -bt * cp / bp // cp = a / bp
@@ -2190,9 +2102,9 @@ and DM =
     static member Pow (a:DM, b:D) =
         let inline ff(a, b) = Backend.Map_F_M((fun v -> v ** b), a)
         let inline fd(a:DM, b:D) = a ** b
-        let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D one)) * b
+        let inline df_da(cp, ap:DM, at:DM) = at .* (ap ** (b - D.One)) * b
         let inline df_db(cp, bp, bt) = bt * cp .* log a // cp = a ** bp
-        let inline df_dab(cp, ap:DM, at:DM, bp:D, bt:D) = (ap ** (bp - D one)) .* ((at * bp) + (ap * bt .* log ap))
+        let inline df_dab(cp, ap:DM, at:DM, bp:D, bt:D) = (ap ** (bp - D.One)) .* ((at * bp) + (ap * bt .* log ap))
         let inline r_d_d(a, b) = Pow_DM_D(a, b)
         let inline r_d_c(a, b) = Pow_DM_DCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_D(a, b)
@@ -2201,9 +2113,9 @@ and DM =
     static member Pow (a:D, b:DM) =
         let inline ff(a, b) = Backend.Map_F_M((fun v -> a ** v), b)
         let inline fd(a:D, b:DM) = DM.Pow(a, b)
-        let inline df_da(cp, ap:D, at:D) = at * (DM.Pow(ap, b - D one)) .* b
+        let inline df_da(cp, ap:D, at:D) = at * (DM.Pow(ap, b - D.One)) .* b
         let inline df_db(cp, bp, bt) = bt .* cp * log a // cp = a ** bp
-        let inline df_dab(cp, ap:D, at:D, bp:DM, bt:DM) = (DM.Pow(ap, bp - D one)) .* ((at * bp) + (ap * bt * log ap))
+        let inline df_dab(cp, ap:D, at:D, bp:DM, bt:DM) = (DM.Pow(ap, bp - D.One)) .* ((at * bp) + (ap * bt * log ap))
         let inline r_d_d(a, b) = Pow_D_DM(a, b)
         let inline r_d_c(a, b) = Pow_D_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DCons_DM(a, b)
@@ -2248,20 +2160,20 @@ and DM =
     static member Atan2 (a:number, b:DM) = DM.Atan2(D a, b)
 
     // DM - int binary operations
-    static member (+) (a:DM, b:int) = a + D (toNumber b)
-    static member (-) (a:DM, b:int) = a - D (toNumber b)
-    static member (*) (a:DM, b:int) = a * D (toNumber b)
-    static member (/) (a:DM, b:int) = a / D (toNumber b)
-    static member Pow (a:DM, b:int) = a ** D (toNumber b)
-    static member Atan2 (a:DM, b: int) = DM.Atan2(a, D (toNumber b))
+    static member (+) (a:DM, b:int) = a + D (N.toNumber b)
+    static member (-) (a:DM, b:int) = a - D (N.toNumber b)
+    static member (*) (a:DM, b:int) = a * D (N.toNumber b)
+    static member (/) (a:DM, b:int) = a / D (N.toNumber b)
+    static member Pow (a:DM, b:int) = a ** D (N.toNumber b)
+    static member Atan2 (a:DM, b: int) = DM.Atan2(a, D (N.toNumber b))
 
     // int - DM binary operations
-    static member (+) (a:int, b:DM) = (D (toNumber a)) + b
-    static member (-) (a:int, b:DM) = (D (toNumber a)) - b
-    static member (*) (a:int, b:DM) = (D (toNumber a)) * b
-    static member (/) (a:int, b:DM) = (D (toNumber a)) / b
-    static member Pow (a:int, b:DM) = DM.Pow(D (toNumber a), b)
-    static member Atan2 (a:int, b:DM) = DM.Atan2(D (toNumber a), b)
+    static member (+) (a:int, b:DM) = (D (N.toNumber a)) + b
+    static member (-) (a:int, b:DM) = (D (N.toNumber a)) - b
+    static member (*) (a:int, b:DM) = (D (N.toNumber a)) * b
+    static member (/) (a:int, b:DM) = (D (N.toNumber a)) / b
+    static member Pow (a:int, b:DM) = DM.Pow(D (N.toNumber a), b)
+    static member Atan2 (a:int, b:DM) = DM.Atan2(D (N.toNumber a), b)
 
     static member Log (a:DM) =
         let inline ff(a) = Backend.Map_F_M(log, a)
@@ -2273,7 +2185,7 @@ and DM =
     static member Log10 (a:DM) =
         let inline ff(a) = Backend.Map_F_M(log10, a)
         let inline fd(a) = log10 a
-        let inline df(cp, ap:DM, at:DM) = at ./ (ap * log10Val)
+        let inline df(cp, ap:DM, at:DM) = at ./ (ap * N.log10Val)
         let inline r(a) = Log10_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
@@ -2306,7 +2218,7 @@ and DM =
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member (~-) (a:DM) =
-        let inline ff(a) = Backend.Mul_S_M(minus1, a)
+        let inline ff(a) = Backend.Mul_S_M(N.minus1, a)
         let inline fd(a) = -a
         let inline df(cp, ap, at) = -at
         let inline r(a) = Neg_DM(a)
@@ -2315,7 +2227,7 @@ and DM =
     static member Sqrt (a:DM) =
         let inline ff(a) = Backend.Map_F_M(sqrt, a)
         let inline fd(a) = sqrt a
-        let inline df(cp:DM, ap:DM, at:DM) = at ./ (D two * cp) // cp = sqrt ap
+        let inline df(cp:DM, ap:DM, at:DM) = at ./ (D N.two * cp) // cp = sqrt ap
         let inline r(a) = Sqrt_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
@@ -2343,21 +2255,21 @@ and DM =
     static member Asin (a:DM) =
         let inline ff(a) = Backend.Map_F_M(asin, a)
         let inline fd(a) = asin a
-        let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D one - (ap .* ap))
+        let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D.One - (ap .* ap))
         let inline r(a) = Asin_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Acos (a:DM) =
         let inline ff(a) = Backend.Map_F_M(acos, a)
         let inline fd(a) = acos a
-        let inline df(cp:DM, ap:DM, at:DM) = -at ./ sqrt (D one - (ap .* ap))
+        let inline df(cp:DM, ap:DM, at:DM) = -at ./ sqrt (D.One - (ap .* ap))
         let inline r(a) = Acos_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
     static member Atan (a:DM) =
         let inline ff(a) = Backend.Map_F_M(atan, a)
         let inline fd(a) = atan a
-        let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D one + (ap .* ap))
+        let inline df(cp:DM, ap:DM, at:DM) = at ./ sqrt (D.One + (ap .* ap))
         let inline r(a) = Atan_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
@@ -2462,7 +2374,7 @@ and DM =
     
     /// Add submatrix `b` to matrix `a`, where the upper left corner of `b` is positioned at row `i` and column `j`
     static member AddSubMatrix (a:DM, i:int, j:int, b:DM) =
-        let inline ff(a:number[,], bb:number[,]) = 
+        let inline ff(a:number[, ], bb:number[, ]) = 
             let aa = Array2D.copy a 
 //            Parallel.For(0, b.Rows, fun ii -> 
 //                Parallel.For(0, b.Cols, fun jj ->
@@ -2482,7 +2394,7 @@ and DM =
 
     /// Add the elements of vector `b` to the diagonal elements of matrix `a`
     static member AddDiagonal (a:DM, b:DV) =
-        let inline ff(a:number[,], b:number[]) =
+        let inline ff(a:number[, ], b:number[]) =
             let aa = Array2D.copy a
             let n = min (Array2D.length1 a) (Array2D.length2 a) |> min b.Length
             for i = 0 to n - 1 do
@@ -2521,21 +2433,21 @@ and DM =
         DM.Op_DM_D (a, ff, fd, df, r)
 
     static member ReLU (a:DM) =
-        let inline ff(a) = Backend.Map_F_M(max zero, a)
+        let inline ff(a) = Backend.Map_F_M(max N.zero, a)
         let inline fd(a) = DM.ReLU(a)
-        let inline df(cp, ap, at) = at .* ((one + DM.Sign(ap)) / two)
+        let inline df(cp, ap, at) = at .* ((N.one + DM.Sign(ap)) / N.two)
         let inline r(a) = ReLU_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
         
     static member Sigmoid (a:DM) =
-        let inline ff(a) = Backend.Map_F_M((fun v -> one / (one + exp -v)), a)
+        let inline ff(a) = Backend.Map_F_M((fun v -> N.one / (N.one + exp -v)), a)
         let inline fd(a) = DM.Sigmoid(a)
-        let inline df(cp:DM, ap, at) = at .* cp .* (one - cp)
+        let inline df(cp:DM, ap, at) = at .* cp .* (N.one - cp)
         let inline r(a) = Sigmoid_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
 
-    static member SoftPlus (a:DM) = log (one + exp a)
-    static member SoftSign (a:DM) = a ./ (one + abs a)
+    static member SoftPlus (a:DM) = log (N.one + exp a)
+    static member SoftSign (a:DM) = a ./ (N.one + abs a)
 
     static member Mean (a:DM) =
         DM.Sum(a) / a.Length
@@ -2546,24 +2458,24 @@ and DM =
         DM.Variance(a) |> sqrt
     static member Standardize (a:DM) =
         let sd = DM.StandardDev(a)
-        if sd = D zero then
-            a * (D zero)
+        if sd = D.Zero then
+            a * (D.Zero)
         else
             (a - DM.Mean(a)) / DM.StandardDev(a)
     static member Normalize (a:DM) =
         let min = DM.Min(a)
         let range = DM.Max(a) - min
-        if range = D zero then
-            a * (D zero)
+        if range = D.Zero then
+            a * (D.Zero)
         else
             (a - min) / range
 
-    static member Max (a:DM, b:DM) = ((a + b) + abs (b - a)) / two
-    static member Max (a:DM, b:D) = ((a + b) + abs (b - a)) / two
-    static member Max (a:D, b:DM) = ((a + b) + abs (b - a)) / two
-    static member Min (a:DM, b:DM) = ((a + b) - abs (a - b)) / two
-    static member Min (a:DM, b:D) = ((a + b) - abs (a - b)) / two
-    static member Min (a:D, b:DM) = ((a + b) - abs (a - b)) / two
+    static member Max (a:DM, b:DM) = ((a + b) + abs (b - a)) / N.two
+    static member Max (a:DM, b:D) = ((a + b) + abs (b - a)) / N.two
+    static member Max (a:D, b:DM) = ((a + b) + abs (b - a)) / N.two
+    static member Min (a:DM, b:DM) = ((a + b) - abs (a - b)) / N.two
+    static member Min (a:DM, b:D) = ((a + b) - abs (a - b)) / N.two
+    static member Min (a:D, b:DM) = ((a + b) - abs (a - b)) / N.two
 
     /// Index of the maximum element of matrix `a`
     static member MaxIndex (a:DM) =
@@ -2588,7 +2500,7 @@ and DM =
     static member Min (a:DM) = let minij = DM.MinIndex(a) in a.[fst minij, snd minij]
 
     member d.Visualize() =
-        let (d':number[,]) = ((VisualizationContrast * (DM.Normalize(d.P) - half)) + half) |> DM.op_Explicit
+        let (d':number[, ]) = ((VisualizationContrast * (DM.Normalize(d.P) - N.half)) + N.half) |> DM.op_Explicit
         let sb = System.Text.StringBuilder()
         match d with
         | DM(_) -> sb.AppendLine(sprintf "DM : %i x %i" d.Rows d.Cols) |> ignore
@@ -2596,7 +2508,7 @@ and DM =
         | DMR(_) -> sb.AppendLine(sprintf "DMR: %i x %i" d.Rows d.Cols) |> ignore
         let palette = GlobalConfig.GrayscalePalette
         let palettel = palette.Length
-        let palettelf = toNumber palettel
+        let palettelf = N.toNumber palettel
         for i = 0 to d.Rows - 1 do
             for j = 0 to d.Cols - 1 do
                 let c = int (d'.[i, j] * palettelf) - 1
@@ -2829,7 +2741,7 @@ and TraceOp =
     | Ceil_DM                of DM
     | Round_DM               of DM
     | Transpose_DM           of DM
-    | Make_DM_ofDs           of D[,]
+    | Make_DM_ofDs           of D[, ]
     | Make_DMRows_ofDV       of DV
     | Make_DMCols_ofDV       of DV
     | Make_DMRows_ofDVs      of DV[]
@@ -2852,6 +2764,58 @@ and TraceOp =
     
     | Noop
 
+/// Represents the computed adjoints for reverse AD
+and Adjoints() = 
+    let dict = Dictionary<int, dobj>()
+
+    member internal __.GetD(uniq: int) = dict.[uniq] :?> D
+    member internal __.SetD(uniq:int, v:D) = dict.[uniq] <- v
+    member internal __.GetDV(uniq: int) = dict.[uniq] :?> DV
+    member internal __.SetDV(uniq:int, v:DV) = dict.[uniq] <- v
+    member internal __.GetDM(uniq: int) = dict.[uniq] :?> DM
+    member internal __.SetDM(uniq:int, v:DM) = dict.[uniq] <- v
+
+    /// Lookup the adjoint for a value
+    member this.Item 
+      with get (d:D) : D = 
+        match d with 
+        | D _ -> D.Zero
+        | DF _ -> failwith "Cannot get adjoint value of DF. Use makeReverse on this node when composing the computation."
+        | DR (_, _, _, uniq) -> this.GetD(uniq)
+      and set (d:D) (v : D) = 
+        match d with 
+        | D _ -> ()
+        | DF _ -> failwith "Cannot set adjoint value of DF. Use makeReverse on this node when composing the computation."
+        | DR (_, _, _, uniq) -> this.SetD(uniq, v)
+    
+    /// Lookup the adjoint for a vector
+    member this.Item 
+      with get (d:DV) : DV = 
+        match d with 
+        | DV _ -> DV.ZeroN d.Length 
+        | DVF _ -> failwith "Cannot get adjoint value of DVF. Use makeReverse on this node when composing the computation."
+        | DVR (_, _, _, uniq) -> this.GetDV(uniq)
+      and set (d:DV) (v : DV) = 
+        match d with 
+        | DV _ -> ()
+        | DVF _ -> failwith "Cannot set adjoint value of DVF. Use makeReverse on this node when composing the computation."
+        | DVR (_, _, _, uniq) -> this.SetDV(uniq, v)
+    
+    /// Lookup the adjoint for a matrix
+    member this.Item 
+      with get (d:DM) : DM = 
+        match d with 
+        | DM(_) -> DM.ZeroMN d.Rows d.Cols 
+        | DMF _ -> failwith "Cannot get adjoint value of DMF. Use makeReverse on this node when composing the computation."
+        | DMR (_, _, _, uniq) -> this.GetDM(uniq)
+      and set (d:DM) (v : DM) = 
+        match d with 
+        | DM _ -> ()
+        | DMF _ -> failwith "Cannot set adjoint value of DMF. Use makeReverse on this node when composing the computation."
+        | DMR (_, _, _, uniq) -> this.SetDM(uniq, v)
+
+    override __.ToString() = sprintf "(%d computed adjoints)" dict.Count
+
 
 /// Functional-oriented operations on vectors. Implementing functionality similar to FSharp.Collections.Array.
 [<RequireQualifiedAccess>]
@@ -2871,16 +2835,13 @@ module DV =
     /// Converts vector `v` into a column matrix
     let inline toColDM (v:DV) = v.ToColDM()
 
-    /// Creates a copy of vector `v`
-    let inline copy (v:DV) = v.Copy()
-
     /// Creates a vector with `n` elements, each with value `v`
     let inline create n (v:'a) = 
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.create n (unbox<D>(box v)))
         elif at.Equals(typeof<number>) then DV (Array.create n (unbox<number>(box v)))
-        elif at.Equals(typeof<int>) then DV (Array.create n (unbox<int>(box v) |> toNumber))
-        else failWithInvalidTypeMessage ()
+        elif at.Equals(typeof<int>) then DV (Array.create n (unbox<int>(box v) |> N.toNumber))
+        else N.failWithInvalidTypeMessage ()
 
     /// Creates a vector with `n` zero elements
     let inline zeroCreate n = DV.ZeroN n
@@ -2893,8 +2854,8 @@ module DV =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.init n (unbox<int->D>(box f)))
         elif at.Equals(typeof<number>) then DV (Array.init n (unbox<int->number>(box f)))
-        elif at.Equals(typeof<int>) then DV ((Array.init n (unbox<int->int>(box f))) |> Array.map toNumber)
-        else failWithInvalidTypeMessage ()
+        elif at.Equals(typeof<int>) then DV ((Array.init n (unbox<int->int>(box f))) |> Array.map N.toNumber)
+        else N.failWithInvalidTypeMessage ()
 
     /// Returns true if vector `v` is empty, otherwise returns false
     let isEmpty (v:DV) = v.Length = 0
@@ -3038,10 +2999,10 @@ module DM =
     let inline ofDV (m:int) (v:DV) = DV.ReshapeToDM(m, v)
 
     /// Gets the column with index `j` of matrix `m`
-    let inline col (j:int) (m:DM) = m.[*,j]
+    let inline col (j:int) (m:DM) = m.[*, j]
 
     /// Gets the row with index `i` of matrix `m`
-    let inline row (i:int) (m:DM) = m.[i,*]
+    let inline row (i:int) (m:DM) = m.[i, *]
 
     /// Number of columns in matrix `m`
     let inline cols (m:DM) = m.Cols
@@ -3054,8 +3015,8 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<number>) then DM (Array2D.create m n (unbox<number>(box v)))
-        elif at.Equals(typeof<int>) then DM (Array2D.create m n (unbox<int>(box v) |> toNumber))
-        else failWithInvalidTypeMessage ()
+        elif at.Equals(typeof<int>) then DM (Array2D.create m n (unbox<int>(box v) |> N.toNumber))
+        else N.failWithInvalidTypeMessage ()
 
     /// Creates a matrix with `m` rows, where all rows are equal to `v`
     let inline createRows (m:int) (v:DV) = DM.OfRows(m, v)
@@ -3080,8 +3041,8 @@ module DM =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.init m n (unbox<int->int->D>(box f)))
         elif at.Equals(typeof<number>) then DM (Array2D.init m n (unbox<int->int->number>(box f)))
-        elif at.Equals(typeof<int>) then DM ((Array2D.init m n (unbox<int->int->int>(box f))) |> Array2D.map toNumber)
-        else failWithInvalidTypeMessage ()
+        elif at.Equals(typeof<int>) then DM ((Array2D.init m n (unbox<int->int->int>(box f))) |> Array2D.map N.toNumber)
+        else N.failWithInvalidTypeMessage ()
 
     /// Creates a matrix with `m` rows, where each row is given by `f` as a vector
     let inline initRows (m:int) (f:int->DV) = Seq.init m f |> ofRows
@@ -3133,9 +3094,6 @@ module DM =
 
     /// Number of columns in matrix `m`. Same with DM.cols.
     let inline length2 (m:DM) = m.Cols
-
-    /// Creates a copy of matrix `m`
-    let inline copy (m:DM) = m.Copy()
 
     /// Determinant of matrix `m`
     let inline det (m:DM) = DM.Det(m)
@@ -3228,7 +3186,7 @@ module DM =
 [<AutoOpen>]
 module DOps =
 
-    /// Explicit conversion between types where it is permitted. For example: DV -> number[], number[,] -> DM
+    /// Explicit conversion between types where it is permitted. For example: DV -> number[], number[, ] -> DM
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
 
     /// Create a vector from sequence `v`
@@ -3237,7 +3195,7 @@ module DOps =
         | :? seq<D> as v ->
             v |> Seq.toArray |> DV.ofArray
         | _ ->
-            v |> Seq.toArray |> Array.map toNumber |> DV
+            v |> Seq.toArray |> Array.map N.toNumber |> DV
 
     /// Create a matrix form sequence of sequences `m`
     let inline toDM (m:seq<seq<_>>) = 
@@ -3245,7 +3203,7 @@ module DOps =
         | :? seq<seq<D>> as m ->
             m |> array2D |> DM.ofArray2D
         | _ ->
-            m |> array2D |> Array2D.map toNumber |> DM
+            m |> array2D |> Array2D.map N.toNumber |> DM
 
     /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
     let inline makeForward i (t:^a) (p:^a) = 
@@ -3265,13 +3223,30 @@ module DOps =
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
 
     /// Get the adjoint value of `d`
-    let inline adjoint (d:^a when ^a : (member A : ^a)) = (^a : (member A : ^a) d)
+    let adjoint (adjoints: Adjoints) (d : 'T :> dobj) : 'T = 
+         match box d with 
+         | :? D as d -> adjoints.[d] |> box :?> 'T
+         | :? DV as d -> adjoints.[d] |> box :?> 'T
+         | :? DM as d -> adjoints.[d] |> box :?> 'T
+         | _ -> failwith "invalid dobj type"
 
     /// Get the primal and tangent values of `d`, as a tuple
     let inline primalTangent d = d |> primal, d |> tangent
 
+
+    type Fanouts = Dictionary<int32,uint32>
+    let incrementFanout (fanouts: Fanouts) d = 
+        match fanouts.TryGetValue(d) with
+        | true,fanout -> 
+            fanouts.[d] <- fanout + 1u
+            fanout + 1u
+        | _ -> 
+            fanouts.[d] <- 1u
+            1u
+
     /// Resets the adjoints of all the values in the evaluation trace of `d`, preparing for a new reverse propagation
-    let reverseReset (d:dobj) =
+    let reverseReset (adjoints: Adjoints) (d:dobj) =
+        let fanouts = Fanouts()
         // Note, this uses an explicit worklist over (D|DV|DM) to make it tail-recursive
         let rec resetRec (ds:dobj list) =
             match ds with
@@ -3280,10 +3255,10 @@ module DOps =
                 match d with
                 | :? D as d ->
                     match d with
-                    | DR(_,_,o,_,_) ->
-                        d.A <- D zero
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
+                    | DR(_, o, _, uniq) ->
+                        let fanout = incrementFanout fanouts uniq
+                        if fanout = 1u then
+                            adjoints.SetD(uniq,D.Zero)
                             match o with
                             | Add_D_D(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Add_D_DCons(a) -> resetRec (bxd a :: t)
@@ -3339,10 +3314,10 @@ module DOps =
                     | _ -> resetRec t
                 | :? DV as d ->
                     match d with
-                    | DVR(_,_,o,_,_) ->
-                        d.A <- DV.ZeroN d.Length
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
+                    | DVR(_, o, _, uniq) ->
+                        let fanout = incrementFanout fanouts uniq
+                        if fanout = 1u then
+                            adjoints.SetDV(uniq,DV.ZeroN d.Length)
                             match o with
                             | Add_DV_DV(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Add_DV_DVCons(a) -> resetRec (bxd a :: t)
@@ -3416,23 +3391,23 @@ module DOps =
                             | Ceil_DV(a) -> resetRec (bxd a :: t)
                             | Round_DV(a) -> resetRec (bxd a :: t)
                             | Make_DV_ofDs(a) -> resetRec (List.append (a |> Array.map bxd |> List.ofArray) t)
-                            | SliceRow_DM(a,_,_) -> resetRec (bxd a :: t)
-                            | SliceCol_DM(a,_,_) -> resetRec (bxd a :: t)
+                            | SliceRow_DM(a, _, _) -> resetRec (bxd a :: t)
+                            | SliceCol_DM(a, _, _) -> resetRec (bxd a :: t)
                             | Solve_DM_DV(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Solve_DM_DVCons(a, _) -> resetRec (bxd a :: t)
                             | Solve_DMCons_DV(_, b) -> resetRec (bxd b :: t)
                             | Append_DV_DV(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Append_DV_DVCons(a) -> resetRec (bxd a :: t)
                             | Append_DVCons_DV(b) -> resetRec (bxd b :: t)
-                            | Split_DV(a,_) -> resetRec (bxd a :: t)
-                            | AddItem_DV_D(a,_,b) -> resetRec (bxd a :: bxd b :: t)
+                            | Split_DV(a, _) -> resetRec (bxd a :: t)
+                            | AddItem_DV_D(a, _, b) -> resetRec (bxd a :: bxd b :: t)
                             | AddItem_DV_DCons(a) -> resetRec (bxd a :: t)
-                            | AddItem_DVCons_D(_,b) -> resetRec (bxd b :: t)
-                            | AddSubVector_DV_DV(a,_,b) -> resetRec (bxd a :: bxd b :: t)
+                            | AddItem_DVCons_D(_, b) -> resetRec (bxd b :: t)
+                            | AddSubVector_DV_DV(a, _, b) -> resetRec (bxd a :: bxd b :: t)
                             | AddSubVector_DV_DVCons(a) -> resetRec (bxd a :: t)
-                            | AddSubVector_DVCons_DV(_,b) -> resetRec (bxd b :: t)
+                            | AddSubVector_DVCons_DV(_, b) -> resetRec (bxd b :: t)
                             | ReshapeCopy_DM_DV(a) -> resetRec (bxd a :: t)
-                            | Slice_DV(a,_) -> resetRec (bxd a :: t)
+                            | Slice_DV(a, _) -> resetRec (bxd a :: t)
                             | Diagonal_DM(a) -> resetRec (bxd a :: t)
                             | ReLU_DV(a) -> resetRec (bxd a :: t)
                             | Sigmoid_DV(a) -> resetRec (bxd a :: t)
@@ -3441,10 +3416,10 @@ module DOps =
                     | _ -> resetRec t
                 | :? DM as d ->
                     match d with
-                    | DMR(_,_,o,_,_) ->
-                        d.A <- DM.ZeroMN d.Rows d.Cols
-                        d.F <- d.F + 1u
-                        if d.F = 1u then
+                    | DMR(_, o, _, uniq) ->
+                        let fanout = incrementFanout fanouts uniq
+                        if fanout = 1u then
+                            adjoints.SetDM(uniq,DM.ZeroMN d.Rows d.Cols)
                             match o with
                             | Add_DM_DM(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Add_DM_DMCons(a) -> resetRec (bxd a :: t)
@@ -3527,10 +3502,10 @@ module DOps =
                             | AddItem_DM_D(a, _, _, b) -> resetRec (bxd a :: bxd b :: t)
                             | AddItem_DM_DCons(a) -> resetRec (bxd a :: t)
                             | AddItem_DMCons_D(_, _, b) -> resetRec (bxd b :: t)
-                            | AddSubMatrix_DM_DM(a,_,_,b) -> resetRec (bxd a :: bxd b :: t)
+                            | AddSubMatrix_DM_DM(a, _, _, b) -> resetRec (bxd a :: bxd b :: t)
                             | AddSubMatrix_DM_DMCons(a) -> resetRec (bxd a :: t)
-                            | AddSubMatrix_DMCons_DM(_,_,b) -> resetRec (bxd b :: t)
-                            | Slice_DM(a,_,_) -> resetRec (bxd a :: t)
+                            | AddSubMatrix_DMCons_DM(_, _, b) -> resetRec (bxd b :: t)
+                            | Slice_DM(a, _, _) -> resetRec (bxd a :: t)
                             | RowMatrix_DV(a) -> resetRec (bxd a :: t)
                             | AddDiagonal_DM_DV(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | AddDiagonal_DM_DVCons(a) -> resetRec (bxd a :: t)
@@ -3544,9 +3519,11 @@ module DOps =
                     | _ -> resetRec t
                 | _ -> resetRec t
         resetRec [d]
+        fanouts
 
     /// Propagates the adjoint `v` backwards through the evaluation trace of `d`. The adjoints in the trace are reset before the push.
-    let rec reverseProp (v:dobj) (d:dobj) =
+    let rec reverseProp (adjoints: Adjoints) (v:dobj) (d:dobj) =
+        let fanouts = reverseReset adjoints d
         let inline bx v d = bxd v, bxd d
         // Note, this uses an explicit worklist over (D*D|DV*DV|DM*DM) to make it tail-recursive
         let rec pushRec (ds:(dobj*dobj) list) =
@@ -3556,60 +3533,66 @@ module DOps =
                 match d, v with
                 | (:? D as d), (:? D as v) ->
                     match d with
-                    | DR(_,_,o,_,_) ->
-                        d.A <- d.A + v
-                        d.F <- d.F - 1u
-                        // If all incoming parts of the adjoint have been received, then proceed to the children
-                        if d.F = 0u then
+                    | DR(_, o, _, uniq) ->
+                        let dA = adjoints.GetD(uniq) + v
+                        let fanout = fanouts.[uniq] - 1u
+                        adjoints.SetD(uniq,dA)
+                        fanouts.[uniq] <- fanout
+                        // If all incoming parts of the adjoint have been received, then proceed to the parent
+                        if fanout = 0u then
                             match o with
-                            | Add_D_D(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
-                            | Add_D_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_D_D(a, b) -> pushRec ((bx d.A a) :: (bx -d.A b) :: t)
-                            | Sub_D_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DCons_D(b) -> pushRec ((bx -d.A b) :: t)
-                            | Mul_D_D(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (d.A * a.P) b) :: t)
-                            | Mul_D_DCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
-                            | Div_D_D(a, b) -> pushRec ((bx (d.A / b.P) a) :: (bx (d.A * (-a.P / (b.P * b.P))) b) :: t)
-                            | Div_D_DCons(a, cons) -> pushRec ((bx (d.A / cons) a) :: t)
-                            | Div_DCons_D(cons, b) -> pushRec ((bx (d.A * (-cons / (b.P * b.P))) b) :: t)
-                            | Pow_D_D(a, b) -> pushRec ((bx (d.A * (a.P ** (b.P - D one)) * b.P) a) :: (bx (d.A * (a.P ** b.P) * log a.P) b) :: t)
-                            | Pow_D_DCons(a, cons) -> pushRec ((bx (d.A * (a.P ** (cons - D one)) * cons) a) :: t)
-                            | Pow_DCons_D(cons, b) -> pushRec ((bx (d.A * (cons ** b.P) * log cons) b) :: t)
-                            | Atan2_D_D(a, b) -> let denom = a.P * a.P + b.P * b.P in pushRec ((bx (d.A * b.P / denom) a) :: (bx (d.A * (-a.P) / denom) b) :: t)
-                            | Atan2_D_DCons(a, cons) -> pushRec ((bx (d.A * cons / (a.P * a.P + cons * cons)) a) :: t)
-                            | Atan2_DCons_D(cons, b) -> pushRec ((bx (d.A * (-cons) / (cons * cons + b.P * b.P)) b) :: t)
-                            | Log_D(a) -> pushRec ((bx (d.A / a.P) a) :: t)
-                            | Log10_D(a) -> pushRec ((bx (d.A / (a.P * log10Val)) a) :: t)
-                            | Exp_D(a) -> pushRec ((bx (d.A * d.P) a) :: t) // d.P = exp a.P
-                            | Sin_D(a) -> pushRec ((bx (d.A * cos a.P) a) :: t)
-                            | Cos_D(a) -> pushRec ((bx (d.A * (-sin a.P)) a) :: t)
-                            | Tan_D(a) -> let seca = D one / cos a.P in pushRec ((bx (d.A * seca * seca) a) :: t)
-                            | Neg_D(a) -> pushRec ((bx -d.A a) :: t)
-                            | Sqrt_D(a) -> pushRec ((bx (d.A / (D two * d.P)) a) :: t) // d.P = sqrt a.P
-                            | Sinh_D(a) -> pushRec ((bx (d.A * cosh a.P) a) :: t)
-                            | Cosh_D(a) -> pushRec ((bx (d.A * sinh a.P) a) :: t)
-                            | Tanh_D(a) -> let secha = D one / cosh a.P in pushRec ((bx (d.A * secha * secha) a) :: t)
-                            | Asin_D(a) -> pushRec ((bx (d.A / sqrt (D one - a.P * a.P)) a) :: t)
-                            | Acos_D(a) -> pushRec ((bx (-d.A / sqrt (D one - a.P * a.P)) a) :: t)
-                            | Atan_D(a) -> pushRec ((bx (d.A / (D one + a.P * a.P)) a) :: t)
-                            | Abs_D(a) -> pushRec ((bx (d.A * D.Sign(a.P)) a) :: t)
+                            | Add_D_D(a, b) -> pushRec ((bx dA a) :: (bx dA b) :: t)
+                            | Add_D_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_D_D(a, b) -> pushRec ((bx dA a) :: (bx -dA b) :: t)
+                            | Sub_D_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DCons_D(b) -> pushRec ((bx -dA b) :: t)
+                            | Mul_D_D(a, b) -> pushRec ((bx (dA * b.P) a) :: (bx (dA * a.P) b) :: t)
+                            | Mul_D_DCons(a, cons) -> pushRec ((bx (dA * cons) a) :: t)
+                            | Div_D_D(a, b) -> pushRec ((bx (dA / b.P) a) :: (bx (dA * (-a.P / (b.P * b.P))) b) :: t)
+                            | Div_D_DCons(a, cons) -> pushRec ((bx (dA / cons) a) :: t)
+                            | Div_DCons_D(cons, b) -> pushRec ((bx (dA * (-cons / (b.P * b.P))) b) :: t)
+                            | Pow_D_D(a, b) -> pushRec ((bx (dA * (a.P ** (b.P - D.One)) * b.P) a) :: (bx (dA * (a.P ** b.P) * log a.P) b) :: t)
+                            | Pow_D_DCons(a, cons) -> pushRec ((bx (dA * (a.P ** (cons - D.One)) * cons) a) :: t)
+                            | Pow_DCons_D(cons, b) -> pushRec ((bx (dA * (cons ** b.P) * log cons) b) :: t)
+                            | Atan2_D_D(a, b) -> let denom = a.P * a.P + b.P * b.P in pushRec ((bx (dA * b.P / denom) a) :: (bx (dA * (-a.P) / denom) b) :: t)
+                            | Atan2_D_DCons(a, cons) -> pushRec ((bx (dA * cons / (a.P * a.P + cons * cons)) a) :: t)
+                            | Atan2_DCons_D(cons, b) -> pushRec ((bx (dA * (-cons) / (cons * cons + b.P * b.P)) b) :: t)
+                            | Log_D(a) -> pushRec ((bx (dA / a.P) a) :: t)
+                            | Log10_D(a) -> pushRec ((bx (dA / (a.P * N.log10Val)) a) :: t)
+                            | Exp_D(a) -> pushRec ((bx (dA * d.P) a) :: t) // d.P = exp a.P
+                            | Sin_D(a) -> pushRec ((bx (dA * cos a.P) a) :: t)
+                            | Cos_D(a) -> pushRec ((bx (dA * (-sin a.P)) a) :: t)
+                            | Tan_D(a) -> let seca = D.One / cos a.P in pushRec ((bx (dA * seca * seca) a) :: t)
+                            | Neg_D(a) -> pushRec ((bx -dA a) :: t)
+                            | Sqrt_D(a) -> pushRec ((bx (dA / (D N.two * d.P)) a) :: t) // d.P = sqrt a.P
+                            | Sinh_D(a) -> pushRec ((bx (dA * cosh a.P) a) :: t)
+                            | Cosh_D(a) -> pushRec ((bx (dA * sinh a.P) a) :: t)
+                            | Tanh_D(a) -> let secha = D.One / cosh a.P in pushRec ((bx (dA * secha * secha) a) :: t)
+                            | Asin_D(a) -> pushRec ((bx (dA / sqrt (D.One - a.P * a.P)) a) :: t)
+                            | Acos_D(a) -> pushRec ((bx (-dA / sqrt (D.One - a.P * a.P)) a) :: t)
+                            | Atan_D(a) -> pushRec ((bx (dA / (D.One + a.P * a.P)) a) :: t)
+                            | Abs_D(a) -> pushRec ((bx (dA * D.Sign(a.P)) a) :: t)
                             | Sign_D(a) -> pushRec ((bx D.Zero a) :: t)
                             | Floor_D(a) -> pushRec ((bx D.Zero a) :: t)
                             | Ceil_D(a) -> pushRec ((bx D.Zero a) :: t)
                             | Round_D(a) -> pushRec ((bx D.Zero a) :: t)
-                            | Mul_Dot_DV_DV(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (d.A * a.P) b) :: t)
-                            | Mul_Dot_DV_DVCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
-                            | Sum_DV(a) -> pushRec ((bx (DV.create a.Length d.A) a) :: t)
-                            | L1Norm_DV(a) -> pushRec ((bx (d.A * DV.Sign a.P) a) :: t)
-                            | L2NormSq_DV(a) -> pushRec ((bx (d.A * (D two) * a.P) a) :: t)
-                            | L2Norm_DV(a) -> pushRec ((bx ((d.A / d.P) * a.P) a) :: t)
-                            | Item_DV(a, i) -> a.A <- DV.AddItem(a.A, i, d.A); pushRec ((bx DV.Zero a) :: t)
-                            | Sum_DM(a) -> pushRec ((bx (DM.create a.Rows a.Cols d.A) a) :: t)
-                            | Item_DM(a, i, j) -> a.A <- DM.AddItem(a.A, i, j, d.A); pushRec ((bx DM.Zero a) :: t)
+                            | Mul_Dot_DV_DV(a, b) -> pushRec ((bx (dA * b.P) a) :: (bx (dA * a.P) b) :: t)
+                            | Mul_Dot_DV_DVCons(a, cons) -> pushRec ((bx (dA * cons) a) :: t)
+                            | Sum_DV(a) -> pushRec ((bx (DV.create a.Length dA) a) :: t)
+                            | L1Norm_DV(a) -> pushRec ((bx (dA * DV.Sign a.P) a) :: t)
+                            | L2NormSq_DV(a) -> pushRec ((bx (dA * (D N.two) * a.P) a) :: t)
+                            | L2Norm_DV(a) -> pushRec ((bx ((dA / d.P) * a.P) a) :: t)
+                            | Item_DV(a, i) -> 
+                                adjoints.[a] <- DV.AddItem(adjoints.[a], i, dA); 
+                                pushRec ((bx DV.Zero a) :: t)
+                            | Sum_DM(a) -> pushRec ((bx (DM.create a.Rows a.Cols dA) a) :: t)
+                            | Item_DM(a, i, j) -> 
+                                adjoints.[a] <- DM.AddItem(adjoints.[a], i, j, dA); 
+                                pushRec ((bx DM.Zero a) :: t)
                             | Det_DM(a) -> pushRec ((bx (d.T * d.P * DM.Transpose(DM.Inverse(a))) a) :: t) // Check this
-                            | ReLU_D(a) -> pushRec ((bx (d.A * ((D.Sign(a.P) + one) / two)) a) :: t)
-                            | Sigmoid_D(a) -> pushRec ((bx (d.A * d.P * (one - d.P)) a) :: t) // d.P = D.Sigmoid(a.P)
-                            | LogSumExp_DV(a) -> pushRec ((bx ((d.A / exp d.P) * exp a.P) a) :: t) // d.P = DV.LogSumExp(a.P)
+                            | ReLU_D(a) -> pushRec ((bx (dA * ((D.Sign(a.P) + N.one) / N.two)) a) :: t)
+                            | Sigmoid_D(a) -> pushRec ((bx (dA * d.P * (N.one - d.P)) a) :: t) // d.P = D.Sigmoid(a.P)
+                            | LogSumExp_DV(a) -> pushRec ((bx ((dA / exp d.P) * exp a.P) a) :: t) // d.P = DV.LogSumExp(a.P)
                             | FixedPoint_D(b, bfirst, aprev, alast) ->
                                 // Christianson (1994)
                                 let imax = DiffSharp.Config.GlobalConfig.FixedPointMaxIterations
@@ -3617,8 +3600,8 @@ module DOps =
 
                                 let mutable i = 0
 
-                                let r = d.A
-                                reverseProp r alast
+                                let r = dA
+                                reverseProp adjoints r alast
 
                                 while i < imax do
                                     i <- i + 1
@@ -3626,264 +3609,274 @@ module DOps =
                                         //printfn "Fixed point reverse iteration timeout, i = %i" i
                                         ignore()
                                     else
-                                        if abs (aprev.A + r - alast.A) <= eps then
+                                        if abs (adjoints.[aprev] + r - adjoints.[alast]) <= eps then
                                             //printfn "Fixed point reverse iteration converged, i = %i" i
                                             i <- imax
                                         else
-                                            reverseProp (r + aprev.A) alast
+                                            reverseProp adjoints (r + adjoints.[aprev]) alast
 
-                                pushRec ((bx (bfirst.A) b) :: t) // Propogate converged adjoint back towards the original b at the beginning of the fixed point iteration
+                                pushRec ((bx (adjoints.[bfirst]) b) :: t) // Propogate converged adjoint back towards the original b at the beginning of the fixed point iteration
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
 
                 | (:? DV as d), (:? DV as v) ->
                     match d with
-                    | DVR(_,_,o,_,_) ->
-                        d.A <- d.A + v
-                        d.F <- d.F - 1u
-                        // If all incoming parts of the adjoint have been received, then proceed to the children
-                        if d.F = 0u then
+                    | DVR(_, o, _, uniq) ->
+                        let dA = adjoints.GetDV(uniq) + v
+                        let fanout = fanouts.[uniq] - 1u
+                        adjoints.SetDV(uniq,dA)
+                        fanouts.[uniq] <- fanout
+                        // If all incoming parts of the adjoint have been received, then proceed to the parent
+                        if fanout = 0u then
                             match o with
-                            | Add_DV_DV(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
-                            | Add_DV_DVCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Add_DV_D(a, b) -> pushRec ((bx d.A a) :: (bx (DV.Sum(d.A)) b) :: t)
-                            | Add_DV_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Add_DVCons_D(b) -> pushRec ((bx (DV.Sum(d.A)) b) :: t)
-                            | Sub_DV_DV(a, b) -> pushRec ((bx d.A a) :: (bx -d.A b) :: t)
-                            | Sub_DV_DVCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DVCons_DV(a) -> pushRec ((bx -d.A a) :: t)
-                            | Sub_DV_D(a, b) -> pushRec ((bx d.A a) :: (bx -(DV.Sum(d.A)) b) :: t)
-                            | Sub_DV_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DVCons_D(b) -> pushRec ((bx -(DV.Sum(d.A)) b) :: t)
-                            | Sub_D_DV(a, b) -> pushRec ((bx (DV.Sum(d.A)) a) :: (bx -d.A b) :: t)
-                            | Sub_D_DVCons(a) -> pushRec ((bx (DV.Sum(d.A)) a) :: t)
-                            | Sub_DCons_DV(b) -> pushRec ((bx -d.A b) :: t)
-                            | Mul_Had_DV_DV(a, b) -> pushRec ((bx (d.A .* b.P) a) :: (bx (d.A .* a.P) b) :: t)
-                            | Mul_Had_DV_DVCons(a, cons) -> pushRec ((bx (d.A .* cons) a) :: t)
-                            | Mul_DV_D(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (d.A * a.P) b) :: t)
-                            | Mul_DV_DCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
-                            | Mul_DVCons_D(cons, b) -> pushRec ((bx (d.A * cons) b) :: t)
-                            | Mul_DM_DV(a, b) -> pushRec ((bx (d.A &* b.P) a) :: (bx (DM.Transpose(a.P) * d.A) b) :: t)
-                            | Mul_DM_DVCons(a, cons) -> pushRec ((bx (d.A &* cons) a) :: t)
-                            | Mul_DMCons_DV(cons, b) -> pushRec ((bx (DM.Transpose(cons) * d.A) b) :: t)
-                            | Mul_DV_DM(a, b) -> pushRec ((bx (d.A * DM.Transpose(b.P)) a) :: (bx (a.P &* d.A) b) :: t)
-                            | Mul_DV_DMCons(a, cons) -> pushRec ((bx (d.A * DM.Transpose(cons)) a) :: t)
-                            | Mul_DVCons_DM(cons, b) -> pushRec ((bx (cons &* d.A) b) :: t)
-                            | Div_Had_DV_DV(a, b) -> pushRec ((bx (d.A ./ b.P) a) :: (bx (d.A .* (-a.P ./ (b.P .* b.P))) b) :: t)
-                            | Div_Had_DV_DVCons(a, cons) -> pushRec ((bx (d.A ./ cons) a) :: t)
-                            | Div_Had_DVCons_DV(cons, b) -> pushRec ((bx (d.A .* (-cons ./ (b.P .* b.P))) b) :: t)
-                            | Div_DV_D(a, b) -> pushRec ((bx (d.A / b.P) a) :: (bx (d.A * (-a.P / (b.P * b.P))) b) :: t)
-                            | Div_DV_DCons(a, cons) -> pushRec ((bx (d.A / cons) a) :: t)
-                            | Div_DVCons_D(cons, b) -> pushRec ((bx (d.A * (-cons / (b.P * b.P))) b) :: t)
-                            | Div_D_DV(a, b) -> pushRec ((bx (DV.Sum(d.A ./ b.P)) a) :: (bx (d.A .* (-a.P / (b.P .* b.P))) b) :: t)
-                            | Div_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(d.A ./ cons)) a) :: t)
-                            | Div_DCons_DV(cons, b) -> pushRec ((bx (d.A .* (-cons / (b.P .* b.P))) b) :: t)
-                            | Pow_DV_DV(a, b) -> pushRec ((bx (d.A .* (a.P ** (b.P - D one)) .* b.P) a) :: (bx (d.A .* (a.P ** b.P) .* log a.P) b) :: t)
-                            | Pow_DV_DVCons(a, cons) -> pushRec ((bx (d.A .* (a.P ** (cons - D one)) .* cons) a) :: t)
-                            | Pow_DVCons_DV(cons, b) -> pushRec ((bx (d.A .* (cons ** b.P) .* log cons) b) :: t)
-                            | Atan2_DV_DV(a, b) -> let denom = (a.P .* a.P) + (b.P .* b.P) in pushRec ((bx (d.A .* b.P ./ denom) a) :: (bx (d.A .* (-a.P) ./ denom) b) :: t)
-                            | Atan2_DV_DVCons(a, cons) -> pushRec ((bx (d.A .* cons ./ ((a.P .* a.P) + (cons .* cons))) a) :: t)
-                            | Atan2_DVCons_DV(cons, b) -> pushRec ((bx (d.A .* (-cons) ./ ((cons .* cons) + (b.P .* b.P))) b) :: t)
-                            | Pow_DV_D(a, b) -> pushRec ((bx (d.A .* (a.P ** (b.P - D one)) * b.P) a) :: (bx (DV.Sum(d.A .* (a.P ** b.P) .* log a.P)) b) :: t)
-                            | Pow_DV_DCons(a, cons) -> pushRec ((bx (d.A .* (a.P ** (cons - D one)) * cons) a) :: t)
-                            | Pow_DVCons_D(cons, b) -> pushRec ((bx (DV.Sum(d.A .* (cons ** b.P) .* log cons)) b) :: t)
-                            | Pow_D_DV(a, b) -> pushRec ((bx (DV.Sum(d.A .* (DV.Pow(a.P, b.P - D one)) .* b.P)) a) :: (bx (d.A .* (DV.Pow(a.P, b.P)) * log a.P) b) :: t)
-                            | Pow_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(d.A .* (DV.Pow(a.P, cons - D one)) .* cons)) a) :: t)
-                            | Pow_DCons_DV(cons, b) -> pushRec ((bx (d.A .* (DV.Pow(cons, b.P)) * log cons) b) :: t)
-                            | Atan2_DV_D(a, b) -> let denom = (a.P .* a.P) + (b.P * b.P) in pushRec ((bx (d.A * b.P ./ denom) a) :: (bx (DV.Sum(d.A .* (-a.P) ./ denom)) b) :: t)
-                            | Atan2_DV_DCons(a, cons) -> pushRec ((bx (d.A * cons ./ ((a.P .* a.P) + (cons * cons))) a) :: t)
-                            | Atan2_DVCons_D(cons, b) -> pushRec ((bx (DV.Sum(d.A .* (-cons) ./ ((cons .* cons) + (b.P * b.P)))) b) :: t)
-                            | Atan2_D_DV(a, b) -> let denom = (a.P * a.P) + (b.P .* b.P) in pushRec ((bx (DV.Sum(d.A .* b.P ./ denom)) a) :: (bx (d.A * (-a.P) ./ denom) b) :: t)
-                            | Atan2_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(d.A .* cons ./ ((a.P * a.P) + (cons .* cons)))) a) :: t)
-                            | Atan2_DCons_DV(cons, b) -> pushRec ((bx (d.A * (-cons) ./ ((cons * cons) + (b.P .* b.P))) b) :: t)
-                            | Log_DV(a) -> pushRec ((bx (d.A ./ a.P) a) :: t)
-                            | Log10_DV(a) -> pushRec ((bx (d.A ./ (a.P * log10Val)) a) :: t)
-                            | Exp_DV(a) -> pushRec ((bx (d.A .* d.P) a) :: t) // d.P = exp a.P
-                            | Sin_DV(a) -> pushRec ((bx (d.A .* cos a.P) a) :: t)
-                            | Cos_DV(a) -> pushRec ((bx (-d.A .* sin a.P) a) :: t)
-                            | Tan_DV(a) -> let seca = D one / cos a.P in pushRec ((bx (d.A .* seca .* seca) a) :: t)
-                            | Neg_DV(a) -> pushRec ((bx -d.A a) :: t)
-                            | Sqrt_DV(a) -> pushRec ((bx (d.A ./ (two * d.P)) a) :: t) // d.P = sqrt a.P
-                            | Sinh_DV(a) -> pushRec ((bx (d.A .* cosh a.P) a) :: t)
-                            | Cosh_DV(a) -> pushRec ((bx (d.A .* sinh a.P) a) :: t)
-                            | Tanh_DV(a) -> let secha = D one / cosh a.P in pushRec ((bx (d.A .* secha .* secha) a) :: t)
-                            | Asin_DV(a) -> pushRec ((bx (d.A ./ sqrt (D one - (a.P .* a.P))) a) :: t)
-                            | Acos_DV(a) -> pushRec ((bx (-d.A ./ sqrt (D one - (a.P .* a.P))) a) :: t)
-                            | Atan_DV(a) -> pushRec ((bx (d.A ./ (D one + (a.P .* a.P))) a) :: t)
-                            | Abs_DV(a) -> pushRec ((bx (d.A .* DV.Sign a.P) a) :: t)
+                            | Add_DV_DV(a, b) -> pushRec ((bx dA a) :: (bx dA b) :: t)
+                            | Add_DV_DVCons(a) -> pushRec ((bx dA a) :: t)
+                            | Add_DV_D(a, b) -> pushRec ((bx dA a) :: (bx (DV.Sum(dA)) b) :: t)
+                            | Add_DV_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Add_DVCons_D(b) -> pushRec ((bx (DV.Sum(dA)) b) :: t)
+                            | Sub_DV_DV(a, b) -> pushRec ((bx dA a) :: (bx -dA b) :: t)
+                            | Sub_DV_DVCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DVCons_DV(a) -> pushRec ((bx -dA a) :: t)
+                            | Sub_DV_D(a, b) -> pushRec ((bx dA a) :: (bx -(DV.Sum(dA)) b) :: t)
+                            | Sub_DV_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DVCons_D(b) -> pushRec ((bx -(DV.Sum(dA)) b) :: t)
+                            | Sub_D_DV(a, b) -> pushRec ((bx (DV.Sum(dA)) a) :: (bx -dA b) :: t)
+                            | Sub_D_DVCons(a) -> pushRec ((bx (DV.Sum(dA)) a) :: t)
+                            | Sub_DCons_DV(b) -> pushRec ((bx -dA b) :: t)
+                            | Mul_Had_DV_DV(a, b) -> pushRec ((bx (dA .* b.P) a) :: (bx (dA .* a.P) b) :: t)
+                            | Mul_Had_DV_DVCons(a, cons) -> pushRec ((bx (dA .* cons) a) :: t)
+                            | Mul_DV_D(a, b) -> pushRec ((bx (dA * b.P) a) :: (bx (dA * a.P) b) :: t)
+                            | Mul_DV_DCons(a, cons) -> pushRec ((bx (dA * cons) a) :: t)
+                            | Mul_DVCons_D(cons, b) -> pushRec ((bx (dA * cons) b) :: t)
+                            | Mul_DM_DV(a, b) -> pushRec ((bx (dA &* b.P) a) :: (bx (DM.Transpose(a.P) * dA) b) :: t)
+                            | Mul_DM_DVCons(a, cons) -> pushRec ((bx (dA &* cons) a) :: t)
+                            | Mul_DMCons_DV(cons, b) -> pushRec ((bx (DM.Transpose(cons) * dA) b) :: t)
+                            | Mul_DV_DM(a, b) -> pushRec ((bx (dA * DM.Transpose(b.P)) a) :: (bx (a.P &* dA) b) :: t)
+                            | Mul_DV_DMCons(a, cons) -> pushRec ((bx (dA * DM.Transpose(cons)) a) :: t)
+                            | Mul_DVCons_DM(cons, b) -> pushRec ((bx (cons &* dA) b) :: t)
+                            | Div_Had_DV_DV(a, b) -> pushRec ((bx (dA ./ b.P) a) :: (bx (dA .* (-a.P ./ (b.P .* b.P))) b) :: t)
+                            | Div_Had_DV_DVCons(a, cons) -> pushRec ((bx (dA ./ cons) a) :: t)
+                            | Div_Had_DVCons_DV(cons, b) -> pushRec ((bx (dA .* (-cons ./ (b.P .* b.P))) b) :: t)
+                            | Div_DV_D(a, b) -> pushRec ((bx (dA / b.P) a) :: (bx (dA * (-a.P / (b.P * b.P))) b) :: t)
+                            | Div_DV_DCons(a, cons) -> pushRec ((bx (dA / cons) a) :: t)
+                            | Div_DVCons_D(cons, b) -> pushRec ((bx (dA * (-cons / (b.P * b.P))) b) :: t)
+                            | Div_D_DV(a, b) -> pushRec ((bx (DV.Sum(dA ./ b.P)) a) :: (bx (dA .* (-a.P / (b.P .* b.P))) b) :: t)
+                            | Div_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(dA ./ cons)) a) :: t)
+                            | Div_DCons_DV(cons, b) -> pushRec ((bx (dA .* (-cons / (b.P .* b.P))) b) :: t)
+                            | Pow_DV_DV(a, b) -> pushRec ((bx (dA .* (a.P ** (b.P - D.One)) .* b.P) a) :: (bx (dA .* (a.P ** b.P) .* log a.P) b) :: t)
+                            | Pow_DV_DVCons(a, cons) -> pushRec ((bx (dA .* (a.P ** (cons - D.One)) .* cons) a) :: t)
+                            | Pow_DVCons_DV(cons, b) -> pushRec ((bx (dA .* (cons ** b.P) .* log cons) b) :: t)
+                            | Atan2_DV_DV(a, b) -> let denom = (a.P .* a.P) + (b.P .* b.P) in pushRec ((bx (dA .* b.P ./ denom) a) :: (bx (dA .* (-a.P) ./ denom) b) :: t)
+                            | Atan2_DV_DVCons(a, cons) -> pushRec ((bx (dA .* cons ./ ((a.P .* a.P) + (cons .* cons))) a) :: t)
+                            | Atan2_DVCons_DV(cons, b) -> pushRec ((bx (dA .* (-cons) ./ ((cons .* cons) + (b.P .* b.P))) b) :: t)
+                            | Pow_DV_D(a, b) -> pushRec ((bx (dA .* (a.P ** (b.P - D.One)) * b.P) a) :: (bx (DV.Sum(dA .* (a.P ** b.P) .* log a.P)) b) :: t)
+                            | Pow_DV_DCons(a, cons) -> pushRec ((bx (dA .* (a.P ** (cons - D.One)) * cons) a) :: t)
+                            | Pow_DVCons_D(cons, b) -> pushRec ((bx (DV.Sum(dA .* (cons ** b.P) .* log cons)) b) :: t)
+                            | Pow_D_DV(a, b) -> pushRec ((bx (DV.Sum(dA .* (DV.Pow(a.P, b.P - D.One)) .* b.P)) a) :: (bx (dA .* (DV.Pow(a.P, b.P)) * log a.P) b) :: t)
+                            | Pow_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(dA .* (DV.Pow(a.P, cons - D.One)) .* cons)) a) :: t)
+                            | Pow_DCons_DV(cons, b) -> pushRec ((bx (dA .* (DV.Pow(cons, b.P)) * log cons) b) :: t)
+                            | Atan2_DV_D(a, b) -> let denom = (a.P .* a.P) + (b.P * b.P) in pushRec ((bx (dA * b.P ./ denom) a) :: (bx (DV.Sum(dA .* (-a.P) ./ denom)) b) :: t)
+                            | Atan2_DV_DCons(a, cons) -> pushRec ((bx (dA * cons ./ ((a.P .* a.P) + (cons * cons))) a) :: t)
+                            | Atan2_DVCons_D(cons, b) -> pushRec ((bx (DV.Sum(dA .* (-cons) ./ ((cons .* cons) + (b.P * b.P)))) b) :: t)
+                            | Atan2_D_DV(a, b) -> let denom = (a.P * a.P) + (b.P .* b.P) in pushRec ((bx (DV.Sum(dA .* b.P ./ denom)) a) :: (bx (dA * (-a.P) ./ denom) b) :: t)
+                            | Atan2_D_DVCons(a, cons) -> pushRec ((bx (DV.Sum(dA .* cons ./ ((a.P * a.P) + (cons .* cons)))) a) :: t)
+                            | Atan2_DCons_DV(cons, b) -> pushRec ((bx (dA * (-cons) ./ ((cons * cons) + (b.P .* b.P))) b) :: t)
+                            | Log_DV(a) -> pushRec ((bx (dA ./ a.P) a) :: t)
+                            | Log10_DV(a) -> pushRec ((bx (dA ./ (a.P * N.log10Val)) a) :: t)
+                            | Exp_DV(a) -> pushRec ((bx (dA .* d.P) a) :: t) // d.P = exp a.P
+                            | Sin_DV(a) -> pushRec ((bx (dA .* cos a.P) a) :: t)
+                            | Cos_DV(a) -> pushRec ((bx (-dA .* sin a.P) a) :: t)
+                            | Tan_DV(a) -> let seca = D.One / cos a.P in pushRec ((bx (dA .* seca .* seca) a) :: t)
+                            | Neg_DV(a) -> pushRec ((bx -dA a) :: t)
+                            | Sqrt_DV(a) -> pushRec ((bx (dA ./ (N.two * d.P)) a) :: t) // d.P = sqrt a.P
+                            | Sinh_DV(a) -> pushRec ((bx (dA .* cosh a.P) a) :: t)
+                            | Cosh_DV(a) -> pushRec ((bx (dA .* sinh a.P) a) :: t)
+                            | Tanh_DV(a) -> let secha = D.One / cosh a.P in pushRec ((bx (dA .* secha .* secha) a) :: t)
+                            | Asin_DV(a) -> pushRec ((bx (dA ./ sqrt (D.One - (a.P .* a.P))) a) :: t)
+                            | Acos_DV(a) -> pushRec ((bx (-dA ./ sqrt (D.One - (a.P .* a.P))) a) :: t)
+                            | Atan_DV(a) -> pushRec ((bx (dA ./ (D.One + (a.P .* a.P))) a) :: t)
+                            | Abs_DV(a) -> pushRec ((bx (dA .* DV.Sign a.P) a) :: t)
                             | Sign_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Floor_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Ceil_DV(a) -> pushRec ((bx DV.Zero a) :: t)
                             | Round_DV(a) -> pushRec ((bx DV.Zero a) :: t)
-                            | Make_DV_ofDs(a) -> pushRec (t |> List.append (a |> Array.mapi (fun i v -> (bx d.A.[i] v)) |> List.ofArray))
+                            | Make_DV_ofDs(a) -> pushRec (t |> List.append (a |> Array.mapi (fun i v -> (bx dA.[i] v)) |> List.ofArray))
                             | SliceRow_DM(a, i, j) ->
-                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToRowDM())
+                                adjoints.[a] <- DM.AddSubMatrix(adjoints.[a], i, j, dA.ToRowDM())
                                 pushRec ((bx DM.Zero a) :: t)
                             | SliceCol_DM(a, i, j) ->
-                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A.ToColDM())
+                                adjoints.[a] <- DM.AddSubMatrix(adjoints.[a], i, j, dA.ToColDM())
                                 pushRec ((bx DM.Zero a) :: t)
-                            | Solve_DM_DV(a, b) -> let ba = DM.Solve(DM.Transpose(a), d.A) in pushRec ((bx (-ba &* d.A) a) :: (bx (ba) b) :: t)
-                            | Solve_DM_DVCons(a, cons) -> let ba = DM.Solve(DM.Transpose(a), d.A) in pushRec ((bx (-ba &* d.A) a) :: t)
-                            | Solve_DMCons_DV(cons, b) -> let ba = DM.Solve(DM.Transpose(cons), d.A) in pushRec ((bx ba b) :: t)
+                            | Solve_DM_DV(a, b) -> let ba = DM.Solve(DM.Transpose(a), dA) in pushRec ((bx (-ba &* dA) a) :: (bx (ba) b) :: t)
+                            | Solve_DM_DVCons(a, cons) -> let ba = DM.Solve(DM.Transpose(a), dA) in pushRec ((bx (-ba &* dA) a) :: t)
+                            | Solve_DMCons_DV(cons, b) -> let ba = DM.Solve(DM.Transpose(cons), dA) in pushRec ((bx ba b) :: t)
                             | Append_DV_DV(a, b) ->
-                                a.A <- a.A + d.A.[..(a.Length - 1)]
-                                b.A <- b.A + d.A.[a.Length..]
+                                adjoints.[a] <- adjoints.[a] + dA.[..(a.Length - 1)]
+                                adjoints.[b] <- adjoints.[b] + dA.[a.Length..]
                                 pushRec ((bx DV.Zero a) :: (bx DV.Zero b) :: t)
                             | Append_DV_DVCons(a) ->
-                                a.A <- a.A + d.A.[..(a.Length - 1)]
+                                adjoints.[a] <- adjoints.[a] + dA.[..(a.Length - 1)]
                                 pushRec ((bx DV.Zero a) :: t)
                             | Append_DVCons_DV(b) ->
-                                b.A <- b.A + d.A.[(d.Length - b.Length)..]
+                                adjoints.[b] <- adjoints.[b] + dA.[(d.Length - b.Length)..]
                                 pushRec ((bx DV.Zero b) :: t)
                             | Split_DV(a, i) ->
-                                a.A <- DV.AddSubVector(a.A, i, d.A)
+                                adjoints.[a] <- DV.AddSubVector(adjoints.[a], i, dA)
                                 pushRec ((bx DV.Zero a) :: t)
-                            | AddItem_DV_D(a, i, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i]) b) :: t)
-                            | AddItem_DV_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | AddItem_DVCons_D(i, b) -> pushRec ((bx d.A.[i] b) :: t)
-                            | AddSubVector_DV_DV(a, i, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i..(i + b.Length - 1)]) b) :: t)
-                            | AddSubVector_DV_DVCons(a) -> pushRec ((bx d.A a) :: t)
-                            | AddSubVector_DVCons_DV(i, b) -> pushRec ((bx (d.A.[i..(i + b.Length - 1)]) b) :: t)
-                            | ReshapeCopy_DM_DV(a) -> pushRec ((bx (DV.ReshapeToDM(a.Rows, d.A)) a) :: t)
+                            | AddItem_DV_D(a, i, b) -> pushRec ((bx dA a) :: (bx (dA.[i]) b) :: t)
+                            | AddItem_DV_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | AddItem_DVCons_D(i, b) -> pushRec ((bx dA.[i] b) :: t)
+                            | AddSubVector_DV_DV(a, i, b) -> pushRec ((bx dA a) :: (bx (dA.[i..(i + b.Length - 1)]) b) :: t)
+                            | AddSubVector_DV_DVCons(a) -> pushRec ((bx dA a) :: t)
+                            | AddSubVector_DVCons_DV(i, b) -> pushRec ((bx (dA.[i..(i + b.Length - 1)]) b) :: t)
+                            | ReshapeCopy_DM_DV(a) -> pushRec ((bx (DV.ReshapeToDM(a.Rows, dA)) a) :: t)
                             | Slice_DV(a, i) ->
-                                a.A <- DV.AddSubVector(a.A, i, d.A)
+                                adjoints.[a] <- DV.AddSubVector(adjoints.[a], i, dA)
                                 pushRec ((bx DV.Zero a) :: t)
                             | Diagonal_DM(a) -> 
-                                a.A <- DM.AddDiagonal(a.A, d.A)
+                                adjoints.[a] <- DM.AddDiagonal(adjoints.[a], dA)
                                 pushRec ((bx DM.Zero a) :: t)
-                            | ReLU_DV(a) -> pushRec ((bx (d.A .* ((DV.Sign(a.P) + one) / two)) a) :: t)
-                            | Sigmoid_DV(a) -> pushRec ((bx (d.A .* d.P .* (one - d.P)) a) :: t) // d.P = DV.Sigmoid(a.P)
+                            | ReLU_DV(a) -> pushRec ((bx (dA .* ((DV.Sign(a.P) + N.one) / N.two)) a) :: t)
+                            | Sigmoid_DV(a) -> pushRec ((bx (dA .* d.P .* (N.one - d.P)) a) :: t) // d.P = DV.Sigmoid(a.P)
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
 
                 | (:? DM as d), (:? DM as v) ->
                     match d with
-                    | DMR(_,_,o,_,_) ->
-                        d.A <- d.A + v
-                        d.F <- d.F - 1u
-                        // If all incoming parts of the adjoint have been received, then proceed to the children
-                        if d.F = 0u then
+                    | DMR(_, o, _, uniq) ->
+                        let dA = adjoints.GetDM(uniq) + v
+                        let fanout = fanouts.[uniq] - 1u
+                        adjoints.SetDM(uniq,dA)
+                        fanouts.[uniq] <- fanout
+                        // If all incoming parts of the adjoint have been received, then proceed to the parent
+                        if fanout = 0u then
                             match o with
-                            | Add_DM_DM(a, b) -> pushRec ((bx d.A a) :: (bx d.A b) :: t)
-                            | Add_DM_DMCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DM_DM(a, b) -> pushRec ((bx d.A a) :: (bx -d.A b) :: t)
-                            | Sub_DM_DMCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DMCons_DM(a) -> pushRec ((bx -d.A a) :: t)
-                            | Mul_DM_DM(a, b) -> pushRec ((bx (d.A * DM.Transpose(b.P)) a) :: (bx (DM.Transpose(a.P) * d.A) b) :: t)
-                            | Mul_DM_DMCons(a, cons) -> pushRec ((bx (d.A * DM.Transpose(cons)) a) :: t)
-                            | Mul_DMCons_DM(cons, b) -> pushRec ((bx (DM.Transpose(cons) * d.A) b) :: t)
-                            | Mul_Had_DM_DM(a, b) -> pushRec ((bx (d.A .* b.P) a) :: (bx (d.A .* a.P) b) :: t)
-                            | Mul_Had_DM_DMCons(a, cons) -> pushRec ((bx (d.A .* cons) a) :: t)
-                            | Mul_DM_D(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (DM.Sum(d.A .* a.P)) b) :: t)
-                            | Mul_DM_DCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
-                            | Mul_DMCons_D(cons, b) -> pushRec ((bx (DM.Sum(d.A .* cons)) b) :: t)
-                            | Mul_Out_DV_DV(a, b) -> pushRec ((bx (d.A * b.P) a) :: (bx (DM.Transpose(d.A) * a.P) b) :: t)
-                            | Mul_Out_DV_DVCons(a, cons) -> pushRec ((bx (d.A * cons) a) :: t)
-                            | Mul_Out_DVCons_DV(cons, b) -> pushRec ((bx (DM.Transpose(d.A) * cons) b) :: t)
-                            | Div_Had_DM_DM(a, b) -> pushRec ((bx (d.A ./ b.P) a) :: (bx (d.A .* (-a.P ./ (b.P .* b.P))) b) :: t)
-                            | Div_Had_DM_DMCons(a, cons) -> pushRec ((bx (d.A ./ cons) a) :: t)
-                            | Div_Had_DMCons_DM(cons, b) -> pushRec ((bx (d.A .* (-cons ./ (b.P .* b.P))) b) :: t)
-                            | Pow_DM_DM(a, b) -> pushRec ((bx (d.A .* (a.P ** (b.P - D one)) .* b.P) a) :: (bx (d.A .* (a.P ** b.P) .* log a.P) b) :: t)
-                            | Pow_DM_DMCons(a, cons) -> pushRec ((bx (d.A .* (a.P ** (cons - D one)) .* cons) a) :: t)
-                            | Pow_DMCons_DM(cons, b) -> pushRec ((bx (d.A .* (cons ** b.P) .* log cons) b) :: t)
-                            | Atan2_DM_DM(a, b) -> let denom = (a.P .* a.P) + (b.P .* b.P) in pushRec ((bx (d.A .* b.P ./ denom) a) :: (bx (d.A .* (-a.P) ./ denom) b) :: t)
-                            | Atan2_DM_DMCons(a, cons) -> pushRec ((bx (d.A .* cons ./ ((a.P .* a.P) + (cons .* cons))) a) :: t)
-                            | Atan2_DMCons_DM(cons, b) -> pushRec ((bx (d.A .* (-cons) ./ ((cons .* cons) + (b.P .* b.P))) b) :: t)
-                            | Add_DM_D(a, b) -> pushRec ((bx d.A a) :: (bx (DM.Sum(d.A)) b) :: t)
-                            | Add_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Add_DMCons_D(b) -> pushRec ((bx (DM.Sum(d.A)) b) :: t)
+                            | Add_DM_DM(a, b) -> pushRec ((bx dA a) :: (bx dA b) :: t)
+                            | Add_DM_DMCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DM_DM(a, b) -> pushRec ((bx dA a) :: (bx -dA b) :: t)
+                            | Sub_DM_DMCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DMCons_DM(a) -> pushRec ((bx -dA a) :: t)
+                            | Mul_DM_DM(a, b) -> pushRec ((bx (dA * DM.Transpose(b.P)) a) :: (bx (DM.Transpose(a.P) * dA) b) :: t)
+                            | Mul_DM_DMCons(a, cons) -> pushRec ((bx (dA * DM.Transpose(cons)) a) :: t)
+                            | Mul_DMCons_DM(cons, b) -> pushRec ((bx (DM.Transpose(cons) * dA) b) :: t)
+                            | Mul_Had_DM_DM(a, b) -> pushRec ((bx (dA .* b.P) a) :: (bx (dA .* a.P) b) :: t)
+                            | Mul_Had_DM_DMCons(a, cons) -> pushRec ((bx (dA .* cons) a) :: t)
+                            | Mul_DM_D(a, b) -> pushRec ((bx (dA * b.P) a) :: (bx (DM.Sum(dA .* a.P)) b) :: t)
+                            | Mul_DM_DCons(a, cons) -> pushRec ((bx (dA * cons) a) :: t)
+                            | Mul_DMCons_D(cons, b) -> pushRec ((bx (DM.Sum(dA .* cons)) b) :: t)
+                            | Mul_Out_DV_DV(a, b) -> pushRec ((bx (dA * b.P) a) :: (bx (DM.Transpose(dA) * a.P) b) :: t)
+                            | Mul_Out_DV_DVCons(a, cons) -> pushRec ((bx (dA * cons) a) :: t)
+                            | Mul_Out_DVCons_DV(cons, b) -> pushRec ((bx (DM.Transpose(dA) * cons) b) :: t)
+                            | Div_Had_DM_DM(a, b) -> pushRec ((bx (dA ./ b.P) a) :: (bx (dA .* (-a.P ./ (b.P .* b.P))) b) :: t)
+                            | Div_Had_DM_DMCons(a, cons) -> pushRec ((bx (dA ./ cons) a) :: t)
+                            | Div_Had_DMCons_DM(cons, b) -> pushRec ((bx (dA .* (-cons ./ (b.P .* b.P))) b) :: t)
+                            | Pow_DM_DM(a, b) -> pushRec ((bx (dA .* (a.P ** (b.P - D.One)) .* b.P) a) :: (bx (dA .* (a.P ** b.P) .* log a.P) b) :: t)
+                            | Pow_DM_DMCons(a, cons) -> pushRec ((bx (dA .* (a.P ** (cons - D.One)) .* cons) a) :: t)
+                            | Pow_DMCons_DM(cons, b) -> pushRec ((bx (dA .* (cons ** b.P) .* log cons) b) :: t)
+                            | Atan2_DM_DM(a, b) -> let denom = (a.P .* a.P) + (b.P .* b.P) in pushRec ((bx (dA .* b.P ./ denom) a) :: (bx (dA .* (-a.P) ./ denom) b) :: t)
+                            | Atan2_DM_DMCons(a, cons) -> pushRec ((bx (dA .* cons ./ ((a.P .* a.P) + (cons .* cons))) a) :: t)
+                            | Atan2_DMCons_DM(cons, b) -> pushRec ((bx (dA .* (-cons) ./ ((cons .* cons) + (b.P .* b.P))) b) :: t)
+                            | Add_DM_D(a, b) -> pushRec ((bx dA a) :: (bx (DM.Sum(dA)) b) :: t)
+                            | Add_DM_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Add_DMCons_D(b) -> pushRec ((bx (DM.Sum(dA)) b) :: t)
                             | Add_DMCols_DV(a, b) ->
-                                d.A.GetCols() |> Seq.iter (fun v -> b.A <- b.A + v)
-                                pushRec ((bx d.A a) :: (bx DV.Zero b) :: t)
+                                dA.GetCols() |> Seq.iter (fun v -> adjoints.[b] <- adjoints.[b] + v)
+                                pushRec ((bx dA a) :: (bx DV.Zero b) :: t)
                             | Add_DMCols_DVCons(a) ->
-                                pushRec ((bx d.A a) :: t)
+                                pushRec ((bx dA a) :: t)
                             | Add_DMColsCons_DV(b) ->
-                                d.A.GetCols() |> Seq.iter (fun v -> b.A <- b.A + v)
+                                dA.GetCols() |> Seq.iter (fun v -> adjoints.[b] <- adjoints.[b] + v)
                                 pushRec ((bx DV.Zero b) :: t)
-                            | Sub_DM_D(a, b) -> pushRec ((bx d.A a) :: (bx -(DM.Sum(d.A)) b) :: t)
-                            | Sub_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | Sub_DMCons_D(b) -> pushRec ((bx -(DM.Sum(d.A)) b) :: t)
-                            | Sub_D_DM(a, b) -> pushRec ((bx (DM.Sum(d.A)) a) :: (bx -d.A b) :: t)
-                            | Sub_D_DMCons(a) -> pushRec ((bx (DM.Sum(d.A)) a) :: t)
-                            | Sub_DCons_DM(b) -> pushRec ((bx -d.A b) :: t)
-                            | Div_DM_D(a, b) -> pushRec ((bx (d.A / b.P) a) :: (bx (d.A * (-a.P / (b.P * b.P))) b) :: t)
-                            | Div_DM_DCons(a, cons) -> pushRec ((bx (d.A / cons) a) :: t)
-                            | Div_DMCons_D(cons, b) -> pushRec ((bx (d.A * (-cons / (b.P * b.P))) b) :: t)
-                            | Div_D_DM(a, b) -> pushRec ((bx (DM.Sum(d.A ./ b.P)) a) :: (bx (d.A .* (-a.P / (b.P .* b.P))) b) :: t)
-                            | Div_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(d.A ./ cons)) a) :: t)
-                            | Div_DCons_DM(cons, b) -> pushRec ((bx (d.A .* (-cons / (b.P .* b.P))) b) :: t)
-                            | Pow_DM_D(a, b) -> pushRec ((bx (d.A .* (a.P ** (b.P - D one)) * b.P) a) :: (bx (DM.Sum(d.A .* (a.P ** b.P) .* log a.P)) b) :: t)
-                            | Pow_DM_DCons(a, cons) -> pushRec ((bx (d.A .* (a.P ** (cons - D one)) * cons) a) :: t)
-                            | Pow_DMCons_D(cons, b) -> pushRec ((bx (DM.Sum(d.A .* (cons ** b.P) .* log cons)) b) :: t)
-                            | Pow_D_DM(a, b) -> pushRec ((bx (DM.Sum(d.A .* (DM.Pow(a.P, b.P - D one)) .* b.P)) a) :: (bx (d.A .* (DM.Pow(a.P, b.P)) * log a.P) b) :: t)
-                            | Pow_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(d.A .* (DM.Pow(a.P, cons - D one)) .* cons)) a) :: t)
-                            | Pow_DCons_DM(cons, b) -> pushRec ((bx (d.A .* (DM.Pow(cons, b.P)) * log cons) b) :: t)
-                            | Atan2_DM_D(a, b) -> let denom = (a.P .* a.P) + (b.P * b.P) in pushRec ((bx (d.A * b.P ./ denom) a) :: (bx (DM.Sum(d.A .* (-a.P) ./ denom)) b) :: t)
-                            | Atan2_DM_DCons(a, cons) -> pushRec ((bx (d.A * cons ./ ((a.P .* a.P) + (cons * cons))) a) :: t)
-                            | Atan2_DMCons_D(cons, b) ->pushRec ((bx (DM.Sum(d.A .* (-cons) ./ ((cons .* cons) + (b.P * b.P)))) b) :: t)
-                            | Atan2_D_DM(a, b) -> let denom = (a.P * a.P) + (b.P .* b.P) in pushRec ((bx (DM.Sum(d.A .* b.P ./ denom)) a) :: (bx (d.A * (-a.P) ./ denom) b) :: t)
-                            | Atan2_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(d.A .* cons ./ ((a.P * a.P) + (cons .* cons)))) a) :: t)
-                            | Atan2_DCons_DM(cons, b) -> pushRec ((bx (d.A * (-cons) ./ ((cons * cons) + (b.P .* b.P))) b) :: t)
-                            | Log_DM(a) -> pushRec ((bx (d.A ./ a.P) a) :: t)
-                            | Log10_DM(a) -> pushRec ((bx (d.A ./ (a.P * log10Val)) a) :: t)
-                            | Exp_DM(a) -> pushRec ((bx (d.A .* d.P) a) :: t) // d.P = exp a.P
-                            | Sin_DM(a) -> pushRec ((bx (d.A .* cos a.P) a) :: t)
-                            | Cos_DM(a) -> pushRec ((bx (-d.A .* sin a.P) a) :: t)
-                            | Tan_DM(a) -> let seca = D one / cos a.P in pushRec ((bx (d.A .* seca .* seca) a) :: t)
-                            | Neg_DM(a) -> pushRec ((bx -d.A a) :: t)
-                            | Sqrt_DM(a) -> pushRec ((bx (d.A ./ (two * d.P)) a) :: t) // d.P = sqrt a.P
-                            | Sinh_DM(a) -> pushRec ((bx (d.A .* cosh a.P) a) :: t)
-                            | Cosh_DM(a) -> pushRec ((bx (d.A .* sinh a.P) a) :: t)
-                            | Tanh_DM(a) -> let secha = D one / cosh a.P in pushRec ((bx (d.A .* secha .* secha) a) :: t)
-                            | Asin_DM(a) -> pushRec ((bx (d.A ./ sqrt (D one - (a.P .* a.P))) a) :: t)
-                            | Acos_DM(a) -> pushRec ((bx (-d.A ./ sqrt (D one - (a.P .* a.P))) a) :: t)
-                            | Atan_DM(a) -> pushRec ((bx (d.A ./ (D one + (a.P .* a.P))) a) :: t)
-                            | Abs_DM(a) -> pushRec ((bx (d.A .* DM.Sign a.P) a) :: t)
+                            | Sub_DM_D(a, b) -> pushRec ((bx dA a) :: (bx -(DM.Sum(dA)) b) :: t)
+                            | Sub_DM_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | Sub_DMCons_D(b) -> pushRec ((bx -(DM.Sum(dA)) b) :: t)
+                            | Sub_D_DM(a, b) -> pushRec ((bx (DM.Sum(dA)) a) :: (bx -dA b) :: t)
+                            | Sub_D_DMCons(a) -> pushRec ((bx (DM.Sum(dA)) a) :: t)
+                            | Sub_DCons_DM(b) -> pushRec ((bx -dA b) :: t)
+                            | Div_DM_D(a, b) -> pushRec ((bx (dA / b.P) a) :: (bx (dA * (-a.P / (b.P * b.P))) b) :: t)
+                            | Div_DM_DCons(a, cons) -> pushRec ((bx (dA / cons) a) :: t)
+                            | Div_DMCons_D(cons, b) -> pushRec ((bx (dA * (-cons / (b.P * b.P))) b) :: t)
+                            | Div_D_DM(a, b) -> pushRec ((bx (DM.Sum(dA ./ b.P)) a) :: (bx (dA .* (-a.P / (b.P .* b.P))) b) :: t)
+                            | Div_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(dA ./ cons)) a) :: t)
+                            | Div_DCons_DM(cons, b) -> pushRec ((bx (dA .* (-cons / (b.P .* b.P))) b) :: t)
+                            | Pow_DM_D(a, b) -> pushRec ((bx (dA .* (a.P ** (b.P - D.One)) * b.P) a) :: (bx (DM.Sum(dA .* (a.P ** b.P) .* log a.P)) b) :: t)
+                            | Pow_DM_DCons(a, cons) -> pushRec ((bx (dA .* (a.P ** (cons - D.One)) * cons) a) :: t)
+                            | Pow_DMCons_D(cons, b) -> pushRec ((bx (DM.Sum(dA .* (cons ** b.P) .* log cons)) b) :: t)
+                            | Pow_D_DM(a, b) -> pushRec ((bx (DM.Sum(dA .* (DM.Pow(a.P, b.P - D.One)) .* b.P)) a) :: (bx (dA .* (DM.Pow(a.P, b.P)) * log a.P) b) :: t)
+                            | Pow_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(dA .* (DM.Pow(a.P, cons - D.One)) .* cons)) a) :: t)
+                            | Pow_DCons_DM(cons, b) -> pushRec ((bx (dA .* (DM.Pow(cons, b.P)) * log cons) b) :: t)
+                            | Atan2_DM_D(a, b) -> let denom = (a.P .* a.P) + (b.P * b.P) in pushRec ((bx (dA * b.P ./ denom) a) :: (bx (DM.Sum(dA .* (-a.P) ./ denom)) b) :: t)
+                            | Atan2_DM_DCons(a, cons) -> pushRec ((bx (dA * cons ./ ((a.P .* a.P) + (cons * cons))) a) :: t)
+                            | Atan2_DMCons_D(cons, b) ->pushRec ((bx (DM.Sum(dA .* (-cons) ./ ((cons .* cons) + (b.P * b.P)))) b) :: t)
+                            | Atan2_D_DM(a, b) -> let denom = (a.P * a.P) + (b.P .* b.P) in pushRec ((bx (DM.Sum(dA .* b.P ./ denom)) a) :: (bx (dA * (-a.P) ./ denom) b) :: t)
+                            | Atan2_D_DMCons(a, cons) -> pushRec ((bx (DM.Sum(dA .* cons ./ ((a.P * a.P) + (cons .* cons)))) a) :: t)
+                            | Atan2_DCons_DM(cons, b) -> pushRec ((bx (dA * (-cons) ./ ((cons * cons) + (b.P .* b.P))) b) :: t)
+                            | Log_DM(a) -> pushRec ((bx (dA ./ a.P) a) :: t)
+                            | Log10_DM(a) -> pushRec ((bx (dA ./ (a.P * N.log10Val)) a) :: t)
+                            | Exp_DM(a) -> pushRec ((bx (dA .* d.P) a) :: t) // d.P = exp a.P
+                            | Sin_DM(a) -> pushRec ((bx (dA .* cos a.P) a) :: t)
+                            | Cos_DM(a) -> pushRec ((bx (-dA .* sin a.P) a) :: t)
+                            | Tan_DM(a) -> let seca = D.One / cos a.P in pushRec ((bx (dA .* seca .* seca) a) :: t)
+                            | Neg_DM(a) -> pushRec ((bx -dA a) :: t)
+                            | Sqrt_DM(a) -> pushRec ((bx (dA ./ (N.two * d.P)) a) :: t) // d.P = sqrt a.P
+                            | Sinh_DM(a) -> pushRec ((bx (dA .* cosh a.P) a) :: t)
+                            | Cosh_DM(a) -> pushRec ((bx (dA .* sinh a.P) a) :: t)
+                            | Tanh_DM(a) -> let secha = D.One / cosh a.P in pushRec ((bx (dA .* secha .* secha) a) :: t)
+                            | Asin_DM(a) -> pushRec ((bx (dA ./ sqrt (D.One - (a.P .* a.P))) a) :: t)
+                            | Acos_DM(a) -> pushRec ((bx (-dA ./ sqrt (D.One - (a.P .* a.P))) a) :: t)
+                            | Atan_DM(a) -> pushRec ((bx (dA ./ (D.One + (a.P .* a.P))) a) :: t)
+                            | Abs_DM(a) -> pushRec ((bx (dA .* DM.Sign a.P) a) :: t)
                             | Sign_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Floor_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Ceil_DM(a) -> pushRec ((bx DM.Zero a) :: t)
                             | Round_DM(a) -> pushRec ((bx DM.Zero a) :: t)
-                            | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(d.A)) a) :: t)
-                            | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (d.A |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
+                            | Transpose_DM(a) -> pushRec ((bx (DM.Transpose(dA)) a) :: t)
+                            | Make_DM_ofDs(a) -> pushRec (t |> List.append (List.map2 (fun v dd -> (bx v dd)) (dA |> DM.toDV |> DV.toArray |> Array.toList) (a |> Array2D.toArray |> List.ofArray)))
                             | Make_DMRows_ofDV(a) ->
-                                d.A.GetRows() |> Seq.iter (fun v -> a.A <- a.A + v)
+                                dA.GetRows() |> Seq.iter (fun v -> adjoints.[a] <- adjoints.[a] + v)
                                 pushRec ((bx DV.Zero a) :: t)
                             | Make_DMCols_ofDV(a) ->
-                                d.A.GetCols() |> Seq.iter (fun v -> a.A <- a.A + v)
+                                dA.GetCols() |> Seq.iter (fun v -> adjoints.[a] <- adjoints.[a] + v)
                                 pushRec ((bx DV.Zero a) :: t)
-                            | Make_DMRows_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx d.A.[i, *] v))))
-                            | AddItem_DM_D(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i, j]) b) :: t)
-                            | AddItem_DM_DCons(a) -> pushRec ((bx d.A a) :: t)
-                            | AddItem_DMCons_D(i, j, b) -> pushRec ((bx d.A.[i, j] b) :: t)
-                            | AddSubMatrix_DM_DM(a, i, j, b) -> pushRec ((bx d.A a) :: (bx (d.A.[i..(i + b.Rows - 1), j..(j + b.Cols - 1)]) b) :: t)
-                            | AddSubMatrix_DM_DMCons(a) -> pushRec ((bx d.A a) :: t)
-                            | AddSubMatrix_DMCons_DM(i, j, b) -> pushRec ((bx (d.A.[i..(i + b.Rows - 1), j..(j + b.Cols - 1)]) b) :: t)
+                            | Make_DMRows_ofDVs(a) -> pushRec (t |> List.append (a |> List.ofArray |> List.mapi (fun i v -> (bx dA.[i, *] v))))
+                            | AddItem_DM_D(a, i, j, b) -> pushRec ((bx dA a) :: (bx (dA.[i, j]) b) :: t)
+                            | AddItem_DM_DCons(a) -> pushRec ((bx dA a) :: t)
+                            | AddItem_DMCons_D(i, j, b) -> pushRec ((bx dA.[i, j] b) :: t)
+                            | AddSubMatrix_DM_DM(a, i, j, b) -> pushRec ((bx dA a) :: (bx (dA.[i..(i + b.Rows - 1), j..(j + b.Cols - 1)]) b) :: t)
+                            | AddSubMatrix_DM_DMCons(a) -> pushRec ((bx dA a) :: t)
+                            | AddSubMatrix_DMCons_DM(i, j, b) -> pushRec ((bx (dA.[i..(i + b.Rows - 1), j..(j + b.Cols - 1)]) b) :: t)
                             | Slice_DM(a, i, j) ->
-                                a.A <- DM.AddSubMatrix(a.A, i, j, d.A)
+                                adjoints.[a] <- DM.AddSubMatrix(adjoints.[a], i, j, dA)
                                 pushRec ((bx DM.Zero a) :: t)
-                            | RowMatrix_DV(a) -> pushRec ((bx (d.A.[0,*]) a) :: t)
-                            | AddDiagonal_DM_DV(a, b) -> pushRec ((bx d.A a) :: (bx (DM.Diagonal(d.A)) b) :: t)
-                            | AddDiagonal_DM_DVCons(a) -> pushRec ((bx d.A a) :: t)
-                            | AddDiagonal_DMCons_DV(b) -> pushRec ((bx (DM.Diagonal(d.A)) b) :: t)
-                            | ReshapeCopy_DV_DM(a) -> pushRec ((bx (DM.ReshapeToDV(d.A)) a) :: t)
-                            | Inverse_DM(a) -> let dpt = DM.Transpose(d.P) in pushRec ((bx (-dpt * d.A * dpt) a) :: t) // d.P = DM.Inverse(a.P)
-                            | ReLU_DM(a) -> pushRec ((bx (d.A .* ((DM.Sign(a.P) + one) / two)) a) :: t)
-                            | Sigmoid_DM(a) -> pushRec ((bx (d.A .* d.P .* (one - d.P)) a) :: t) // d.P = DM.Sigmoid(a.P)
+                            | RowMatrix_DV(a) -> pushRec ((bx (dA.[0, *]) a) :: t)
+                            | AddDiagonal_DM_DV(a, b) -> pushRec ((bx dA a) :: (bx (DM.Diagonal(dA)) b) :: t)
+                            | AddDiagonal_DM_DVCons(a) -> pushRec ((bx dA a) :: t)
+                            | AddDiagonal_DMCons_DV(b) -> pushRec ((bx (DM.Diagonal(dA)) b) :: t)
+                            | ReshapeCopy_DV_DM(a) -> pushRec ((bx (DM.ReshapeToDV(dA)) a) :: t)
+                            | Inverse_DM(a) -> let dpt = DM.Transpose(d.P) in pushRec ((bx (-dpt * dA * dpt) a) :: t) // d.P = DM.Inverse(a.P)
+                            | ReLU_DM(a) -> pushRec ((bx (dA .* ((DM.Sign(a.P) + N.one) / N.two)) a) :: t)
+                            | Sigmoid_DM(a) -> pushRec ((bx (dA .* d.P .* (N.one - d.P)) a) :: t) // d.P = DM.Sigmoid(a.P)
                             | _ -> pushRec t
                         else pushRec t
                     | _ -> pushRec t
                 | _ -> pushRec t
-        reverseReset d
         pushRec [(v, d)]
 
 /// Forward and reverse differentiation operations module (automatically opened)
 [<AutoOpen>]
 module DiffOps =
+
+    let inline computeAdjoints (d: 'T :> dobj) =
+        let adjoints = Adjoints()
+        let one = LanguagePrimitives.GenericOne<'T>
+        reverseProp adjoints one d
+        adjoints
+
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff' f x =
-        x |> makeForward GlobalTagger.Next (D one) |> f |> primalTangent
+        x |> makeForward GlobalTagger.Next (D.One) |> f |> primalTangent
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
     let inline diff f x = diff' f x |> snd
@@ -3921,8 +3914,8 @@ module DiffOps =
     let inline grad' f x =
         let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
-        z |> reverseProp (D one)
-        (z |> primal, xa |> adjoint)
+        let adjoints = computeAdjoints z
+        (z |> primal, xa |> adjoint adjoints )
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
     let inline grad f x =
@@ -3949,8 +3942,9 @@ module DiffOps =
         let r1 = z |> primal
         let r2 =
             fun (v:'b) ->
-                z |> reverseProp v
-                xa |> adjoint
+                let adjoints = Adjoints()
+                z |> reverseProp adjoints v
+                xa |> adjoint adjoints
         (r1, r2)
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Reverse AD.

@@ -14,6 +14,7 @@ If you don't use NuGet, you can download the binaries of the latest release <a h
 For using DiffSharp, your project should target .NET Framework 4.6 or higher before installing the NuGet package. 
 
 Starting with version 0.7, DiffSharp only supports the 64 bit platform. In the build configuration of your project, you should set "x64" as the platform target (don't forget to do this for all build configurations). 
+If you need to use 32-bit, please adjust the source.
 
 If you are using F# interactive, you should run it in 64 bit mode. In Visual Studio, you can do this by selecting "Tools - Options - F# Tools - F# Interactive" and setting "64 bit F# Interactive" to "true" and restarting the IDE.
 

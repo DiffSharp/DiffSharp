@@ -146,6 +146,11 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
+/// Global tagger for 
+type UniqueTagger() =
+    static let mutable t = 0 
+    static member Next() = t <- t + 1; t
+
 /// Extensions for the FSharp.Collections.Array module
 module Array =
     module Parallel =
