@@ -2095,6 +2095,9 @@ and DM =
         let inline r_c_d(a, b) = Sub_DCons_DM(b)
         DM.Op_D_DM_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
 
+    static member (-) (a:DV, b:DM) = a + -b
+    static member (-) (a:DM, b:DV) = a + -b
+
     static member Pow (a:DM, b:D) =
         let inline ff(a, b) = Backend.Map_F_M((fun v -> v ** b), a)
         let inline fd(a:DM, b:D) = a ** b
