@@ -11,7 +11,7 @@
 //   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
-//   DiffSharp is distributed in the hope that it will be useful,
+//   DiffSharp is distributed in the hope that it will be useful, 
 //   but WITHOUT ANY WARRANTY; without even the implied warranty of
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //   GNU General Public License for more details.
@@ -62,8 +62,8 @@ type D(x:ADD) =
         let rec s (d:ADD) =
             match d with
             | AD.D(p) -> sprintf "D %A" p
-            | AD.DF(p,t,_) -> sprintf "DF (%A, %A)" (s p) (s t)
-            | AD.DR(p,op,_) -> sprintf "DR (%A, %A)"  (s p) (op.ToString())
+            | AD.DF(p, t, _) -> sprintf "DF (%A, %A)" (s p) (s t)
+            | AD.DR(p, op, _, _) -> sprintf "DR (%A, %A)"  (s p) (op.ToString())
         s (d.toADD())
     static member op_Explicit(d:D):AD.number = ADD.op_Explicit (d.toADD())
     static member op_Implicit(a:AD.number):D = D(a)
@@ -156,8 +156,8 @@ and DV(v:ADDV) =
         let rec s (d:ADDV) =
             match d with
             | AD.DV(p) -> sprintf "DV %A" p
-            | AD.DVF(p,t,_) -> sprintf "DVF (%A, %A)" (s p) (s t)
-            | AD.DVR(p,op,_) -> sprintf "DVR (%A, %A)" (s p) (op.ToString())
+            | AD.DVF(p, t, _) -> sprintf "DVF (%A, %A)" (s p) (s t)
+            | AD.DVR(p, op, _, _) -> sprintf "DVR (%A, %A)" (s p) (op.ToString())
         s (d.toADDV())
     member d.Visualize() = d.toADDV().Visualize()
     static member op_Explicit(d:DV):AD.number[] = ADDV.op_Explicit(d.toADDV())
@@ -254,7 +254,7 @@ and DV(v:ADDV) =
     static member Standardize (a:DV) = DV(ADDV.Standardize(a.toADDV()))
 
 and DM(m:ADDM) =
-    new(m:AD.number[,]) = DM(ADDM.DM(m))
+    new(m:AD.number[, ]) = DM(ADDM.DM(m))
     member internal this.toADDM() = m
     static member internal ADDMtoDM (x:ADDM) = new DM(x)
     static member internal DMtoADDM (x:DM) = x.toADDM()
@@ -269,12 +269,12 @@ and DM(m:ADDM) =
         let rec s (d:ADDM) =
             match d with
             | AD.DM(p) -> sprintf "DM %A" p
-            | AD.DMF(p,t,_) -> sprintf "DMF (%A, %A)" (s p) (s t)
-            | AD.DMR(p,op,_) -> sprintf "DMR (%A, %A)" (s p) (op.ToString())
+            | AD.DMF(p, t, _) -> sprintf "DMF (%A, %A)" (s p) (s t)
+            | AD.DMR(p, op, _, _) -> sprintf "DMR (%A, %A)" (s p) (op.ToString())
         s (d.toADDM())
     member d.Visualize() = d.toADDM().Visualize()
-    static member op_Explicit(d:DM):AD.number[,] = ADDM.op_Explicit(d.toADDM())
-    static member op_Implicit(a:AD.number[,]):DM = DM(a)
+    static member op_Explicit(d:DM):AD.number[, ] = ADDM.op_Explicit(d.toADDM())
+    static member op_Implicit(a:AD.number[, ]):DM = DM(a)
     static member Zero = DM(Array2D.empty)
 
     // DM - DM binary operations
@@ -396,76 +396,76 @@ and Adjoints() =
 type AD =
 
     /// First derivative of a scalar-to-scalar function `f`
-    static member Diff(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diff(f:System.Func<D, D>) = System.Func<D, D>(D.DtoADD >> (AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff(f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diff(f:System.Func<D, D>, x:D) = D.ADDtoD <| AD.DiffOps.diff (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
 
     /// Second derivative of a scalar-to-scalar function `f`
-    static member Diff2(f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diff2(f:System.Func<D, D>) = System.Func<D, D>(D.DtoADD >> (AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff2(f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diff2(f:System.Func<D, D>, x:D) = D.ADDtoD <| AD.DiffOps.diff2 (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`
-    static member Diffn(n:int, f:System.Func<D,D>) = System.Func<D,D>(D.DtoADD >> (AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Diffn(n:int, f:System.Func<D, D>) = System.Func<D, D>(D.DtoADD >> (AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diffn(n:int, f:System.Func<D,D>, x:D) = D.ADDtoD <| AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
+    static member Diffn(n:int, f:System.Func<D, D>, x:D) = D.ADDtoD <| AD.DiffOps.diffn n (D.ADDtoD >> f.Invoke >> D.DtoADD) (x |> D.DtoADD)
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Gradv(f:System.Func<DV,D>, x:DV, v:DV) = D.ADDtoD <| AD.DiffOps.gradv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Gradv(f:System.Func<DV, D>, x:DV, v:DV) = D.ADDtoD <| AD.DiffOps.gradv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
 
     /// Gradient of a vector-to-scalar function `f`
-    static member Grad(f:System.Func<DV,D>) = System.Func<DV,DV>(DV.DVtoADDV >> (AD.DiffOps.grad (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DV.ADDVtoDV)
+    static member Grad(f:System.Func<DV, D>) = System.Func<DV, DV>(DV.DVtoADDV >> (AD.DiffOps.grad (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DV.ADDVtoDV)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    static member Grad(f:System.Func<DV,D>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.grad ((DV.ADDVtoDV) >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Grad(f:System.Func<DV, D>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.grad ((DV.ADDVtoDV) >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
 
     /// Laplacian of a vector-to-scalar function `f`
-    static member Laplacian(f:System.Func<DV,D>) = System.Func<DV,D>(DV.DVtoADDV >> (AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
+    static member Laplacian(f:System.Func<DV, D>) = System.Func<DV, D>(DV.DVtoADDV >> (AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> D.ADDtoD)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    static member Laplacian(f:System.Func<DV,D>, x:DV) = D.ADDtoD <| AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Laplacian(f:System.Func<DV, D>, x:DV) = D.ADDtoD <| AD.DiffOps.laplacian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member Jacobianv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Jacobianv(f:System.Func<DV, DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
 
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member JacobianTv(f:System.Func<DV,DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianTv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member JacobianTv(f:System.Func<DV, DV>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.jacobianTv (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
 
     /// Jacobian of a vector-to-vector function `f`
-    static member Jacobian(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+    static member Jacobian(f:System.Func<DV, DV>) = System.Func<DV, DM>(DV.DVtoADDV >> (AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    static member Jacobian(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Jacobian(f:System.Func<DV, DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobian (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
 
     /// Transposed Jacobian of a vector-to-vector function `f`
-    static member JacobianT(f:System.Func<DV,DV>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
+    static member JacobianT(f:System.Func<DV, DV>) = System.Func<DV, DM>(DV.DVtoADDV >> (AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DM.ADDMtoDM)
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    static member JacobianT(f:System.Func<DV,DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member JacobianT(f:System.Func<DV, DV>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.jacobianT (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
 
     /// Hessian of a vector-to-scalar function `f`
-    static member Hessian(f:System.Func<DV,D>) = System.Func<DV,DM>(DV.DVtoADDV >> (AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DM.ADDMtoDM)
+    static member Hessian(f:System.Func<DV, D>) = System.Func<DV, DM>(DV.DVtoADDV >> (AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD)) >> DM.ADDMtoDM)
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    static member Hessian(f:System.Func<DV,D>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
+    static member Hessian(f:System.Func<DV, D>, x:DV) = DM.ADDMtoDM <| AD.DiffOps.hessian (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV)
 
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`
-    static member Hessianv(f:System.Func<DV,D>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.hessianv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
+    static member Hessianv(f:System.Func<DV, D>, x:DV, v:DV) = DV.ADDVtoDV <| AD.DiffOps.hessianv (DV.ADDVtoDV >> f.Invoke >> D.DtoADD) (x |> DV.DVtoADDV) (v |> DV.DVtoADDV)
 
     /// Curl of a vector-to-vector function `f`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<DV,DV>) = System.Func<DV,DV>(DV.DVtoADDV >> (AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DV.ADDVtoDV)
+    static member Curl(f:System.Func<DV, DV>) = System.Func<DV, DV>(DV.DVtoADDV >> (AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> DV.ADDVtoDV)
 
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<DV,DV>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Curl(f:System.Func<DV, DV>, x:DV) = DV.ADDVtoDV <| AD.DiffOps.curl (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
 
     /// Divergence of a vector-to-vector function `f`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<DV,DV>) = System.Func<DV,D>(DV.DVtoADDV >> (AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> D.ADDtoD)
+    static member Div(f:System.Func<DV, DV>) = System.Func<DV, D>(DV.DVtoADDV >> (AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV)) >> D.ADDtoD)
 
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<DV,DV>, x:DV) = D.ADDtoD <| AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
+    static member Div(f:System.Func<DV, DV>, x:DV) = D.ADDtoD <| AD.DiffOps.div (DV.ADDVtoDV >> f.Invoke >> DV.DVtoADDV) (x |> DV.DVtoADDV)
 
     /// Returns a specified number raised to the specified power.
     static member inline Pow(a:'T, b:'U) = a ** b
@@ -560,65 +560,65 @@ type AD =
 type Numerical =
 
     /// First derivative of a scalar-to-scalar function `f`
-    static member Diff(f:System.Func<AD.number,AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff f.Invoke)
+    static member Diff(f:System.Func<AD.number, AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff f.Invoke)
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff(f:System.Func<AD.number,AD.number>, x:AD.number) = Numerical.DiffOps.diff f.Invoke x
+    static member Diff(f:System.Func<AD.number, AD.number>, x:AD.number) = Numerical.DiffOps.diff f.Invoke x
 
     /// Second derivative of a scalar-to-scalar function `f`
-    static member Diff2(f:System.Func<AD.number,AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff2 f.Invoke)
+    static member Diff2(f:System.Func<AD.number, AD.number>) = System.Func<AD.number, AD.number>(Numerical.DiffOps.diff2 f.Invoke)
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`
-    static member Diff2(f:System.Func<AD.number,AD.number>, x:AD.number) = Numerical.DiffOps.diff2 f.Invoke x
+    static member Diff2(f:System.Func<AD.number, AD.number>, x:AD.number) = Numerical.DiffOps.diff2 f.Invoke x
 
     /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Gradv(f:System.Func<AD.number[],AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.gradv f.Invoke x v
+    static member Gradv(f:System.Func<AD.number[], AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.gradv f.Invoke x v
 
     /// Gradient of a vector-to-scalar function `f`
-    static member Grad(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number[]>(Numerical.DiffOps.grad f.Invoke)
+    static member Grad(f:System.Func<AD.number[], AD.number>) = System.Func<AD.number[], AD.number[]>(Numerical.DiffOps.grad f.Invoke)
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`
-    static member Grad(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.grad f.Invoke x
+    static member Grad(f:System.Func<AD.number[], AD.number>, x:AD.number[]) = Numerical.DiffOps.grad f.Invoke x
 
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`
-    static member Hessianv(f:System.Func<AD.number[],AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.hessianv f.Invoke x v
+    static member Hessianv(f:System.Func<AD.number[], AD.number>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.hessianv f.Invoke x v
 
     /// Hessian of a vector-to-scalar function `f`
-    static member Hessian(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.hessian f.Invoke)
+    static member Hessian(f:System.Func<AD.number[], AD.number>) = System.Func<AD.number[], AD.number[, ]>(Numerical.DiffOps.hessian f.Invoke)
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`
-    static member Hessian(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.hessian f.Invoke x
+    static member Hessian(f:System.Func<AD.number[], AD.number>, x:AD.number[]) = Numerical.DiffOps.hessian f.Invoke x
 
     /// Laplacian of a vector-to-scalar function `f`
-    static member Laplacian(f:System.Func<AD.number[],AD.number>) = System.Func<AD.number[],AD.number>(Numerical.DiffOps.laplacian f.Invoke)
+    static member Laplacian(f:System.Func<AD.number[], AD.number>) = System.Func<AD.number[], AD.number>(Numerical.DiffOps.laplacian f.Invoke)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`
-    static member Laplacian(f:System.Func<AD.number[],AD.number>, x:AD.number[]) = Numerical.DiffOps.laplacian f.Invoke x
+    static member Laplacian(f:System.Func<AD.number[], AD.number>, x:AD.number[]) = Numerical.DiffOps.laplacian f.Invoke x
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`
-    static member Jacobianv(f:System.Func<AD.number[],AD.number[]>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.jacobianv f.Invoke x v
+    static member Jacobianv(f:System.Func<AD.number[], AD.number[]>, x:AD.number[], v:AD.number[]) = Numerical.DiffOps.jacobianv f.Invoke x v
 
     /// Jacobian of a vector-to-vector function `f`
-    static member Jacobian(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.jacobian f.Invoke)
+    static member Jacobian(f:System.Func<AD.number[], AD.number[]>) = System.Func<AD.number[], AD.number[, ]>(Numerical.DiffOps.jacobian f.Invoke)
 
     /// Jacobian of a vector-to-vector function `f`, at point `x`
-    static member Jacobian(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobian f.Invoke x
+    static member Jacobian(f:System.Func<AD.number[], AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobian f.Invoke x
 
     /// Transposed Jacobian of a vector-to-vector function `f`
-    static member JacobianT(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[,]>(Numerical.DiffOps.jacobianT f.Invoke)
+    static member JacobianT(f:System.Func<AD.number[], AD.number[]>) = System.Func<AD.number[], AD.number[, ]>(Numerical.DiffOps.jacobianT f.Invoke)
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`
-    static member JacobianT(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobianT f.Invoke x
+    static member JacobianT(f:System.Func<AD.number[], AD.number[]>, x:AD.number[]) = Numerical.DiffOps.jacobianT f.Invoke x
 
     /// Curl of a vector-to-vector function `f`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number[]>(Numerical.DiffOps.curl f.Invoke)
+    static member Curl(f:System.Func<AD.number[], AD.number[]>) = System.Func<AD.number[], AD.number[]>(Numerical.DiffOps.curl f.Invoke)
 
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
-    static member Curl(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.curl f.Invoke x
+    static member Curl(f:System.Func<AD.number[], AD.number[]>, x:AD.number[]) = Numerical.DiffOps.curl f.Invoke x
 
     /// Divergence of a vector-to-vector function `f`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<AD.number[],AD.number[]>) = System.Func<AD.number[],AD.number>(Numerical.DiffOps.div f.Invoke)
+    static member Div(f:System.Func<AD.number[], AD.number[]>) = System.Func<AD.number[], AD.number>(Numerical.DiffOps.div f.Invoke)
 
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix.
-    static member Div(f:System.Func<AD.number[],AD.number[]>, x:AD.number[]) = Numerical.DiffOps.div f.Invoke x
+    static member Div(f:System.Func<AD.number[], AD.number[]>, x:AD.number[]) = Numerical.DiffOps.div f.Invoke x
 
