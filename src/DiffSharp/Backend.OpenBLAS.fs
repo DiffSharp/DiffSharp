@@ -640,7 +640,6 @@ module OpenBLAS =
                 let xl = x.Length
                 let yl = y.Length
                 if xl = 0 then ()
-                elif yl = 0 then ()
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
@@ -665,14 +664,6 @@ module OpenBLAS =
                     let x' = Array.copyFast x
                     BLAS.sscal(alpha, x')
                     x'
-
-            // BLAS
-            member o.Mul_S_V_Inplace(alpha, x) =
-                if Array.isEmpty x then
-                    ()
-                else
-                    Stats.InplaceOp(x.Length)
-                    BLAS.sscal(alpha, x)
 
             // BLAS
             member o.Sub_V_V(x, y) =
@@ -750,7 +741,7 @@ module OpenBLAS =
                     y'
 
             // BLAS in-place addition
-            member o.Add_MulM_M_Inplace(alpha, x, y) =
+            member o.AlphaAdd_M_M_Inplace(alpha, x, y) =
                 let xl1 = Array2D.length1 x
                 let xl2 = Array2D.length2 x
                 let yl1 = Array2D.length1 y
@@ -1142,7 +1133,6 @@ module OpenBLAS =
                 let xl = x.Length
                 let yl = y.Length
                 if xl = 0 then()
-                elif yl = 0 then ()
                 elif xl <> yl then
                     ErrorMessages.InvalidArgVV()
                 else
@@ -1167,13 +1157,6 @@ module OpenBLAS =
                     let x' = Array.copyFast x
                     BLAS.dscal(alpha, x')
                     x'
-
-            // BLAS
-            member o.Mul_S_V_Inplace(alpha, x) =
-                if Array.isEmpty x then ()
-                else
-                    Stats.InplaceOp(x.Length)
-                    BLAS.dscal(alpha, x)
 
             // BLAS
             member o.Sub_V_V(x, y) =
@@ -1247,7 +1230,7 @@ module OpenBLAS =
                     y'
 
             // BLAS
-            member o.Add_MulM_M_Inplace(alpha, x, y) =
+            member o.AlphaAdd_M_M_Inplace(alpha, x, y) =
                 let xl1 = Array2D.length1 x
                 let xl2 = Array2D.length2 x
                 let yl1 = Array2D.length1 y

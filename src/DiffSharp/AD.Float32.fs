@@ -1903,7 +1903,7 @@ and DM =
 
     /// Element-wise addition of `a` and `b`, potentially destructive of the storage of raw matrices in 'b'
     static member internal Add_M_M_Inplace (a:DM, b:DM) =
-        let inline ff(a:number[,], b:number[,]) = Backend.Add_MulM_M_Inplace(N.one, a, b); b
+        let inline ff(a:number[,], b:number[,]) = Backend.AlphaAdd_M_M_Inplace(N.one, a, b); b
         let inline fd(a:DM, b:DM) = a + b
         let inline df_da(cp:DM, ap:DM, at:DM) = at
         let inline df_db(cp:DM, bp:DM, bt:DM) = bt
@@ -3217,12 +3217,12 @@ type Adjoints() =
         let adj = dict.[uniq] :?> DM
         match adj,x with 
         | DM adjm, XM (DM xm) -> 
-            Backend.Add_MulM_M_Inplace(N.one, xm, adjm)
+            Backend.AlphaAdd_M_M_Inplace(N.one, xm, adjm)
             adj
         | DM adjm, XNegM (XM (DM xm)) -> 
             // TODO: also perform the inplace update in the case where adj is not "DM adj"
             // However this needs care.
-            Backend.Add_MulM_M_Inplace(N.minus1, xm, adjm)
+            Backend.AlphaAdd_M_M_Inplace(N.minus1, xm, adjm)
             adj
         | _ -> 
             let adj = DM.Add_M_M_Inplace(evalM x,adj)
