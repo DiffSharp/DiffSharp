@@ -5,15 +5,16 @@ solution: DiffSharp.sln
 sudo: required 
 
 before_install:
-  - sudo apt-get update -y
-  - sudo apt-get install libopenblas-dev -y
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository ppa:ginggs/julia-backports -y; sudo apt-get update -y; sudo apt-get install libopenblas-dev -y; fi
 
 matrix:
   include:
     - dotnet: 2.1.302
       mono: none
-      env: DOTNETCORE=1
       os: linux
+    - dotnet: 2.1.302
+      mono: none
+      os: osx
     - mono: latest
       os: linux
       env: MONO=1
