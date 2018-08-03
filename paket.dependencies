@@ -7,4 +7,4 @@ nuget FSharp.Core 4.3.4
 nuget FSharp.Data
 nuget FSharp.Formatting
 nuget FSharp.Quotations.Evaluator
-nuget NUnit 
+nuget NUnit 3.9.0

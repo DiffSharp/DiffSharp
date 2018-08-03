@@ -20,7 +20,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
     <PackageReference Include="FSharp.Core" Version="4.3.4" />
     <PackageReference Update="FSharp.Core" Version="4.3.4" /> <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 -->
-    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
     <PackageReference Include="FsCheck" Version="2.11" />
     <PackageReference Include="FsCheck.NUnit" Version="2.11" />
     <ProjectReference Include="..\..\src\DiffSharp\DiffSharp.fsproj" />
