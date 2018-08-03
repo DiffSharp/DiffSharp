@@ -1,12 +1,10 @@
 source https://www.nuget.org/api/v2/
-strategy: max
-framework >= net46
-redirects: on
+frameworks: net461, netstandard2.0, netcoreapp2.0
 
 nuget FsCheck.NUnit
 nuget FSharp.Charting
-nuget FSharp.Core 4.0.0.1
+nuget FSharp.Core 4.3.4
 nuget FSharp.Data
 nuget FSharp.Formatting
 nuget FSharp.Quotations.Evaluator
-nuget NUnit 2.6.4
+nuget NUnit 

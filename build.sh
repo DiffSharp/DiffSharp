@@ -22,7 +22,6 @@ sudo apt-get -y install libopenblas-dev
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib/OpenBLAS-v0.2.14-Linux64
 
-mono .paket/paket.bootstrapper.exe && \
-mono .paket/paket.exe restore && \
-msbuild /p:Configuration=Release DiffSharp.sln && \
-mono ./packages/NUnit.Runners/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
+dotnet build DiffSharp.sln -c debug 
+dotnet test tests/DiffSharp.Tests  -c debug 
+
