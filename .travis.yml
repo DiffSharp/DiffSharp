@@ -8,10 +8,16 @@ before_install:
   - sudo apt-get update -y
   - sudo apt-get install libopenblas-dev -y
 
-os:
-  - linux
-mono:
-  - latest
+matrix:
+  include:
+    - dotnet: 2.1.302
+      mono: none
+      env: DOTNETCORE=1  # optional, can be used to take different code paths in your script
+      os: linux
+    - mono: latest
+      os: linux
+      env: MONO=1  # optional, can be used to take different code paths in your script
+
 script:
   - ./build.sh
 
