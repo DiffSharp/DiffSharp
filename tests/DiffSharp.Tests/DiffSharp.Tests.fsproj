@@ -13,6 +13,7 @@
     <Compile Include="AD.Float32.fs" />
     <Compile Include="Program.fs" />
     <None Include="Script.fsx" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
