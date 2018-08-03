@@ -1,21 +1,29 @@
 language: csharp
 solution: DiffSharp.sln
 
-# sudo to install packages
-sudo: required 
+services:
+  - docker
 
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository ppa:ginggs/julia-backports -y; sudo apt-get update -y; sudo apt-get install libopenblas-dev -y; fi
 
 matrix:
   include:
     - dotnet: 2.1.302
       mono: none
       os: linux
+      before_install:
+         - docker pull ubuntu:16.04
+      script:
+         - docker build .
+
     - dotnet: 2.1.302
       mono: none
       os: osx
-    - mono: latest
+      before_install:
+         - docker pull ubuntu:16.04
+      script:
+         - docker build .
+
+      - mono: latest
       os: linux
       env: MONO=1
 
