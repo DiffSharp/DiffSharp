@@ -12,11 +12,11 @@ matrix:
   include:
     - dotnet: 2.1.302
       mono: none
-      env: DOTNETCORE=1  # optional, can be used to take different code paths in your script
+      env: DOTNETCORE=1
       os: linux
     - mono: latest
       os: linux
-      env: MONO=1  # optional, can be used to take different code paths in your script
+      env: MONO=1
 
 script:
   - ./build.sh

@@ -4,7 +4,6 @@
     <OtherFlags>/warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="paket.template" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Backend.fs" />
