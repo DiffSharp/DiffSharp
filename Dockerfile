@@ -1,4 +1,6 @@
-FROM ubuntu:16.04
+FROM microsoft/dotnet:sdk AS build-env
 
-RUN ./build.sh
+# Copy everything and build
+COPY . ./
+RUN build.sh
 
