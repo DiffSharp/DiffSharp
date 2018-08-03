@@ -22,7 +22,7 @@ sudo apt-get -y install libopenblas-dev
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/OpenBLAS-v0.2.8-Linux64;/usr/local/lib/OpenBLAS-v0.2.8-Linux64
 
-if [ ! -d "MONO" ]; then
+if [ -d "MONO" ]; then
    msbuild DiffSharp.sln /p:Configuration=Release
    msbuild /p:Configuration=Release DiffSharp.sln
    # not currently testing on mono
