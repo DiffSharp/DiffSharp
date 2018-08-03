@@ -8,12 +8,9 @@ case "$(uname -s)" in
 
    CYGWIN*|MINGW32*|MSYS*|Linux)
     echo 'Linux, Cygwin, etc' 
-    sudo apt-get -y update
-    sudo apt-get -y install libopenblas-dev
+#    sudo apt-get -y update
+#    sudo apt-get -y install libopenblas-dev
      ;;
-
-   # Add here more strings to compare
-   # See correspondence table at the bottom of this answer
 
    *)
      echo 'other OS' 
@@ -29,6 +26,6 @@ if [ -d "MONO" ]; then
    # mono ./packages/NUnit.Runners/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
 else
    dotnet build DiffSharp.sln -c debug 
-   dotnet test tests/DiffSharp.Tests  -c release
+   dotnet test tests/DiffSharp.Tests  -c release -f netcoreapp2.0
 fi
 
