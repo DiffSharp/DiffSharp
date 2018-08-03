@@ -1,9 +1,4 @@
-image:
-- Visual Studio 2017
-- Ubuntu
+image: Visual Studio 2017
 
 build_script:
-  - sh: printf "I'll be shown on Linux!"
-  - cmd: echo Hey, I'm displayed on Windows only!
-  - sh: ./build.sh
   - cmd: .\build.cmd
