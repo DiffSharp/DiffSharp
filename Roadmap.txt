@@ -2,7 +2,8 @@
 - Tensor/multidimensional array, a la numpy.ndarray, torch.Tensor
 - CUDA/cuBLAS/cuDNN backend
 - Convolution ops
-- Neural network modules
+- Neural network namespace
+- Optimization namespace
 - Unit tests
 - Overhaul of website and tutorials
 
@@ -10,6 +11,7 @@
 - Fully generalize differentiation API type signatures
 - (Iterate to fixed point) - this is already done, needs testing
 - (GEMV/GEMM ops with vector addition)
+- Probability distributions
 - In-place operations
 - Half-precision floats
 
