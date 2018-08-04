@@ -38,6 +38,7 @@
 
 module DiffSharp.Tests.Backend.OpenBLAS
 
+open NUnit.Framework
 open FsCheck.NUnit
 open DiffSharp.Util
 open DiffSharp.Backend
@@ -643,3 +644,7 @@ let ``OpenBLAS.64.RepeatReshapeCopy_V_MCols``() =
         for j = 0 to n - 1 do
             r.[i, j] <- v64_1.[i]
     Util.(=~)(Float64Backend.RepeatReshapeCopy_V_MCols(n, v64_1), r)
+
+[<Test>]
+let ``Smoke1``() =
+    ()

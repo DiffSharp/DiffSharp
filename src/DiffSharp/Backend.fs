@@ -42,14 +42,14 @@ namespace DiffSharp.Backend
 type Backend<'T> =
     // Scalar valued
     abstract member Mul_Dot_V_V : 'T[] * 'T[] -> 'T
-    abstract member L1Norm_V : ('T[]) -> 'T
-    abstract member L2Norm_V : ('T[]) -> 'T
-    abstract member SupNorm_V : ('T[]) -> 'T
-    abstract member Sum_V : ('T[]) -> 'T
-    abstract member Sum_M : ('T[,]) -> 'T
+    abstract member L1Norm_V : 'T[] -> 'T
+    abstract member L2Norm_V : 'T[] -> 'T
+    abstract member SupNorm_V : 'T[] -> 'T
+    abstract member Sum_V : 'T[] -> 'T
+    abstract member Sum_M : 'T[,] -> 'T
     
     // Vector valued, in-place. 
-    abstract member Add_V_V_Inplace : 'T[] * 'T[] -> unit
+    abstract member Add_V_V_Inplace : 'T[] * dest: 'T[] -> unit
 
     // Vector valued
     abstract member Add_V_V : 'T[] * 'T[] -> 'T[]
@@ -68,8 +68,8 @@ type Backend<'T> =
     abstract member Map2_F_V_V : ('T -> 'T -> 'T) * 'T[] * 'T[] -> 'T[]
     abstract member ReshapeCopy_MRows_V : 'T[,] -> 'T[]
 
-    // Matrix valued, in-place
-    abstract member AlphaAdd_M_M_Inplace : 'T * 'T[,] * 'T[,] -> unit
+    // Matrix valued, in-place. Accumulate to ``acc``
+    abstract member AlphaAdd_M_M_Inplace : alpha:'T * x:'T[,] * acc: 'T[,] -> unit
 
     // Matrix valued
     abstract member Mul_Out_V_V : 'T[] * 'T[] -> 'T[,]

@@ -1,2 +1,6 @@
+image: Visual Studio 2017
+
 build_script:
-  - ps: .\build.cmd
+  - cmd: .\build.cmd
+
+test: off
