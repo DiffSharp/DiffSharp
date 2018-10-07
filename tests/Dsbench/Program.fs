@@ -1,41 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
-
+// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+﻿// This code is licensed under the BSD license (see LICENSE file for details)
 
 open System.Diagnostics
 open DiffSharp.AD.Float64
@@ -67,8 +35,8 @@ let duration nm n f () =
 let printb i t name =
     printfn "Running benchmark %2i / %2i %s" i  t name
 
-let opArgNames = 
-     ["diff"; 
+let opArgNames =
+     ["diff";
       "diff2";
       "diffn";
       "computeAdjointsV";
@@ -120,21 +88,21 @@ let rec parseArgsRec args optionsSoFar =
     match args with
     | [] -> optionsSoFar
     | "/h"::_ | "-h"::_ | "--help"::_ | "/?"::_ | "-?"::_ -> {optionsSoFar with help = true}
-    | ("/b" | "-b")::xs -> 
+    | ("/b" | "-b")::xs ->
         match xs with
-        | (("1" | "2") as f)::xss -> 
+        | (("1" | "2") as f)::xss ->
             parseArgsRec xss {optionsSoFar with benchmarks= optionsSoFar.benchmarks @ [f]}
         | _ ->
             eprintfn "Option -b needs to be followed by a benchmark name (1, 2)."
             exit 1
-    | ("/m" | "-m") ::xs -> 
+    | ("/m" | "-m") ::xs ->
         match xs with
-        | (("auto" | "numeric") as f)::xss -> 
+        | (("auto" | "numeric") as f)::xss ->
             parseArgsRec xss {optionsSoFar with modes = optionsSoFar.modes @ [f]}
         | _ ->
             eprintfn "Option -b needs to be followed by a mode name (auto,numeric)."
             exit 1
-    | ("/o" | "-o") ::xs -> 
+    | ("/o" | "-o") ::xs ->
         match xs with
         | f::xss when List.contains f opArgNames ->
             parseArgsRec xss {optionsSoFar with opsToRun = optionsSoFar.opsToRun @ [f]}
@@ -143,7 +111,7 @@ let rec parseArgsRec args optionsSoFar =
             exit 1
     | "/f"::xs | "-f"::xs ->
         match xs with
-        | f::xss -> 
+        | f::xss ->
             parseArgsRec xss {optionsSoFar with fileName = f; changed = true}
         | _ ->
             eprintfn "Option -f needs to be followed by a file name."
@@ -206,7 +174,7 @@ let parseArgs args =
 
 
 [<EntryPoint>]
-let main argv = 
+let main argv =
 
     let benchmarkver = "1.0.9"
 
@@ -235,26 +203,26 @@ let main argv =
         0 // return an integer exit code
     else
         printfn "Use option -h for help on usage.\n"
-    
+
         if not ops.changed then printfn "Using default options.\n"
 
-        let benchmarks = 
-            match ops.benchmarks with 
-            | [] -> ["1"; "2"] 
+        let benchmarks =
+            match ops.benchmarks with
+            | [] -> ["1"; "2"]
             | xss -> xss
 
-        let modes = 
-            match ops.modes with 
-            | [] -> [ "auto"; "numeric"] 
+        let modes =
+            match ops.modes with
+            | [] -> [ "auto"; "numeric"]
             | xss -> xss
 
-        let opsToRun = 
-            match ops.opsToRun with 
+        let opsToRun =
+            match ops.opsToRun with
             | [] -> opArgNames
             | xss -> xss
 
-        let bench1 = List.contains "1" benchmarks 
-        let bench2 = List.contains "2" benchmarks 
+        let bench1 = List.contains "1" benchmarks
+        let bench2 = List.contains "2" benchmarks
         let auto = List.contains "auto" modes
         let numeric = List.contains "numeric" modes
 
@@ -391,19 +359,19 @@ let main argv =
         let run_computeAdjoints_AD =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fvsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xvD)))
 
         let run_computeAdjoints_AD_m =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fmsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xmD)))
-        
+
         let run_gradv_AD = duration "gradv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv fvsD xvD vvD)
         let run_gradv_N =  duration "gradv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv fvs xv vv)
 
         let run_hessian_AD =  duration "hessian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian fvsD xvD)
         let run_hessian_N =   duration "hessian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian fvs xv)
-        
+
         let run_hessianv_AD = duration "hessianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv fvsD xvD vvD)
         let run_hessianv_N =  duration "hessianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv fvs xv vv)
 
         let run_gradhessian_AD =  duration "gradhessian (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian fvsD xvD)
         let run_gradhessian_N =   duration "gradhessian (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian fvs xv)
-        
+
         let run_gradhessianv_AD = duration "gradhessianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv fvsD xvD vvD)
         let run_gradhessianv_N =  duration "gradhessianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv fvs xv vv)
 
@@ -415,7 +383,7 @@ let main argv =
 
         let run_jacobianv_AD =  duration "jacobianv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv fvvD xvD vvD)
         let run_jacobianv_N =   duration "jacobianv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv fvv xv vv)
-        
+
         let run_jacobianT_AD =  duration "jacobianT (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT fvvD xvD)
         let run_jacobianT_N =   duration "jacobianT (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT fvv xv)
 
@@ -434,19 +402,19 @@ let main argv =
 
         let run_grad'_AD =  duration "grad' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.grad' fvsD xvD)
         let run_grad'_N =   duration "grad' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad' fvs xv)
-        
+
         let run_gradv'_AD = duration "gradv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv' fvsD xvD vvD)
         let run_gradv'_N =  duration "gradv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv' fvs xv vv)
 
         let run_hessian'_AD =  duration "hessian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessian' fvsD xvD)
         let run_hessian'_N =   duration "hessian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessian' fvs xv)
-        
+
         let run_hessianv'_AD = duration "hessianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.hessianv' fvsD xvD vvD)
         let run_hessianv'_N =  duration "hessianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.hessianv' fvs xv vv)
 
         let run_gradhessian'_AD =  duration "gradhessian' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessian' fvsD xvD)
         let run_gradhessian'_N =   duration "gradhessian' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessian' fvs xv)
-        
+
         let run_gradhessianv'_AD = duration "gradhessianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradhessianv' fvsD xvD vvD)
         let run_gradhessianv'_N =  duration "gradhessianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradhessianv' fvs xv vv)
 
@@ -458,7 +426,7 @@ let main argv =
 
         let run_jacobianv'_AD =  duration "jacobianv' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianv' fvvD xvD vvD)
         let run_jacobianv'_N =   duration "jacobianv' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianv' fvv xv vv)
-        
+
         let run_jacobianT'_AD =  duration "jacobianT' (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.jacobianT' fvvD xvD)
         let run_jacobianT'_N =   duration "jacobianT' (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.jacobianT' fvv xv)
 
@@ -490,7 +458,7 @@ let main argv =
         let row_N          = [run_diff_N;   run_diff2_N;   run_diffn_N;   k 0.0;                   k 0.0;                     run_grad_N;   run_gradv_N;   run_hessian_N;   run_hessianv_N;   run_gradhessian_N;   run_gradhessianv_N;   run_laplacian_N;   run_jacobian_N;   run_jacobianv_N;   run_jacobianT_N;   run_jacobianTv_N]
         let row'_AD        = [run_diff'_AD; run_diff2'_AD; run_diffn'_AD; k 0.0;                   k 0.0;                     run_grad'_AD; run_gradv'_AD; run_hessian'_AD; run_hessianv'_AD; run_gradhessian'_AD; run_gradhessianv'_AD; run_laplacian'_AD; run_jacobian'_AD; run_jacobianv'_AD; run_jacobianT'_AD; run_jacobianTv'_AD]
         let row'_N         = [run_diff'_N;  run_diff2'_N;  run_diffn'_N;  k 0.0;                   k 0.0;                     run_grad'_N;  run_gradv'_N;  run_hessian'_N;  run_hessianv'_N;  run_gradhessian'_N;  run_gradhessianv'_N;  run_laplacian'_N;  run_jacobian'_N;  run_jacobianv'_N;  run_jacobianT'_N;  run_jacobianTv'_N]
-        
+
         if Set.ofList opNames <> Set.ofList opArgNames then failwith "opNames <> opArgNames - fix the benchmark program please"
         let doOp op = List.contains op opsToRun
         let opNames2        = opNames |> List.filter doOp
@@ -501,18 +469,18 @@ let main argv =
         let row'_AD        = List.zip opNames row'_AD |> List.filter (fst >> doOp) |> List.map snd
         let row'_N         = List.zip opNames row'_N |> List.filter (fst >> doOp) |> List.map snd
         let run fs = List.map (fun f -> f()) fs |> toDV
-              
-        let bench = 
-            [ if bench1  then 
+
+        let bench =
+            [ if bench1  then
                 if auto then  yield run row_AD ./ run row_originalsD
-                if numeric then yield  run row_N  ./ run row_originals 
-              if bench2 then 
+                if numeric then yield  run row_N  ./ run row_originals
+              if bench2 then
                 if auto then yield run row'_AD ./ run row_originalsD
                 if numeric then yield run row'_N  ./ run row_originals ]
-            |> DM.ofRows 
+            |> DM.ofRows
 
         let score = float (DM.sum bench)
-    
+
         let score = 1. / score
         let score = int (score * 100000000.)
 
@@ -535,20 +503,20 @@ let main argv =
         stream.WriteLine(sprintf "Benchmarking finished: %A" finished)
         stream.WriteLine(sprintf "Total duration: %A\r\n" duration)
         stream.WriteLine(sprintf "Benchmark score: %A\r\n" score)
-    
+
         stream.WriteLine("Benchmark matrix\r\n")
         stream.WriteLine("Column labels: {0}",String.concat ", " opNames2 )
-        stream.WriteLine("Row labels: {0}", String.concat ", " [ if bench1 then 
+        stream.WriteLine("Row labels: {0}", String.concat ", " [ if bench1 then
                                                                     if auto then yield "DiffSharp.Bench1.AD"
-                                                                    if numeric then yield "Diffsharp.Bench1.Numerical" 
-                                                                 if bench2 then 
+                                                                    if numeric then yield "Diffsharp.Bench1.Numerical"
+                                                                 if bench2 then
                                                                     if auto then yield "DiffSharp.Bench2.AD"
-                                                                    if numeric then yield "Diffsharp.Bench2.Numerical" 
+                                                                    if numeric then yield "Diffsharp.Bench2.Numerical"
                                                                  ])
         stream.WriteLine(sprintf "Values: %s" (bench.ToMathematicaString()))
 
         stream.Flush()
         stream.Close()
-        
+
 
         0

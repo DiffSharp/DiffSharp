@@ -1,40 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
+// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+﻿// This code is licensed under the BSD license (see LICENSE file for details)
 
 #nowarn "9"
 #nowarn "51"
@@ -342,7 +311,7 @@ module OpenBLAS =
             use arg_b = new PinnedArray2D<float>(a)
             use arg_c = new PinnedArray2D<float>(c)
             dgemm_(&&arg_transa, &&arg_transb, &&arg_m, &&arg_n, &&arg_k, &&arg_alpha, arg_a.Ptr, &&arg_lda, arg_b.Ptr, &&arg_ldb, &&arg_beta, arg_c.Ptr, &&arg_ldc)
-        
+
         // y <- alpha * A * x + beta * y
         let dgemv(alpha:float, a:float[,], x:float[], beta:float, y:float[]) =
             let mutable arg_trans = 'T'
@@ -960,7 +929,7 @@ module OpenBLAS =
 
             // Non-BLAS
             member o.Sub_S_V(alpha, x) =
-                if alpha = 0.f then 
+                if alpha = 0.f then
                     (o :> Backend<float32>).Mul_S_V(-1.0f, x)
                 else
                     (o :> Backend<float32>).Map_F_V((fun v -> alpha - v), x)
@@ -974,7 +943,7 @@ module OpenBLAS =
 
             // Non-BLAS
             member o.Sub_S_M(alpha, x) =
-                if alpha = 0.f then 
+                if alpha = 0.f then
                     (o :> Backend<float32>).Mul_S_M(-1.0f, x)
                 else
                     (o :> Backend<float32>).Map_F_M((fun v -> alpha - v), x)
@@ -1439,7 +1408,7 @@ module OpenBLAS =
                     | _ -> None
             // Non-BLAS
             member o.Sub_S_V(alpha, x) =
-                if alpha = 0. then 
+                if alpha = 0. then
                     (o :> Backend<float>).Mul_S_V(-1., x)
                 else
                     (o :> Backend<float>).Map_F_V((fun v -> alpha - v), x)
@@ -1451,7 +1420,7 @@ module OpenBLAS =
                     (o :> Backend<float>).Map_F_V((fun v -> v - alpha), x)
             // Non-BLAS
             member o.Sub_S_M(alpha, x) =
-                if alpha = 0. then 
+                if alpha = 0. then
                     (o :> Backend<float>).Mul_S_M(-1., x)
                 else
                     (o :> Backend<float>).Map_F_M((fun v -> alpha - v), x)

@@ -1,45 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful, 
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
-//   Don Syme
-//   dsyme@microsoft.com
-//
-//   Microsoft Research, Cambridge, UK
-//
+// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+﻿// This code is licensed under the BSD license (see LICENSE file for details)
 
 /// Nested forward and reverse mode automatic differentiation module
 module DiffSharp.AD.Float32
@@ -55,7 +19,7 @@ type number = float32
 let inline Backend<'T>               = GlobalConfig.Float32Backend
 let inline VisualizationContrast<'T> = GlobalConfig.Float32VisualizationContrast
 let inline FixedPointEpsilon<'T>     = GlobalConfig.Float32FixedPointEpsilon
-module N = 
+module N =
     let inline toNumber x = float32 x
     let inline failWithInvalidTypeMessage () = failwith "Unsupported type. Expecting D, float32, or int."
 
@@ -67,16 +31,14 @@ module N =
 
     let inline log10Val<'T>              = log10ValFloat32
 
-
-
-/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, 
+/// Scalar numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD,
 /// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
     /// Primal
     | D of number
     /// Primal, tangent, layer tag (for forward mode)
-    | DF of primal: D * tanget: D * tag: uint32 
+    | DF of primal: D * tanget: D * tag: uint32
     /// Primal, parent, layer tag (for reverse mode)
     | DR of primal: D * parentOperation: TraceOp * tag: uint32 * uniq: int32
 
@@ -451,15 +413,15 @@ type D =
         let mutable i = 0
 
         match b with
-        | D(bp) -> 
+        | D(bp) ->
             while i < imax do
                 i <- i + 1
-                if i >= imax then 
+                if i >= imax then
                     //printfn "Fixed point iteration timeout, i = %i" i
                     ignore()
                 else
                     let aa = g a b
-                    if abs (aa - a) <= eps then 
+                    if abs (aa - a) <= eps then
                         //printfn "Fixed point iteration converged, i = %i" i
                         i <- imax
                     a <- aa
@@ -467,12 +429,12 @@ type D =
         | DF(bp, bt, bi) ->
             while i < imax do
                 i <- i + 1
-                if i >= imax then 
+                if i >= imax then
                     //printfn "Fixed point iteration timeout, i = %i" i
                     ignore()
                 else
                     let aa = g a b
-                    if (abs (aa.P - a.P) <= eps) && (abs (aa.T - a.T) <= eps) then 
+                    if (abs (aa.P - a.P) <= eps) && (abs (aa.T - a.T) <= eps) then
                         //printfn "Fixed point iteration converged, i = %i" i
                         i <- imax
                     a <- aa
@@ -481,7 +443,7 @@ type D =
             let bfirst = D.R(bp, Noop, bi) // Cut the connection between b and bfirst ("switch of graph construction" involving b beyond this point)
             while i < imax do
                 i <- i + 1
-                if i >= imax then 
+                if i >= imax then
                     //printfn "Fixed point iteration timeout, i = %i" i
                     ignore()
                 else
@@ -494,7 +456,7 @@ type D =
             let alast = g aprev bfirst
             D.R(a.P, FixedPoint_D(b, bfirst, aprev, alast), bi)
 
-/// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting 
+/// Vector numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting
 /// capability, using tags to avoid perturbation confusion
 and DV =
     | DV of number[] // Primal
@@ -632,7 +594,7 @@ and DV =
     static member Split(d:DV, n:seq<int>) =
         match d with
         | DV(ap) ->
-            seq {let i = ref 0; 
+            seq {let i = ref 0;
                  for j in n do yield Array.sub ap !i j |> DV; i := !i + j}
         | DVF(ap, at, ai) ->
             let aps = DV.Split(ap, n)
@@ -928,7 +890,7 @@ and DV =
         let inline r_d_c(a, b) = Pow_DV_DVCons(a, b)
         let inline r_c_d(a, b) = Pow_DVCons_DV(a, b)
         DV.Op_DV_DV_DV(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
-    
+
     /// Element-wise atan2 of `a` and `b`
     static member Atan2 (a:DV, b:DV) =
         let inline ff(a, b) = Backend.Map2_F_V_V(atan2, a, b)
@@ -1096,11 +1058,11 @@ and DV =
         let inline r_d_c(a, b) = AddItem_DV_DCons(a)
         let inline r_c_d(a, b) = AddItem_DVCons_D(i, b)
         DV.Op_DV_D_DV (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
-    
+
     /// Add subvector `b` to vector `a`, starting from index `i`
     static member AddSubVector (a:DV, i:int, b:DV) =
-        let inline ff(a:_[], b:_[]) = 
-            let aa = Array.copy a 
+        let inline ff(a:_[], b:_[]) =
+            let aa = Array.copy a
             for j = 0 to b.Length - 1 do
                 aa.[i + j] <- aa.[i + j] + b.[j]
             aa
@@ -1165,7 +1127,7 @@ and DV =
         let inline df(cp, ap, at) = at .* cp // cp = exp ap
         let inline r(a) = Exp_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
-    
+
     static member Sin (a:DV) =
         let inline ff(a) = Backend.Map_F_V(sin, a)
         let inline fd(a) = sin a
@@ -1348,12 +1310,12 @@ and DV =
         let inline r(a) = Sigmoid_DV(a)
         DV.Op_DV_DV (a, ff, fd, df, r)
 
-    static member SoftPlus (a:DV) = log (N.one + exp a)    
+    static member SoftPlus (a:DV) = log (N.one + exp a)
 
     static member SoftSign (a:DV) = a ./ (N.one + abs a)
 
     static member LogSumExp (a:DV) =
-        let inline ff(a) = 
+        let inline ff(a) =
             let m = Array.max a
             let aa = Backend.Sub_V_S(a, m)
             m + log (Backend.Map_F_V(exp, aa) |> Array.sum)
@@ -1403,7 +1365,7 @@ and DV =
             if a'.[i] > maxv then maxi <- i; maxv <- a'.[i]
         maxi
     static member Max (a:DV) = a.[DV.MaxIndex(a)]
-        
+
     /// Index of the minimum element of vector `b`
     static member MinIndex (a:DV) =
         let a' = DV.op_Explicit(a)
@@ -1437,13 +1399,13 @@ and DV =
         sb.ToString()
 
 
-/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting 
+/// Matrix numeric type keeping dual numbers for forward mode and adjoints and tapes for reverse mode AD, with nesting
 /// capability, using tags to avoid perturbation confusion
 and DM =
     /// Primal
-    | DM of number[, ] 
+    | DM of number[, ]
     /// Primal, tangent, layer tag (for forward mode)
-    | DMF of primal: DM * tanget: DM * tag: uint32 
+    | DMF of primal: DM * tanget: DM * tag: uint32
     /// Primal, parent, layer tag (for reverse mode)
     | DMR of primal: DM * parentOperation: TraceOp * tag: uint32 * uniq: int32
 
@@ -1606,7 +1568,7 @@ and DM =
         let n = a.Length / m
         Array2D.init m n (fun i j -> a.[i * n + j]) |> DM.OfArray2D
 
-    static member OfRows (s:seq<DV>) = 
+    static member OfRows (s:seq<DV>) =
         // TODO: check to ensure that all elements in the array are of the same type (D, DF, or DR) and have the same nesting tag
         match Seq.head s with
         | DV _ ->
@@ -1995,7 +1957,7 @@ and DM =
         let inline r_d_c(a, b) = Pow_DM_DMCons(a, b)
         let inline r_c_d(a, b) = Pow_DMCons_DM(a, b)
         DM.Op_DM_DM_DM(a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
-    
+
     static member Atan2 (a:DM, b:DM) =
         let inline ff(a, b) = Backend.Map2_F_M_M(atan2, a, b)
         let inline fd(a, b) = atan2 a b
@@ -2392,12 +2354,12 @@ and DM =
         let inline r_d_c(a, b) = AddItem_DM_DCons(a)
         let inline r_c_d(a, b) = AddItem_DMCons_D(i, j, b)
         DM.Op_DM_D_DM (a, b, ff, fd, df_da, df_db, df_dab, r_d_d, r_d_c, r_c_d)
-    
+
     /// Add submatrix `b` to matrix `a`, where the upper left corner of `b` is positioned at row `i` and column `j`
     static member AddSubMatrix (a:DM, i:int, j:int, b:DM) =
-        let inline ff(a:number[, ], bb:number[, ]) = 
-            let aa = Array2D.copy a 
-//            Parallel.For(0, b.Rows, fun ii -> 
+        let inline ff(a:number[, ], bb:number[, ]) =
+            let aa = Array2D.copy a
+//            Parallel.For(0, b.Rows, fun ii ->
 //                Parallel.For(0, b.Cols, fun jj ->
 //                    aa.[i + ii, j + jj] <- aa.[i + ii, j + jj] + bb.[ii, jj]) |> ignore) |> ignore
             for ii = 0 to b.Rows - 1 do
@@ -2459,7 +2421,7 @@ and DM =
         let inline df(cp, ap, at) = at .* ((N.one + DM.Sign(ap)) / N.two)
         let inline r(a) = ReLU_DM(a)
         DM.Op_DM_DM (a, ff, fd, df, r)
-        
+
     static member Sigmoid (a:DM) =
         let inline ff(a) = Backend.Map_F_M((fun v -> N.one / (N.one + exp -v)), a)
         let inline fd(a) = DM.Sigmoid(a)
@@ -2685,7 +2647,7 @@ and TraceOp =
     | Diagonal_DM            of DM
     | ReLU_DV                of DV
     | Sigmoid_DV             of DV
-       
+
     // Matrix-valued operations
     | Add_DM_DM              of DM * DM
     | Add_DM_DMCons          of DM
@@ -2782,7 +2744,7 @@ and TraceOp =
     | Det_DM                 of DM
     | ReLU_DM                of DM
     | Sigmoid_DM             of DM
-    
+
     | Noop
 
 
@@ -2809,7 +2771,7 @@ module DV =
     let inline toColDM (v:DV) = v.ToColDM()
 
     /// Creates a vector with `n` elements, each with value `v`
-    let inline create n (v:'a) = 
+    let inline create n (v:'a) =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.create n (unbox<D>(box v)))
         elif at.Equals(typeof<number>) then DV (Array.create n (unbox<number>(box v)))
@@ -2823,7 +2785,7 @@ module DV =
     let empty = DV.Zero
 
     /// Creates a vector of `n` elements, where each element is defined by function `f`
-    let inline init n (f:int->'a) = 
+    let inline init n (f:int->'a) =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DV.OfArray(Array.init n (unbox<int->D>(box f)))
         elif at.Equals(typeof<number>) then DV (Array.init n (unbox<int->number>(box f)))
@@ -2984,7 +2946,7 @@ module DM =
     let inline rows (m:DM) = m.Rows
 
     /// Creates a matrix with `m` rows and `n` columns, where all entries have value `v`
-    let inline create m n (v:'a) = 
+    let inline create m n (v:'a) =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.create m n (unbox<D>(box v)))
         elif at.Equals(typeof<number>) then DM (Array2D.create m n (unbox<number>(box v)))
@@ -3010,7 +2972,7 @@ module DM =
     let isEmpty (m:DM) = m.Length = 0
 
     /// Creates a matrix with `m` rows and `n` columns, where each element is given by function `f`
-    let inline init m n (f:int->int->'a) = 
+    let inline init m n (f:int->int->'a) =
         let at = typeof<'a>
         if at.Equals(typeof<D>) then DM.OfArray2D(Array2D.init m n (unbox<int->int->D>(box f)))
         elif at.Equals(typeof<number>) then DM (Array2D.init m n (unbox<int->int->number>(box f)))
@@ -3156,15 +3118,15 @@ module DM =
 
 
 // Scripts for adjusting the adjoint
-type Delta = 
+type Delta =
     | X of D
     //| XNeg of DeltaV
     interface delta
-and DeltaV = 
+and DeltaV =
     | XV of DV
     //| XNegV of DeltaV
     interface delta
-and DeltaM = 
+and DeltaM =
     | XM of DM
     | XNegM of DeltaM
     interface delta
@@ -3172,17 +3134,17 @@ and delta = interface end
 
 /// Represents the computed adjoints for reverse AD.  This is a table indexed by node ID.
 /// The table is destructively updated as the adjoints are accumulated.
-type Adjoints() = 
+type Adjoints() =
     let dict = Dictionary<int, dobj>()
 
-    let rec eval d = 
-        match d with 
+    let rec eval d =
+        match d with
         | X d -> d
     and evalV d =
-        match d with 
+        match d with
         | XV d -> d
-    and evalM d = 
-        match d with 
+    and evalM d =
+        match d with
         | XM v -> v
         | XNegM v -> -(evalM v)
 
@@ -3194,76 +3156,76 @@ type Adjoints() =
     member internal __.SetDM(uniq:int, v:DM) = dict.[uniq] <- v
 
     // adj <- adj + interp(delta)
-    member internal __.ApplyDelta(uniq: int, x:Delta) = 
+    member internal __.ApplyDelta(uniq: int, x:Delta) =
         let adj = dict.[uniq] :?> D
         let res = eval x + adj
         dict.[uniq] <- res
         res
 
     // adj <- adj + interp(delta)
-    member internal __.ApplyDeltaV(uniq: int, x:DeltaV) = 
+    member internal __.ApplyDeltaV(uniq: int, x:DeltaV) =
         let adj = dict.[uniq] :?> DV
-        match adj,x with 
-        | DV adjv, XV (DV xv) -> 
+        match adj,x with
+        | DV adjv, XV (DV xv) ->
             Backend.Add_V_V_Inplace(xv, adjv)
             adj
-        | _ -> 
+        | _ ->
             let res = DV.Add_V_V_Inplace(evalV x,adj)
             dict.[uniq] <- res
             res
 
     // adj <- adj + interp(delta)
-    member internal __.ApplyDeltaM(uniq: int, x:DeltaM) = 
+    member internal __.ApplyDeltaM(uniq: int, x:DeltaM) =
         let adj = dict.[uniq] :?> DM
-        match adj,x with 
-        | DM adjm, XM (DM xm) -> 
+        match adj,x with
+        | DM adjm, XM (DM xm) ->
             Backend.AlphaAdd_M_M_Inplace(N.one, xm, adjm)
             adj
-        | DM adjm, XNegM (XM (DM xm)) -> 
+        | DM adjm, XNegM (XM (DM xm)) ->
             // TODO: also perform the inplace update in the case where adj is not "DM adj"
             // However this needs care.
             Backend.AlphaAdd_M_M_Inplace(N.minus1, xm, adjm)
             adj
-        | _ -> 
+        | _ ->
             let adj = DM.Add_M_M_Inplace(evalM x,adj)
             dict.[uniq] <- adj
             adj
 
     /// Lookup the adjoint for a value
-    member this.Item 
-      with get (d:D) : D = 
-        match d with 
+    member this.Item
+      with get (d:D) : D =
+        match d with
         | D _ -> D.Zero
         | DF _ -> failwith "Cannot get adjoint value of DF. Use makeReverse on this node when composing the computation."
         | DR (_, _, _, uniq) -> this.GetD(uniq)
-      and set (d:D) (v : D) = 
-        match d with 
+      and set (d:D) (v : D) =
+        match d with
         | D _ -> ()
         | DF _ -> failwith "Cannot set adjoint value of DF. Use makeReverse on this node when composing the computation."
         | DR (_, _, _, uniq) -> this.SetD(uniq, v)
-    
+
     /// Lookup the adjoint for a vector
-    member this.Item 
-      with get (d:DV) : DV = 
-        match d with 
-        | DV _ -> DV.ZeroN d.Length 
+    member this.Item
+      with get (d:DV) : DV =
+        match d with
+        | DV _ -> DV.ZeroN d.Length
         | DVF _ -> failwith "Cannot get adjoint value of DVF. Use makeReverse on this node when composing the computation."
         | DVR (_, _, _, uniq) -> this.GetDV(uniq)
-      and set (d:DV) (v : DV) = 
-        match d with 
+      and set (d:DV) (v : DV) =
+        match d with
         | DV _ -> ()
         | DVF _ -> failwith "Cannot set adjoint value of DVF. Use makeReverse on this node when composing the computation."
         | DVR (_, _, _, uniq) -> this.SetDV(uniq, v)
-    
+
     /// Lookup the adjoint for a matrix
-    member this.Item 
-      with get (d:DM) : DM = 
-        match d with 
-        | DM(_) -> DM.ZeroMN d.Rows d.Cols 
+    member this.Item
+      with get (d:DM) : DM =
+        match d with
+        | DM(_) -> DM.ZeroMN d.Rows d.Cols
         | DMF _ -> failwith "Cannot get adjoint value of DMF. Use makeReverse on this node when composing the computation."
         | DMR (_, _, _, uniq) -> this.GetDM(uniq)
-      and set (d:DM) (v : DM) = 
-        match d with 
+      and set (d:DM) (v : DM) =
+        match d with
         | DM _ -> ()
         | DMF _ -> failwith "Cannot set adjoint value of DMF. Use makeReverse on this node when composing the computation."
         | DMR (_, _, _, uniq) -> this.SetDM(uniq, v)
@@ -3279,7 +3241,7 @@ module DOps =
     let inline convert (v:^a) : ^b = ((^a or ^b) : (static member op_Explicit: ^a -> ^b) v)
 
     /// Create a vector from sequence `v`
-    let inline toDV (v:seq<_>) = 
+    let inline toDV (v:seq<_>) =
         match v with
         | :? seq<D> as v ->
             v |> Seq.toArray |> DV.ofArray
@@ -3287,7 +3249,7 @@ module DOps =
             v |> Seq.toArray |> Array.map N.toNumber |> DV
 
     /// Create a matrix form sequence of sequences `m`
-    let inline toDM (m:seq<seq<_>>) = 
+    let inline toDM (m:seq<seq<_>>) =
         match m with
         | :? seq<seq<D>> as m ->
             m |> array2D |> DM.ofArray2D
@@ -3295,11 +3257,11 @@ module DOps =
             m |> array2D |> Array2D.map N.toNumber |> DM
 
     /// Make forward AD type, with tag `i`, primal `p` and tangent `t`
-    let inline makeForward i (t:^a) (p:^a) = 
+    let inline makeForward i (t:^a) (p:^a) =
         (^a : (member GetForward : ^a -> uint32 -> ^a) p, t, i)
 
     /// Make reverse AD type, with tag `i` and primal `p`
-    let inline makeReverse i (p:^a) = 
+    let inline makeReverse i (p:^a) =
         (^a : (member GetReverse : uint32 -> ^a) p, i)
 
     /// Get the primal value of `d`
@@ -3312,8 +3274,8 @@ module DOps =
     let inline tangent (d:^a when ^a : (member T : ^a)) = (^a : (member T : ^a) d)
 
     /// Get the adjoint value of `d`
-    let adjoint (adjoints: Adjoints) (d : 'T :> dobj) : 'T = 
-         match box d with 
+    let adjoint (adjoints: Adjoints) (d : 'T :> dobj) : 'T =
+         match box d with
          | :? D as d -> adjoints.[d] |> box :?> 'T
          | :? DV as d -> adjoints.[d] |> box :?> 'T
          | :? DM as d -> adjoints.[d] |> box :?> 'T
@@ -3324,12 +3286,12 @@ module DOps =
 
 
     type Fanouts = Dictionary<int32,uint32>
-    let incrementFanout (fanouts: Fanouts) d = 
+    let incrementFanout (fanouts: Fanouts) d =
         match fanouts.TryGetValue(d) with
-        | true,fanout -> 
+        | true,fanout ->
             fanouts.[d] <- fanout + 1u
             fanout + 1u
-        | _ -> 
+        | _ ->
             fanouts.[d] <- 1u
             1u
 
@@ -3634,7 +3596,7 @@ module DOps =
                 | (:? Delta as delta),  (:? D as d) ->
                     match d with
                     | DR(_, o, _, uniq) ->
-                        let dA = adjoints.ApplyDelta(uniq, delta) 
+                        let dA = adjoints.ApplyDelta(uniq, delta)
                         let fanout = fanouts.[uniq] - 1u
                         fanouts.[uniq] <- fanout
                         // If all incoming parts of the adjoint have been received, then proceed to the parent
@@ -3681,12 +3643,12 @@ module DOps =
                             | L1Norm_DV(a) -> pushRec ((bxv (dA * DV.Sign a.P) a) :: t)
                             | L2NormSq_DV(a) -> pushRec ((bxv (dA * (D N.two) * a.P) a) :: t)
                             | L2Norm_DV(a) -> pushRec ((bxv ((dA / d.P) * a.P) a) :: t)
-                            | Item_DV(a, i) -> 
-                                adjoints.[a] <- DV.AddItem(adjoints.[a], i, dA); 
+                            | Item_DV(a, i) ->
+                                adjoints.[a] <- DV.AddItem(adjoints.[a], i, dA);
                                 pushRec ((bxv DV.Zero a) :: t)
                             | Sum_DM(a) -> pushRec ((bxm (DM.create a.Rows a.Cols dA) a) :: t)
-                            | Item_DM(a, i, j) -> 
-                                adjoints.[a] <- DM.AddItem(adjoints.[a], i, j, dA); 
+                            | Item_DM(a, i, j) ->
+                                adjoints.[a] <- DM.AddItem(adjoints.[a], i, j, dA);
                                 pushRec ((bxm DM.Zero a) :: t)
                             | Det_DM(a) -> pushRec ((bxm (d.T * d.P * DM.Transpose(DM.Inverse(a))) a) :: t) // Check this
                             | ReLU_D(a) -> pushRec ((bx (dA * ((D.Sign(a.P) + N.one) / N.two)) a) :: t)
@@ -3704,7 +3666,7 @@ module DOps =
 
                                 while i < imax do
                                     i <- i + 1
-                                    if i >= imax then 
+                                    if i >= imax then
                                         //printfn "Fixed point reverse iteration timeout, i = %i" i
                                         ignore()
                                     else
@@ -3832,7 +3794,7 @@ module DOps =
                             | Slice_DV(a, i) ->
                                 adjoints.[a] <- DV.AddSubVector(adjoints.[a], i, dA)
                                 pushRec ((bxv DV.Zero a) :: t)
-                            | Diagonal_DM(a) -> 
+                            | Diagonal_DM(a) ->
                                 adjoints.[a] <- DM.AddDiagonal(adjoints.[a], dA)
                                 pushRec ((bxm DM.Zero a) :: t)
                             | ReLU_DV(a) -> pushRec ((bxv (dA .* ((DV.Sign(a.P) + N.one) / N.two)) a) :: t)
@@ -3853,14 +3815,14 @@ module DOps =
                             | Add_DM_DM(a, b) -> pushRec ((bxm dA a) :: (bxm dA b) :: t)
                             | Add_DM_DMCons(a) -> pushRec ((bxm dA a) :: t)
 
-                            // When pushing "-dA" as adjoint increment for b, the operation 
-                            //    "b.Adjoint <- -1.0 * dA + b.Adjoint" 
-                            // can be performed directly in-place. Instead of pushing a D|DV|DM we should a 
-                            // structured expression about how to compute the D|DV|DM which can be interpreted 
+                            // When pushing "-dA" as adjoint increment for b, the operation
+                            //    "b.Adjoint <- -1.0 * dA + b.Adjoint"
+                            // can be performed directly in-place. Instead of pushing a D|DV|DM we should a
+                            // structured expression about how to compute the D|DV|DM which can be interpreted
                             // to do an in-place update
                             | Sub_DM_DM(a, b) -> pushRec ((bxm dA a) :: (bdm (XNegM (XM dA)) b) :: t)
 
-                            // TODO: also avoid the inplace operations in most of the below. 
+                            // TODO: also avoid the inplace operations in most of the below.
                             | Sub_DM_DMCons(a) -> pushRec ((bxm dA a) :: t)
                             | Sub_DMCons_DM(a) -> pushRec ((bxm -dA a) :: t)
                             | Mul_DM_DM(a, b) -> pushRec ((bxm (dA * DM.Transpose(b.P)) a) :: (bxm (DM.Transpose(a.P) * dA) b) :: t)
@@ -3967,8 +3929,8 @@ module DOps =
                         else pushRec t
                     | _ -> pushRec t
                 | _ -> pushRec t
-        let initialv = 
-            match v with 
+        let initialv =
+            match v with
             | :? D as v -> bxdelta (X v)
             | :? DV as v -> bxdelta (XV v)
             | :? DM as v -> bxdelta (XM v)

@@ -1,41 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
-
+// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+﻿// This code is licensed under the BSD license (see LICENSE file for details)
 
 /// Numerical differentiation module
 module DiffSharp.Numerical.Float32
@@ -49,7 +17,7 @@ module DiffOps =
     /// First derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff (f:float32->float32) x =
         ((f (x + GlobalConfig.Float32Epsilon)) - (f (x - GlobalConfig.Float32Epsilon))) * GlobalConfig.Float32EpsilonRec2
-    
+
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`
     let inline diff' f x =
         (f x, diff f x)
@@ -81,7 +49,7 @@ module DiffOps =
         let g = Array.create x.Length fx
         let gg = Array.init x.Length (fun i -> f (GlobalConfig.Float32Backend.Add_V_V(x, standardBasisVal x.Length i GlobalConfig.Float32Epsilon)))
         (fx, GlobalConfig.Float32Backend.Mul_S_V(GlobalConfig.Float32EpsilonRec, GlobalConfig.Float32Backend.Sub_V_V(gg, g)))
-    
+
     /// Gradient of a vector-to-scalar function `f`, at point `x`
     let grad f x =
         grad' f x |> snd
@@ -100,7 +68,7 @@ module DiffOps =
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian' f x =
         gradhessian' f x |> drop2Of3
-                
+
     /// Hessian of a vector-to-scalar function `f`, at point `x`
     let inline hessian f x =
         gradhessian' f x |> p33
@@ -191,4 +159,3 @@ module DiffOps =
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix.
     let inline curldiv f x =
         curldiv' f x |> drop1Of3
-

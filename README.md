@@ -22,21 +22,12 @@ You can come and join the Gitter chat room, if you want to chat with us:
 
 ### License
 
-Copyright (c) 2014–2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
+Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin)<br>
+Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme)<br>
+Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter)<br>
+Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
 
-Written by: Atilim Gunes Baydin & Barak A. Pearlmutter
-
-    Brain and Computation Lab
-    Hamilton Institute & Department of Computer Science
-    National University of Ireland Maynooth
-    Maynooth, Co. Kildare
-    Ireland
-
-    www.bcl.hamilton.ie
-
-DiffSharp is released under the GNU Lesser General Public License (LGPL) version 3. This means that you can integrate DiffSharp as a shared library into your software, which may be commercial, closed-source, or open-source under any license (including non-GPL), provided that you use the unmodified DiffSharp binary and reproduce the above copyright notice with a link to the DiffSharp website. Permitting uses outside of these license terms may be considered on a by-case basis.
-
-This work is supported by Science Foundation Ireland grant 09/IN.1/I2637.
+DiffSharp is licensed under the BSD 2-clause "Simplified" license, which means that redistribution and use in source and binary forms, with or without modification, are permitted provided that the authors listed above are properly acknowledged by following the conditions in the attached LICENSE file.
 
 ### Other licenses
 
@@ -44,4 +35,3 @@ DiffSharp uses:
 
 * [OpenBLAS](http://www.openblas.net/) by Zhang Xianyi, Wang Qian, Werner Saar (BSD license) for BLAS/LAPACK operations
 * [F# Quotations Evaluator](http://fsprojects.github.io/FSharp.Quotations.Evaluator/) by Paul Westcott and others (Unlicense/public domain) for compiling code quotations
-
