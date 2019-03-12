@@ -18,7 +18,7 @@
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
     
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
@@ -37,7 +37,7 @@
     <div class="container">
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
-          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
         <h3 class="muted">DiffSharp</h3>
       </div>
@@ -418,7 +418,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>grad : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}\)</span></h5>
 
-<p><strong><code>grad f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Gradient">gradient</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>grad f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Gradient">gradient</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the gradient evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
@@ -434,7 +434,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>gradv : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
-<p><strong><code>gradv f x v</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Directional_derivative">gradient-vector product</a> (directional derivative) of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
+<p><strong><code>gradv f x v</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Directional_derivative">gradient-vector product</a> (directional derivative) of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
 <p>For a function <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}\)</span>, and <span class="math">\(\mathbf{x}, \mathbf{v} \in \mathbb{R}^n\)</span>, this gives the dot product of the gradient of <span class="math">\(f\)</span> at <span class="math">\(\mathbf{x}\)</span> with <span class="math">\(\mathbf{v}\)</span></p>
 
@@ -452,7 +452,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>hessian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{n \times n}}\)</span></h5>
 
-<p><strong><code>hessian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Hessian_matrix">Hessian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>hessian f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Hessian_matrix">Hessian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the Hessian matrix evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
@@ -473,7 +473,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>hessianv : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^n}\)</span></h5>
 
-<p><strong><code>hessianv f x v</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Hessian_automatic_differentiation">Hessian-vector product</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
+<p><strong><code>hessianv f x v</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Hessian_automatic_differentiation">Hessian-vector product</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>, along the vector <code>v</code>.</p>
 
 <p>For a function <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}\)</span>, and <span class="math">\(\mathbf{x}, \mathbf{v} \in \mathbb{R}^n\)</span>, this gives the multiplication of the Hessian matrix of <span class="math">\(f\)</span> at <span class="math">\(\mathbf{x}\)</span> with <span class="math">\(\mathbf{v}\)</span></p>
 
@@ -515,7 +515,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>laplacian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
-<p><strong><code>laplacian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator">Laplacian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>laplacian f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator">Laplacian</a> of a vector-to-scalar function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the sum of second derivatives evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
@@ -535,7 +535,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>jacobian : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^m) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}^{m \times n}}\)</span></h5>
 
-<p><strong><code>jacobian f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>jacobian f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m\)</span> with components <span class="math">\(F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives the <span class="math">\(m\)</span>-by-<span class="math">\(n\)</span> Jacobian matrix evaluated at <span class="math">\(\mathbf{x}\)</span></p>
 
@@ -619,7 +619,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>curl : <span class="math">\(\color{red}{(\mathbb{R}^3 \to \mathbb{R}^3) \to \mathbb{R}^3} \to \color{blue}{\mathbb{R}^3}\)</span></h5>
 
-<p><strong><code>curl f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Curl_(mathematics)">curl</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>curl f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Curl_(mathematics)">curl</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3\)</span> with components <span class="math">\(F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^3\)</span>, this gives</p>
 
@@ -631,7 +631,7 @@ val b : D = D 0.987765946</code></pre></td></tr></table>
 
 <h5>div : <span class="math">\(\color{red}{(\mathbb{R}^n \to \mathbb{R}^n) \to \mathbb{R}^n} \to \color{blue}{\mathbb{R}}\)</span></h5>
 
-<p><strong><code>div f x</code></strong> returns the <a href="http://en.wikipedia.org/wiki/Divergence">divergence</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
+<p><strong><code>div f x</code></strong> returns the <a href="https://en.wikipedia.org/wiki/Divergence">divergence</a> of a vector-to-vector function <code>f</code>, at the point <code>x</code>.</p>
 
 <p>For a function <span class="math">\(\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n\)</span> with components <span class="math">\(F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)\)</span>, and <span class="math">\(\mathbf{x} \in \mathbb{R}^n\)</span>, this gives</p>
 
@@ -712,7 +712,7 @@ val j1val : D [,] = [[D 0.5403023059; D 0.0]
 
 <p>In addition to this, every module provides a <strong>Vector</strong> submodule containing versions of the same differentiation operators using the <strong>Vector</strong> and <strong>Matrix</strong> types instead of <strong>float[]</strong> and <strong>float[,]</strong>. This is advantageous in situations where you have to manipulate vectors in the rest of your algorithm. For instance, see the example on <a href="examples-gradientdescent.html">Gradient Descent</a>.</p>
 
-<p>Vector and Matrix operations are handled through the <a href="http://gbaydin.github.io/FsAlg/">FsAlg Linear Algebra Library</a>, which supports most of the commonly used linear algebra operations, including matrix–vector operations, matrix inverse, determinants, eigenvalues, LU and QR decompositions. Please see the API reference of FsAlg for a complete list of supported linear algebra operations.</p>
+<p>Vector and Matrix operations are handled through the <a href="https://gbaydin.github.io/FsAlg/">FsAlg Linear Algebra Library</a>, which supports most of the commonly used linear algebra operations, including matrix–vector operations, matrix inverse, determinants, eigenvalues, LU and QR decompositions. Please see the API reference of FsAlg for a complete list of supported linear algebra operations.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -840,8 +840,8 @@ val j2val : Matrix&lt;D&gt; = Matrix [[D 0.5403023059; D 0.0]
             <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
             <li><a href="https://www.nuget.org/packages/diffsharp">Get DiffSharp via NuGet</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
@@ -885,7 +885,7 @@ val j2val : Matrix&lt;D&gt; = Matrix [[D 0.5403023059; D 0.0]
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>
-            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
             <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
@@ -904,9 +904,9 @@ val j2val : Matrix&lt;D&gt; = Matrix [[D 0.5403023059; D 0.0]
     "statcounter.com/counter/counter.js'></"+"script>");
     </script>
     <noscript><div class="statcounter"><a title="web stats"
-    href="http://statcounter.com/free-web-stats/"
+    href="https://statcounter.com/free-web-stats/"
     target="_blank"><img class="statcounter"
-    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    src="https://c.statcounter.com/10059115/0/92275ee1/1/"
     alt="web stats"></a></div></noscript>
     <!-- End of StatCounter Code for Default Guide -->
   </body>

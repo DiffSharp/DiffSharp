@@ -18,7 +18,7 @@
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
     
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
@@ -37,7 +37,7 @@
     <div class="container">
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
-          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
         <h3 class="muted">DiffSharp</h3>
       </div>
@@ -46,20 +46,20 @@
         <div class="span9" id="main">
           <h1>DiffSharp: Differentiable Functional Programming</h1>
 
-<p>DiffSharp is a functional <a href="http://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library.</p>
+<p>DiffSharp is a functional <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library.</p>
 
-<p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="http://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
+<p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="https://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="https://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
 
 <p>Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the <a href="api-overview.html">API Overview</a> page for a list of available operations.</p>
 
-<p>The library is developed by <a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a> and <a href="http://bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a> mainly for research applications in machine learning, as part of their work at the <a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a>, Hamilton Institute, National University of Ireland Maynooth.</p>
+<p>The library is developed by <a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a> and <a href="http://bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a> mainly for research applications in machine learning, as part of their work at the <a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a>, Hamilton Institute, National University of Ireland Maynooth.</p>
 
 <p>DiffSharp is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono, <a href="http://dotnet.github.io/">.NET Core</a>, or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.</p>
 
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#C6AEC7">
-        Version 0.7 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version. (If you still need pre-0.7 documentation, <a href="http://diffsharp.github.io/DiffSharp/0.6.3/">here they are</a>).
+        Version 0.7 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version. (If you still need pre-0.7 documentation, <a href="https://diffsharp.github.io/DiffSharp/0.6.3/">here they are</a>).
     </div>
     </div>
 </div>
@@ -134,21 +134,21 @@
 
 <h2>More Info and How to Cite</h2>
 
-<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="http://github.com/DiffSharp/DiffSharp">on GitHub</a>. We also have a <a href="https://gitter.im/DiffSharp/DiffSharp">Gitter chat room</a> that we follow.</p>
+<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="https://github.com/DiffSharp/DiffSharp">on GitHub</a>. We also have a <a href="https://gitter.im/DiffSharp/DiffSharp">Gitter chat room</a> that we follow.</p>
 
 <p>If you would like to cite this library, please use the following information:</p>
 
 <p><em>Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767</em> (<a href="http://arxiv.org/abs/1502.05767">link</a>) (<a href="misc/adml2015.bib">BibTeX</a>)</p>
 
-<p>You can also check our <a href="http://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf"><strong>recent poster</strong></a> for the <a href="http://mloss.org/workshop/icml15/">Machine Learning Open Source Software Workshop</a> at the International Conference on Machine Learning 2015. For in-depth material, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
+<p>You can also check our <a href="https://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf"><strong>recent poster</strong></a> for the <a href="http://mloss.org/workshop/icml15/">Machine Learning Open Source Software Workshop</a> at the International Conference on Machine Learning 2015. For in-depth material, you can check our <a href="http://www.bcl.hamilton.ie/publications/">publications page</a> and the <a href="http://www.autodiff.org/">autodiff.org</a> website.</p>
 
 <p>Other sources:</p>
 
 <ul>
-<li><a href="http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/">Introduction to Automatic Differentiation</a> by Alexey Radul</li>
+<li><a href="https://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/">Introduction to Automatic Differentiation</a> by Alexey Radul</li>
 <li><a href="https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/">Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?</a> by Justin Domke</li>
-<li><a href="http://edge.org/response-detail/26794">Differentiable Programming</a> by David Dalrymple</li>
-<li><a href="http://colah.github.io/posts/2015-09-NN-Types-FP/">Neural Networks, Types, and Functional Programming</a> by Christopher Olah</li>
+<li><a href="https://edge.org/response-detail/26794">Differentiable Programming</a> by David Dalrymple</li>
+<li><a href="https://colah.github.io/posts/2015-09-NN-Types-FP/">Neural Networks, Types, and Functional Programming</a> by Christopher Olah</li>
 </ul>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
@@ -177,9 +177,9 @@
             <li class="nav-header">DiffSharp</li>
             <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
             <li><a href="download.html">Download and FAQ</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
@@ -222,7 +222,7 @@
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>
-            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
             <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
@@ -241,9 +241,9 @@
     "statcounter.com/counter/counter.js'></"+"script>");
     </script>
     <noscript><div class="statcounter"><a title="web stats"
-    href="http://statcounter.com/free-web-stats/"
+    href="https://statcounter.com/free-web-stats/"
     target="_blank"><img class="statcounter"
-    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    src="https://c.statcounter.com/10059115/0/92275ee1/1/"
     alt="web stats"></a></div></noscript>
     <!-- End of StatCounter Code for Default Guide -->
   </body>
