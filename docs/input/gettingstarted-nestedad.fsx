@@ -58,9 +58,9 @@ Correctly nesting AD in a functional framework is achieved through the method of
 
 _Jeffrey Mark Siskind and Barak A. Pearlmutter. Perturbation Confusion and Referential Transparency: Correct Functional Implementation of Forward-Mode AD. In Proceedings of the 17th International Workshop on Implementation and Application of Functional Languages (IFL2005), Dublin, Ireland, Sep. 19-21, 2005._
 
-_Jeffrey Mark Siskind and Barak A. Pearlmutter. Nesting forward-mode AD in a functional framework. Higher Order and Symbolic Computation 21(4):361-76, 2008. [doi:10.1007/s10990-008-9037-1](http://dx.doi.org/10.1007/s10990-008-9037-1) _
+_Jeffrey Mark Siskind and Barak A. Pearlmutter. Nesting forward-mode AD in a functional framework. Higher Order and Symbolic Computation 21(4):361-76, 2008. [doi:10.1007/s10990-008-9037-1](https://dx.doi.org/10.1007/s10990-008-9037-1) _
 
-_Barak A. Pearlmutter and Jeffrey Mark Siskind. Reverse-Mode AD in a functional framework: Lambda the ultimate backpropagator. TOPLAS 30(2):1-36, Mar. 2008. [doi:10.1145/1330017.1330018](http://dx.doi.org/10.1145/1330017.1330018) _
+_Barak A. Pearlmutter and Jeffrey Mark Siskind. Reverse-Mode AD in a functional framework: Lambda the ultimate backpropagator. TOPLAS 30(2):1-36, Mar. 2008. [doi:10.1145/1330017.1330018](https://dx.doi.org/10.1145/1330017.1330018) _
 
 Forward and Reverse AD Operations
 ---------------------------------
@@ -118,9 +118,9 @@ let jh = jacobian h (toDV [2.; 3.])
 Using the Reverse AD Trace
 --------------------------
 
-In addition to the high-level differentiation API that uses reverse AD (such as **grad**, **jacobianTv** ), you can make use of the exposed low-level [trace](http://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. Reverse AD automatically builds a global trace (or "tape", in AD literature) of all executed numeric operations, which allows a subsequent reverse sweep of these operations for propagating adjoint values in reverse. 
+In addition to the high-level differentiation API that uses reverse AD (such as **grad**, **jacobianTv** ), you can make use of the exposed low-level [trace](https://en.wikipedia.org/wiki/Tracing_%28software%29) functionality. Reverse AD automatically builds a global trace (or "tape", in AD literature) of all executed numeric operations, which allows a subsequent reverse sweep of these operations for propagating adjoint values in reverse. 
 
-The technique is equivalent to the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks, which is essentially just a special case of reverse AD. (You can see an implementation of the backpropagation algorithm using reverse AD in the [neural networks example](examples-neuralnetworks.html).)
+The technique is equivalent to the [backpropagation](https://en.wikipedia.org/wiki/Backpropagation) method commonly used for training artificial neural networks, which is essentially just a special case of reverse AD. (You can see an implementation of the backpropagation algorithm using reverse AD in the [neural networks example](examples-neuralnetworks.html).)
 
 For example, consider the computation
 

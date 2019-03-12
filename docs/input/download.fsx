@@ -22,7 +22,7 @@ If you are using F# interactive, you should run it in 64 bit mode. In Visual Stu
     <div class="span1"></div>
     <div class="span7">
     <div class="well well-small" id="nuget">
-        To install <a href="https://www.nuget.org/packages/diffsharp">DiffSharp on NuGet</a>, run the following in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
+        To install <a href="https://www.nuget.org/packages/diffsharp">DiffSharp on NuGet</a>, run the following in the <a href="https://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
         <pre>PM> Install-Package DiffSharp</pre>
     </div>
     </div>
@@ -33,13 +33,13 @@ If you are using F# interactive, you should run it in 64 bit mode. In Visual Stu
 
 Please make sure you have the latest **libopenblas-dev** package installed for OpenBLAS.
 
-You should have a working .NET runtime on your system. [Mono](http://www.mono-project.com/) has been the standard choice for Linux, but the community is in the process of moving to [.NET Core](http://dotnet.github.io/), a new cross-platform implementation of the framework. Please refer to [fsharp.org](http://fsharp.org/) for the latest instructions.
+You should have a working .NET runtime on your system. [Mono](https://www.mono-project.com/) has been the standard choice for Linux, but the community is in the process of moving to [.NET Core](https://dotnet.github.io/), a new cross-platform implementation of the framework. Please refer to [fsharp.org](https://fsharp.org/) for the latest instructions.
 
 If you have a .NET setup where you can use NuGet, once you have the file _libopenblas.so_ in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.
 
 Alternatively, you can download the Linux-specific pack of binaries of the latest release, which also includes a compatible version of _libopenblas.so_, <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
-You can check out [Ionide](http://ionide.io/), a lightweight editor for F# development on Linux.
+You can check out [Ionide](https://ionide.io/), a lightweight editor for F# development on Linux.
 
 ## FAQ
 
@@ -49,7 +49,7 @@ This is because you have an old version of OpenBLAS on your system. DiffSharp us
 
 On Linux, you can compile the latest OpenBLAS using [these instructions](https://github.com/xianyi/OpenBLAS/wiki/Installation-Guide). We also distribute a compatible version of _libopenblas.so_ in the Linux-specific pack of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.
 
-Please make sure you have the latest version of _libopenblas.so_ in the shared library search path. Also see the "Linux shared library search path" section on [this page](http://www.mono-project.com/docs/advanced/pinvoke/).
+Please make sure you have the latest version of _libopenblas.so_ in the shared library search path. Also see the "Linux shared library search path" section on [this page](https://www.mono-project.com/docs/advanced/pinvoke/).
 
 <br>
 
@@ -57,11 +57,11 @@ Please make sure you have the latest version of _libopenblas.so_ in the shared l
 
 This is related with the general behavior of F# Interactive and how it works with native dlls. It is not specific to DiffSharp.
 
-[This post](http://christoph.ruegg.name/blog/loading-native-dlls-in-fsharp-interactive.html) by Christoph Rüegg provides a detailed overview of how to load native libraries for scripts.
+[This post](https://christoph.ruegg.name/blog/loading-native-dlls-in-fsharp-interactive.html) by Christoph Rüegg provides a detailed overview of how to load native libraries for scripts.
 
 In short, you have to make sure that you have the OpenBLAS binaries (_libopenblas.dll, libgcc_s_seh-1.dll, libgfortran-3.dll, libquadmath-0.dll_ on Windows, and _libopenblas.so_ on Linux) in a location reachable by the _DiffSharp.dll_ assembly you are loading into your script (e.g., _#r "../DiffSharp.dll"_).
 
-On Linux, make sure that you have _libopenblas.so_ in the shared library search path. Also see the "Linux shared library search path" section on [this page](http://www.mono-project.com/docs/advanced/pinvoke/).
+On Linux, make sure that you have _libopenblas.so_ in the shared library search path. Also see the "Linux shared library search path" section on [this page](https://www.mono-project.com/docs/advanced/pinvoke/).
 
 On Windows, one way of accomplishing this is to put the _DiffSharp.dll_ and OpenBLAS binaries into the same folder with your .fsx script and call
 

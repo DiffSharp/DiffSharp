@@ -1,4 +1,4 @@
-﻿// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
 // Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 // Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
 // Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
@@ -53,7 +53,7 @@ for fileInfo in DirectoryInfo(relative "input/files/img").EnumerateFiles() do
 // Generate documentation
 //
 
-let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/DiffSharp/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
+let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "https://github.com/DiffSharp/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
 
 Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates/template.html", relative "output/index.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/download.fsx", relative "input/templates/template.html", relative "output/download.html", replacements = tags)

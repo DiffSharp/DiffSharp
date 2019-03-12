@@ -232,7 +232,7 @@ The original value and the `n`-th derivative of a scalar-to-scalar function `f`,
 grad f x
 
 (**
-The [gradient](http://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
+The [gradient](https://en.wikipedia.org/wiki/Gradient) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the gradient evaluated at $\mathbf{x}$
 
@@ -257,7 +257,7 @@ The original value and the gradient of a vector-to-scalar function `f`, at the p
 gradv f x v
 
 (**
-The [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+The [gradient-vector product](https://en.wikipedia.org/wiki/Directional_derivative) (directional derivative) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -284,7 +284,7 @@ The original value and the gradient-vector product (directional derivative) of a
 hessian f x
 
 (**
-The [Hessian](http://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
+The [Hessian](https://en.wikipedia.org/wiki/Hessian_matrix) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the Hessian matrix evaluated at $\mathbf{x}$
 
@@ -314,7 +314,7 @@ The original value and the Hessian of a vector-to-scalar function `f`, at the po
 hessianv f x v
 
 (**
-The [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
+The [Hessian-vector product](https://en.wikipedia.org/wiki/Hessian_automatic_differentiation) of a vector-to-scalar function `f`, at the point `x`, along the vector `v`.
 
 For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this gives the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
@@ -381,7 +381,7 @@ The original value, the gradient-vector product (directional derivative), and th
 laplacian f x
 
 (**
-The [Laplacian](http://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
+The [Laplacian](https://en.wikipedia.org/wiki/Laplace_operator#Laplace.E2.80.93Beltrami_operator) of a vector-to-scalar function `f`, at the point `x`.
 
 For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the sum of second derivatives evaluated at $\mathbf{x}$
 
@@ -410,7 +410,7 @@ The original value and the Laplacian of a vector-to-scalar function `f`, at the 
 jacobian f x
 
 (**
-The [Jacobian](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
+The [Jacobian](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives the $m$-by-$n$ Jacobian matrix evaluated at $\mathbf{x}$
 
@@ -534,7 +534,7 @@ This can be computed efficiently by the **DiffSharp.AD.Reverse** module in a mat
 curl f x
 
 (**
-The [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
+The [curl](https://en.wikipedia.org/wiki/Curl_(mathematics)) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$, and $\mathbf{x} \in \mathbb{R}^3$, this gives
 
@@ -555,7 +555,7 @@ The original value and the curl of a vector-to-vector function `f`, at the point
 div f x
 
 (**
-The [divergence](http://en.wikipedia.org/wiki/Divergence) of a vector-to-vector function `f`, at the point `x`.
+The [divergence](https://en.wikipedia.org/wiki/Divergence) of a vector-to-vector function `f`, at the point `x`.
 
 For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, and $\mathbf{x} \in \mathbb{R}^n$, this gives
 

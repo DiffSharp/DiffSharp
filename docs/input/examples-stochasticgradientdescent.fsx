@@ -6,7 +6,7 @@
 Stochastic Gradient Descent
 ===========================
 
-[Stochastic gradient descent](http://en.wikipedia.org/wiki/Stochastic_gradient_descent) is a [stochastic](http://en.wikipedia.org/wiki/Stochastic) variant of the gradient descent algorithm that is used for minimizing loss functions with the form of a sum
+[Stochastic gradient descent](https://en.wikipedia.org/wiki/Stochastic_gradient_descent) is a [stochastic](https://en.wikipedia.org/wiki/Stochastic) variant of the gradient descent algorithm that is used for minimizing loss functions with the form of a sum
 
 $$$
   Q(\mathbf{w}) = \sum_{i=1}^{d} Q_i(\mathbf{w}) \; ,
@@ -28,7 +28,7 @@ Alternatively, in stochastic gradient descent, $Q$ is minimized using
 $$$
   \mathbf{w}_{t+1} = \mathbf{w}_t - \eta \nabla Q_i (\mathbf{w}_t) \; ,
 
-updating the weights $\mathbf{w}$ in each step using just one sample $i$ randomly chosen from the training set. This is advantageous for big sample sizes, because it makes the evaluation time of each step independent from $d$. Another advantage is that it can process samples on the fly, in an [online learning](http://en.wikipedia.org/wiki/Online_machine_learning) task.
+updating the weights $\mathbf{w}$ in each step using just one sample $i$ randomly chosen from the training set. This is advantageous for big sample sizes, because it makes the evaluation time of each step independent from $d$. Another advantage is that it can process samples on the fly, in an [online learning](https://en.wikipedia.org/wiki/Online_machine_learning) task.
 
 In practice, instead of $\eta$, the algorithm is used with a decreasing sequence of step sizes $\eta_t$, for convergence.
 
@@ -58,7 +58,7 @@ $$$
 
 where $f_{\mathbf{w}} : \mathbb{R}^n \to \mathbb{R}^m$ is a model function for our data (parameterized by $\mathbf{w}$) and $\mathbf{x}_i \in \mathbb{R}^n$ and $\mathbf{y}_i \in \mathbb{R}^m$ are the input–output pair of the $i$-th sample in the training set. Finding the parameters $\mathbf{w}$ minimizing $Q(\mathbf{w}) = \sum_{i=1}^{d} Q_i (\mathbf{w})$ thus fits the model function $f_{\mathbf{w}}$ to our data.
 
-We can test this via [fitting a curve](http://en.wikipedia.org/wiki/Curve_fitting)
+We can test this via [fitting a curve](https://en.wikipedia.org/wiki/Curve_fitting)
 
 $$$
   f_{\mathbf{w}} (x) = w_1 x^2 + w_2 x + w_3

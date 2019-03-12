@@ -6,7 +6,7 @@
 Helmholtz Energy Function
 =========================
 
-The following formula, giving the [Helmholtz free energy](http://en.wikipedia.org/wiki/Helmholtz_free_energy) of a mixed fluid based on the [Peng-Robinson equation of state](http://en.wikipedia.org/wiki/Equation_of_state#Peng-Robinson_equation_of_state), has been used in automatic differentiation literature for benchmarking gradient calculations:
+The following formula, giving the [Helmholtz free energy](https://en.wikipedia.org/wiki/Helmholtz_free_energy) of a mixed fluid based on the [Peng-Robinson equation of state](https://en.wikipedia.org/wiki/Equation_of_state#Peng-Robinson_equation_of_state), has been used in automatic differentiation literature for benchmarking gradient calculations:
 
 $$$
  f(\mathbf{x}) = R \, T \sum_{i = 0}^{n} x_i \log \frac{x_i}{1 - \mathbf{b^T} \mathbf{x}} - \frac{\mathbf{x^T} \mathbf{A} \mathbf{x}}{\sqrt{8} \mathbf{b^T} \mathbf{x}} \log \frac{1 + (1 + \sqrt{2}) \mathbf{b^T} \mathbf{x}}{1 + (1 - \sqrt{2}) \mathbf{b^T} \mathbf{x}} \; ,
