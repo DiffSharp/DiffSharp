@@ -30,6 +30,9 @@
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libquadmath-0.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\lib\OpenBLAS-v0.3.5-macOS-x86_64\libopenblas.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
