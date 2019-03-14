@@ -18,15 +18,11 @@
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
     
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
     <script src="misc/tips.js" type="text/javascript"></script>
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -41,7 +37,7 @@
     <div class="container">
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
-          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
         <h3 class="muted">DiffSharp</h3>
       </div>
@@ -66,7 +62,7 @@
     <div class="span1"></div>
     <div class="span7">
     <div class="well well-small" id="nuget">
-        To install <a href="https://www.nuget.org/packages/diffsharp">DiffSharp on NuGet</a>, run the following in the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
+        To install <a href="https://www.nuget.org/packages/diffsharp">DiffSharp on NuGet</a>, run the following in the <a href="https://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:
         <pre>PM> Install-Package DiffSharp</pre>
     </div>
     </div>
@@ -77,13 +73,13 @@
 
 <p>Please make sure you have the latest <strong>libopenblas-dev</strong> package installed for OpenBLAS.</p>
 
-<p>You should have a working .NET runtime on your system. <a href="http://www.mono-project.com/">Mono</a> has been the standard choice for Linux, but the community is in the process of moving to <a href="http://dotnet.github.io/">.NET Core</a>, a new cross-platform implementation of the framework. Please refer to <a href="http://fsharp.org/">fsharp.org</a> for the latest instructions.</p>
+<p>You should have a working .NET runtime on your system. <a href="https://www.mono-project.com/">Mono</a> has been the standard choice for Linux, but the community is in the process of moving to <a href="https://dotnet.github.io/">.NET Core</a>, a new cross-platform implementation of the framework. Please refer to <a href="https://fsharp.org/">fsharp.org</a> for the latest instructions.</p>
 
 <p>If you have a .NET setup where you can use NuGet, once you have the file <em>libopenblas.so</em> in the library search path (e.g. in /usr/lib), you can use the same NuGet package described above.</p>
 
 <p>Alternatively, you can download the Linux-specific pack of binaries of the latest release, which also includes a compatible version of <em>libopenblas.so</em>, <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
 
-<p>You can check out <a href="http://ionide.io/">Ionide</a>, a lightweight editor for F# development on Linux.</p>
+<p>You can check out <a href="https://ionide.io/">Ionide</a>, a lightweight editor for F# development on Linux.</p>
 
 <h2>FAQ</h2>
 
@@ -93,7 +89,7 @@
 
 <p>On Linux, you can compile the latest OpenBLAS using <a href="https://github.com/xianyi/OpenBLAS/wiki/Installation-Guide">these instructions</a>. We also distribute a compatible version of <em>libopenblas.so</em> in the Linux-specific pack of the latest release <a href="https://github.com/DiffSharp/DiffSharp/releases">on GitHub</a>.</p>
 
-<p>Please make sure you have the latest version of <em>libopenblas.so</em> in the shared library search path. Also see the "Linux shared library search path" section on <a href="http://www.mono-project.com/docs/advanced/pinvoke/">this page</a>.</p>
+<p>Please make sure you have the latest version of <em>libopenblas.so</em> in the shared library search path. Also see the "Linux shared library search path" section on <a href="https://www.mono-project.com/docs/advanced/pinvoke/">this page</a>.</p>
 
 <br>
 
@@ -101,11 +97,11 @@
 
 <p>This is related with the general behavior of F# Interactive and how it works with native dlls. It is not specific to DiffSharp.</p>
 
-<p><a href="http://christoph.ruegg.name/blog/loading-native-dlls-in-fsharp-interactive.html">This post</a> by Christoph Rüegg provides a detailed overview of how to load native libraries for scripts.</p>
+<p><a href="https://christoph.ruegg.name/blog/loading-native-dlls-in-fsharp-interactive.html">This post</a> by Christoph Rüegg provides a detailed overview of how to load native libraries for scripts.</p>
 
 <p>In short, you have to make sure that you have the OpenBLAS binaries (<em>libopenblas.dll, libgcc</em>s<em>seh-1.dll, libgfortran-3.dll, libquadmath-0.dll</em> on Windows, and <em>libopenblas.so</em> on Linux) in a location reachable by the <em>DiffSharp.dll</em> assembly you are loading into your script (e.g., <em>#r "../DiffSharp.dll"</em>).</p>
 
-<p>On Linux, make sure that you have <em>libopenblas.so</em> in the shared library search path. Also see the "Linux shared library search path" section on <a href="http://www.mono-project.com/docs/advanced/pinvoke/">this page</a>.</p>
+<p>On Linux, make sure that you have <em>libopenblas.so</em> in the shared library search path. Also see the "Linux shared library search path" section on <a href="https://www.mono-project.com/docs/advanced/pinvoke/">this page</a>.</p>
 
 <p>On Windows, one way of accomplishing this is to put the <em>DiffSharp.dll</em> and OpenBLAS binaries into the same folder with your .fsx script and call</p>
 
@@ -130,9 +126,9 @@
             <li class="nav-header">DiffSharp</li>
             <li class="divider"></li>
             <li><a href="index.html">Home Page</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp">GitHub Page</a></li>
             <li><a href="download.html">Download and FAQ</a></li>
-            <li><a href="http://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
+            <li><a href="https://github.com/DiffSharp/DiffSharp/releases">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
@@ -175,7 +171,7 @@
 
             <li class="nav-header">Makers</li>
             <li class="divider"></li>
-            <li><a href="http://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
             <li><a href="http://www.bcl.hamilton.ie/">Brain and Computation Lab</a></li>
           </ul>
@@ -194,9 +190,9 @@
     "statcounter.com/counter/counter.js'></"+"script>");
     </script>
     <noscript><div class="statcounter"><a title="web stats"
-    href="http://statcounter.com/free-web-stats/"
+    href="https://statcounter.com/free-web-stats/"
     target="_blank"><img class="statcounter"
-    src="http://c.statcounter.com/10059115/0/92275ee1/1/"
+    src="https://c.statcounter.com/10059115/0/92275ee1/1/"
     alt="web stats"></a></div></noscript>
     <!-- End of StatCounter Code for Default Guide -->
   </body>
