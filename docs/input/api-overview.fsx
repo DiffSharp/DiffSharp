@@ -696,7 +696,7 @@ let s = DV.length v1 // Length of DV
 let s = DV.min v1    // Minimum element of DV
 let s = DV.max v1    // Maximum element of DV
 let s = DV.sum v1    // Sum of elements of DV
-let v = DV.unitVector v1 // Unit vector codirectional with v1
+let v = DV.unitDV v1     // Unit vector codirectional with v1
 let v = DV.normalize v1  // Normalize elements to have zero mean and unit variance
 
 (**
@@ -789,8 +789,8 @@ let m  = DM (array2D [[1.; 2.]; [3.; 4.]]) // Create DM from float[,]
 let m  = toDM [|[|1.; 2.|]; [|3.; 4.|]|] // Create DM from sequence of sequences of floats
 let m  = toDM [[1.; 2.]; [3.; 4.]]       // Create DM from sequence of sequences of floats
 let m  = toDM [[D 1.; D 2.]; [D 3.; D 4.]] // Create DM from sequence of sequences of Ds
-let v  = DM.toVector m1   // Convert DM to DV by stacking rows of matrix
-let m  = DM.ofVector 2 v2 // Convert DV to a DM with a given number of rows
+let v  = DM.toDV m1        // Convert DM to DV by stacking rows of matrix
+let m  = DM.ofDV 2 v2      // Convert DV to a DM with a given number of rows
 let m  = DM.appendRow v m  // Append row to matrix
 let m  = DM.prependRow v m // Prepend row to matrix
 let m  = DM.appendCol v m  // Append column to matrix
