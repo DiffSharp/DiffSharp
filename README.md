@@ -1,9 +1,9 @@
 DiffSharp: Differentiable Functional Programming
 ------------------------------------------------
 
-DiffSharp is a functional [automatic differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language. It supports C# and the other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages). The library is being developed mainly for research applications in machine learning, by [Atılım Güneş Baydin](http://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/), within the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), National University of Ireland Maynooth.
+DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library implemented in the F# language. It supports C# and the other [CLI languages](https://en.wikipedia.org/wiki/List_of_CLI_languages). The library is being developed mainly for research applications in machine learning, by [Atılım Güneş Baydin](https://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](http://bcl.hamilton.ie/~barak/), within the [Brain and Computation Lab](http://www.bcl.hamilton.ie/), National University of Ireland Maynooth.
 
-Please visit the [project website](http://gbaydin.github.io/DiffSharp/) for detailed documentation and examples.
+Please visit the [project website](https://diffsharp.github.io/DiffSharp/) for detailed documentation and examples.
 
 You can come and join the Gitter chat room, if you want to chat with us:
 
@@ -11,8 +11,8 @@ You can come and join the Gitter chat room, if you want to chat with us:
 
 ### Project statistics
 
-[![Issue Stats](http://issuestats.com/github/diffsharp/diffsharp/badge/pr?style=flat-square)](http://issuestats.com/github/diffsharp/diffsharp)
-[![Issue Stats](http://issuestats.com/github/diffsharp/diffsharp/badge/issue?style=flat-square)](http://issuestats.com/github/diffsharp/diffsharp)
+[![Issue Stats](https://issuestats.com/github/diffsharp/diffsharp/badge/pr?style=flat-square)](https://issuestats.com/github/diffsharp/diffsharp)
+[![Issue Stats](https://issuestats.com/github/diffsharp/diffsharp/badge/issue?style=flat-square)](https://issuestats.com/github/diffsharp/diffsharp)
 
 ### Current build status
 
@@ -33,5 +33,5 @@ DiffSharp is licensed under the BSD 2-clause "Simplified" license, which means t
 
 DiffSharp uses:
 
-* [OpenBLAS](http://www.openblas.net/) by Zhang Xianyi, Wang Qian, Werner Saar (BSD license) for BLAS/LAPACK operations
-* [F# Quotations Evaluator](http://fsprojects.github.io/FSharp.Quotations.Evaluator/) by Paul Westcott and others (Unlicense/public domain) for compiling code quotations
+* [OpenBLAS](https://www.openblas.net/) by Zhang Xianyi, Wang Qian, Werner Saar (BSD license) for BLAS/LAPACK operations
+* [F# Quotations Evaluator](https://fsprojects.github.io/FSharp.Quotations.Evaluator/) by Paul Westcott and others (Unlicense/public domain) for compiling code quotations

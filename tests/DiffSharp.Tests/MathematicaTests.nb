@@ -1,7 +1,7 @@
 (* Content-type: application/vnd.wolfram.mathematica *)
 
 (*** Wolfram Notebook File ***)
-(* http://www.wolfram.com/nb *)
+(* https://www.wolfram.com/nb *)
 
 (* CreatedBy='Mathematica 10.0' *)
 

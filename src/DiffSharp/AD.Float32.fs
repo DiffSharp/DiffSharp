@@ -1,4 +1,4 @@
-﻿// This file is part of DiffSharp: Differentiable Functional Programming - http://diffsharp.github.io
+﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
 // Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 // Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
 // Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)

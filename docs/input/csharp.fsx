@@ -3,7 +3,7 @@
 Interoperability with Other Languages
 =====================================
 
-As F# can interoperate seamlessly with C# and other [CLI languages](http://en.wikipedia.org/wiki/List_of_CLI_languages), DiffSharp can be used with these languages as well. Your project should reference the **DiffSharp.dll** assembly, its dependencies, and also the **FSharp.Core.dll** assembly. Please note that your project should target ".NET Framework 4.6" and have "x64" as the platform target. (Also see the installation instructions on the [main page](index.html).)
+As F# can interoperate seamlessly with C# and other [CLI languages](https://en.wikipedia.org/wiki/List_of_CLI_languages), DiffSharp can be used with these languages as well. Your project should reference the **DiffSharp.dll** assembly, its dependencies, and also the **FSharp.Core.dll** assembly. Please note that your project should target ".NET Framework 4.6" and have "x64" as the platform target. (Also see the installation instructions on the [main page](index.html).)
 
 For C# and other languages, the **DiffSharp.Interop** namespace provides a simpler way of using the library. (Without **DiffSharp.Interop**, you can still use the regular DiffSharp namespaces, but you will need to take care of issues such as converting to and from [**FSharp.Core.FSharpFunc**](https://msdn.microsoft.com/en-us/library/ee340302.aspx) objects.)
 
@@ -244,7 +244,7 @@ $$$
 
 Syntax: `public static Func<DV,DV> AD.Grad(Func<DV,D> f)`
 
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [gradient](http://en.wikipedia.org/wiki/Gradient)
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [gradient](https://en.wikipedia.org/wiki/Gradient)
 
 $$$
   \nabla f = \left[ \frac{\partial f}{{\partial a}_1}, \dots, \frac{\partial f}{{\partial a}_n} \right] \; .
@@ -275,7 +275,7 @@ $$$
 
 Syntax: `public static D AD.Gradv(Func<DV,D> f, DV x, DV v)`
 
-For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [gradient-vector product](http://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [gradient-vector product](https://en.wikipedia.org/wiki/Directional_derivative) (directional derivative), that is, the dot product of the gradient of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \nabla f \right)_\mathbf{x} \cdot \mathbf{v} \; .
@@ -292,7 +292,7 @@ With AD, this value is computed efficiently in one forward evaluation of the fun
 
 Syntax: `public static Func<DV,DM> AD.Hessian(Func<DV,D> f)`
 
-For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [Hessian matrix](http://en.wikipedia.org/wiki/Hessian_matrix)
+For a function $f(a_1, \dots, a_n): \mathbb{R}^n \to \mathbb{R}$, this returns a function that computes the [Hessian matrix](https://en.wikipedia.org/wiki/Hessian_matrix)
 
 $$$
   \mathbf{H}_f = \begin{bmatrix}
@@ -333,7 +333,7 @@ $$$
 
 Syntax: `public static DV AD.Hessianv(Func<DV,D> f, DV x, DV v)`
 
-For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [Hessian-vector product](http://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
+For a function $f: \mathbb{R}^n \to \mathbb{R}$, and $\mathbf{x}, \mathbf{v} \in \mathbb{R}^n$, this returns the [Hessian-vector product](https://en.wikipedia.org/wiki/Hessian_automatic_differentiation), that is, the multiplication of the Hessian matrix of $f$ at $\mathbf{x}$ with $\mathbf{v}$
 
 $$$
   \left( \mathbf{H}_f \right)_\mathbf{x} \; \mathbf{v} \; .
@@ -385,7 +385,7 @@ $$$
 
 Syntax: `public static Func<DV,DM> AD.Jacobian(Func<DV,DV> f)`
 
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $m$-by-$n$ [Jacobian matrix](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^m$ with components $F_1 (a_1, \dots, a_n), \dots, F_m (a_1, \dots, a_n)$, this returns a function that computes the $m$-by-$n$ [Jacobian matrix](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
 
 $$$
   \mathbf{J}_\mathbf{F} = \begin{bmatrix}
@@ -497,7 +497,7 @@ With AD, this value is computed efficiently in one forward and one reverse evalu
 
 Syntax: `public static Func<DV,DV> AD.Curl(Func<DV,DV> f)`
 
-For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this returns a function that computes the [curl](http://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
+For a function $\mathbf{F}: \mathbb{R}^3 \to \mathbb{R}^3$ with components $F_1(a_1, a_2, a_3),\; F_2(a_1, a_2, a_3),\; F_3(a_1, a_2, a_3)$ this returns a function that computes the [curl](https://en.wikipedia.org/wiki/Curl_(mathematics)), that is,
 
 $$$
   \textrm{curl} \, \mathbf{F} = \nabla \times \mathbf{F} = \left[ \frac{\partial F_3}{\partial a_2} - \frac{\partial F_2}{\partial a_3}, \; \frac{\partial F_1}{\partial a_3} - \frac{\partial F_3}{\partial a_1}, \; \frac{\partial F_2}{\partial a_1} - \frac{\partial F_1}{\partial a_2} \right] \; .
@@ -528,7 +528,7 @@ $$$
 
 Syntax: `public static Func<DV,D> AD.Div(Func<DV,D[]> f)`
 
-For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this returns a function that computes the [divergence](http://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
+For a function $\mathbf{F}: \mathbb{R}^n \to \mathbb{R}^n$ with components $F_1(a_1, \dots, a_n),\; \dots, \; F_n(a_1, \dots, a_n)$, this returns a function that computes the [divergence](https://en.wikipedia.org/wiki/Divergence), that is, the trace of the Jacobian matrix
 
 $$$
   \textrm{div} \, \mathbf{F} = \nabla \cdot \mathbf{F} = \textrm{tr}\left( \mathbf{J}_{\mathbf{F}} \right) = \left( \frac{\partial F_1}{\partial a_1} + \dots + \frac{\partial F_n}{\partial a_n}\right) \; .

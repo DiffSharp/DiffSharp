@@ -7,7 +7,7 @@
 <div class="row">
     <div class="span9">
     <div class="well well-small" id="nuget" style="background-color:#E0EBEB">
-        <b>Please note:</b> this is an introductory example and therefore the code is kept very simple. More advanced cases, including recurrent and convolutional networks, will be released as part of the <a href="http://hypelib.github.io/Hype/">Hype</a> library built on top of DiffSharp.
+        <b>Please note:</b> this is an introductory example and therefore the code is kept very simple. More advanced cases, including recurrent and convolutional networks, will be released as part of the <a href="https://hypelib.github.io/Hype/">Hype</a> library built on top of DiffSharp.
     </div>
     </div>
 </div>
@@ -15,9 +15,9 @@
 Neural Networks
 ===============
 
-[Artificial neural networks](http://en.wikipedia.org/wiki/Artificial_neural_network) are computational models inspired by biological nervous systems, capable of approximating functions that depend on a large number of inputs. A network is defined by a connectivity structure and a set of weights between interconnected processing units ("neurons"). Neural networks "learn" a given task by tuning the set of weights under an optimization procedure.
+[Artificial neural networks](https://en.wikipedia.org/wiki/Artificial_neural_network) are computational models inspired by biological nervous systems, capable of approximating functions that depend on a large number of inputs. A network is defined by a connectivity structure and a set of weights between interconnected processing units ("neurons"). Neural networks "learn" a given task by tuning the set of weights under an optimization procedure.
 
-Let's create a [feedforward neural network](http://en.wikipedia.org/wiki/Feedforward_neural_network) with DiffSharp and implement the [backpropagation](http://en.wikipedia.org/wiki/Backpropagation) algorithm for training it. As mentioned before, backpropagation is just a special case of reverse mode AD.
+Let's create a [feedforward neural network](https://en.wikipedia.org/wiki/Feedforward_neural_network) with DiffSharp and implement the [backpropagation](https://en.wikipedia.org/wiki/Backpropagation) algorithm for training it. As mentioned before, backpropagation is just a special case of reverse mode AD.
 
 We start by defining our neural network structure.
 
@@ -43,7 +43,7 @@ The network will consist of several layers of neurons. Each neuron works by taki
 $$$
   a = \sigma \left(\sum_{i} w_i x_i + b\right) \; ,
 
-where $w_i$ are synapse weights associated with each input, $b$ is a bias, and $\sigma$ is an [activation function](http://en.wikipedia.org/wiki/Activation_function) representing the rate of [action potential](http://en.wikipedia.org/wiki/Action_potential) firing in the neuron.
+where $w_i$ are synapse weights associated with each input, $b$ is a bias, and $\sigma$ is an [activation function](https://en.wikipedia.org/wiki/Activation_function) representing the rate of [action potential](https://en.wikipedia.org/wiki/Action_potential) firing in the neuron.
 
 <div class="row">
     <div class="span6 offset2">
@@ -51,7 +51,7 @@ where $w_i$ are synapse weights associated with each input, $b$ is a bias, and $
     </div>
 </div>
 
-A conventional choice for the activation function had been the [sigmoid](http://en.wikipedia.org/wiki/Sigmoid_function) $\sigma (z) = 1 / (1 + e^{-z})$ for a long period because of its simple derivative and gain control properties. Recently the hyperbolic tangent $\tanh$ and the [rectified linear unit](https://en.wikipedia.org/wiki/Rectifier_(neural_networks)) $\textrm{ReLU}(z) = \max(0, z)$ have been more popular choices due to their convergence and performance characteristics.
+A conventional choice for the activation function had been the [sigmoid](https://en.wikipedia.org/wiki/Sigmoid_function) $\sigma (z) = 1 / (1 + e^{-z})$ for a long period because of its simple derivative and gain control properties. Recently the hyperbolic tangent $\tanh$ and the [rectified linear unit](https://en.wikipedia.org/wiki/Rectifier_(neural_networks)) $\textrm{ReLU}(z) = \max(0, z)$ have been more popular choices due to their convergence and performance characteristics.
 
 Now let's write the network evaluation code and a function for creating a given network configuration and initializing the weights and biases with small random values. In practice, proper weight initialization has been demonstrated to have an important effect on training convergence and it would depend on the network structure and the type of activation functions used.
 
@@ -152,7 +152,7 @@ Using reverse mode AD here has two big advantages: (1) it makes the backpropagat
 
 We can now test the algorithm by training some networks.
 
-It is known that [linearly separable](http://en.wikipedia.org/wiki/Linear_separability) rules such as [logical disjunction](http://en.wikipedia.org/wiki/Logical_disjunction) can be learned by a single neuron.
+It is known that [linearly separable](https://en.wikipedia.org/wiki/Linear_separability) rules such as [logical disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) can be learned by a single neuron.
 
 *)
 open FSharp.Charting
@@ -187,7 +187,7 @@ Chart.Line train2
     </div>
 </div>
 
-Linearly inseparable problems such as [exclusive or](http://en.wikipedia.org/wiki/Exclusive_or) require one or more hidden layers to learn.
+Linearly inseparable problems such as [exclusive or](https://en.wikipedia.org/wiki/Exclusive_or) require one or more hidden layers to learn.
     
 *)
 
@@ -298,7 +298,7 @@ let backprop' (n:Network') (eta:float) epochs mbsize loss (x:DM) (y:DM) =
 The Obligatory MNIST Example
 ----------------------------
 
-The MNIST database of handwritten digits is commonly used for demonstrating neural network training. The database contains 60,000 training images and 10,000 testing images. More information on the database and downloadable files can be found [here](http://yann.lecun.com/exdb/mnist/).
+The MNIST database of handwritten digits is commonly used for demonstrating neural network training. The database contains 60,000 training images and 10,000 testing images. More information on the database and downloadable files can be found [here](https://yann.lecun.com/exdb/mnist/).
 
 The following code reads the standard MNIST files into matrices.
 *)

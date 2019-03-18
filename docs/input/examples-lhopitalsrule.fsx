@@ -6,7 +6,7 @@
 l'Hôpital's Rule
 ================
 
-[l'Hôpital's rule](http://en.wikipedia.org/wiki/L'H%C3%B4pital's_rule) is a method for evaluating [limits](http://en.wikipedia.org/wiki/Limit_of_a_function) involving [indeterminate forms](http://en.wikipedia.org/wiki/Indeterminate_form). The rule states that, under some conditions, the indeterminate limits
+[l'Hôpital's rule](https://en.wikipedia.org/wiki/L'H%C3%B4pital's_rule) is a method for evaluating [limits](https://en.wikipedia.org/wiki/Limit_of_a_function) involving [indeterminate forms](https://en.wikipedia.org/wiki/Indeterminate_form). The rule states that, under some conditions, the indeterminate limits
 
 $$$
  \begin{eqnarray*}
@@ -38,7 +38,7 @@ let g x = x - sin x
 let lim = f 0. / g 0.
 
 (**
-As expected, we get a [nan](http://msdn.microsoft.com/en-us/library/system.double.nan.aspx) as a result, meaning the result of this operations is undefined.
+As expected, we get a [nan](https://msdn.microsoft.com/en-us/library/system.double.nan.aspx) as a result, meaning the result of this operations is undefined.
 *)
 
 (*** hide, define-output: o1 ***)

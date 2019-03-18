@@ -6,13 +6,13 @@
 Hamiltonian Monte Carlo
 =======================
 
-[Hamiltonian Monte Carlo](http://en.wikipedia.org/wiki/Hybrid_Monte_Carlo) (HMC) is a type of [Markov chain Monte Carlo](http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) (MCMC) algorithm for obtaining random samples from probability distributions for which direct sampling is difficult. HMC makes use of [Hamiltonian mechanics](http://en.wikipedia.org/wiki/Hamiltonian_mechanics) for efficiently exploring target distributions and provides better convergence characteristics that avoid the slow exploration of random sampling (in alternatives such as the [Metropolis-Hastings algorithm](http://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
+[Hamiltonian Monte Carlo](https://en.wikipedia.org/wiki/Hybrid_Monte_Carlo) (HMC) is a type of [Markov chain Monte Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) (MCMC) algorithm for obtaining random samples from probability distributions for which direct sampling is difficult. HMC makes use of [Hamiltonian mechanics](https://en.wikipedia.org/wiki/Hamiltonian_mechanics) for efficiently exploring target distributions and provides better convergence characteristics that avoid the slow exploration of random sampling (in alternatives such as the [Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
 The advantages of HMC come at the cost of evaluating gradients of distribution functions, which need to be worked out and supplied by the user. Using DiffSharp, we can design an HMC algorithm that only needs the target distribution function as its input, which **can be implemented freely using the full expressivity of the programming language including control flow and subprocedures**, computing the needed gradients efficiently through reverse mode AD.
 
 Let's demonstrate how an AD-HMC can be implemented.
 
-First we need a scheme for integrating Hamiltonian dynamics with discretized time. The [Leapfrog algorithm]() is the common choice, due to its [symplectic](http://en.wikipedia.org/wiki/Symplectic_integrator) property and straightforward implementation.
+First we need a scheme for integrating Hamiltonian dynamics with discretized time. The [Leapfrog algorithm]() is the common choice, due to its [symplectic](https://en.wikipedia.org/wiki/Symplectic_integrator) property and straightforward implementation.
 
 Hamiltonian mechanics is a formulation of classical mechanics, describing the time evolution of a system by the equations
 
@@ -57,7 +57,7 @@ let leapFrog (u:DV->D) (k:DV->D) (d:D) steps (x0, p0) =
 
 (**
 
-We define simple functions for generating [uniform](http://en.wikipedia.org/wiki/Uniform_distribution_(continuous)) and [standard normal](http://en.wikipedia.org/wiki/Normal_distribution) random numbers.
+We define simple functions for generating [uniform](https://en.wikipedia.org/wiki/Uniform_distribution_(continuous)) and [standard normal](https://en.wikipedia.org/wiki/Normal_distribution) random numbers.
     
 *)
 
@@ -111,7 +111,7 @@ let hmc n hdelta hsteps (x0:DV) (f:DV->D) =
 
 Whereas the classical HMC requires the user to supply the log-density and also its gradient, in our implementation we need to supply only the target density function. The rest is taken care of by reverse AD. This has two main advantages: (1) AD computes the exact gradient efficiently and (2) it is applicable to complex density functions where closed-form expressions for the gradient cannot be formulated.
 
-Let's now test this HMC algorithm with a [multivariate normal distribution](http://en.wikipedia.org/wiki/Multivariate_normal_distribution), which has the density
+Let's now test this HMC algorithm with a [multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution), which has the density
 
 $$$
   f_{\mathbf{x}}(x_1,\dots,x_k) = \frac{1}{\sqrt{(2\pi)^k \left|\mathbf{\Sigma}\right|}} \textrm{exp} \left( -\frac{1}{2} (\mathbf{x} - \mathbf{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \mathbf{\mu}) \right)\;,
