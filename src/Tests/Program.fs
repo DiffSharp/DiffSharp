@@ -6,7 +6,7 @@ open TorchSharp.Tensor
 
 [<EntryPoint>]
 let main argv =
-    printfn "Hello World from F#!"
+    printfn "DiffSharp tests"
     let t = TorchSharp.Tensor.FloatTensor.From(1.f)
     printfn "%A" t
 

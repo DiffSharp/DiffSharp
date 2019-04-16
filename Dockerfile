@@ -13,7 +13,7 @@ ENV LD_LIBRARY_PATH /code/libtorch/lib
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.2/cmake-3.14.2-Linux-x86_64.sh && sh cmake-3.14.2-Linux-x86_64.sh --skip-license
 
 # Build libTorchSharp
-RUN cd /code && git clone https://github.com/interesaaat/LibTorchSharp.git && cd LibTorchSharp && git checkout b870e00 && cmake -DTorch_DIR=/code/libtorch/share/cmake/Torch . && make
+RUN cd /code && git clone https://github.com/interesaaat/LibTorchSharp.git && cd LibTorchSharp && git checkout b870e00 && cmake -DTorch_DIR=/code/libtorch/share/cmake/Torch -DCMAKE_BUILD_TYPE="Release" . && make
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/code/LibTorchSharp/
 
 # Build DiffSharp
