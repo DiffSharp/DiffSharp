@@ -254,3 +254,5 @@ paket-files/
 
 # Coverage Report
 MyProject_coverage.xml
+
+src/TorchSharp/
