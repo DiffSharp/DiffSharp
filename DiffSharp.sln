@@ -1,72 +1,72 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{1168F126-A9CD-4E72-AD0B-8B9475D6C0F0}"
-	ProjectSection(SolutionItems) = preProject
-		paket.dependencies = paket.dependencies
-	EndProjectSection
+VisualStudioVersion = 15.0.26124.0
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{32CC6DBC-1752-40BE-AE12-3DE10FC57FD4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B9A8E07A-17A4-4051-8B2D-1D7027B35865}"
-	ProjectSection(SolutionItems) = preProject
-		docs\input\api-overview.fsx = docs\input\api-overview.fsx
-		docs\input\benchmarks.fsx = docs\input\benchmarks.fsx
-		docs\BuildDocs.fsx = docs\BuildDocs.fsx
-		docs\input\csharp.fsx = docs\input\csharp.fsx
-		docs\input\download.fsx = docs\input\download.fsx
-		docs\input\examples-gradientdescent.fsx = docs\input\examples-gradientdescent.fsx
-		docs\input\examples-hamiltonianmontecarlo.fsx = docs\input\examples-hamiltonianmontecarlo.fsx
-		docs\input\examples-helmholtzenergyfunction.fsx = docs\input\examples-helmholtzenergyfunction.fsx
-		docs\input\examples-inversekinematics.fsx = docs\input\examples-inversekinematics.fsx
-		docs\input\examples-kinematics.fsx = docs\input\examples-kinematics.fsx
-		docs\input\examples-kmeansclustering.fsx = docs\input\examples-kmeansclustering.fsx
-		docs\input\examples-lhopitalsrule.fsx = docs\input\examples-lhopitalsrule.fsx
-		docs\input\examples-neuralnetworks.fsx = docs\input\examples-neuralnetworks.fsx
-		docs\input\examples-newtonsmethod.fsx = docs\input\examples-newtonsmethod.fsx
-		docs\input\examples-stochasticgradientdescent.fsx = docs\input\examples-stochasticgradientdescent.fsx
-		docs\input\gettingstarted-nestedad.fsx = docs\input\gettingstarted-nestedad.fsx
-		docs\input\gettingstarted-numericaldifferentiation.fsx = docs\input\gettingstarted-numericaldifferentiation.fsx
-		docs\input\gettingstarted-symbolicdifferentiation.fsx = docs\input\gettingstarted-symbolicdifferentiation.fsx
-		docs\input\gettingstarted-typeinference.fsx = docs\input\gettingstarted-typeinference.fsx
-		docs\input\index.fsx = docs\input\index.fsx
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "src\Tests\Tests.fsproj", "{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Dsbench", "tests\Dsbench\Dsbench.fsproj", "{0577D15F-366A-4EB7-9BAF-73C42A38CA33}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TorchSharp", "TorchSharp", "{9A4742BF-2955-40C3-862D-E09C0ECC6036}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteropTest", "tests\InteropTest\InteropTest.csproj", "{73EDFD98-0114-4271-A92A-0F9735ED7425}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "tests\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{89636F64-9969-474B-AA31-1FE21F8B6217}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorchSharp", "src\TorchSharp\TorchSharp\TorchSharp.csproj", "{705939D6-34AB-449F-BE03-E7D79A9D479D}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Debug|x64.Build.0 = Debug|Any CPU
-		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Release|x64.ActiveCfg = Release|Any CPU
-		{AB5AF4D0-EC82-413D-A903-C53CE34D1CEC}.Release|x64.Build.0 = Release|Any CPU
-		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Debug|x64.Build.0 = Debug|Any CPU
-		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Release|x64.ActiveCfg = Release|Any CPU
-		{0577D15F-366A-4EB7-9BAF-73C42A38CA33}.Release|x64.Build.0 = Release|Any CPU
-		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Debug|x64.Build.0 = Debug|Any CPU
-		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|x64.ActiveCfg = Release|Any CPU
-		{73EDFD98-0114-4271-A92A-0F9735ED7425}.Release|x64.Build.0 = Release|Any CPU
-		{89636F64-9969-474B-AA31-1FE21F8B6217}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{89636F64-9969-474B-AA31-1FE21F8B6217}.Debug|x64.Build.0 = Debug|Any CPU
-		{89636F64-9969-474B-AA31-1FE21F8B6217}.Release|x64.ActiveCfg = Release|Any CPU
-		{89636F64-9969-474B-AA31-1FE21F8B6217}.Release|x64.Build.0 = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|x64.Build.0 = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Debug|x86.Build.0 = Debug|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|x64.ActiveCfg = Release|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|x64.Build.0 = Release|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|x86.ActiveCfg = Release|Any CPU
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4}.Release|x86.Build.0 = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|x64.Build.0 = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Debug|x86.Build.0 = Debug|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|x64.ActiveCfg = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|x64.Build.0 = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51}.Release|x86.Build.0 = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|x64.Build.0 = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Debug|x86.Build.0 = Debug|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|x64.ActiveCfg = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|x64.Build.0 = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|x86.ActiveCfg = Release|Any CPU
+		{705939D6-34AB-449F-BE03-E7D79A9D479D}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{40886C9D-B7FE-409C-B4F3-046B0D77D9C4} = {32CC6DBC-1752-40BE-AE12-3DE10FC57FD4}
+		{7B98AB7A-EBB5-4A0A-A283-9C7B7C3C4D51} = {32CC6DBC-1752-40BE-AE12-3DE10FC57FD4}
+		{9A4742BF-2955-40C3-862D-E09C0ECC6036} = {32CC6DBC-1752-40BE-AE12-3DE10FC57FD4}
+		{705939D6-34AB-449F-BE03-E7D79A9D479D} = {9A4742BF-2955-40C3-862D-E09C0ECC6036}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,3 @@
+[submodule "src/TorchSharp"]
+	path = src/TorchSharp
+	url = https://github.com/interesaaat/TorchSharp.git
