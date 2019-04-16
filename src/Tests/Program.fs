@@ -2,10 +2,14 @@
 
 open System
 open DiffSharp
+open TorchSharp.Tensor
 
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
-    // let t = Tensor.Create(2.f)
-    // printfn "%A" t
+    let t = TorchSharp.Tensor.FloatTensor.From(1.f)
+    printfn "%A" t
+
+    let tt = Tensor.Create(2.f)
+    printfn "%A" tt
     0 // return an integer exit code

@@ -1,5 +1,7 @@
 ﻿namespace DiffSharp
 
+open TorchSharp.Tensor
+
 type Tensor =
     | Tensor of FloatTensor
     | TensorF of primal: Tensor * derivative: Tensor * tag: uint32
