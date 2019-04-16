@@ -15,6 +15,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.2/cmake-3.14.2
 # Build libTorchSharp
 RUN cd /code && git clone https://github.com/interesaaat/LibTorchSharp.git && cd LibTorchSharp && git checkout b870e00 && cmake -DTorch_DIR=/code/libtorch/share/cmake/Torch . && make
 
-# # Build DiffSharp
-# COPY . /code/DiffSharp
-# RUN cd /code/DiffSharp && dotnet build
+# Build DiffSharp
+COPY . /code/DiffSharp
+RUN cd /code/DiffSharp/src && git clone https://github.com/DiffSharp/TorchSharp.git
+RUN cd /code/DiffSharp && dotnet build
