@@ -8,8 +8,4 @@
     <Compile Include="Tensor.fs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TorchSharp\TorchSharp\TorchSharp.csproj" />
-  </ItemGroup>
-
 </Project>
