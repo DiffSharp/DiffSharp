@@ -17,5 +17,4 @@ RUN cd /code && git clone https://github.com/interesaaat/LibTorchSharp.git && cd
 
 # Build DiffSharp
 COPY . /code/DiffSharp
-RUN cd /code/DiffSharp/src && git clone https://github.com/DiffSharp/TorchSharp.git
-RUN cd /code/DiffSharp && dotnet build
+RUN cd /code/DiffSharp && sh build.sh
