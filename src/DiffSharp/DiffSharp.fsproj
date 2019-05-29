@@ -4,6 +4,29 @@
     <OtherFlags>/warnon:1182</OtherFlags>
     <PlatformTarget>x64</PlatformTarget>
     <Version>0.8.0</Version>
+    <Authors>Atılım Güneş Baydin,Barak A. Pearlmutter</Authors>
+    <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+    <PackageIconUrl>http://diffsharp.github.io/DiffSharp/img/diffsharp-logo.png</PackageIconUrl>
+    <PackageDescription>DiffSharp is an automatic differentiation (AD) library.
+
+AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from numerical differentiation, which is prone to truncation and round-off errors, and symbolic differentiation, which is affected by expression swell and cannot fully handle algorithmic control flow.
+
+Using the DiffSharp library, derivative calculations (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) can be incorporated with minimal change into existing algorithms. Diffsharp supports nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the API Overview page for a list of available operations.
+
+The library is under active development by Atılım Güneş Baydin and Barak A. Pearlmutter mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.
+
+DiffSharp is implemented in the F# language and can be used from C# and the other languages running on .NET Core, Mono, or the .NET Framework; targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.</PackageDescription>
+    <PackageReleaseNotes>Please visit
+
+https://github.com/DiffSharp/DiffSharp/releases
+
+for the latest release notes.</PackageReleaseNotes>
+    <Copyright>Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin)
+Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme)
+Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter)
+Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)</Copyright>
+    <PackageTags>Differentiation;Automatic;Symbolic;Numerical;Optimization;Machine Learning;FSharp;F#</PackageTags>
+
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
