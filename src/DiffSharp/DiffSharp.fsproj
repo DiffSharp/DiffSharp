@@ -3,6 +3,7 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <OtherFlags>/warnon:1182</OtherFlags>
     <PlatformTarget>x64</PlatformTarget>
+    <Version>0.8.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -19,21 +20,37 @@
     <Compile Include="Interop.Float32.fs" />
     <Compile Include="Interop.Float64.fs" />
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgcc_s_seh-1.dll">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgfortran-3.dll">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libopenblas.dll">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libquadmath-0.dll">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.3.5-macOS-x86_64\libopenblas.dylib">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\README.md">
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DiffSharp.targets">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
