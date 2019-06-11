@@ -4,9 +4,12 @@
     <OtherFlags>/warnon:1182</OtherFlags>
     <PlatformTarget>x64</PlatformTarget>
     <Version>0.8.0</Version>
+    <PackageVersion>0.8.0-beta</PackageVersion>
     <Authors>Atılım Güneş Baydin,Barak A. Pearlmutter</Authors>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageIconUrl>http://diffsharp.github.io/DiffSharp/img/diffsharp-logo.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/DiffSharp/DiffSharp</RepositoryUrl>
+    <Title>DiffSharp: Automatic Differentiation Library</Title>
     <PackageDescription>DiffSharp is an automatic differentiation (AD) library.
 
 AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from numerical differentiation, which is prone to truncation and round-off errors, and symbolic differentiation, which is affected by expression swell and cannot fully handle algorithmic control flow.
