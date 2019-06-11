@@ -3,7 +3,7 @@
 case "$(uname -s)" in
 
    Darwin)
-     brew install homebrew/science/openblas
+     brew install openblas
      ;;
 
    CYGWIN*|MINGW32*|MSYS*|Linux)
@@ -25,7 +25,9 @@ if [ -d "MONO" ]; then
    # not currently testing on mono
    # mono ./packages/NUnit.Runners/tools/nunit-console.exe ./tests/DiffSharp.Tests/bin/Release/DiffSharp.Tests.dll
 else
+   dotnet --version
    dotnet build DiffSharp.sln -c debug 
    dotnet test tests/DiffSharp.Tests  -c release -f netcoreapp2.0
+   dotnet pack DiffSharp.sln -c release
 fi
 
