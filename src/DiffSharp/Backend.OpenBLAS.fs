@@ -715,7 +715,8 @@ module OpenBLAS =
                 let xl2 = Array2D.length2 x
                 let yl1 = Array2D.length1 y
                 let yl2 = Array2D.length2 y
-                if (xl1 <> yl1) || (xl2 <> yl2) then
+                if xl1 * xl2 = 0 then ()
+                elif (xl1 <> yl1) || (xl2 <> yl2) then
                     ErrorMessages.InvalidArgMM()
                 else
                     Stats.InplaceOp(yl1 * yl2)
