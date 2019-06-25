@@ -3480,6 +3480,7 @@ module DOps =
                             | Sub_DMCons_DM(a) -> resetRec (bxd a :: t)
                             | Mul_DM_DM(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Mul_DM_DMCons(a, _) -> resetRec (bxd a :: t)
+                            | Mul_DMCons_DM(_, b) -> resetRec (bxd b :: t)
                             | Mul_Had_DM_DM(a, b) -> resetRec (bxd a :: bxd b :: t)
                             | Mul_Had_DM_DMCons(a, _) -> resetRec (bxd a :: t)
                             | Mul_DM_D(a, b) -> resetRec (bxd a :: bxd b :: t)
