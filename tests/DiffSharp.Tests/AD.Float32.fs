@@ -46,7 +46,6 @@ let ``Gradient descent``() =
         let mutable W = x0
         for _ in [0..10] do
             let L,g = grad' f W
-            printfn "%f" (float32 L)
             W <- W - eta*g
 
     let lossFunction (w:DV) =
