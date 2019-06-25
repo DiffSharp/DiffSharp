@@ -37,3 +37,22 @@ let ``Compute Adjoint``() =
     let A = computeAdjoints L //Smoke test computeAdjoints, was an issue with single precision
 
     ()
+
+[<Property>]
+let ``Gradient descent``() =
+
+    let minimize (f:DV->D) (x0:DV) = 
+        let eta = 1e-2f
+        let mutable W = x0
+        for _ in [0..10] do
+            let L,g = grad' f W
+            printfn "%f" (float32 L)
+            W <- W - eta*g
+
+    let lossFunction (w:DV) =
+        let x = toDM [[1.0; 0.0]]
+        let Wg = w.[0..3] |> DM.ofDV 2
+        let g = (x*Wg)
+        cos g.[0,0]
+
+    minimize lossFunction (DV.create 5 1.0f) //Smoke test
