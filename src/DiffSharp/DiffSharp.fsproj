@@ -3,8 +3,8 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <OtherFlags>/warnon:1182</OtherFlags>
     <PlatformTarget>x64</PlatformTarget>
-    <Version>0.8.2</Version>
-    <PackageVersion>0.8.2-beta</PackageVersion>
+    <Version>0.8.3</Version>
+    <PackageVersion>0.8.3-beta</PackageVersion>
     <Authors>Atılım Güneş Baydin,Barak A. Pearlmutter</Authors>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageIconUrl>http://diffsharp.github.io/DiffSharp/img/diffsharp-logo.png</PackageIconUrl>
@@ -47,22 +47,22 @@ Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Ba
     <Compile Include="Interop.Float64.fs" />
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgcc_s_seh-1.dll">
       <Pack>true</Pack>
-      <PackagePath>build\</PackagePath>
+      <PackagePath>runtimes\win\native\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libgfortran-3.dll">
       <Pack>true</Pack>
-      <PackagePath>build\</PackagePath>
+      <PackagePath>runtimes\win\native\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libopenblas.dll">
       <Pack>true</Pack>
-      <PackagePath>build\</PackagePath>
+      <PackagePath>runtimes\win\native\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.2.15-Win64-int32\libquadmath-0.dll">
       <Pack>true</Pack>
-      <PackagePath>build\</PackagePath>
+      <PackagePath>runtimes\win\native\</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\lib\OpenBLAS-v0.3.5-macOS-x86_64\libopenblas.dylib">
