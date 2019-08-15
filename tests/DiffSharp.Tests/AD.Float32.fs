@@ -55,3 +55,22 @@ let ``Gradient descent``() =
         cos g.[0,0]
 
     minimize lossFunction (DV.create 5 1.0f) //Smoke test
+
+
+[<Property>]
+let ``Gradient descent (with arrays)``() =
+
+    let minimize (f:DV->D) (x0:DV) = 
+        let eta = 1e-2f
+        let mutable W = x0
+        for _ in [0..10] do
+            let L,g = grad' f W
+            W <- W - eta*g
+
+    let n = 5
+    let lossFunction (w:DV) =
+        let x = DM.init n n (fun i j -> w.[n*i+j])
+        let x' = x.GetSlice(None, None, None, None)
+        cos x'.[0,0]
+
+    minimize lossFunction (DV.create (n*n) 1.0f) //Smoke test
