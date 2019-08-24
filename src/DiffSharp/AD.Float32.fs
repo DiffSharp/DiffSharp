@@ -1474,7 +1474,7 @@ and DM =
         match d with
         | DM(ap) -> DM(ap.[rowStart..rowFinish, colStart..colFinish])
         | DMF(ap, at, ai) -> DMF(ap.[rowStart..rowFinish, colStart..colFinish], at.[rowStart..rowFinish, colStart..colFinish], ai)
-        | DMR(ap, _, ai, _) -> let cp = ap.[rowStart..rowFinish, colStart..colFinish] in DM.R(cp, Slice_DM(d, rowStart, rowFinish), ai)
+        | DMR(ap, _, ai, _) -> let cp = ap.[rowStart..rowFinish, colStart..colFinish] in DM.R(cp, Slice_DM(d, rowStart, colStart), ai)
 
     member d.GetSlice(row, colStart, colFinish) =
         let colStart = defaultArg colStart 0
