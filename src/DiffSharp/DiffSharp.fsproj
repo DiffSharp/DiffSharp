@@ -3,8 +3,8 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <OtherFlags>/warnon:1182</OtherFlags>
     <PlatformTarget>x64</PlatformTarget>
-    <Version>0.8.3</Version>
-    <PackageVersion>0.8.3-beta</PackageVersion>
+    <Version>0.8.4</Version>
+    <PackageVersion>0.8.4-beta</PackageVersion>
     <Authors>Atılım Güneş Baydin,Barak A. Pearlmutter</Authors>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageIconUrl>http://diffsharp.github.io/DiffSharp/img/diffsharp-logo.png</PackageIconUrl>
