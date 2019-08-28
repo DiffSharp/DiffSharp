@@ -1,16 +1,20 @@
 1.0.*
-- Separate AD reverse tape from value descriptions
+- Tensor/multidimensional array, a la numpy.ndarray, torch.Tensor
+- CUDA/cuBLAS/cuDNN backend
+- Convolution ops
+- Neural network namespace
+- Optimization namespace
+- Unit tests
+- Overhaul of website and tutorials
 
 1.1.*
 - Fully generalize differentiation API type signatures
-- GEMV/GEMM ops with vector addition
-- Iterate to fixed point
+- (Iterate to fixed point) - this is already done, needs testing
+- (GEMV/GEMM ops with vector addition)
+- Probability distributions
 - In-place operations
-- CUDA/CuBLAS backend
+- Half-precision floats
 
 1.2.*
-- Tensor/multidimensional array, a la numpy.ndarray
-- Convolution ops
-
-1.3.*
-- AD via syntax tree transformation
+- (AD via syntax tree transformation)
+- (Separate AD reverse tape from value descriptions)

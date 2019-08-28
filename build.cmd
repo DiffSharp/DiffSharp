@@ -1,14 +1,6 @@
-@echo off
 cls
 
-.paket\paket.bootstrapper.exe
-if errorlevel 1 (
-  exit /b %errorlevel%
-)
-
-.paket\paket.exe restore
-if errorlevel 1 (
-  exit /b %errorlevel%
-)
-msbuild DiffSharp.sln /p:Configuration=Debug 
-packages\NUnit.Runners\tools\nunit-console "tests\DiffSharp.Tests\bin\Debug\DiffSharp.Tests.dll" 
+dotnet --version
+dotnet build DiffSharp.sln -c release -v:n
+dotnet test tests/DiffSharp.Tests  -c release -v:n
+dotnet pack DiffSharp.sln -c release

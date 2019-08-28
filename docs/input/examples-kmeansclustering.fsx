@@ -7,7 +7,7 @@
 K-Means Clustering
 ==================
 
-[K-means clustering](http://en.wikipedia.org/wiki/K-means_clustering) is a method in [cluster analysis](http://en.wikipedia.org/wiki/Cluster_analysis) for partitioning a given set of observations into $k$ clusters, where the observations in the same cluster are more similar to each other than to those in other clusters.
+[K-means clustering](https://en.wikipedia.org/wiki/K-means_clustering) is a method in [cluster analysis](https://en.wikipedia.org/wiki/Cluster_analysis) for partitioning a given set of observations into $k$ clusters, where the observations in the same cluster are more similar to each other than to those in other clusters.
 
 Given $d$ observations $\{\mathbf{x}_1,\dots,\mathbf{x}_d\}$, the observations are assigned to $k$ clusters $\mathbf{S} = \{S_1,\dots,S_k\}$ so as to minimize
 
@@ -128,7 +128,7 @@ plotClusters clusters2
     </div>
 </div>
 
-Finally, we can test our algorithm with the [Iris flower data set](http://en.wikipedia.org/wiki/Iris_flower_data_set) that is commonly used for demonstrations. The data set contains four morphological features (_sepal length_, _sepal width_, _petal length_, _petal width_) of Iris flowers belonging to three related species. A version of the data set can be found [here](https://dataminingproject.googlecode.com/svn-history/r44/DataMiningApp/datasets/Iris/iris.csv).
+Finally, we can test our algorithm with the [Iris flower data set](https://en.wikipedia.org/wiki/Iris_flower_data_set) that is commonly used for demonstrations. The data set contains four morphological features (_sepal length_, _sepal width_, _petal length_, _petal width_) of Iris flowers belonging to three related species. A version of the data set can be found [here](https://dataminingproject.googlecode.com/svn-history/r44/DataMiningApp/datasets/Iris/iris.csv).
 
 *)
 
@@ -153,7 +153,7 @@ plotClusters irisClusters
     </div>
 </div>
 
-Our clustering of the _sepal width_ - _petal length_ data correctly predicts the actual assignment of these features to the three flower species, which can be seen below ([image](http://en.wikipedia.org/wiki/Iris_flower_data_set#mediaviewer/File:Anderson%27s_Iris_data_set.png) by user [Indon](http://commons.wikimedia.org/wiki/User:Indon) on Wikimedia Commons, CC BY-SA 3.0).
+Our clustering of the _sepal width_ - _petal length_ data correctly predicts the actual assignment of these features to the three flower species, which can be seen below ([image](https://en.wikipedia.org/wiki/Iris_flower_data_set#mediaviewer/File:Anderson%27s_Iris_data_set.png) by user [Indon](https://commons.wikimedia.org/wiki/User:Indon) on Wikimedia Commons, CC BY-SA 3.0).
 
 <div class="row">
     <div class="span6 offset1">

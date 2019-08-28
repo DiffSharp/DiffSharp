@@ -1,40 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
+﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+// This code is licensed under the BSD license (see LICENSE file for details)
 
 //
 // Script for generating library documentation
@@ -58,7 +27,7 @@ open FSharp.MetadataFormat
 // Setup output directory structure and copy static files
 //
 
-let source = __SOURCE_DIRECTORY__ 
+let source = __SOURCE_DIRECTORY__
 let docs = Path.Combine(source, "")
 let relative subdir = Path.Combine(docs, subdir)
 
@@ -84,7 +53,7 @@ for fileInfo in DirectoryInfo(relative "input/files/img").EnumerateFiles() do
 // Generate documentation
 //
 
-let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "http://github.com/DiffSharp/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
+let tags = ["project-name", "DiffSharp"; "project-author", "Atılım Güneş Baydin"; "project-github", "https://github.com/DiffSharp/DiffSharp"; "project-nuget", "https://www.nuget.org/packages/diffsharp"; "root", ""]
 
 Literate.ProcessScriptFile(relative "input/index.fsx", relative "input/templates/template.html", relative "output/index.html", replacements = tags)
 Literate.ProcessScriptFile(relative "input/download.fsx", relative "input/templates/template.html", relative "output/download.html", replacements = tags)

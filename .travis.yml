@@ -1,20 +1,12 @@
-language: csharp
-solution: DiffSharp.sln
 
-# sudo to install packages
-sudo: required 
+services:
+    - docker
 
 before_install:
-  - sudo add-apt-repository ppa:ginggs/julia-backports -y
-  - sudo apt-get update -y
-  - sudo apt-get install libopenblas-dev -y
+    - docker pull ubuntu:16.04
 
-os:
-  - linux
-mono:
-  - latest
-script:
-  - ./build.sh
+script: 
+    - docker build .
 
 notifications:
   email:

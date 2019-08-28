@@ -5,14 +5,14 @@
 Symbolic Differentiation
 ========================
 
-In addition to AD, the DiffSharp library also implements [symbolic differentiation](http://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of closed-form expressions using rules of differential calculus.
+In addition to AD, the DiffSharp library also implements [symbolic differentiation](https://en.wikipedia.org/wiki/Symbolic_computation), which works by the symbolic manipulation of closed-form expressions using rules of differential calculus.
 
 For a complete list of the available differentiation operations, please refer to [API Overview](api-overview.html) and [API Reference](reference/index.html).
 
 DiffSharp.Symbolic
 ------------------
 
-This is a symbolic differentiation module, used with the [**Expr**](http://msdn.microsoft.com/en-us/library/ee370577.aspx) type representing F# code expressions. A common way of generating F# code expressions is to use [code quotations](http://msdn.microsoft.com/en-us/library/dd233212.aspx), with the <@ and @> symbols delimiting an expression.
+This is a symbolic differentiation module, used with the [**Expr**](https://msdn.microsoft.com/en-us/library/ee370577.aspx) type representing F# code expressions. A common way of generating F# code expressions is to use [code quotations](https://msdn.microsoft.com/en-us/library/dd233212.aspx), with the <@ and @> symbols delimiting an expression.
 
 Symbolic differentiation operators construct the wanted derivative as a new expression and return this as a compiled function that can be used subsequently for evaluating the derivative. Once the derivative expression is compiled and returned, it is significantly faster to run it with specific numerical arguments, compared to the initial time it takes to compile the function. You can see example compilation and running times on the [Benchmarks](benchmarks.html) page.
 *)
@@ -27,7 +27,7 @@ let d = diff <@ fun x -> sin (3. * sqrt x) @>
 let d2 = d 2.
 
 (**
-Function definitions should be marked with the [**ReflectedDefinition**](http://msdn.microsoft.com/en-us/library/ee353643.aspx) attribute for allowing access to quotation expressions at runtime.
+Function definitions should be marked with the [**ReflectedDefinition**](https://msdn.microsoft.com/en-us/library/ee353643.aspx) attribute for allowing access to quotation expressions at runtime.
 *)
 
 // f: float -> float

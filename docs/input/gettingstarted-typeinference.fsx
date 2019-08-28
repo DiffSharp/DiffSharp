@@ -7,7 +7,7 @@ Type Inference
 
 Differentiation can be applied to functions using the **D**, **DV**, and **DM** types respectively for scalar, vector, and matrix values. 32- and 64-bit floating point varieties of these types are provided by the **DiffSharp.AD.Float32** and **DiffSharp.AD.Float64** modules. On many current systems, 32-bit (single) precision floating point operations run significantly faster than 64-bit (double) precision. It is therefore recommended to use the 32-bit module if this precision is sufficient for your usage case.
 
-The library automatically instantiates [dual numbers](http://en.wikipedia.org/wiki/Dual_number) (for forward AD) and/or [adjoints](http://en.wikipedia.org/wiki/Adjoint) (for reverse AD) as needed, using the best one for a given differentiation operation.
+The library automatically instantiates [dual numbers](https://en.wikipedia.org/wiki/Dual_number) (for forward AD) and/or [adjoints](https://en.wikipedia.org/wiki/Adjoint) (for reverse AD) as needed, using the best one for a given differentiation operation.
 
 DiffSharp supports nested AD, which means that you can evaluate derivatives of functions that may themselves be internally using derivatives, up to arbitrary level. All emerging higher-order derivatives are automatically handled by the library and computed exactly and efficiently.
 
@@ -41,7 +41,7 @@ There are several ways the type inference system can work together with DiffShar
 
 ### Lambda Expressions
 
-The simplest and easiest way is to define functions using [lambda expressions](http://msdn.microsoft.com/en-us/library/dd233201.aspx) after differentiation operators. The expression will automatically assume the required signature.
+The simplest and easiest way is to define functions using [lambda expressions](https://msdn.microsoft.com/en-us/library/dd233201.aspx) after differentiation operators. The expression will automatically assume the required signature.
 
 (You can hover the pointer over the examples to check their types.)
 *)
@@ -90,7 +90,7 @@ let df4 = diff f4
 (**
 ### Generic Functions
 
-In the previous example, **f4** assumes the **D -> D** type and therefore cannot be used with other types, for example **float**. We can get around this by defining [generic numeric functions](http://tomasp.net/blog/fsharp-generic-numeric.aspx/) that can work with multiple types, by using **inline**.
+In the previous example, **f4** assumes the **D -> D** type and therefore cannot be used with other types, for example **float**. We can get around this by defining [generic numeric functions](https://tomasp.net/blog/fsharp-generic-numeric.aspx/) that can work with multiple types, by using **inline**.
 
 *)
 // f5 is the generic version of f4

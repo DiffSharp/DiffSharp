@@ -1,40 +1,9 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
+﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+// This code is licensed under the BSD license (see LICENSE file for details)
 
 /// Symbolic differentiation module
 module DiffSharp.Symbolic.Float32
@@ -46,7 +15,6 @@ open FSharp.Quotations.ExprShape
 open FSharp.Quotations.Evaluator
 open DiffSharp.Util
 open DiffSharp.Config
-
 
 /// Symbolic differentiation expression operations module (automatically opened)
 [<AutoOpen>]
@@ -113,8 +81,8 @@ module ExprOps =
 
     /// Completely expand Expr `expr`
     let expand expr =
-        let rec expandExpr vars expr = 
-            let expanded = 
+        let rec expandExpr vars expr =
+            let expanded =
                 match expr with
                 | ShapeVar v when Map.containsKey v vars -> vars.[v]
                 | ShapeVar v -> Expr.Var v
@@ -131,7 +99,7 @@ module ExprOps =
         expandExpr Map.empty expr
 
     /// Get the arguments of a function given in Expr `expr`, as a Var array
-    let getExprArgs expr = 
+    let getExprArgs expr =
         let rec getLambdaArgs (args:Var[]) = function
             | Lambda(arg, body) -> getLambdaArgs (Array.append args [|arg|]) body
             | _ -> args
@@ -157,7 +125,7 @@ module ExprOps =
         Expr.Applications(expr, args)
         |> QuotationEvaluator.CompileUntyped
         :?> float32
-    
+
     /// Evaluate vector-to-vector Expr `expr`, at point `x`
     let evalVV (x:float32[]) expr =
         let args = List.ofArray x |> List.map (fun a -> [Expr.Value(a, typeof<float32>)])
@@ -198,7 +166,7 @@ module DiffOps =
         let fe = (QuotationEvaluator.CompileUntyped f) :?> (float32->float32)
         let fd = diffn n f
         fun x -> (fe x, fd x)
-    
+
     /// Second derivative of a scalar-to-scalar function `f`
     let diff2 f =
         diffn 2 f
@@ -221,7 +189,7 @@ module DiffOps =
         let fe = expand f
         let fg = Array.map (fun a -> simplify (diffExpr a fe)) (getExprArgs fe)
         fun x -> Array.map (evalVS x) fg
-    
+
     /// Original value and gradient of a vector-to-scalar function `f`. Function should have multiple variables in curried form, instead of an array variable as in other parts of the library.
     let grad' f =
         let fg = grad f

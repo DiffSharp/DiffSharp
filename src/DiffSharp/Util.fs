@@ -1,47 +1,14 @@
-﻿//
-// This file is part of
-// DiffSharp: Differentiable Functional Programming
-//
-// Copyright (c) 2014--2016, National University of Ireland Maynooth (Atilim Gunes Baydin, Barak A. Pearlmutter)
-// 
-// Released under the LGPL license.
-//
-//   DiffSharp is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU Lesser General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   DiffSharp is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU Lesser General Public License
-//   along with DiffSharp. If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by:
-//
-//   Atilim Gunes Baydin
-//   atilimgunes.baydin@nuim.ie
-//
-//   Barak A. Pearlmutter
-//   barak@cs.nuim.ie
-//
-//   Brain and Computation Lab
-//   Hamilton Institute & Department of Computer Science
-//   National University of Ireland Maynooth
-//   Maynooth, Co. Kildare
-//   Ireland
-//
-//   www.bcl.hamilton.ie
-//
-
+﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
+// Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
+// Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
+// This code is licensed under the BSD license (see LICENSE file for details)
 
 /// Various utility functions
 module DiffSharp.Util
 
 open System.Threading.Tasks
-
 
 /// Gets the first term of a 3-tuple
 let inline p13 (f, _, _) = f
@@ -68,13 +35,13 @@ let inline hash (o:obj[]) =
     |> Array.fold (fun acc elem -> acc * 23 + elem) 17
 
 /// Gets an array of size `n`, where the `i`-th element is 1 and the rest of the elements are zero
-let inline standardBasis (n:int) (i:int) = 
+let inline standardBasis (n:int) (i:int) =
     let s = Array.zeroCreate n
     s.[i] <- LanguagePrimitives.GenericOne
     s
 
 /// Gets an array of size `n`, where the `i`-th element has value `v` and the rest of the elements are zero
-let inline standardBasisVal (n:int) (i:int) v = 
+let inline standardBasisVal (n:int) (i:int) v =
     let s = Array.zeroCreate n
     s.[i] <- v
     s
@@ -89,7 +56,7 @@ let inline copyUpperToLower (m:_[,]) =
             Parallel.For(0, i, fun j ->
                 r.[i, j] <- r.[j, i]) |> ignore) |> ignore
     r
-            
+
 let inline signummod x =
     if x < LanguagePrimitives.GenericZero then -LanguagePrimitives.GenericOne
     elif x > LanguagePrimitives.GenericZero then LanguagePrimitives.GenericOne
@@ -133,7 +100,7 @@ module ErrorMessages =
     let InvalidArgMM() = invalidArg "" "Matrices must have same shape."
     let InvalidArgVMRows() = invalidArg "" "Length of vector must match number of rows of matrix."
     let InvalidArgVMCols() = invalidArg "" "Length of vector must match number of columns of matrix."
-    
+
 
 /// Tagger for generating incremental integers
 type Tagger(t) =
@@ -146,16 +113,16 @@ type GlobalTagger() =
     static member Next = T.Next()
     static member Reset = T.LastTag <- 0u
 
-/// Global tagger for 
+/// Global tagger for
 type UniqueTagger() =
-    static let mutable t = 0 
+    static let mutable t = 0
     static member Next() = t <- t + 1; t
 
-type Stats() = 
+type Stats() =
     static let mutable hit = 0L
     static let mutable miss = 0L
-    static do 
-         System.AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> 
+    static do
+         System.AppDomain.CurrentDomain.ProcessExit.Add(fun _ ->
             let total = hit + miss
             printfn "inplace update statistics: hit = %d, total = %d, ratio = %f" hit total (float hit / float total))
 
@@ -164,7 +131,7 @@ type Stats() =
 
 /// Extensions for the FSharp.Collections.Array module
 module Array =
-    let copyFast (array : 'T[]) =  
+    let copyFast (array : 'T[]) =
         Stats.CopyOp(Array.length array)
         Array.copy array
     module Parallel =
@@ -174,7 +141,7 @@ module Array =
 
 /// Extensions for the FSharp.Collections.Array2D module
 module Array2D =
-    let copyFast (array : 'T[,]) =  
+    let copyFast (array : 'T[,]) =
         Stats.CopyOp(Array2D.length1 array * Array2D.length2 array)
         array.Clone() :?> 'T[,]
     let empty<'T> = Array2D.zeroCreate<'T> 0 0
@@ -182,7 +149,7 @@ module Array2D =
     let toArray (array : 'T[,]) = array |> Seq.cast<'T> |> Seq.toArray
     let find (predicate : 'T -> bool) (array : 'T[,]) = array |> toArray |> Array.find predicate
     let tryFind (predicate : 'T -> bool) (array : 'T[,]) = array |> toArray |> Array.tryFind predicate
-    let map2 f (a1:_[,]) (a2:_[,]) = 
+    let map2 f (a1:_[,]) (a2:_[,]) =
         let m = min (Array2D.length1 a1) (Array2D.length1 a2)
         let n = min (Array2D.length2 a1) (Array2D.length2 a2)
         Array2D.init m n (fun i j -> f a1.[i, j] a2.[i, j])
@@ -202,4 +169,3 @@ module Array2D =
             let m = min (Array2D.length1 a1) (Array2D.length1 a2)
             let n = min (Array2D.length2 a1) (Array2D.length2 a2)
             init m n (fun i j -> f a1.[i, j] a2.[i, j])
-
