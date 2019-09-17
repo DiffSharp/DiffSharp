@@ -96,7 +96,9 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
         for i=0 to shapes.Length - 1 do
             if not (arraysEqual shape0 shapes.[i]) then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
-    | _ -> invalidArg "value" "Cannot convert value to flat array and shape"
+    | _ -> null, null
+
+let inline notNull value = not (obj.ReferenceEquals(value, null))
 
 // let rec arrayShapeToString (array:'a[]) (shape:int[]) =
 //     let sb = System.Text.StringBuilder()

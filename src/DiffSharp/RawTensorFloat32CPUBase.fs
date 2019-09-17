@@ -12,6 +12,23 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
             flatIndex <- flatIndex + index.[i] * v
         let tvalue = t.Value:?>float32[]
         tvalue.[flatIndex]
+    
+    static member Create(value:obj):RawTensor = 
+        let array, shape = value |> toFlatArrayAndShape<float32>
+        if notNull array then 
+            upcast RawTensorFloat32CPUBase(array, shape)
+        else 
+            let array, shape = value |> toFlatArrayAndShape<double>
+            if notNull array then 
+                upcast RawTensorFloat32CPUBase(array |> Array.map float32, shape)
+            else
+                let array, shape = value |> toFlatArrayAndShape<int>
+                if notNull array then 
+                    upcast RawTensorFloat32CPUBase(array |> Array.map float32, shape)
+                else
+                    invalidArg "value" "Cannot convert value to float32 array and shape"
+    static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
+    static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
 
     override t.Create(value) = upcast RawTensorFloat32CPUBase(toFlatArrayAndShape value)
     override t.CreateWithShape(value, shape) =

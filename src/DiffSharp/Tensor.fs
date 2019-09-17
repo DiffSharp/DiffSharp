@@ -47,8 +47,12 @@ type Tensor =
             | TensorR(_,_,_,f,_) -> f := value
 
     // member inline t.Value = 0.
-    member t.GetForward(derivative, tag) = if t.ShapeEquals(derivative) then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
-    member t.GetReverse(tag) = TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
+    member t.GetForward(derivative, ?tag:uint32) = 
+        let tag = defaultArg tag GlobalTagger.Next
+        if t.ShapeEquals(derivative) then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
+    member t.GetReverse(?tag:uint32) = 
+        let tag = defaultArg tag GlobalTagger.Next
+        TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
     member t.Shape = t.PrimalRaw.Shape
     member t.Dim = t.PrimalRaw.Dim
     member t.ToArray() = t.PrimalRaw.ToArray()
@@ -72,14 +76,14 @@ type Tensor =
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Zeros(shape))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
     static member Ones(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 1.f, shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Ones(shape))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
@@ -87,7 +91,7 @@ type Tensor =
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase(toFlatArrayAndShape<float32> value))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Create(value))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
     static member Extend(a:Tensor, shape:int[]) =
@@ -171,6 +175,13 @@ type Tensor =
         let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
+
+    member t.Reverse(?value:Tensor) =
+        let value = defaultArg value (Tensor.OnesLike(t))
+        t.ReverseReset()
+        t.ReversePush(value)
+
+    member inline t.Backward(value) = t.Reverse(value)
 
     member t.ReverseReset() =
         let rec reset (ts: Tensor list) =
