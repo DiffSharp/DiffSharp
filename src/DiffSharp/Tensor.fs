@@ -48,11 +48,11 @@ type Tensor =
 
     // member inline t.Value = 0.
     member t.GetForward(derivative, tag) = if t.ShapeEquals(derivative) then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
-    member t.GetReverse(tag) = TensorR(t, ref (t.ZeroWithSameType()), NewT, ref 0u, tag)
+    member t.GetReverse(tag) = TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
     member t.Shape = t.PrimalRaw.Shape
     member t.Dim = t.PrimalRaw.Dim
     member t.ToArray() = t.PrimalRaw.ToArray()
-    member t.ZeroWithSameType() = Tensor(t.PrimalRaw.ZeroWithSameType())
+    member t.Zero() = Tensor(t.PrimalRaw.Zero())
     member t.CreateWithSameType(value) = Tensor(t.PrimalRaw.Create(value))
     member t.ShapeEquals(tensor:Tensor) = Util.arraysEqual t.Shape tensor.Shape
     override t.Equals(other) =
@@ -64,8 +64,23 @@ type Tensor =
         | Tensor(tp) -> hash (tp)
         | TensorF(tp,td,tt) -> hash (tp, td, tt)
         | TensorR(tp,td,_,_,tt) -> hash (tp, !td, tt)
-    static member inline op_Explicit(tensor:Tensor):'a =
-        downcast tensor.PrimalRaw.ToValue()
+    static member inline op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
+    static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
+    static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
+    static member Zeros(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Float32
+        let device = defaultArg device CPU
+        let backend = defaultArg backend CPUBase
+        match dtype, device, backend with
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape))
+        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+    static member Ones(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Float32
+        let device = defaultArg device CPU
+        let backend = defaultArg backend CPUBase
+        match dtype, device, backend with
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 1.f, shape))
+        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
@@ -85,33 +100,33 @@ type Tensor =
             TensorF(cp,cd,at)
         | TensorR(ap,_,_,_,at) ->
             let cp = Tensor.Extend(ap, shape)
-            TensorR(cp, ref (a.ZeroWithSameType()), MakeTofT0(a), ref 0u, at)
+            TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor(ap)           -> Tensor(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
-        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRev(a), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.Zero()), dfTensorRev(a), ref 0u, at)
 
     static member inline OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
         | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevCT(a,b), ref 0u, bt)
+        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
         | TensorF(ap,ad,at),    Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
-        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
-        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
-        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevTT(a,b), ref 0u, at)
-        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevTC(a,b), ref 0u, at)
-        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.ZeroWithSameType()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, ref (a.Zero()), dfTensorRevTT(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     static member (+) (a:Tensor, b:Tensor) =
@@ -164,7 +179,7 @@ type Tensor =
             | t :: tt ->
                 match t with
                 | TensorR(_,_,o,_,_) ->
-                    t.Derivative <- t.ZeroWithSameType()
+                    t.Derivative <- t.Zero()
                     t.Fanout <- t.Fanout + 1u
                     if t.Fanout = 1u then
                         match o with

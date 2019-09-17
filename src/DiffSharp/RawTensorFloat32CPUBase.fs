@@ -19,8 +19,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         match shape.Length with
         | 0 -> upcast RawTensorFloat32CPUBase([|value|], [||])
         | _ -> upcast RawTensorFloat32CPUBase(Array.create (shape |> Array.reduce (*)) value, shape)
-    override t.ZeroWithSameType() = upcast RawTensorFloat32CPUBase([|0.f|], [||])
-
+    override t.Zero() = upcast RawTensorFloat32CPUBase([|0.f|], [||])
+    override t.Zeros(shape) = t.CreateWithShape(0.f, shape)
+    override t.One() = upcast RawTensorFloat32CPUBase([|1.f|], [||])
+    override t.Ones(shape) = t.CreateWithShape(1.f, shape)
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         match t.Dim with

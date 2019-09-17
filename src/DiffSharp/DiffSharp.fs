@@ -21,3 +21,11 @@ module DiffSharp =
                 z |> reverseProp v
                 xa |> derivative
         zp, r
+    let inline jacobianTv' f x v = let zp, r = jacobianTv'' f x in zp, r v
+    let inline jacobianTv f x v = jacobianTv' f x v |> snd
+    let inline gradv f x v = jacobianv f x v
+    let inline gradv' f x v = jacobianv' f x v
+    let inline diff' f x = jacobianv' f x (x |> Tensor.OnesLike)
+    let inline diff f x = diff' f x |> snd
+    let inline grad' f x = let zp, r = jacobianTv'' f x in zp, r (zp |> Tensor.OnesLike)
+    let inline grad f x = grad' f x |> snd
