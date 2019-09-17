@@ -26,7 +26,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                 if notNull array then 
                     upcast RawTensorFloat32CPUBase(array |> Array.map float32, shape)
                 else
-                    invalidArg "value" "Cannot convert value to float32 array and shape"
+                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPUBase"
     static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
     static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
 
