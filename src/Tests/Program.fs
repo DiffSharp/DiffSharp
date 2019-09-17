@@ -26,11 +26,19 @@ let main argv =
     let f (x:Tensor) =
         x + 2.f
 
-    let x = Tensor.Create([[2.f]; [2.f]])
-    let y = Tensor.Create([[[2.f; 2.f]]])
-    let z = x + y
+    // let x = Tensor.Create([1.f; 2.f; 3.f])
+    // let z, z' = DiffSharp.grad' (fun t -> t.Sum()) x
+    // printfn "%A" x
+    // printfn "%A" z
+    // printfn "%A" z'
+
+    let x = Tensor.Create([[1.f; 2.f; 3.f]; [4.f; 5.f; 6.f]])
+    let y, y' = DiffSharp.diff' (fun t -> t.Sum()) x
+    let z, z' = DiffSharp.grad' (fun t -> t.Sum()) x
     printfn "%A" x
     printfn "%A" y
+    printfn "%A" y'
     printfn "%A" z
+    printfn "%A" z'
 
     0 // return an integer exit code

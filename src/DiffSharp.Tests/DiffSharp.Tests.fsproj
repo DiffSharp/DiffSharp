@@ -14,8 +14,8 @@
 
   <ItemGroup>
     <Compile Include="TestUtil.fs" />
-    <Compile Include="TestTensorFloat32CPUBase.fs" />
     <Compile Include="TestTensor.fs" />
+    <Compile Include="TestDerivatives.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

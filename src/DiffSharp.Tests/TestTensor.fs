@@ -82,3 +82,31 @@ type TestTensor () =
         Assert.AreEqual(t2String, t2StringCorrect)
         Assert.AreEqual(t3String, t3StringCorrect)
         Assert.AreEqual(t4String, t4StringCorrect)
+
+    [<Test>]
+    member this.TestTensorAdd () =
+        let t1 = Tensor.Create([1.f; 2.f]) + Tensor.Create([3.f; 4.f])
+        let t1Correct = Tensor.Create([4.f; 6.f])
+
+        let t2 = Tensor.Create([1.f; 2.f]) + Tensor.Create(5.f)
+        let t2Correct = Tensor.Create([6.f; 7.f])
+
+        let t3 = Tensor.Create([1.f; 2.f]) + 5.f
+        let t3Correct = Tensor.Create([6.f; 7.f])
+
+        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t3, t3Correct)
+
+    [<Test>]
+    member this.TestTensorSum () =
+        let t1 = Tensor.Create([1.f; 2.f; 3.f])
+        let t1Sum = t1.Sum()
+        let t1SumCorrect = Tensor.Create(6.f)
+
+        let t2 = Tensor.Create([[1.f; 2.f]; [3.f; 4.f]])
+        let t2Sum = t2.Sum()
+        let t2SumCorrect = Tensor.Create(10.f)
+
+        Assert.AreEqual(t1Sum, t1SumCorrect)
+        Assert.AreEqual(t2Sum, t2SumCorrect)
