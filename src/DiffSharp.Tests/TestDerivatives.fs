@@ -12,10 +12,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSum () =
-        let x = Tensor.Create([[1.f; 2.f]; [3.f; 4.f]])
-        let z, z' = DiffSharp.grad' (fun t -> t.Sum()) x
-        let zCorrect = Tensor.Create(10.f)
-        let z'Correct = Tensor.Create([[1.f; 1.f]; [1.f; 1.f]])
+        let fwdx = Tensor.Create([1.f; 2.f; 3.f])
+        let fwdv = Tensor.Create([2.f; 3.f; 4.f])
+        let fwdfx, fwdjv = DiffSharp.jacobianv' (fun t -> t.Sum()) fwdx fwdv
+        let fwdfxCorrect = Tensor.Create(6.f)
+        let fwdjvCorrect = Tensor.Create(9.f)
 
-        Assert.AreEqual(z, zCorrect)
-        Assert.AreEqual(z', z'Correct)
+        let revx = Tensor.Create([1.f; 2.f; 3.f])
+        let revv = Tensor.Create(5.f)
+        let revfx, revjv = DiffSharp.jacobianTv' (fun t -> t.Sum()) revx revv
+        let revfxCorrect = Tensor.Create(6.f)
+        let revjvCorrect = Tensor.Create([5.f; 5.f; 5.f])
+
+        Assert.AreEqual(fwdfx, fwdfxCorrect)
+        Assert.AreEqual(fwdjv, fwdjvCorrect)
+        Assert.AreEqual(revfx, revfxCorrect)
+        Assert.AreEqual(revjv, revjvCorrect)
