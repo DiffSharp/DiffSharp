@@ -35,6 +35,11 @@ type TestDerivatives () =
         Assert.AreEqual(revxd, revxdCorrect)
         Assert.AreEqual(revyd, revydCorrect)
 
+    // TODO: add test for AddTTConst
+    // TODO: add test for AddTT0
+    // TODO: add test for AddTT0Const
+    // TODO: add test for AddTConstT0
+
     [<Test>]
     member this.TestDerivativeSubTT () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
@@ -59,6 +64,15 @@ type TestDerivatives () =
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)
         Assert.AreEqual(revyd, revydCorrect)
+
+    // TODO: add test for SubTTConst
+    // TODO: add test for SubTConstT
+    // TODO: add test for SubT0T
+    // TODO: add test for SubT0TConst
+    // TODO: add test for SubT0ConstT
+    // TODO: add test for SubTT0
+    // TODO: add test for SubTT0Const
+    // TODO: add test for SubTConstT0
 
     [<Test>]
     member this.TestDerivativeNeg () =
