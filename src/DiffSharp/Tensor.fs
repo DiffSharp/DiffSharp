@@ -62,6 +62,9 @@ type Tensor =
         match other with
         | :? Tensor as tensor -> t.PrimalRaw.Equals(tensor.PrimalRaw)
         | _ -> false
+    member t.ApproximatelyEqual(tensor:Tensor, ?tolerance) =
+        let tolerance = defaultArg tolerance 0.01
+        t.PrimalRaw.ApproximatelyEquals(tensor.PrimalRaw, tolerance)
     override t.GetHashCode() =
         match t with
         | Tensor(tp) -> hash (tp)
@@ -360,14 +363,14 @@ type Tensor =
                         | MulTConstT0(_,b) -> reset (b::tt)
                         | MulTT0Const(a,_) -> reset (a::tt)
                         | DivTT(a,b) -> reset (a::b::tt)
-                        | DivTTConst(a,b) -> reset (a::b::tt)
-                        | DivTConstT(a,b) -> reset (a::b::tt)
+                        | DivTTConst(a,_) -> reset (a::tt)
+                        | DivTConstT(_,b) -> reset (b::tt)
                         | DivT0T(a,b) -> reset (a::b::tt)
-                        | DivT0TConst(a,b) -> reset (a::b::tt)
-                        | DivT0ConstT(a,b) -> reset (a::b::tt)
+                        | DivT0TConst(a,_) -> reset (a::tt)
+                        | DivT0ConstT(_,b) -> reset (b::tt)
                         | DivTT0(a,b) -> reset (a::b::tt)
-                        | DivTT0Const(a,b) -> reset (a::b::tt)
-                        | DivTConstT0(a,b) -> reset (a::b::tt)
+                        | DivTT0Const(a,_) -> reset (a::tt)
+                        | DivTConstT0(_,b) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim1(a) -> reset (a::tt)

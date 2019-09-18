@@ -34,11 +34,11 @@ let getShapeLength (shape:int[]) =
 //                     arrayforeach shape.[1..] action (Array.append externalCoords [|i|]) masterArray
 //         arrayforeach shape action [||] array
 
-let arraysEqual (array1:'a[]) (array2:'a[]) =
+let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
     if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield array1.[i] = array2.[i]} |> Seq.forall id
+    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) < tolerance) } |> Seq.forall id
 
 let rec toFlatArrayAndShape<'T> (value:obj) =
     match value with
@@ -82,19 +82,19 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
         let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
-            if not (arraysEqual shape0 shapes.[i]) then invalidArg "value" "Expecting a rectangular sequence"
+            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | :? seq<seq<seq<'T>>> as v ->
         let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
-            if not (arraysEqual shape0 shapes.[i]) then invalidArg "value" "Expecting a rectangular sequence"
+            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | :? seq<seq<seq<seq<'T>>>> as v ->
         let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
-            if not (arraysEqual shape0 shapes.[i]) then invalidArg "value" "Expecting a rectangular sequence"
+            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | _ -> null, null
 

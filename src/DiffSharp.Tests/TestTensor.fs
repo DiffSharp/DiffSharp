@@ -152,6 +152,25 @@ type TestTensor () =
         Assert.AreEqual(t4, t4Correct)
 
     [<Test>]
+    member this.TestTensorDivTT () =
+        let t1 = Tensor.Create([1.; 2.]) / Tensor.Create([3.; 4.])
+        let t1Correct = Tensor.Create([0.333333; 0.5])
+
+        let t2 = Tensor.Create([1.; 2.]) / Tensor.Create(5.)
+        let t2Correct = Tensor.Create([0.2; 0.4])
+
+        let t3 = Tensor.Create([1.; 2.]) / 5.f
+        let t3Correct = Tensor.Create([0.2; 0.4])
+
+        let t4 = 5. / Tensor.Create([1.; 2.])
+        let t4Correct = Tensor.Create([5.; 2.5])
+
+        Assert.True(t1.ApproximatelyEqual(t1Correct))
+        Assert.True(t2.ApproximatelyEqual(t2Correct))
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+        Assert.True(t4.ApproximatelyEqual(t4Correct))
+
+    [<Test>]
     member this.TestTensorNeg () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Neg = -t1

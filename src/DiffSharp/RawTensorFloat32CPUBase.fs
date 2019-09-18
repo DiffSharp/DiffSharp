@@ -83,8 +83,14 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
 
     override t1.Equals(t2:RawTensor) = 
         match t2 with
-        | :? RawTensorFloat32CPUBase as t2 -> arraysEqual (t1.Value:?>float32[]) (t2.Value:?>float32[])
-        | _ -> failwith (sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2)
+        | :? RawTensorFloat32CPUBase as t2 -> (t1.Value:?>float32[]) = (t2.Value:?>float32[])
+        | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+
+    override t1.ApproximatelyEquals(t2:RawTensor, tolerance) =
+        let tolerance = float32 <| tolerance
+        match t2 with
+        | :? RawTensorFloat32CPUBase as t2 -> arraysApproximatelyEqual tolerance (t1.Value:?>float32[]) (t2.Value:?>float32[])
+        | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
     override t1.AddTT(t2) =
         let t1value = t1.Value:?>float32[]

@@ -33,16 +33,8 @@ let main argv =
     // printfn "%A" z
     // printfn "%A" z'
 
-    let fwdx = Tensor.Create([[1.; 2.]; [3.; 4.]]).GetForward(Tensor.Create([[2.; 3.]; [4.; 5.]]), 1u)
-    let fwdy = Tensor.Create([5.; 6.]).GetForward(Tensor.Create([2.; 3.]), 1u)
-    let fwdz = fwdx + fwdy
-    let fwdzCorrect = Tensor.Create([[6.; 7.]; [9.; 10.]])
-    let fwdzd = fwdz.Derivative
-    let fwdzdCorrect = Tensor.Create([[4.; 5.]; [7.; 8.]])
-
-    printfn "%A" fwdx
-    printfn "%A" fwdy
-    printfn "%A" fwdz
-    printfn "%A" fwdzd
-
+    let a = [|1./3.|]
+    let b = [|1./3.|]
+    let c = a = b
+    printfn "%A" c
     0 // return an integer exit code
