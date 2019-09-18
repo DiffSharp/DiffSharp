@@ -102,9 +102,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t1value = t1.Value:?>float32[]
         let t2value = t2.Value:?>float32[]
         let result = Array.copy t1value
-        for i=0 to t2.Shape.[0]-1 do
+        for i=0 to t1.Shape.[0]-1 do
             for j=0 to t1.Shape.[1]-1 do
-                result.[i*t1.Shape.[1] + j] <- t2value.[i]
+                let flatindex = i*t1.Shape.[1] + j
+                result.[flatindex] <- result.[flatindex] + t2value.[i]
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
     override t1.SubTT(t2) =

@@ -84,7 +84,7 @@ type TestTensor () =
         Assert.AreEqual(t4String, t4StringCorrect)
 
     [<Test>]
-    member this.TestTensorAdd () =
+    member this.TestTensorAddTT () =
         let t1 = Tensor.Create([1.; 2.]) + Tensor.Create([3.; 4.])
         let t1Correct = Tensor.Create([4.; 6.])
 
@@ -107,7 +107,14 @@ type TestTensor () =
         Assert.AreEqual(t5, t5Correct)
 
     [<Test>]
-    member this.TestTensorSub () =
+    member this.TestTensorAddT2T1 () =
+        let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
+        let t1Correct = Tensor.Create([[6.; 7.]; [9.; 10.]])
+
+        Assert.AreEqual(t1, t1Correct)
+
+    [<Test>]
+    member this.TestTensorSubTT () =
         let t1 = Tensor.Create([1.; 2.]) - Tensor.Create([3.; 4.])
         let t1Correct = Tensor.Create([-2.; -2.])
 
