@@ -30,7 +30,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
     static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
 
-    override t.Create(value) = upcast RawTensorFloat32CPUBase(toFlatArrayAndShape value)
+    override t.Create(value) = RawTensorFloat32CPUBase.Create(value)
     override t.CreateWithShape(value, shape) =
         let value = value:?>float32
         match shape.Length with

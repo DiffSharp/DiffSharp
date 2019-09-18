@@ -57,7 +57,7 @@ type Tensor =
     member t.Dim = t.PrimalRaw.Dim
     member t.ToArray() = t.PrimalRaw.ToArray()
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
-    member t.CreateWithSameType(value) = Tensor(t.PrimalRaw.Create(value))
+    member t.Create(value) = Tensor(t.PrimalRaw.Create(value))
     member t.ShapeEquals(tensor:Tensor) = Util.arraysEqual t.Shape tensor.Shape
     override t.Equals(other) =
         match other with
@@ -165,8 +165,8 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (+) (a:Tensor, b) = a + a.CreateWithSameType(b)
-    static member (+) (a, b:Tensor) = b.CreateWithSameType(a) + b
+    static member (+) (a:Tensor, b) = a + a.Create(b)
+    static member (+) (a, b:Tensor) = b.Create(a) + b
 
     static member Sum (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Sum()
