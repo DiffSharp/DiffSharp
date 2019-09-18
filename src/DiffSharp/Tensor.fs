@@ -259,6 +259,41 @@ type Tensor =
     static member (*) (a:Tensor, b) = a * a.Create(b)
     static member (*) (a, b:Tensor) = b.Create(a) * b
 
+    static member (/) (a:Tensor, b:Tensor) =
+        if a.Shape = b.Shape then
+            let inline fRaw(a,b) = a / b
+            let inline fTensor(a,b) = a / b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp,ap,ad) = ad / b
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd * cp / bp
+            let inline dfTensorRevTT(a,b) = DivTT(a,b)
+            let inline dfTensorRevTC(a,b) = DivTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = DivTConstT(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        elif a.Dim = 0 then
+            let inline fRaw(a,b) = a / b
+            let inline fTensor(a,b) = a / b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp,ap,ad) = ad / b
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd * cp / bp
+            let inline dfTensorRevTT(a,b) = DivT0T(a,b)
+            let inline dfTensorRevTC(a,b) = DivT0TConst(a,b)
+            let inline dfTensorRevCT(a,b) = DivT0ConstT(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        elif b.Dim = 0 then
+            let inline fRaw(a,b) = a / b
+            let inline fTensor(a,b) = a / b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp,ap,ad) = ad / b
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd * cp / bp
+            let inline dfTensorRevTT(a,b) = DivTT0(a,b)
+            let inline dfTensorRevTC(a,b) = DivTT0Const(a,b)
+            let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
+    static member (/) (a:Tensor, b) = a / a.Create(b)
+    static member (/) (a, b:Tensor) = b.Create(a) / b
+
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Neg()
         let inline fTensor(a) = -a
@@ -323,7 +358,16 @@ type Tensor =
                         | MulTTConst(a,_) -> reset (a::tt)
                         | MulTT0(a,b) -> reset (a::b::tt)
                         | MulTConstT0(_,b) -> reset (b::tt)
-                        | MulTT0Const(a,_) -> reset (a::tt)                                    
+                        | MulTT0Const(a,_) -> reset (a::tt)
+                        | DivTT(a,b) -> reset (a::b::tt)
+                        | DivTTConst(a,b) -> reset (a::b::tt)
+                        | DivTConstT(a,b) -> reset (a::b::tt)
+                        | DivT0T(a,b) -> reset (a::b::tt)
+                        | DivT0TConst(a,b) -> reset (a::b::tt)
+                        | DivT0ConstT(a,b) -> reset (a::b::tt)
+                        | DivTT0(a,b) -> reset (a::b::tt)
+                        | DivTT0Const(a,b) -> reset (a::b::tt)
+                        | DivTConstT0(a,b) -> reset (a::b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim1(a) -> reset (a::tt)
@@ -366,6 +410,15 @@ type Tensor =
                         | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
                         | MulTConstT0(a,b) -> push ((t.Derivative * a, b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.Derivative * b, a) :: tt)
+                        | DivTT(a,b) -> failwith "Not implemented"
+                        | DivTTConst(a,b) -> failwith "Not implemented"
+                        | DivTConstT(a,b) -> failwith "Not implemented"
+                        | DivT0T(a,b) -> failwith "Not implemented"
+                        | DivT0TConst(a,b) -> failwith "Not implemented"
+                        | DivT0ConstT(a,b) -> failwith "Not implemented"
+                        | DivTT0(a,b) -> failwith "Not implemented"
+                        | DivTT0Const(a,b) -> failwith "Not implemented"
+                        | DivTConstT0(a,b) -> failwith "Not implemented"                        
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
@@ -400,6 +453,16 @@ and TensorOp =
     | MulTT0 of Tensor * Tensor
     | MulTConstT0 of Tensor * Tensor
     | MulTT0Const of Tensor * Tensor
+
+    | DivTT of Tensor * Tensor
+    | DivTTConst of Tensor * Tensor
+    | DivTConstT of Tensor * Tensor
+    | DivT0T of Tensor * Tensor
+    | DivT0TConst of Tensor * Tensor
+    | DivT0ConstT of Tensor * Tensor
+    | DivTT0 of Tensor * Tensor
+    | DivTT0Const of Tensor * Tensor
+    | DivTConstT0 of Tensor * Tensor
 
     | NegT of Tensor
     | SumT of Tensor
