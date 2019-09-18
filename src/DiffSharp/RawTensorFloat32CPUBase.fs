@@ -92,11 +92,34 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = Array.map2 (+) t1value t2value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
-    override t1.AddTS(t2) =
+    override t1.AddTT0(t2) =
         let t1value = t1.Value:?>float32[]
         let t2value = (t2.Value:?>float32[]).[0]
         let result = Array.map ((+) t2value) t1value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.SubTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 (-) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.SubT0T(t2) =
+        let t1value = (t1.Value:?>float32[]).[0]
+        let t2value = (t2.Value:?>float32[])
+        let result = Array.map ((-) t1value) t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.SubTT0(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = (t2.Value:?>float32[]).[0]
+        let result = Array.map (fun t -> t - t2value) t1value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t.Neg() =
+        let tvalue = t.Value:?>float32[]
+        let result = Array.map (~-) tvalue
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
 
     override t.Sum() =
         let tvalue = t.Value:?>float32[]

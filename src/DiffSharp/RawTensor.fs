@@ -31,11 +31,22 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     static member (+) (t1:RawTensor, t2:RawTensor) = t1.Add(t2)
     member t1.Add(t2) =
         match t1, t2 with
-        | t1, t2 when t1.Dim = t2.Dim && t1.Length = t2.Length -> t1.AddTT(t2)
-        | t1, t2 when t1.Dim = 0 -> t2.AddTS(t1)
-        | t1, t2 when t2.Dim = 0 -> t1.AddTS(t2)
+        | t1, t2 when t1.Shape = t2.Shape -> t1.AddTT(t2)
+        | t1, t2 when t1.Dim = 0 -> t2.AddTT0(t1)
+        | t1, t2 when t2.Dim = 0 -> t1.AddTT0(t2)
         // TODO: implement other broadcasting additions
-        | _ -> invalidOp <| sprintf "Cannot add Tensors with shapes %A %A" t1.Shape t2.Shape
+        | _ -> invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
+
+    static member (-) (t1:RawTensor, t2:RawTensor) = t1.Sub(t2)
+    member t1.Sub(t2) =
+        match t1, t2 with
+        | t1, t2 when t1.Shape = t2.Shape -> t1.SubTT(t2)
+        | t1, t2 when t1.Dim = 0 -> t1.SubT0T(t2)
+        | t1, t2 when t2.Dim = 0 -> t1.SubTT0(t2)
+        // TODO: implement other broadcasting subtractions
+        | _ -> invalidOp <| sprintf "Cannot subtract Tensors with shapes %A, %A" t1.Shape t2.Shape
+
+    static member (~-) (t:RawTensor) = t.Neg()
 
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
@@ -48,5 +59,9 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
     abstract member AddTT : RawTensor -> RawTensor
-    abstract member AddTS : RawTensor -> RawTensor
+    abstract member AddTT0 : RawTensor -> RawTensor
+    abstract member SubTT : RawTensor -> RawTensor
+    abstract member SubT0T : RawTensor -> RawTensor
+    abstract member SubTT0 : RawTensor -> RawTensor
+    abstract member Neg : unit -> RawTensor
     abstract member Sum : unit -> RawTensor

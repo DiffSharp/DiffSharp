@@ -50,4 +50,10 @@ let main argv =
     printfn "%A" z
     printfn "%A" (z2a, z2b)
     printfn "%A" z3
+
+    let a = [|1;2;3|]
+    let b = [|1;2;4|]
+    let c = a = b
+    printfn "%A" c
+
     0 // return an integer exit code
