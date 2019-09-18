@@ -107,6 +107,25 @@ type TestTensor () =
         Assert.AreEqual(t5, t5Correct)
 
     [<Test>]
+    member this.TestTensorSub () =
+        let t1 = Tensor.Create([1.; 2.]) - Tensor.Create([3.; 4.])
+        let t1Correct = Tensor.Create([-2.; -2.])
+
+        let t2 = Tensor.Create([1.; 2.]) - Tensor.Create(5.)
+        let t2Correct = Tensor.Create([-4.; -3.])
+
+        let t3 = Tensor.Create([1.; 2.]) - 5.f
+        let t3Correct = Tensor.Create([-4.; -3.])
+
+        let t4 = 5. - Tensor.Create([1.; 2.])
+        let t4Correct = Tensor.Create([4.; 3.])
+
+        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t3, t3Correct)
+        Assert.AreEqual(t4, t4Correct)
+
+    [<Test>]
     member this.TestTensorSum () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Sum = t1.Sum()

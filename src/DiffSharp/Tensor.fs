@@ -200,8 +200,8 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (-) (a:Tensor, b) = a + a.Create(b)
-    static member (-) (a, b:Tensor) = b.Create(a) + b
+    static member (-) (a:Tensor, b) = a - a.Create(b)
+    static member (-) (a, b:Tensor) = b.Create(a) - b
 
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Neg()
