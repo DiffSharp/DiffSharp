@@ -134,3 +134,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tvalue = t.Value:?>float32[]
         let result = Array.reduce (+) tvalue
         upcast RawTensorFloat32CPUBase([|result|], [||])
+
+    override t.SumT2Dim1() =
+        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
+        let tvalue = t.Value:?>float32[]
+        let result = Array.init t.Shape.[0] (fun i-> Array.init t.Shape.[1] (fun j -> tvalue.[i * t.Shape.[1] + j]) |> Array.reduce (+))
+        let resultShape = [|t.Shape.[0]|]
+        upcast RawTensorFloat32CPUBase(result, resultShape)

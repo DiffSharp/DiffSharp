@@ -145,3 +145,11 @@ type TestTensor () =
 
         Assert.AreEqual(t1Sum, t1SumCorrect)
         Assert.AreEqual(t2Sum, t2SumCorrect)
+
+    [<Test>]
+    member this.TestTensorSumT2Dim1 () =
+        let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t1Sum = t1.SumT2Dim1()
+        let t1SumCorrect = Tensor.Create([3.; 7.])
+
+        Assert.AreEqual(t1Sum, t1SumCorrect)

@@ -113,3 +113,23 @@ type TestDerivatives () =
         Assert.AreEqual(fwdzd, fwdzdCorrect)
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)
+
+    [<Test>]
+    member this.TestDerivativeSumT2D1 () =
+        let fwdx = Tensor.Create([[1.; 2.]; [3.; 4.]]).GetForward(Tensor.Create([[2.; 3.]; [4.; 5.]]), 1u)
+        let fwdz = fwdx.SumT2Dim1()
+        let fwdzCorrect = Tensor.Create([3.; 7.])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([5.; 9.])
+
+        let revx = Tensor.Create([[1.; 2.]; [3.; 4.]]).GetReverse(1u)
+        let revz = revx.SumT2Dim1()
+        let revzCorrect = Tensor.Create([3.; 7.])
+        revz.Reverse(Tensor.Create([5.; 6.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[5.; 5.]; [6.; 6.]])
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd, revxdCorrect)        

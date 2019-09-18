@@ -239,6 +239,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
 
+    static member SumT2Dim1 (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SumT2Dim1()
+        let inline fTensor(a) = Tensor.SumT2Dim1(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim1(ad)
+        let inline dfTensorRev(a) = SumT2Dim1(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.SumT2Dim1() = Tensor.SumT2Dim1(t)
+
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -277,6 +285,7 @@ type Tensor =
                         | SubTConstT0(b) -> reset (b::tt)                        
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
+                        | SumT2Dim1(a) -> reset (a::tt)
                         | MakeTofT0(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
@@ -299,9 +308,9 @@ type Tensor =
                         | AddTT0(a,b) -> push ((t.Derivative, a) :: (t.Derivative.Sum(), b) :: tt)
                         | AddTT0Const(a) -> push ((t.Derivative, a) :: tt)
                         | AddTConstT0(b) -> push ((t.Derivative.Sum(), b) :: tt)
-                        | AddT2T1(a,b) -> failwith "Not implemented"
-                        | AddT2T1Const(a) -> failwith "Not implemented"
-                        | AddT2ConstT1(b) -> failwith "Not implemented"
+                        | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.SumT2Dim1(), b) :: tt)
+                        | AddT2T1Const(a) -> push ((t.Derivative, a) :: tt)
+                        | AddT2ConstT1(b) -> push ((t.Derivative.SumT2Dim1(), b) :: tt)
                         | SubTT(a,b) -> push ((t.Derivative, a) :: (-t.Derivative, b) :: tt)
                         | SubTTConst(a) -> push ((t.Derivative, a) :: tt)
                         | SubTConstT(b) -> push ((-t.Derivative, b) :: tt)
@@ -313,6 +322,7 @@ type Tensor =
                         | SubTConstT0(b) -> push ((-t.Derivative.Sum(), b) :: tt)                       
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
+                        | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0 (a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | NewT -> push tt
                     else push tt
@@ -341,6 +351,7 @@ and TensorOp =
 
     | NegT of Tensor
     | SumT of Tensor
+    | SumT2Dim1 of Tensor
     | MakeTofT0 of Tensor
     | NewT
 
