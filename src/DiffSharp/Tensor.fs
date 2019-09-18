@@ -231,8 +231,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad * b
             let inline dfTensorFwdCT(cp,bp,bd) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT(a,b)
-            let inline dfTensorRevTC(a,b) = MulTTConst(a)
-            let inline dfTensorRevCT(a,b) = MulTTConst(b)
+            let inline dfTensorRevTC(a,b) = MulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MulTTConst(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 0 then
             let inline fRaw(a,b) = a * b
@@ -241,8 +241,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad * b
             let inline dfTensorFwdCT(cp,bp,bd) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT0(b,a)
-            let inline dfTensorRevTC(a,b) = MulTConstT0(a)
-            let inline dfTensorRevCT(a,b) = MulTT0Const(b)
+            let inline dfTensorRevTC(a,b) = MulTConstT0(a,b)
+            let inline dfTensorRevCT(a,b) = MulTT0Const(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
             let inline fRaw(a,b) = a * b
@@ -251,8 +251,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad * b
             let inline dfTensorFwdCT(cp,bp,bd) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT0(a,b)
-            let inline dfTensorRevTC(a,b) = MulTT0Const(a)
-            let inline dfTensorRevCT(a,b) = MulTConstT0(b)
+            let inline dfTensorRevTC(a,b) = MulTT0Const(a,b)
+            let inline dfTensorRevCT(a,b) = MulTConstT0(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         // TODO: implement general broadcasting?
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
@@ -320,10 +320,10 @@ type Tensor =
                         | SubTT0Const(a) -> reset (a::tt)
                         | SubTConstT0(b) -> reset (b::tt)
                         | MulTT(a,b) -> reset (a::b::tt)
-                        | MulTTConst(a) -> reset (a::tt)
+                        | MulTTConst(a,_) -> reset (a::tt)
                         | MulTT0(a,b) -> reset (a::b::tt)
-                        | MulTConstT0(b) -> reset (b::tt)
-                        | MulTT0Const(a) -> reset (a::tt)                                    
+                        | MulTConstT0(_,b) -> reset (b::tt)
+                        | MulTT0Const(a,_) -> reset (a::tt)                                    
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim1(a) -> reset (a::tt)
@@ -361,11 +361,11 @@ type Tensor =
                         | SubTT0(a,b) -> push ((t.Derivative, a) :: (-t.Derivative.Sum(), b) :: tt)
                         | SubTT0Const(a) -> push ((t.Derivative, a) :: tt)
                         | SubTConstT0(b) -> push ((-t.Derivative.Sum(), b) :: tt)      
-                        | MulTT(a,b) -> failwith "Note implemented"
-                        | MulTTConst(a) -> failwith "Note implemented"
-                        | MulTT0(a,b) -> failwith "Note implemented"
-                        | MulTConstT0(b) -> failwith "Note implemented"
-                        | MulTT0Const(a) -> failwith "Note implemented"
+                        | MulTT(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
+                        | MulTTConst(a,b) -> push ((t.Derivative * b, a) :: tt)
+                        | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
+                        | MulTConstT0(a,b) -> push ((t.Derivative * a, b) :: tt)
+                        | MulTT0Const(a,b) -> push ((t.Derivative * b, a) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
@@ -396,10 +396,10 @@ and TensorOp =
     | SubTConstT0 of Tensor
 
     | MulTT of Tensor * Tensor
-    | MulTTConst of Tensor
+    | MulTTConst of Tensor * Tensor
     | MulTT0 of Tensor * Tensor
-    | MulTConstT0 of Tensor
-    | MulTT0Const of Tensor
+    | MulTConstT0 of Tensor * Tensor
+    | MulTT0Const of Tensor * Tensor
 
     | NegT of Tensor
     | SumT of Tensor
