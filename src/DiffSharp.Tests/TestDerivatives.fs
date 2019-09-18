@@ -102,6 +102,36 @@ type TestDerivatives () =
     // TODO: add test for SubTConstT0
 
     [<Test>]
+    member this.TestDerivativeMulTT () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
+        let fwdy = Tensor.Create([5.; 6.; 7.]).GetForward(Tensor.Create([2.; 2.; 3.]), 1u)
+        let fwdz = fwdx * fwdy
+        let fwdzCorrect = Tensor.Create([5.; 12.; 21.])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([12.; 22.; 37.])
+
+        let revx = Tensor.Create([1.; 2.; 3.]).GetReverse(1u)
+        let revy = Tensor.Create([5.; 6.; 7.]).GetReverse(1u)
+        let revz = revx * revy
+        let revzCorrect = Tensor.Create([5.; 12.; 21.])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([25.; 30.; 35.])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([5.; 10.; 15.])
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(revyd, revydCorrect)
+
+    // TODO: add test for MulTTConst
+    // TODO: add test for MulTT0
+    // TODO: add test for MulTConstT0
+    // TODO: add test for MulTT0Const
+
+    [<Test>]
     member this.TestDerivativeNeg () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
         let fwdz = -fwdx

@@ -133,6 +133,25 @@ type TestTensor () =
         Assert.AreEqual(t4, t4Correct)
 
     [<Test>]
+    member this.TestTensorMulTT () =
+        let t1 = Tensor.Create([1.; 2.]) * Tensor.Create([3.; 4.])
+        let t1Correct = Tensor.Create([3.; 8.])
+
+        let t2 = Tensor.Create([1.; 2.]) * Tensor.Create(5.)
+        let t2Correct = Tensor.Create([5.; 10.])
+
+        let t3 = Tensor.Create([1.; 2.]) * 5.f
+        let t3Correct = Tensor.Create([5.; 10.])
+
+        let t4 = 5. * Tensor.Create([1.; 2.])
+        let t4Correct = Tensor.Create([5.; 10.])
+
+        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t3, t3Correct)
+        Assert.AreEqual(t4, t4Correct)
+
+    [<Test>]
     member this.TestTensorNeg () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Neg = -t1
