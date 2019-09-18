@@ -42,18 +42,24 @@ let main argv =
     // printfn "%A" z
     // printfn "%A" z'
 
-    let x = Tensor.Create([1.;2.;3.])
-    let z = [1;2;3]
-    let z2a, z2b = toFlatArrayAndShape<int> z
-    let z3 = z2a |> Array.map float32
-    printfn "%A" x
-    printfn "%A" z
-    printfn "%A" (z2a, z2b)
-    printfn "%A" z3
+    // let x = Tensor.Create([1.;2.;3.])
+    // let z = [1;2;3]
+    // let z2a, z2b = toFlatArrayAndShape<int> z
+    // let z3 = z2a |> Array.map float32
+    // printfn "%A" x
+    // printfn "%A" z
+    // printfn "%A" (z2a, z2b)
+    // printfn "%A" z3
 
-    let a = [|1;2;3|]
-    let b = [|1;2;4|]
-    let c = a = b
-    printfn "%A" c
+    let revx = Tensor.Create([1.; 2.; 3.]).GetReverse(1u)
+    let revz = -revx
+    let revzCorrect = Tensor.Create([-1.; -2.; -3.])
+    revz.Reverse(Tensor.Create([5.; 5.; 5.]))
+    let revzd = revx.Derivative
+    let revzdCorrect = Tensor.Create([-5.; -5.; -5.])
+
+    printfn "%A" revx
+    printfn "%A" revz
+    printfn "%A" revzd
 
     0 // return an integer exit code

@@ -47,9 +47,9 @@ type Tensor =
             | TensorR(_,_,_,f,_) -> f := value
 
     // member inline t.Value = 0.
-    member t.GetForward(derivative, ?tag:uint32) = 
+    member t.GetForward(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalTagger.Next
-        if t.ShapeEquals(derivative) then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
+        if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
     member t.GetReverse(?tag:uint32) = 
         let tag = defaultArg tag GlobalTagger.Next
         TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
@@ -58,7 +58,6 @@ type Tensor =
     member t.ToArray() = t.PrimalRaw.ToArray()
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
     member t.Create(value) = Tensor(t.PrimalRaw.Create(value))
-    member t.ShapeEquals(tensor:Tensor) = Util.arraysEqual t.Shape tensor.Shape
     override t.Equals(other) =
         match other with
         | :? Tensor as tensor -> t.PrimalRaw.Equals(tensor.PrimalRaw)
@@ -134,7 +133,7 @@ type Tensor =
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     static member (+) (a:Tensor, b:Tensor) =
-        if a.ShapeEquals(b) then
+        if a.Shape = b.Shape then
             let inline fRaw(a,b) = a + b
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
@@ -169,7 +168,7 @@ type Tensor =
     static member (+) (a, b:Tensor) = b.Create(a) + b
 
     static member (-) (a:Tensor, b:Tensor) =
-        if a.ShapeEquals(b) then
+        if a.Shape = b.Shape then
             let inline fRaw(a,b) = a - b
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
@@ -221,6 +220,7 @@ type Tensor =
 
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
+        if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
         t.ReverseReset()
         t.ReversePush(value)
 
