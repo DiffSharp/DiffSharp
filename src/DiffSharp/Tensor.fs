@@ -410,15 +410,15 @@ type Tensor =
                         | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
                         | MulTConstT0(a,b) -> push ((t.Derivative * a, b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.Derivative * b, a) :: tt)
-                        | DivTT(a,b) -> failwith "Not implemented"
-                        | DivTTConst(a,b) -> failwith "Not implemented"
-                        | DivTConstT(a,b) -> failwith "Not implemented"
-                        | DivT0T(a,b) -> failwith "Not implemented"
-                        | DivT0TConst(a,b) -> failwith "Not implemented"
-                        | DivT0ConstT(a,b) -> failwith "Not implemented"
-                        | DivTT0(a,b) -> failwith "Not implemented"
-                        | DivTT0Const(a,b) -> failwith "Not implemented"
-                        | DivTConstT0(a,b) -> failwith "Not implemented"                        
+                        | DivTT(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
+                        | DivTTConst(a,b) -> push ((t.Derivative / b, a) :: tt)
+                        | DivTConstT(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))), b) :: tt)
+                        | DivT0T(a,b) -> push (((t.Derivative / b.Primal).Sum(), a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
+                        | DivT0TConst(a,b) -> push (((t.Derivative / b).Sum(), a) :: tt)
+                        | DivT0ConstT(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))), b) :: tt)
+                        | DivTT0(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))).Sum(), b) :: tt)
+                        | DivTT0Const(a,b) -> push ((t.Derivative / b, a) :: tt)
+                        | DivTConstT0(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))).Sum(), b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
