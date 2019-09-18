@@ -54,6 +54,15 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
         // TODO: implement general broadcasting subtractions
         | _ -> invalidOp <| sprintf "Cannot subtract Tensors with shapes %A, %A" t1.Shape t2.Shape
 
+    static member (*) (t1:RawTensor, t2:RawTensor) = t1.Mul(t2)
+    member t1.Mul(t2) =
+        match t1, t2 with
+        | t1, t2 when t1.Shape = t2.Shape -> t1.MulTT(t2)
+        | t1, t2 when t1.Dim = 0 -> t2.MulTT0(t1)
+        | t1, t2 when t2.Dim = 0 -> t1.MulTT0(t2)
+        // TODO: implement general broadcasting?
+        | _ -> invalidOp <| sprintf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
+
     static member (~-) (t:RawTensor) = t.Neg()
 
     abstract member Create : obj -> RawTensor
@@ -72,6 +81,8 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member SubTT : RawTensor -> RawTensor
     abstract member SubT0T : RawTensor -> RawTensor
     abstract member SubTT0 : RawTensor -> RawTensor
+    abstract member MulTT : RawTensor -> RawTensor
+    abstract member MulTT0 : RawTensor -> RawTensor
     abstract member Neg : unit -> RawTensor
     abstract member Sum : unit -> RawTensor
     abstract member SumT2Dim1 : unit -> RawTensor
