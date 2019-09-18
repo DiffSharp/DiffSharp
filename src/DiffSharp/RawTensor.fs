@@ -34,7 +34,15 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
         | t1, t2 when t1.Shape = t2.Shape -> t1.AddTT(t2)
         | t1, t2 when t1.Dim = 0 -> t2.AddTT0(t1)
         | t1, t2 when t2.Dim = 0 -> t1.AddTT0(t2)
-        // TODO: implement other broadcasting additions
+        | t1, t2 when t1.Dim = 2 && t2.Dim = 1 ->
+            if t1.Shape.[0] = t2.Shape.[0] then
+                t1.AddT2T1(t2)
+            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
+        | t1, t2 when t1.Dim = 1 && t2.Dim = 2 ->
+            if t1.Shape.[0] = t2.Shape.[0] then
+                t2.AddT2T1(t1)
+            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
+        // TODO: implement general broadcasting additions
         | _ -> invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
 
     static member (-) (t1:RawTensor, t2:RawTensor) = t1.Sub(t2)
@@ -43,7 +51,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
         | t1, t2 when t1.Shape = t2.Shape -> t1.SubTT(t2)
         | t1, t2 when t1.Dim = 0 -> t1.SubT0T(t2)
         | t1, t2 when t2.Dim = 0 -> t1.SubTT0(t2)
-        // TODO: implement other broadcasting subtractions
+        // TODO: implement general broadcasting subtractions
         | _ -> invalidOp <| sprintf "Cannot subtract Tensors with shapes %A, %A" t1.Shape t2.Shape
 
     static member (~-) (t:RawTensor) = t.Neg()
@@ -60,6 +68,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member Equals: RawTensor -> bool
     abstract member AddTT : RawTensor -> RawTensor
     abstract member AddTT0 : RawTensor -> RawTensor
+    abstract member AddT2T1: RawTensor -> RawTensor
     abstract member SubTT : RawTensor -> RawTensor
     abstract member SubT0T : RawTensor -> RawTensor
     abstract member SubTT0 : RawTensor -> RawTensor
