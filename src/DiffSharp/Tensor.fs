@@ -352,6 +352,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sign() = Tensor.Sign(t)
 
+    static member Abs (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.Abs()
+        let inline fTensor(a) = Tensor.Abs(a)
+        let inline dfTensorFwd(cp,ap,ad) = ad * Tensor.Sign(ap)
+        let inline dfTensorRev(a) = AbsT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Abs() = Tensor.Abs(t)
+
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -411,6 +419,7 @@ type Tensor =
                         | MakeTofT0(a) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SignT(a) -> reset (a::tt)
+                        | AbsT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -467,6 +476,7 @@ type Tensor =
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
+                        | AbsT(a) -> push ((t.Derivative * a.Primal, a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -518,6 +528,7 @@ and TensorOp =
     | MakeTofT0 of Tensor
     | TransposeT2 of Tensor
     | SignT of Tensor
+    | AbsT of Tensor
     | NewT
 
 [<RequireQualifiedAccess>]
