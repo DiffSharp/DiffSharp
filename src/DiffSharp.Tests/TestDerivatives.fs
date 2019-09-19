@@ -224,3 +224,23 @@ type TestDerivatives () =
         Assert.AreEqual(fwdzd, fwdzdCorrect)
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)        
+
+    [<Test>]
+    member this.TestDerivativeTranspose () =
+        let fwdx = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).GetForward(Tensor.Create([[2.; 3.; 4.]; [10.; 20.; 30.]]), 1u)
+        let fwdz = fwdx.Transpose()
+        let fwdzCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[2.; 10.]; [3.; 20.]; [4.; 30.]])
+
+        let revx = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).GetReverse(1u)
+        let revz = revx.Transpose()
+        let revzCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        revz.Reverse(Tensor.Create([[5.; 5.]; [2.; 5.]; [3.; 7.]]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[5.; 2.; 3.]; [5.; 5.; 7.]])
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd, revxdCorrect)

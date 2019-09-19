@@ -321,6 +321,15 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.SumT2Dim1() = Tensor.SumT2Dim1(t)
 
+    static member Transpose (a:Tensor) =
+        if a.Dim <> 2 then invalidOp <| sprintf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
+        let inline fRaw(a:RawTensor) = a.TransposeT2()
+        let inline fTensor(a) = Tensor.Transpose(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
+        let inline dfTensorRev(a) = TransposeT2(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Transpose() = Tensor.Transpose(t)
+    
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -375,6 +384,7 @@ type Tensor =
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim1(a) -> reset (a::tt)
                         | MakeTofT0(a) -> reset (a::tt)
+                        | TransposeT2(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -425,7 +435,8 @@ type Tensor =
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
-                        | MakeTofT0 (a) -> push ((t.Derivative.Sum(), a) :: tt)
+                        | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
+                        | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -471,6 +482,7 @@ and TensorOp =
     | SumT of Tensor
     | SumT2Dim1 of Tensor
     | MakeTofT0 of Tensor
+    | TransposeT2 of Tensor
     | NewT
 
 [<RequireQualifiedAccess>]

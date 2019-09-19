@@ -198,3 +198,16 @@ type TestTensor () =
         let t1SumCorrect = Tensor.Create([3.; 7.])
 
         Assert.AreEqual(t1Sum, t1SumCorrect)
+    
+    [<Test>]
+    member this.TestTensorTranspose () =
+        let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
+        let t1Transpose = t1.Transpose()
+        let t1TransposeCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+
+        let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t2TransposeTranspose = t2.Transpose().Transpose()
+        let t2TransposeTransposeCorrect = t2
+
+        Assert.AreEqual(t1Transpose, t1TransposeCorrect)
+        Assert.AreEqual(t2TransposeTranspose, t2TransposeTransposeCorrect)

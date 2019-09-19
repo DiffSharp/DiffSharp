@@ -99,3 +99,4 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member Neg : unit -> RawTensor
     abstract member Sum : unit -> RawTensor
     abstract member SumT2Dim1 : unit -> RawTensor
+    abstract member TransposeT2: unit -> RawTensor
