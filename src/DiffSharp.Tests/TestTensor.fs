@@ -171,6 +171,24 @@ type TestTensor () =
         Assert.True(t4.ApproximatelyEqual(t4Correct))
 
     [<Test>]
+    member this.TestTensorMatMulT2T2 () =
+        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = Tensor.Create([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t3 = Tensor.MatMul(t1, t2)
+        let t3Correct = Tensor.Create([[118.0367; 56.6266];
+                                        [190.5926; 90.8155];
+                                        [134.3925; 64.1030]])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
     member this.TestTensorNeg () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Neg = -t1
