@@ -195,3 +195,8 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tcols = t.Shape.[1]
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> tvalue.[j*tcols + i])
         RawTensorFloat32CPUBase.Create(result)
+
+    override t.Sign() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map (sign >> float32)
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
