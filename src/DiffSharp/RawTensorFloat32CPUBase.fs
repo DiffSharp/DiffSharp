@@ -162,6 +162,16 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = Array.map (fun t -> t / t2value) t1value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
+    override t1.MatMulT2T2(t2) =
+        if t1.Dim <> 2 || t2.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
+        let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
+        if t1cols <> t2rows then invalidOp <| sprintf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]        
+        let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
+        RawTensorFloat32CPUBase.Create(result)
+
     override t.Neg() =
         let tvalue = t.Value:?>float32[]
         let result = Array.map (~-) tvalue
@@ -182,5 +192,6 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.TransposeT2() =
         if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
         let tvalue = t.Value:?>float32[]
-        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.GetItem([|j; i|]))
+        let tcols = t.Shape.[1]
+        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> tvalue.[j*tcols + i])
         RawTensorFloat32CPUBase.Create(result)

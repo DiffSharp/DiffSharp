@@ -297,6 +297,20 @@ type Tensor =
     static member (/) (a:Tensor, b) = a / a.Create(b)
     static member (/) (a, b:Tensor) = b.Create(a) / b
 
+    static member MatMul (a:Tensor, b:Tensor) =
+        if a.Dim <> 2 || b.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
+        if a.Shape.[1] = b.Shape.[0] then
+            let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
+            let inline fTensor(a,b) = Tensor.MatMul(a, b)
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.MatMul(ad, b)
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.MatMul(a, bd)
+            let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
+            let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
+            let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
+
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Neg()
         let inline fTensor(a) = -a
@@ -380,6 +394,9 @@ type Tensor =
                         | DivTT0(a,b) -> reset (a::b::tt)
                         | DivTT0Const(a,_) -> reset (a::tt)
                         | DivTConstT0(_,b) -> reset (b::tt)
+                        | MatMulT2T2(a,b) -> reset (a::b::tt)
+                        | MatMulT2T2Const(a,_) -> reset (a::tt)
+                        | MatMulT2ConstT2(_,b) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim1(a) -> reset (a::tt)
@@ -432,6 +449,9 @@ type Tensor =
                         | DivTT0(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))).Sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push ((t.Derivative / b, a) :: tt)
                         | DivTConstT0(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))).Sum(), b) :: tt)
+                        | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
+                        | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
+                        | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
@@ -477,6 +497,10 @@ and TensorOp =
     | DivTT0 of Tensor * Tensor
     | DivTT0Const of Tensor * Tensor
     | DivTConstT0 of Tensor * Tensor
+
+    | MatMulT2T2 of Tensor * Tensor
+    | MatMulT2T2Const of Tensor * Tensor
+    | MatMulT2ConstT2 of Tensor * Tensor
 
     | NegT of Tensor
     | SumT of Tensor

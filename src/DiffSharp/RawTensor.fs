@@ -96,6 +96,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member DivTT : RawTensor -> RawTensor
     abstract member DivT0T : RawTensor -> RawTensor
     abstract member DivTT0 : RawTensor -> RawTensor
+    abstract member MatMulT2T2: RawTensor -> RawTensor
     abstract member Neg : unit -> RawTensor
     abstract member Sum : unit -> RawTensor
     abstract member SumT2Dim1 : unit -> RawTensor
