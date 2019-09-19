@@ -205,6 +205,14 @@ type TestTensor () =
         Assert.AreEqual(t1Sign, t1SignCorrect)
 
     [<Test>]
+    member this.TestTensorAbs () =
+        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
+        let t1Abs = t1.Abs()
+        let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
+
+        Assert.AreEqual(t1Abs, t1AbsCorrect)
+
+    [<Test>]
     member this.TestTensorSum () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Sum = t1.Sum()
