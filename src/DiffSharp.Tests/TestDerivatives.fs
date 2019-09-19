@@ -132,6 +132,40 @@ type TestDerivatives () =
     // TODO: add test for MulTT0Const
 
     [<Test>]
+    member this.TestDerivativeDivTT () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
+        let fwdy = Tensor.Create([5.; 6.; 7.]).GetForward(Tensor.Create([2.; 2.; 3.]), 1u)
+        let fwdz = fwdx / fwdy
+        let fwdzCorrect = Tensor.Create([0.2; 0.333333; 0.428571])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([0.32; 0.388889; 0.387755])
+
+        let revx = Tensor.Create([1.; 2.; 3.]).GetReverse(1u)
+        let revy = Tensor.Create([5.; 6.; 7.]).GetReverse(1u)
+        let revz = revx / revy
+        let revzCorrect = Tensor.Create([0.2; 0.333333; 0.428571])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([1.; 0.833333; 0.714286])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([-0.2; -0.277778; -0.306122])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+    
+    // TODO: add test for DivTTConst
+    // TODO: add test for DivTConstT
+    // TODO: add test for DivT0T
+    // TODO: add test for DivT0TConst
+    // TODO: add test for DivT0ConstT
+    // TODO: add test for DivTT0
+    // TODO: add test for DivTT0Const
+    // TODO: add test for DivTConstT0
+
+    [<Test>]
     member this.TestDerivativeNeg () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
         let fwdz = -fwdx
