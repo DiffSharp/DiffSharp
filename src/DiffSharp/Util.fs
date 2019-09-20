@@ -19,21 +19,6 @@ let getShapeLength (shape:int[]) =
     if shape.Length = 0 then 1
     else Array.reduce (*) shape
 
-// type System.Array with
-//     static member iteri<'T> (action: int[] -> 'T -> unit) (array:System.Array) =
-//         let shape = getArrayShape array
-//         printfn "array %A shape %A rank %A" array shape array.Rank
-//         let rec arrayforeach (shape:int[]) mapping externalCoords (masterArray:System.Array) =
-//             if shape.Length = 1 then
-//                 for i = 0 to shape.[0] - 1 do
-//                     let globalCoords = Array.append externalCoords [|i|]
-//                     let value = downcast masterArray.GetValue(globalCoords)
-//                     action globalCoords value
-//             else
-//                 for i = 0 to shape.[0] - 1 do
-//                     arrayforeach shape.[1..] action (Array.append externalCoords [|i|]) masterArray
-//         arrayforeach shape action [||] array
-
 let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
@@ -43,7 +28,7 @@ let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
 let rec toFlatArrayAndShape<'T> (value:obj) =
     match value with
     | :? 'T as v -> [|v|], [||]
-    | :? ('T[]) as v -> v |> Array.toSeq |> toFlatArrayAndShape
+    | :? ('T[]) as v -> v |> Array.toSeq |> toFlatArrayAndShape<'T>
     | :? ('T[,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -51,7 +36,7 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                     for j=0 to v.GetLength(1)-1 do
                         yield v.[i, j]
                 }
-        } |> toFlatArrayAndShape
+        } |> toFlatArrayAndShape<'T>
     | :? ('T[,,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -62,7 +47,7 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                                 yield v.[i, j, k]
                         }
                 }
-        } |> toFlatArrayAndShape        
+        } |> toFlatArrayAndShape<'T>        
     | :? ('T[,,,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -76,43 +61,28 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                                 }
                         }
                 }
-        } |> toFlatArrayAndShape    
+        } |> toFlatArrayAndShape<'T>    
     | :? seq<'T> as v -> Seq.toArray v, [|Seq.length v|]
     | :? seq<seq<'T>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
+        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
             if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | :? seq<seq<seq<'T>>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
+        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
             if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | :? seq<seq<seq<seq<'T>>>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape |> Seq.toArray |> Array.unzip
+        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
         let shape0 = shapes.[0]
         for i=0 to shapes.Length - 1 do
             if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
     | _ -> null, null
+    // TODO: add list of tuples parsing
+
 
 let inline notNull value = not (obj.ReferenceEquals(value, null))
-
-// let rec arrayShapeToString (array:'a[]) (shape:int[]) =
-//     let sb = System.Text.StringBuilder()
-//     for i=0 to shape.length - 1 do
-        
-let splitList (n:int) (l:'a list) =
-    let size = l.Length / n
-    seq {
-        let r = ResizeArray()
-        for x in l do
-            r.Add(x)
-            if r.Count = size then
-                yield r.ToArray() |> Array.toList
-                r.Clear()
-        if r.Count > 0 then 
-            yield r.ToArray() |> Array.toList
-    } |> Seq.toList

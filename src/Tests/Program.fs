@@ -4,6 +4,8 @@ open System
 open DiffSharp
 open DiffSharp.Util
 
+
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
@@ -33,8 +35,7 @@ let main argv =
     // printfn "%A" z
     // printfn "%A" z'
 
-    let a = [|1./3.|]
-    let b = [|1./3.|]
-    let c = a = b
-    printfn "%A" c
+    // let a = Tensor.Create([[[1., 2., 3.], [4., 5., 6.]]])
+    // printfn "%A" a
+
     0 // return an integer exit code
