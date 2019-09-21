@@ -124,7 +124,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t1value = (t1.Value:?>float32[]).[0]
         let t2value = (t2.Value:?>float32[])
         let result = Array.map ((-) t1value) t2value
-        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+        upcast RawTensorFloat32CPUBase(result, t2.Shape)
 
     override t1.SubTT0(t2) =
         let t1value = t1.Value:?>float32[]
@@ -154,12 +154,30 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t1value = (t1.Value:?>float32[]).[0]
         let t2value = (t2.Value:?>float32[])
         let result = Array.map ((/) t1value) t2value
-        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+        upcast RawTensorFloat32CPUBase(result, t2.Shape)
 
     override t1.DivTT0(t2) =
         let t1value = t1.Value:?>float32[]
         let t2value = (t2.Value:?>float32[]).[0]
         let result = Array.map (fun t -> t / t2value) t1value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.PowTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 ( ** ) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.PowT0T(t2) =
+        let t1value = (t1.Value:?>float32[]).[0]
+        let t2value = (t2.Value:?>float32[])
+        let result = Array.map (fun t -> t1value ** t) t2value
+        upcast RawTensorFloat32CPUBase(result, t2.Shape)
+
+    override t1.PowTT0(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = (t2.Value:?>float32[]).[0]
+        let result = Array.map (fun t -> t ** t2value) t1value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
     override t1.MatMulT2T2(t2) =
@@ -171,7 +189,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t2value = t2.Value:?>float32[]        
         let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
         RawTensorFloat32CPUBase.Create(result)
-
+        
     override t.NegT() =
         let tvalue = t.Value:?>float32[]
         let result = Array.map (~-) tvalue

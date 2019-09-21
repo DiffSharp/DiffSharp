@@ -28,52 +28,6 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     override t.ToString() = t.GetString()
     member t.Extend(shape) = t.CreateWithShape(t.ToValue(), shape)
 
-    static member (+) (t1:RawTensor, t2:RawTensor) = t1.Add(t2)
-    member t1.Add(t2) =
-        match t1, t2 with
-        | t1, t2 when t1.Shape = t2.Shape -> t1.AddTT(t2)
-        | t1, t2 when t1.Dim = 0 -> t2.AddTT0(t1)
-        | t1, t2 when t2.Dim = 0 -> t1.AddTT0(t2)
-        | t1, t2 when t1.Dim = 2 && t2.Dim = 1 ->
-            if t1.Shape.[0] = t2.Shape.[0] then
-                t1.AddT2T1(t2)
-            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
-        | t1, t2 when t1.Dim = 1 && t2.Dim = 2 ->
-            if t1.Shape.[0] = t2.Shape.[0] then
-                t2.AddT2T1(t1)
-            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
-        // TODO: implement general broadcasting additions
-        | _ -> invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" t1.Shape t2.Shape
-
-    static member (-) (t1:RawTensor, t2:RawTensor) = t1.Sub(t2)
-    member t1.Sub(t2) =
-        match t1, t2 with
-        | t1, t2 when t1.Shape = t2.Shape -> t1.SubTT(t2)
-        | t1, t2 when t1.Dim = 0 -> t1.SubT0T(t2)
-        | t1, t2 when t2.Dim = 0 -> t1.SubTT0(t2)
-        // TODO: implement general broadcasting subtractions
-        | _ -> invalidOp <| sprintf "Cannot subtract Tensors with shapes %A, %A" t1.Shape t2.Shape
-
-    static member (*) (t1:RawTensor, t2:RawTensor) = t1.Mul(t2)
-    member t1.Mul(t2) =
-        match t1, t2 with
-        | t1, t2 when t1.Shape = t2.Shape -> t1.MulTT(t2)
-        | t1, t2 when t1.Dim = 0 -> t2.MulTT0(t1)
-        | t1, t2 when t2.Dim = 0 -> t1.MulTT0(t2)
-        // TODO: implement general broadcasting?
-        | _ -> invalidOp <| sprintf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
-
-    static member (/) (t1:RawTensor, t2:RawTensor) = t1.Div(t2)
-    member t1.Div(t2) =
-        match t1, t2 with
-        | t1, t2 when t1.Shape = t2.Shape -> t1.DivTT(t2)
-        | t1, t2 when t1.Dim = 0 -> t1.DivT0T(t2)
-        | t1, t2 when t2.Dim = 0 -> t1.DivTT0(t2)
-        // TODO: implement general broadcasting?
-        | _ -> invalidOp <| sprintf "Cannot divide Tensors with shapes %A, %A" t1.Shape t2.Shape
-
-    static member (~-) (t:RawTensor) = t.NegT()
-
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
     abstract member Zero : unit -> RawTensor
@@ -96,6 +50,9 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member DivTT : RawTensor -> RawTensor
     abstract member DivT0T : RawTensor -> RawTensor
     abstract member DivTT0 : RawTensor -> RawTensor
+    abstract member PowTT : RawTensor -> RawTensor
+    abstract member PowT0T: RawTensor -> RawTensor
+    abstract member PowTT0 : RawTensor -> RawTensor
     abstract member MatMulT2T2: RawTensor -> RawTensor
     abstract member NegT : unit -> RawTensor
     abstract member SumT : unit -> RawTensor
