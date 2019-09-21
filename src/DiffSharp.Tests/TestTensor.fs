@@ -189,7 +189,7 @@ type TestTensor () =
         Assert.True(t3.ApproximatelyEqual(t3Correct))
 
     [<Test>]
-    member this.TestTensorNeg () =
+    member this.TestTensorNegT () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Neg = -t1
         let t1NegCorrect = Tensor.Create([-1.; -2.; -3.])
@@ -197,23 +197,7 @@ type TestTensor () =
         Assert.AreEqual(t1Neg, t1NegCorrect)
 
     [<Test>]
-    member this.TestTensorSign () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Sign = t1.Sign()
-        let t1SignCorrect = Tensor.Create([-1.; -1.; 0.; 1.])
-
-        Assert.AreEqual(t1Sign, t1SignCorrect)
-
-    [<Test>]
-    member this.TestTensorAbs () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Abs = t1.Abs()
-        let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
-
-        Assert.AreEqual(t1Abs, t1AbsCorrect)
-
-    [<Test>]
-    member this.TestTensorSum () =
+    member this.TestTensorSumT () =
         let t1 = Tensor.Create([1.; 2.; 3.])
         let t1Sum = t1.Sum()
         let t1SumCorrect = Tensor.Create(6.)
@@ -234,7 +218,7 @@ type TestTensor () =
         Assert.AreEqual(t1Sum, t1SumCorrect)
     
     [<Test>]
-    member this.TestTensorTranspose () =
+    member this.TestTensorTransposeT2 () =
         let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
         let t1Transpose = t1.Transpose()
         let t1TransposeCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
@@ -245,3 +229,19 @@ type TestTensor () =
 
         Assert.AreEqual(t1Transpose, t1TransposeCorrect)
         Assert.AreEqual(t2TransposeTranspose, t2TransposeTransposeCorrect)
+
+    [<Test>]
+    member this.TestTensorSignT () =
+        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
+        let t1Sign = t1.Sign()
+        let t1SignCorrect = Tensor.Create([-1.; -1.; 0.; 1.])
+
+        Assert.AreEqual(t1Sign, t1SignCorrect)
+
+    [<Test>]
+    member this.TestTensorAbsT () =
+        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
+        let t1Abs = t1.Abs()
+        let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
+
+        Assert.AreEqual(t1Abs, t1AbsCorrect)
