@@ -23,7 +23,7 @@ dotnet test
 Required:
 - Install [Docker](https://hub.docker.com/search/?type=edition&offering=community) for your system
 
-Build a Docker image called `diffsharp`. This will work without any local .NET Core installation.
+Build a Docker image called `diffsharp`. This will work without any local .NET Core installation and build DiffSharp inside the image.
 ```
 docker build -t diffsharp .
 ```
