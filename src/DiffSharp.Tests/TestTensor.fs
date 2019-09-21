@@ -253,3 +253,19 @@ type TestTensor () =
         let t1ReLUCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
 
         Assert.AreEqual(t1ReLU, t1ReLUCorrect)
+
+    [<Test>]
+    member this.TestTensorExpT () =
+        let t1 = Tensor.Create([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
+        let t1Exp = t1.Exp()
+        let t1ExpCorrect = Tensor.Create([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
+
+        Assert.True(t1Exp.ApproximatelyEqual(t1ExpCorrect))
+
+    [<Test>]
+    member this.TestTensorLogT () =
+        let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+        let t1Log = t1.Log()
+        let t1LogCorrect = Tensor.Create([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
+
+        Assert.True(t1Log.ApproximatelyEqual(t1LogCorrect))        

@@ -104,3 +104,5 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member SignT: unit -> RawTensor
     abstract member AbsT: unit -> RawTensor
     abstract member ReLUT: unit -> RawTensor
+    abstract member ExpT: unit -> RawTensor
+    abstract member LogT: unit -> RawTensor

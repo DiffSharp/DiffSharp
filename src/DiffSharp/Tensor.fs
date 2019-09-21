@@ -368,6 +368,22 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.ReLU() = Tensor.ReLU(t)
 
+    static member Exp (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.ExpT()
+        let inline fTensor(a) = Tensor.Exp(a)
+        let inline dfTensorFwd(cp,ap,ad) = ad * cp
+        let inline dfTensorRev(a) = ExpT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Exp() = Tensor.Exp(t)
+
+    static member Log (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.LogT()
+        let inline fTensor(a) = Tensor.Log(a)
+        let inline dfTensorFwd(cp,ap,ad) = ad / ap
+        let inline dfTensorRev(a) = LogT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Log() = Tensor.Log(t)
+
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -429,6 +445,8 @@ type Tensor =
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
                         | ReLUT(a) -> reset (a::tt)
+                        | ExpT(a) -> reset (a::tt)
+                        | LogT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -487,10 +505,12 @@ type Tensor =
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
                         | ReLUT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
+                        | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
+                        | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
-        push [(value, t)]                    
+        push [(value, t)]
 
 and TensorOp =
     | AddTT of Tensor * Tensor
@@ -540,6 +560,8 @@ and TensorOp =
     | SignT of Tensor
     | AbsT of Tensor
     | ReLUT of Tensor
+    | ExpT of Tensor
+    | LogT of Tensor
     | NewT
 
 [<RequireQualifiedAccess>]

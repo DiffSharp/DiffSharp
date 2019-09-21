@@ -210,3 +210,13 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t1value = t1.Value:?>float32[]
         let result = Array.map (max 0.f) t1value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t.ExpT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map exp
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t.LogT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map log
+        upcast RawTensorFloat32CPUBase(result, t.Shape)                

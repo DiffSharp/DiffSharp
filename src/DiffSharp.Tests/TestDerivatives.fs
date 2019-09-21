@@ -348,7 +348,6 @@ type TestDerivatives () =
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)
 
-
     [<Test>]
     member this.TestDerivativeReLUT () =
         let fwdx = Tensor.Create([-1.; -2.; 0.; 3.; 10.]).GetForward(Tensor.Create([2.; 3.; 4.; 5.; 6.]), 1u)
@@ -364,7 +363,47 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([0.; 0.; 0.; 5.; -5.])
 
-        // Assert.AreEqual(fwdz, fwdzCorrect)
-        // Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd, fwdzdCorrect)
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)
+
+    [<Test>]
+    member this.TestDerivativeExpT () =
+        let fwdx = Tensor.Create([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).GetForward(Tensor.Create([-1.9015; 0.4606; -0.1030; 0.0466; -0.2321]), 1u)
+        let fwdz = fwdx.Exp()
+        let fwdzCorrect = Tensor.Create([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([-2.5300; 0.1606; -0.2845; 0.0710; -0.8331])
+
+        let revx = Tensor.Create([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).GetReverse(1u)
+        let revz = revx.Exp()
+        let revzCorrect = Tensor.Create([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([6.6526; 1.7435; 13.8140; 7.6152; -17.9474])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeLogT () =
+        let fwdx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).GetForward(Tensor.Create([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]), 1u)
+        let fwdz = fwdx.Log()
+        let fwdzCorrect = Tensor.Create([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([1.8118; 0.1951; 7.3820; 2.1624; 0.6847])
+
+        let revx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).GetReverse(1u)
+        let revz = revx.Log()
+        let revzCorrect = Tensor.Create([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([5.2780; 3.3576; 24.8177; 8.5945; -5.9248])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))        
