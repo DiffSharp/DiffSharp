@@ -10,6 +10,18 @@ type GlobalTagger() =
     static member Next = tagger.Next()
     static member Reset = tagger.LastTag <- 0u
 
+type Random() =
+    static let mutable rnd = System.Random()
+    static member Seed(seed) = rnd <- System.Random(seed)
+    static member Uniform() = rnd.NextDouble()
+    static member Uniform(low, high) = low + (rnd.NextDouble() * (high-low))
+    static member Normal() =
+        let rec normal() = 
+            let x, y = (rnd.NextDouble()) * 2.0 - 1.0, (rnd.NextDouble()) * 2.0 - 1.0
+            let s = x * x + y * y
+            if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
+        normal()
+    static member Normal(mean, stddev) = mean + Random.Normal() * stddev
 
 let getArrayShape (a:System.Array) =
     if a.Length = 0 then [||]

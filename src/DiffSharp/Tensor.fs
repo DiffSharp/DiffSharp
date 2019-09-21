@@ -56,6 +56,7 @@ type Tensor =
     member t.Shape = t.PrimalRaw.Shape
     member t.Dim = t.PrimalRaw.Dim
     member t.ToArray() = t.PrimalRaw.ToArray()
+    member t.ToValue() = t.PrimalRaw.ToValue()
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
     member t.Create(value) = Tensor(t.PrimalRaw.Create(value))
     override t.Equals(other) =
@@ -166,7 +167,7 @@ type Tensor =
             let inline dfTensorRevTC(a,b) = AddTT0Const(a)
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.Dim = 2 && b.Dim = 1 then
+        elif a.Dim = 2 && b.Dim = 1 then  // TODO: change broadcast to add T1 to rows of T2
             if a.Shape.[0] = b.Shape.[0] then
                 let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
                 let inline fTensor(a,b) = a + b
@@ -178,7 +179,7 @@ type Tensor =
                 let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
-        elif a.Dim = 1 && b.Dim = 2 then
+        elif a.Dim = 1 && b.Dim = 2 then  // TODO: change broadcast to add T1 to rows of T2
             if a.Shape.[0] = b.Shape.[0] then
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
                 let inline fTensor(a,b) = a + b

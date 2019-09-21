@@ -5,7 +5,6 @@ open DiffSharp
 open DiffSharp.Util
 
 
-
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
