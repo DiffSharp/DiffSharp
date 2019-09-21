@@ -312,7 +312,7 @@ type Tensor =
         else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
 
     static member (~-) (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.Neg()
+        let inline fRaw(a:RawTensor) = a.NegT()
         let inline fTensor(a) = -a
         let inline dfTensorFwd(cp,ap,ad) = -ad
         let inline dfTensorRev(a) = NegT(a)
@@ -320,7 +320,7 @@ type Tensor =
     member t.Neg() = -t
 
     static member Sum (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.Sum()
+        let inline fRaw(a:RawTensor) = a.SumT()
         let inline fTensor(a) = Tensor.Sum(a)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Sum(ad)
         let inline dfTensorRev(a) = SumT(a)
@@ -345,7 +345,7 @@ type Tensor =
     member t.Transpose() = Tensor.Transpose(t)
 
     static member Sign (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.Sign()
+        let inline fRaw(a:RawTensor) = a.SignT()
         let inline fTensor(a) = Tensor.Sign(a)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = SignT(a)
@@ -353,12 +353,20 @@ type Tensor =
     member t.Sign() = Tensor.Sign(t)
 
     static member Abs (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.Abs()
+        let inline fRaw(a:RawTensor) = a.AbsT()
         let inline fTensor(a) = Tensor.Abs(a)
         let inline dfTensorFwd(cp,ap,ad) = ad * Tensor.Sign(ap)
         let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Abs() = Tensor.Abs(t)
+
+    static member ReLU (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.ReLUT()
+        let inline fTensor(a) = Tensor.ReLU(a)
+        let inline dfTensorFwd(cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
+        let inline dfTensorRev(a) = ReLUT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.ReLU() = Tensor.ReLU(t)
 
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
@@ -420,6 +428,7 @@ type Tensor =
                         | TransposeT2(a) -> reset (a::tt)
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
+                        | ReLUT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -477,6 +486,7 @@ type Tensor =
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
+                        | ReLUT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -529,6 +539,7 @@ and TensorOp =
     | TransposeT2 of Tensor
     | SignT of Tensor
     | AbsT of Tensor
+    | ReLUT of Tensor
     | NewT
 
 [<RequireQualifiedAccess>]

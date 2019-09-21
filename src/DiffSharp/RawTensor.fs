@@ -72,7 +72,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
         // TODO: implement general broadcasting?
         | _ -> invalidOp <| sprintf "Cannot divide Tensors with shapes %A, %A" t1.Shape t2.Shape
 
-    static member (~-) (t:RawTensor) = t.Neg()
+    static member (~-) (t:RawTensor) = t.NegT()
 
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
@@ -97,9 +97,10 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member DivT0T : RawTensor -> RawTensor
     abstract member DivTT0 : RawTensor -> RawTensor
     abstract member MatMulT2T2: RawTensor -> RawTensor
-    abstract member Neg : unit -> RawTensor
-    abstract member Sum : unit -> RawTensor
+    abstract member NegT : unit -> RawTensor
+    abstract member SumT : unit -> RawTensor
     abstract member SumT2Dim1 : unit -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
-    abstract member Sign: unit -> RawTensor
-    abstract member Abs: unit -> RawTensor
+    abstract member SignT: unit -> RawTensor
+    abstract member AbsT: unit -> RawTensor
+    abstract member ReLUT: unit -> RawTensor

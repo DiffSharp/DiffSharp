@@ -347,3 +347,24 @@ type TestDerivatives () =
         Assert.AreEqual(fwdzd, fwdzdCorrect)
         Assert.AreEqual(revz, revzCorrect)
         Assert.AreEqual(revxd, revxdCorrect)
+
+
+    [<Test>]
+    member this.TestDerivativeReLUT () =
+        let fwdx = Tensor.Create([-1.; -2.; 0.; 3.; 10.]).GetForward(Tensor.Create([2.; 3.; 4.; 5.; 6.]), 1u)
+        let fwdz = fwdx.ReLU()
+        let fwdzCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([0.; 0.; 0.; 5.; 6.])
+
+        let revx = Tensor.Create([-1.; -2.; 0.; 3.; 10.]).GetReverse(1u)
+        let revz = revx.ReLU()
+        let revzCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([0.; 0.; 0.; 5.; -5.])
+
+        // Assert.AreEqual(fwdz, fwdzCorrect)
+        // Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd, revxdCorrect)

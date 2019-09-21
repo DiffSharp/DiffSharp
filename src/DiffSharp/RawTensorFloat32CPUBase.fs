@@ -172,12 +172,12 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
         RawTensorFloat32CPUBase.Create(result)
 
-    override t.Neg() =
+    override t.NegT() =
         let tvalue = t.Value:?>float32[]
         let result = Array.map (~-) tvalue
         upcast RawTensorFloat32CPUBase(result, t.Shape)
 
-    override t.Sum() =
+    override t.SumT() =
         let tvalue = t.Value:?>float32[]
         let result = Array.reduce (+) tvalue
         upcast RawTensorFloat32CPUBase([|result|], [||])
@@ -196,12 +196,17 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> tvalue.[j*tcols + i])
         RawTensorFloat32CPUBase.Create(result)
 
-    override t.Sign() =
+    override t.SignT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map (sign >> float32)
         upcast RawTensorFloat32CPUBase(result, t.Shape)
 
-    override t.Abs() =
+    override t.AbsT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map abs
         upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t1.ReLUT() =
+        let t1value = t1.Value:?>float32[]
+        let result = Array.map (max 0.f) t1value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
