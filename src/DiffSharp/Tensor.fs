@@ -530,8 +530,8 @@ type Tensor =
                         | SubTConstT0(b) -> push ((-t.Derivative.Sum(), b) :: tt)      
                         | MulTT(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
                         | MulTTConst(a,b) -> push ((t.Derivative * b, a) :: tt)
-                        | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
-                        | MulTConstT0(a,b) -> push ((t.Derivative * a, b) :: tt)
+                        | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: ((t.Derivative * a.Primal).Sum(), b) :: tt)
+                        | MulTConstT0(a,b) -> push (((t.Derivative * a).Sum(), b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.Derivative * b, a) :: tt)
                         | DivTT(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
                         | DivTTConst(a,b) -> push ((t.Derivative / b, a) :: tt)
@@ -542,15 +542,15 @@ type Tensor =
                         | DivTT0(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))).Sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push ((t.Derivative / b, a) :: tt)
                         | DivTConstT0(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))).Sum(), b) :: tt)
-                        | PowTT(a,b) -> failwith "Not implemented"
-                        | PowTTConst(a,b) -> failwith "Not implemented"
-                        | PowTConstT(a,b) -> failwith "Not implemented"
-                        | PowT0T(a,b) -> failwith "Not implemented"
-                        | PowT0TConst(a,b) -> failwith "Not implemented"
-                        | PowT0ConstT(a,b) -> failwith "Not implemented"
-                        | PowTT0(a,b) -> failwith "Not implemented"
-                        | PowTT0Const(a,b) -> failwith "Not implemented"
-                        | PowTConstT0(a,b) -> failwith "Not implemented"
+                        | PowTT(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: (t.Derivative * (a.Primal ** b.Primal) * log a.Primal, b) :: tt)
+                        | PowTTConst(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
+                        | PowTConstT(a,b) -> push ((t.Derivative * (a ** b.Primal) * log a, b) :: tt)
+                        | PowT0T(a,b) -> push (((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal).Sum(), a) :: (t.Derivative * (a.Primal ** b.Primal) * log a.Primal, b) :: tt)
+                        | PowT0TConst(a,b) -> push (((t.Derivative * (a.Primal ** (b - 1.)) * b).Sum(), a) :: tt)
+                        | PowT0ConstT(a,b) -> push ((t.Derivative * (a ** b.Primal) * log a, b) :: tt)
+                        | PowTT0(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: ((t.Derivative * (a.Primal ** b.Primal) * log a.Primal).Sum(), b) :: tt)
+                        | PowTT0Const(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
+                        | PowTConstT0(a,b) -> push (((t.Derivative * (a ** b.Primal) * log a).Sum(), b) :: tt)
                         | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
