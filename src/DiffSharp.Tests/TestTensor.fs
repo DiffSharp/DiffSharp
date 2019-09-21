@@ -171,6 +171,21 @@ type TestTensor () =
         Assert.True(t4.ApproximatelyEqual(t4Correct))
 
     [<Test>]
+    member this.TestTensorPowTT () =
+        let t1 = Tensor.Create([1.; 2.]) ** Tensor.Create([3.; 4.])
+        let t1Correct = Tensor.Create([1.; 16.])
+
+        let t2 = Tensor.Create([1.; 2.]) ** Tensor.Create(5.)
+        let t2Correct = Tensor.Create([1.; 32.])
+
+        let t3 = Tensor.Create(5.) ** Tensor.Create([1.; 2.])
+        let t3Correct = Tensor.Create([5.; 25.])
+
+        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t3, t3Correct)
+
+    [<Test>]
     member this.TestTensorMatMulT2T2 () =
         let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                 [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
