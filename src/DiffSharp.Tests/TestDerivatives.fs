@@ -166,6 +166,40 @@ type TestDerivatives () =
     // TODO: add test for DivTConstT0
 
     [<Test>]
+    member this.TestDerivativePowTT () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
+        let fwdy = Tensor.Create([5.; 6.; 7.]).GetForward(Tensor.Create([2.; 2.; 3.]), 1u)
+        let fwdz = fwdx ** fwdy
+        let fwdzCorrect = Tensor.Create([1.; 64.; 2187.])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([10.; 664.723; 27620.])
+
+        let revx = Tensor.Create([1.; 2.; 3.]).GetReverse(1u)
+        let revy = Tensor.Create([5.; 6.; 7.]).GetReverse(1u)
+        let revz = revx ** revy
+        let revzCorrect = Tensor.Create([1.; 64.; 2187.])
+        revz.Reverse(Tensor.Create([5.; 15.; 25.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([25.; 2880.; 127575.])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([0.; 665.421; 60066.6])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect,0.1))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect,0.1))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect,0.1))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect,0.1))
+        Assert.True(revyd.ApproximatelyEqual(revydCorrect,0.1))
+    
+    // TODO: add test for PowTTConst
+    // TODO: add test for PowTConstT
+    // TODO: add test for PowT0T
+    // TODO: add test for PowT0TConst
+    // TODO: add test for PowT0ConstT
+    // TODO: add test for PowTT0
+    // TODO: add test for PowTT0Const
+    // TODO: add test for PowTConstT0
+
+    [<Test>]
     member this.TestDerivativeMatMulT2T2 () =
         let fwdx = Tensor.Create([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
             [9.8762; 3.2263; 6.2866; 4.7111; 0.0652];
