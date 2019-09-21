@@ -476,7 +476,7 @@ type Tensor =
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
-                        | AbsT(a) -> push ((t.Derivative * a.Primal, a) :: tt)
+                        | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt

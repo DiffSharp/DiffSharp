@@ -341,7 +341,7 @@ type TestDerivatives () =
         let revzCorrect = Tensor.Create([1.; 0.; 3.])
         revz.Reverse(Tensor.Create([5.; 5.; 5.]))
         let revxd = revx.Derivative
-        let revxdCorrect = Tensor.Create([-5.; 0.; 15.])
+        let revxdCorrect = Tensor.Create([-5.; 0.; 5.])
 
         Assert.AreEqual(fwdz, fwdzCorrect)
         Assert.AreEqual(fwdzd, fwdzdCorrect)
