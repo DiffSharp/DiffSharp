@@ -28,7 +28,9 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                 else
                     invalidArg "value" "Cannot convert value to RawTensorFloat32CPUBase"
     static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
-    static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
+    static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 1.f, shape)
+    static member Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (getShapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
+    static member RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (getShapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
 
     override t.Create(value) = RawTensorFloat32CPUBase.Create(value)
     override t.CreateWithShape(value, shape) =
@@ -37,9 +39,12 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         | 0 -> upcast RawTensorFloat32CPUBase([|value|], [||])
         | _ -> upcast RawTensorFloat32CPUBase(Array.create (shape |> Array.reduce (*)) value, shape)
     override t.Zero() = upcast RawTensorFloat32CPUBase([|0.f|], [||])
-    override t.Zeros(shape) = t.CreateWithShape(0.f, shape)
+    override t.Zeros(shape) = RawTensorFloat32CPUBase.Zeros(shape)
     override t.One() = upcast RawTensorFloat32CPUBase([|1.f|], [||])
-    override t.Ones(shape) = t.CreateWithShape(1.f, shape)
+    override t.Ones(shape) = RawTensorFloat32CPUBase.Ones( shape)
+    override t.Random(shape) = RawTensorFloat32CPUBase.Random(shape)
+    override t.RandomNormal(shape) = RawTensorFloat32CPUBase.RandomNormal(shape)
+
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         match t.Dim with

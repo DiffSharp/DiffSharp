@@ -74,6 +74,8 @@ type Tensor =
     static member inline op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
+    static member RandomLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Random(tensor.Shape))
+    static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.RandomNormal(tensor.Shape))
     static member Zeros(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
@@ -88,7 +90,20 @@ type Tensor =
         match dtype, device, backend with
         | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Ones(shape))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
-
+    static member Random(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Float32
+        let device = defaultArg device CPU
+        let backend = defaultArg backend CPUBase
+        match dtype, device, backend with
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Random(shape))
+        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+    static member RandomNormal(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Float32
+        let device = defaultArg device CPU
+        let backend = defaultArg backend CPUBase
+        match dtype, device, backend with
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.RandomNormal(shape))
+        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU

@@ -3,7 +3,7 @@
 open System
 open DiffSharp
 open DiffSharp.Util
-
+open DiffSharp.Distributions
 
 [<EntryPoint>]
 let main argv =
@@ -37,4 +37,6 @@ let main argv =
     // let a = Tensor.Create([[[1., 2., 3.], [4., 5., 6.]]])
     // printfn "%A" a
 
+    let a = Normal(Tensor.Create(0.), Tensor.Create(1.))
+    printfn "%A" (a.Sample(1))
     0 // return an integer exit code
