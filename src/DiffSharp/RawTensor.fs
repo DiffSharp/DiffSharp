@@ -58,7 +58,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member MatMulT2T2: RawTensor -> RawTensor
     abstract member NegT : unit -> RawTensor
     abstract member SumT : unit -> RawTensor
-    abstract member SumT2Dim1 : unit -> RawTensor
+    abstract member SumT2Dim0 : unit -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
     abstract member SignT: unit -> RawTensor
     abstract member AbsT: unit -> RawTensor

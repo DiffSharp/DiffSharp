@@ -167,7 +167,7 @@ type Tensor =
             let inline dfTensorRevTC(a,b) = AddTT0Const(a)
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.Dim = 2 && b.Dim = 1 then  // TODO: change broadcast to add T1 to rows of T2
+        elif a.Dim = 2 && b.Dim = 1 then
             if a.Shape.[0] = b.Shape.[0] then
                 let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
                 let inline fTensor(a,b) = a + b
@@ -179,7 +179,7 @@ type Tensor =
                 let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
-        elif a.Dim = 1 && b.Dim = 2 then  // TODO: change broadcast to add T1 to rows of T2
+        elif a.Dim = 1 && b.Dim = 2 then
             if a.Shape.[0] = b.Shape.[0] then
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
                 let inline fTensor(a,b) = a + b
@@ -367,14 +367,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
 
-    static member SumT2Dim1 (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.SumT2Dim1()
-        let inline fTensor(a) = Tensor.SumT2Dim1(a)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim1(ad)
-        let inline dfTensorRev(a) = SumT2Dim1(a)
+    static member SumT2Dim0 (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SumT2Dim0()
+        let inline fTensor(a) = Tensor.SumT2Dim0(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim0(ad)
+        let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.SumT2Dim1() = Tensor.SumT2Dim1(t)
-
+    member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
+    
     static member Transpose (a:Tensor) =
         if a.Dim <> 2 then invalidOp <| sprintf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
         let inline fRaw(a:RawTensor) = a.TransposeT2()
@@ -488,7 +488,7 @@ type Tensor =
                         | MatMulT2ConstT2(_,b) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
-                        | SumT2Dim1(a) -> reset (a::tt)
+                        | SumT2Dim0(a) -> reset (a::tt)
                         | MakeTofT0(a) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SignT(a) -> reset (a::tt)
@@ -517,9 +517,9 @@ type Tensor =
                         | AddTT0(a,b) -> push ((t.Derivative, a) :: (t.Derivative.Sum(), b) :: tt)
                         | AddTT0Const(a) -> push ((t.Derivative, a) :: tt)
                         | AddTConstT0(b) -> push ((t.Derivative.Sum(), b) :: tt)
-                        | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.SumT2Dim1(), b) :: tt)
+                        | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.SumT2Dim0(), b) :: tt)
                         | AddT2T1Const(a) -> push ((t.Derivative, a) :: tt)
-                        | AddT2ConstT1(b) -> push ((t.Derivative.SumT2Dim1(), b) :: tt)
+                        | AddT2ConstT1(b) -> push ((t.Derivative.SumT2Dim0(), b) :: tt)
                         | SubTT(a,b) -> push ((t.Derivative, a) :: (-t.Derivative, b) :: tt)
                         | SubTTConst(a) -> push ((t.Derivative, a) :: tt)
                         | SubTConstT(b) -> push ((-t.Derivative, b) :: tt)
@@ -557,7 +557,7 @@ type Tensor =
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
-                        | SumT2Dim1(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
+                        | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
@@ -622,7 +622,7 @@ and TensorOp =
 
     | NegT of Tensor
     | SumT of Tensor
-    | SumT2Dim1 of Tensor
+    | SumT2Dim0 of Tensor
     | MakeTofT0 of Tensor
     | TransposeT2 of Tensor
     | SignT of Tensor

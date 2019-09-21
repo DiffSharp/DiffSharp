@@ -109,7 +109,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAddT2T1 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
-        let t1Correct = Tensor.Create([[6.; 7.]; [9.; 10.]])
+        let t1Correct = Tensor.Create([[6.; 8.]; [8.; 10.]])
 
         Assert.AreEqual(t1, t1Correct)
 
@@ -225,10 +225,10 @@ type TestTensor () =
         Assert.AreEqual(t2Sum, t2SumCorrect)
 
     [<Test>]
-    member this.TestTensorSumT2Dim1 () =
+    member this.TestTensorSumT2Dim0 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t1Sum = t1.SumT2Dim1()
-        let t1SumCorrect = Tensor.Create([3.; 7.])
+        let t1Sum = t1.SumT2Dim0()
+        let t1SumCorrect = Tensor.Create([4.; 6.])
 
         Assert.AreEqual(t1Sum, t1SumCorrect)
     

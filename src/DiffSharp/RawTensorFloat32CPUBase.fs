@@ -111,7 +111,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         for i=0 to t1.Shape.[0]-1 do
             for j=0 to t1.Shape.[1]-1 do
                 let flatindex = i*t1.Shape.[1] + j
-                result.[flatindex] <- result.[flatindex] + t2value.[i]
+                result.[flatindex] <- result.[flatindex] + t2value.[j]
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
     override t1.SubTT(t2) =
@@ -199,12 +199,12 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tvalue = t.Value:?>float32[]
         let result = Array.reduce (+) tvalue
         upcast RawTensorFloat32CPUBase([|result|], [||])
-
-    override t.SumT2Dim1() =
+    
+    override t.SumT2Dim0() =
         if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
         let tvalue = t.Value:?>float32[]
-        let result = Array.init t.Shape.[0] (fun i-> Array.init t.Shape.[1] (fun j -> tvalue.[i * t.Shape.[1] + j]) |> Array.reduce (+))
-        let resultShape = [|t.Shape.[0]|]
+        let result = Array.init t.Shape.[1] (fun j -> Array.init t.Shape.[0] (fun i -> tvalue.[i * t.Shape.[1] + j]) |> Array.reduce (+))
+        let resultShape = [|t.Shape.[1]|]
         upcast RawTensorFloat32CPUBase(result, resultShape)
 
     override t.TransposeT2() =
