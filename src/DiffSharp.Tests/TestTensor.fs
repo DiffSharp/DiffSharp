@@ -87,10 +87,53 @@ type TestTensor () =
     member this.TestTensorCompare () =
         let t1 = Tensor.Create(-1.)
         let t2 = Tensor.Create(1.)
-        let t1t2 = t1 < t2
-        let t1t2Correct = true
+        let t3 = Tensor.Create(1.)
+        let t1t2Less = t1 < t2
+        let t1t2LessCorrect = true
+        let t1t2Equal = t1 = t2
+        let t1t2EqualCorrect = false
+        let t2t3Equal = t2 = t3
+        let t2t3EqualCorrect = true
 
-        Assert.AreEqual(t1t2, t1t2Correct)
+        Assert.AreEqual(t1t2Less, t1t2LessCorrect)
+        Assert.AreEqual(t1t2Equal, t1t2EqualCorrect)
+        Assert.AreEqual(t2t3Equal, t2t3EqualCorrect)
+
+    [<Test>]
+    member this.TestTensorLtTT () =
+        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
+        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
+        let t1t2Lt = t1.Lt(t2)
+        let t1t2LtCorrect = Tensor.Create([0.; 1.; 1.; 0.])
+
+        Assert.AreEqual(t1t2Lt, t1t2LtCorrect)
+
+    [<Test>]
+    member this.TestTensorLeTT () =
+        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
+        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
+        let t1t2Le = t1.Le(t2)
+        let t1t2LeCorrect = Tensor.Create([1.; 1.; 1.; 0.])
+
+        Assert.AreEqual(t1t2Le, t1t2LeCorrect)
+
+    [<Test>]
+    member this.TestTensorGtTT () =
+        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
+        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
+        let t1t2Gt = t1.Gt(t2)
+        let t1t2GtCorrect = Tensor.Create([0.; 0.; 0.; 1.])
+
+        Assert.AreEqual(t1t2Gt, t1t2GtCorrect)
+
+    [<Test>]
+    member this.TestTensorGeTT () =
+        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
+        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
+        let t1t2Ge = t1.Ge(t2)
+        let t1t2GeCorrect = Tensor.Create([1.; 0.; 0.; 1.])
+
+        Assert.AreEqual(t1t2Ge, t1t2GeCorrect)
 
     [<Test>]
     member this.TestTensorAddTT () =

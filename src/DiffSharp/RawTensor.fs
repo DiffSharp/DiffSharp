@@ -44,6 +44,10 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
     abstract member ApproximatelyEquals: RawTensor * float -> bool
+    abstract member LtTT: RawTensor -> RawTensor
+    abstract member GtTT: RawTensor -> RawTensor
+    abstract member LeTT: RawTensor -> RawTensor
+    abstract member GeTT: RawTensor -> RawTensor    
     abstract member AddTT : RawTensor -> RawTensor
     abstract member AddTT0 : RawTensor -> RawTensor
     abstract member AddT2T1: RawTensor -> RawTensor

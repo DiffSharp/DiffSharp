@@ -120,6 +120,30 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         Seq.init n (fun i -> Array.init unstackedLength (fun j -> tvalue.[i*unstackedLength+j]))
         |> Seq.map (fun v -> upcast RawTensorFloat32CPUBase(v, unstackedShape))
 
+    override t1.LtTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 (fun t1 t2 -> if t1 < t2 then 1.f else 0.f) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.GtTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 (fun t1 t2 -> if t1 > t2 then 1.f else 0.f) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.LeTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 (fun t1 t2 -> if t1 <= t2 then 1.f else 0.f) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.GeTT(t2) =
+        let t1value = t1.Value:?>float32[]
+        let t2value = t2.Value:?>float32[]
+        let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then 1.f else 0.f) t1value t2value
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+        
     override t1.AddTT(t2) =
         let t1value = t1.Value:?>float32[]
         let t2value = t2.Value:?>float32[]
@@ -270,4 +294,4 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.SqrtT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map sqrt
-        upcast RawTensorFloat32CPUBase(result, t.Shape)                
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
