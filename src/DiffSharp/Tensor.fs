@@ -596,7 +596,7 @@ type Tensor =
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
-                        | UnstackT(a,i) -> failwith "Not implemented"
+                        | UnstackT(a,i) -> failwith "ReversePush UnstackT not implemented"
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)

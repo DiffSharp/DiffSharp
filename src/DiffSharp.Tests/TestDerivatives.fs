@@ -263,6 +263,38 @@ type TestDerivatives () =
     //TODO: add test for MatMulT2ConstT2
 
     [<Test>]
+    member this.TestTensorStackTs () =
+        let fwdxa = Tensor.Create([1.; 2.]).GetForward(Tensor.Create([10.; 20.]), 1u)
+        let fwdxb = Tensor.Create([3.; 4.]).GetForward(Tensor.Create([30.; 40.]), 1u)
+        let fwdxc = Tensor.Create([5.; 6.]).GetForward(Tensor.Create([50.; 60.]), 1u)
+        let fwdz = Tensor.Stack([fwdxa;fwdxb;fwdxc])
+        let fwdzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[10.;20.];[30.;40.];[50.;60.]])
+
+        let revxa = Tensor.Create([1.; 2.]).GetReverse(1u)
+        let revxb = Tensor.Create([3.; 4.]).GetReverse(1u)
+        let revxc = Tensor.Create([5.; 6.]).GetReverse(1u)
+        let revz = Tensor.Stack([revxa;revxb;revxc])
+        let revzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+        revz.Reverse(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
+        let revxda = revxa.Derivative
+        let revxdaCorrect = Tensor.Create([10.; 20.])
+        let revxdb = revxb.Derivative
+        let revxdbCorrect = Tensor.Create([30.; 40.])
+        let revxdc = revxc.Derivative
+        let revxdcCorrect = Tensor.Create([50.; 60.])
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd, fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxda, revxdaCorrect)
+        Assert.AreEqual(revxdb, revxdbCorrect)
+        Assert.AreEqual(revxdc, revxdcCorrect)
+
+    // TODO: add test for UnstackT
+
+    [<Test>]
     member this.TestDerivativeNeg () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).GetForward(Tensor.Create([2.; 3.; 4.]), 1u)
         let fwdz = -fwdx
