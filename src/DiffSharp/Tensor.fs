@@ -2,7 +2,7 @@
 open DiffSharp.RawTensor
 open DiffSharp.Util
 
-[<CustomEquality; NoComparison>]
+[<CustomEquality; CustomComparison>]
 type Tensor = 
     | Tensor of RawTensor
     | TensorF of Tensor * Tensor * uint32
@@ -71,6 +71,15 @@ type Tensor =
         | Tensor(tp) -> hash (tp)
         | TensorF(tp,td,tt) -> hash (tp, td, tt)
         | TensorR(tp,td,_,_,tt) -> hash (tp, !td, tt)
+    interface System.IComparable with
+        override t.CompareTo(other) =
+            match other with
+            | :? Tensor as tensor -> 
+                if t.Dim = tensor.Dim && t.Dim = 0 then
+                    t.PrimalRaw.CompareTo(tensor.PrimalRaw)
+                else
+                    invalidOp "Cannot compare non-scalar Tensors"
+            | _ -> invalidOp "Cannot compare Tensor with another type"
     static member inline op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))

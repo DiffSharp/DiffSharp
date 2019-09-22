@@ -28,6 +28,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     override t.ToString() = t.GetString()
     member t.Extend(shape) = t.CreateWithShape(t.ToValue(), shape)
 
+    abstract member CompareTo: RawTensor -> int
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
     abstract member StackTs: seq<RawTensor> -> RawTensor

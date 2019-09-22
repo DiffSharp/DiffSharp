@@ -32,6 +32,8 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     static member Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
     static member RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
 
+    override t1.CompareTo(t2) =
+        compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
     override t.Create(value) = RawTensorFloat32CPUBase.Create(value)
     override t.CreateWithShape(value, shape) =
         let value = value:?>float32

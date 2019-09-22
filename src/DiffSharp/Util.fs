@@ -1,4 +1,7 @@
 module DiffSharp.Util
+open System
+
+let logSqrt2Pi = log(sqrt(2. * Math.PI))
 
 type Tagger =
     val mutable LastTag:uint32

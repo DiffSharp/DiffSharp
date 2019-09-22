@@ -38,12 +38,15 @@ let main argv =
     // printfn "%A" a
 
     let a = Normal(Tensor.Create(0.), Tensor.Create(1.))
+    printfn "%A" a
     printfn "%A" (a.Sample())
     printfn "%A" (a.Sample(2))
 
     let b = Normal(Tensor.Create([0.;10.]), Tensor.Create([1.;1.]))
+    printfn "%A" b
     printfn "%A" (b.Sample())
     printfn "%A" (b.Sample(2))
+    printfn "%A" Math.PI
 
     // let a = Tensor.RandomNormal([||])
     // let b = Tensor.RandomNormal([||])

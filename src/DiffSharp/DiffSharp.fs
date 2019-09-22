@@ -2,6 +2,7 @@ namespace DiffSharp
 open DiffSharp.Util
 
 module DiffSharp =
+    let inline Seed(seed) = Random.Seed(seed)
     let inline primal (tensor:Tensor) = tensor.Primal
     let inline derivative (tensor:Tensor) = tensor.Derivative
     let inline primalDerivative tensor = tensor |> primal, tensor |> derivative
