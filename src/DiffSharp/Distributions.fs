@@ -30,10 +30,14 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.Stddev = d.Range * d.Range / 12.f
     override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
     override d.Logprob(value) = 
+        if value.Shape <> d.Mean.Shape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.Low.Shape value.Shape
         if d.Low.Dim = 0 then
-            -log (d.High - d.Low)
+            if value <= d.High && value >= d.Low then
+                -log (d.High - d.Low)
+            else
+                log (Tensor.ZerosLike(value))
         else
-            -log (d.High - d.Low)
+            failwith "Not implemented"  // TODO: implement batched comparisons
     override d.GetString() = sprintf "Uniform(low:%A, high:%A)" d.Low d.High
 
 type Normal(mean:Tensor, stddev:Tensor) =
@@ -43,6 +47,8 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.Mean = mean
     override d.Stddev = stddev
     override d.Sample() = d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev
-    override d.Logprob(value) = let v = value - d.Mean in -(v * v) / (2. * d.Variance) - (log d.Stddev) - logSqrt2Pi
+    override d.Logprob(value) = 
+        if value.Shape <> d.Mean.Shape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.Mean.Shape value.Shape
+        let v = value - d.Mean in -(v * v) / (2. * d.Variance) - (log d.Stddev) - logSqrt2Pi
     override d.GetString() = sprintf "Normal(mean:%A, stddev:%A)" d.Mean d.Stddev
     
