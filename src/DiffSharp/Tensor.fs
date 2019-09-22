@@ -458,6 +458,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Log() = Tensor.Log(t)
 
+    static member Sqrt (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SqrtT()
+        let inline fTensor(a) = Tensor.Sqrt(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
+        let inline dfTensorRev(a) = SqrtT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Sqrt() = Tensor.Sqrt(t)
+
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -532,6 +540,7 @@ type Tensor =
                         | ReLUT(a) -> reset (a::tt)
                         | ExpT(a) -> reset (a::tt)
                         | LogT(a) -> reset (a::tt)
+                        | SqrtT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -603,6 +612,7 @@ type Tensor =
                         | ReLUT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
                         | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
+                        | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -670,6 +680,7 @@ and TensorOp =
     | ReLUT of Tensor
     | ExpT of Tensor
     | LogT of Tensor
+    | SqrtT of Tensor
     | NewT
 
 [<RequireQualifiedAccess>]

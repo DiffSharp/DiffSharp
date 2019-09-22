@@ -263,4 +263,9 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.LogT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map log
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t.SqrtT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map sqrt
         upcast RawTensorFloat32CPUBase(result, t.Shape)                
