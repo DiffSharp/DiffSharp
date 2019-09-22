@@ -93,33 +93,33 @@ type Tensor =
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
     static member RandomLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Random(tensor.Shape))
     static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.RandomNormal(tensor.Shape))
-    static member Zeros(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Zeros(shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Zeros(shape|>Seq.toArray))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
-    static member Ones(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member Ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Ones(shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Ones(shape|>Seq.toArray))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
-    static member Random(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member Random(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Random(shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Random(shape|>Seq.toArray))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
-    static member RandomNormal(shape:int[], ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member RandomNormal(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend CPUBase
         match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.RandomNormal(shape))
+        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.RandomNormal(shape|>Seq.toArray))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
@@ -129,10 +129,10 @@ type Tensor =
         | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Create(value))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
-    static member Extend(a:Tensor, shape:int[]) =
+    static member Extend(a:Tensor, shape:seq<int>) =
         if a.Dim <> 0 then invalidArg "tensor" (sprintf "Expecting a 0d Tensor, received shape: %A" a.Shape)
         match a with
-        | Tensor(ap) -> Tensor(ap.Extend(shape))
+        | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
         | TensorF(ap,ad,at) ->
             let cp = Tensor.Extend(ap, shape)
             let cd = Tensor.Extend(ad, shape)
@@ -219,7 +219,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 2 && b.Dim = 1 then
-            if a.Shape.[0] = b.Shape.[0] then
+            if a.Shape.[1] = b.Shape.[0] then
                 let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
                 let inline fTensor(a,b) = a + b
                 let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
@@ -231,7 +231,7 @@ type Tensor =
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         elif a.Dim = 1 && b.Dim = 2 then
-            if a.Shape.[0] = b.Shape.[0] then
+            if a.Shape.[0] = b.Shape.[1] then
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
                 let inline fTensor(a,b) = a + b
                 let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
@@ -451,13 +451,13 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Abs() = Tensor.Abs(t)
 
-    static member ReLU (a:Tensor) =
-        let inline fRaw(a:RawTensor) = a.ReLUT()
-        let inline fTensor(a) = Tensor.ReLU(a)
+    static member Relu (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.ReluT()
+        let inline fTensor(a) = Tensor.Relu(a)
         let inline dfTensorFwd(cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
-        let inline dfTensorRev(a) = ReLUT(a)
+        let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.ReLU() = Tensor.ReLU(t)
+    member t.Relu() = Tensor.Relu(t)
 
     static member Exp (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.ExpT()
@@ -554,7 +554,7 @@ type Tensor =
                         | TransposeT2(a) -> reset (a::tt)
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
-                        | ReLUT(a) -> reset (a::tt)
+                        | ReluT(a) -> reset (a::tt)
                         | ExpT(a) -> reset (a::tt)
                         | LogT(a) -> reset (a::tt)
                         | SqrtT(a) -> reset (a::tt)
@@ -626,7 +626,7 @@ type Tensor =
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
-                        | ReLUT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
+                        | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
                         | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
                         | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
@@ -694,7 +694,7 @@ and TensorOp =
     | TransposeT2 of Tensor
     | SignT of Tensor
     | AbsT of Tensor
-    | ReLUT of Tensor
+    | ReluT of Tensor
     | ExpT of Tensor
     | LogT of Tensor
     | SqrtT of Tensor

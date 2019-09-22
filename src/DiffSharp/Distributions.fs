@@ -31,13 +31,9 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
     override d.Logprob(value) = 
         if value.Shape <> d.Mean.Shape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.Low.Shape value.Shape
-        if d.Low.Dim = 0 then
-            if value <= d.High && value >= d.Low then
-                -log (d.High - d.Low)
-            else
-                log (Tensor.ZerosLike(value))
-        else
-            failwith "Not implemented"  // TODO: implement batched comparisons
+        let lb = d.Low.Le(value)
+        let ub = d.High.Gt(value)
+        log (lb * ub) - log d.Range
     override d.GetString() = sprintf "Uniform(low:%A, high:%A)" d.Low d.High
 
 type Normal(mean:Tensor, stddev:Tensor) =
