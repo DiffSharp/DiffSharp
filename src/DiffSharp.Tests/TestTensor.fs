@@ -348,12 +348,12 @@ type TestTensor () =
         Assert.AreEqual(t1Abs, t1AbsCorrect)
 
     [<Test>]
-    member this.TestTensorReLUT () =
+    member this.TestTensorReluT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
-        let t1ReLU = t1.ReLU()
-        let t1ReLUCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
+        let t1Relu = t1.Relu()
+        let t1ReluCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
 
-        Assert.AreEqual(t1ReLU, t1ReLUCorrect)
+        Assert.AreEqual(t1Relu, t1ReluCorrect)
 
     [<Test>]
     member this.TestTensorExpT () =

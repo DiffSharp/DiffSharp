@@ -48,10 +48,10 @@ type Tensor =
 
     // member inline t.Value = 0.
     member t.GetForward(derivative:Tensor, ?tag:uint32) = 
-        let tag = defaultArg tag GlobalTagger.Next
+        let tag = defaultArg tag GlobalNestingLevel.Current
         if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
     member t.GetReverse(?tag:uint32) = 
-        let tag = defaultArg tag GlobalTagger.Next
+        let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
     member t.Shape = t.PrimalRaw.Shape
     member t.Dim = t.PrimalRaw.Dim

@@ -3,6 +3,9 @@ open DiffSharp.Util
 
 module DiffSharp =
     let inline Seed(seed) = Random.Seed(seed)
+    let inline Nest(level) = GlobalNestingLevel.Set(level)
+    let inline NestReset() = GlobalNestingLevel.Reset()
+    let inline NestNext() = GlobalNestingLevel.Next() |> ignore
     let inline primal (tensor:Tensor) = tensor.Primal
     let inline derivative (tensor:Tensor) = tensor.Derivative
     let inline primalDerivative tensor = tensor |> primal, tensor |> derivative
@@ -11,10 +14,10 @@ module DiffSharp =
     let inline reverseReset (tensor:Tensor) = tensor.ReverseReset()
     let inline reversePush (value:Tensor) (tensor:Tensor) = tensor.ReversePush(value)
     let inline reverseProp (value:Tensor) (tensor:Tensor) = tensor |> reverseReset; tensor |> reversePush value
-    let inline jacobianv' f x v = x |> makeForward GlobalTagger.Next v |> f |> primalDerivative
+    let inline jacobianv' f x v = x |> makeForward (GlobalNestingLevel.Next()) v |> f |> primalDerivative
     let inline jacobianv f x v = jacobianv' f x v |> snd
     let inline jacobianTv'' f x =
-        let xa = x |> makeReverse GlobalTagger.Next
+        let xa = x |> makeReverse (GlobalNestingLevel.Next())
         let z = f xa
         let zp = z |> primal
         let r =

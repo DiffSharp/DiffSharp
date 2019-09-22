@@ -15,6 +15,7 @@ let main argv =
     printfn "Hello World from F#!"
 
     DiffSharp.Seed(123)
+    DiffSharp.NestReset()
     let layer = Linear(5, 3)
     let x = Tensor.Random([1; 5])
     let o = x |> layer.Forward |> Tensor.Relu

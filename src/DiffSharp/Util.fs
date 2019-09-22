@@ -3,15 +3,17 @@ open System
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
 
-type Tagger =
-    val mutable LastTag:uint32
-    new(t) = {LastTag = t}
-    member t.Next() = t.LastTag <- t.LastTag + 1u; t.LastTag
+type NestingLevel =
+    val mutable Current:uint32
+    new() = {Current = 0u}
+    member t.Next() = t.Current <- t.Current + 1u; t.Current
 
-type GlobalTagger() =
-    static let tagger = Tagger(0u)
-    static member Next = tagger.Next()
-    static member Reset = tagger.LastTag <- 0u
+type GlobalNestingLevel() =
+    static let tagger = NestingLevel()
+    static member Current = tagger.Current
+    static member Next() = tagger.Next()
+    static member Reset() = tagger.Current <- 0u
+    static member Set(level) = tagger.Current <- level
 
 type Random() =
     static let mutable rnd = System.Random()
