@@ -127,7 +127,7 @@ type Tensor =
     static member Stack(tensors:seq<Tensor>) = 
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.Stack(tensors |> Seq.map (fun t -> t.PrimalRaw)))
+        | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.map (fun t -> t.PrimalRaw)))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.Primal)
             let ad = tensors |> Seq.map (fun t -> t.Derivative)
@@ -135,6 +135,13 @@ type Tensor =
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.Primal)
             let cp = Tensor.Stack(ap) in TensorR(cp, ref (cp.Zero()), StackTs(tensors), ref 0u, at)
+
+    static member Unstack (a:Tensor) =
+        match a with
+        | Tensor(ap) -> ap.UnstackT() |> Seq.map Tensor
+        | TensorF(ap,ad,at) -> Seq.map2 (fun p d -> TensorF(p,d,at)) (ap.Unstack()) (ad.Unstack())
+        | TensorR(ap,_,_,_,at) -> Seq.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.Unstack())
+    member t.Unstack() = Tensor.Unstack(t)
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
@@ -518,6 +525,7 @@ type Tensor =
                         | SumT2Dim0(a) -> reset (a::tt)
                         | MakeTofT0(a) -> reset (a::tt)
                         | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
+                        | UnstackT(a,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
@@ -587,7 +595,8 @@ type Tensor =
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
-                        | StackTs(a) -> failwith "Not implemented"
+                        | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
+                        | UnstackT(a,i) -> failwith "Not implemented"
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
@@ -654,6 +663,7 @@ and TensorOp =
     | SumT2Dim0 of Tensor
     | MakeTofT0 of Tensor
     | StackTs of seq<Tensor>
+    | UnstackT of Tensor * int
     | TransposeT2 of Tensor
     | SignT of Tensor
     | AbsT of Tensor

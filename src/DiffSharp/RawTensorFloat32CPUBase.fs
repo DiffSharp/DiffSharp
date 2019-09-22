@@ -97,7 +97,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         | :? RawTensorFloat32CPUBase as t2 -> arraysApproximatelyEqual tolerance (t1.Value:?>float32[]) (t2.Value:?>float32[])
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override t.Stack(tensors) =
+    override t.StackTs(tensors) =
         let tensors = tensors |> Seq.toList
         let values, shapes = tensors |> List.map (fun t -> t.Value:?>float32[], t.Shape) |> List.unzip
         if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
@@ -108,6 +108,15 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
             for j=0 to m-1 do
                 result.[i*m+j] <-values.[i].[j]
         upcast RawTensorFloat32CPUBase(result, Array.append [|n|] shapes.[0])
+
+    override t.UnstackT() =
+        if t.Dim < 1 then invalidOp "Cannot unstack scalar Tensor (dim < 1)"
+        let tvalue = t.Value:?>float32[]
+        let n = t.Shape.[0]
+        let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
+        let unstackedLength = shapeLength unstackedShape
+        Seq.init n (fun i -> Array.init unstackedLength (fun j -> tvalue.[i*unstackedLength+j]))
+        |> Seq.map (fun v -> upcast RawTensorFloat32CPUBase(v, unstackedShape))
 
     override t1.AddTT(t2) =
         let t1value = t1.Value:?>float32[]

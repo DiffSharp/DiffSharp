@@ -107,6 +107,40 @@ type TestTensor () =
         Assert.AreEqual(t5, t5Correct)
 
     [<Test>]
+    member this.TestTensorStackTs () =
+        let t0a = Tensor.Create(1.)
+        let t0b = Tensor.Create(3.)
+        let t0c = Tensor.Create(5.)
+        let t0 = Tensor.Stack([t0a;t0b;t0c])
+        let t0Correct = Tensor.Create([1.;3.;5.])
+
+        let t1a = Tensor.Create([1.; 2.])
+        let t1b = Tensor.Create([3.; 4.])
+        let t1c = Tensor.Create([5.; 6.])
+        let t1 = Tensor.Stack([t1a;t1b;t1c])
+        let t1Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+
+        Assert.AreEqual(t0, t0Correct)
+        Assert.AreEqual(t1, t1Correct)
+
+    [<Test>]
+    member this.TestTensorUnstackT () =
+        let t0a = Tensor.Create(1.)
+        let t0b = Tensor.Create(3.)
+        let t0c = Tensor.Create(5.)
+        let t0Correct = [t0a;t0b;t0c]
+        let t0 = Tensor.Stack(t0Correct).Unstack()
+
+        let t1a = Tensor.Create([1.; 2.])
+        let t1b = Tensor.Create([3.; 4.])
+        let t1c = Tensor.Create([5.; 6.])
+        let t1Correct = [t1a;t1b;t1c]
+        let t1 = Tensor.Stack(t1Correct).Unstack()
+
+        Assert.AreEqual(t0, t0Correct)
+        Assert.AreEqual(t1, t1Correct)
+
+    [<Test>]
     member this.TestTensorAddT2T1 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
         let t1Correct = Tensor.Create([[6.; 8.]; [8.; 10.]])

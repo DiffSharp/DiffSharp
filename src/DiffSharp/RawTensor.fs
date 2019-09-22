@@ -30,7 +30,8 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
 
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
-    abstract member Stack: seq<RawTensor> -> RawTensor
+    abstract member StackTs: seq<RawTensor> -> RawTensor
+    abstract member UnstackT: unit -> seq<RawTensor>
     abstract member Zero : unit -> RawTensor
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor
