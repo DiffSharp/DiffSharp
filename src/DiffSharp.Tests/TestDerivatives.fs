@@ -472,4 +472,25 @@ type TestDerivatives () =
         Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
         Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
         Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))        
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeSqrtT () =
+        let fwdx = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).GetForward(Tensor.Create([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]), 1u)
+        let fwdz = fwdx.Sqrt()
+        let fwdzCorrect = Tensor.Create([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([0.5972; 0.1617; 0.1971; 0.5093; 0.0061])
+
+        let revx = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).GetReverse(1u)
+        let revz = revx.Sqrt()
+        let revzCorrect = Tensor.Create([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        revz.Reverse(Tensor.Create([7.0478; 2.0493; 1.8341; 0.0166; 9.4089]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([0.4761; 0.1219; 0.2286; 0.0010; 0.5166])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+          
