@@ -4,9 +4,10 @@ open DiffSharp.Util
 
 [<AbstractClass>]
 type Distribution() =
-    abstract member Sample: int -> Tensor
+    abstract member Sample: ?numSamples:int -> Tensor
     abstract member Mean: Tensor
     abstract member Stddev : Tensor
+    member d.Variance = d.Stddev * d.Stddev
 
 type Normal(mean:Tensor, stddev:Tensor) =
     inherit Distribution()
@@ -14,6 +15,9 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.Mean = mean
     override d.Stddev = stddev
 
-    override d.Sample(numSamples:int) =
-        // let numSamples = defaultArg numSamples 1
-        d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev
+    override d.Sample(?numSamples:int) =
+        let numSamples = defaultArg numSamples -1
+        if numSamples = -1 then
+            d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev
+        else
+            List.init numSamples (fun _ -> d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev) |> Tensor.Stack

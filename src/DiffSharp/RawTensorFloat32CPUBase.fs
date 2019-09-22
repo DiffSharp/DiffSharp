@@ -14,23 +14,23 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         tvalue.[flatIndex]
     
     static member Create(value:obj):RawTensor = 
-        let array, shape = value |> toFlatArrayAndShape<float32>
+        let array, shape = value |> flatArrayAndShape<float32>
         if notNull array then 
             upcast RawTensorFloat32CPUBase(array, shape)
         else 
-            let array, shape = value |> toFlatArrayAndShape<double>
+            let array, shape = value |> flatArrayAndShape<double>
             if notNull array then 
                 upcast RawTensorFloat32CPUBase(array |> Array.map float32, shape)
             else
-                let array, shape = value |> toFlatArrayAndShape<int>
+                let array, shape = value |> flatArrayAndShape<int>
                 if notNull array then 
                     upcast RawTensorFloat32CPUBase(array |> Array.map float32, shape)
                 else
                     invalidArg "value" "Cannot convert value to RawTensorFloat32CPUBase"
-    static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 0.f, shape)
-    static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (getShapeLength shape) 1.f, shape)
-    static member Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (getShapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
-    static member RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (getShapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
+    static member Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (shapeLength shape) 0.f, shape)
+    static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (shapeLength shape) 1.f, shape)
+    static member Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
+    static member RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
 
     override t.Create(value) = RawTensorFloat32CPUBase.Create(value)
     override t.CreateWithShape(value, shape) =
@@ -96,6 +96,18 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         match t2 with
         | :? RawTensorFloat32CPUBase as t2 -> arraysApproximatelyEqual tolerance (t1.Value:?>float32[]) (t2.Value:?>float32[])
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+
+    override t.Stack(tensors) =
+        let tensors = tensors |> Seq.toList
+        let values, shapes = tensors |> List.map (fun t -> t.Value:?>float32[], t.Shape) |> List.unzip
+        if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
+        let n = tensors |> List.length
+        let m = shapeLength shapes.[0]
+        let result = Array.create (n * m) 0.f
+        for i=0 to n-1 do
+            for j=0 to m-1 do
+                result.[i*m+j] <-values.[i].[j]
+        upcast RawTensorFloat32CPUBase(result, Array.append [|n|] shapes.[0])
 
     override t1.AddTT(t2) =
         let t1value = t1.Value:?>float32[]

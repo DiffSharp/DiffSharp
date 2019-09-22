@@ -23,11 +23,11 @@ type Random() =
         normal()
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
 
-let getArrayShape (a:System.Array) =
+let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
     else Array.init a.Rank (fun i -> a.GetLength(i))
 
-let getShapeLength (shape:int[]) =
+let shapeLength (shape:int[]) =
     if shape.Length = 0 then 1
     else Array.reduce (*) shape
 
@@ -37,10 +37,14 @@ let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     if dim1 <> dim2 then false
     else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) < tolerance) } |> Seq.forall id
 
-let rec toFlatArrayAndShape<'T> (value:obj) =
+let allEqual (items:seq<'a>) =
+    let item0 = items |> Seq.head
+    items |> Seq.forall ((=) item0)
+
+let rec flatArrayAndShape<'T> (value:obj) =
     match value with
     | :? 'T as v -> [|v|], [||]
-    | :? ('T[]) as v -> v |> Array.toSeq |> toFlatArrayAndShape<'T>
+    | :? ('T[]) as v -> v |> Array.toSeq |> flatArrayAndShape<'T>
     | :? ('T[,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -48,7 +52,7 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                     for j=0 to v.GetLength(1)-1 do
                         yield v.[i, j]
                 }
-        } |> toFlatArrayAndShape<'T>
+        } |> flatArrayAndShape<'T>
     | :? ('T[,,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -59,7 +63,7 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                                 yield v.[i, j, k]
                         }
                 }
-        } |> toFlatArrayAndShape<'T>        
+        } |> flatArrayAndShape<'T>        
     | :? ('T[,,,]) as v ->
         seq {
             for i=0 to v.GetLength(0)-1 do
@@ -73,26 +77,20 @@ let rec toFlatArrayAndShape<'T> (value:obj) =
                                 }
                         }
                 }
-        } |> toFlatArrayAndShape<'T>    
+        } |> flatArrayAndShape<'T>    
     | :? seq<'T> as v -> Seq.toArray v, [|Seq.length v|]
     | :? seq<seq<'T>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        let shape0 = shapes.[0]
-        for i=0 to shapes.Length - 1 do
-            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
+        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
+        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | :? seq<seq<seq<'T>>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        let shape0 = shapes.[0]
-        for i=0 to shapes.Length - 1 do
-            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
+        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
+        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | :? seq<seq<seq<seq<'T>>>> as v ->
-        let arrays, shapes = v |> Seq.map toFlatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        let shape0 = shapes.[0]
-        for i=0 to shapes.Length - 1 do
-            if shape0 <> shapes.[i] then invalidArg "value" "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shape0
+        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
+        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | _ -> null, null
     // TODO: add list of tuples parsing
 

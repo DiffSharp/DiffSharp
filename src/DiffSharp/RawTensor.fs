@@ -21,7 +21,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     member t.Value = value
     member t.Shape = shape
     member t.Dim = shape.Length
-    member t.Length = getShapeLength shape
+    member t.Length = shapeLength shape
     member t.DType = dtype
     member t.Device = device
     member t.Backend = backend
@@ -30,6 +30,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
 
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
+    abstract member Stack: seq<RawTensor> -> RawTensor
     abstract member Zero : unit -> RawTensor
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor

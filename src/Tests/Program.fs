@@ -9,9 +9,9 @@ open DiffSharp.Distributions
 let main argv =
     printfn "Hello World from F#!"
 
-    // let a = toFlatArrayAndShape<float32> 2.f
-    // let b = toFlatArrayAndShape<float32> [2.f; 3.f]
-    // let c = toFlatArrayAndShape<float32> [[2.f; 3.f; 7.f]; [4.f; 5.f; 6.f]]
+    // let a = flatArrayAndShape<float32> 2.f
+    // let b = flatArrayAndShape<float32> [2.f; 3.f]
+    // let c = flatArrayAndShape<float32> [[2.f; 3.f; 7.f]; [4.f; 5.f; 6.f]]
     // printfn "%A" a
     // printfn "%A" b
     // printfn "%A" c
@@ -38,5 +38,20 @@ let main argv =
     // printfn "%A" a
 
     let a = Normal(Tensor.Create(0.), Tensor.Create(1.))
-    printfn "%A" (a.Sample(1))
+    printfn "%A" (a.Sample())
+    printfn "%A" (a.Sample(2))
+
+    let b = Normal(Tensor.Create([0.;10.]), Tensor.Create([1.;1.]))
+    printfn "%A" (b.Sample())
+    printfn "%A" (b.Sample(2))
+
+    // let a = Tensor.RandomNormal([||])
+    // let b = Tensor.RandomNormal([||])
+    // let c = Tensor.RandomNormal([||])
+    // let d = Tensor.Stack([|a; b; c|])
+    // printfn "%A %A" a a.Shape
+    // printfn "%A %A" b b.Shape
+    // printfn "%A %A" c c.Shape
+    // printfn "%A %A" d d.Shape
+
     0 // return an integer exit code
