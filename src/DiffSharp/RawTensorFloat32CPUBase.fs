@@ -99,7 +99,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         | :? RawTensorFloat32CPUBase as t2 -> arraysApproximatelyEqual tolerance (t1.Value:?>float32[]) (t2.Value:?>float32[])
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override t.StackTs(tensors) =
+    override __.StackTs(tensors) =
         let tensors = tensors |> Seq.toList
         let values, shapes = tensors |> List.map (fun t -> t.Value:?>float32[], t.Shape) |> List.unzip
         if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
