@@ -31,9 +31,9 @@ type Layer() =
     member l.NoDiff() = l.Map(fun _ p -> p.NoDiff())
     abstract member Forward: Tensor -> Tensor
     
-type Linear(inFeatures, ooutFeatures) =
+type Linear(inFeatures, outFeatures) =
     inherit Layer()
-    let w = Parameter(Tensor.Random([inFeatures; ooutFeatures]))
-    let b = Parameter(Tensor.Random([ooutFeatures]))
+    let w = Parameter(Tensor.Random([inFeatures; outFeatures]))
+    let b = Parameter(Tensor.Random([outFeatures]))
     do base.AddParameters(["weight", w; "bias", b])
     override l.Forward(value) = Tensor.MatMul(value, w.Tensor) + b.Tensor
