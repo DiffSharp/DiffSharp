@@ -18,6 +18,10 @@ type Model() =
         |> fc1.Forward |> Tensor.Relu
         |> fc2.Forward |> Tensor.Relu
 
+let optimize (model:Layer) (lr:Tensor) =
+    let update k (p:Parameter) = printfn "updating %A" k; p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+    model.Map(update)
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
@@ -28,14 +32,11 @@ let main argv =
     model.ReverseDiff()
     let x = Tensor.Random([1; 2])
     let o = model.Forward(x)
-    printfn "%A" x
-    printfn "%A" o
-    printfn "%A\n\n" model.Parameters
-    model.NoDiff()
-    let x = Tensor.Random([1; 2])
-    let o = model.Forward(x)
-    printfn "%A" x
-    printfn "%A" o
-    printfn "%A\n\n" model.Parameters
+    o.Reverse(Tensor.Random([1; 1]))
 
+    printfn "\n%A\n" model.Parameters
+    optimize model (Tensor.Create(0.1))
+    printfn "\n%A\n" model.Parameters
+
+    
     0 // return an integer exit code

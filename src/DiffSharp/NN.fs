@@ -3,13 +3,14 @@ open DiffSharp
 open System.Collections.Generic
 
 type Parameter(tensor:Tensor) =
-    let mutable tensor = tensor
-    member t.Tensor 
-        with get() = tensor
-    member t.ForwardDiff(derivative) = tensor <- tensor.ForwardDiff(derivative)
-    member t.ReverseDiff() = tensor <- tensor.ReverseDiff()
-    member t.NoDiff() = tensor <- tensor.NoDiff()
-    override t.ToString() = sprintf "Parameter %A" tensor
+    let mutable t = tensor
+    member p.Tensor 
+        with get() = t
+        and set(tensor) = t <- tensor
+    member p.ForwardDiff(derivative) = t <- t.ForwardDiff(derivative)
+    member p.ReverseDiff() = t <- t.ReverseDiff()
+    member p.NoDiff() = t <- t.NoDiff()
+    override p.ToString() = sprintf "Parameter %A" t
 
 [<AbstractClass>]
 type Layer() =
@@ -22,7 +23,7 @@ type Layer() =
                 for KeyValue(nn, pp) in layer.Parameters do
                     l.Parameters.Add(n + "_" + nn, pp)
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Layer or Parameter"
-    member private l.Map(f) =
+    member l.Map(f) =
         let keys = Array.create l.Parameters.Count ""
         l.Parameters.Keys.CopyTo(keys, 0)
         for k in keys do f k l.Parameters.[k]
