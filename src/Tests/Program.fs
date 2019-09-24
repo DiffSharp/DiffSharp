@@ -14,9 +14,9 @@ type Model() =
     let fc2 = Linear(2, 1)
     do base.AddParameters(["fc1", fc1; "fc2", fc2])
     override l.Forward(x) =
-        let x = fc1.Forward(x) |> Tensor.Relu
-        let x = fc2.Forward(x) |> Tensor.Relu
-        x
+        x 
+        |> fc1.Forward |> Tensor.Relu
+        |> fc2.Forward |> Tensor.Relu
 
 [<EntryPoint>]
 let main argv =
