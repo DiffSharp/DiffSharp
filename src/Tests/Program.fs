@@ -5,63 +5,37 @@ open System.Collections.Generic
 open DiffSharp
 open DiffSharp.Util
 open DiffSharp.Distributions
-// [<AbstractClass>]
+open DiffSharp.NN
 
-// type Layer =
-//     val Parameters: Dictionary<string, Tensor>
-//     new(parameters) = {Parameters = parameters}
-//     member l.ReverseDiff() = 
-//         l.Parameters.Keys |> Seq.iter (fun t -> l.Parameters.[t] <- l.Parameters.[t].ReverseDiff())
 
-// type Linear =
-//     inherit Layer
-//     new(inFeatures, outFeatures) = 
-//         let w = Tensor.Random([inFeatures; outFeatures])
-//         let b = Tensor.Random([outFeatures])
-
-//         let d = Dictionary()
-//         d.Add("W", w)
-//         d.Add("b", b)
-//         {inherit Layer(Dictionary(d))}
-
-//     // Parameters <- Dictionary()
-//         // let d = Dictionary()
-//         // d.Add("W", w)
-//         // d.Add("b", b)
-//         // d
-
-type Layer(parameters) =
-    member val Parameters:Dictionary<string, Tensor> = Dictionary(parameters |> Map.ofList)
-    member l.ReverseDiff() = 
-        let keys = Array.create l.Parameters.Count ""
-        l.Parameters.Keys.CopyTo(keys, 0)
-        for k in keys do l.Parameters.[k] <- l.Parameters.[k].ReverseDiff()
-
-type Linear(inFeatures, outFeatures) =
-    inherit Layer([
-        "W", Tensor.Random([inFeatures; outFeatures]); 
-        "b", Tensor.Random([outFeatures])])
-    do printfn ""
-    member l.Forward(value) = Tensor.MatMul(value, l.Parameters.["W"]) + l.Parameters.["b"]
+type Model() =
+    inherit Layer()
+    let fc1 = Linear(2, 2)
+    let fc2 = Linear(2, 1)
+    do base.AddParameters(["fc1", fc1; "fc2", fc2])
+    override l.Forward(x) =
+        let x = fc1.Forward(x) |> Tensor.Relu
+        let x = fc2.Forward(x) |> Tensor.Relu
+        x
 
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
 
-    DiffSharp.Seed(123)
-    DiffSharp.NestReset()
-    let layer = Linear(5, 3)
-    let x = Tensor.Random([1; 5])
+    // DiffSharp.Seed(123)
+    // DiffSharp.NestReset()
+    let model = Model()
+    model.ReverseDiff()
+    let x = Tensor.Random([1; 2])
+    let o = model.Forward(x)
+    printfn "%A" x
+    printfn "%A" o
+    printfn "%A\n\n" model.Parameters
+    model.NoDiff()
+    let x = Tensor.Random([1; 2])
+    let o = model.Forward(x)
+    printfn "%A" x
+    printfn "%A" o
+    printfn "%A\n\n" model.Parameters
 
-    layer.ReverseDiff()
-    let o = x |> layer.Forward |> Tensor.Relu
-    // printfn "%A" layer.Parameters
-    printfn "%A" x
-    printfn "%A" o
-    o.Reverse(Tensor.Random([1;3]))
-    printfn ""
-    // printfn "%A" layer.Parameters
-    printfn "%A" x
-    printfn "%A" o
-    
     0 // return an integer exit code

@@ -8,6 +8,7 @@
     <Compile Include="RawTensorFloat32CPUBase.fs" />
     <Compile Include="Tensor.fs" />
     <Compile Include="Distributions.fs" />
+    <Compile Include="NN.fs" />
     <Compile Include="DiffSharp.fs" />
   </ItemGroup>
 </Project>
