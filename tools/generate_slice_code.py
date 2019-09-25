@@ -15,13 +15,13 @@ def generate(num_dims, fixed_dims):
         else:
             str += '\n    let i{}min = defaultArg i{}min 0'.format(i, i)
             str += '\n    let i{}max = defaultArg i{}max t.Shape.[{}] - 1'.format(i, i, i)
-    str += '\n    let indices = array2D ['
+    str += '\n    let bounds = array2D ['
     prefix = ''
     for i in range(num_dims):
         str += '{}[i{}min; i{}max]'.format(prefix, i, i)
         prefix = '; '
     str += ']'
-    str += '\n    t.GetSlice(indices)\n'
+    str += '\n    t.GetSlice(bounds)\n'
     return str
 
 def per(n):

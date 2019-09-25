@@ -40,15 +40,26 @@ let main argv =
     // printfn "\n%A\n" model.Parameters
     
 
-    let t = Tensor.Random([2; 2; 3])
-    // let tt = t.[0, *]
-    let tt = t.[1]
+    let t = Tensor.Random([2; 2])
+    printfn "%A" t
+    let tt = t.[0, *]
+    printfn "%A" tt
+    let tt = t.[1, *]
+    printfn "%A" tt    
     let tt = t.[0, 1]
-    let tt = t.[0, 0, 1]
-    let tt = t.[0,*]
-    let tt = t.[*,*]
-    let tt = t.[*,0]
-    let tt = t.[0,*]
+    printfn "%A" tt
+
+    // let tt = t.[1]
+    // let tt = t.[0, 1]
+    // let tt = t.[0, 0, 1]
+    // let tt = t.[0,*]
+    // let tt = t.[*,*]
+    // let tt = t.[*,0]
+    // let tt = t.[0,*]
+
+    // let a = array2D [[1;2];[3;4];[5;6]]
+    // let b = a.[1..,*]
+    // printfn "%A" b
 
     // let r = RawTensorFloat32CPUBase.Create([[1.;2.];[3.;4.]])
     // let i = r.[0]

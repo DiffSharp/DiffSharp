@@ -13,10 +13,26 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tvalue = t.Value:?>float32[]
         tvalue.[flatIndex]
     override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.GetValue(index))
-    override t.GetSlice(index:int[,]) =
-        if index.GetLength(0) <> t.Dim then invalidArg "index" (sprintf "Expecting a %i-by-2 index" t.Dim)
-        printfn "%A" index
-        RawTensorFloat32CPUBase.Create(0.)
+    override t.GetSlice(bounds:int[,]) =
+        // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
+        // printfn "%A" bounds
+        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1)
+        // printfn "%A" shape
+        let array = Array.create (shapeLength shape) 0.f
+        let mutable arrayi = 0
+        let rec slice (bounds:int[,]) externalCoords =
+            if bounds.GetLength(0) = 1 then
+                for i=bounds.[0,0] to bounds.[0,1] do
+                    // printfn "inner %A" i
+                    let globalCoords = Array.append externalCoords [|i|]
+                    array.[arrayi] <- t.GetValue(globalCoords)
+                    arrayi <- arrayi + 1
+            else
+                for i=bounds.[0,0] to bounds.[0,1] do
+                    // printfn "outer %A" i
+                    slice bounds.[1..,*] (Array.append externalCoords [|i|])
+        slice bounds [||]
+        upcast RawTensorFloat32CPUBase(array, shape)
     static member Create(value:obj):RawTensor = 
         let array, shape = value |> flatArrayAndShape<float32>
         if notNull array then 
