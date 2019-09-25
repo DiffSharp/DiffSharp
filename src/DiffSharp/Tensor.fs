@@ -130,15 +130,43 @@ type Tensor =
         | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Create(value))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
-    member private t.GetSlice(indices) =
+    member private t.GetSlice(indices:int[,]) =
+        if t.Dim = 0 then failwith "Not implemented"
+        let fullIndices = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
+        indices |> Array2D.iteri (fun i j v -> fullIndices.[i, j] <- v)
         match t with
-        | Tensor(ap) -> Tensor(ap.GetSlice(indices))
+        | Tensor(ap) -> Tensor(ap.GetSlice(fullIndices))
         | _ -> failwith "Not implemented"
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
-            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
             let indices = Array2D.init index.Length 2 (fun i _ -> index.[i])
             t.GetSlice(indices)
+    member t.GetSlice(i0:int) = 
+        let indices = array2D [[i0; i0]]
+        t.GetSlice(indices)
+    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option) = 
+        let i0min = defaultArg i0min 0
+        let i0max = defaultArg i0max t.Shape.[0] - 1
+        let i1min = defaultArg i1min 0
+        let i1max = defaultArg i1max t.Shape.[1] - 1
+        let indices = array2D [[i0min; i0max]; [i1min; i1max]]
+        t.GetSlice(indices)
+    member t.GetSlice(i0min:int option, i0max:int option, i1:int) = 
+        let i0min = defaultArg i0min 0
+        let i0max = defaultArg i0max t.Shape.[0] - 1
+        let i1min = i1
+        let i1max = i1
+        let indices = array2D [[i0min; i0max]; [i1min; i1max]]
+        t.GetSlice(indices)
+    member t.GetSlice(i0:int, i1min:int option, i1max:int option) = 
+        let i0min = i0
+        let i0max = i0
+        let i1min = defaultArg i1min 0
+        let i1max = defaultArg i1max t.Shape.[1] - 1
+        let indices = array2D [[i0min; i0max]; [i1min; i1max]]
+        t.GetSlice(indices)
+
     static member Extend(a:Tensor, shape:seq<int>) =
         if a.Dim <> 0 then invalidArg "tensor" (sprintf "Expecting a 0d Tensor, received shape: %A" a.Shape)
         match a with
