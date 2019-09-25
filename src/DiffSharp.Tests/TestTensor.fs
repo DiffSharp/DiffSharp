@@ -401,6 +401,10 @@ type TestTensor () =
         let t2s5Correct = Tensor.Create([1.;3.])
         let t2s6Correct = Tensor.Create([[1.;2.];[3.;4.]])
 
+        let t2b = Tensor.Create([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
+        let t2bs1 = t2b.[1..,2..]
+        let t2bs1Correct = Tensor.Create([[7.;8.];[11.;12.]])
+
         let t3 = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
         let t3s1  = t3.[0]
         let t3s2  = t3.[*]
@@ -440,6 +444,8 @@ type TestTensor () =
         Assert.AreEqual(t2s4, t2s4Correct)
         Assert.AreEqual(t2s5, t2s5Correct)
         Assert.AreEqual(t2s6, t2s6Correct)
+
+        Assert.AreEqual(t2bs1, t2bs1Correct)
 
         Assert.AreEqual(t3s1, t3s1Correct)
         Assert.AreEqual(t3s2, t3s2Correct)
