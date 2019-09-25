@@ -142,8 +142,10 @@ type Tensor =
             if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
             let indices = Array2D.init index.Length 2 (fun i _ -> index.[i])
             t.GetSlice(indices)
-    member t.GetSlice(i0:int) = 
-        let indices = array2D [[i0; i0]]
+    member t.GetSlice(i0:int) =
+        let i0min = i0
+        let i0max = i0
+        let indices = array2D [[i0min; i0max]]
         t.GetSlice(indices)
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option) = 
         let i0min = defaultArg i0min 0
@@ -159,7 +161,7 @@ type Tensor =
         let i1max = i1
         let indices = array2D [[i0min; i0max]; [i1min; i1max]]
         t.GetSlice(indices)
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option) = 
+    member t.GetSlice(i0:int, i1min:int option, i1max:int option) =
         let i0min = i0
         let i0max = i0
         let i1min = defaultArg i1min 0
