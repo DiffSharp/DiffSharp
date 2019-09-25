@@ -27,7 +27,39 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     member t.Backend = backend
     override t.ToString() = t.GetString()
     member t.Extend(shape) = t.CreateWithShape(t.ToValue(), shape)
-
+    // member t.Item
+    //     with get([<System.ParamArray>] index:int[]) = 
+    //         t.GetSliceFull(index)
+    //         t.GetItem([|0;0|])        
+    // member t.GetSlice(i1:int option) =
+    //     let i1 = defaultArg i1 -1
+    //     t.GetSliceFull([|i1;i1|])
+    //     t.GetItem([|0;0|])
+    // member t.GetSlice(i1:int option,i2:int option) =
+    //     let i1 = defaultArg i1 -1
+    //     let i2 = defaultArg i2 -1
+    //     t.GetSliceFull([|i1;i2|])
+    //     t.GetItem([|0;0|])
+    // member t.GetSlice(i1:int option,i2:int option,i3:int option) =
+    //     let i1 = defaultArg i1 -1
+    //     let i2 = defaultArg i2 -1
+    //     let i3 = defaultArg i3 -1
+    //     t.GetSliceFull([|i1;i2;i3|])
+    //     t.GetItem([|0;0|])
+    // member t.GetSlice(i1:int option,i2:int option,i3:int) =
+    //     let i1 = defaultArg i1 -1
+    //     let i2 = defaultArg i2 -1
+    //     t.GetSliceFull([|i1;i2;i3;i3|])
+    //     t.GetItem([|0;0|])        
+    // member t.GetSlice(i1:int option,i2:int option,i3:int option,i4:int option) =
+    //     let i1 = defaultArg i1 -1
+    //     let i2 = defaultArg i2 -1
+    //     let i3 = defaultArg i3 -1
+    //     let i4 = defaultArg i4 -1
+    //     t.GetSliceFull([|i1;i2;i3;i4|])
+    //     t.GetItem([|0;0|])
+    // member t.GetSliceFull(indices:int[]) =
+    //     printfn "%A" indices
     abstract member CompareTo: RawTensor -> int
     abstract member Create : obj -> RawTensor
     abstract member CreateWithShape : obj * int[] -> RawTensor
@@ -40,6 +72,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member Random : int[] -> RawTensor
     abstract member RandomNormal : int[] -> RawTensor
     abstract member GetString : unit -> string
+    abstract member GetItem: int[] -> RawTensor
     abstract member ToValue: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool

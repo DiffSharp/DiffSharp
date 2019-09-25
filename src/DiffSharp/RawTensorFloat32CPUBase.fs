@@ -4,15 +4,16 @@ open DiffSharp.Util
 type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     inherit RawTensor(value, shape, Float32, CPU, CPUBase)
 
-    member private t.GetItem (index:int[]) =
-        // if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %i-dimensional index" t.Dim)
+    member private t.GetValue ([<System.ParamArray>] index:int[]) =
+        if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
             let v = if i = index.Length - 1 then 1 else (Array.reduce (*) t.Shape.[i+1..])
             flatIndex <- flatIndex + index.[i] * v
         let tvalue = t.Value:?>float32[]
         tvalue.[flatIndex]
-    
+    override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.GetValue(index))
+
     static member Create(value:obj):RawTensor = 
         let array, shape = value |> flatArrayAndShape<float32>
         if notNull array then 
@@ -60,7 +61,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                     for i=0 to shape.[0]-1 do
                         let globalCoords = Array.append externalCoords [|i|]
                         sb.Append(prefix) |> ignore
-                        sb.Append(sprintf "%A" (t.GetItem(globalCoords))) |> ignore
+                        sb.Append(sprintf "%A" (t.GetValue(globalCoords))) |> ignore
                         prefix <- "; "
                     sb.Append("]") |> ignore
                 else
@@ -77,15 +78,15 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.ToValue() =
         match t.Dim with
         | 0 -> upcast (t.Value:?>float32[]).[0]
-        | _ -> invalidOp (sprintf "Cannot convert %Ad Tensor to single value" t.Dim)
+        | _ -> invalidOp (sprintf "Cannot convert %Ad Tensor to scalar" t.Dim)
 
     override t.ToArray() =
         match t.Dim with
         | 0 -> invalidOp "Cannot convert 0d Tensor to array"
-        | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.GetItem([|i|]))
-        | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.GetItem([|i; j|]))
-        | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.GetItem([|i; j; k|]))
-        | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.GetItem([|i; j; k; l|]))
+        | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.GetValue(i))
+        | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.GetValue(i, j))
+        | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.GetValue(i, j, k))
+        | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.GetValue(i, j, k, l))
         | _ -> invalidOp (sprintf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape)
 
     override t1.Equals(t2:RawTensor) = 

@@ -6,6 +6,7 @@ open DiffSharp
 open DiffSharp.Util
 open DiffSharp.Distributions
 open DiffSharp.NN
+open DiffSharp.RawTensor
 
 
 type Model() =
@@ -28,15 +29,23 @@ let main argv =
 
     // DiffSharp.Seed(123)
     // DiffSharp.NestReset()
-    let model = Model()
-    model.ReverseDiff()
-    let x = Tensor.Random([1; 2])
-    let o = model.Forward(x)
-    o.Reverse(Tensor.Random([1; 1]))
+    // let model = Model()
+    // model.ReverseDiff()
+    // let x = Tensor.Random([1; 2])
+    // let o = model.Forward(x)
+    // o.Reverse(Tensor.Random([1; 1]))
 
-    printfn "\n%A\n" model.Parameters
-    optimize model (Tensor.Create(0.1))
-    printfn "\n%A\n" model.Parameters
-
+    // printfn "\n%A\n" model.Parameters
+    // optimize model (Tensor.Create(0.1))
+    // printfn "\n%A\n" model.Parameters
     
+    // let r = RawTensorFloat32CPUBase.Create([[1.;2.];[3.;4.]])
+    // let i = r.[0]
+    // let i = r.[0, 1]
+    // let i = r.[*, 1]
+    // let i = r.[1.., 1]
+    // let i = r.[..1, 1]
+    // printfn "%A" r
+    // printfn "%A" i
+
     0 // return an integer exit code
