@@ -130,6 +130,15 @@ type Tensor =
         | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Create(value))
         | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
 
+    member private t.GetSlice(indices) =
+        match t with
+        | Tensor(ap) -> Tensor(ap.GetSlice(indices))
+        | _ -> failwith "Not implemented"
+    member t.Item
+        with get([<System.ParamArray>] index:int[]) =
+            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            let indices = Array2D.init index.Length 2 (fun i _ -> index.[i])
+            t.GetSlice(indices)
     static member Extend(a:Tensor, shape:seq<int>) =
         if a.Dim <> 0 then invalidArg "tensor" (sprintf "Expecting a 0d Tensor, received shape: %A" a.Shape)
         match a with

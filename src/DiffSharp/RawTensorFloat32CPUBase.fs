@@ -13,7 +13,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tvalue = t.Value:?>float32[]
         tvalue.[flatIndex]
     override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.GetValue(index))
-
+    override t.GetSlice(index:int[,]) =
+        if index.GetLength(0) <> t.Dim then invalidArg "index" (sprintf "Expecting a %i-by-2 index" t.Dim)
+        printfn "%A" index
+        RawTensorFloat32CPUBase.Create(0.)
     static member Create(value:obj):RawTensor = 
         let array, shape = value |> flatArrayAndShape<float32>
         if notNull array then 
@@ -36,15 +39,15 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
     override t.Create(value) = RawTensorFloat32CPUBase.Create(value)
-    override t.CreateWithShape(value, shape) =
+    override t.Create(value, shape) =
         let value = value:?>float32
         match shape.Length with
         | 0 -> upcast RawTensorFloat32CPUBase([|value|], [||])
-        | _ -> upcast RawTensorFloat32CPUBase(Array.create (shape |> Array.reduce (*)) value, shape)
+        | _ -> upcast RawTensorFloat32CPUBase(Array.create (shapeLength shape) value, shape)
     override t.Zero() = upcast RawTensorFloat32CPUBase([|0.f|], [||])
     override t.Zeros(shape) = RawTensorFloat32CPUBase.Zeros(shape)
     override t.One() = upcast RawTensorFloat32CPUBase([|1.f|], [||])
-    override t.Ones(shape) = RawTensorFloat32CPUBase.Ones( shape)
+    override t.Ones(shape) = RawTensorFloat32CPUBase.Ones(shape)
     override t.Random(shape) = RawTensorFloat32CPUBase.Random(shape)
     override t.RandomNormal(shape) = RawTensorFloat32CPUBase.RandomNormal(shape)
 

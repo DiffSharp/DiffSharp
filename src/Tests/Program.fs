@@ -39,6 +39,9 @@ let main argv =
     // optimize model (Tensor.Create(0.1))
     // printfn "\n%A\n" model.Parameters
     
+    let t = Tensor.Random([2; 2; 3])
+    let tt = t.[0, 0, 1]
+
     // let r = RawTensorFloat32CPUBase.Create([[1.;2.];[3.;4.]])
     // let i = r.[0]
     // let i = r.[0, 1]

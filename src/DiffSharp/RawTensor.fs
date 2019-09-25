@@ -26,7 +26,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     member t.Device = device
     member t.Backend = backend
     override t.ToString() = t.GetString()
-    member t.Extend(shape) = t.CreateWithShape(t.ToValue(), shape)
+    member t.Extend(shape) = t.Create(t.ToValue(), shape)
     // member t.Item
     //     with get([<System.ParamArray>] index:int[]) = 
     //         t.GetSliceFull(index)
@@ -62,7 +62,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     //     printfn "%A" indices
     abstract member CompareTo: RawTensor -> int
     abstract member Create : obj -> RawTensor
-    abstract member CreateWithShape : obj * int[] -> RawTensor
+    abstract member Create : obj * int[] -> RawTensor
     abstract member StackTs: seq<RawTensor> -> RawTensor
     abstract member UnstackT: unit -> seq<RawTensor>
     abstract member Zero : unit -> RawTensor
@@ -73,6 +73,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member RandomNormal : int[] -> RawTensor
     abstract member GetString : unit -> string
     abstract member GetItem: int[] -> RawTensor
+    abstract member GetSlice: int[,] -> RawTensor
     abstract member ToValue: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
