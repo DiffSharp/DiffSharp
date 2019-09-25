@@ -379,6 +379,80 @@ type TestTensor () =
 
         Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
 
-    // [<Test>]
-    // member this.TestTensorSlice () =
-        // let t = Tensor.Create[]
+    [<Test>]
+    member this.TestTensorSlice () =
+        let t1 = Tensor.Create([1.;2.])
+        let t1s1 = t1.[0]
+        let t1s2 = t1.[*]
+        let t1s1Correct = Tensor.Create(1.)
+        let t1s2Correct = Tensor.Create([1.;2.])
+
+        let t2 = Tensor.Create([[1.;2.];[3.;4.]])
+        let t2s1 = t2.[0]
+        let t2s2 = t2.[*]
+        let t2s3 = t2.[0,0]
+        let t2s4 = t2.[0,*]
+        let t2s5 = t2.[*,0]
+        let t2s6 = t2.[*,*]
+        let t2s1Correct = Tensor.Create([1.;2.])
+        let t2s2Correct = Tensor.Create([[1.;2.];[3.;4.]])
+        let t2s3Correct = Tensor.Create(1.)
+        let t2s4Correct = Tensor.Create([1.;2.])
+        let t2s5Correct = Tensor.Create([1.;3.])
+        let t2s6Correct = Tensor.Create([[1.;2.];[3.;4.]])
+
+        let t3 = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s1  = t3.[0]
+        let t3s2  = t3.[*]
+        let t3s3  = t3.[0,0]
+        let t3s4  = t3.[0,*]
+        let t3s5  = t3.[*,0]
+        let t3s6  = t3.[*,*]
+        let t3s7  = t3.[0,0,0]
+        let t3s8  = t3.[0,0,*]
+        let t3s9  = t3.[0,*,0]
+        let t3s10 = t3.[0,*,*]
+        let t3s11 = t3.[*,0,0]
+        let t3s12 = t3.[*,0,*]
+        let t3s13 = t3.[*,*,0]
+        let t3s14 = t3.[*,*,*]
+        let t3s1Correct  = Tensor.Create([[1.;2.];[3.;4.]])
+        let t3s2Correct  = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s3Correct  = Tensor.Create([1.;2.])
+        let t3s4Correct  = Tensor.Create([[1.;2.];[3.;4.]])
+        let t3s5Correct  = Tensor.Create([[1.;2.];[5.;6.]])
+        let t3s6Correct  = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s7Correct  = Tensor.Create(1.)
+        let t3s8Correct  = Tensor.Create([1.;2.])
+        let t3s9Correct  = Tensor.Create([1.;3.])
+        let t3s10Correct = Tensor.Create([[1.;2.];[3.;4.]])
+        let t3s11Correct = Tensor.Create([1.;5.])
+        let t3s12Correct = Tensor.Create([[1.;2.];[5.;6.]])
+        let t3s13Correct = Tensor.Create([[1.;3.];[5.;7.]])
+        let t3s14Correct = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+
+        Assert.AreEqual(t1s1, t1s1Correct)
+        Assert.AreEqual(t1s2, t1s2Correct)
+
+        Assert.AreEqual(t2s1, t2s1Correct)
+        Assert.AreEqual(t2s2, t2s2Correct)
+        Assert.AreEqual(t2s3, t2s3Correct)
+        Assert.AreEqual(t2s4, t2s4Correct)
+        Assert.AreEqual(t2s5, t2s5Correct)
+        Assert.AreEqual(t2s6, t2s6Correct)
+
+        Assert.AreEqual(t3s1, t3s1Correct)
+        Assert.AreEqual(t3s2, t3s2Correct)
+        Assert.AreEqual(t3s3, t3s3Correct)
+        Assert.AreEqual(t3s4, t3s4Correct)
+        Assert.AreEqual(t3s5, t3s5Correct)
+        Assert.AreEqual(t3s6, t3s6Correct)
+        Assert.AreEqual(t3s7, t3s7Correct)
+        Assert.AreEqual(t3s8, t3s8Correct)
+        Assert.AreEqual(t3s9, t3s9Correct)
+        Assert.AreEqual(t3s10, t3s10Correct)
+        Assert.AreEqual(t3s11, t3s11Correct)
+        Assert.AreEqual(t3s12, t3s12Correct)
+        Assert.AreEqual(t3s13, t3s13Correct)
+        Assert.AreEqual(t3s14, t3s14Correct)
+
