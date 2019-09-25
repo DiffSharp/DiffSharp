@@ -36,6 +36,9 @@ let shapeLength (shape:int[]) =
     if shape.Length = 0 then 1
     else Array.reduce (*) shape
 
+let shapeSqueeze (shape:int[]) =
+    [for s in shape do if s <> 1 then yield s] |> List.toArray
+
 let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length

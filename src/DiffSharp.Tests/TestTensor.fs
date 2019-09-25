@@ -377,4 +377,8 @@ type TestTensor () =
         let t1Sqrt = t1.Sqrt()
         let t1SqrtCorrect = Tensor.Create([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
 
-        Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))   
+        Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
+
+    // [<Test>]
+    // member this.TestTensorSlice () =
+        // let t = Tensor.Create[]

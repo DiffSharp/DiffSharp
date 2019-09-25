@@ -16,7 +16,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.GetSlice(bounds:int[,]) =
         // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
         // printfn "%A" bounds
-        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1)
+        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1) |> shapeSqueeze
         // printfn "%A" shape
         let array = Array.create (shapeLength shape) 0.f
         let mutable arrayi = 0

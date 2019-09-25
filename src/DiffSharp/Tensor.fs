@@ -701,18 +701,29 @@ and TensorOp =
     | SqrtT of Tensor
     | NewT
 
+        // | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
+        // | TensorF(ap,ad,at) ->
+        //     let cp = Tensor.Extend(ap, shape)
+        //     let cd = Tensor.Extend(ad, shape)
+        //     TensorF(cp,cd,at)
+        // | TensorR(ap,_,_,_,at) ->
+        //     let cp = Tensor.Extend(ap, shape)
+        //     TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
+
 type Tensor with
     member private t.GetSlice(bounds:int[,]) =
-        if t.Dim = 0 then failwith "Not implemented"
+        if t.Dim = 0 then invalidOp "Cannot slice a scalar Tensor"
         let fullbounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
             fullbounds.[i, j] <- v)
         match t with
         | Tensor(ap) -> Tensor(ap.GetSlice(fullbounds))
+        | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullbounds), ad.GetSlice(fullbounds), at)
         | _ -> failwith "Not implemented"
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
+            if t.Dim = 0 then invalidOp "Cannot index a scalar Tensor"
             if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
             let bounds = Array2D.init index.Length 2 (fun i _ -> index.[i])
             t.GetSlice(bounds)

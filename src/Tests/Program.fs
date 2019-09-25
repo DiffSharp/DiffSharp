@@ -42,11 +42,18 @@ let main argv =
 
     let t = Tensor.Random([2; 2])
     printfn "%A" t
-    let tt = t.[0, *]
+    let tt = t.[0, 0]
     printfn "%A" tt
-    let tt = t.[1, *]
+    let tt = t.[0, *]
     printfn "%A" tt    
-    let tt = t.[0, 1]
+    let tt = t.[*, 0]
+    printfn "%A" tt
+    let tt = t.[*, *]
+    printfn "%A" tt
+
+    let t = Tensor.Random([])
+    printfn "%A" t
+    let tt = t.[0]
     printfn "%A" tt
 
     // let tt = t.[1]
