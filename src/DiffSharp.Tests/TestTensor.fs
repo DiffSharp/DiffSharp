@@ -480,3 +480,19 @@ type TestTensor () =
             [   0.6776;    1.5844;   -0.5686]])
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorSqueezeT () =
+        let t1 = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
+        let t1Squeeze = t1.Squeeze()
+        let t1SqueezeCorrect = Tensor.Create([[1.;2.];[3.;4.]])
+
+        Assert.True(t1Squeeze.ApproximatelyEqual(t1SqueezeCorrect))
+
+    [<Test>]
+    member this.TestTensorUnsqueezeT () =
+        let t1 = Tensor.Create([[1.;2.];[3.;4.]])
+        let t1Unsqueeze = t1.Unsqueeze(1)
+        let t1UnsqueezeCorrect = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
+
+        Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))        
