@@ -389,4 +389,19 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.TanhT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map tanh
-        upcast RawTensorFloat32CPUBase(result, t.Shape)            
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t.AsinT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map asin
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+        
+    override t.AcosT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map acos
+        upcast RawTensorFloat32CPUBase(result, t.Shape)                
+        
+    override t.AtanT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map atan
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
