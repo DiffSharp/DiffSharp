@@ -21,7 +21,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.GetSlice(bounds:int[,]) =
         // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
         // printfn "%A" bounds
-        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1) |> shapeSqueeze
+        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1) |> shapeSqueeze -1
         // printfn "%A" shape
         let array = Array.create (shapeLength shape) 0.f
         let mutable arrayi = 0
@@ -310,15 +310,15 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> tvalue.[j*tcols + i])
         RawTensorFloat32CPUBase.Create(result)
 
-    override t.SqueezeT() =
+    override t.SqueezeT(dim) =
         let tvalue = t.Value:?>float32[]
         let result = Array.copy tvalue
-        upcast RawTensorFloat32CPUBase(result, shapeSqueeze t.Shape)
+        upcast RawTensorFloat32CPUBase(result, shapeSqueeze dim t.Shape)
 
     override t.UnsqueezeT(dim) =
         let tvalue = t.Value:?>float32[]
         let result = Array.copy tvalue
-        upcast RawTensorFloat32CPUBase(result, shapeUnsqueeze t.Shape dim)
+        upcast RawTensorFloat32CPUBase(result, shapeUnsqueeze dim t.Shape)
 
     override t.ViewT(shape:int[]) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape

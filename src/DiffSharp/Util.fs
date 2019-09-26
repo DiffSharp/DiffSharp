@@ -36,11 +36,17 @@ let shapeLength (shape:int[]) =
     if shape.Length = 0 then 1
     else Array.reduce (*) shape
 
-let shapeSqueeze (shape:int[]) =
-    [|for s in shape do if s <> 1 then yield s|]
+let shapeSqueeze (dim:int) (shape:int[]) =
+    if dim = -1 then
+        [|for s in shape do if s <> 1 then yield s|]
+    elif shape.[dim] = 1 then
+        [|for i=0 to shape.Length - 1 - 1 do 
+            if i < dim then yield shape.[i]
+            elif i > dim then yield shape.[i+1]|]
+    else shape
 
-let shapeUnsqueeze (shape:int[]) (dim:int) =
-    [|for i=0 to shape.Length + 1 do 
+let shapeUnsqueeze (dim:int) (shape:int[]) =
+    [|for i=0 to shape.Length - 1 + 1 do 
         if i < dim then yield shape.[i]
         elif i = dim then yield 1
         else yield shape.[i-1]|]

@@ -454,6 +454,25 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Transpose() = Tensor.Transpose(t)
 
+    static member Squeeze (a:Tensor, ?dim:int) =
+        let dim = defaultArg dim -1
+        let inline fRaw(a:RawTensor) = a.SqueezeT(dim)
+        let inline fTensor(a) = Tensor.Squeeze(a, dim)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Squeeze(ad, dim)
+        let inline dfTensorRev(a) = SqueezeT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Squeeze(?dim) = 
+        let dim = defaultArg dim -1
+        Tensor.Squeeze(t, dim)
+
+    static member Unsqueeze (a:Tensor, dim:int) =
+        let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
+        let inline fTensor(a) = Tensor.Unsqueeze(a, dim)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Unsqueeze(ad, dim)
+        let inline dfTensorRev(a) = UnsqueezeT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
+
     static member View (a:Tensor, shape:seq<int>) =
         let inline fRaw(a:RawTensor) = a.ViewT(shape |> Seq.toArray)
         let inline fTensor(a) = Tensor.View(a, shape)
@@ -461,6 +480,9 @@ type Tensor =
         let inline dfTensorRev(a) = ViewT(a, a.Shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.View(shape) = Tensor.View(t, shape)
+
+    static member ViewAs(a:Tensor, b:Tensor) = a.View(b.Shape)
+    member a.ViewAs(b:Tensor) = a.View(b.Shape)
 
     static member Sign (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SignT()
@@ -591,6 +613,8 @@ type Tensor =
                         | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
+                        | SqueezeT(a) -> reset (a::tt)
+                        | UnsqueezeT(a) -> reset (a::tt)
                         | ViewT(a,_) -> reset (a::tt)
                         | SliceT(a,_) -> reset (a::tt)
                         | AddTTSlice(a,_,b) -> reset (a::b::tt)
@@ -670,6 +694,8 @@ type Tensor =
                             a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative)
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
+                        | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
+                        | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative)
@@ -749,6 +775,8 @@ and TensorOp =
     | AddTTConstSlice of Tensor
     | AddTCostTSlice of int[] * Tensor
     | TransposeT2 of Tensor
+    | SqueezeT of Tensor
+    | UnsqueezeT of Tensor
     | ViewT of Tensor * int[]
     | SignT of Tensor
     | AbsT of Tensor
