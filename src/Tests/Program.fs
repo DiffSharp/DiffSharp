@@ -11,8 +11,8 @@ open DiffSharp.RawTensor
 
 type Model() =
     inherit Layer()
-    let fc1 = Linear(2, 2)
-    let fc2 = Linear(2, 1)
+    let fc1 = Linear(2, 16)
+    let fc2 = Linear(16, 1)
     do base.AddParameters(["fc1", fc1; "fc2", fc2])
     override l.Forward(x) =
         x 
@@ -27,10 +27,16 @@ let optimize (model:Layer) (lr:Tensor) =
 let main argv =
     printfn "Hello World from F#!"
 
-    // DiffSharp.Seed(123)
-    // DiffSharp.NestReset()
-    // let model = Model()
-    // model.ReverseDiff()
+    DiffSharp.Seed(123)
+    DiffSharp.NestReset()
+    let model = Model()
+    model.ReverseDiff()
+    let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
+    let x = data.[*,0..1]
+    let y = data.[*,2..]
+    printfn "%A" x
+    printfn "%A" y
+
     // let x = Tensor.Random([1; 2])
     // let o = model.Forward(x)
     // o.Reverse(Tensor.Random([1; 1]))
@@ -38,13 +44,5 @@ let main argv =
     // printfn "\n%A\n" model.Parameters
     // optimize model (Tensor.Create(0.1))
     // printfn "\n%A\n" model.Parameters
-    
-    let a = RawTensorFloat32CPUBase.Create([[1.;2.;3.];[4.;5.;6.];[7.;8.;9.]])
-    let b = RawTensorFloat32CPUBase.Create([[10.;20.];[30.;40.]])
-    printfn "%A" a
-    printfn "%A" b
-    let c = a.AddTTSlice([|0;0|], b)
-    printfn "%A" c
-
 
     0 // return an integer exit code
