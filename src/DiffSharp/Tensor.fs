@@ -144,14 +144,14 @@ type Tensor =
 
     member internal t.GetSlice(bounds:int[,]) =
         if t.Dim = 0 then invalidOp "Cannot slice a scalar Tensor"
-        let fullbounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
+        let fullBounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
-            fullbounds.[i, j] <- v)
+            fullBounds.[i, j] <- v)
         match t with
-        | Tensor(ap) -> Tensor(ap.GetSlice(fullbounds))
-        | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullbounds), ad.GetSlice(fullbounds), at)
-        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullbounds), ref (ap.Zero()), SliceT(t, fullbounds), ref 0u, at)
+        | Tensor(ap) -> Tensor(ap.GetSlice(fullBounds))
+        | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
+        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.Zero()), SliceT(t, fullBounds), ref 0u, at)
 
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
@@ -746,15 +746,6 @@ and TensorOp =
     | LogT of Tensor
     | SqrtT of Tensor
     | NewT
-
-        // | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
-        // | TensorF(ap,ad,at) ->
-        //     let cp = Tensor.Extend(ap, shape)
-        //     let cd = Tensor.Extend(ad, shape)
-        //     TensorF(cp,cd,at)
-        // | TensorR(ap,_,_,_,at) ->
-        //     let cp = Tensor.Extend(ap, shape)
-        //     TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
 type Tensor with
     member t.GetSlice(i0min:int option, i0max:int option) =
@@ -2419,9 +2410,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
-
-
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
