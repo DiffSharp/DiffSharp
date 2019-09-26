@@ -29,31 +29,31 @@ let optimize (model:Layer) (lr:Tensor) =
 let main argv =
     printfn "Hello World from F#!"
 
-    // DiffSharp.Seed(123)
-    // DiffSharp.NestReset()
-    // let model = Model()
-    // model.ReverseDiff()
-    // let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
-    // let x = data.[*,0..1]
-    // let y = data.[*,2..]
-    // printfn "%A" x
-    // printfn "%A" y
+    DiffSharp.Seed(123)
+    DiffSharp.NestReset()
+    let model = Model()
+    model.ReverseDiff()
+    let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
+    let x = data.[*,0..1]
+    let y = data.[*,2..]
+    printfn "%A" x
+    printfn "%A" y
 
-    // let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
+    let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
 
-    // for i=0 to 10000 do    
-    //     model.ReverseDiff()
-    //     let o = model.Forward(x).View([4])
-    //     let loss = mseloss o y
-    //     printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
-    //     // printfn "%A" loss
-    //     loss.Reverse()
-    //     optimize model (Tensor.Create(0.01))
+    for i=0 to 10000 do    
+        model.ReverseDiff()
+        let o = model.Forward(x).View([4])
+        let loss = mseloss o y
+        printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
+        // printfn "%A" loss
+        loss.Reverse()
+        optimize model (Tensor.Create(0.01))
 
-    let a = Tensor.Create(0.)
-    let b = Tensor.Create(0.).ForwardDiff(Tensor.Create(2.))
-    let c = Tensor.Create(1.).ReverseDiff()
+    // let a = Tensor.Create(0.)
+    // let b = Tensor.Create(0.).ForwardDiff(Tensor.Create(2.))
+    // let c = Tensor.Create(1.).ReverseDiff()
 
-    
+
 
     0 // return an integer exit code
