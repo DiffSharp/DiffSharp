@@ -80,6 +80,18 @@ type Tensor =
                 else
                     invalidOp "Cannot compare non-scalar Tensors"
             | _ -> invalidOp "Cannot compare Tensor with another type"
+    member t1.IsSameDiffType(t2:Tensor) =
+        match t1, t2 with
+        | Tensor(_),  Tensor(_)  -> true
+        | Tensor(_),  TensorF(_) -> false
+        | Tensor(_),  TensorR(_) -> false
+        | TensorF(_), Tensor(_)  -> false
+        | TensorF(_), TensorF(_) -> true
+        | TensorF(_), TensorR(_) -> false
+        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), TensorF(_) -> false
+        | TensorR(_), TensorR(_) -> true
+
     static member Lt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
     member t1.Lt(t2) = Tensor.Lt(t1, t2)
     static member Gt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))

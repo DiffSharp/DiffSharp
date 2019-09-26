@@ -523,6 +523,9 @@ type TestDerivatives () =
         Assert.True(revxda.ApproximatelyEqual(revxdaCorrect))
         Assert.True(revxdb.ApproximatelyEqual(revxdbCorrect))
         Assert.True(revxdc.ApproximatelyEqual(revxdcCorrect))
+    // TODO: Add test for UnstackT
+    // TODO: Add test for SqueezeT
+    // TODO: Add test for UnsqueezeT
 
     [<Test>]
     member this.TestDerivativeSliceT () =

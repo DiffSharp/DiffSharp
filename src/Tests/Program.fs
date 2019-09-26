@@ -50,12 +50,10 @@ let main argv =
     //     loss.Reverse()
     //     optimize model (Tensor.Create(0.01))
 
-    let revx = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).ReverseDiff()
-    let revz = revx.[2..]
-    let revzCorrect = Tensor.Create([16.0868; 74.5486; 82.9318])
-    revz.Reverse(Tensor.Create([0.9360; 0.8748; 0.4353]))
-    // let revxd = revx.Derivative
-    // let revxdCorrect = Tensor.Create([0.; 0.; 0.9360; 0.8748; 0.4353])
+    let a = Tensor.Create(0.)
+    let b = Tensor.Create(0.).ForwardDiff(Tensor.Create(2.))
+    let c = Tensor.Create(1.).ReverseDiff()
 
+    
 
     0 // return an integer exit code
