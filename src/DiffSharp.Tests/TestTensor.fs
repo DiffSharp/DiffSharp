@@ -388,6 +388,22 @@ type TestTensor () =
         Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
 
     [<Test>]
+    member this.TestTensorSinT () =
+        let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+        let t1Sin = t1.Sin()
+        let t1SinCorrect = Tensor.Create([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
+
+        Assert.True(t1Sin.ApproximatelyEqual(t1SinCorrect))
+
+    [<Test>]
+    member this.TestTensorCosT () =
+        let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+        let t1Cos = t1.Cos()
+        let t1CosCorrect = Tensor.Create([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
+
+        Assert.True(t1Cos.ApproximatelyEqual(t1CosCorrect))
+
+    [<Test>]
     member this.TestTensorSlice () =
         let t1 = Tensor.Create([1.;2.])
         let t1s1 = t1.[0]

@@ -360,3 +360,13 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map sqrt
         upcast RawTensorFloat32CPUBase(result, t.Shape)
+        
+    override t.SinT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map sin
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+        
+    override t.CosT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map cos
+        upcast RawTensorFloat32CPUBase(result, t.Shape)                

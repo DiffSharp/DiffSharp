@@ -79,3 +79,5 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member LogT: unit -> RawTensor
     abstract member Log10T: unit -> RawTensor
     abstract member SqrtT: unit -> RawTensor
+    abstract member SinT: unit -> RawTensor
+    abstract member CosT: unit -> RawTensor

@@ -551,6 +551,22 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sqrt() = Tensor.Sqrt(t)
 
+    static member Sin (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SinT()
+        let inline fTensor(a) = Tensor.Sin(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cos(ap)
+        let inline dfTensorRev(a) = SinT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Sin() = Tensor.Sin(t)
+
+    static member Cos (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.CosT()
+        let inline fTensor(a) = Tensor.Cos(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = -ad * Tensor.Sin(ap)
+        let inline dfTensorRev(a) = CosT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Cos() = Tensor.Cos(t)
+
     static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
         let location = location |> Seq.toArray
@@ -648,6 +664,8 @@ type Tensor =
                         | LogT(a) -> reset (a::tt)
                         | Log10T(a) -> reset (a::tt)
                         | SqrtT(a) -> reset (a::tt)
+                        | SinT(a) -> reset (a::tt)
+                        | CosT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -735,6 +753,8 @@ type Tensor =
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
                         | Log10T(a) -> push ((t.Derivative / (a.Primal * log10Val), a) :: tt)
                         | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
+                        | SinT(a) -> push ((t.Derivative * (a.Primal.Cos()), a) :: tt)
+                        | CosT(a) -> push ((-t.Derivative * (a.Primal.Sin()), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -811,6 +831,8 @@ and TensorOp =
     | LogT of Tensor
     | Log10T of Tensor
     | SqrtT of Tensor
+    | SinT of Tensor
+    | CosT of Tensor
     | NewT
 
 type Tensor with
