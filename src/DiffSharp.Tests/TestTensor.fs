@@ -340,6 +340,30 @@ type TestTensor () =
         Assert.AreEqual(t1Sign, t1SignCorrect)
 
     [<Test>]
+    member this.TestTensorFloorT () =
+        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Floor = t1.Floor()
+        let t1FloorCorrect = Tensor.Create([0.; 0.; 0.; 0.; 0.])
+
+        Assert.True(t1Floor.ApproximatelyEqual(t1FloorCorrect))
+
+    [<Test>]
+    member this.TestTensorCeilT () =
+        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Ceil = t1.Ceil()
+        let t1CeilCorrect = Tensor.Create([1.; 1.; 1.; 1.; 1.])
+
+        Assert.True(t1Ceil.ApproximatelyEqual(t1CeilCorrect))
+
+    [<Test>]
+    member this.TestTensorRoundT () =
+        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Round = t1.Round()
+        let t1RoundCorrect = Tensor.Create([1.; 0.; 0.; 1.; 1.])
+
+        Assert.True(t1Round.ApproximatelyEqual(t1RoundCorrect))
+
+    [<Test>]
     member this.TestTensorAbsT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
         let t1Abs = t1.Abs()

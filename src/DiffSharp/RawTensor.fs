@@ -73,6 +73,9 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member UnsqueezeT: int -> RawTensor
     abstract member ViewT: int[] -> RawTensor
     abstract member SignT: unit -> RawTensor
+    abstract member FloorT: unit -> RawTensor
+    abstract member CeilT: unit -> RawTensor
+    abstract member RoundT: unit -> RawTensor
     abstract member AbsT: unit -> RawTensor
     abstract member ReluT: unit -> RawTensor
     abstract member SigmoidT: unit -> RawTensor

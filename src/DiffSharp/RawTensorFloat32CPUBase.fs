@@ -331,6 +331,21 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = tvalue |> Array.map (sign >> float32)
         upcast RawTensorFloat32CPUBase(result, t.Shape)
 
+    override t.FloorT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map floor
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t.CeilT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map ceil
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
+    override t.RoundT() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map round
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+
     override t.AbsT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map abs

@@ -503,6 +503,30 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sign() = Tensor.Sign(t)
 
+    static member Floor (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.FloorT()
+        let inline fTensor(a) = Tensor.Floor(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorRev(a) = FloorT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Floor() = Tensor.Floor(t)
+
+    static member Ceil (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.CeilT()
+        let inline fTensor(a) = Tensor.Ceil(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorRev(a) = CeilT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Ceil() = Tensor.Ceil(t)
+
+    static member Round (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.RoundT()
+        let inline fTensor(a) = Tensor.Round(a)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorRev(a) = RoundT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Round() = Tensor.Round(t)
+
     static member Abs (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.AbsT()
         let inline fTensor(a) = Tensor.Abs(a)
@@ -722,6 +746,9 @@ type Tensor =
                         | AddTTConstSlice(a) -> reset (a::tt)
                         | AddTCostTSlice(_, b) -> reset (b::tt)
                         | SignT(a) -> reset (a::tt)
+                        | FloorT(a) -> reset (a::tt)
+                        | CeilT(a) -> reset (a::tt)
+                        | RoundT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
                         | ReluT(a) -> reset (a::tt)
                         | SigmoidT(a) -> reset (a::tt)
@@ -819,6 +846,9 @@ type Tensor =
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
                         | AddTCostTSlice(location, b) -> push ((t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
+                        | FloorT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
+                        | CeilT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
+                        | RoundT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
                         | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
                         | SigmoidT(a) -> push ((t.Derivative * t.Primal * (1. - t.Primal), a) :: tt)
@@ -905,6 +935,9 @@ and TensorOp =
     | UnsqueezeT of Tensor
     | ViewT of Tensor * int[]
     | SignT of Tensor
+    | FloorT of Tensor
+    | CeilT of Tensor
+    | RoundT of Tensor
     | AbsT of Tensor
     | ReluT of Tensor
     | SigmoidT of Tensor
