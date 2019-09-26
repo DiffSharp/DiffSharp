@@ -46,7 +46,6 @@ type Tensor =
             | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
-    // member inline t.Value = 0.
     member t.ForwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)

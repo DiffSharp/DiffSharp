@@ -478,7 +478,5 @@ type TestTensor () =
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
-        printfn "%A" t3
-        printfn "%A" t3Correct
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
