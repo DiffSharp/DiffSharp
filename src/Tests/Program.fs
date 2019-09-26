@@ -13,14 +13,16 @@ type Model() =
     inherit Layer()
     let fc1 = Linear(2, 16)
     let fc2 = Linear(16, 1)
-    do base.AddParameters(["fc1", fc1; "fc2", fc2])
+    do base.AddParameters(["fc1", fc1])
     override l.Forward(x) =
         x 
         |> fc1.Forward |> Tensor.Relu
         |> fc2.Forward |> Tensor.Relu
 
 let optimize (model:Layer) (lr:Tensor) =
-    let update k (p:Parameter) = printfn "updating %A" k; p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+    let update k (p:Parameter) = 
+        // printfn "updating %A" k; 
+        p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
     model.Map(update)
 
 [<EntryPoint>]
@@ -37,12 +39,15 @@ let main argv =
     printfn "%A" x
     printfn "%A" y
 
-    // let x = Tensor.Random([1; 2])
-    // let o = model.Forward(x)
-    // o.Reverse(Tensor.Random([1; 1]))
+    let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
 
-    // printfn "\n%A\n" model.Parameters
-    // optimize model (Tensor.Create(0.1))
-    // printfn "\n%A\n" model.Parameters
+    for i=0 to 10000 do    
+        model.ReverseDiff()
+        let o = model.Forward(x).View([4])
+        let loss = mseloss o y
+        printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
+        // printfn "%A" loss
+        loss.Reverse()
+        optimize model (Tensor.Create(0.01))
 
     0 // return an integer exit code

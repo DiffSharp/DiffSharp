@@ -39,6 +39,12 @@ let shapeLength (shape:int[]) =
 let shapeSqueeze (shape:int[]) =
     [|for s in shape do if s <> 1 then yield s|]
 
+let shapeUnsqueeze (shape:int[]) (dim:int) =
+    [|for i=0 to shape.Length + 1 do 
+        if i < dim then yield shape.[i]
+        elif i = dim then yield 1
+        else yield shape.[i-1]|]
+
 let shapeUnsqueezeAs (shape1:int[]) (shape2:int[]) =
     if shape1.Length > shape2.Length then failwithf "Expecting shape1.Length <= shape2.Length, received %A %A" shape1.Length shape2.Length
     let ones = Array.create (shape2.Length - shape1.Length) 1
