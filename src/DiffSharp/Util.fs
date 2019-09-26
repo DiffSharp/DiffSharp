@@ -64,7 +64,7 @@ let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 2 (fun i j -> if j=0 then location.[i] else location.[i] + shape.[i] - 1)
 
 let boundsToLocation (bounds:int[,]) =
-    [|for i=0 to bounds.GetLength(0) do yield bounds.[i, 0]|]
+    [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 
 let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length

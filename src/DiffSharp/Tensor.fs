@@ -698,7 +698,8 @@ type Tensor =
                         | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative)
+                            // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
+                            a.Derivative <- Tensor.AddSlice(Tensor.ZerosLike(a) + a.Derivative, boundsToLocation bounds, t.Derivative)
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
