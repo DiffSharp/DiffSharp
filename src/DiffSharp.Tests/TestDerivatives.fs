@@ -523,7 +523,49 @@ type TestDerivatives () =
         Assert.True(revxda.ApproximatelyEqual(revxdaCorrect))
         Assert.True(revxdb.ApproximatelyEqual(revxdbCorrect))
         Assert.True(revxdc.ApproximatelyEqual(revxdcCorrect))
-    // TODO: Add test for UnstackT
+
+    [<Test>]
+    member this.TestDerivativeUnstackT () =
+        let fwdx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ForwardDiff(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
+        let fwdz = Tensor.Unstack(fwdx) |> Seq.toArray
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzc = fwdz.[2]
+        let fwdzda = fwdza.Derivative
+        let fwdzdb = fwdzb.Derivative
+        let fwdzdc = fwdzc.Derivative
+        let fwdzaCorrect = Tensor.Create([1.; 2.])
+        let fwdzbCorrect = Tensor.Create([3.; 4.])
+        let fwdzcCorrect = Tensor.Create([5.; 6.])
+        let fwdzdaCorrect = Tensor.Create([10.; 20.])
+        let fwdzdbCorrect = Tensor.Create([30.; 40.])
+        let fwdzdcCorrect = Tensor.Create([50.; 60.])
+
+        let revx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ReverseDiff()
+        let revz = Tensor.Unstack(revx) |> Seq.toArray
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzc = revz.[2]
+        let revzaCorrect = Tensor.Create([1.; 2.])
+        let revzbCorrect = Tensor.Create([3.; 4.])
+        let revzcCorrect = Tensor.Create([5.; 6.])
+        revza.Reverse(Tensor.Create([10.; 20.]))
+        revzb.Reverse(Tensor.Create([30.; 40.]), zeroDerivatives=false)
+        revzc.Reverse(Tensor.Create([50.; 60.]), zeroDerivatives=false)
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.];[50.;60.]])
+
+        Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
+        Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))
+        Assert.True(fwdzc.ApproximatelyEqual(fwdzcCorrect))
+        Assert.True(fwdzda.ApproximatelyEqual(fwdzdaCorrect))
+        Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
+        Assert.True(fwdzdc.ApproximatelyEqual(fwdzdcCorrect))
+        Assert.True(revza.ApproximatelyEqual(revzaCorrect))
+        Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
+        Assert.True(revzc.ApproximatelyEqual(revzcCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
     // TODO: Add test for SqueezeT
     // TODO: Add test for UnsqueezeT
 

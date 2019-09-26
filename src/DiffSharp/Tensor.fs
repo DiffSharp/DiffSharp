@@ -556,22 +556,23 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = AddTCostTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    member t.Reverse(?value:Tensor) =
+    member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
+        let zeroDerivatives = defaultArg zeroDerivatives true
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
-        t.ReverseReset()
+        t.ReverseReset(zeroDerivatives)
         t.ReversePush(value)
 
     member inline t.Backward(value) = t.Reverse(value)
 
-    member t.ReverseReset() =
+    member t.ReverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
             match ts with
             | [] -> ()
             | t :: tt ->
                 match t with
                 | TensorR(_,_,o,_,_) ->
-                    t.Derivative <- t.Zero()
+                    if zeroDerivatives then t.Derivative <- t.Zero()
                     t.Fanout <- t.Fanout + 1u
                     if t.Fanout = 1u then
                         match o with
@@ -704,7 +705,7 @@ type Tensor =
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative)
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.Unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
