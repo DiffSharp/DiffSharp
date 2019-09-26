@@ -465,3 +465,20 @@ type TestTensor () =
         Assert.AreEqual(t3s13, t3s13Correct)
         Assert.AreEqual(t3s14, t3s14Correct)
 
+    [<Test>]
+    member this.TestTensorAddTTSlice () =
+        let t1 = Tensor.Create([[-0.2754;  0.0172;  0.7105];
+            [-0.1890;  1.7664;  0.5377];
+            [-0.5313; -2.2530; -0.6235];
+            [ 0.6776;  1.5844; -0.5686]])
+        let t2 = Tensor.Create([[-111.8892;   -7.0328];
+            [  18.7557;  -86.2308]])
+        let t3 = Tensor.AddSlice(t1, [0;1], t2)
+        let t3Correct = Tensor.Create([[  -0.2754; -111.8720;   -6.3222];
+            [  -0.1890;   20.5221;  -85.6932];
+            [  -0.5313;   -2.2530;   -0.6235];
+            [   0.6776;    1.5844;   -0.5686]])
+        printfn "%A" t3
+        printfn "%A" t3Correct
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))

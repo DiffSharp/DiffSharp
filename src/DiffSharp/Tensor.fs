@@ -532,8 +532,9 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sqrt() = Tensor.Sqrt(t)
 
-    static member AddSlice (a:Tensor, location:int[], b:Tensor) =
+    static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
+        let location = location |> Seq.toArray
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a,b) = Tensor.AddSlice(a, location, b)
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.AddSlice(ad, location, bd)
