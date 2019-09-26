@@ -356,6 +356,14 @@ type TestTensor () =
         Assert.AreEqual(t1Relu, t1ReluCorrect)
 
     [<Test>]
+    member this.TestTensorSigmoidT () =
+        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Sigmoid = t1.Sigmoid()
+        let t1SigmoidCorrect = Tensor.Create([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
+
+        Assert.True(t1Sigmoid.ApproximatelyEqual(t1SigmoidCorrect))
+
+    [<Test>]
     member this.TestTensorExpT () =
         let t1 = Tensor.Create([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
         let t1Exp = t1.Exp()

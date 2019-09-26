@@ -519,6 +519,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Relu() = Tensor.Relu(t)
 
+    static member Sigmoid (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SigmoidT()
+        let inline fTensor(a) = Tensor.Sigmoid(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
+        let inline dfTensorRev(a) = SigmoidT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Sigmoid() = Tensor.Sigmoid(t)
+
     static member Exp (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.ExpT()
         let inline fTensor(a) = Tensor.Exp(a)
@@ -716,6 +724,7 @@ type Tensor =
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
                         | ReluT(a) -> reset (a::tt)
+                        | SigmoidT(a) -> reset (a::tt)
                         | ExpT(a) -> reset (a::tt)
                         | LogT(a) -> reset (a::tt)
                         | Log10T(a) -> reset (a::tt)
@@ -812,6 +821,7 @@ type Tensor =
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
                         | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
+                        | SigmoidT(a) -> push ((t.Derivative * t.Primal * (1. - t.Primal), a) :: tt)
                         | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
                         | Log10T(a) -> push ((t.Derivative / (a.Primal * log10Val), a) :: tt)
@@ -897,6 +907,7 @@ and TensorOp =
     | SignT of Tensor
     | AbsT of Tensor
     | ReluT of Tensor
+    | SigmoidT of Tensor
     | ExpT of Tensor
     | LogT of Tensor
     | Log10T of Tensor

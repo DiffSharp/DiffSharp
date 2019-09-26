@@ -338,7 +338,12 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
 
     override t1.ReluT() =
         let t1value = t1.Value:?>float32[]
-        let result = Array.map (max 0.f) t1value
+        let result = t1value |> Array.map (max 0.f) 
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.SigmoidT() =
+        let t1value = t1.Value:?>float32[]
+        let result = t1value |> Array.map (fun v -> 1.f / (1.f + exp -v))
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
     override t.ExpT() =
