@@ -567,6 +567,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Cos() = Tensor.Cos(t)
 
+    static member Tan (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.TanT()
+        let inline fTensor(a) = Tensor.Tan(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = let cosap = Tensor.Cos(ap) in ad / (cosap * cosap)
+        let inline dfTensorRev(a) = TanT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Tan() = Tensor.Tan(t)
+
     static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
         let location = location |> Seq.toArray
@@ -666,6 +674,7 @@ type Tensor =
                         | SqrtT(a) -> reset (a::tt)
                         | SinT(a) -> reset (a::tt)
                         | CosT(a) -> reset (a::tt)
+                        | TanT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -755,6 +764,7 @@ type Tensor =
                         | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
                         | SinT(a) -> push ((t.Derivative * (a.Primal.Cos()), a) :: tt)
                         | CosT(a) -> push ((-t.Derivative * (a.Primal.Sin()), a) :: tt)
+                        | TanT(a) -> let cosap = a.Primal.Cos() in push ((t.Derivative / (cosap * cosap), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -833,6 +843,7 @@ and TensorOp =
     | SqrtT of Tensor
     | SinT of Tensor
     | CosT of Tensor
+    | TanT of Tensor
     | NewT
 
 type Tensor with

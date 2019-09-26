@@ -81,3 +81,4 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member SqrtT: unit -> RawTensor
     abstract member SinT: unit -> RawTensor
     abstract member CosT: unit -> RawTensor
+    abstract member TanT: unit -> RawTensor

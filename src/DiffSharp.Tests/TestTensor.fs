@@ -404,6 +404,14 @@ type TestTensor () =
         Assert.True(t1Cos.ApproximatelyEqual(t1CosCorrect))
 
     [<Test>]
+    member this.TestTensorTanT () =
+        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Tan = t1.Tan()
+        let t1TanCorrect = Tensor.Create([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
+
+        Assert.True(t1Tan.ApproximatelyEqual(t1TanCorrect))
+
+    [<Test>]
     member this.TestTensorSlice () =
         let t1 = Tensor.Create([1.;2.])
         let t1s1 = t1.[0]
