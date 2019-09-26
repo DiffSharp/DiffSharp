@@ -412,6 +412,30 @@ type TestTensor () =
         Assert.True(t1Tan.ApproximatelyEqual(t1TanCorrect))
 
     [<Test>]
+    member this.TestTensorSinhT () =
+        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Sinh = t1.Sinh()
+        let t1SinhCorrect = Tensor.Create([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
+
+        Assert.True(t1Sinh.ApproximatelyEqual(t1SinhCorrect))
+
+    [<Test>]
+    member this.TestTensorCoshT () =
+        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Cosh = t1.Cosh()
+        let t1CoshCorrect = Tensor.Create([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
+
+        Assert.True(t1Cosh.ApproximatelyEqual(t1CoshCorrect))
+
+    [<Test>]
+    member this.TestTensorTanhT () =
+        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Tanh = t1.Tanh()
+        let t1TanhCorrect = Tensor.Create([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
+
+        Assert.True(t1Tanh.ApproximatelyEqual(t1TanhCorrect))
+
+    [<Test>]
     member this.TestTensorSlice () =
         let t1 = Tensor.Create([1.;2.])
         let t1s1 = t1.[0]

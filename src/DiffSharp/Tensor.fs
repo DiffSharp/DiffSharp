@@ -575,6 +575,30 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Tan() = Tensor.Tan(t)
 
+    static member Sinh (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.SinhT()
+        let inline fTensor(a) = Tensor.Sinh(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cosh(ap)
+        let inline dfTensorRev(a) = SinhT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Sinh() = Tensor.Sinh(t)
+
+    static member Cosh (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.CoshT()
+        let inline fTensor(a) = Tensor.Cosh(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Sinh(ap)
+        let inline dfTensorRev(a) = CoshT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Cosh() = Tensor.Cosh(t)
+
+    static member Tanh (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.TanhT()
+        let inline fTensor(a) = Tensor.Tanh(a)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = let coshap = Tensor.Cosh(ap) in ad / (coshap * coshap)
+        let inline dfTensorRev(a) = TanhT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Tanh() = Tensor.Tanh(t)
+
     static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
         let location = location |> Seq.toArray
@@ -675,6 +699,9 @@ type Tensor =
                         | SinT(a) -> reset (a::tt)
                         | CosT(a) -> reset (a::tt)
                         | TanT(a) -> reset (a::tt)
+                        | SinhT(a) -> reset (a::tt)
+                        | CoshT(a) -> reset (a::tt)
+                        | TanhT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
                 | _ -> reset tt
@@ -765,6 +792,9 @@ type Tensor =
                         | SinT(a) -> push ((t.Derivative * (a.Primal.Cos()), a) :: tt)
                         | CosT(a) -> push ((-t.Derivative * (a.Primal.Sin()), a) :: tt)
                         | TanT(a) -> let cosap = a.Primal.Cos() in push ((t.Derivative / (cosap * cosap), a) :: tt)
+                        | SinhT(a) -> push ((t.Derivative * (a.Primal.Cosh()), a) :: tt)
+                        | CoshT(a) -> push ((t.Derivative * (a.Primal.Sinh()), a) :: tt)
+                        | TanhT(a) -> let coshap = a.Primal.Cosh() in push ((t.Derivative / (coshap * coshap), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -844,6 +874,9 @@ and TensorOp =
     | SinT of Tensor
     | CosT of Tensor
     | TanT of Tensor
+    | SinhT of Tensor
+    | CoshT of Tensor
+    | TanhT of Tensor
     | NewT
 
 type Tensor with
