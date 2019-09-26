@@ -142,6 +142,24 @@ type Tensor =
             let cp = Tensor.Extend(ap, shape)
             TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
+    member internal t.GetSlice(bounds:int[,]) =
+        if t.Dim = 0 then invalidOp "Cannot slice a scalar Tensor"
+        let fullbounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
+        bounds |> Array2D.iteri (fun i j v -> 
+            if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
+            fullbounds.[i, j] <- v)
+        match t with
+        | Tensor(ap) -> Tensor(ap.GetSlice(fullbounds))
+        | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullbounds), ad.GetSlice(fullbounds), at)
+        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullbounds), ref (ap.Zero()), SliceT(t, fullbounds), ref 0u, at)
+
+    member t.Item
+        with get([<System.ParamArray>] index:int[]) =
+            if t.Dim = 0 then invalidOp "Cannot index a scalar Tensor"
+            if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
+            let bounds = Array2D.init index.Length 2 (fun i _ -> index.[i])
+            t.GetSlice(bounds)
+
     static member Stack(tensors:seq<Tensor>) = 
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         match Seq.head tensors with
@@ -484,6 +502,18 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sqrt() = Tensor.Sqrt(t)
 
+    static member AddSlice (a:Tensor, location:int[], b:Tensor) =
+        if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
+        let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
+        let inline fTensor(a,b) = Tensor.AddSlice(a, location, b)
+        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.AddSlice(ad, location, bd)
+        let inline dfTensorFwdTC(cp,ap,ad) = ad
+        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
+        let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
+        let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
+        let inline dfTensorRevCT(a,b) = AddTCostTSlice(location,b)
+        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+
     member t.Reverse(?value:Tensor) =
         let value = defaultArg value (Tensor.OnesLike(t))
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
@@ -553,6 +583,10 @@ type Tensor =
                         | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
+                        | SliceT(a,_) -> reset (a::tt)
+                        | AddTTSlice(a,_,b) -> reset (a::b::tt)
+                        | AddTTConstSlice(a) -> reset (a::tt)
+                        | AddTCostTSlice(_, b) -> reset (b::tt)
                         | SignT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
                         | ReluT(a) -> reset (a::tt)
@@ -623,8 +657,16 @@ type Tensor =
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
-                        | UnstackT(a,i) -> failwith "ReversePush UnstackT not implemented"
+                        | UnstackT(a,i) -> 
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative)
+                            push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
+                        | SliceT(a,bounds) -> 
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative)
+                            push ((a.Zero(), a) :: tt)
+                        | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
+                        | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
+                        | AddTCostTSlice(location, b) -> push ((t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
                         | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
@@ -692,6 +734,10 @@ and TensorOp =
     | MakeTofT0 of Tensor
     | StackTs of seq<Tensor>
     | UnstackT of Tensor * int
+    | SliceT of Tensor * int[,]
+    | AddTTSlice of Tensor * int[] * Tensor
+    | AddTTConstSlice of Tensor
+    | AddTCostTSlice of int[] * Tensor
     | TransposeT2 of Tensor
     | SignT of Tensor
     | AbsT of Tensor
@@ -711,22 +757,6 @@ and TensorOp =
         //     TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
 type Tensor with
-    member private t.GetSlice(bounds:int[,]) =
-        if t.Dim = 0 then invalidOp "Cannot slice a scalar Tensor"
-        let fullbounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
-        bounds |> Array2D.iteri (fun i j v -> 
-            if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
-            fullbounds.[i, j] <- v)
-        match t with
-        | Tensor(ap) -> Tensor(ap.GetSlice(fullbounds))
-        | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullbounds), ad.GetSlice(fullbounds), at)
-        | _ -> failwith "Not implemented"
-    member t.Item
-        with get([<System.ParamArray>] index:int[]) =
-            if t.Dim = 0 then invalidOp "Cannot index a scalar Tensor"
-            if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
-            let bounds = Array2D.init index.Length 2 (fun i _ -> index.[i])
-            t.GetSlice(bounds)
     member t.GetSlice(i0min:int option, i0max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max t.Shape.[0] - 1

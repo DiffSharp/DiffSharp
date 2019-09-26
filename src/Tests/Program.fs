@@ -39,42 +39,12 @@ let main argv =
     // optimize model (Tensor.Create(0.1))
     // printfn "\n%A\n" model.Parameters
     
+    let a = RawTensorFloat32CPUBase.Create([[1.;2.;3.];[4.;5.;6.];[7.;8.;9.]])
+    let b = RawTensorFloat32CPUBase.Create([[10.;20.];[30.;40.]])
+    printfn "%A" a
+    printfn "%A" b
+    let c = a.AddTTSlice([|0;0|], b)
+    printfn "%A" c
 
-    let t = Tensor.Random([2; 2])
-    printfn "%A" t
-    let tt = t.[0, 0]
-    printfn "%A" tt
-    let tt = t.[0, *]
-    printfn "%A" tt    
-    let tt = t.[*, 0]
-    printfn "%A" tt
-    let tt = t.[*, *]
-    printfn "%A" tt
-
-    let t = Tensor.Random([])
-    printfn "%A" t
-    let tt = t.[0]
-    printfn "%A" tt
-
-    // let tt = t.[1]
-    // let tt = t.[0, 1]
-    // let tt = t.[0, 0, 1]
-    // let tt = t.[0,*]
-    // let tt = t.[*,*]
-    // let tt = t.[*,0]
-    // let tt = t.[0,*]
-
-    // let a = array2D [[1;2];[3;4];[5;6]]
-    // let b = a.[1..,*]
-    // printfn "%A" b
-
-    // let r = RawTensorFloat32CPUBase.Create([[1.;2.];[3.;4.]])
-    // let i = r.[0]
-    // let i = r.[0, 1]
-    // let i = r.[*, 1]
-    // let i = r.[1.., 1]
-    // let i = r.[..1, 1]
-    // printfn "%A" r
-    // printfn "%A" i
 
     0 // return an integer exit code

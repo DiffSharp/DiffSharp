@@ -52,6 +52,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member AddTT : RawTensor -> RawTensor
     abstract member AddTT0 : RawTensor -> RawTensor
     abstract member AddT2T1: RawTensor -> RawTensor
+    abstract member AddTTSlice: int[] * RawTensor -> RawTensor
     abstract member SubTT : RawTensor -> RawTensor
     abstract member SubT0T : RawTensor -> RawTensor
     abstract member SubTT0 : RawTensor -> RawTensor

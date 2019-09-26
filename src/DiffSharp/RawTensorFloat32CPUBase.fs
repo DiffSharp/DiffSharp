@@ -4,15 +4,20 @@ open DiffSharp.Util
 type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     inherit RawTensor(value, shape, Float32, CPU, CPUBase)
 
-    member private t.GetValue ([<System.ParamArray>] index:int[]) =
-        if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+    member private t.FlatIndex(index:int[]) =
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
             let v = if i = index.Length - 1 then 1 else (Array.reduce (*) t.Shape.[i+1..])
             flatIndex <- flatIndex + index.[i] * v
-        let tvalue = t.Value:?>float32[]
-        tvalue.[flatIndex]
-    override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.GetValue(index))
+        flatIndex
+        
+    member t.Item
+        with get ([<System.ParamArray>] index:int[]) =
+            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            let tvalue = t.Value:?>float32[]
+            tvalue.[t.FlatIndex(index)]
+
+    override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.[index])
     override t.GetSlice(bounds:int[,]) =
         // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
         // printfn "%A" bounds
@@ -25,7 +30,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                 for i=bounds.[0,0] to bounds.[0,1] do
                     // printfn "inner %A" i
                     let globalCoords = Array.append externalCoords [|i|]
-                    array.[arrayi] <- t.GetValue(globalCoords)
+                    array.[arrayi] <- t.[globalCoords]
                     arrayi <- arrayi + 1
             else
                 for i=bounds.[0,0] to bounds.[0,1] do
@@ -80,7 +85,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                     for i=0 to shape.[0]-1 do
                         let globalCoords = Array.append externalCoords [|i|]
                         sb.Append(prefix) |> ignore
-                        sb.Append(sprintf "%A" (t.GetValue(globalCoords))) |> ignore
+                        sb.Append(sprintf "%A" (t.[globalCoords])) |> ignore
                         prefix <- "; "
                     sb.Append("]") |> ignore
                 else
@@ -102,10 +107,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.ToArray() =
         match t.Dim with
         | 0 -> invalidOp "Cannot convert 0d Tensor to array"
-        | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.GetValue(i))
-        | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.GetValue(i, j))
-        | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.GetValue(i, j, k))
-        | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.GetValue(i, j, k, l))
+        | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.[i])
+        | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.[i, j])
+        | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.[i, j, k])
+        | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.[i, j, k, l])
         | _ -> invalidOp (sprintf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape)
 
     override t1.Equals(t2:RawTensor) = 
@@ -184,6 +189,25 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
             for j=0 to t1.Shape.[1]-1 do
                 let flatindex = i*t1.Shape.[1] + j
                 result.[flatindex] <- result.[flatindex] + t2value.[j]
+        upcast RawTensorFloat32CPUBase(result, t1.Shape)
+
+    override t1.AddTTSlice(location:int[], t2) =
+        // if not (shapeContains t1.Shape t2.Shape) then failwithf "Expecting t1.Shape to contain t2.Shape, received %A, %A" t1.Shape t2.Shape
+        let t1value = t1.Value:?>float32[]
+        let t2 = t2 :?> RawTensorFloat32CPUBase
+        let result = Array.copy t1value
+        let shape2 = shapeUnsqueezeAs t2.Shape t1.Shape
+        let rec add (shape2:int[]) externalCoords =
+            if shape2.Length = 1 then
+                for i=0 to shape2.[0]-1 do
+                    let globalCoords = Array.append externalCoords [|i|]
+                    let t1Coords = Array.map2 (+) globalCoords location
+                    let t1FlatIndex = t1.FlatIndex(t1Coords)
+                    result.[t1FlatIndex] <- result.[t1FlatIndex] + t2.[globalCoords]
+            else
+                for i=0 to shape2.[0]-1 do
+                    add (shape2.[1..]) (Array.append externalCoords [|i|])
+        add shape2 [||]
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
 
     override t1.SubTT(t2) =
