@@ -372,6 +372,14 @@ type TestTensor () =
         Assert.True(t1Log.ApproximatelyEqual(t1LogCorrect))
 
     [<Test>]
+    member this.TestTensorLog10T () =
+        let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+        let t1Log10 = t1.Log10()
+        let t1Log10Correct = Tensor.Create([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
+
+        Assert.True(t1Log10.ApproximatelyEqual(t1Log10Correct))
+
+    [<Test>]
     member this.TestTensorSqrtT () =
         let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
         let t1Sqrt = t1.Sqrt()

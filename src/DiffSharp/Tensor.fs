@@ -535,6 +535,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Log() = Tensor.Log(t)
 
+    static member Log10 (a:Tensor) =
+        let inline fRaw(a:RawTensor) = a.Log10T()
+        let inline fTensor(a) = Tensor.Log10(a)
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
+        let inline dfTensorRev(a) = Log10T(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Log10() = Tensor.Log10(t)
+
     static member Sqrt (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SqrtT()
         let inline fTensor(a) = Tensor.Sqrt(a)
@@ -638,6 +646,7 @@ type Tensor =
                         | ReluT(a) -> reset (a::tt)
                         | ExpT(a) -> reset (a::tt)
                         | LogT(a) -> reset (a::tt)
+                        | Log10T(a) -> reset (a::tt)
                         | SqrtT(a) -> reset (a::tt)
                         | NewT -> reset tt
                     else reset tt
@@ -724,6 +733,7 @@ type Tensor =
                         | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
                         | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
+                        | Log10T(a) -> push ((t.Derivative / (a.Primal * log10Val), a) :: tt)
                         | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
                         | NewT -> push tt
                     else push tt
@@ -799,6 +809,7 @@ and TensorOp =
     | ReluT of Tensor
     | ExpT of Tensor
     | LogT of Tensor
+    | Log10T of Tensor
     | SqrtT of Tensor
     | NewT
 

@@ -77,4 +77,5 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member ReluT: unit -> RawTensor
     abstract member ExpT: unit -> RawTensor
     abstract member LogT: unit -> RawTensor
+    abstract member Log10T: unit -> RawTensor
     abstract member SqrtT: unit -> RawTensor

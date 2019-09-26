@@ -2,6 +2,7 @@ module DiffSharp.Util
 open System
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
+let log10Val = log 10.
 
 type NestingLevel =
     val mutable Current:uint32

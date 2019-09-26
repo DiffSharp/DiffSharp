@@ -351,6 +351,11 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let result = tvalue |> Array.map log
         upcast RawTensorFloat32CPUBase(result, t.Shape)
 
+    override t.Log10T() =
+        let tvalue = t.Value:?>float32[]
+        let result = tvalue |> Array.map log10
+        upcast RawTensorFloat32CPUBase(result, t.Shape)
+        
     override t.SqrtT() =
         let tvalue = t.Value:?>float32[]
         let result = tvalue |> Array.map sqrt
