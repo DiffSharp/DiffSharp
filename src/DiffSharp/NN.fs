@@ -34,7 +34,7 @@ type Layer() =
     
 type Linear(inFeatures, outFeatures) =
     inherit Layer()
-    let w = Parameter(Tensor.Random([inFeatures; outFeatures]))
-    let b = Parameter(Tensor.Random([outFeatures]))
+    let w = Parameter(Tensor.RandomNormal([inFeatures; outFeatures]))
+    let b = Parameter(Tensor.RandomNormal([outFeatures]))
     do base.AddParameters(["weight", w; "bias", b])
     override l.Forward(value) = Tensor.MatMul(value, w.Tensor) + b.Tensor
