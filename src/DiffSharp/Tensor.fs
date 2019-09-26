@@ -691,6 +691,7 @@ type Tensor =
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
+                            if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
                             a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative)
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
@@ -699,7 +700,8 @@ type Tensor =
                         | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
-                            a.Derivative <- Tensor.AddSlice(Tensor.ZerosLike(a) + a.Derivative, boundsToLocation bounds, t.Derivative)
+                            if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative)
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
