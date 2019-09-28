@@ -16,6 +16,8 @@ type GlobalNestingLevel() =
     static member Reset() = tagger.Current <- 0u
     static member Set(level) = tagger.Current <- level
 
+let inline cumulativeSum (a:_[]) = (Array.scan (+) FSharp.Core.LanguagePrimitives.GenericZero a).[1..]
+
 type Random() =
     static let mutable rnd = System.Random()
     static member Seed(seed) = rnd <- System.Random(seed)
@@ -28,6 +30,15 @@ type Random() =
             if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
         normal()
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
+    static member ChoiceIndex(probs:float[]) =
+        let probsSum = probs |> Array.sum
+        let cumulativeProbs = probs |> Array.map (fun v -> v / probsSum) |> cumulativeSum
+        let p = rnd.NextDouble()
+        cumulativeProbs |> Array.findIndex (fun v -> v >= p)
+    static member Choice(array:_[]) = array.[rnd.Next(array.Length)]
+    static member Choice(array:_[], probs:float[]) = 
+        if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
+        array.[Random.ChoiceIndex(probs)]
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]

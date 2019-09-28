@@ -47,4 +47,4 @@ type Normal(mean:Tensor, stddev:Tensor) =
         if value.Shape <> d.Mean.Shape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.Mean.Shape value.Shape
         let v = value - d.Mean in -(v * v) / (2. * d.Variance) - (log d.Stddev) - logSqrt2Pi
     override d.GetString() = sprintf "Normal(mean:%A, stddev:%A)" d.Mean d.Stddev
-    
+

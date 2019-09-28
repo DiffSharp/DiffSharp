@@ -56,6 +56,16 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     static member Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.create (shapeLength shape) 1.f, shape)
     static member Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
     static member RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPUBase(Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
+    static member RandomMultinomial(probs:RawTensor, numSamples:int):RawTensor =
+        if probs.Dim < 1 || probs.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.Shape
+        if probs.Dim = 1 then
+            let p = probs.Value :?> float32[] |> Array.map float
+            let result = [|for i=0 to numSamples-1 do yield float32 (Random.ChoiceIndex(p))|]
+            upcast RawTensorFloat32CPUBase(result, [|numSamples|])
+        else
+            let p = probs.ToArray() :?> float32[,] |> Array2D.map float
+            let result = Array2D.init (p.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(p.[i,*]))
+            RawTensorFloat32CPUBase.Create(result)
 
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
@@ -71,6 +81,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.Ones(shape) = RawTensorFloat32CPUBase.Ones(shape)
     override t.Random(shape) = RawTensorFloat32CPUBase.Random(shape)
     override t.RandomNormal(shape) = RawTensorFloat32CPUBase.RandomNormal(shape)
+    override t.RandomMultinomial(probs, numSamples) = RawTensorFloat32CPUBase.RandomMultinomial(probs, numSamples)
 
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
