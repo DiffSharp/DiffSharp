@@ -21,6 +21,7 @@
     <Compile Include="TestUtil.fs" />
     <Compile Include="TestTensor.fs" />
     <Compile Include="TestDerivatives.fs" />
+    <Compile Include="TestDistributions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

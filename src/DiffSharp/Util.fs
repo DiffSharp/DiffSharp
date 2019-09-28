@@ -141,5 +141,11 @@ let rec flatArrayAndShape<'T> (value:obj) =
     | _ -> null, null
     // TODO: add list of tuples parsing
 
+let toInt a =
+    match box a with
+    | :? float as a -> a |> int
+    | :? float32 as a -> a |> int
+    | :? int as a -> a
+    | _ -> failwith "Cannot convert to int"
 
 let inline notNull value = not (obj.ReferenceEquals(value, null))

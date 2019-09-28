@@ -55,6 +55,7 @@ type Tensor =
     member t.NoDiff() = Tensor(t.PrimalRaw)
     member t.Shape = t.PrimalRaw.Shape
     member t.Dim = t.PrimalRaw.Dim
+    member t.Nelement = t.PrimalRaw.Nelement
     member t.ToArray() = t.PrimalRaw.ToArray()
     member t.ToValue() = t.PrimalRaw.ToValue()
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
@@ -100,7 +101,7 @@ type Tensor =
     member t1.Le(t2) = Tensor.Le(t1, t2)
     static member Ge(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
     member t1.Ge(t2) = Tensor.Ge(t1, t2)
-    static member inline op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
+    static member op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
     static member RandomLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Random(tensor.Shape))
@@ -447,6 +448,15 @@ type Tensor =
         let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
+
+    static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
+    member t.Mean() = Tensor.Mean(t)
+
+    static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
+    member t.Variance() = Tensor.Variance(t)
+
+    static member Stddev (a:Tensor) = Tensor.Variance(a) |> Tensor.Sqrt
+    member t.Stddev() = Tensor.Stddev(t)
 
     static member SumT2Dim0 (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SumT2Dim0()

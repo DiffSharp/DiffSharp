@@ -21,7 +21,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     member t.Value = value
     member t.Shape = shape
     member t.Dim = shape.Length
-    member t.Length = shapeLength shape
+    member t.Nelement = shapeLength shape
     member t.DType = dtype
     member t.Device = device
     member t.Backend = backend
@@ -38,7 +38,7 @@ type RawTensor(value:obj, shape:int[], dtype:DType, device:Device, backend:Backe
     abstract member Ones : int[] -> RawTensor
     abstract member Random : int[] -> RawTensor
     abstract member RandomNormal : int[] -> RawTensor
-    abstract member RandomMultinomial: RawTensor * int -> RawTensor
+    abstract member RandomMultinomial: int -> RawTensor
     abstract member GetString : unit -> string
     abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor

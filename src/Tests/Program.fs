@@ -25,6 +25,13 @@ let optimize (model:Layer) (lr:Tensor) =
         p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
     model.Map(update)
 
+[<AutoOpen>]
+module ExtraPrimitives =
+    let inline tryUnbox<'a> (x:obj) =
+        match x with
+        | :? 'a as result -> Some (result)
+        | _ -> None
+        
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
@@ -54,9 +61,11 @@ let main argv =
     // let b = Tensor.Create(0.).ForwardDiff(Tensor.Create(2.))
     // let c = Tensor.Create(1.).ReverseDiff()
 
-    let p = RawTensorFloat32CPUBase.Create([[0.1; 0.1; 0.8]; [0.8; 0.1; 0.1]])
-    let r = RawTensorFloat32CPUBase.RandomMultinomial(p, 20)
-    printfn "%A" r
+    let p = Tensor.Create([[0.1;0.1;0.8]; [0.8;0.1;0.1]])
+    let d = Categorical(p)
+    let s = d.Sample(10)
+    printfn "%A" d
+    printfn "%A" s
 
 
     0 // return an integer exit code

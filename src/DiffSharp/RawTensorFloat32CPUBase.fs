@@ -81,7 +81,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     override t.Ones(shape) = RawTensorFloat32CPUBase.Ones(shape)
     override t.Random(shape) = RawTensorFloat32CPUBase.Random(shape)
     override t.RandomNormal(shape) = RawTensorFloat32CPUBase.RandomNormal(shape)
-    override t.RandomMultinomial(probs, numSamples) = RawTensorFloat32CPUBase.RandomMultinomial(probs, numSamples)
+    override t.RandomMultinomial(numSamples) = RawTensorFloat32CPUBase.RandomMultinomial(t, numSamples)
 
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
