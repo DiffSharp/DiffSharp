@@ -449,6 +449,18 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
 
+    // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
+    member t.Sum(dim:int) =
+        if dim >= t.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" t.Dim
+        let sBounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
+        sBounds.[dim, 1] <- 0
+        let mutable s = Tensor.ZerosLike(t).GetSlice(sBounds)
+        for i=0 to t.Shape.[dim]-1 do
+            sBounds.[dim,0] <- i
+            sBounds.[dim,1] <- i
+            s <- s + t.GetSlice(sBounds)
+        s
+
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
 

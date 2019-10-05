@@ -31,12 +31,26 @@ module ExtraPrimitives =
         match x with
         | :? 'a as result -> Some (result)
         | _ -> None
-        
+
+
+    // if dim = 0 then
+    //     let mutable s = Tensor.ZerosLike(t).[0]
+    //     for i=0 to t.Shape.[0]-1 do
+    //         s <- s + t.[i]
+    //     s
+    // elif dim = 1 then
+    //     let mutable s = Tensor.ZerosLike(t).[*,0]
+    //     for i=0 to t.Shape.[1]-1 do
+    //         s <- s + t.[*,i]
+    //     s
+    // else
+    //     failwith "Not implemented"
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
 
-    // DiffSharp.Seed(123)
+    // DiffSharp.Seed(125)
     // DiffSharp.NestReset()
     // let model = Model()
     // model.ReverseDiff()
@@ -57,15 +71,12 @@ let main argv =
     //     loss.Reverse()
     //     optimize model (Tensor.Create(0.01))
 
-    // let a = Tensor.Create(0.)
-    // let b = Tensor.Create(0.).ForwardDiff(Tensor.Create(2.))
-    // let c = Tensor.Create(1.).ReverseDiff()
-
-    let p = Tensor.Create([[0.1;0.1;0.8]; [0.8;0.1;0.1]])
-    let d = Categorical(p)
-    let s = d.Sample(10)
-    printfn "%A" d
-    printfn "%A" s
-
-
+    let x = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+    let x0 = x.Sum(0)
+    let x1 = x.Sum(1)
+    let x2 = x.Sum(2)
+    printfn "%A" x
+    printfn "\n%A" x0
+    printfn "\n%A" x1
+    printfn "\n%A" x2
     0 // return an integer exit code
