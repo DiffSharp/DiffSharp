@@ -333,6 +333,28 @@ type TestTensor () =
         Assert.AreEqual(tSum2, tSum2Correct)
 
     [<Test>]
+    member this.TestTensorMean () =
+        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let tMean = t.Mean()
+        let tMeanCorrect = Tensor.Create(12.5)
+
+        Assert.AreEqual(tMean, tMeanCorrect)
+
+    [<Test>]
+    member this.TestTensorMeanDim () =
+        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let tMean0 = t.Mean(0)
+        let tMean0Correct = Tensor.Create([[7.0f; 8.0f; 9.0f; 10.0f]; [11.0f; 12.0f; 13.0f; 14.0f]; [15.0f; 16.0f; 17.0f; 18.0f]])
+        let tMean1 = t.Mean(1)
+        let tMean1Correct = Tensor.Create([[5.0f; 6.0f; 7.0f; 8.0f]; [17.0f; 18.0f; 19.0f; 20.0f]])
+        let tMean2 = t.Mean(2)
+        let tMean2Correct = Tensor.Create([[2.5f; 6.5f; 10.5f]; [14.5f; 18.5f; 22.5f]])
+
+        Assert.AreEqual(tMean0, tMean0Correct)
+        Assert.AreEqual(tMean1, tMean1Correct)
+        Assert.AreEqual(tMean2, tMean2Correct)
+
+    [<Test>]
     member this.TestTensorTransposeT2 () =
         let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
         let t1Transpose = t1.Transpose()

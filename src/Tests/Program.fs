@@ -72,9 +72,9 @@ let main argv =
     //     optimize model (Tensor.Create(0.01))
 
     let x = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-    let x0 = x.Sum(0)
-    let x1 = x.Sum(1)
-    let x2 = x.Sum(2)
+    let x0 = x.Mean(0)
+    let x1 = x.Mean(1)
+    let x2 = x.Mean(2)
     printfn "%A" x
     printfn "\n%A" x0
     printfn "\n%A" x1

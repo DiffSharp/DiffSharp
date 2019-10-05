@@ -450,19 +450,23 @@ type Tensor =
     member t.Sum() = Tensor.Sum(t)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    member t.Sum(dim:int) =
-        if dim >= t.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" t.Dim
-        let sBounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
+    static member Sum(a:Tensor, dim:int) =
+        if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
+        let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
         sBounds.[dim, 1] <- 0
-        let mutable s = Tensor.ZerosLike(t).GetSlice(sBounds)
-        for i=0 to t.Shape.[dim]-1 do
+        let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
+        for i=0 to a.Shape.[dim]-1 do
             sBounds.[dim,0] <- i
             sBounds.[dim,1] <- i
-            s <- s + t.GetSlice(sBounds)
+            s <- s + a.GetSlice(sBounds)
         s
+    member t.Sum(dim) = Tensor.Sum(t, dim)
 
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
+
+    static member Mean(a:Tensor, dim:int) = a.Sum(dim) / a.Shape.[dim]
+    member t.Mean(dim) = Tensor.Mean(t, dim)
 
     static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
     member t.Variance() = Tensor.Variance(t)
