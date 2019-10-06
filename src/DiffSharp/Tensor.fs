@@ -468,6 +468,7 @@ type Tensor =
     static member Mean(a:Tensor, dim:int) = a.Sum(dim) / a.Shape.[dim]
     member t.Mean(dim) = Tensor.Mean(t, dim)
 
+    // This is the two-pass algorithm better than the naive algorithm
     static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
     member t.Variance() = Tensor.Variance(t)
 
