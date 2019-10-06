@@ -1,21 +1,33 @@
 namespace DiffSharp.RawTensor
 open DiffSharp.Util
+open System
 
 type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
     inherit RawTensor(value, shape, Float32, CPU, CPUBase)
 
-    member private t.FlatIndex(index:int[]) =
+    member private t.IndexToFlatIndex(index:int[]) =
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
             let v = if i = index.Length - 1 then 1 else (Array.reduce (*) t.Shape.[i+1..])
             flatIndex <- flatIndex + index.[i] * v
         flatIndex
-        
+    
+    member private t.FlatIndexToIndex(flatIndex:int) =
+        let index = Array.create t.Dim 0
+        let mutable mul = t.Nelement
+        let mutable fi = flatIndex
+        for i=t.Dim downto 1 do
+            mul <- mul / t.Shape.[i-1]
+            index.[i-1] <- fi / mul
+            fi <- fi - index.[i-1] * mul
+        index |> Array.rev
+
+
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =
             if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
             let tvalue = t.Value:?>float32[]
-            tvalue.[t.FlatIndex(index)]
+            tvalue.[t.IndexToFlatIndex(index)]
 
     override t.GetItem(index:int[]) = RawTensorFloat32CPUBase.Create(t.[index])
     override t.GetSlice(bounds:int[,]) =
@@ -179,7 +191,19 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let t2value = t2.Value:?>float32[]
         let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then 1.f else 0.f) t1value t2value
         upcast RawTensorFloat32CPUBase(result, t1.Shape)
-        
+
+    override t.MaxIndexT() =
+        let tvalue = t.Value:?>float32[]
+        let m  =maxIndex tvalue
+        let mm = t.FlatIndexToIndex(m)        
+        printfn "%A" m
+        printfn "%A" mm
+        mm
+
+    override t.MinIndexT() =
+        let tvalue = t.Value:?>float32[]
+        t.FlatIndexToIndex(minIndex tvalue)
+
     override t1.AddTT(t2) =
         let t1value = t1.Value:?>float32[]
         let t2value = t2.Value:?>float32[]
@@ -213,7 +237,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
                 for i=0 to shape2.[0]-1 do
                     let globalCoords = Array.append externalCoords [|i|]
                     let t1Coords = Array.map2 (+) globalCoords location
-                    let t1FlatIndex = t1.FlatIndex(t1Coords)
+                    let t1FlatIndex = t1.IndexToFlatIndex(t1Coords)
                     result.[t1FlatIndex] <- result.[t1FlatIndex] + t2.[globalCoords]
             else
                 for i=0 to shape2.[0]-1 do

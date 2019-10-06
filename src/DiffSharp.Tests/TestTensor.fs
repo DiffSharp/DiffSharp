@@ -683,3 +683,60 @@ type TestTensor () =
         let t1UnsqueezeCorrect = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
 
         Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
+
+    [<Test>]
+    member this.TestTensorMax () =
+        let t1 = Tensor.Create([4.;1.;20.;3.])
+        let t1Max = t1.Max()
+        let t1MaxCorrect = Tensor.Create(20.)
+
+        let t2 = Tensor.Create([[1.;4.];[2.;3.]])
+        let t2Max = t2.Max()
+        let t2MaxCorrect = Tensor.Create(4.)
+
+        let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
+             [46.7944; 61.5331; 40.1627];
+             [48.3240;  4.9910; 50.1571]];
+
+            [[13.4777; 65.7656; 36.8161];
+             [47.8268; 42.2229;  5.6115];
+             [43.4779; 77.8675; 95.7660]];
+
+            [[59.8422; 47.1146; 36.7614];
+             [71.6328; 18.5912; 27.7328];
+             [49.9120; 60.3023; 53.0838]]])
+        let t3Max = t3.Max()
+        let t3MaxCorrect = Tensor.Create(95.7660)
+        
+        Assert.AreEqual(t1Max, t1MaxCorrect)
+        Assert.AreEqual(t2Max, t2MaxCorrect)
+        Assert.AreEqual(t3Max, t3MaxCorrect)
+
+
+    [<Test>]
+    member this.TestTensorMin () =
+        let t1 = Tensor.Create([4.;1.;20.;3.])
+        let t1Min = t1.Min()
+        let t1MinCorrect = Tensor.Create(1.)
+
+        let t2 = Tensor.Create([[1.;4.];[2.;3.]])
+        let t2Min = t2.Min()
+        let t2MinCorrect = Tensor.Create(1.)
+
+        let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
+             [46.7944; 61.5331; 40.1627];
+             [48.3240;  4.9910; 50.1571]];
+
+            [[13.4777; 65.7656; 36.8161];
+             [47.8268; 42.2229;  5.6115];
+             [43.4779; 77.8675; 95.7660]];
+
+            [[59.8422; 47.1146; 36.7614];
+             [71.6328; 18.5912; 27.7328];
+             [49.9120; 60.3023; 53.0838]]])
+        let t3Min = t3.Min()
+        let t3MinCorrect = Tensor.Create(4.0114)
+        
+        Assert.AreEqual(t1Min, t1MinCorrect)
+        Assert.AreEqual(t2Min, t2MinCorrect)
+        Assert.AreEqual(t3Min, t3MinCorrect)

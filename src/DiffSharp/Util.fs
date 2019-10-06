@@ -149,3 +149,6 @@ let toInt a =
     | _ -> failwith "Cannot convert to int"
 
 let inline notNull value = not (obj.ReferenceEquals(value, null))
+
+let maxIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.maxBy snd |> fst
+let minIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.minBy snd |> fst
