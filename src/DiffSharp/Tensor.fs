@@ -471,6 +471,26 @@ type Tensor =
     static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
     member t.Variance() = Tensor.Variance(t)
 
+    // TODO: this is the naive algorithm, can be improved for better numerical stability
+    static member Variance(a:Tensor, dim:int) =
+        if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
+        let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
+        sBounds.[dim, 1] <- 0
+        let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
+        let mutable sSquare = Tensor.ZerosLike(a).GetSlice(sBounds)
+        let n = a.Shape.[dim]
+        for i=0 to n-1 do
+            sBounds.[dim,0] <- i
+            sBounds.[dim,1] <- i
+            let slice = a.GetSlice(sBounds)
+            s <- s + slice
+            sSquare <- sSquare + slice * slice
+        (sSquare - (s * s) / n) / (n - 1)
+    member t.Variance(dim) = Tensor.Variance(t, dim)
+
+    static member Stddev (a:Tensor, dim:int) = Tensor.Variance(a, dim) |> Tensor.Sqrt
+    member t.Stddev(dim) = Tensor.Stddev(t, dim)
+
     static member Stddev (a:Tensor) = Tensor.Variance(a) |> Tensor.Sqrt
     member t.Stddev() = Tensor.Stddev(t)
 
@@ -511,6 +531,7 @@ type Tensor =
     member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
 
     static member View (a:Tensor, shape:seq<int>) =
+        // TODO: add -1 semantics to complete an unspecified dimension
         let inline fRaw(a:RawTensor) = a.ViewT(shape |> Seq.toArray)
         let inline fTensor(a) = Tensor.View(a, shape)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.View(ad, shape)

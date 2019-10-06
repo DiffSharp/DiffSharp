@@ -354,6 +354,45 @@ type TestTensor () =
         Assert.AreEqual(tMean1, tMean1Correct)
         Assert.AreEqual(tMean2, tMean2Correct)
 
+
+    [<Test>]
+    member this.TestTensorStddev () =
+        let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
+          [0.6078;0.4742;0.7844;0.0967];
+          [0.1416;0.1559;0.6452;0.1417]];
+ 
+         [[0.0848;0.4156;0.5542;0.4166];
+          [0.5187;0.0520;0.4763;0.1509];
+          [0.4767;0.8096;0.1729;0.6671]]])
+        let tStddev = t.Stddev()
+        let tStddevCorrect = Tensor.Create(0.2398)
+
+        Assert.True(tStddev.ApproximatelyEqual(tStddevCorrect))
+
+    [<Test>]
+    member this.TestTensorStddevDim () =
+        let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
+          [0.6078;0.4742;0.7844;0.0967];
+          [0.1416;0.1559;0.6452;0.1417]];
+ 
+         [[0.0848;0.4156;0.5542;0.4166];
+          [0.5187;0.0520;0.4763;0.1509];
+          [0.4767;0.8096;0.1729;0.6671]]])
+        let tStddev0 = t.Stddev(0)
+        let tStddev0Correct = Tensor.Create([[0.2078; 0.2375; 0.2326; 0.0530];
+         [0.0630; 0.2985; 0.2179; 0.0383];
+         [0.2370; 0.4623; 0.3339; 0.3715]])
+        let tStddev1 = t.Stddev(1)
+        let tStddev1Correct = Tensor.Create([[0.2331; 0.2981; 0.2911; 0.1304];
+         [0.2393; 0.3789; 0.2014; 0.2581]])
+        let tStddev2 = t.Stddev(2)
+        let tStddev2Correct = Tensor.Create([[0.2277; 0.2918; 0.2495];
+         [0.1996; 0.2328; 0.2753]])
+
+        Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
+        Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
+        Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
+
     [<Test>]
     member this.TestTensorTransposeT2 () =
         let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])

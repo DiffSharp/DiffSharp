@@ -71,10 +71,16 @@ let main argv =
     //     loss.Reverse()
     //     optimize model (Tensor.Create(0.01))
 
-    let x = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-    let x0 = x.Mean(0)
-    let x1 = x.Mean(1)
-    let x2 = x.Mean(2)
+    let x = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
+          [0.6078;0.4742;0.7844;0.0967];
+          [0.1416;0.1559;0.6452;0.1417]];
+ 
+         [[0.0848;0.4156;0.5542;0.4166];
+          [0.5187;0.0520;0.4763;0.1509];
+          [0.4767;0.8096;0.1729;0.6671]]])
+    let x0 = x.Variance(0)
+    let x1 = x.Variance(1)
+    let x2 = x.Variance(2)
     printfn "%A" x
     printfn "\n%A" x0
     printfn "\n%A" x1
