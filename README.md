@@ -1,4 +1,4 @@
-# DiffSharp
+# DiffSharp [![Build Status](https://travis-ci.org/DiffSharp/DiffSharp.svg?branch=dev)](https://travis-ci.org/DiffSharp/DiffSharp)
 
 This is the development branch of DiffSharp 1.0.0.
 
