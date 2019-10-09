@@ -1,0 +1,6 @@
+language: csharp
+mono: none
+dotnet: 3.0.100
+script:
+  - dotnet build
+  - dotnet test
