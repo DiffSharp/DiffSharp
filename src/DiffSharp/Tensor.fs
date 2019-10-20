@@ -470,6 +470,9 @@ type Tensor =
         s
     member t.Sum(dim) = Tensor.Sum(t, dim)
 
+    static member Sum(a:Tensor, dim:int, keepDim:bool) = if keepDim then Tensor.Sum(a, dim).Unsqueeze(dim) else Tensor.Sum(a, dim)
+    member t.Sum(dim, keepDim) = Tensor.Sum(t, dim, keepDim)
+
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
 

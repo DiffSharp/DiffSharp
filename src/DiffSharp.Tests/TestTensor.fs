@@ -331,6 +331,20 @@ type TestTensor () =
         Assert.AreEqual(tSum0, tSum0Correct)
         Assert.AreEqual(tSum1, tSum1Correct)
         Assert.AreEqual(tSum2, tSum2Correct)
+    
+    [<Test>]
+    member this.TestTensorSumDimKeepDim () =
+        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let tSum0 = t.Sum(0, keepDim=true)
+        let tSum0Correct = Tensor.Create([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
+        let tSum1 = t.Sum(1, keepDim=true)
+        let tSum1Correct = Tensor.Create([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
+        let tSum2 = t.Sum(2, keepDim=true)
+        let tSum2Correct = Tensor.Create([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
+
+        Assert.AreEqual(tSum0, tSum0Correct)
+        Assert.AreEqual(tSum1, tSum1Correct)
+        Assert.AreEqual(tSum2, tSum2Correct)
 
     [<Test>]
     member this.TestTensorMean () =
