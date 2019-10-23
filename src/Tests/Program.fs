@@ -124,31 +124,18 @@ let main argv =
     // let z = x.Repeat(0, 2)
     // printfn "%A %A" z z.Shape
 
+    let revx = Tensor.Create([4.6815; 5.6441; 7.4689]).ReverseDiff()
+    let revz = revx.Softmax(dim=0)
 
-    let x = Tensor.Create([[[5.2547; 5.8897; 3.2926];
-         [4.7479; 3.7830; 8.7926]];
+    printfn "revx %A" revx
+    printfn "revz %A" revz
 
-        [[5.5300; 6.0128; 9.3868];
-         [8.3881; 2.3259; 3.6057]]])
+    revz.Reverse(Tensor.Create([4.6815; 5.6441; 7.4689]))
 
-    // let x = Tensor.Create([[[2.3835; 8.3894; 5.8549];
-    //      [4.1888; 6.7062; 7.8819]];
-
-    //     [[9.7250; 4.0928; 3.8114];
-    //      [4.0415; 2.9865; 3.3753]]])
-
-    let x = Tensor.Create([0.4429; 0.4359; 0.2654])
-
-    printfn "%A %A" x x.Shape
-    let y = x.Softmax(0)
-    printfn "%A %A" y y.Shape
-
-    // let t2 = Tensor.Zeros([1])
-    // // printfn "%A" (t2.Max())
-    // printfn "%A" t2
-    // printfn "%A" t2.Shape
-    // for i=0 to t2.PrimalRaw.Nelement - 1 do
-    //     let ii = (t2.PrimalRaw :?> RawTensorFloat32CPUBase).FlatIndexToIndex(i)
-    //     printfn "%A %A" i ii
+    // let revzCorrect = Tensor.Create([[9.9215e-02; 2.6998e-03; 8.9808e-01];
+        // [2.0194e-01; 7.9731e-01; 7.5161e-04]])
+    // revz.Reverse(Tensor.Create([[6.0933; 9.6456; 7.0996];
+        // [0.2617; 1.7002; 4.9711]]))
+    // let revxd = revx.Derivative
 
     0 // return an integer exit code
