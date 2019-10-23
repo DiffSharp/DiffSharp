@@ -722,9 +722,44 @@ type TestTensor () =
         let t3Max = t3.Max()
         let t3MaxCorrect = Tensor.Create(95.7660)
         
+        let t4 = Tensor.Create([[[[8.8978; 8.0936];
+              [4.8087; 1.0921];
+              [8.5664; 3.7814]];
+
+             [[2.3581; 3.7361];
+              [1.0436; 6.0353];
+              [7.7843; 8.7153]];
+
+             [[3.9188; 6.7906];
+              [9.1242; 4.8711];
+              [1.7870; 9.7456]];
+
+             [[5.7825; 8.0450];
+              [2.7801; 1.0877];
+              [3.4042; 5.1911]]];
+
+            [[[0.5370; 7.1115];
+              [5.4971; 2.3567];
+              [0.9318; 8.6992]];
+
+             [[3.3796; 8.7833];
+              [5.8722; 5.9881];
+              [0.7646; 7.3685]];
+
+             [[7.5344; 9.6162];
+              [2.6404; 4.3938];
+              [3.1335; 7.6783]];
+
+             [[5.0444; 0.5447];
+              [6.2945; 5.9047];
+              [8.0867; 3.1606]]]])
+        let t4Max = t4.Max()
+        let t4MaxCorrect = Tensor.Create(9.7456)
+
         Assert.AreEqual(t1Max, t1MaxCorrect)
         Assert.AreEqual(t2Max, t2MaxCorrect)
         Assert.AreEqual(t3Max, t3MaxCorrect)
+        Assert.AreEqual(t4Max, t4MaxCorrect)
 
 
     [<Test>]
@@ -750,7 +785,128 @@ type TestTensor () =
              [49.9120; 60.3023; 53.0838]]])
         let t3Min = t3.Min()
         let t3MinCorrect = Tensor.Create(4.0114)
-        
+       
+        let t4 = Tensor.Create([[[[8.8978; 8.0936];
+              [4.8087; 1.0921];
+              [8.5664; 3.7814]];
+
+             [[2.3581; 3.7361];
+              [1.0436; 6.0353];
+              [7.7843; 8.7153]];
+
+             [[3.9188; 6.7906];
+              [9.1242; 4.8711];
+              [1.7870; 9.7456]];
+
+             [[5.7825; 8.0450];
+              [2.7801; 1.0877];
+              [3.4042; 5.1911]]];
+
+            [[[0.5370; 7.1115];
+              [5.4971; 2.3567];
+              [0.9318; 8.6992]];
+
+             [[3.3796; 8.7833];
+              [5.8722; 5.9881];
+              [0.7646; 7.3685]];
+
+             [[7.5344; 9.6162];
+              [2.6404; 4.3938];
+              [3.1335; 7.6783]];
+
+             [[5.0444; 0.5447];
+              [6.2945; 5.9047];
+              [8.0867; 3.1606]]]])
+        let t4Min = t4.Min()
+        let t4MinCorrect = Tensor.Create(0.5370)
+
         Assert.AreEqual(t1Min, t1MinCorrect)
         Assert.AreEqual(t2Min, t2MinCorrect)
         Assert.AreEqual(t3Min, t3MinCorrect)
+        Assert.AreEqual(t4Min, t4MinCorrect)
+
+    [<Test>]
+    member this.TestTensorSoftmax () =
+        let t1 = Tensor.Create([2.7291; 0.0607; 0.8290])
+        let t1Softmax0 = t1.Softmax(0)
+        let t1Softmax0Correct = Tensor.Create([0.8204; 0.0569; 0.1227])
+
+        let t2 = Tensor.Create([[1.3335; 1.6616; 2.4874; 6.1722];
+            [3.3478; 9.3019; 1.0844; 8.9874];
+            [8.6300; 1.8842; 9.1387; 9.1321]])
+        let t2Softmax0 = t2.Softmax(0)
+        let t2Softmax0Correct = Tensor.Create([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
+            [5.0519e-03; 9.9892e-01; 3.1723e-04; 4.5134e-01];
+            [9.9427e-01; 5.9987e-04; 9.9839e-01; 5.2163e-01]])
+        let t2Softmax1 = t2.Softmax(1)
+        let t2Softmax1Correct = Tensor.Create([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
+            [1.4974e-03; 5.7703e-01; 1.5573e-04; 4.2131e-01];
+            [2.3167e-01; 2.7240e-04; 3.8528e-01; 3.8277e-01]])
+
+        let t3 = Tensor.Create([[[3.0897; 2.0902];
+             [2.4055; 1.2437];
+             [2.1253; 8.7802];
+             [4.3856; 3.4456]];
+
+            [[8.6233; 6.9789];
+             [4.9583; 9.9497];
+             [2.6964; 1.6048];
+             [2.1182; 2.1071]];
+
+            [[8.1097; 6.9804];
+             [8.1223; 6.3030];
+             [0.1873; 8.7840];
+             [9.3609; 0.6493]]])
+             
+        let t3Softmax0 = t3.Softmax(0)
+        let t3Softmax0Correct = Tensor.Create([[[2.4662e-03; 3.7486e-03];
+             [3.1467e-03; 1.6136e-04];
+             [3.4316e-01; 4.9885e-01];
+             [6.8542e-03; 7.5571e-01]];
+
+            [[6.2411e-01; 4.9776e-01];
+             [4.0415e-02; 9.7443e-01];
+             [6.0743e-01; 3.8170e-04];
+             [7.0995e-04; 1.9817e-01]];
+
+            [[3.7342e-01; 4.9849e-01];
+             [9.5644e-01; 2.5410e-02];
+             [4.9412e-02; 5.0077e-01];
+             [9.9244e-01; 4.6122e-02]]])
+        let t3Softmax1 = t3.Softmax(1)
+        let t3Softmax1Correct = Tensor.Create([[[1.8050e-01; 1.2351e-03];
+             [9.1058e-02; 5.2978e-04];
+             [6.8813e-02; 9.9344e-01];
+             [6.5963e-01; 4.7904e-03]];
+
+            [[9.7109e-01; 4.8732e-02];
+             [2.4864e-02; 9.5067e-01];
+             [2.5896e-03; 2.2587e-04];
+             [1.4526e-03; 3.7327e-04]];
+
+            [[1.8156e-01; 1.3190e-01];
+             [1.8387e-01; 6.6997e-02];
+             [6.5824e-05; 8.0087e-01];
+             [6.3451e-01; 2.3479e-04]]])
+        let t3Softmax2 = t3.Softmax(2)
+        let t3Softmax2Correct = Tensor.Create([[[7.3096e-01; 2.6904e-01];
+             [7.6165e-01; 2.3835e-01];
+             [1.2861e-03; 9.9871e-01];
+             [7.1910e-01; 2.8090e-01]];
+
+            [[8.3814e-01; 1.6186e-01];
+             [6.7502e-03; 9.9325e-01];
+             [7.4868e-01; 2.5132e-01];
+             [5.0278e-01; 4.9722e-01]];
+
+            [[7.5571e-01; 2.4429e-01];
+             [8.6049e-01; 1.3951e-01];
+             [1.8468e-04; 9.9982e-01];
+             [9.9984e-01; 1.6463e-04]]])
+
+        Assert.True(t1Softmax0.ApproximatelyEqual(t1Softmax0Correct, 0.001))
+        Assert.True(t2Softmax0.ApproximatelyEqual(t2Softmax0Correct, 0.001))
+        Assert.True(t2Softmax1.ApproximatelyEqual(t2Softmax1Correct, 0.001))
+        Assert.True(t3Softmax0.ApproximatelyEqual(t3Softmax0Correct, 0.001))
+        Assert.True(t3Softmax1.ApproximatelyEqual(t3Softmax1Correct, 0.001))
+        Assert.True(t3Softmax2.ApproximatelyEqual(t3Softmax2Correct, 0.001))        

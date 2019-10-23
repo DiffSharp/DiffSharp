@@ -111,9 +111,13 @@ type Tensor =
     member t.Min() = Tensor.Min(t)
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
+    static member ZerosLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Zeros(shape |> Array.ofSeq))
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
+    static member OnesLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Ones(shape |> Array.ofSeq))
     static member RandomLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Random(tensor.Shape))
+    static member RandomLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Random(shape |> Array.ofSeq))
     static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.RandomNormal(tensor.Shape))
+    static member RandomNormalLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.RandomNormal(shape |> Array.ofSeq))
     static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
@@ -542,6 +546,18 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
 
+    static member Repeat (a:Tensor, dim:int, times:int) =
+        if a.Shape.[dim] <> 1 then invalidOp <| sprintf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.Shape dim
+        let newShape = a.Shape |> Array.copy
+        newShape.[dim] <- times
+        let mutable ret = Tensor.ZerosLike(a, newShape)
+        let location = Array.create a.Dim 0
+        for i=0 to times-1 do
+            location.[dim] <- i
+            ret <- Tensor.AddSlice(ret, location, a)
+        ret
+    member t.Repeat(dim:int, times:int) = Tensor.Repeat(t, dim, times)
+
     static member View (a:Tensor, shape:seq<int>) =
         // TODO: add -1 semantics to complete an unspecified dimension
         let inline fRaw(a:RawTensor) = a.ViewT(shape |> Seq.toArray)
@@ -716,6 +732,7 @@ type Tensor =
 
     static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
+        if location |> Seq.length <> a.Dim then failwithf "Expecting location of the same length as a.Dim, received %A, %A" (location |> Seq.length) a.Dim
         let location = location |> Seq.toArray
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a,b) = Tensor.AddSlice(a, location, b)
@@ -724,8 +741,15 @@ type Tensor =
         let inline dfTensorFwdCT(cp,bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
         let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
-        let inline dfTensorRevCT(a,b) = AddTCostTSlice(location,b)
+        let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+
+    static member Softmax(a:Tensor, dim:int) =
+        if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
+        let e = (a - a.Max().NoDiff()).Exp()
+        let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
+        e / esum
+    member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
@@ -803,7 +827,7 @@ type Tensor =
                         | SliceT(a,_) -> reset (a::tt)
                         | AddTTSlice(a,_,b) -> reset (a::b::tt)
                         | AddTTConstSlice(a) -> reset (a::tt)
-                        | AddTCostTSlice(_, b) -> reset (b::tt)
+                        | AddTConstTSlice(_, b) -> reset (b::tt)
                         | SignT(a) -> reset (a::tt)
                         | FloorT(a) -> reset (a::tt)
                         | CeilT(a) -> reset (a::tt)
@@ -903,7 +927,7 @@ type Tensor =
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
-                        | AddTCostTSlice(location, b) -> push ((t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
+                        | AddTConstTSlice(location, b) -> push ((t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | FloorT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | CeilT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
@@ -988,7 +1012,7 @@ and TensorOp =
     | SliceT of Tensor * int[,]
     | AddTTSlice of Tensor * int[] * Tensor
     | AddTTConstSlice of Tensor
-    | AddTCostTSlice of int[] * Tensor
+    | AddTConstTSlice of int[] * Tensor
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor

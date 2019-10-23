@@ -17,11 +17,10 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
         let mutable mul = t.Nelement
         let mutable fi = flatIndex
         for i=t.Dim downto 1 do
-            mul <- mul / t.Shape.[i-1]
+            mul <- mul / t.Shape.[t.Dim-i]
             index.[i-1] <- fi / mul
             fi <- fi - index.[i-1] * mul
         index |> Array.rev
-
 
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =
@@ -194,11 +193,7 @@ type RawTensorFloat32CPUBase(value: float32[], shape:int[]) =
 
     override t.MaxIndexT() =
         let tvalue = t.Value:?>float32[]
-        let m  =maxIndex tvalue
-        let mm = t.FlatIndexToIndex(m)        
-        printfn "%A" m
-        printfn "%A" mm
-        mm
+        t.FlatIndexToIndex(maxIndex tvalue)
 
     override t.MinIndexT() =
         let tvalue = t.Value:?>float32[]

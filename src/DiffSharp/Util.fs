@@ -152,3 +152,12 @@ let inline notNull value = not (obj.ReferenceEquals(value, null))
 
 let maxIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.maxBy snd |> fst
 let minIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.minBy snd |> fst
+
+let memoize fn =
+  let cache = new System.Collections.Generic.Dictionary<_,_>()
+  (fun x ->
+    match cache.TryGetValue x with
+    | true, v -> v
+    | false, _ -> let v = fn (x)
+                  cache.Add(x,v)
+                  v)
