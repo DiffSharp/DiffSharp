@@ -124,13 +124,13 @@ let main argv =
     // let z = x.Repeat(0, 2)
     // printfn "%A %A" z z.Shape
 
-    let revx = Tensor.Create([4.6815; 5.6441; 7.4689]).ReverseDiff()
+    let revx = Tensor.Create([[1.;2.];[3.;4.]]).ReverseDiff()
     let revz = revx.Softmax(dim=0)
 
-    printfn "revx %A" revx
-    printfn "revz %A" revz
+    printfn "revx %A %A" revx.Primal revx.Derivative
+    printfn "revz %A %A" revz.Primal revz.Derivative
 
-    revz.Reverse(Tensor.Create([4.6815; 5.6441; 7.4689]))
+    revz.Reverse(Tensor.Create([[10.;20.];[30.;40.]]))
 
     // let revzCorrect = Tensor.Create([[9.9215e-02; 2.6998e-03; 8.9808e-01];
         // [2.0194e-01; 7.9731e-01; 7.5161e-04]])

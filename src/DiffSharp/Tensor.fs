@@ -746,7 +746,8 @@ type Tensor =
 
     static member Softmax(a:Tensor, dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
-        let e = (a - a.Max().NoDiff()).Exp()
+        // let e = (a - a.Max().NoDiff()).Exp()
+        let e = a.Exp()
         let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
@@ -863,6 +864,9 @@ type Tensor =
                     t.Derivative <- t.Derivative + v
                     t.Fanout <- t.Fanout - 1u
                     if t.Fanout = 0u then
+                        // printfn "reversepush"
+                        // printfn "t %A" t
+                        // printfn "o %A" o
                         match o with
                         | AddTT(a,b) -> push ((t.Derivative, a) :: (t.Derivative, b) :: tt)
                         | AddTTConst(a) -> push ((t.Derivative, a) :: tt)
@@ -923,7 +927,11 @@ type Tensor =
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative)
+                            // printfn "a %A" a
+                            // printfn "a.Derivative %A" a.Derivative 
+                            // printfn "bounds %A" bounds
+                            // printfn "t.Derivative %A" t.Derivative
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative.View(shapeUnsqueezeAs t.Derivative.Shape a.Derivative.Shape))
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)

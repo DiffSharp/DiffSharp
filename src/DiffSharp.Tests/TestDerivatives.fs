@@ -966,23 +966,32 @@ type TestDerivatives () =
             [9.1976; 8.1241; 7.4521]]).ForwardDiff(Tensor.Create([[8.0030; 7.0798; 6.8637];
                 [9.5760; 7.4524; 2.6404]]))
         let fwdz = fwdx.Softmax(dim=1)
-        let fwdzCorrect = Tensor.Create([[9.9215e-02; 2.6998e-03; 8.9808e-01];
-            [2.0194e-01; 7.9731e-01; 7.5161e-04]])
+        let fwdzCorrect = Tensor.Create([[0.0504; 0.1319; 0.8178];
+            [0.6595; 0.2254; 0.1151]])
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create([[0.0530; 0.0172; -0.0702]; [0.8422; -0.1908; -0.6514]])
-
-        printfn "%A" fwdz
-        printfn "%A" fwdzCorrect
 
         let revx = Tensor.Create([[4.6815; 5.6441; 7.4689];
             [9.1976; 8.1241; 7.4521]]).ReverseDiff()
         let revz = revx.Softmax(dim=1)
-        let revzCorrect = Tensor.Create([[9.9215e-02; 2.6998e-03; 8.9808e-01];
-            [2.0194e-01; 7.9731e-01; 7.5161e-04]])
+        let revzCorrect = Tensor.Create([[0.0504; 0.1319; 0.8178];
+            [0.6595; 0.2254; 0.1151]])
         revz.Reverse(Tensor.Create([[6.0933; 9.6456; 7.0996];
             [0.2617; 1.7002; 4.9711]]))
         let revxd = revx.Derivative
-        let revxdCorrect = Tensor.Create([[0.0530; 0.0172; -0.0702]; [0.8422; -0.1908; -0.6514]])
+        let revxdCorrect = Tensor.Create([[-0.0649; 0.2988; -0.2329]; [-0.5713; 0.1291; 0.4426]])
+
+        printfn "%A" fwdx.Primal
+        printfn "%A" fwdz.Primal
+        printfn "%A" fwdzCorrect.Primal
+        printfn "%A" fwdzd.Primal
+        printfn "%A" fwdzdCorrect.Primal
+
+        printfn "\n%A" revx.Primal
+        printfn "%A" revz.Primal
+        printfn "%A" revzCorrect.Primal
+        printfn "%A" revxd.Primal
+        printfn "%A" revxdCorrect.Primal
 
         Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
         Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
