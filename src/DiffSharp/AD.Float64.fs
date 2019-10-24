@@ -12,13 +12,13 @@ module DiffSharp.AD.Float64
 
 open DiffSharp.Util
 open DiffSharp.Config
-open System.Threading.Tasks
 open System.Collections.Generic
 
 type number = float
 let inline Backend<'T>               = GlobalConfig.Float64Backend
 let inline VisualizationContrast<'T> = GlobalConfig.Float64VisualizationContrast
 let inline FixedPointEpsilon<'T>     = GlobalConfig.Float64FixedPointEpsilon
+
 module N =
     let inline toNumber x = float x
     let inline failWithInvalidTypeMessage () = failwith "Unsupported type. Expecting D, float, or int."
@@ -35,10 +35,13 @@ module N =
 /// with nesting capability, using tags to avoid perturbation confusion
 [<CustomEquality; CustomComparison>]
 type D =
+
     /// Primal
     | D of number
+
     /// Primal, tangent, layer tag (for forward mode)
-    | DF of primal: D * tanget: D * tag: uint32
+    | DF of primal: D * tanget: D * tag: uint32 
+
     /// Primal, parent, layer tag (for reverse mode)
     | DR of primal: D * parentOperation: TraceOp * tag: uint32 * uniq: int32
 
@@ -3942,6 +3945,7 @@ module DOps =
 [<AutoOpen>]
 module DiffOps =
 
+    /// Compute the adjoints of a differentiable value
     let inline computeAdjoints (d: 'T :> dobj) =
         let adjoints = Adjoints()
         let one = LanguagePrimitives.GenericOne<'T>
@@ -3949,28 +3953,29 @@ module DiffOps =
         adjoints
 
     /// Original value and first derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diff' f x =
-        x |> makeForward GlobalTagger.Next (D.One) |> f |> primalTangent
+    let diff' (f: D -> D) x =
+        let dx = makeForward GlobalTagger.Next (D.One) x
+        dx |> f |> primalTangent
 
     /// First derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diff f x = diff' f x |> snd
+    let diff (f: D -> D) x = diff' f x |> snd
 
     /// Second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diff2 f x =
+    let diff2 (f: D -> D) x  : D =
         diff (diff f) x
 
     /// Original value, first derivative, and second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diff2'' f x =
+    let diff2'' (f: D -> D) x : D * D * D =
         let v, d = diff' f x
         let d2 = diff2 f x
         (v, d, d2)
 
     /// Original value and second derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diff2' f x =
+    let diff2' (f: D -> D) x  : D * D =
         diff2'' f x |> drop2Of3
 
     /// `n`-th derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diffn n f x =
+    let diffn n (f: D -> D) x  : D =
         if n < 0 then ErrorMessages.InvalidArgDiffn()
         elif n = 0 then x |> f
         else
@@ -3981,57 +3986,60 @@ module DiffOps =
             x |> d n f
 
     /// Original value and `n`-th derivative of a scalar-to-scalar function `f`, at point `x`. Forward AD.
-    let inline diffn' n f x =
+    let diffn' n (f: D -> D) x  : D * D =
         (x |> f, diffn n f x)
 
     /// Original value and gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
-    let inline grad' f x =
+    let grad' (f: DV -> D) x : D * DV =
         let xa = x |> makeReverse GlobalTagger.Next
         let z:D = f xa
         let adjoints = computeAdjoints z
         (z |> primal, xa |> adjoint adjoints )
 
     /// Gradient of a vector-to-scalar function `f`, at point `x`. Reverse AD.
-    let inline grad f x =
+    let grad (f: DV -> D) x : DV =
         grad' f x |> snd
 
+    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
+    let gradv' (f: DV -> D) (x: DV) (v: DV) : D * D =
+        let dvx = makeForward GlobalTagger.Next v x
+        dvx |> f |> primalTangent
+
+    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
+    let gradv (f: DV -> D) x v : D =
+        gradv' f x v |> snd
+
     /// Original value and Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Forward AD.
-    let inline jacobianv' f x v =
+    let jacobianv' (f: DV -> DV) x v : DV * DV =
         x |> makeForward GlobalTagger.Next v |> f |> primalTangent
 
     /// Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Forward AD.
-    let inline jacobianv f x v =
+    let jacobianv (f: DV -> DV) x v : DV =
         jacobianv' f x v |> snd
 
-    /// Gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
-    let inline gradv f x v = jacobianv f x v
-
-    /// Original value and gradient-vector product (directional derivative) of a vector-to-scalar function `f`, at point `x`, along vector `v`. Forward AD.
-    let inline gradv' f x v = jacobianv' f x v
-
     /// Original value and a function for evaluating the transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`. Of the returned pair, the first is the original value of function `f` at point `x` (the result of the forward pass of the reverse mode AD) and the second is a function (the reverse evaluator) that can compute the transposed Jacobian-vector product many times along many different vectors (performing a new reverse pass of reverse mode AD, with the given vector, without repeating the forward pass). Reverse AD.
-    let inline jacobianTv'' (f:'a->'b) (x:'a) =
+    let jacobianTv'' (f: DV -> DV) (x:DV) =
         let xa = x |> makeReverse GlobalTagger.Next
         let z = f xa
         let r1 = z |> primal
         let r2 =
-            fun (v:'b) ->
+            fun (v:DV) ->
                 let adjoints = Adjoints()
                 z |> reverseProp adjoints v
                 xa |> adjoint adjoints
         (r1, r2)
 
     /// Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Reverse AD.
-    let inline jacobianTv' f x v =
+    let jacobianTv' (f: DV -> DV) x v =
         let r1, r2 = jacobianTv'' f x
         (r1, r2 v)
 
     /// Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`. Reverse AD.
-    let inline jacobianTv f x v =
+    let jacobianTv (f: DV -> DV) x v =
         jacobianTv' f x v |> snd
 
     /// Original value and Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
-    let inline jacobian' f (x:DV) =
+    let jacobian' (f: DV -> DV) (x:DV) : DV * DM =
         let o:DV = x |> f |> primal
         if x.Length > o.Length then
             let r = jacobianTv f x
@@ -4039,88 +4047,87 @@ module DiffOps =
         else
             (o, Array.init x.Length (fun i -> jacobianv f x (DV.standardBasis x.Length i)) |> DM.ofCols)
 
-
     /// Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
-    let inline jacobian f x =
+    let jacobian (f: DV -> DV) x : DM =
         jacobian' f x |> snd
 
     /// Original value and transposed Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
-    let inline jacobianT' f x =
+    let jacobianT' (f: DV -> DV) x =
         jacobian' f x |> fun (r, j) -> (r, DM.transpose j)
 
     /// Transposed Jacobian of a vector-to-vector function `f`, at point `x`. Forward or reverse AD, depending on input and output dimensions.
-    let inline jacobianT f x =
+    let jacobianT (f: DV -> DV) x : DM =
         jacobianT' f x |> snd
 
     /// Gradient and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
-    let inline gradhessian f x =
+    let gradhessian (f: DV -> D) x : DV * DM =
         jacobian' (grad f) x
 
     /// Original value, gradient, and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
-    let inline gradhessian' f x =
+    let gradhessian' (f: DV -> D) x : D * DV * DM =
         let g, h = gradhessian f x
         (x |> f , g, h)
 
     /// Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
-    let inline hessian f x =
+    let hessian (f: DV -> D) x : DM =
         jacobian (grad f) x
 
     /// Original value and Hessian of a vector-to-scalar function `f`, at point `x`. Forward-on-reverse AD.
-    let inline hessian' f x =
+    let hessian' (f: DV -> D) x : D * DM =
         (x |> f, hessian f x)
 
     /// Original value, gradient-vector product (directional derivative), and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
-    let inline gradhessianv' f x v =
-        let gv, hv = grad' (fun xx -> jacobianv f xx v) x
+    let gradhessianv' (f: DV -> D) x v =
+        let gv, hv = grad' (fun xx -> gradv f xx v) x
         (x |> f, gv, hv)
 
     /// Gradient-vector product (directional derivative) and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
-    let inline gradhessianv f x v =
+    let gradhessianv (f: DV -> D) x v : D * DV =
         gradhessianv' f x v |> drop1Of3
 
     /// Original value and Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
-    let inline hessianv' f x v =
+    let hessianv' (f: DV -> D) x v =
         gradhessianv' f x v |> drop2Of3
 
     /// Hessian-vector product of a vector-to-scalar function `f`, at point `x`, along vector `v`. Reverse-on-forward AD.
-    let inline hessianv f x v =
+    let hessianv (f: DV -> D) x v : DV =
         hessianv' f x v |> snd
 
     /// Original value and Laplacian of a vector-to-scalar function `f`, at point `x`. Reverse-on-forward AD.
-    let inline laplacian' f x = // TODO: reimplement faster
+    let laplacian' (f: DV -> D) x : D * D = // TODO: reimplement faster
         let v, h = hessian' f x
         (v, DM.trace h)
 
     /// Laplacian of a vector-to-scalar function `f`, at point `x`. Reverse-on-forward AD.
-    let inline laplacian f x =
+    let laplacian (f: DV -> D) x : D =
         laplacian' f x |> snd
 
     /// Original value and curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
-    let inline curl' f x =
+    let curl' (f: DV -> DV) x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurl()
         v, toDV [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|]
 
     /// Curl of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
-    let inline curl f x =
+    let curl (f: DV -> DV) x : DV =
         curl' f x |> snd
 
     /// Original value and divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix. Forward AD.
-    let inline div' f x =
+    let div' (f: DV -> DV) x =
         let v, j = jacobianT' f x
         if j.Rows <> j.Cols then ErrorMessages.InvalidArgDiv()
         v, DM.trace j
 
     /// Divergence of a vector-to-vector function `f`, at point `x`. Defined only for functions with a square Jacobian matrix. Forward AD.
-    let inline div f x =
+    let div (f: DV -> DV) x : D =
         div' f x |> snd
 
     /// Original value, curl, and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
-    let inline curldiv' f x =
+    let curldiv' (f: DV -> DV) x =
         let v, j = jacobianT' f x
         if (j.Rows, j.Cols) <> (3, 3) then ErrorMessages.InvalidArgCurlDiv()
         v, toDV [|j.[1, 2] - j.[2, 1]; j.[2, 0] - j.[0, 2]; j.[0, 1] - j.[1, 0]|], DM.trace j
 
     /// Curl and divergence of a vector-to-vector function `f`, at point `x`. Supported only for functions with a three-by-three Jacobian matrix. Forward AD.
-    let inline curldiv f x =
+    let curldiv (f: DV -> DV) x : DV * D =
         curldiv' f x |> drop1Of3
