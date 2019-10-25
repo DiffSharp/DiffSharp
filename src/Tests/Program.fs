@@ -113,29 +113,23 @@ let main argv =
 
     // printfn "\n\n\n***"
 
-    // let x = Tensor.Create([[[0; 1; 2];[10;11;12]]])
-    // let mutable y = Tensor.ZerosLike(x, [2;2;3])
-    // printfn "%A %A" x x.Shape
-    // printfn "%A %A" y y.Shape
+    let a = Tensor.Create([[4.2606; 6.3278; 2.4159];
+        [2.7748; 8.0032; 1.3511]]).ReverseDiff()
+    let b = a.Softmax(dim=1)
+    b.Reverse(Tensor.Create([[0; 0; 0];
+        [0; 0; 1]]))
+    // b.Reverse(Tensor.Create([[8.1862; 2.1702; 6.3328];
+    //     [0.;0.; 0.]]))
+    printfn "a %A" a
+    printfn "b %A" b
+    printfn "ad %A" a.Derivative
 
-    // y <- Tensor.AddSlice(y, [0;0;0], x)
-    // y <- Tensor.AddSlice(y, [1;0;0], x)
-    // printfn "%A %A" y y.Shape
-    // let z = x.Repeat(0, 2)
-    // printfn "%A %A" z z.Shape
-
-    let revx = Tensor.Create([[1.;2.];[3.;4.]]).ReverseDiff()
-    let revz = revx.Softmax(dim=0)
-
-    printfn "revx %A %A" revx.Primal revx.Derivative
-    printfn "revz %A %A" revz.Primal revz.Derivative
-
-    revz.Reverse(Tensor.Create([[10.;20.];[30.;40.]]))
-
-    // let revzCorrect = Tensor.Create([[9.9215e-02; 2.6998e-03; 8.9808e-01];
-        // [2.0194e-01; 7.9731e-01; 7.5161e-04]])
-    // revz.Reverse(Tensor.Create([[6.0933; 9.6456; 7.0996];
-        // [0.2617; 1.7002; 4.9711]]))
-    // let revxd = revx.Derivative
+    // let a = Tensor.Create([[4.2606; 6.3278; 2.4159];
+    //     [2.7748; 8.0032; 1.3511]]).ForwardDiff(Tensor.Create([[2; 0; 0];
+    //         [0; 0; 0]]))
+    // let b = a.Softmax(dim=1)
+    // printfn "a %A" a
+    // printfn "b %A" b
+    // printfn "bd %A" b.Derivative
 
     0 // return an integer exit code

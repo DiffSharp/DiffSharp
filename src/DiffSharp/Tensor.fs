@@ -765,7 +765,6 @@ type Tensor =
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
-        printfn "value %A" value
         let zeroDerivatives = defaultArg zeroDerivatives true
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
         t.ReverseReset(zeroDerivatives)
@@ -939,11 +938,7 @@ type Tensor =
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            // printfn "a %A" a
-                            // printfn "a.Derivative %A" a.Derivative 
-                            // printfn "bounds %A" bounds
-                            // printfn "t.Derivative %A" t.Derivative
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative.View(shapeUnsqueezeAs t.Derivative.Shape a.Derivative.Shape))
+                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative.View(boundsToShape bounds))
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
