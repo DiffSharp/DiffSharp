@@ -289,6 +289,8 @@ type Tensor =
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
     static member (+) (a:Tensor, b) = a + a.Create(b)
     static member (+) (a, b:Tensor) = b.Create(a) + b
+    member t1.Add(t2:Tensor) = t1 + t2
+    member t1.Add(t2) = t1 + t1.Create(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -324,6 +326,8 @@ type Tensor =
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
     static member (-) (a:Tensor, b) = a - a.Create(b)
     static member (-) (a, b:Tensor) = b.Create(a) - b
+    member t1.Sub(t2:Tensor) = t1 - t2
+    member t1.Sub(t2) = t1 - t1.Create(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -360,6 +364,8 @@ type Tensor =
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
     static member (*) (a:Tensor, b) = a * a.Create(b)
     static member (*) (a, b:Tensor) = b.Create(a) * b
+    member t1.Mul(t2:Tensor) = t1 * t2
+    member t1.Mul(t2) = t1 * t1.Create(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -395,6 +401,8 @@ type Tensor =
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
     static member (/) (a:Tensor, b) = a / a.Create(b)
     static member (/) (a, b:Tensor) = b.Create(a) / b
+    member t1.Div(t2:Tensor) = t1 / t2
+    member t1.Div(t2) = t1 / t1.Create(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -430,6 +438,8 @@ type Tensor =
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.Shape b.Shape
     static member Pow (a:Tensor, b) = a ** a.Create(b)
     static member Pow (a, b:Tensor) = b.Create(a) ** b
+    member t1.Pow(t2:Tensor) = t1 ** t2
+    member t1.Pow(t2) = t1 ** t1.Create(t2)
 
     static member MatMul (a:Tensor, b:Tensor) =
         if a.Dim <> 2 || b.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
@@ -444,6 +454,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
+    member t1.MatMul(t2:Tensor) = Tensor.MatMul(t1, t2)
 
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.NegT()
@@ -754,6 +765,7 @@ type Tensor =
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
+        printfn "value %A" value
         let zeroDerivatives = defaultArg zeroDerivatives true
         if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
         t.ReverseReset(zeroDerivatives)
