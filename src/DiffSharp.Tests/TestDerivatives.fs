@@ -981,18 +981,6 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[-0.0649; 0.2988; -0.2329]; [-0.5713; 0.1291; 0.4426]])
 
-        printfn "%A" fwdx.Primal
-        printfn "%A" fwdz.Primal
-        printfn "%A" fwdzCorrect.Primal
-        printfn "%A" fwdzd.Primal
-        printfn "%A" fwdzdCorrect.Primal
-
-        printfn "\n%A" revx.Primal
-        printfn "%A" revz.Primal
-        printfn "%A" revzCorrect.Primal
-        printfn "%A" revxd.Primal
-        printfn "%A" revxdCorrect.Primal
-
         Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
         Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
         Assert.True(revz.ApproximatelyEqual(revzCorrect))
