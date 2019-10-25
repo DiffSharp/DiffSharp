@@ -757,8 +757,7 @@ type Tensor =
 
     static member Softmax(a:Tensor, dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
-        // let e = (a - a.Max().NoDiff()).Exp()
-        let e = a.Exp()
+        let e = (a - a.Max().NoDiff()).Exp()
         let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
