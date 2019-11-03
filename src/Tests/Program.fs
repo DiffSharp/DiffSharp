@@ -11,9 +11,9 @@ open DiffSharp.RawTensor
 
 type Model() =
     inherit Layer()
-    let fc1 = Linear(2, 16)
-    let fc2 = Linear(16, 1)
-    do base.AddParameters(["fc1", fc1])
+    let fc1 = Linear(2, 64)
+    let fc2 = Linear(64, 1)
+    do base.AddParameters(["fc1", fc1; "fc2", fc2])
     override l.Forward(x) =
         x 
         |> fc1.Forward |> Tensor.Relu
@@ -50,30 +50,30 @@ module ExtraPrimitives =
 let main argv =
     printfn "Hello World from F#!"
 
-    // DiffSharp.Seed(1)
-    // DiffSharp.NestReset()
-    // let model = Model()
-    // model.ReverseDiff()
-    // let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
-    // let x = data.[*,0..1]
-    // let y = data.[*,2..]
-    // printfn "%A" x
-    // printfn "%A" y
+    DiffSharp.Seed(1)
+    DiffSharp.NestReset()
+    let model = Model()
+    model.ReverseDiff()
+    let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
+    let x = data.[*,0..1]
+    let y = data.[*,2..]
+    printfn "%A" x
+    printfn "%A" y
 
-    // let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
+    let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
 
-    // for i=0 to 10000 do    
-    //     model.ReverseDiff()
-    //     let o = model.Forward(x).View([4])
-    //     let loss = mseloss o y
-    //     printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
-    //     // printfn "%A" loss
-    //     loss.Reverse()
-    //     optimize model (Tensor.Create(0.01))
+    for i=0 to 10 do    
+        model.ReverseDiff()
+        let o = model.Forward(x).View(-1)
+        let loss = mseloss o y
+        printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
+        // printfn "%A" loss
+        loss.Reverse()
+        optimize model (Tensor.Create(0.01))
 
-    let a = Tensor.RandomNormal([5;4])
-    let b = a.View([|2;-1;5|])
-    printfn "%A %A" a a.Shape
-    printfn "%A %A" b b.Shape
+    // let a = Tensor.RandomNormal([5;4])
+    // let b = a.View([|2;-1;5|])
+    // printfn "%A %A" a a.Shape
+    // printfn "%A %A" b b.Shape
 
     0 // return an integer exit code

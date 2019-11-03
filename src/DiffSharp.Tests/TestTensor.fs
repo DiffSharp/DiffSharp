@@ -844,6 +844,36 @@ type TestTensor () =
         Assert.AreEqual(t4Min, t4MinCorrect)
 
     [<Test>]
+    member this.TestTensorMaxBinary () =
+        let t1 = Tensor.Create([[-4.9385; 12.6206; 10.1783];
+            [-2.9624; 17.6992;  2.2506];
+            [-2.3536;  8.0772; 13.5639]])
+        let t2 = Tensor.Create([[  0.7027;  22.3251; -11.4533];
+            [  3.6887;   4.3355;   3.3767];
+            [  0.1203;  -5.4088;   1.5658]])
+        let t3 = Tensor.Max(t1, t2)
+        let t3Correct = Tensor.Create([[ 0.7027; 22.3251; 10.1783];
+            [ 3.6887; 17.6992;  3.3767];
+            [ 0.1203;  8.0772; 13.5639]])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorMinBinary () =
+        let t1 = Tensor.Create([[-4.9385; 12.6206; 10.1783];
+            [-2.9624; 17.6992;  2.2506];
+            [-2.3536;  8.0772; 13.5639]])
+        let t2 = Tensor.Create([[  0.7027;  22.3251; -11.4533];
+            [  3.6887;   4.3355;   3.3767];
+            [  0.1203;  -5.4088;   1.5658]])
+        let t3 = Tensor.Min(t1, t2)
+        let t3Correct = Tensor.Create([[ -4.9385;  12.6206; -11.4533];
+            [ -2.9624;   4.3355;   2.2506];
+            [ -2.3536;  -5.4088;   1.5658]])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
     member this.TestTensorSoftmax () =
         let t1 = Tensor.Create([2.7291; 0.0607; 0.8290])
         let t1Softmax0 = t1.Softmax(0)
@@ -927,4 +957,4 @@ type TestTensor () =
         Assert.True(t2Softmax1.ApproximatelyEqual(t2Softmax1Correct, 0.001))
         Assert.True(t3Softmax0.ApproximatelyEqual(t3Softmax0Correct, 0.001))
         Assert.True(t3Softmax1.ApproximatelyEqual(t3Softmax1Correct, 0.001))
-        Assert.True(t3Softmax2.ApproximatelyEqual(t3Softmax2Correct, 0.001))        
+        Assert.True(t3Softmax2.ApproximatelyEqual(t3Softmax2Correct, 0.001))
