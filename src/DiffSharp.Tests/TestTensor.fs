@@ -699,6 +699,24 @@ type TestTensor () =
         Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
 
     [<Test>]
+    member this.TestTensorView () =
+        let t = Tensor.Random([10;10])
+        let t1Shape = t.View(-1).Shape
+        let t1ShapeCorrect = [|100|]
+        let t2Shape = t.View([-1;50]).Shape
+        let t2ShapeCorrect = [|2;50|]
+        let t3Shape = t.View([2;-1;50]).Shape
+        let t3ShapeCorrect = [|2;1;50|]
+        let t4Shape = t.View([2;-1;10]).Shape
+        let t4ShapeCorrect = [|2;5;10|]
+        
+        Assert.AreEqual(t1Shape, t1ShapeCorrect)
+        Assert.AreEqual(t2Shape, t2ShapeCorrect)
+        Assert.AreEqual(t3Shape, t3ShapeCorrect)
+        Assert.AreEqual(t4Shape, t4ShapeCorrect)
+
+
+    [<Test>]
     member this.TestTensorMax () =
         let t1 = Tensor.Create([4.;1.;20.;3.])
         let t1Max = t1.Max()
