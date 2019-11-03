@@ -11,13 +11,13 @@ open DiffSharp.RawTensor
 
 type Model() =
     inherit Layer()
-    let fc1 = Linear(2, 64)
-    let fc2 = Linear(64, 1)
+    let fc1 = Linear(2, 16)
+    let fc2 = Linear(16, 1)
     do base.AddParameters(["fc1", fc1; "fc2", fc2])
     override l.Forward(x) =
         x 
-        |> fc1.Forward |> Tensor.Relu
-        |> fc2.Forward |> Tensor.Relu
+        |> fc1.Forward |> Tensor.LeakyRelu
+        |> fc2.Forward |> Tensor.LeakyRelu
 
 let optimize (model:Layer) (lr:Tensor) =
     let update k (p:Parameter) = 
@@ -50,7 +50,7 @@ module ExtraPrimitives =
 let main argv =
     printfn "Hello World from F#!"
 
-    DiffSharp.Seed(1)
+    DiffSharp.Seed(12)
     DiffSharp.NestReset()
     let model = Model()
     model.ReverseDiff()
@@ -62,7 +62,7 @@ let main argv =
 
     let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
 
-    for i=0 to 10 do    
+    for i=0 to 10000 do    
         model.ReverseDiff()
         let o = model.Forward(x).View(-1)
         let loss = mseloss o y

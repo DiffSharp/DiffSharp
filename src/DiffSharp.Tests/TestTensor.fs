@@ -245,7 +245,7 @@ type TestTensor () =
         let t2 = Tensor.Create([1.; 2.]) / Tensor.Create(5.)
         let t2Correct = Tensor.Create([0.2; 0.4])
 
-        let t3 = Tensor.Create([1.; 2.]) / 5.f
+        let t3 = Tensor.Create([1.; 2.]) / 5.
         let t3Correct = Tensor.Create([0.2; 0.4])
 
         let t4 = 5. / Tensor.Create([1.; 2.])
@@ -467,6 +467,14 @@ type TestTensor () =
         let t1ReluCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
 
         Assert.AreEqual(t1Relu, t1ReluCorrect)
+
+    [<Test>]
+    member this.TestTensorLeakyRelu () =
+        let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
+        let t1LeakyRelu = t1.LeakyRelu()
+        let t1LeakyReluCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+
+        Assert.AreEqual(t1LeakyRelu, t1LeakyReluCorrect)
 
     [<Test>]
     member this.TestTensorSigmoidT () =

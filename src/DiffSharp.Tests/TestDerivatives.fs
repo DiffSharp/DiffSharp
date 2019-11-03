@@ -495,6 +495,30 @@ type TestDerivatives () =
         Assert.AreEqual(revxd, revxdCorrect)
 
     [<Test>]
+    member this.TestDerivativeLeakyRelu () =
+        let fwdx = Tensor.Create([-1.; -2.; 0.; 3.; 10.]).ForwardDiff(Tensor.Create([2.; 3.; 4.; 5.; 6.]))
+        let fwdz = fwdx.LeakyRelu()
+        let fwdzCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+        let fwdzd = fwdz.Derivative
+        // TODO: behavior of the detivative (where it is undefined) at 0 can be reconsidered
+        // let fwdzdCorrect = Tensor.Create([0.0200; 0.0300; 0.0400; 5.; 6.])
+        let fwdzdCorrect = Tensor.Create([0.0200; 0.0300; 2.02; 5.; 6.])
+
+        let revx = Tensor.Create([-1.; -2.; 0.; 3.; 10.]).ReverseDiff()
+        let revz = revx.LeakyRelu()
+        let revzCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+        let revxd = revx.Derivative
+        // TODO behavior of the derivative (where it is undefined) at 0 can be reconsidered
+        // let revxdCorrect = Tensor.Create([0.0500; 0.0500; 0.0500; 5.; -5.])
+        let revxdCorrect = Tensor.Create([0.0500; 0.0500; 2.52; 5.; -5.])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
     member this.TestDerivativeSigmoidT () =
         let fwdx = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).ForwardDiff(Tensor.Create([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.Sigmoid()
@@ -985,3 +1009,53 @@ type TestDerivatives () =
         Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
         Assert.True(revz.ApproximatelyEqual(revzCorrect))
         Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeMaxBinary () =
+        let fwdx = Tensor.Create([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).ForwardDiff(Tensor.Create([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
+        let fwdy = Tensor.Create([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).ForwardDiff(Tensor.Create([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
+        let fwdz = Tensor.Max(fwdx, fwdy)
+        let fwdzCorrect = Tensor.Create([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([1.9788; 0.2861; 9.7303; 0.5602; 7.7003])
+
+        let revx = Tensor.Create([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).ReverseDiff()
+        let revy = Tensor.Create([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).ReverseDiff()
+        let revz = Tensor.Max(revx, revy)
+        let revzCorrect = Tensor.Create([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
+        revz.Reverse(Tensor.Create([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([9.7293; -10.2704; 0.; -3.9050; 0.])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([0.; 0.; -13.7527; 0.; -1.6439])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+
+    [<Test>]
+    member this.TestDerivativeMinBinary () =
+        let fwdx = Tensor.Create([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).ForwardDiff(Tensor.Create([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
+        let fwdy = Tensor.Create([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).ForwardDiff(Tensor.Create([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
+        let fwdz = Tensor.Min(fwdx, fwdy)
+        let fwdzCorrect = Tensor.Create([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([9.6600; 6.9111; 4.2025; 0.1491; 7.9510])
+
+        let revx = Tensor.Create([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).ReverseDiff()
+        let revy = Tensor.Create([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).ReverseDiff()
+        let revz = Tensor.Min(revx, revy)
+        let revzCorrect = Tensor.Create([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
+        revz.Reverse(Tensor.Create([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([0.; 0.; -13.7527; 0.; -1.6439])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([9.7293; -10.2704; 0.; -3.9050; 0.])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
