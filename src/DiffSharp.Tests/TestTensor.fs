@@ -966,3 +966,23 @@ type TestTensor () =
         Assert.True(t3Softmax0.ApproximatelyEqual(t3Softmax0Correct, 0.001))
         Assert.True(t3Softmax1.ApproximatelyEqual(t3Softmax1Correct, 0.001))
         Assert.True(t3Softmax2.ApproximatelyEqual(t3Softmax2Correct, 0.001))
+
+    [<Test>]
+    member this.TestTensorDepth () =
+        let t0 = Tensor.Create([1.;2.])
+        let t0Depth = t0.Depth
+        let t0DepthCorrect = 0
+        let t1 = Tensor.Create([1.;2.]).ReverseDiff()
+        let t1Depth = t1.Depth
+        let t1DepthCorrect = 1
+        let t2 = Tensor.Create([1.;2.]).ReverseDiff().ReverseDiff()
+        let t2Depth = t2.Depth
+        let t2DepthCorrect = 2
+        let t3 = Tensor.Create([1.;2.]).ReverseDiff().ReverseDiff().ForwardDiff(Tensor.Create([1.; 1.]))
+        let t3Depth = t3.Depth
+        let t3DepthCorrect = 3
+
+        Assert.AreEqual(t0Depth, t0DepthCorrect)
+        Assert.AreEqual(t1Depth, t1DepthCorrect)
+        Assert.AreEqual(t2Depth, t2DepthCorrect)
+        Assert.AreEqual(t3Depth, t3DepthCorrect)

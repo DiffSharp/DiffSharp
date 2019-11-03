@@ -53,6 +53,7 @@ let main argv =
     DiffSharp.Seed(12)
     DiffSharp.NestReset()
     let model = Model()
+    printfn "%A" model.Parameters
     model.ReverseDiff()
     let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
     let x = data.[*,0..1]
@@ -71,6 +72,7 @@ let main argv =
         loss.Reverse()
         optimize model (Tensor.Create(0.01))
 
+    printfn "%A" model.Parameters
     // let a = Tensor.RandomNormal([5;4])
     // let b = a.View([|2;-1;5|])
     // printfn "%A %A" a a.Shape

@@ -29,7 +29,7 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.BatchShape = low.Shape
     override d.EventShape = [||]
     override d.Mean = (low + high) / 2.
-    override d.Stddev = d.Range * d.Range / 12.f
+    override d.Stddev = d.Range * d.Range / 12.
     override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
     override d.Logprob(value) = 
         if value.Shape <> d.BatchShape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape

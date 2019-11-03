@@ -22,6 +22,14 @@ type Tensor =
             | TensorR(tp,_,_,_,_) -> primalRaw tp
         primalRaw t
 
+    member t.Depth =
+        let rec depth x d =
+            match x with
+            | Tensor(_) -> d
+            | TensorF(tp,_,_) -> depth tp (d + 1)
+            | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
+        depth t 0
+
     member t.Derivative
         with get() =
             match t with
