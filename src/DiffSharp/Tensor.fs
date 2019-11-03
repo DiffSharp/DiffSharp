@@ -570,13 +570,14 @@ type Tensor =
     member t.Repeat(dim:int, times:int) = Tensor.Repeat(t, dim, times)
 
     static member View (a:Tensor, shape:seq<int>) =
-        // TODO: add -1 semantics to complete an unspecified dimension
-        let inline fRaw(a:RawTensor) = a.ViewT(shape |> Seq.toArray)
+        let shape = shape |> Seq.toArray |> shapeComplete a.Nelement  // Handles -1 semantics
+        let inline fRaw(a:RawTensor) = a.ViewT(shape)
         let inline fTensor(a) = Tensor.View(a, shape)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.View(ad, shape)
         let inline dfTensorRev(a) = ViewT(a, a.Shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.View(shape) = Tensor.View(t, shape)
+    member t.View(shape:int) = Tensor.View(t, [|shape|])
 
     static member ViewAs(a:Tensor, b:Tensor) = a.View(b.Shape)
     member a.ViewAs(b:Tensor) = a.View(b.Shape)

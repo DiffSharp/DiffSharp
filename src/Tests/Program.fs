@@ -50,7 +50,7 @@ module ExtraPrimitives =
 let main argv =
     printfn "Hello World from F#!"
 
-    // DiffSharp.Seed(125)
+    // DiffSharp.Seed(1)
     // DiffSharp.NestReset()
     // let model = Model()
     // model.ReverseDiff()
@@ -71,65 +71,9 @@ let main argv =
     //     loss.Reverse()
     //     optimize model (Tensor.Create(0.01))
 
-    // let x = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
-    //       [0.6078;0.4742;0.7844;0.0967];
-    //       [0.1416;0.1559;0.6452;0.1417]];
- 
-    //      [[0.0848;0.4156;0.5542;0.4166];
-    //       [0.5187;0.0520;0.4763;0.1509];
-    //       [0.4767;0.8096;0.1729;0.6671]]])
-    // let x0 = x.Variance(0)
-    // let x1 = x.Variance(1)
-    // let x2 = x.Variance(2)
-    // printfn "%A" x
-    // printfn "\n%A" x0
-    // printfn "\n%A" x1
-    // printfn "\n%A" x2
-
-    // let x = Tensor.Create([[[0];[10]];[[100]; [110]]])
-    // let mutable y = Tensor.ZerosLike(x, [2;2;3])
-    // printfn "%A %A" x x.Shape
-    // printfn "%A %A" y y.Shape
-
-    // y <- Tensor.AddSlice(y, [0;0;0], x)
-    // y <- Tensor.AddSlice(y, [0;0;1], x)
-    // y <- Tensor.AddSlice(y, [0;0;2], x)
-    // printfn "%A %A" y y.Shape
-    // let z = x.Repeat(2, 3)
-    // printfn "%A %A" z z.Shape
-   
-    // printfn "\n\n\n***"
-
-    // let x = Tensor.Create([[[0; 1; 2]];[[100; 101; 102]]])
-    // let mutable y = Tensor.ZerosLike(x, [2;2;3])
-    // printfn "%A %A" x x.Shape
-    // printfn "%A %A" y y.Shape
-
-    // y <- Tensor.AddSlice(y, [0;0;0], x)
-    // y <- Tensor.AddSlice(y, [0;1;0], x)
-    // printfn "%A %A" y y.Shape
-    // let z = x.Repeat(1, 2)
-    // printfn "%A %A" z z.Shape
-
-    // printfn "\n\n\n***"
-
-    let a = Tensor.Create([[4.2606; 6.3278; 2.4159];
-        [2.7748; 8.0032; 1.3511]]).ReverseDiff()
-    let b = a.Softmax(dim=1)
-    b.Reverse(Tensor.Create([[0; 0; 0];
-        [0; 0; 1]]))
-    // b.Reverse(Tensor.Create([[8.1862; 2.1702; 6.3328];
-    //     [0.;0.; 0.]]))
-    printfn "a %A" a
-    printfn "b %A" b
-    printfn "ad %A" a.Derivative
-
-    // let a = Tensor.Create([[4.2606; 6.3278; 2.4159];
-    //     [2.7748; 8.0032; 1.3511]]).ForwardDiff(Tensor.Create([[2; 0; 0];
-    //         [0; 0; 0]]))
-    // let b = a.Softmax(dim=1)
-    // printfn "a %A" a
-    // printfn "b %A" b
-    // printfn "bd %A" b.Derivative
+    let a = Tensor.RandomNormal([5;4])
+    let b = a.View([|2;-1;5|])
+    printfn "%A %A" a a.Shape
+    printfn "%A %A" b b.Shape
 
     0 // return an integer exit code

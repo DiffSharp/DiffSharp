@@ -81,6 +81,19 @@ let boundsToLocation (bounds:int[,]) =
 let boundsToShape (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|] 
 
+let shapeComplete (nelement:int) (shape:int[]) =
+    if (shape |> Array.filter (fun x -> x < -1) |> Array.length) > 0 then failwith <| sprintf "Invalid shape %A" shape
+    let numUnspecified = shape |> Array.filter ((=) -1) |> Array.length
+    if numUnspecified > 1 then
+        failwith <| sprintf "Cannot complete shape %A, expecting at most one unspecified dimension (-1)" shape
+    elif numUnspecified = 0 then 
+        shape
+    else
+        let divisor = shape |> Array.filter ((<>) -1) |> shapeLength
+        if nelement % divisor <> 0 then failwith <| sprintf "Cannot complete shape %A to have %A elements" shape nelement
+        let missing = nelement / divisor
+        [|for d in shape do if d = -1 then yield missing else yield d|]
+
 let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
