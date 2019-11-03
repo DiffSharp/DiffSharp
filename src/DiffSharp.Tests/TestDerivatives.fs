@@ -500,7 +500,7 @@ type TestDerivatives () =
         let fwdz = fwdx.LeakyRelu()
         let fwdzCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
         let fwdzd = fwdz.Derivative
-        // TODO: behavior of the detivative (where it is undefined) at 0 can be reconsidered
+        // TODO: behavior of derivative at 0 (where it is undefined) can be reconsidered
         // let fwdzdCorrect = Tensor.Create([0.0200; 0.0300; 0.0400; 5.; 6.])
         let fwdzdCorrect = Tensor.Create([0.0200; 0.0300; 2.02; 5.; 6.])
 
@@ -509,7 +509,7 @@ type TestDerivatives () =
         let revzCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
         revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.Derivative
-        // TODO behavior of the derivative (where it is undefined) at 0 can be reconsidered
+        // TODO: behavior of derivative at 0 (where it is undefined) can be reconsidered
         // let revxdCorrect = Tensor.Create([0.0500; 0.0500; 0.0500; 5.; -5.])
         let revxdCorrect = Tensor.Create([0.0500; 0.0500; 2.52; 5.; -5.])
 
