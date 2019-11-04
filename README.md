@@ -28,7 +28,7 @@ Build a Docker image called `diffsharp`. This will work without any local .NET C
 docker build -t diffsharp .
 ```
 
-Use the following to run the tests:
+Use the following to instantiate a Docker container from the `diffsharp` image and run the tests inside:
 ```
 docker run --rm diffsharp dotnet test
 ```
