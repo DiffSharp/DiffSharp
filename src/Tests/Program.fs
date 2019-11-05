@@ -11,8 +11,8 @@ open DiffSharp.RawTensor
 
 type Model() =
     inherit Layer()
-    let fc1 = Linear(2, 16)
-    let fc2 = Linear(16, 1)
+    let fc1 = Linear(2, 32)
+    let fc2 = Linear(32, 1)
     do base.AddParameters(["fc1", fc1; "fc2", fc2])
     override l.Forward(x) =
         x 
@@ -23,7 +23,7 @@ let optimize (model:Layer) (lr:Tensor) =
     let update k (p:Parameter) = 
         // printfn "updating %A" k; 
         p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
-    model.Map(update)
+    model.IterParameters(update)
 
 [<AutoOpen>]
 module ExtraPrimitives =
@@ -54,6 +54,8 @@ let main argv =
     DiffSharp.NestReset()
     let model = Model()
     printfn "%A" model.Parameters
+    // for np in model.Parameters do
+        // printfn "%A:\n%A" np.Key (np.Value.NoDiff())
     model.ReverseDiff()
     let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
     let x = data.[*,0..1]
@@ -61,9 +63,10 @@ let main argv =
     printfn "%A" x
     printfn "%A" y
 
-    let mseloss (x:Tensor) (y:Tensor) = Tensor.Sum((x - y) * (x - y)) / x.Shape.[0]
+    let mseloss (x:Tensor) (y:Tensor) = ((x - y) * (x - y)).Mean()
 
-    for i=0 to 10000 do    
+    for i=0 to 1000 do
+        model.NoDiff()
         model.ReverseDiff()
         let o = model.Forward(x).View(-1)
         let loss = mseloss o y
@@ -72,7 +75,11 @@ let main argv =
         loss.Reverse()
         optimize model (Tensor.Create(0.01))
 
+    model.NoDiff()
     printfn "%A" model.Parameters
+    // let ps = sprintf "%A" model.Parameters
+    // for np in model.Parameters do
+        // printfn "%A:\n%A" np.Key (np.Value.NoDiff())
     // let a = Tensor.RandomNormal([5;4])
     // let b = a.View([|2;-1;5|])
     // printfn "%A %A" a a.Shape

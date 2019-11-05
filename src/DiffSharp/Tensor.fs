@@ -484,15 +484,17 @@ type Tensor =
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
     static member Sum(a:Tensor, dim:int) =
-        if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
-        let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
-        sBounds.[dim, 1] <- 0
-        let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
-        for i=0 to a.Shape.[dim]-1 do
-            sBounds.[dim,0] <- i
-            sBounds.[dim,1] <- i
-            s <- s + a.GetSlice(sBounds)
-        s
+        if dim = 0 && a.Dim = 0 then a
+        else
+            if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
+            let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
+            sBounds.[dim, 1] <- 0
+            let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
+            for i=0 to a.Shape.[dim]-1 do
+                sBounds.[dim,0] <- i
+                sBounds.[dim,1] <- i
+                s <- s + a.GetSlice(sBounds)
+            s
     member t.Sum(dim) = Tensor.Sum(t, dim)
 
     static member Sum(a:Tensor, dim:int, keepDim:bool) = if keepDim then Tensor.Sum(a, dim).Unsqueeze(dim) else Tensor.Sum(a, dim)
@@ -501,7 +503,9 @@ type Tensor =
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
 
-    static member Mean(a:Tensor, dim:int) = a.Sum(dim) / a.Shape.[dim]
+    static member Mean(a:Tensor, dim:int) = 
+        if dim = 0 && a.Dim = 0 then a
+        else a.Sum(dim) / a.Shape.[dim]
     member t.Mean(dim) = Tensor.Mean(t, dim)
 
     // This is the two-pass algorithm better than the naive algorithm

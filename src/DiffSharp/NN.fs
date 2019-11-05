@@ -7,9 +7,9 @@ type Parameter(tensor:Tensor) =
     member p.Tensor 
         with get() = t
         and set(tensor) = t <- tensor
-    member p.ForwardDiff(derivative) = t <- t.ForwardDiff(derivative)
-    member p.ReverseDiff() = t <- t.ReverseDiff()
-    member p.NoDiff() = t <- t.NoDiff()
+    member p.ForwardDiff(derivative) = t <- t.ForwardDiff(derivative); t
+    member p.ReverseDiff() = t <- t.ReverseDiff(); t
+    member p.NoDiff() = t <- t.NoDiff(); t
     override p.ToString() = sprintf "Parameter %A" t
 
 [<AbstractClass>]
@@ -23,13 +23,13 @@ type Layer() =
                 for KeyValue(nn, pp) in layer.Parameters do
                     l.Parameters.Add(n + "_" + nn, pp)
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Layer or Parameter"
-    member l.Map(f) =
+    member l.IterParameters(f) =
         let keys = Array.create l.Parameters.Count ""
         l.Parameters.Keys.CopyTo(keys, 0)
         for k in keys do f k l.Parameters.[k]
-    member l.ForwardDiff(derivatives:Dictionary<string, Tensor>) = l.Map(fun k p -> p.ForwardDiff(derivatives.[k]))
-    member l.ReverseDiff() = l.Map(fun _ p -> p.ReverseDiff())
-    member l.NoDiff() = l.Map(fun _ p -> p.NoDiff())
+    member l.ForwardDiff(derivatives:Dictionary<string, Tensor>) = l.IterParameters(fun k p -> p.ForwardDiff(derivatives.[k]) |> ignore)
+    member l.ReverseDiff() = l.IterParameters(fun _ p -> p.ReverseDiff() |> ignore)
+    member l.NoDiff() = l.IterParameters(fun _ p -> p.NoDiff() |> ignore)
     abstract member Forward: Tensor -> Tensor
     
 type Linear(inFeatures, outFeatures) =
