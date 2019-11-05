@@ -1,0 +1,5 @@
+image: Visual Studio 2019
+
+build_script:
+  - cmd: dotnet build
+  - cmd: dotnet test
