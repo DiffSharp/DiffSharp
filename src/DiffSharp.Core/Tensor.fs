@@ -2722,7 +2722,6 @@ type Tensor with
 
 
 [<RequireQualifiedAccess>]
-[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Tensor =
     let create (count:int) (value:float32) = Tensor.Create(Array.create count value)
     let zeroCreate (count:int) = Tensor.Create(Array.zeroCreate count)

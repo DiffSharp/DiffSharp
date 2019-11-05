@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- <ItemGroup>
+    <Compile Include="Library.fs" />
+  </ItemGroup> -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Backend.None\DiffSharp.Backend.None.fsproj" />
+  </ItemGroup>
+
+</Project>
