@@ -1,14 +1,10 @@
 ﻿// Learn more about F# at http://fsharp.org
 
-open System
-open System.Collections.Generic
 open DiffSharp
 open DiffSharp.Util
 open DiffSharp.Distributions
 open DiffSharp.Model
 open DiffSharp.Optim
-open DiffSharp.RawTensor
-
 
 type FeedforwardNet() =
     inherit Model()
@@ -19,7 +15,6 @@ type FeedforwardNet() =
         x 
         |> fc1.Forward |> Tensor.LeakyRelu
         |> fc2.Forward |> Tensor.LeakyRelu
-
 
 [<EntryPoint>]
 let main argv =
