@@ -6,6 +6,7 @@ open DiffSharp
 open DiffSharp.Util
 open DiffSharp.Distributions
 open DiffSharp.NN
+open DiffSharp.Optim
 open DiffSharp.RawTensor
 
 
@@ -63,13 +64,13 @@ let main argv =
     printfn "%A" x
     printfn "%A" y
 
-    let mseloss (x:Tensor) (y:Tensor) = ((x - y) * (x - y)).Mean()
+    // let mseloss (x:Tensor) (y:Tensor) = ((x - y) * (x - y)).Mean()
 
     for i=0 to 1000 do
         model.NoDiff()
         model.ReverseDiff()
         let o = model.Forward(x).View(-1)
-        let loss = mseloss o y
+        let loss = Tensor.MSELoss(o, y)
         printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
         // printfn "%A" loss
         loss.Reverse()

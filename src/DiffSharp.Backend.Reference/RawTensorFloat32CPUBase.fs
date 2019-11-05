@@ -5,7 +5,7 @@ open DiffSharp.Util
 open System
 
 type RawTensorFloat32CPU(value: float32[], shape:int[]) =
-    inherit RawTensor(value, shape, Float32, CPU, CPUBase)
+    inherit RawTensor(value, shape, Float32, CPU, Backend.Reference)
 
     member private t.IndexToFlatIndex(index:int[]) =
         let mutable flatIndex = 0
@@ -51,20 +51,6 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
                     slice bounds.[1..,*] (Array.append externalCoords [|i|])
         slice bounds [||]
         upcast RawTensorFloat32CPU(array, shape)
-    static member Create(value:obj):RawTensor = 
-        let array, shape = value |> flatArrayAndShape<float32>
-        if notNull array then 
-            upcast RawTensorFloat32CPU(array, shape)
-        else 
-            let array, shape = value |> flatArrayAndShape<double>
-            if notNull array then 
-                upcast RawTensorFloat32CPU(array |> Array.map float32, shape)
-            else
-                let array, shape = value |> flatArrayAndShape<int>
-                if notNull array then 
-                    upcast RawTensorFloat32CPU(array |> Array.map float32, shape)
-                else
-                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
 
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
@@ -81,6 +67,16 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
     override t.Random(shape) = RawTensorFloat32CPU.Random(shape)
     override t.RandomNormal(shape) = RawTensorFloat32CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorFloat32CPU.RandomMultinomial(t, numSamples)
+    static member RandomMultinomial(probs:RawTensor, numSamples:int):RawTensor =
+        if probs.Dim < 1 || probs.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.Shape
+        if probs.Dim = 1 then
+            let p = probs.Value :?> float32[] |> Array.map float
+            let result = [|for i=0 to numSamples-1 do yield float32 (Random.ChoiceIndex(p))|]
+            upcast RawTensorFloat32CPU(result, [|numSamples|])
+        else
+            let p = probs.ToArray() :?> float32[,] |> Array2D.map float
+            let result = Array2D.init (p.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(p.[i,*]))
+            RawTensorFloat32CPU.Create(result)
 
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
@@ -447,19 +443,27 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
 and RawTensorFloat32CPUStatics() = 
 
     inherit RawTensorStatics()
+
     override __.Zeros(shape:int[]):RawTensor = upcast RawTensorFloat32CPU(Array.create (shapeLength shape) 0.f, shape)
+
     override __.Ones(shape:int[]):RawTensor = upcast RawTensorFloat32CPU(Array.create (shapeLength shape) 1.f, shape)
+
     override __.Random(shape:int[]):RawTensor = upcast RawTensorFloat32CPU(Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform())), shape)
+
     override __.RandomNormal(shape:int[]):RawTensor = upcast RawTensorFloat32CPU(Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal())), shape)
-    override __.RandomMultinomial(probs:RawTensor, numSamples:int):RawTensor =
-        if probs.Dim < 1 || probs.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.Shape
-        if probs.Dim = 1 then
-            let p = probs.Value :?> float32[] |> Array.map float
-            let result = [|for i=0 to numSamples-1 do yield float32 (Random.ChoiceIndex(p))|]
-            upcast RawTensorFloat32CPU(result, [|numSamples|])
-        else
-            let p = probs.ToArray() :?> float32[,] |> Array2D.map float
-            let result = Array2D.init (p.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(p.[i,*]))
-            RawTensorFloat32CPU.Create(result)
-    abstract Create : obj -> RawTensor
+
+    override __.Create(value:obj) : RawTensor = 
+        let array, shape = value |> flatArrayAndShape<float32>
+        if notNull array then 
+            upcast RawTensorFloat32CPU(array, shape)
+        else 
+            let array, shape = value |> flatArrayAndShape<double>
+            if notNull array then 
+                upcast RawTensorFloat32CPU(array |> Array.map float32, shape)
+            else
+                let array, shape = value |> flatArrayAndShape<int>
+                if notNull array then 
+                    upcast RawTensorFloat32CPU(array |> Array.map float32, shape)
+                else
+                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
     

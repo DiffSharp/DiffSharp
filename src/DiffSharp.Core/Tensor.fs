@@ -57,42 +57,29 @@ type Tensor =
     member t.ForwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
-
     member t.ReverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
-
     member t.NoDiff() = Tensor(t.PrimalRaw)
-
     member t.Shape = t.PrimalRaw.Shape
-
     member t.Dim = t.PrimalRaw.Dim
-
     member t.Nelement = t.PrimalRaw.Nelement
-
     member t.ToArray() = t.PrimalRaw.ToArray()
-
     member t.ToValue() = t.PrimalRaw.ToValue()
-
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
-
     member t.Create(value) = Tensor(t.PrimalRaw.Create(value))
-
     override t.Equals(other) =
         match other with
         | :? Tensor as tensor -> t.PrimalRaw.Equals(tensor.PrimalRaw)
         | _ -> false
-
     member t.ApproximatelyEqual(tensor:Tensor, ?tolerance) =
         let tolerance = defaultArg tolerance 0.01
         t.PrimalRaw.ApproximatelyEquals(tensor.PrimalRaw, tolerance)
-
     override t.GetHashCode() =
         match t with
         | Tensor(tp) -> hash (tp)
         | TensorF(tp,td,tt) -> hash (tp, td, tt)
         | TensorR(tp,td,_,_,tt) -> hash (tp, !td, tt)
-
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
@@ -102,7 +89,6 @@ type Tensor =
                 else
                     invalidOp "Cannot compare non-scalar Tensors"
             | _ -> invalidOp "Cannot compare Tensor with another type"
-
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with
         | Tensor(_),  Tensor(_)  -> true
@@ -116,57 +102,31 @@ type Tensor =
         | TensorR(_), TensorR(_) -> true
 
     static member Lt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
-
     member t1.Lt(t2) = Tensor.Lt(t1, t2)
-
     static member Gt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
-
     member t1.Gt(t2) = Tensor.Gt(t1, t2)
-
     static member Le(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
-
     member t1.Le(t2) = Tensor.Le(t1, t2)
-
     static member Ge(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
-
     member t1.Ge(t2) = Tensor.Ge(t1, t2)
-
     static member MaxIndex(a:Tensor) = a.PrimalRaw.MaxIndexT()
-
     member t.MaxIndex() = Tensor.MaxIndex(t)
-
     static member MinIndex(a:Tensor) = a.PrimalRaw.MinIndexT()
-
     member t.MinIndex() = Tensor.MinIndex(t)
-
     static member Max(a:Tensor) = a.[a.MaxIndex()]
-
     member t.Max() = Tensor.Max(t)
-
     static member Min(a:Tensor) = a.[a.MinIndex()]
-
     member t.Min() = Tensor.Min(t)
-
     static member Max(a:Tensor, b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
-
     static member Min(a:Tensor, b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
-
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
-
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
-
     static member ZerosLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Zeros(shape |> Array.ofSeq))
-
     static member OnesLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Ones(tensor.Shape))
-
     static member OnesLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Ones(shape |> Array.ofSeq))
-
     static member RandomLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Random(tensor.Shape))
-
     static member RandomLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Random(shape |> Array.ofSeq))
-
     static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.RandomNormal(tensor.Shape))
-
     static member RandomNormalLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.RandomNormal(shape |> Array.ofSeq))
 
     static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
@@ -231,7 +191,6 @@ type Tensor =
         | Tensor(ap) -> ap.UnstackT() |> Seq.map Tensor
         | TensorF(ap,ad,at) -> Seq.map2 (fun p d -> TensorF(p,d,at)) (ap.Unstack()) (ad.Unstack())
         | TensorR(ap,_,_,_,at) -> Seq.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.Unstack())
-
     member t.Unstack() = Tensor.Unstack(t)
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
@@ -318,13 +277,9 @@ type Tensor =
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         // TODO: implement general broadcasting additions
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-
     static member (+) (a:Tensor, b) = a + a.Create(b)
-
     static member (+) (a, b:Tensor) = b.Create(a) + b
-
     member t1.Add(t2:Tensor) = t1 + t2
-
     member t1.Add(t2) = t1 + t1.Create(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
@@ -359,13 +314,9 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
-
     static member (-) (a:Tensor, b) = a - a.Create(b)
-
     static member (-) (a, b:Tensor) = b.Create(a) - b
-
     member t1.Sub(t2:Tensor) = t1 - t2
-
     member t1.Sub(t2) = t1 - t1.Create(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
@@ -401,13 +352,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         // TODO: implement general broadcasting?
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-
     static member (*) (a:Tensor, b) = a * a.Create(b)
-
     static member (*) (a, b:Tensor) = b.Create(a) * b
-
     member t1.Mul(t2:Tensor) = t1 * t2
-
     member t1.Mul(t2) = t1 * t1.Create(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
@@ -442,13 +389,9 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
-
     static member (/) (a:Tensor, b) = a / a.Create(b)
-
     static member (/) (a, b:Tensor) = b.Create(a) / b
-
     member t1.Div(t2:Tensor) = t1 / t2
-
     member t1.Div(t2) = t1 / t1.Create(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
@@ -483,13 +426,9 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.Shape b.Shape
-
     static member Pow (a:Tensor, b) = a ** a.Create(b)
-
     static member Pow (a, b:Tensor) = b.Create(a) ** b
-
     member t1.Pow(t2:Tensor) = t1 ** t2
-
     member t1.Pow(t2) = t1 ** t1.Create(t2)
 
     static member MatMul (a:Tensor, b:Tensor) =
@@ -505,7 +444,6 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
-
     member t1.MatMul(t2:Tensor) = Tensor.MatMul(t1, t2)
 
     static member (~-) (a:Tensor) =
@@ -522,7 +460,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Sum(ad)
         let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sum() = Tensor.Sum(t)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
@@ -541,22 +478,18 @@ type Tensor =
     member t.Sum(dim) = Tensor.Sum(t, dim)
 
     static member Sum(a:Tensor, dim:int, keepDim:bool) = if keepDim then Tensor.Sum(a, dim).Unsqueeze(dim) else Tensor.Sum(a, dim)
-
     member t.Sum(dim, keepDim) = Tensor.Sum(t, dim, keepDim)
 
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
-
     member t.Mean() = Tensor.Mean(t)
 
     static member Mean(a:Tensor, dim:int) = 
         if dim = 0 && a.Dim = 0 then a
         else a.Sum(dim) / a.Shape.[dim]
-
     member t.Mean(dim) = Tensor.Mean(t, dim)
 
     // This is the two-pass algorithm better than the naive algorithm
     static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
-
     member t.Variance() = Tensor.Variance(t)
 
     // TODO: this is the naive algorithm, can be improved for better numerical stability
@@ -574,15 +507,12 @@ type Tensor =
             s <- s + slice
             sSquare <- sSquare + slice * slice
         (sSquare - (s * s) / n) / (n - 1)
-
     member t.Variance(dim) = Tensor.Variance(t, dim)
 
     static member Stddev (a:Tensor, dim:int) = Tensor.Variance(a, dim) |> Tensor.Sqrt
-
     member t.Stddev(dim) = Tensor.Stddev(t, dim)
 
     static member Stddev (a:Tensor) = Tensor.Variance(a) |> Tensor.Sqrt
-
     member t.Stddev() = Tensor.Stddev(t)
 
     static member SumT2Dim0 (a:Tensor) =
@@ -591,7 +521,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim0(ad)
         let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
     
     static member Transpose (a:Tensor) =
@@ -601,7 +530,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
         let inline dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Transpose() = Tensor.Transpose(t)
 
     static member Squeeze (a:Tensor, ?dim:int) =
@@ -611,7 +539,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Squeeze(ad, dim)
         let inline dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Squeeze(?dim) = 
         let dim = defaultArg dim -1
         Tensor.Squeeze(t, dim)
@@ -622,7 +549,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Unsqueeze(ad, dim)
         let inline dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
 
     static member Repeat (a:Tensor, dim:int, times:int) =
@@ -635,7 +561,6 @@ type Tensor =
             location.[dim] <- i
             ret <- Tensor.AddSlice(ret, location, a)
         ret
-
     member t.Repeat(dim:int, times:int) = Tensor.Repeat(t, dim, times)
 
     static member View (a:Tensor, shape:seq<int>) =
@@ -645,13 +570,10 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.View(ad, shape)
         let inline dfTensorRev(a) = ViewT(a, a.Shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.View(shape) = Tensor.View(t, shape)
-
     member t.View(shape:int) = Tensor.View(t, [|shape|])
 
     static member ViewAs(a:Tensor, b:Tensor) = a.View(b.Shape)
-
     member a.ViewAs(b:Tensor) = a.View(b.Shape)
 
     static member Sign (a:Tensor) =
@@ -660,7 +582,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sign() = Tensor.Sign(t)
 
     static member Floor (a:Tensor) =
@@ -669,7 +590,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Floor() = Tensor.Floor(t)
 
     static member Ceil (a:Tensor) =
@@ -678,7 +598,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Ceil() = Tensor.Ceil(t)
 
     static member Round (a:Tensor) =
@@ -687,7 +606,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Round() = Tensor.Round(t)
 
     static member Abs (a:Tensor) =
@@ -696,7 +614,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = ad * Tensor.Sign(ap)
         let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Abs() = Tensor.Abs(t)
 
     static member Relu (a:Tensor) =
@@ -705,15 +622,12 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
         let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Relu() = Tensor.Relu(t)
 
     static member LeakyRelu (a:Tensor, ?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
         Tensor.Max(Tensor.Create(0.), a) + negativeSlope * Tensor.Min(Tensor.Create(0.), a)
-
     member t.LeakyRelu() = Tensor.LeakyRelu(t)
-
     member t.LeakyRelu(negativeSlope) = Tensor.LeakyRelu(t, negativeSlope)
 
     static member Sigmoid (a:Tensor) =
@@ -722,7 +636,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
         let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sigmoid() = Tensor.Sigmoid(t)
 
     static member Exp (a:Tensor) =
@@ -731,7 +644,6 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = ad * cp
         let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Exp() = Tensor.Exp(t)
 
     static member Log (a:Tensor) =
@@ -740,9 +652,7 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = ad / ap
         let inline dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Log() = Tensor.Log(t)
-
 
     static member Log10 (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Log10T()
@@ -750,9 +660,7 @@ type Tensor =
         let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
         let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Log10() = Tensor.Log10(t)
-
 
     static member Sqrt (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SqrtT()
@@ -760,9 +668,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
         let inline dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sqrt() = Tensor.Sqrt(t)
-
 
     static member Sin (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SinT()
@@ -770,9 +676,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cos(ap)
         let inline dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sin() = Tensor.Sin(t)
-
 
     static member Cos (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CosT()
@@ -780,7 +684,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = -ad * Tensor.Sin(ap)
         let inline dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Cos() = Tensor.Cos(t)
 
     static member Tan (a:Tensor) =
@@ -789,9 +692,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = let cosap = Tensor.Cos(ap) in ad / (cosap * cosap)
         let inline dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Tan() = Tensor.Tan(t)
-
 
     static member Sinh (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SinhT()
@@ -799,9 +700,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cosh(ap)
         let inline dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Sinh() = Tensor.Sinh(t)
-
 
     static member Cosh (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CoshT()
@@ -809,7 +708,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Sinh(ap)
         let inline dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Cosh() = Tensor.Cosh(t)
 
     static member Tanh (a:Tensor) =
@@ -818,7 +716,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = let coshap = Tensor.Cosh(ap) in ad / (coshap * coshap)
         let inline dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Tanh() = Tensor.Tanh(t)
 
     static member Asin (a:Tensor) =
@@ -827,7 +724,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / Tensor.Sqrt(1. - ap*ap)
         let inline dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Asin() = Tensor.Asin(t)
 
     static member Acos (a:Tensor) =
@@ -836,7 +732,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / Tensor.Sqrt(1. - ap*ap)
         let inline dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Acos() = Tensor.Acos(t)
 
     static member Atan (a:Tensor) =
@@ -845,7 +740,6 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
         let inline dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     member t.Atan() = Tensor.Atan(t)
 
     static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
@@ -867,8 +761,9 @@ type Tensor =
         let e = (a - a.Max().NoDiff()).Exp()
         let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
         e / esum
-
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
+
+    static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).Mean()
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
@@ -1162,19 +1057,16 @@ and TensorOp =
     | NewT
 
 type Tensor with
-
     member t.GetSlice(i0min:int option, i0max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
         let bounds = array2D [[i0min; i0max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int) =
         let i0min = i0
         let i0max = i0
         let bounds = array2D [[i0min; i0max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1182,7 +1074,6 @@ type Tensor with
         let i1max = defaultArg i1max (t.Shape.[1] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1190,7 +1081,6 @@ type Tensor with
         let i1max = i1
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1198,7 +1088,6 @@ type Tensor with
         let i1max = defaultArg i1max (t.Shape.[1] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int) =
         let i0min = i0
         let i0max = i0
@@ -1206,7 +1095,6 @@ type Tensor with
         let i1max = i1
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1216,7 +1104,6 @@ type Tensor with
         let i2max = defaultArg i2max (t.Shape.[2] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1226,7 +1113,6 @@ type Tensor with
         let i2max = i2
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1236,7 +1122,6 @@ type Tensor with
         let i2max = defaultArg i2max (t.Shape.[2] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1246,7 +1131,6 @@ type Tensor with
         let i2max = i2
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1256,7 +1140,6 @@ type Tensor with
         let i2max = defaultArg i2max (t.Shape.[2] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int) =
         let i0min = i0
         let i0max = i0
@@ -1266,7 +1149,6 @@ type Tensor with
         let i2max = i2
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1276,7 +1158,6 @@ type Tensor with
         let i2max = defaultArg i2max (t.Shape.[2] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int) =
         let i0min = i0
         let i0max = i0
@@ -1286,7 +1167,6 @@ type Tensor with
         let i2max = i2
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1298,7 +1178,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1310,7 +1189,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1322,7 +1200,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1334,7 +1211,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1346,7 +1222,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1358,7 +1233,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1370,7 +1244,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1382,7 +1255,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1394,7 +1266,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int) =
         let i0min = i0
         let i0max = i0
@@ -1406,7 +1277,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1418,7 +1288,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int) =
         let i0min = i0
         let i0max = i0
@@ -1430,7 +1299,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1442,7 +1310,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int) =
         let i0min = i0
         let i0max = i0
@@ -1454,7 +1321,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1466,7 +1332,6 @@ type Tensor with
         let i3max = defaultArg i3max (t.Shape.[3] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int) =
         let i0min = i0
         let i0max = i0
@@ -1478,7 +1343,6 @@ type Tensor with
         let i3max = i3
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1492,7 +1356,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1506,7 +1369,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1520,7 +1382,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1534,7 +1395,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1548,7 +1408,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1562,7 +1421,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1576,7 +1434,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1590,7 +1447,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1604,7 +1460,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1618,7 +1473,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1632,7 +1486,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1646,7 +1499,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1660,7 +1512,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1674,7 +1525,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1688,7 +1538,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1702,7 +1551,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1716,7 +1564,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1730,7 +1577,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1744,7 +1590,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1758,7 +1603,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1772,7 +1616,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1786,7 +1629,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1800,7 +1642,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1814,7 +1655,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1828,7 +1668,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1842,7 +1681,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1856,7 +1694,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1870,7 +1707,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1884,7 +1720,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1898,7 +1733,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option) =
         let i0min = i0
         let i0max = i0
@@ -1912,7 +1746,6 @@ type Tensor with
         let i4max = defaultArg i4max (t.Shape.[4] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int) =
         let i0min = i0
         let i0max = i0
@@ -1926,7 +1759,6 @@ type Tensor with
         let i4max = i4
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1942,7 +1774,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1958,7 +1789,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1974,7 +1804,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -1990,7 +1819,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2006,7 +1834,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2022,7 +1849,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2038,7 +1864,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2054,7 +1879,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2070,7 +1894,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2086,7 +1909,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2102,7 +1924,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2118,7 +1939,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2134,7 +1954,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2150,7 +1969,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2166,7 +1984,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2182,7 +1999,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2198,7 +2014,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2214,7 +2029,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2230,7 +2044,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2246,7 +2059,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2262,7 +2074,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2278,7 +2089,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2294,7 +2104,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2310,7 +2119,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2326,7 +2134,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2342,7 +2149,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2358,7 +2164,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2374,7 +2179,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2390,7 +2194,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2406,7 +2209,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2422,7 +2224,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int, i5:int) =
         let i0min = defaultArg i0min 0
         let i0max = defaultArg i0max (t.Shape.[0] - 1)
@@ -2438,7 +2239,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2454,7 +2254,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2470,7 +2269,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2486,7 +2284,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2502,7 +2299,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2518,7 +2314,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2534,7 +2329,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2550,7 +2344,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2566,7 +2359,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2582,7 +2374,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2598,7 +2389,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2614,7 +2404,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2630,7 +2419,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2646,7 +2434,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2662,7 +2449,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2678,7 +2464,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2694,7 +2479,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2710,7 +2494,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2726,7 +2509,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2742,7 +2524,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2758,7 +2539,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2774,7 +2554,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2790,7 +2569,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2806,7 +2584,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2822,7 +2599,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2838,7 +2614,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2854,7 +2629,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2870,7 +2644,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2886,7 +2659,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2902,7 +2674,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2918,7 +2689,6 @@ type Tensor with
         let i5max = i5
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
         let i0min = i0
         let i0max = i0
@@ -2934,7 +2704,6 @@ type Tensor with
         let i5max = defaultArg i5max (t.Shape.[5] - 1)
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
-
     member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int, i5:int) =
         let i0min = i0
         let i0max = i0
@@ -2951,15 +2720,12 @@ type Tensor with
         let bounds = array2D [[i0min; i0max]; [i1min; i1max]; [i2min; i2max]; [i3min; i3max]; [i4min; i4max]; [i5min; i5max]]
         t.GetSlice(bounds)
 
+
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Tensor =
     let create (count:int) (value:float32) = Tensor.Create(Array.create count value)
-
     let zeroCreate (count:int) = Tensor.Create(Array.zeroCreate count)
-
     let init (count:int) (initializer:int->float32) = Tensor.Create(Array.init count initializer)
-
     let shape (t:Tensor) = t.Shape
-
     let dim (t:Tensor) = t.Dim
