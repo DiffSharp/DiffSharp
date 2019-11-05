@@ -1,5 +1,5 @@
 ﻿namespace DiffSharp
-open DiffSharp.RawTensor
+open DiffSharp.Backend
 open DiffSharp.Util
 
 [<CustomEquality; CustomComparison>]
@@ -128,41 +128,21 @@ type Tensor =
     static member RandomLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Random(shape |> Array.ofSeq))
     static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.RandomNormal(tensor.Shape))
     static member RandomNormalLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.RandomNormal(shape |> Array.ofSeq))
+
     static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend CPUBase
-        match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Zeros(shape|>Seq.toArray))
-        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+        Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+
     static member Ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend CPUBase
-        match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Ones(shape|>Seq.toArray))
-        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+        Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+
     static member Random(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend CPUBase
-        match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Random(shape|>Seq.toArray))
-        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+        Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+
     static member RandomNormal(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend CPUBase
-        match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.RandomNormal(shape|>Seq.toArray))
-        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+        Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend CPUBase
-        match dtype, device, backend with
-        | Float32, CPU, CPUBase -> Tensor(RawTensorFloat32CPUBase.Create(value))
-        | _ -> failwithf "Unsupported Tensor creation with dtype: %A, device: %A, backend: %A" dtype device backend
+        Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     static member Extend(a:Tensor, shape:seq<int>) =
         if a.Dim <> 0 then invalidArg "tensor" (sprintf "Expecting a 0d Tensor, received shape: %A" a.Shape)
