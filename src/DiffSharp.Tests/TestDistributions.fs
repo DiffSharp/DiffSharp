@@ -6,7 +6,7 @@ open DiffSharp.Distributions
 
 [<TestFixture>]
 type TestDistributions () =
-    let numEmpiricalSamples = 7500
+    let numEmpiricalSamples = 10000
 
     [<SetUp>]
     member this.Setup () =
