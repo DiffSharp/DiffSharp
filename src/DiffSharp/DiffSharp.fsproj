@@ -2,7 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+  
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Empty.fs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
