@@ -31,6 +31,7 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
             tvalue.[t.IndexToFlatIndex(index)]
 
     override t.GetItem(index:int[]) = RawTensorFloat32CPU.Create(t.[index])
+    
     override t.GetSlice(bounds:int[,]) =
         // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
         // printfn "%A" bounds
@@ -54,9 +55,8 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
 
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
+    
     override t.Create(value) = RawTensorFloat32CPU.Create(value)
-
-
     override t.Create(value, shape) =
         let value = value:?>float32
         match shape.Length with
@@ -64,18 +64,11 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
         | _ -> upcast RawTensorFloat32CPU(Array.create (shapeLength shape) value, shape)
 
     override t.Zero() = upcast RawTensorFloat32CPU([|0.f|], [||])
-
     override t.Zeros(shape) = RawTensorFloat32CPU.Zeros(shape)
-
     override t.One() = upcast RawTensorFloat32CPU([|1.f|], [||])
-
-
     override t.Ones(shape) = RawTensorFloat32CPU.Ones(shape)
-
     override t.Random(shape) = RawTensorFloat32CPU.Random(shape)
-
     override t.RandomNormal(shape) = RawTensorFloat32CPU.RandomNormal(shape)
-
     override t.RandomMultinomial(numSamples) = RawTensorFloat32CPU.RandomMultinomial(t, numSamples)
 
     static member RandomMultinomial(probs:RawTensor, numSamples:int):RawTensor =
