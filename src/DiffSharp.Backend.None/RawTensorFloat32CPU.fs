@@ -5,7 +5,7 @@ open DiffSharp.Util
 open System
 
 type RawTensorFloat32CPU(value: float32[], shape:int[]) =
-    inherit RawTensor(value, shape, Float32, CPU, Backend.Reference)
+    inherit RawTensor(value, shape, Float32, CPU, DiffSharp.Backend.Backend.None)
 
     member private t.IndexToFlatIndex(index:int[]) =
         let mutable flatIndex = 0

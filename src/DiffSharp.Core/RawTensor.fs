@@ -16,24 +16,22 @@ type Device =
         | CPU -> "CPU"
         | GPU -> "GPU"
 
+[<RequireQualifiedAccess>]
 type Backend =
-    | Reference
+    | None
     | OpenBLAS
-    | TorchNoGPU
     | Torch
 
     member internal x.Code = 
         match x with 
-        | Reference -> 0x000
+        | None -> 0x000
         | OpenBLAS  -> 0x010
-        | TorchNoGPU -> 0x020
-        | Torch -> 0x030
+        | Torch -> 0x020
 
     member x.Name = 
         match x with 
-        | Reference -> "Reference"
+        | None -> "None"
         | OpenBLAS -> "OpenBLAS"
-        | TorchNoGPU -> "TorchNoGPU"
         | Torch -> "Torch"
 
 type DType =
@@ -66,7 +64,7 @@ type [<AbstractClass>]
     static member Get(?dtype: DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
-        let backend = defaultArg backend Backend.Reference
+        let backend = defaultArg backend Backend.None
         let code = dtype.Code + device.Code + backend.Code
         match backends.TryGetValue(code) with 
         | true, v -> v
@@ -77,7 +75,7 @@ type [<AbstractClass>]
                 let asm = 
                     try System.Reflection.Assembly.Load(fullName)
                     with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                let typeName = sprintf "DiffSharp.Backend.Reference.RawTensor%s%sStatics" dtype.Name device.Name
+                let typeName = sprintf "DiffSharp.Backend.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
                 let theType = asm.GetType(typeName)
                 if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
                 match System.Activator.CreateInstance(theType) with
