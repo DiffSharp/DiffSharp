@@ -8,6 +8,14 @@ type Optimizer(model:Model) =
     abstract member ParameterUpdate : Parameter -> unit
     member o.Step() = o.Model.IterParameters(fun _ p -> o.ParameterUpdate(p))
 
-type SGD(model, lr:Tensor) =
+type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool) =
     inherit Optimizer(model)
-    override o.ParameterUpdate(p) = p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+    let lr = defaultArg learningRate (Tensor.Create(0.001))
+    let mom = momentum
+    let nesterov = defaultArg nesterov true
+    override o.ParameterUpdate(p) = 
+        match mom with
+        | Some mom -> 
+            if nesterov then p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+            else p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+        | None -> p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative

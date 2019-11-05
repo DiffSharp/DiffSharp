@@ -28,7 +28,7 @@ let main argv =
     DiffSharp.Seed(12)
     DiffSharp.NestReset()
     let model = FeedforwardNet()
-    let optimizer = SGD(model, Tensor.Create(0.01))
+    let optimizer = SGD(model)
     printfn "%A" model.Parameters
     let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
     let x = data.[*,0..1]
