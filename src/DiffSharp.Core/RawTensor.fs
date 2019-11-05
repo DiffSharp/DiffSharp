@@ -1,4 +1,5 @@
 namespace DiffSharp.RawTensor
+
 open DiffSharp.Util
 
 type Device =
