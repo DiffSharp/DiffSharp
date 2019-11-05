@@ -5,13 +5,13 @@ open System.Collections.Generic
 open DiffSharp
 open DiffSharp.Util
 open DiffSharp.Distributions
-open DiffSharp.NN
+open DiffSharp.Model
 open DiffSharp.Optim
 open DiffSharp.RawTensor
 
 
-type Model() =
-    inherit Layer()
+type FeedforwardNet() =
+    inherit Model()
     let fc1 = Linear(2, 32)
     let fc2 = Linear(32, 1)
     do base.AddParameters(["fc1", fc1; "fc2", fc2])
@@ -20,11 +20,11 @@ type Model() =
         |> fc1.Forward |> Tensor.LeakyRelu
         |> fc2.Forward |> Tensor.LeakyRelu
 
-let optimize (model:Layer) (lr:Tensor) =
-    let update k (p:Parameter) = 
-        // printfn "updating %A" k; 
-        p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
-    model.IterParameters(update)
+// let optimize (model:Layer) (lr:Tensor) =
+//     let update k (p:Parameter) = 
+//         // printfn "updating %A" k; 
+//         p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
+//     model.IterParameters(update)
 
 [<AutoOpen>]
 module ExtraPrimitives =
@@ -53,11 +53,11 @@ let main argv =
 
     DiffSharp.Seed(12)
     DiffSharp.NestReset()
-    let model = Model()
+    let model = FeedforwardNet()
+    let optimizer = SGD(model, 0.01)
     printfn "%A" model.Parameters
     // for np in model.Parameters do
         // printfn "%A:\n%A" np.Key (np.Value.NoDiff())
-    model.ReverseDiff()
     let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
     let x = data.[*,0..1]
     let y = data.[*,2..]
@@ -67,14 +67,14 @@ let main argv =
     // let mseloss (x:Tensor) (y:Tensor) = ((x - y) * (x - y)).Mean()
 
     for i=0 to 1000 do
-        model.NoDiff()
         model.ReverseDiff()
         let o = model.Forward(x).View(-1)
         let loss = Tensor.MSELoss(o, y)
         printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
         // printfn "%A" loss
         loss.Reverse()
-        optimize model (Tensor.Create(0.01))
+        // optimize model (Tensor.Create(0.01))
+        optimizer.Step()
 
     model.NoDiff()
     printfn "%A" model.Parameters
