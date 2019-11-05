@@ -9,7 +9,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Core", "src\DiffS
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Tests", "src\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{FDAFD453-7B82-40F9-8874-524498C447ED}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests", "src\Tests\Tests.fsproj", "{7D771824-F0AE-4315-ACAD-2173BCF2F55D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Test", "src\Test\Test.fsproj", "{7D771824-F0AE-4315-ACAD-2173BCF2F55D}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backend.None", "src\DiffSharp.Backend.None\DiffSharp.Backend.None.fsproj", "{2E00CB58-9924-481F-B0C9-8F8CF17ABFF2}"
 EndProject
