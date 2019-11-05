@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageVersion>1.0.0</PackageVersion>
@@ -7,7 +7,6 @@
   <ItemGroup>
     <Compile Include="Util.fs" />
     <Compile Include="RawTensor.fs" />
-    <Compile Include="RawTensorFloat32CPUBase.fs" />
     <Compile Include="Tensor.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Model.fs" />

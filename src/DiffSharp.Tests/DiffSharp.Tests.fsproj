@@ -14,15 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiffSharp\DiffSharp.fsproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="TestUtil.fs" />
     <Compile Include="TestTensor.fs" />
     <Compile Include="TestDerivatives.fs" />
     <Compile Include="TestDistributions.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiffSharp.Backend.None\DiffSharp.Backend.None.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
   </ItemGroup>
 
 </Project>
