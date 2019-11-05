@@ -20,32 +20,6 @@ type FeedforwardNet() =
         |> fc1.Forward |> Tensor.LeakyRelu
         |> fc2.Forward |> Tensor.LeakyRelu
 
-// let optimize (model:Layer) (lr:Tensor) =
-//     let update k (p:Parameter) = 
-//         // printfn "updating %A" k; 
-//         p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
-//     model.IterParameters(update)
-
-[<AutoOpen>]
-module ExtraPrimitives =
-    let inline tryUnbox<'a> (x:obj) =
-        match x with
-        | :? 'a as result -> Some (result)
-        | _ -> None
-
-
-    // if dim = 0 then
-    //     let mutable s = Tensor.ZerosLike(t).[0]
-    //     for i=0 to t.Shape.[0]-1 do
-    //         s <- s + t.[i]
-    //     s
-    // elif dim = 1 then
-    //     let mutable s = Tensor.ZerosLike(t).[*,0]
-    //     for i=0 to t.Shape.[1]-1 do
-    //         s <- s + t.[*,i]
-    //     s
-    // else
-    //     failwith "Not implemented"
 
 [<EntryPoint>]
 let main argv =
@@ -54,36 +28,23 @@ let main argv =
     DiffSharp.Seed(12)
     DiffSharp.NestReset()
     let model = FeedforwardNet()
-    let optimizer = SGD(model, 0.01)
+    let optimizer = SGD(model, Tensor.Create(0.01))
     printfn "%A" model.Parameters
-    // for np in model.Parameters do
-        // printfn "%A:\n%A" np.Key (np.Value.NoDiff())
     let data = Tensor.Create([[0.;0.;0.];[0.;1.;1.];[1.;0.;1.];[1.;1.;0.]])
     let x = data.[*,0..1]
     let y = data.[*,2..]
-    printfn "%A" x
-    printfn "%A" y
-
-    // let mseloss (x:Tensor) (y:Tensor) = ((x - y) * (x - y)).Mean()
+    // printfn "%A" x
+    // printfn "%A" y
 
     for i=0 to 1000 do
         model.ReverseDiff()
         let o = model.Forward(x).View(-1)
         let loss = Tensor.MSELoss(o, y)
         printfn "prediction: %A, loss: %A" (o.NoDiff()) (loss.NoDiff())
-        // printfn "%A" loss
         loss.Reverse()
-        // optimize model (Tensor.Create(0.01))
         optimizer.Step()
 
     model.NoDiff()
     printfn "%A" model.Parameters
-    // let ps = sprintf "%A" model.Parameters
-    // for np in model.Parameters do
-        // printfn "%A:\n%A" np.Key (np.Value.NoDiff())
-    // let a = Tensor.RandomNormal([5;4])
-    // let b = a.View([|2;-1;5|])
-    // printfn "%A %A" a a.Shape
-    // printfn "%A %A" b b.Shape
 
     0 // return an integer exit code

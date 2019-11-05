@@ -8,6 +8,6 @@ type Optimizer(model:Model) =
     abstract member ParameterUpdate : Parameter -> unit
     member o.Step() = o.Model.IterParameters(fun _ p -> o.ParameterUpdate(p))
 
-type SGD(model, lr:float) =
+type SGD(model, lr:Tensor) =
     inherit Optimizer(model)
     override o.ParameterUpdate(p) = p.Tensor <- p.Tensor.Primal - lr * p.Tensor.Derivative
