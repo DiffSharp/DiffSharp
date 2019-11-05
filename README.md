@@ -32,3 +32,4 @@ Use the following to instantiate a Docker container from the `diffsharp` image a
 ```
 docker run --rm diffsharp dotnet test
 ```
+
