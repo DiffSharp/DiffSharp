@@ -783,7 +783,7 @@ type Tensor =
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
 
-    static member MSELoss(a:Tensor, b:Tensor) = ((a - b) * (a - b)).Mean()
+    static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).Mean()
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
