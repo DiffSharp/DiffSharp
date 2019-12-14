@@ -1,5 +1,6 @@
 module DiffSharp.Util
 open System
+open System.Collections.Generic
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
 let log10Val = log 10.
@@ -177,3 +178,8 @@ let memoize fn =
     | false, _ -> let v = fn (x)
                   cache.Add(x,v)
                   v)
+
+let getKeys (dictionary:Dictionary<string, 'a>) =
+    let keys = Array.create dictionary.Count ""
+    dictionary.Keys.CopyTo(keys, 0)
+    keys
