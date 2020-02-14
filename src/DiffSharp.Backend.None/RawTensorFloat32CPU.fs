@@ -29,6 +29,10 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
             if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
             let tvalue = t.Value:?>float32[]
             tvalue.[t.IndexToFlatIndex(index)]
+        and set ([<System.ParamArray>] index:int[]) value =
+            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            let tvalue = t.Value:?>float32[]
+            tvalue.[t.IndexToFlatIndex(index)] <- value
 
     override t.GetItem(index:int[]) = RawTensorFloat32CPU.Create(t.[index])
     
@@ -303,7 +307,33 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
         let t2value = t2.Value:?>float32[]        
         let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
         RawTensorFloat32CPU.Create(result)
-        
+    
+    override t1.Conv1D(t2, stride, padding) =
+        // TODO: implement stride and padding
+        // t1: input, NxCxI (batchSize x inputChannels, inputLength)
+        // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
+        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        let batchSize = t1.Shape.[0]
+        let inputChannels = t1.Shape.[1]
+        let inputLength = t1.Shape.[2]
+        let outputChannels = t2.Shape.[0]
+        if t2.Shape.[1] <> inputChannels then invalidOp <| sprintf "Input and kernel have different num_channels: %A, %A" inputChannels t2.Shape.[1]
+        let kernelLength = t2.Shape.[2]
+        if kernelLength > inputLength then invalidOp <| sprintf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
+        let outputLength = inputLength - kernelLength + 1
+        let outputShape = [|batchSize; outputChannels; outputLength|]
+        let result = RawTensorFloat32CPU.Zeros(outputShape) :?> RawTensorFloat32CPU
+        let t2 = t2 :?> RawTensorFloat32CPU
+        for n=0 to batchSize-1 do
+            for k=0 to outputChannels-1 do
+                for v=0 to outputLength-1 do
+                    let mutable value = 0.f
+                    for c=0 to inputChannels-1 do
+                        for u=0 to kernelLength-1 do
+                            value <- value + t2.[k, c, u] * t1.[n, c, v + u]
+                    result.[[|n; k; v|]] <- value
+        result :> RawTensor
+
     override t.NegT() =
         let tvalue = t.Value:?>float32[]
         let result = Array.map (~-) tvalue
