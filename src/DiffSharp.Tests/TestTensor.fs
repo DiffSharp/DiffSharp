@@ -345,9 +345,53 @@ type TestTensor () =
                                         [[0.3165; 1.2965; 3.4749; 2.9038; 2.7131; 1.7408; 0.5275];
                                          [0.3861; 1.3549; 2.7692; 2.9444; 3.2554; 1.2120; 0.7428]]])
 
+        let t3s2 = Tensor.Conv1D(t1, t2, stride=2)
+        let t3s2Correct = Tensor.Create([[[2.8516; 2.6420];
+                                         [2.3239; 2.7450]];
+
+                                        [[3.0127; 2.5219];
+                                         [3.0899; 2.4110]];
+
+                                        [[3.4749; 2.7131];
+                                         [2.7692; 3.2554]]])
+
+        let t3s3 = Tensor.Conv1D(t1, t2, stride=3)
+        let t3s3Correct = Tensor.Create([[[2.8516];
+                                         [2.3239]];
+
+                                        [[3.0127];
+                                         [3.0899]];
+
+                                        [[3.4749];
+                                         [2.7692]]])
+
+        let t3p1s2 = Tensor.Conv1D(t1, t2, padding=1, stride=2)
+        let t3p1s2Correct = Tensor.Create([[[1.4392; 2.0732; 2.1177];
+                                             [1.4345; 1.7078; 2.1474]];
+
+                                            [[2.4208; 2.9651; 1.2960];
+                                             [1.5544; 3.1496; 1.8567]];
+
+                                            [[1.2965; 2.9038; 1.7408];
+                                             [1.3549; 2.9444; 1.2120]]])
+
+        let t3p2s3 = Tensor.Conv1D(t1, t2, padding=2, stride=3)
+        let t3p2s3Correct = Tensor.Create([[[0.6333; 2.0732; 1.0258];
+                                             [0.6539; 1.7078; 1.2585]];
+
+                                            [[0.5982; 2.9651; 1.0620];
+                                             [0.5157; 3.1496; 1.3182]];
+
+                                            [[0.3165; 2.9038; 0.5275];
+                                             [0.3861; 2.9444; 0.7428]]])
+
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
         Assert.True(t3p2.ApproximatelyEqual(t3p2Correct))
+        Assert.True(t3s2.ApproximatelyEqual(t3s2Correct))
+        Assert.True(t3s3.ApproximatelyEqual(t3s3Correct))
+        Assert.True(t3p1s2.ApproximatelyEqual(t3p1s2Correct))
+        Assert.True(t3p2s3.ApproximatelyEqual(t3p2s3Correct))
 
     [<Test>]
     member this.TestTensorNegT () =

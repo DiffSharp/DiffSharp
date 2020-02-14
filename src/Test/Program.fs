@@ -83,7 +83,7 @@ let main argv =
                              [0.7678; 0.0733; 0.3396];
                              [0.6023; 0.6546; 0.3439]]])
 
-    let t3 = Tensor.Conv1D(t1, t2)
+    let t3 = Tensor.Conv1D(t1, t2, padding=1, stride=2)
     let t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
                                      [2.3239; 1.7078; 2.7450]];
 
@@ -100,6 +100,11 @@ let main argv =
     printfn "t1 %A" t1
     printfn "t2 %A" t2
     printfn "t3 %A" t3
-    printfn "t3Correct %A" t3Correct
+    // printfn "t3Correct %A" t3Correct
+
+    // let a = 7
+    // let b = 2
+    // let c = (float a) / (float b) |> ceil |> int
+    // printfn "%A" c
 
     0 // return an integer exit code
