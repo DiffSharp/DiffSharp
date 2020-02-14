@@ -313,6 +313,16 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
         // t1: input, NxCxI (batchSize x inputChannels, inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
         if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        let t1 =
+            if padding = 0 then
+                t1
+            elif padding > 0 then
+                let tshape = Array.copy t1.Shape
+                tshape.[2] <- t1.Shape.[2] + padding * 2
+                let t = RawTensorFloat32CPU.Zeros(tshape)
+                t.AddTTSlice([|0; 0; padding|], t1) :?> RawTensorFloat32CPU
+            else
+                invalidOp <| sprintf "Expecting padding >= 0, received %A" padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
         let inputLength = t1.Shape.[2]
