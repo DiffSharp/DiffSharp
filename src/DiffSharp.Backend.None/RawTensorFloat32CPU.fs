@@ -309,7 +309,7 @@ type RawTensorFloat32CPU(value: float32[], shape:int[]) =
         RawTensorFloat32CPU.Create(result)
     
     override t1.Conv1D(t2, stride, padding) =
-        // TODO: implement stride and padding
+        // TODO: implement stride
         // t1: input, NxCxI (batchSize x inputChannels, inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
         if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
