@@ -1,8 +1,8 @@
 namespace DiffSharp.Backend.None
+
 open DiffSharp
 open DiffSharp.Backend
 open DiffSharp.Util
-open System
 
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensor(shape, Float32, CPU, DiffSharp.Backend.Backend.None)
