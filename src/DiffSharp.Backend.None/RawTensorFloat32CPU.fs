@@ -443,13 +443,13 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let result = t.Values |> Array.map abs
         upcast RawTensorFloat32CPU(result, t.Shape)
 
-    override t1.ReluT() =
-        let result = t1.Values |> Array.map (max 0.f) 
-        upcast RawTensorFloat32CPU(result, t1.Shape)
+    override t.ReluT() =
+        let result = t.Values |> Array.map (max 0.f) 
+        upcast RawTensorFloat32CPU(result, t.Shape)
 
-    override t1.SigmoidT() =
-        let result = t1.Values |> Array.map (fun v -> 1.f / (1.f + exp -v))
-        upcast RawTensorFloat32CPU(result, t1.Shape)
+    override t.SigmoidT() =
+        let result = t.Values |> Array.map (fun v -> 1.f / (1.f + exp -v))
+        upcast RawTensorFloat32CPU(result, t.Shape)
 
     override t.ExpT() =
         let result = t.Values |> Array.map exp
