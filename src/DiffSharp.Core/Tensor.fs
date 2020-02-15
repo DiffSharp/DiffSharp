@@ -234,8 +234,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT(a,b)
-            let inline dfTensorRevTC(a,_) = AddTTConst(a)
-            let inline dfTensorRevCT(_,b) = AddTTConst(b)
+            let inline dfTensorRevTC(a,b) = AddTTConst(a)
+            let inline dfTensorRevCT(a,b) = AddTTConst(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 0 then
             let inline fRaw(a,b:RawTensor) = b.AddTT0(a)
@@ -244,8 +244,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT0(b,a)
-            let inline dfTensorRevTC(a,_) = AddTConstT0(a)
-            let inline dfTensorRevCT(_,b) = AddTT0Const(b)
+            let inline dfTensorRevTC(a,b) = AddTConstT0(a)
+            let inline dfTensorRevCT(a,b) = AddTT0Const(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.AddTT0(b)
@@ -254,8 +254,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(bd, a.Shape)
             let inline dfTensorRevTT(a,b) = AddTT0(a,b)
-            let inline dfTensorRevTC(a,_) = AddTT0Const(a)
-            let inline dfTensorRevCT(_,b) = AddTConstT0(b)
+            let inline dfTensorRevTC(a,b) = AddTT0Const(a)
+            let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 2 && b.Dim = 1 then
             if a.Shape.[1] = b.Shape.[0] then
@@ -265,8 +265,8 @@ type Tensor =
                 let inline dfTensorFwdTC(cp,ap,ad) = ad
                 let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp) + bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
-                let inline dfTensorRevTC(a,_) = AddT2T1Const(a)
-                let inline dfTensorRevCT(_,b) = AddT2ConstT1(b)
+                let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
+                let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         elif a.Dim = 1 && b.Dim = 2 then
@@ -277,8 +277,8 @@ type Tensor =
                 let inline dfTensorFwdTC(cp,ap,ad) = ad + Tensor.ZerosLike(cp)
                 let inline dfTensorFwdCT(cp,bp,bd) = bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
-                let inline dfTensorRevTC(a,_) = AddT2ConstT1(a)
-                let inline dfTensorRevCT(_,b) = AddT2T1Const(b)
+                let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
+                let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         // TODO: implement general broadcasting additions
@@ -296,8 +296,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubTT(a,b)
-            let inline dfTensorRevTC(a,_) = SubTTConst(a)
-            let inline dfTensorRevCT(_,b) = SubTConstT(b)
+            let inline dfTensorRevTC(a,b) = SubTTConst(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.SubT0T(b)
@@ -306,7 +306,7 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubT0T(a,b)
-            let inline dfTensorRevTC(a,_b) = SubT0TConst(a)
+            let inline dfTensorRevTC(a,bb) = SubT0TConst(a)
             let inline dfTensorRevCT(_a,b) = SubT0ConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
@@ -316,7 +316,7 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(-bd, a.Shape)
             let inline dfTensorRevTT(a,b) = SubTT0(a,b)
-            let inline dfTensorRevTC(a,_b) = SubTT0Const(a)
+            let inline dfTensorRevTC(a,bb) = SubTT0Const(a)
             let inline dfTensorRevCT(_a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
@@ -758,8 +758,8 @@ type Tensor =
         let inline dfTensorFwdTC(cp,ap,ad) = ad
         let inline dfTensorFwdCT(cp,bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
-        let inline dfTensorRevTC(a,_) = AddTTConstSlice(a)
-        let inline dfTensorRevCT(_,b) = AddTConstTSlice(location,b)
+        let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
+        let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     static member Softmax(a:Tensor, dim:int) =
