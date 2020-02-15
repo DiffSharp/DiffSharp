@@ -764,14 +764,16 @@ type Tensor =
     static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).Mean()
 
     static member Conv1D(a:Tensor, b:Tensor, ?stride:int, ?padding:int) =
+        // a: input
+        // b: filter
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
         let inline fTensor(a,b) = Tensor.Conv1D(a, b, stride, padding)
-        // TODO: implement the derivatives (the following are placeholders from Tensor.MatMul)
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv1D(ad, bp, stride, padding) + Tensor.Conv1D(ap, bd, stride, padding)
         let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv1D(ad, b, stride, padding)
         let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv1D(a, bd, stride, padding)
+        // TODO: implement the derivatives (the following are placeholders from Tensor.MatMul)
         let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
         let inline dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
