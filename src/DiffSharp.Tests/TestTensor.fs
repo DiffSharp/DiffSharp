@@ -472,19 +472,6 @@ type TestTensor () =
         Assert.AreEqual(tMean1, tMean1Correct)
         Assert.AreEqual(tMean2, tMean2Correct)
 
-    [<Test>]
-    member this.TestTensorMeanDimKeepDim () =
-        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tMean0 = t.Mean(0, keepDim=true)
-        let tMean0Correct = Tensor.Create([[[7.0f; 8.0f; 9.0f; 10.0f]; [11.0f; 12.0f; 13.0f; 14.0f]; [15.0f; 16.0f; 17.0f; 18.0f]]])
-        let tMean1 = t.Mean(1, keepDim=true)
-        let tMean1Correct = Tensor.Create([[[5.0f; 6.0f; 7.0f; 8.0f]]; [[17.0f; 18.0f; 19.0f; 20.0f]]])
-        let tMean2 = t.Mean(2, keepDim=true)
-        let tMean2Correct = Tensor.Create([[[2.5f]; [6.5f]; [10.5f]]; [[14.5f]; [18.5f]; [22.5f]]])
-
-        Assert.AreEqual(tMean0, tMean0Correct)
-        Assert.AreEqual(tMean1, tMean1Correct)
-        Assert.AreEqual(tMean2, tMean2Correct)
 
     [<Test>]
     member this.TestTensorStddev () =
@@ -519,30 +506,6 @@ type TestTensor () =
         let tStddev2 = t.Stddev(2)
         let tStddev2Correct = Tensor.Create([[0.2277; 0.2918; 0.2495];
          [0.1996; 0.2328; 0.2753]])
-
-        Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
-        Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
-        Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
-
-    [<Test>]
-    member this.TestTensorStddevDimKeepDim () =
-        let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
-          [0.6078;0.4742;0.7844;0.0967];
-          [0.1416;0.1559;0.6452;0.1417]];
- 
-         [[0.0848;0.4156;0.5542;0.4166];
-          [0.5187;0.0520;0.4763;0.1509];
-          [0.4767;0.8096;0.1729;0.6671]]])
-        let tStddev0 = t.Stddev(0, keepDim=true)
-        let tStddev0Correct = Tensor.Create([[[0.2078; 0.2375; 0.2326; 0.0530];
-         [0.0630; 0.2985; 0.2179; 0.0383];
-         [0.2370; 0.4623; 0.3339; 0.3715]]])
-        let tStddev1 = t.Stddev(1, keepDim=true)
-        let tStddev1Correct = Tensor.Create([[[0.2331; 0.2981; 0.2911; 0.1304]];
-         [[0.2393; 0.3789; 0.2014; 0.2581]]])
-        let tStddev2 = t.Stddev(2, keepDim=true)
-        let tStddev2Correct = Tensor.Create([[[0.2277]; [0.2918]; [0.2495]];
-         [[0.1996]; [0.2328]; [0.2753]]])
 
         Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
         Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))

@@ -462,12 +462,8 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
 
-    member t.Sum(dim, ?keepDim) = Tensor.Sum(t, dim, ?keepDim=keepDim)
-
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    static member Sum(a:Tensor, dim:int, ?keepDim:bool) =
-       let keepDim = defaultArg keepDim false
-       let res =
+    static member Sum(a:Tensor, dim:int) =
         if dim = 0 && a.Dim = 0 then a
         else
             if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
@@ -479,23 +475,25 @@ type Tensor =
                 sBounds.[dim,1] <- i
                 s <- s + a.GetSlice(sBounds)
             s
-       if keepDim then res.Unsqueeze(dim) else res
+    member t.Sum(dim) = Tensor.Sum(t, dim)
+
+    static member Sum(a:Tensor, dim:int, keepDim:bool) = if keepDim then Tensor.Sum(a, dim).Unsqueeze(dim) else Tensor.Sum(a, dim)
+    member t.Sum(dim, keepDim) = Tensor.Sum(t, dim, keepDim)
 
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
 
-    static member Mean(a:Tensor, dim:int, ?keepDim:bool) = 
+    static member Mean(a:Tensor, dim:int) = 
         if dim = 0 && a.Dim = 0 then a
-        else a.Sum(dim, ?keepDim=keepDim) / a.Shape.[dim]
-    member t.Mean(dim, ?keepDim) = Tensor.Mean(t, dim, ?keepDim=keepDim)
+        else a.Sum(dim) / a.Shape.[dim]
+    member t.Mean(dim) = Tensor.Mean(t, dim)
 
     // This is the two-pass algorithm better than the naive algorithm
     static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
     member t.Variance() = Tensor.Variance(t)
 
     // TODO: this is the naive algorithm, can be improved for better numerical stability
-    static member Variance(a:Tensor, dim:int, ?keepDim:bool) =
-        let keepDim = defaultArg keepDim false
+    static member Variance(a:Tensor, dim:int) =
         if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
         let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
         sBounds.[dim, 1] <- 0
@@ -508,13 +506,11 @@ type Tensor =
             let slice = a.GetSlice(sBounds)
             s <- s + slice
             sSquare <- sSquare + slice * slice
-        let res = (sSquare - (s * s) / n) / (n - 1)
-        if keepDim then res.Unsqueeze(dim) else res
+        (sSquare - (s * s) / n) / (n - 1)
+    member t.Variance(dim) = Tensor.Variance(t, dim)
 
-    member t.Variance(dim, ?keepDim) = Tensor.Variance(t, dim, ?keepDim=keepDim)
-
-    static member Stddev (a:Tensor, dim:int, ?keepDim) = Tensor.Variance(a, dim, ?keepDim=keepDim) |> Tensor.Sqrt
-    member t.Stddev(dim, ?keepDim) = Tensor.Stddev(t, dim, ?keepDim=keepDim)
+    static member Stddev (a:Tensor, dim:int) = Tensor.Variance(a, dim) |> Tensor.Sqrt
+    member t.Stddev(dim) = Tensor.Stddev(t, dim)
 
     static member Stddev (a:Tensor) = Tensor.Variance(a) |> Tensor.Sqrt
     member t.Stddev() = Tensor.Stddev(t)
