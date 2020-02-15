@@ -235,7 +235,6 @@ type TestDerivatives () =
             [7.5281; 1.4816];
             [5.0328; 2.2756]]).ReverseDiff()
         let revz = Tensor.MatMul(revx, revy)
-        let revzCorrect = Tensor.Create([0.2; 0.333333; 0.428571])
         let revzCorrect = Tensor.Create([[ 89.6516; 53.7260];
             [ 99.7751; 58.7331];
             [120.2113; 49.1116]])
