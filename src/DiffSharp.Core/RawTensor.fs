@@ -127,73 +127,73 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Create(values)
 
-    abstract CompareTo: RawTensor -> int
-    abstract Create : values: obj -> RawTensor
-    abstract CreateFromScalar : value: obj * shape: int[] -> RawTensor
-    abstract StackTs: seq<RawTensor> -> RawTensor
-    abstract UnstackT: unit -> seq<RawTensor>
-    abstract Zero : unit -> RawTensor
-    abstract Zeros : int[] -> RawTensor
-    abstract One : unit -> RawTensor
-    abstract Ones : int[] -> RawTensor
-    abstract Random : int[] -> RawTensor
-    abstract RandomNormal : int[] -> RawTensor
-    abstract RandomMultinomial: int -> RawTensor
-    abstract GetString : unit -> string
-    abstract GetItem: int[] -> RawTensor
-    abstract GetSlice: int[,] -> RawTensor
-    abstract ToValue: unit -> obj
-    abstract ToArray: unit -> System.Array
-    abstract Equals: RawTensor -> bool
-    abstract Cast : DType -> RawTensor
-    abstract ApproximatelyEquals: RawTensor * float -> bool
-    abstract LtTT: RawTensor -> RawTensor
-    abstract GtTT: RawTensor -> RawTensor
-    abstract LeTT: RawTensor -> RawTensor
-    abstract GeTT: RawTensor -> RawTensor
-    abstract MaxIndexT : unit -> int[]
-    abstract MinIndexT : unit -> int[]
-    abstract AddTT : RawTensor -> RawTensor
-    abstract AddTT0 : RawTensor -> RawTensor
-    abstract AddT2T1: RawTensor -> RawTensor
-    abstract AddTTSlice: int[] * RawTensor -> RawTensor
-    abstract SubTT : RawTensor -> RawTensor
-    abstract SubT0T : RawTensor -> RawTensor
-    abstract SubTT0 : RawTensor -> RawTensor
-    abstract MulTT : RawTensor -> RawTensor
-    abstract MulTT0 : RawTensor -> RawTensor
-    abstract DivTT : RawTensor -> RawTensor
-    abstract DivT0T : RawTensor -> RawTensor
-    abstract DivTT0 : RawTensor -> RawTensor
-    abstract PowTT : RawTensor -> RawTensor
-    abstract PowT0T: RawTensor -> RawTensor
-    abstract PowTT0 : RawTensor -> RawTensor
-    abstract MatMulT2T2: RawTensor -> RawTensor
-    abstract Conv1D: RawTensor * int * int -> RawTensor
-    abstract NegT : unit -> RawTensor
-    abstract SumT : unit -> RawTensor
-    abstract SumT2Dim0 : unit -> RawTensor
-    abstract TransposeT2: unit -> RawTensor
-    abstract SqueezeT: int -> RawTensor
-    abstract UnsqueezeT: int -> RawTensor
-    abstract ViewT: int[] -> RawTensor
-    abstract SignT: unit -> RawTensor
-    abstract FloorT: unit -> RawTensor
-    abstract CeilT: unit -> RawTensor
-    abstract RoundT: unit -> RawTensor
-    abstract AbsT: unit -> RawTensor
-    abstract ReluT: unit -> RawTensor
-    abstract SigmoidT: unit -> RawTensor
-    abstract ExpT: unit -> RawTensor
-    abstract LogT: unit -> RawTensor
-    abstract Log10T: unit -> RawTensor
-    abstract SqrtT: unit -> RawTensor
-    abstract SinT: unit -> RawTensor
-    abstract CosT: unit -> RawTensor
-    abstract TanT: unit -> RawTensor
-    abstract SinhT: unit -> RawTensor
-    abstract CoshT: unit -> RawTensor
-    abstract TanhT: unit -> RawTensor
-    abstract AsinT: unit -> RawTensor
-    abstract AcosT: unit -> RawTensor
-    abstract AtanT: unit -> RawTensor
+    abstract member CompareTo: RawTensor -> int
+    abstract member Create : values: obj -> RawTensor
+    abstract member CreateFromScalar : value: obj * shape: int[] -> RawTensor
+    abstract member StackTs: seq<RawTensor> -> RawTensor
+    abstract member UnstackT: unit -> seq<RawTensor>
+    abstract member Zero : unit -> RawTensor
+    abstract member Zeros : int[] -> RawTensor
+    abstract member One : unit -> RawTensor
+    abstract member Ones : int[] -> RawTensor
+    abstract member Random : int[] -> RawTensor
+    abstract member RandomNormal : int[] -> RawTensor
+    abstract member RandomMultinomial: int -> RawTensor
+    abstract member GetString : unit -> string
+    abstract member GetItem: int[] -> RawTensor
+    abstract member GetSlice: int[,] -> RawTensor
+    abstract member ToValue: unit -> obj
+    abstract member ToArray: unit -> System.Array
+    abstract member Equals: RawTensor -> bool
+    abstract member Cast : DType -> RawTensor
+    abstract member ApproximatelyEquals: RawTensor * float -> bool
+    abstract member LtTT: RawTensor -> RawTensor
+    abstract member GtTT: RawTensor -> RawTensor
+    abstract member LeTT: RawTensor -> RawTensor
+    abstract member GeTT: RawTensor -> RawTensor
+    abstract member MaxIndexT : unit -> int[]
+    abstract member MinIndexT : unit -> int[]
+    abstract member AddTT : RawTensor -> RawTensor
+    abstract member AddTT0 : RawTensor -> RawTensor
+    abstract member AddT2T1: RawTensor -> RawTensor
+    abstract member AddTTSlice: int[] * RawTensor -> RawTensor
+    abstract member SubTT : RawTensor -> RawTensor
+    abstract member SubT0T : RawTensor -> RawTensor
+    abstract member SubTT0 : RawTensor -> RawTensor
+    abstract member MulTT : RawTensor -> RawTensor
+    abstract member MulTT0 : RawTensor -> RawTensor
+    abstract member DivTT : RawTensor -> RawTensor
+    abstract member DivT0T : RawTensor -> RawTensor
+    abstract member DivTT0 : RawTensor -> RawTensor
+    abstract member PowTT : RawTensor -> RawTensor
+    abstract member PowT0T: RawTensor -> RawTensor
+    abstract member PowTT0 : RawTensor -> RawTensor
+    abstract member MatMulT2T2: RawTensor -> RawTensor
+    abstract member Conv1D: RawTensor * int * int -> RawTensor
+    abstract member NegT : unit -> RawTensor
+    abstract member SumT : unit -> RawTensor
+    abstract member SumT2Dim0 : unit -> RawTensor
+    abstract member TransposeT2: unit -> RawTensor
+    abstract member SqueezeT: int -> RawTensor
+    abstract member UnsqueezeT: int -> RawTensor
+    abstract member ViewT: int[] -> RawTensor
+    abstract member SignT: unit -> RawTensor
+    abstract member FloorT: unit -> RawTensor
+    abstract member CeilT: unit -> RawTensor
+    abstract member RoundT: unit -> RawTensor
+    abstract member AbsT: unit -> RawTensor
+    abstract member ReluT: unit -> RawTensor
+    abstract member SigmoidT: unit -> RawTensor
+    abstract member ExpT: unit -> RawTensor
+    abstract member LogT: unit -> RawTensor
+    abstract member Log10T: unit -> RawTensor
+    abstract member SqrtT: unit -> RawTensor
+    abstract member SinT: unit -> RawTensor
+    abstract member CosT: unit -> RawTensor
+    abstract member TanT: unit -> RawTensor
+    abstract member SinhT: unit -> RawTensor
+    abstract member CoshT: unit -> RawTensor
+    abstract member TanhT: unit -> RawTensor
+    abstract member AsinT: unit -> RawTensor
+    abstract member AcosT: unit -> RawTensor
+    abstract member AtanT: unit -> RawTensor
