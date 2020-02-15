@@ -164,9 +164,6 @@ module internal RawTensorCPU =
     let inline CallNew(values: ^T[], shape: int[]) : (^TensorImpl :> RawTensorCPU< ^T >)  =
         ( ^TensorImpl: (new : ^T[] * int[] -> ^TensorImpl ) (values, shape))
 
-    let inline CallCreate(value: obj) : ^TensorImpl =
-        ( ^TensorImpl: (static member Create : obj -> ^TensorImpl ) (value))
-
     /// Access the natural "0" value for the element of a CPU tensor type
     let inline zero< ^T when ^T : (static member Zero : ^T) > = LanguagePrimitives.GenericZero< ^T >
 
