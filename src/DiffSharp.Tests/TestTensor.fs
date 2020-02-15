@@ -97,7 +97,6 @@ type TestTensor () =
                 | Some Float64 -> ".0"
                 | Some Float32
                 | None -> ".0f"
-                | _ -> failwith "todo"
             let t0StringCorrect = sprintf "Tensor 2%s" suffix
             let t1StringCorrect = sprintf "Tensor [[2%s]; [2%s]]" suffix suffix
             let t2StringCorrect = sprintf "Tensor [[[2%s; 2%s]]]" suffix suffix
