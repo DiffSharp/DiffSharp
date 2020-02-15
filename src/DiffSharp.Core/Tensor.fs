@@ -948,9 +948,9 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
-                        | Conv1DTT(_,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTTConst(_,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTConstT(_,_,_,_) -> failwith "Not implemented"           
+                        | Conv1DTT(a,b,_,_) -> failwith "Not implemented"
+                        | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
+                        | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"           
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
