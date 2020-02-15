@@ -632,7 +632,7 @@ type Tensor =
 
     static member LeakyRelu (a:Tensor, ?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
-        Tensor.Max(Tensor.Create(0.), a) + negativeSlope * Tensor.Min(Tensor.Create(0.), a)
+        Tensor.Max(a.Zero(), a) + negativeSlope * Tensor.Min(a.Zero(), a)
     member t.LeakyRelu() = Tensor.LeakyRelu(t)
     member t.LeakyRelu(negativeSlope) = Tensor.LeakyRelu(t, negativeSlope)
 
