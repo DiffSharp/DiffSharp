@@ -15,12 +15,10 @@ type Tensor =
         | TensorR(tp,_,_,_,_) -> tp
 
     member t.PrimalRaw =
-        let rec primalRaw x =
-            match x with
-            | Tensor(tp) -> tp
-            | TensorF(tp,_,_) -> primalRaw tp
-            | TensorR(tp,_,_,_,_) -> primalRaw tp
-        primalRaw t
+        match t with
+        | Tensor(tp) -> tp
+        | TensorF(tp,_,_) -> tp.PrimalRaw
+        | TensorR(tp,_,_,_,_) -> tp.PrimalRaw
 
     member t.Depth =
         let rec depth x d =
