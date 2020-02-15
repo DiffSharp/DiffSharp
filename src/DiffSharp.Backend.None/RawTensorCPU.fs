@@ -153,25 +153,38 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
         else 
             RawTensor.Create(t.ToArray(), dtype=dtype, backend=t.Backend, device=t.Device)
 
-module RawTensorCPU = 
-    let inline CallNew(values: ^T[], shape: int[]) : ^Coll =
-        ( ^Coll: (new : ^T[] * int[] -> ^Coll ) (values, shape))
+// The operations in this module are math-dependent and are defined as generic inline code
+// Each specific instantiation type (e.g. RawTensorFloat32CPU) inlines these and
+// instantiates these at concrete types.
+//
+// Throught the code we expect ^TensorImpl to be a subtype of RawTensorCPU< ^T >
+module internal RawTensorCPU = 
 
-    let inline CallCreate(value: obj) : ^Coll =
-        ( ^Coll: (static member Create : obj -> ^Coll ) (value))
+    // Create an instance of a concrete type 
+    let inline CallNew(values: ^T[], shape: int[]) : (^TensorImpl :> RawTensorCPU< ^T >)  =
+        ( ^TensorImpl: (new : ^T[] * int[] -> ^TensorImpl ) (values, shape))
 
-    let inline one< ^T when ^T : (static member One : ^T) > = LanguagePrimitives.GenericOne< ^T >
+    let inline CallCreate(value: obj) : ^TensorImpl =
+        ( ^TensorImpl: (static member Create : obj -> ^TensorImpl ) (value))
+
+    /// Access the natural "0" value for the element of a CPU tensor type
     let inline zero< ^T when ^T : (static member Zero : ^T) > = LanguagePrimitives.GenericZero< ^T >
 
-    let inline Zero () : ^Coll =
+    /// Access the natural "1" value for the element of a CPU tensor type
+    let inline one< ^T when ^T : (static member One : ^T) > = LanguagePrimitives.GenericOne< ^T >
+    
+    /// Get the scalar "0" tensor for a CPU tensor type
+    let inline Zero () : (^TensorImpl :> RawTensorCPU< ^T >) =
         let values = [|zero< ^T > |]
         CallNew (values, [| |])
 
-    let inline One() =
+    /// Get the scalar "1" tensor for a CPU tensor type
+    let inline One() : (^TensorImpl :> RawTensorCPU< ^T >) =
         let values = [| one< ^T > |]
         CallNew (values, [| |])
     
-    let inline Zeros(shape:int[]) =
+    /// Get the "0" tensor for a CPU tensor type of the given shape
+    let inline Zeros(shape:int[])  : (^TensorImpl :> RawTensorCPU< ^T >) =
         let values = Array.create (shapeLength shape) zero< ^T >
         CallNew (values, shape)
 
@@ -179,7 +192,7 @@ module RawTensorCPU =
         let values = Array.create (shapeLength shape) one< ^T >
         CallNew (values, shape)
 
-    let inline Create ofFloat32 ofDouble ofInt (value:obj) : (^Coll :> RawTensorCPU< ^T >) = 
+    let inline Create ofFloat32 ofDouble ofInt (value:obj) : (^TensorImpl :> RawTensorCPU< ^T >) = 
         let values, shape = value |> flatArrayAndShape<float32>
         if notNull values then 
             CallNew (values |> Array.map ofFloat32, shape)
@@ -197,7 +210,7 @@ module RawTensorCPU =
     let inline CompareTo(t1: RawTensorCPU< ^T >, t2: RawTensor) =
         NonStructuralComparison.compare (t1.ToValue() :?> ^T ) (t2.ToValue() :?> ^T )
 
-    let inline RandomMultinomial ofInt (t: RawTensorCPU< ^T >, numSamples) =
+    let inline RandomMultinomial ofInt (t: RawTensorCPU< ^T >, numSamples) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if t.Dim < 1 || t.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" t.Shape
         if t.Dim = 1 then
             let p = t.Values |> Array.map float
@@ -219,25 +232,25 @@ module RawTensorCPU =
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (fun t1 t2 -> if t1 < t2 then one else zero) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline GtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline GtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (fun t1 t2 -> if t1 > t2 then one else zero) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline LeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline LeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (fun t1 t2 -> if t1 <= t2 then one else zero) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline GeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline GeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then one else zero) t1value t2value
@@ -249,19 +262,19 @@ module RawTensorCPU =
     let inline internal MinIndexT(t: RawTensorCPU< ^T >) =
         t.FlatIndexToIndex(minIndex t.Values)
 
-    let inline AddTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline AddTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (+) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline AddTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline AddTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
         let result = Array.map ((+) t2value) t1value
         CallNew(result, t1.Shape)
 
-    let inline AddT2T1(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline AddT2T1(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.copy t1value
@@ -271,7 +284,7 @@ module RawTensorCPU =
                 result.[flatindex] <- result.[flatindex] + t2value.[j]
         CallNew(result, t1.Shape)
 
-    let inline internal AddTTSlice(t1: RawTensorCPU< ^T >, location:int[], t2: RawTensor) =
+    let inline internal AddTTSlice(t1: RawTensorCPU< ^T >, location:int[], t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if not (shapeContains t1.Shape t2.Shape) then failwithf "Expecting t1.Shape to contain t2.Shape, received %A, %A" t1.Shape t2.Shape
         let t1value = t1.Values
         let t2 = t2 :?> RawTensorCPU< ^T >
@@ -290,73 +303,73 @@ module RawTensorCPU =
         add shape2 [||]
         CallNew(result, t1.Shape)
 
-    let inline SubTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline SubTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (-) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline SubT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline SubT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values.[0]
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map ((-) t1value) t2value
         CallNew(result, t2.Shape)
 
-    let inline SubTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline SubTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
         let result = Array.map (fun t -> t - t2value) t1value
         CallNew(result, t1.Shape)
 
-    let inline MulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) =
+    let inline MulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (*) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline MulTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline MulTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
         let result = Array.map ((*) t2value) t1value
         CallNew(result, t1.Shape)
 
-    let inline DivTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline DivTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 (/) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline DivT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline DivT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values.[0]
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map ((/) t1value) t2value
         CallNew(result, t2.Shape)
 
-    let inline DivTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline DivTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
         let result = Array.map (fun t -> t / t2value) t1value
         CallNew(result, t1.Shape)
 
-    let inline PowTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline PowTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map2 ( ** ) t1value t2value
         CallNew(result, t1.Shape)
 
-    let inline PowT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline PowT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values.[0]
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
         let result = Array.map (fun t -> t1value ** t) t2value
         CallNew(result, t2.Shape)
 
-    let inline PowTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline PowTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
         let result = Array.map (fun t -> t ** t2value) t1value
         CallNew(result, t1.Shape)
 
-    let inline MatMulT2T2(t1: RawTensorCPU< ^T >, t2: RawTensor) : ^Coll =
+    let inline MatMulT2T2(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if t1.Dim <> 2 || t2.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
         let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
@@ -372,21 +385,21 @@ module RawTensorCPU =
                 result.[i*t2cols + j] <- acc
         CallNew(result,[| t1rows; t2cols |])
     
-    let inline NegT(t: RawTensorCPU< ^T >) : ^Coll =
+    let inline NegT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = Array.map (~-) t.Values
         CallNew(result, t.Shape)
 
-    let inline SumT(t: RawTensorCPU< ^T >) : ^Coll =
+    let inline SumT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = Array.reduce (+) t.Values
         CallNew([|result|], [||])
     
-    let inline SumT2Dim0(t: RawTensorCPU< ^T >) : ^Coll =
+    let inline SumT2Dim0(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
         let result = Array.init t.Shape.[1] (fun j -> Array.init t.Shape.[0] (fun i -> t.Values.[i * t.Shape.[1] + j]) |> Array.reduce (+))
         let resultShape = [|t.Shape.[1]|]
         CallNew(result, resultShape)
 
-    let inline TransposeT2(t: RawTensorCPU< ^T >) : ^Coll =
+    let inline TransposeT2(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
         let trows = t.Shape.[0]
         let tcols = t.Shape.[1]
@@ -397,7 +410,7 @@ module RawTensorCPU =
                 result.[i*trows + j] <- vs.[j*tcols + i]
         CallNew(result, [| tcols; trows |])
 
-    let inline Conv1D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride, padding) : (^Coll :> RawTensorCPU< ^T >) =
+    let inline Conv1D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride, padding) : (^TensorImpl :> RawTensorCPU< ^T >) =
         // t1: input, NxCxI (batchSize x inputChannels, inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
         if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
@@ -407,7 +420,7 @@ module RawTensorCPU =
             elif padding > 0 then
                 let tshape = Array.copy t1.Shape
                 tshape.[2] <- t1.Shape.[2] + padding * 2
-                let t : ^Coll  = Zeros(tshape)
+                let t : ^TensorImpl  = Zeros(tshape)
                 t.AddTTSlice([|0; 0; padding|], t1) :?> RawTensorCPU< ^T >
             else
                 invalidOp <| sprintf "Expecting padding >= 0, received %A" padding
@@ -420,7 +433,7 @@ module RawTensorCPU =
         if kernelLength > inputLength then invalidOp <| sprintf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
         let outputLength = inputLength - kernelLength + 1
         let outputShape = [|batchSize; outputChannels; outputLength|]
-        let result : ^Coll = Zeros(outputShape)
+        let result : (^TensorImpl :> RawTensorCPU< ^T >) = Zeros(outputShape)
         let t2 = t2 :?> RawTensorCPU< ^T >
         for n=0 to batchSize-1 do
             for k=0 to outputChannels-1 do
@@ -435,113 +448,113 @@ module RawTensorCPU =
         elif stride > 1 then
             let outputLength = (float outputLength) / (float stride) |> ceil |> int
             let outputShape = [|batchSize; outputChannels; outputLength|]
-            let mutable sresult : ^Coll = Zeros(outputShape)
+            let mutable sresult : (^TensorImpl :> RawTensorCPU< ^T >) = Zeros(outputShape)
             for v=0 to outputLength-1 do
                 let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v * stride; v * stride]]
                 let slice = result.GetSlice(sliceBounds).UnsqueezeT(2)
-                sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> ^Coll
+                sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> ^TensorImpl
             sresult 
         else
             invalidOp <| sprintf "Expecting stride >= 1, received %A" stride
 
-    let inline SqueezeT(t: RawTensorCPU< ^T >, dim) =
+    let inline SqueezeT(t: RawTensorCPU< ^T >, dim) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = Array.copy t.Values
         CallNew(result, shapeSqueeze dim t.Shape)
 
-    let inline UnsqueezeT(t: RawTensorCPU< ^T >, dim) =
+    let inline UnsqueezeT(t: RawTensorCPU< ^T >, dim) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = Array.copy t.Values
         CallNew(result, shapeUnsqueeze dim t.Shape)
 
-    let inline ViewT(t: RawTensorCPU< ^T >, shape:int[]) =
+    let inline ViewT(t: RawTensorCPU< ^T >, shape:int[]) : (^TensorImpl :> RawTensorCPU< ^T >) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
         let result = Array.copy t.Values
         CallNew(result, shape)
 
-    let inline SignT ofInt (t: RawTensorCPU< ^T >) =
+    let inline SignT ofInt (t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map (sign >> ofInt)
         CallNew(result, t.Shape)
 
-    let inline FloorT(t: RawTensorCPU< ^T >) =
+    let inline FloorT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map floor
         CallNew(result, t.Shape)
 
-    let inline CeilT(t: RawTensorCPU< ^T >) =
+    let inline CeilT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map ceil
         CallNew(result, t.Shape)
 
-    let inline RoundT(t: RawTensorCPU< ^T >) =
+    let inline RoundT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map round
         CallNew(result, t.Shape)
 
-    let inline AbsT(t: RawTensorCPU< ^T >) =
+    let inline AbsT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map abs
         CallNew(result, t.Shape)
 
-    let inline ReluT(t: RawTensorCPU< ^T >) =
+    let inline ReluT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map (max zero< ^T >) 
         CallNew(result, t.Shape)
 
-    let inline SigmoidT(t: RawTensorCPU< ^T >) =
+    let inline SigmoidT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map (fun v -> one / (one + exp -v))
         CallNew(result, t.Shape)
 
-    let inline ExpT(t: RawTensorCPU< ^T >) =
+    let inline ExpT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map exp
         CallNew(result, t.Shape)
 
-    let inline LogT(t: RawTensorCPU< ^T >) =
+    let inline LogT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map log
         CallNew(result, t.Shape)
 
-    let inline Log10T(t: RawTensorCPU< ^T >) =
+    let inline Log10T(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map log10
         CallNew(result, t.Shape)
         
-    let inline SqrtT(t: RawTensorCPU< ^T >) =
+    let inline SqrtT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map sqrt
         CallNew(result, t.Shape)
         
-    let inline SinT(t: RawTensorCPU< ^T >) =
+    let inline SinT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map sin
         CallNew(result, t.Shape)
         
-    let inline CosT(t: RawTensorCPU< ^T >) =
+    let inline CosT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map cos
         CallNew(result, t.Shape)                
         
-    let inline TanT(t: RawTensorCPU< ^T >) =
+    let inline TanT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map tan
         CallNew(result, t.Shape)
         
-    let inline SinhT(t: RawTensorCPU< ^T >) =
+    let inline SinhT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map sinh
         CallNew(result, t.Shape)
         
-    let inline CoshT(t: RawTensorCPU< ^T >) =
+    let inline CoshT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map cosh
         CallNew(result, t.Shape)                
         
-    let inline TanhT(t: RawTensorCPU< ^T >) =
+    let inline TanhT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map tanh
         CallNew(result, t.Shape)
 
-    let inline AsinT(t: RawTensorCPU< ^T >) =
+    let inline AsinT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map asin
         CallNew(result, t.Shape)
         
-    let inline AcosT(t: RawTensorCPU< ^T >) =
+    let inline AcosT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map acos
         CallNew(result, t.Shape)                
         
-    let inline AtanT(t: RawTensorCPU< ^T >) =
+    let inline AtanT(t: RawTensorCPU< ^T >) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let result = t.Values |> Array.map atan
         CallNew(result, t.Shape)
 
-    let inline Random ofDouble (shape:int[])  =
+    let inline Random ofDouble (shape:int[]) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (Random.Uniform()))
         CallNew(values, shape)
 
-    let inline RandomNormal ofDouble (shape:int[]) =
+    let inline RandomNormal ofDouble (shape:int[]) : (^TensorImpl :> RawTensorCPU< ^T >) =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         CallNew(values, shape)
 
