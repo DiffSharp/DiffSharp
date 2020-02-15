@@ -5,6 +5,9 @@ open DiffSharp.Backend
 open DiffSharp.Util
 
 #nowarn "77" // use of op_Explicit
+
+/// This is the base class for all RawTensorXyzCPU types.
+/// All structural type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
     inherit RawTensor(shape, dtype, CPU, DiffSharp.Backend.Backend.None)
@@ -153,11 +156,12 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
         else 
             RawTensor.Create(t.ToArray(), dtype=dtype, backend=t.Backend, device=t.Device)
 
-// The operations in this module are math-dependent and are defined as generic inline code
-// Each specific instantiation type (e.g. RawTensorFloat32CPU) inlines these and
-// instantiates these at concrete types.
+// Defines the math-dependent operations for `RawTensorCPU<T>` types
+// using generic inline code. Each implementing type (e.g. RawTensorFloat32CPU) instantiates
+// inlines these at concrete types.
 //
-// Throught the code we expect ^TensorImpl to be a subtype of RawTensorCPU< ^T >
+// Most of the functions produce (value, shape) pairs for use in constructing an instance
+// of the final implementing type.
 module internal RawTensorCPU = 
 
     /// Access the natural "0" value for the element of a CPU tensor type
@@ -543,6 +547,7 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         (values, shape)
 
+/// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
 
@@ -613,6 +618,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.AcosT() = upcast (RawTensorCPU.AcosT(t) |> RawTensorFloat32CPU)
     override t.AtanT() = upcast (RawTensorCPU.AtanT(t) |> RawTensorFloat32CPU)
 
+/// The concrete implementation of RawTensorStatics for Float32 data.
 and RawTensorFloat32CPUStatics() = 
 
     inherit RawTensorStatics()
