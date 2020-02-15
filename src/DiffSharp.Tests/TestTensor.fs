@@ -131,8 +131,8 @@ type TestTensor () =
             for dtype2 in dtypes do 
                 let t1 = Tensor.Create([1.; 2.; 3.; 5.], dtype=dtype1)
                 let t2 = Tensor.Create([1.; 2.; 3.; 5.], dtype=dtype2)
-                let t2Cast = t1.Cast(dtype2)
-                let t1Cast = t2.Cast(dtype1)
+                let t1Cast = t1.Cast(dtype2)
+                let t2Cast = t2.Cast(dtype1)
 
                 assertEqual(t1Cast.DType, dtype2)
                 assertEqual(t2Cast.DType, dtype1)
