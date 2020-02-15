@@ -10,7 +10,7 @@ type Tensor =
 
     member t.Primal =
         match t with
-        | Tensor _ -> t
+        | Tensor(_) -> t
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
@@ -31,7 +31,7 @@ type Tensor =
     member t.Depth =
         let rec depth x d =
             match x with
-            | Tensor _ -> d
+            | Tensor(_) -> d
             | TensorF(tp,_,_) -> depth tp (d + 1)
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
@@ -39,7 +39,7 @@ type Tensor =
     member t.Derivative
         with get() =
             match t with
-            | Tensor _ -> failwith "Cannot get derivative of constant Tensor"
+            | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
             | TensorF(_,td,_) -> td
             | TensorR(_,td,_,_,_) -> !td
         and set(value) =
@@ -51,13 +51,13 @@ type Tensor =
     member t.Fanout
         with get() =
             match t with
-            | Tensor _ -> failwith "Cannot get fanout of constant Tensor"
-            | TensorF _ -> failwith "Cannot get fanout of TensorF"
+            | Tensor(_) -> failwith "Cannot get fanout of constant Tensor"
+            | TensorF(_) -> failwith "Cannot get fanout of TensorF"
             | TensorR(_,_,_,f,_) -> !f
         and set(value) =
             match t with
-            | Tensor _ -> failwith "Cannot set fanout of constant Tensor"
-            | TensorF _ -> failwith "Cannot set fanout of TensorF"
+            | Tensor(_) -> failwith "Cannot set fanout of constant Tensor"
+            | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
     member t.ForwardDiff(derivative:Tensor, ?tag:uint32) = 
@@ -97,15 +97,15 @@ type Tensor =
             | _ -> invalidOp "Cannot compare Tensor with another type"
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with
-        | Tensor _,  Tensor _  -> true
-        | Tensor _,  TensorF _ -> false
-        | Tensor _,  TensorR _ -> false
-        | TensorF _, Tensor _  -> false
-        | TensorF _, TensorF _ -> true
-        | TensorF _, TensorR _ -> false
-        | TensorR _, Tensor _  -> false
-        | TensorR _, TensorF _ -> false
-        | TensorR _, TensorR _ -> true
+        | Tensor(_),  Tensor(_)  -> true
+        | Tensor(_),  TensorF(_) -> false
+        | Tensor(_),  TensorR(_) -> false
+        | TensorF(_), Tensor(_)  -> false
+        | TensorF(_), TensorF(_) -> true
+        | TensorF(_), TensorR(_) -> false
+        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), TensorF(_) -> false
+        | TensorR(_), TensorR(_) -> true
 
     static member Lt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
     member t1.Lt(t2) = Tensor.Lt(t1, t2)
