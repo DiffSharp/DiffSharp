@@ -306,8 +306,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubT0T(a,b)
-            let inline dfTensorRevTC(a,bb) = SubT0TConst(a)
-            let inline dfTensorRevCT(_a,b) = SubT0ConstT(b)
+            let inline dfTensorRevTC(a,b) = SubT0TConst(a)
+            let inline dfTensorRevCT(a,b) = SubT0ConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.SubTT0(b)
@@ -316,8 +316,8 @@ type Tensor =
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(-bd, a.Shape)
             let inline dfTensorRevTT(a,b) = SubTT0(a,b)
-            let inline dfTensorRevTC(a,bb) = SubTT0Const(a)
-            let inline dfTensorRevCT(_a,b) = SubTConstT0(b)
+            let inline dfTensorRevTC(a,b) = SubTT0Const(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
     static member (-) (a:Tensor, b) = a - a.Create(b)
