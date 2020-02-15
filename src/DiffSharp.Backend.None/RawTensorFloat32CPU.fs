@@ -94,9 +94,9 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
             print t.Shape [||]
             sb.ToString()
 
-    override t.ToValue() : obj =
+    override t.ToValue() =
         match t.Dim with
-        | 0 -> box t.Values.[0]
+        | 0 -> upcast t.Values.[0]
         | _ -> invalidOp (sprintf "Cannot convert %Ad Tensor to scalar" t.Dim)
 
     override t.ToArray() =
@@ -411,7 +411,6 @@ module internal RawTensorCPU =
 
         // t1: input, NxCxI (batchSize x inputChannels, inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
-
         if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1 =
             if padding = 0 then
@@ -455,19 +454,6 @@ module internal RawTensorCPU =
             sresult 
         else
             invalidOp <| sprintf "Expecting stride >= 1, received %A" stride
-
-    let inline SqueezeT(t: RawTensorCPU< ^T >, dim) : (^T[] * int[]) =
-        let result = Array.copy t.Values
-        (result, shapeSqueeze dim t.Shape)
-
-    let inline UnsqueezeT(t: RawTensorCPU< ^T >, dim) : (^T[] * int[]) =
-        let result = Array.copy t.Values
-        (result, shapeUnsqueeze dim t.Shape)
-
-    let inline ViewT(t: RawTensorCPU< ^T >, shape:int[]) : (^T[] * int[]) =
-        if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
-        let result = Array.copy t.Values
-        (result, shape)
 
     let inline SignT ofInt (t: RawTensorCPU< ^T >) : (^T[] * int[]) =
         let result = t.Values |> Array.map (sign >> ofInt)
@@ -606,9 +592,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.SumT() = upcast (RawTensorCPU.SumT(t) |> RawTensorFloat32CPU)
     override t.SumT2Dim0() = upcast (RawTensorCPU.SumT2Dim0(t) |> RawTensorFloat32CPU)
     override t.TransposeT2() = upcast (RawTensorCPU.TransposeT2(t) |> RawTensorFloat32CPU)
-    override t.SqueezeT(dim) = upcast (RawTensorCPU.SqueezeT(t, dim) |> RawTensorFloat32CPU)
-    override t.UnsqueezeT(dim) = upcast (RawTensorCPU.UnsqueezeT(t, dim) |> RawTensorFloat32CPU)
-    override t.ViewT(shape:int[]) = upcast (RawTensorCPU.ViewT(t, shape) |> RawTensorFloat32CPU)
     override t.SignT() = upcast (RawTensorCPU.SignT float32 t |> RawTensorFloat32CPU)
     override t.FloorT() = upcast (RawTensorCPU.FloorT(t) |> RawTensorFloat32CPU)
     override t.CeilT() = upcast (RawTensorCPU.CeilT(t) |> RawTensorFloat32CPU)

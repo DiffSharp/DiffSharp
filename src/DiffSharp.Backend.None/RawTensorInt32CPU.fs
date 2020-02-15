@@ -49,24 +49,20 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     override t.SumT() = upcast (RawTensorCPU.SumT(t) |> RawTensorInt32CPU)
     override t.SumT2Dim0() = upcast (RawTensorCPU.SumT2Dim0(t) |> RawTensorInt32CPU)
     override t.TransposeT2() = upcast (RawTensorCPU.TransposeT2(t) |> RawTensorInt32CPU)
-    override t.SqueezeT(dim) = upcast (RawTensorCPU.SqueezeT(t, dim) |> RawTensorInt32CPU)
-    override t.UnsqueezeT(dim) = upcast (RawTensorCPU.UnsqueezeT(t, dim) |> RawTensorInt32CPU)
-    override t.ViewT(shape:int[]) = upcast (RawTensorCPU.ViewT(t, shape) |> RawTensorInt32CPU)
     override t.SignT() = upcast (RawTensorCPU.SignT int32 t |> RawTensorInt32CPU)
-
     override t.AbsT() = upcast (RawTensorCPU.AbsT(t) |> RawTensorInt32CPU)
     override t.ReluT() = upcast (RawTensorCPU.ReluT(t) |> RawTensorInt32CPU)
 
     member t.ToFloat32() = t.Cast(Float32) :?> RawTensorFloat32CPU
+
+    // Note, these produce Float32 tensors implicitly
+    // TODO: check this
     override t1.PowTT(t2) = upcast (RawTensorCPU.PowTT(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
     override t1.PowT0T(t2) = upcast (RawTensorCPU.PowT0T(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
     override t1.PowTT0(t2) = upcast (RawTensorCPU.PowTT0(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
     override t.FloorT() = upcast (RawTensorCPU.FloorT(t.ToFloat32()) |> RawTensorFloat32CPU)
     override t.CeilT() = upcast (RawTensorCPU.CeilT(t.ToFloat32()) |> RawTensorFloat32CPU)
     override t.RoundT() = upcast (RawTensorCPU.RoundT(t.ToFloat32()) |> RawTensorFloat32CPU)
-
-    // Note, these produce Float32 tensors implicitly
-    // TODO: check this
     override t.SigmoidT() = upcast (RawTensorCPU.SigmoidT(t.ToFloat32()) |> RawTensorFloat32CPU)
     override t.ExpT() = upcast (RawTensorCPU.ExpT(t.ToFloat32()) |> RawTensorFloat32CPU)
     override t.LogT() = upcast (RawTensorCPU.LogT(t.ToFloat32()) |> RawTensorFloat32CPU)
