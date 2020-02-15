@@ -99,7 +99,7 @@ let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
     if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) < tolerance) } |> Seq.forall id
+    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
 
 let allEqual (items:seq<'a>) =
     let item0 = items |> Seq.head
