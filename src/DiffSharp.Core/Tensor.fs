@@ -25,8 +25,8 @@ type Tensor =
     member t.Cast(dtype) =
         match t with
         | Tensor(tp) -> Tensor(tp.Cast(dtype))
-        | TensorF(tp,td,tag) -> TensorF(tp.Cast(dtype), td.Cast(dtype),tag)
-        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR nodes"
+        | TensorF(_,_,_) -> failwith "cannot cast TensorF"
+        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
 
     member t.Depth =
         let rec depth x d =
