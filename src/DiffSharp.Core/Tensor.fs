@@ -15,12 +15,18 @@ type Tensor =
         | TensorR(tp,_,_,_,_) -> tp
 
     member t.PrimalRaw =
-        let rec primalRaw x =
-            match x with
-            | Tensor(tp) -> tp
-            | TensorF(tp,_,_) -> primalRaw tp
-            | TensorR(tp,_,_,_,_) -> primalRaw tp
-        primalRaw t
+        match t with
+        | Tensor(tp) -> tp
+        | TensorF(tp,_,_) -> tp.PrimalRaw
+        | TensorR(tp,_,_,_,_) -> tp.PrimalRaw
+
+    member t.DType = t.PrimalRaw.DType
+
+    member t.Cast(dtype) =
+        match t with
+        | Tensor(tp) -> Tensor(tp.Cast(dtype))
+        | TensorF(tp,td,tag) -> TensorF(tp.Cast(dtype), td.Cast(dtype),tag)
+        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR nodes"
 
     member t.Depth =
         let rec depth x d =
