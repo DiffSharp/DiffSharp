@@ -20,7 +20,7 @@ open DiffSharp.Backend.None
 
 
 [<EntryPoint>]
-let main argv =
+let main _argv =
     printfn "Hello World from F#!"
 
     DiffSharp.Seed(12)
@@ -84,7 +84,7 @@ let main argv =
                              [0.6023; 0.6546; 0.3439]]])
 
     let t3 = Tensor.Conv1D(t1, t2, padding=1, stride=2)
-    let t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
+    let _t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
                                      [2.3239; 1.7078; 2.7450]];
 
                                     [[3.0127; 2.9651; 2.5219];
