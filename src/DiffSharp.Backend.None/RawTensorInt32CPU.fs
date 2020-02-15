@@ -56,7 +56,6 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     member t.ToFloat32() = t.Cast(Float32) :?> RawTensorFloat32CPU
 
     // Note, these produce Float32 tensors implicitly
-    // TODO: check this
     override t1.PowTT(t2) = upcast (RawTensorCPU.PowTT(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
     override t1.PowT0T(t2) = upcast (RawTensorCPU.PowT0T(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
     override t1.PowTT0(t2) = upcast (RawTensorCPU.PowTT0(t1.ToFloat32(), t2) |> RawTensorFloat32CPU)
