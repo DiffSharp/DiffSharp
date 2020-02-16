@@ -121,4 +121,31 @@ let main argv =
     // let c = (float a) / (float b) |> ceil |> int
     // printfn "%A" c
 
+    let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
+        if coordinates.Length <> shape.Length then invalidOp <| sprintf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
+        let result = Array.copy coordinates
+        for d=0 to coordinates.Length-1 do
+            if mirrorDims |> Array.contains d then
+                result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
+        result
+
+    let a = RawTensorFloat32CPU.Create([[0; 1]; [2; 3]])
+    printfn "a %A" a
+    let b = a.FlipT([|1; 0|])
+    printfn "b %A" b
+
+    // let duplicates l =
+    //    l |> List.ofSeq
+    //    |> List.groupBy id
+    //    |> List.choose ( function
+    //           | _, x::_::_ -> Some x
+    //           | _ -> None )
+
+    // let hasDuplicates l =
+    //     (duplicates l) |> List.isEmpty |> not
+
+    // let a = [|1; 2; 3; 0|]
+    // printfn "%A" (duplicates a)        
+    // printfn "%A" (hasDuplicates a)
+
     0 // return an integer exit code

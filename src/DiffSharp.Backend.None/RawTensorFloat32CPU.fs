@@ -99,6 +99,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
     
+    override t.Copy() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
     override t.CreateFromScalar(value, shape) =
         let value = value:?>float32
         match shape.Length with
@@ -417,6 +418,25 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.UnsqueezeT(dim) =
         let result = Array.copy t.Values
         upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
+
+    override t.FlipT(dims:int[]) =
+        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims, list of dimension indices to flip, of length less than the Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims without repetition, received %A" dims
+        match t.Dim with
+        | 0 -> t.Copy()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(t.Shape)
+            let rec flip (shape:int[]) externalCoords = 
+                let currentDim = t.Shape.Length - shape.Length
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[mirrorCoordinates globalCoords t.Shape dims] <- t.[globalCoords]
+                else
+                    for i=0 to shape.[0]-1 do
+                        flip shape.[1..] (Array.append externalCoords [|i|])
+            flip t.Shape [||]        
+            upcast result
 
     override t.ViewT(shape:int[]) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
