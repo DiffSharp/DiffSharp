@@ -949,8 +949,8 @@ type Tensor =
                         | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
-                            // TODO: implement stride, padding
-                            if stride <> 1 || padding <> 0 then invalidOp <| sprintf "Stride %A padding %A case currently not supported in reverse mode." stride padding
+                            // TODO: implement stride
+                            if stride <> 1 then invalidOp <| sprintf "stride=%A currently not supported in reverse mode." stride
                             // a: input, NxCxI (batchSize x inputChannels x inputLength)
                             // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
                             // t: output, NxKxL (batchSize x outputChannels x outputLength)
@@ -967,7 +967,12 @@ type Tensor =
                                 let b = bFlipped.[k].Unsqueeze(1)  // 
                                 let dBounds = array2D [[0; batchSize-1]; [k; k]; [0; outputLength-1]]
                                 let d = t.Derivative.GetSlice(dBounds).Unsqueeze(1)
-                                let c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                if padding > 0 then
+                                    let cBounds = array2D [[0; batchSize-1]; [0; inputChannels-1]; [padding; c.Shape.[2]-1-padding]]
+                                    // printfn "padding %A inputlength %A" padding inputLength
+                                    c <- c.GetSlice(cBounds)
+                                    // printfn "c.Shape %A" c.Shape
                                 aderivative <- aderivative + c
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
@@ -976,7 +981,7 @@ type Tensor =
                                 let d = t.Derivative.[n]
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].Unsqueeze(0).Unsqueeze(0)
-                                    let c = Tensor.Conv1D(aa, dd).View([|1; inputChannels; kernelLength|])
+                                    let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
                                     bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
