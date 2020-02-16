@@ -10,7 +10,7 @@ type Tensor =
 
     member t.Primal =
         match t with
-        | Tensor _ -> t
+        | Tensor(_) -> t
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
@@ -31,7 +31,7 @@ type Tensor =
     member t.Depth =
         let rec depth x d =
             match x with
-            | Tensor _ -> d
+            | Tensor(_) -> d
             | TensorF(tp,_,_) -> depth tp (d + 1)
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
@@ -39,25 +39,25 @@ type Tensor =
     member t.Derivative
         with get() =
             match t with
-            | Tensor _ -> failwith "Cannot get derivative of constant Tensor"
+            | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
             | TensorF(_,td,_) -> td
             | TensorR(_,td,_,_,_) -> !td
         and set(value) =
             match t with
-            | Tensor _ -> failwith "Cannot set derivative of constant Tensor"
-            | TensorF _ -> failwith "Cannot set derivative of TensorF"
+            | Tensor(_) -> failwith "Cannot set derivative of constant Tensor"
+            | TensorF(_) -> failwith "Cannot set derivative of TensorF"
             | TensorR(_,td,_,_,_) -> td := value
 
     member t.Fanout
         with get() =
             match t with
-            | Tensor _ -> failwith "Cannot get fanout of constant Tensor"
-            | TensorF _ -> failwith "Cannot get fanout of TensorF"
+            | Tensor(_) -> failwith "Cannot get fanout of constant Tensor"
+            | TensorF(_) -> failwith "Cannot get fanout of TensorF"
             | TensorR(_,_,_,f,_) -> !f
         and set(value) =
             match t with
-            | Tensor _ -> failwith "Cannot set fanout of constant Tensor"
-            | TensorF _ -> failwith "Cannot set fanout of TensorF"
+            | Tensor(_) -> failwith "Cannot set fanout of constant Tensor"
+            | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
     member t.ForwardDiff(derivative:Tensor, ?tag:uint32) = 
@@ -97,15 +97,15 @@ type Tensor =
             | _ -> invalidOp "Cannot compare Tensor with another type"
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with
-        | Tensor _,  Tensor _  -> true
-        | Tensor _,  TensorF _ -> false
-        | Tensor _,  TensorR _ -> false
-        | TensorF _, Tensor _  -> false
-        | TensorF _, TensorF _ -> true
-        | TensorF _, TensorR _ -> false
-        | TensorR _, Tensor _  -> false
-        | TensorR _, TensorF _ -> false
-        | TensorR _, TensorR _ -> true
+        | Tensor(_),  Tensor(_)  -> true
+        | Tensor(_),  TensorF(_) -> false
+        | Tensor(_),  TensorR(_) -> false
+        | TensorF(_), Tensor(_)  -> false
+        | TensorF(_), TensorF(_) -> true
+        | TensorF(_), TensorR(_) -> false
+        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), TensorF(_) -> false
+        | TensorR(_), TensorR(_) -> true
 
     static member Lt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
     member t1.Lt(t2) = Tensor.Lt(t1, t2)
@@ -208,16 +208,16 @@ type Tensor =
     static member inline OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
-        | Tensor _,            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor _,            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorF(ap,ad,at),    Tensor _                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+        | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorF(ap,ad,at),    Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), Tensor _                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
         | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
@@ -230,55 +230,55 @@ type Tensor =
         if a.Shape = b.Shape then
             let inline fRaw(a:RawTensor,b) = a.AddTT(b)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad + bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-            let inline dfTensorFwdCT(_cp,_bp,bd) = bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT(a,b)
-            let inline dfTensorRevTC(a,_) = AddTTConst(a)
-            let inline dfTensorRevCT(_,b) = AddTTConst(b)
+            let inline dfTensorRevTC(a,b) = AddTTConst(a)
+            let inline dfTensorRevCT(a,b) = AddTTConst(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 0 then
             let inline fRaw(a,b:RawTensor) = b.AddTT0(a)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad + bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = Tensor.Extend(ad, b.Shape)
-            let inline dfTensorFwdCT(_cp,_bp,bd) = bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT0(b,a)
-            let inline dfTensorRevTC(a,_) = AddTConstT0(a)
-            let inline dfTensorRevCT(_,b) = AddTT0Const(b)
+            let inline dfTensorRevTC(a,b) = AddTConstT0(a)
+            let inline dfTensorRevCT(a,b) = AddTT0Const(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.AddTT0(b)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad + bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-            let inline dfTensorFwdCT(_cp,_bp,bd) = Tensor.Extend(bd, a.Shape)
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(bd, a.Shape)
             let inline dfTensorRevTT(a,b) = AddTT0(a,b)
-            let inline dfTensorRevTC(a,_) = AddTT0Const(a)
-            let inline dfTensorRevCT(_,b) = AddTConstT0(b)
+            let inline dfTensorRevTC(a,b) = AddTT0Const(a)
+            let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 2 && b.Dim = 1 then
             if a.Shape.[1] = b.Shape.[0] then
                 let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
                 let inline fTensor(a,b) = a + b
-                let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad + bd
-                let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-                let inline dfTensorFwdCT(cp,_bp,bd) = Tensor.ZerosLike(cp) + bd
+                let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+                let inline dfTensorFwdTC(cp,ap,ad) = ad
+                let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp) + bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
-                let inline dfTensorRevTC(a,_) = AddT2T1Const(a)
-                let inline dfTensorRevCT(_,b) = AddT2ConstT1(b)
+                let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
+                let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         elif a.Dim = 1 && b.Dim = 2 then
             if a.Shape.[0] = b.Shape.[1] then
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
                 let inline fTensor(a,b) = a + b
-                let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad + bd
-                let inline dfTensorFwdTC(cp,_ap,ad) = ad + Tensor.ZerosLike(cp)
-                let inline dfTensorFwdCT(_cp,_bp,bd) = bd
+                let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+                let inline dfTensorFwdTC(cp,ap,ad) = ad + Tensor.ZerosLike(cp)
+                let inline dfTensorFwdCT(cp,bp,bd) = bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
-                let inline dfTensorRevTC(a,_) = AddT2ConstT1(a)
-                let inline dfTensorRevCT(_,b) = AddT2T1Const(b)
+                let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
+                let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
             else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         // TODO: implement general broadcasting additions
@@ -292,32 +292,32 @@ type Tensor =
         if a.Shape = b.Shape then
             let inline fRaw(a:RawTensor,b) = a.SubTT(b)
             let inline fTensor(a,b) = a - b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad - bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-            let inline dfTensorFwdCT(_cp,_bp,bd) = -bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubTT(a,b)
-            let inline dfTensorRevTC(a,_) = SubTTConst(a)
-            let inline dfTensorRevCT(_,b) = SubTConstT(b)
+            let inline dfTensorRevTC(a,b) = SubTTConst(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.SubT0T(b)
             let inline fTensor(a,b) = a - b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad - bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = Tensor.Extend(ad, b.Shape)
-            let inline dfTensorFwdCT(_cp,_bp,bd) = -bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubT0T(a,b)
-            let inline dfTensorRevTC(a,_b) = SubT0TConst(a)
-            let inline dfTensorRevCT(_a,b) = SubT0ConstT(b)
+            let inline dfTensorRevTC(a,b) = SubT0TConst(a)
+            let inline dfTensorRevCT(a,b) = SubT0ConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.SubTT0(b)
             let inline fTensor(a,b) = a - b
-            let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = ad - bd
-            let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-            let inline dfTensorFwdCT(_cp,_bp,bd) = Tensor.Extend(-bd, a.Shape)
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(-bd, a.Shape)
             let inline dfTensorRevTT(a,b) = SubTT0(a,b)
-            let inline dfTensorRevTC(a,_b) = SubTT0Const(a)
-            let inline dfTensorRevCT(_a,b) = SubTConstT0(b)
+            let inline dfTensorRevTC(a,b) = SubTT0Const(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
     static member (-) (a:Tensor, b) = a - a.Create(b)
@@ -329,9 +329,9 @@ type Tensor =
         if a.Shape = b.Shape then
             let inline fRaw(a:RawTensor,b) = a.MulTT(b)
             let inline fTensor(a,b) = a * b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad * b
-            let inline dfTensorFwdCT(_cp:Tensor,_bp:Tensor,bd:Tensor) = a * bd
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT(a,b)
             let inline dfTensorRevTC(a,b) = MulTTConst(a,b)
             let inline dfTensorRevCT(a,b) = MulTTConst(b,a)
@@ -339,9 +339,9 @@ type Tensor =
         elif a.Dim = 0 then
             let inline fRaw(a,b:RawTensor) = b.MulTT0(a)
             let inline fTensor(a,b) = a * b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad * b
-            let inline dfTensorFwdCT(_cp:Tensor,_bp:Tensor,bd:Tensor) = a * bd
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT0(b,a)
             let inline dfTensorRevTC(a,b) = MulTConstT0(a,b)
             let inline dfTensorRevCT(a,b) = MulTT0Const(b,a)
@@ -349,9 +349,9 @@ type Tensor =
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.MulTT0(b)
             let inline fTensor(a,b) = a * b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad * b
-            let inline dfTensorFwdCT(_cp:Tensor,_bp:Tensor,bd:Tensor) = a * bd
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
             let inline dfTensorRevTT(a,b) = MulTT0(a,b)
             let inline dfTensorRevTC(a,b) = MulTT0Const(a,b)
             let inline dfTensorRevCT(a,b) = MulTConstT0(b,a)
@@ -367,8 +367,8 @@ type Tensor =
         if a.Shape = b.Shape then
             let inline fRaw(a:RawTensor,b) = a.DivTT(b)
             let inline fTensor(a,b) = a / b
-            let inline dfTensorFwdTT(cp:Tensor,_ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad / b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
             let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
             let inline dfTensorRevTT(a,b) = DivTT(a,b)
             let inline dfTensorRevTC(a,b) = DivTTConst(a,b)
@@ -377,8 +377,8 @@ type Tensor =
         elif a.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.DivT0T(b)
             let inline fTensor(a,b) = a / b
-            let inline dfTensorFwdTT(cp:Tensor,_ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad / b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
             let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
             let inline dfTensorRevTT(a,b) = DivT0T(a,b)
             let inline dfTensorRevTC(a,b) = DivT0TConst(a,b)
@@ -387,8 +387,8 @@ type Tensor =
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.DivTT0(b)
             let inline fTensor(a:Tensor,b:Tensor) = a / b
-            let inline dfTensorFwdTT(cp:Tensor,_ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let inline dfTensorFwdTC(_cp:Tensor,_ap:Tensor,ad:Tensor) = ad / b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
             let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
             let inline dfTensorRevTT(a,b) = DivTT0(a,b)
             let inline dfTensorRevTC(a,b) = DivTT0Const(a,b)
@@ -404,9 +404,9 @@ type Tensor =
         if a.Shape = b.Shape then
             let inline fRaw(a:RawTensor,b) = a.PowTT(b)
             let inline fTensor(a,b) = a ** b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let inline dfTensorFwdTC(_cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let inline dfTensorFwdCT(cp,_bp,bd) = bd * cp * log a
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
+            let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowTT(a,b)
             let inline dfTensorRevTC(a,b) = PowTTConst(a,b)
             let inline dfTensorRevCT(a,b) = PowTConstT(a,b)
@@ -414,9 +414,9 @@ type Tensor =
         elif a.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowT0T(b)
             let inline fTensor(a,b) = a ** b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let inline dfTensorFwdTC(_cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let inline dfTensorFwdCT(cp,_bp,bd) = bd * cp * log a
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
+            let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowT0T(a,b)
             let inline dfTensorRevTC(a,b) = PowT0TConst(a,b)
             let inline dfTensorRevCT(a,b) = PowT0ConstT(a,b)
@@ -424,9 +424,9 @@ type Tensor =
         elif b.Dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowTT0(b)
             let inline fTensor(a,b) = a ** b
-            let inline dfTensorFwdTT(_cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let inline dfTensorFwdTC(_cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let inline dfTensorFwdCT(cp,_bp,bd) = bd * cp * log a
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
+            let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowTT0(a,b)
             let inline dfTensorRevTC(a,b) = PowTT0Const(a,b)
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
@@ -442,9 +442,9 @@ type Tensor =
         if a.Shape.[1] = b.Shape.[0] then
             let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
             let inline fTensor(a,b) = Tensor.MatMul(a, b)
-            let inline dfTensorFwdTT(_cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
-            let inline dfTensorFwdTC(_cp,_ap,ad) = Tensor.MatMul(ad, b)
-            let inline dfTensorFwdCT(_cp,_bp,bd) = Tensor.MatMul(a, bd)
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.MatMul(ad, b)
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.MatMul(a, bd)
             let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
             let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
             let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
@@ -455,7 +455,7 @@ type Tensor =
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.NegT()
         let inline fTensor(a) = -a
-        let inline dfTensorFwd(_cp,_ap,ad) = -ad
+        let inline dfTensorFwd(cp,ap,ad) = -ad
         let inline dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Neg() = -t
@@ -463,7 +463,7 @@ type Tensor =
     static member Sum (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SumT()
         let inline fTensor(a) = Tensor.Sum(a)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.Sum(ad)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Sum(ad)
         let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sum() = Tensor.Sum(t)
@@ -524,7 +524,7 @@ type Tensor =
     static member SumT2Dim0 (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SumT2Dim0()
         let inline fTensor(a) = Tensor.SumT2Dim0(a)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.SumT2Dim0(ad)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim0(ad)
         let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
@@ -533,7 +533,7 @@ type Tensor =
         if a.Dim <> 2 then invalidOp <| sprintf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
         let inline fRaw(a:RawTensor) = a.TransposeT2()
         let inline fTensor(a) = Tensor.Transpose(a)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.Transpose(ad)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
         let inline dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Transpose() = Tensor.Transpose(t)
@@ -542,7 +542,7 @@ type Tensor =
         let dim = defaultArg dim -1
         let inline fRaw(a:RawTensor) = a.SqueezeT(dim)
         let inline fTensor(a) = Tensor.Squeeze(a, dim)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.Squeeze(ad, dim)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Squeeze(ad, dim)
         let inline dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Squeeze(?dim) = 
@@ -552,7 +552,7 @@ type Tensor =
     static member Unsqueeze (a:Tensor, dim:int) =
         let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
         let inline fTensor(a) = Tensor.Unsqueeze(a, dim)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.Unsqueeze(ad, dim)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Unsqueeze(ad, dim)
         let inline dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
@@ -581,7 +581,7 @@ type Tensor =
         let shape = shape |> Seq.toArray |> shapeComplete a.Nelement  // Handles -1 semantics
         let inline fRaw(a:RawTensor) = a.ViewT(shape)
         let inline fTensor(a) = Tensor.View(a, shape)
-        let inline dfTensorFwd(_cp,_ap,ad) = Tensor.View(ad, shape)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.View(ad, shape)
         let inline dfTensorRev(a) = ViewT(a, a.Shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.View(shape) = Tensor.View(t, shape)
@@ -593,7 +593,7 @@ type Tensor =
     static member Sign (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SignT()
         let inline fTensor(a) = Tensor.Sign(a)
-        let inline dfTensorFwd(cp,_ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sign() = Tensor.Sign(t)
@@ -601,7 +601,7 @@ type Tensor =
     static member Floor (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.FloorT()
         let inline fTensor(a) = Tensor.Floor(a)
-        let inline dfTensorFwd(cp,_ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Floor() = Tensor.Floor(t)
@@ -609,7 +609,7 @@ type Tensor =
     static member Ceil (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CeilT()
         let inline fTensor(a) = Tensor.Ceil(a)
-        let inline dfTensorFwd(cp,_ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Ceil() = Tensor.Ceil(t)
@@ -617,7 +617,7 @@ type Tensor =
     static member Round (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.RoundT()
         let inline fTensor(a) = Tensor.Round(a)
-        let inline dfTensorFwd(cp,_ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Round() = Tensor.Round(t)
@@ -625,7 +625,7 @@ type Tensor =
     static member Abs (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.AbsT()
         let inline fTensor(a) = Tensor.Abs(a)
-        let inline dfTensorFwd(_cp,ap,ad) = ad * Tensor.Sign(ap)
+        let inline dfTensorFwd(cp,ap,ad) = ad * Tensor.Sign(ap)
         let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Abs() = Tensor.Abs(t)
@@ -633,7 +633,7 @@ type Tensor =
     static member Relu (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.ReluT()
         let inline fTensor(a) = Tensor.Relu(a)
-        let inline dfTensorFwd(_cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
+        let inline dfTensorFwd(cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
         let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Relu() = Tensor.Relu(t)
@@ -647,7 +647,7 @@ type Tensor =
     static member Sigmoid (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SigmoidT()
         let inline fTensor(a) = Tensor.Sigmoid(a)
-        let inline dfTensorFwd(cp:Tensor,_ap,ad) = ad * cp * (1. - cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
         let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sigmoid() = Tensor.Sigmoid(t)
@@ -655,7 +655,7 @@ type Tensor =
     static member Exp (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.ExpT()
         let inline fTensor(a) = Tensor.Exp(a)
-        let inline dfTensorFwd(cp,_ap,ad) = ad * cp
+        let inline dfTensorFwd(cp,ap,ad) = ad * cp
         let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Exp() = Tensor.Exp(t)
@@ -663,7 +663,7 @@ type Tensor =
     static member Log (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.LogT()
         let inline fTensor(a) = Tensor.Log(a)
-        let inline dfTensorFwd(_cp,ap,ad) = ad / ap
+        let inline dfTensorFwd(cp,ap,ad) = ad / ap
         let inline dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Log() = Tensor.Log(t)
@@ -671,7 +671,7 @@ type Tensor =
     static member Log10 (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.Log10T()
         let inline fTensor(a) = Tensor.Log10(a)
-        let inline dfTensorFwd(_cp,ap:Tensor,ad) = ad / (ap * log10Val)
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
         let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Log10() = Tensor.Log10(t)
@@ -679,7 +679,7 @@ type Tensor =
     static member Sqrt (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SqrtT()
         let inline fTensor(a) = Tensor.Sqrt(a)
-        let inline dfTensorFwd(cp:Tensor,_ap,ad) = ad / (2. * cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
         let inline dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sqrt() = Tensor.Sqrt(t)
@@ -687,7 +687,7 @@ type Tensor =
     static member Sin (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SinT()
         let inline fTensor(a) = Tensor.Sin(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = ad * Tensor.Cos(ap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cos(ap)
         let inline dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sin() = Tensor.Sin(t)
@@ -695,7 +695,7 @@ type Tensor =
     static member Cos (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CosT()
         let inline fTensor(a) = Tensor.Cos(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = -ad * Tensor.Sin(ap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = -ad * Tensor.Sin(ap)
         let inline dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Cos() = Tensor.Cos(t)
@@ -703,7 +703,7 @@ type Tensor =
     static member Tan (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.TanT()
         let inline fTensor(a) = Tensor.Tan(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = let cosap = Tensor.Cos(ap) in ad / (cosap * cosap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = let cosap = Tensor.Cos(ap) in ad / (cosap * cosap)
         let inline dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Tan() = Tensor.Tan(t)
@@ -711,7 +711,7 @@ type Tensor =
     static member Sinh (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SinhT()
         let inline fTensor(a) = Tensor.Sinh(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = ad * Tensor.Cosh(ap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cosh(ap)
         let inline dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sinh() = Tensor.Sinh(t)
@@ -719,7 +719,7 @@ type Tensor =
     static member Cosh (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CoshT()
         let inline fTensor(a) = Tensor.Cosh(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = ad * Tensor.Sinh(ap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Sinh(ap)
         let inline dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Cosh() = Tensor.Cosh(t)
@@ -727,7 +727,7 @@ type Tensor =
     static member Tanh (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.TanhT()
         let inline fTensor(a) = Tensor.Tanh(a)
-        let inline dfTensorFwd(_cp:Tensor,ap,ad) = let coshap = Tensor.Cosh(ap) in ad / (coshap * coshap)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = let coshap = Tensor.Cosh(ap) in ad / (coshap * coshap)
         let inline dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Tanh() = Tensor.Tanh(t)
@@ -735,7 +735,7 @@ type Tensor =
     static member Asin (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.AsinT()
         let inline fTensor(a) = Tensor.Asin(a)
-        let inline dfTensorFwd(_cp:Tensor,ap:Tensor,ad) = ad / Tensor.Sqrt(1. - ap*ap)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / Tensor.Sqrt(1. - ap*ap)
         let inline dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Asin() = Tensor.Asin(t)
@@ -743,7 +743,7 @@ type Tensor =
     static member Acos (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.AcosT()
         let inline fTensor(a) = Tensor.Acos(a)
-        let inline dfTensorFwd(_cp:Tensor,ap:Tensor,ad) = -ad / Tensor.Sqrt(1. - ap*ap)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / Tensor.Sqrt(1. - ap*ap)
         let inline dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Acos() = Tensor.Acos(t)
@@ -751,7 +751,7 @@ type Tensor =
     static member Atan (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.AtanT()
         let inline fTensor(a) = Tensor.Atan(a)
-        let inline dfTensorFwd(_cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
         let inline dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Atan() = Tensor.Atan(t)
@@ -762,12 +762,12 @@ type Tensor =
         let location = location |> Seq.toArray
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a,b) = Tensor.AddSlice(a, location, b)
-        let inline dfTensorFwdTT(_cp,_ap,ad,_bp,bd) = Tensor.AddSlice(ad, location, bd)
-        let inline dfTensorFwdTC(_cp,_ap,ad) = ad
-        let inline dfTensorFwdCT(cp,_bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
+        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.AddSlice(ad, location, bd)
+        let inline dfTensorFwdTC(cp,ap,ad) = ad
+        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
-        let inline dfTensorRevTC(a,_) = AddTTConstSlice(a)
-        let inline dfTensorRevCT(_,b) = AddTConstTSlice(location,b)
+        let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
+        let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     static member Softmax(a:Tensor, dim:int) =
@@ -959,9 +959,9 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
-                        | Conv1DTT(_,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTTConst(_,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTConstT(_,_,_,_) -> failwith "Not implemented"           
+                        | Conv1DTT(a,b,_,_) -> failwith "Not implemented"
+                        | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
+                        | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"           
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
