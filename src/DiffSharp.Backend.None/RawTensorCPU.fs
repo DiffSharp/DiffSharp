@@ -7,7 +7,7 @@ open DiffSharp.Util
 #nowarn "77" // use of op_Explicit
 
 /// This is the base class for all RawTensorXyzCPU tuypes.
-/// All structural type-independent operations are implemented directly on this class. 
+/// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
     inherit RawTensor(shape, dtype, CPU, DiffSharp.Backend.Backend.None)
@@ -177,6 +177,10 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
             upcast t
         else 
             RawTensor.Create(t.ToArray(), dtype=dtype, backend=t.Backend, device=t.Device)
+
+    member t.ToInt32() = t.Cast(Int32)
+    member t.ToFloat32() = t.Cast(Float32)
+    member t.ToFloat64() = t.Cast(Float64)
 
 // Defines the math-dependent operations for `RawTensorCPU<T>` types
 // using generic inline code. Each implementing type (e.g. RawTensorFloat32CPU) instantiates
@@ -572,7 +576,7 @@ module internal RawTensorCPU =
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
-
+    static let create(values, shape) : RawTensor = upcast RawTensorFloat32CPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorFloat32CPU
     static member One() = RawTensorCPU.One() |> RawTensorFloat32CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorFloat32CPU
@@ -585,60 +589,60 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.Create(values) = upcast RawTensorFloat32CPU.Create(values)
     override t.Zero() = upcast RawTensorFloat32CPU.Zero()
     override t.Zeros(shape) = upcast RawTensorFloat32CPU.Zeros(shape)
-    override t.One() = upcast RawTensorFloat32CPU([|1.f|], [||])
+    override t.One() = create([|1.f|], [||])
     override t.Ones(shape) = upcast RawTensorFloat32CPU.Ones(shape)
     override t.Random(shape) = upcast RawTensorFloat32CPU.Random(shape)
     override t.RandomNormal(shape) = upcast RawTensorFloat32CPU.RandomNormal(shape)
-    override t.RandomMultinomial(numSamples) = upcast (RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> RawTensorFloat32CPU)
+    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.ApproximatelyEquals(t2:RawTensor, tolerance) = RawTensorCPU.ApproximatelyEquals(t1, t2, float32 tolerance)
-    override t1.LtTT(t2) = upcast (RawTensorCPU.LtTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.GtTT(t2) = upcast (RawTensorCPU.GtTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.LeTT(t2) = upcast (RawTensorCPU.LeTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.GeTT(t2) = upcast (RawTensorCPU.GeTT(t1, t2) |> RawTensorFloat32CPU)
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
-    override t1.AddTT(t2) = upcast (RawTensorCPU.AddTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.AddTT0(t2) = upcast (RawTensorCPU.AddTT0(t1, t2) |> RawTensorFloat32CPU)
-    override t1.AddT2T1(t2) = upcast (RawTensorCPU.AddT2T1(t1, t2) |> RawTensorFloat32CPU)
-    override t1.AddTTSlice(location:int[], t2) = upcast (RawTensorCPU.AddTTSlice(t1, location, t2) |> RawTensorFloat32CPU)
-    override t1.SubTT(t2) = upcast (RawTensorCPU.SubTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.SubT0T(t2) = upcast (RawTensorCPU.SubT0T(t1, t2) |> RawTensorFloat32CPU)
-    override t1.SubTT0(t2) = upcast (RawTensorCPU.SubTT0(t1, t2) |> RawTensorFloat32CPU)
-    override t1.MulTT(t2) = upcast (RawTensorCPU.MulTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.MulTT0(t2) = upcast (RawTensorCPU.MulTT0(t1, t2) |> RawTensorFloat32CPU)
-    override t1.DivTT(t2) = upcast (RawTensorCPU.DivTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.DivT0T(t2) = upcast (RawTensorCPU.DivT0T(t1, t2) |> RawTensorFloat32CPU)
-    override t1.DivTT0(t2) = upcast (RawTensorCPU.DivTT0(t1, t2) |> RawTensorFloat32CPU)
-    override t1.PowTT(t2) = upcast (RawTensorCPU.PowTT(t1, t2) |> RawTensorFloat32CPU)
-    override t1.PowT0T(t2) = upcast (RawTensorCPU.PowT0T(t1, t2) |> RawTensorFloat32CPU)
-    override t1.PowTT0(t2) = upcast (RawTensorCPU.PowTT0(t1, t2) |> RawTensorFloat32CPU)
-    override t1.MatMulT2T2(t2) = upcast (RawTensorCPU.MatMulT2T2(t1, t2) |> RawTensorFloat32CPU)
-    override t1.Conv1D(t2, stride, padding) = upcast (RawTensorCPU.Conv1D RawTensorFloat32CPU.Zeros (t1, t2, stride, padding))
-    override t.NegT() = upcast (RawTensorCPU.NegT(t) |> RawTensorFloat32CPU)
-    override t.SumT() = upcast (RawTensorCPU.SumT(t) |> RawTensorFloat32CPU)
-    override t.SumT2Dim0() = upcast (RawTensorCPU.SumT2Dim0(t) |> RawTensorFloat32CPU)
-    override t.TransposeT2() = upcast (RawTensorCPU.TransposeT2(t) |> RawTensorFloat32CPU)
-    override t.SignT() = upcast (RawTensorCPU.SignT float32 t |> RawTensorFloat32CPU)
-    override t.FloorT() = upcast (RawTensorCPU.FloorT(t) |> RawTensorFloat32CPU)
-    override t.CeilT() = upcast (RawTensorCPU.CeilT(t) |> RawTensorFloat32CPU)
-    override t.RoundT() = upcast (RawTensorCPU.RoundT(t) |> RawTensorFloat32CPU)
-    override t.AbsT() = upcast (RawTensorCPU.AbsT(t) |> RawTensorFloat32CPU)
-    override t.ReluT() = upcast (RawTensorCPU.ReluT(t) |> RawTensorFloat32CPU)
-    override t.SigmoidT() = upcast (RawTensorCPU.SigmoidT(t) |> RawTensorFloat32CPU)
-    override t.ExpT() = upcast (RawTensorCPU.ExpT(t) |> RawTensorFloat32CPU)
-    override t.LogT() = upcast (RawTensorCPU.LogT(t) |> RawTensorFloat32CPU)
-    override t.Log10T() = upcast (RawTensorCPU.Log10T(t) |> RawTensorFloat32CPU)
-    override t.SqrtT() = upcast (RawTensorCPU.SqrtT(t) |> RawTensorFloat32CPU)
-    override t.SinT() = upcast (RawTensorCPU.SinT(t) |> RawTensorFloat32CPU)
-    override t.CosT() = upcast (RawTensorCPU.CosT(t) |> RawTensorFloat32CPU)
-    override t.TanT() = upcast (RawTensorCPU.TanT(t) |> RawTensorFloat32CPU)
-    override t.SinhT() = upcast (RawTensorCPU.SinhT(t) |> RawTensorFloat32CPU)
-    override t.CoshT() = upcast (RawTensorCPU.CoshT(t) |> RawTensorFloat32CPU)
-    override t.TanhT() = upcast (RawTensorCPU.TanhT(t) |> RawTensorFloat32CPU)
-    override t.AsinT() = upcast (RawTensorCPU.AsinT(t) |> RawTensorFloat32CPU)
-    override t.AcosT() = upcast (RawTensorCPU.AcosT(t) |> RawTensorFloat32CPU)
-    override t.AtanT() = upcast (RawTensorCPU.AtanT(t) |> RawTensorFloat32CPU)
+    override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
+    override t1.AddTT0(t2) = RawTensorCPU.AddTT0(t1, t2) |> create
+    override t1.AddT2T1(t2) = RawTensorCPU.AddT2T1(t1, t2) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice(t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorCPU.SubTT(t1, t2) |> create
+    override t1.SubT0T(t2) = RawTensorCPU.SubT0T(t1, t2) |> create
+    override t1.SubTT0(t2) = RawTensorCPU.SubTT0(t1, t2) |> create
+    override t1.MulTT(t2) = RawTensorCPU.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorCPU.MulTT0(t1, t2) |> create
+    override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
+    override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
+    override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
+    override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
+    override t1.PowT0T(t2) = RawTensorCPU.PowT0T(t1, t2) |> create
+    override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2) |> create
+    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D RawTensorFloat32CPU.Zeros (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorCPU.NegT(t) |> create
+    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.TransposeT2() = RawTensorCPU.TransposeT2(t) |> create
+    override t.SignT() = RawTensorCPU.SignT float32 t |> create
+    override t.FloorT() = RawTensorCPU.FloorT(t) |> create
+    override t.CeilT() = RawTensorCPU.CeilT(t) |> create
+    override t.RoundT() = RawTensorCPU.RoundT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
+    override t.ExpT() = RawTensorCPU.ExpT(t) |> create
+    override t.LogT() = RawTensorCPU.LogT(t) |> create
+    override t.Log10T() = RawTensorCPU.Log10T(t) |> create
+    override t.SqrtT() = RawTensorCPU.SqrtT(t) |> create
+    override t.SinT() = RawTensorCPU.SinT(t) |> create
+    override t.CosT() = RawTensorCPU.CosT(t) |> create
+    override t.TanT() = RawTensorCPU.TanT(t) |> create
+    override t.SinhT() = RawTensorCPU.SinhT(t) |> create
+    override t.CoshT() = RawTensorCPU.CoshT(t) |> create
+    override t.TanhT() = RawTensorCPU.TanhT(t) |> create
+    override t.AsinT() = RawTensorCPU.AsinT(t) |> create
+    override t.AcosT() = RawTensorCPU.AcosT(t) |> create
+    override t.AtanT() = RawTensorCPU.AtanT(t) |> create
 
 /// The concrete implementation of RawTensorStatics for Float32 data.
 and RawTensorFloat32CPUStatics() = 
@@ -653,4 +657,175 @@ and RawTensorFloat32CPUStatics() =
     override __.RandomNormal(shape:int[]) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override __.Create(values:obj) : RawTensor = upcast RawTensorFloat32CPU.Create(values)
 
-        
+type RawTensorFloat64CPU(values: double[], shape:int[]) =
+    inherit RawTensorCPU<double>(values, shape, Float64)
+
+    static let create(values, shape) : RawTensor = upcast RawTensorFloat64CPU(values, shape)
+    static member Zero() = RawTensorCPU.Zero() |> RawTensorFloat64CPU
+    static member One() = RawTensorCPU.One() |> RawTensorFloat64CPU
+    static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorFloat64CPU
+    static member Ones(shape:int[]) = RawTensorCPU.Ones(shape) |> RawTensorFloat64CPU
+    static member Random(shape:int[])  = RawTensorCPU.Random double shape |> RawTensorFloat64CPU
+    static member RandomNormal(shape:int[]) = RawTensorCPU.RandomNormal double shape |> RawTensorFloat64CPU
+    static member Create(value:obj) = RawTensorCPU.Create double double double (value) |> RawTensorFloat64CPU
+    override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorFloat64CPU))
+    override t.CreateShaped(values, shape) = upcast RawTensorFloat64CPU(values, shape)
+    override t.Create(values) = upcast RawTensorFloat64CPU.Create(values)
+    override t.Zero() = upcast RawTensorFloat64CPU.Zero()
+    override t.Zeros(shape) = upcast RawTensorFloat64CPU.Zeros(shape)
+    override t.One() = upcast RawTensorFloat64CPU([|1.0|], [||])
+    override t.Ones(shape) = upcast RawTensorFloat64CPU.Ones(shape)
+    override t.Random(shape) = upcast RawTensorFloat64CPU.Random(shape)
+    override t.RandomNormal(shape) = upcast RawTensorFloat64CPU.RandomNormal(shape)
+    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
+    override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
+    override t1.ApproximatelyEquals(t2:RawTensor, tolerance) = RawTensorCPU.ApproximatelyEquals(t1, t2, double tolerance)
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
+    override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
+    override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
+    override t1.AddTT0(t2) = RawTensorCPU.AddTT0(t1, t2) |> create
+    override t1.AddT2T1(t2) = RawTensorCPU.AddT2T1(t1, t2) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice(t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorCPU.SubTT(t1, t2) |> create
+    override t1.SubT0T(t2) = RawTensorCPU.SubT0T(t1, t2) |> create
+    override t1.SubTT0(t2) = RawTensorCPU.SubTT0(t1, t2) |> create
+    override t1.MulTT(t2) = RawTensorCPU.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorCPU.MulTT0(t1, t2) |> create
+    override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
+    override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
+    override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
+    override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
+    override t1.PowT0T(t2) = RawTensorCPU.PowT0T(t1, t2) |> create
+    override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2) |> create
+    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D RawTensorFloat64CPU.Zeros (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorCPU.NegT(t) |> create
+    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.TransposeT2() = RawTensorCPU.TransposeT2(t) |> create
+    override t.SignT() = RawTensorCPU.SignT double t |> create
+    override t.FloorT() = RawTensorCPU.FloorT(t) |> create
+    override t.CeilT() = RawTensorCPU.CeilT(t) |> create
+    override t.RoundT() = RawTensorCPU.RoundT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
+    override t.ExpT() = RawTensorCPU.ExpT(t) |> create
+    override t.LogT() = RawTensorCPU.LogT(t) |> create
+    override t.Log10T() = RawTensorCPU.Log10T(t) |> create
+    override t.SqrtT() = RawTensorCPU.SqrtT(t) |> create
+    override t.SinT() = RawTensorCPU.SinT(t) |> create
+    override t.CosT() = RawTensorCPU.CosT(t) |> create
+    override t.TanT() = RawTensorCPU.TanT(t) |> create
+    override t.SinhT() = RawTensorCPU.SinhT(t) |> create
+    override t.CoshT() = RawTensorCPU.CoshT(t) |> create
+    override t.TanhT() = RawTensorCPU.TanhT(t) |> create
+    override t.AsinT() = RawTensorCPU.AsinT(t) |> create
+    override t.AcosT() = RawTensorCPU.AcosT(t) |> create
+    override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+
+and RawTensorFloat64CPUStatics() = 
+
+    inherit RawTensorStatics()
+
+    override __.Zero = upcast RawTensorFloat64CPU.Zero()
+    override __.One = upcast RawTensorFloat64CPU.One()
+    override __.Zeros(shape:int[]) = upcast RawTensorFloat64CPU.Zeros(shape)
+    override __.Ones(shape:int[]) = upcast RawTensorFloat64CPU.Ones(shape)
+    override __.Random(shape:int[]) = upcast RawTensorFloat64CPU.Random(shape)
+    override __.RandomNormal(shape:int[]) = upcast RawTensorFloat64CPU.RandomNormal(shape)
+    override __.Create(values:obj) : RawTensor = upcast RawTensorFloat64CPU.Create(values)
+
+type RawTensorInt32CPU(values: int32[], shape:int[]) =
+    inherit RawTensorCPU<int32>(values, shape, Int32)
+
+    static let create(values, shape) : RawTensor = upcast RawTensorInt32CPU(values, shape)
+    static let createf(values, shape) : RawTensor = upcast RawTensorFloat32CPU(values, shape)
+    static member Zero() = RawTensorCPU.Zero() |> RawTensorInt32CPU
+    static member One() = RawTensorCPU.One() |> RawTensorInt32CPU
+    static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorInt32CPU
+    static member Ones(shape:int[]) = RawTensorCPU.Ones(shape) |> RawTensorInt32CPU
+    static member Random(shape:int[])  = RawTensorCPU.Random int32 shape |> RawTensorInt32CPU
+    static member RandomNormal(shape:int[]) = RawTensorCPU.RandomNormal int32 shape |> RawTensorInt32CPU
+    static member Create(value:obj) = RawTensorCPU.Create int32 int32 int32 (value) |> RawTensorInt32CPU
+    override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt32CPU))
+    override t.CreateShaped(values, shape) = upcast RawTensorInt32CPU(values, shape)
+    override t.Create(values) = upcast RawTensorInt32CPU.Create(values)
+    override t.Zero() = upcast RawTensorInt32CPU.Zero()
+    override t.Zeros(shape) = upcast RawTensorInt32CPU.Zeros(shape)
+    override t.One() = upcast RawTensorInt32CPU([|1|], [||])
+    override t.Ones(shape) = upcast RawTensorInt32CPU.Ones(shape)
+    override t.Random(shape) = upcast RawTensorInt32CPU.Random(shape)
+    override t.RandomNormal(shape) = upcast RawTensorInt32CPU.RandomNormal(shape)
+    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
+    override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
+    override t1.ApproximatelyEquals(t2:RawTensor, tolerance) = RawTensorCPU.ApproximatelyEquals(t1, t2, int32 tolerance)
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
+    override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
+    override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
+    override t1.AddTT0(t2) = RawTensorCPU.AddTT0(t1, t2) |> create
+    override t1.AddT2T1(t2) = RawTensorCPU.AddT2T1(t1, t2) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice(t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorCPU.SubTT(t1, t2) |> create
+    override t1.SubT0T(t2) = RawTensorCPU.SubT0T(t1, t2) |> create
+    override t1.SubTT0(t2) = RawTensorCPU.SubTT0(t1, t2) |> create
+    override t1.MulTT(t2) = RawTensorCPU.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorCPU.MulTT0(t1, t2) |> create
+    override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
+    override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
+    override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
+    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D RawTensorInt32CPU.Zeros (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorCPU.NegT(t) |> create
+    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.TransposeT2() = RawTensorCPU.TransposeT2(t) |> create
+    override t.SignT() = RawTensorCPU.SignT int32 t |> create
+    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+
+    member t.ToFloat32() = base.ToFloat32() :?> RawTensorFloat32CPU
+
+    // Note, these produce Float32 tensors implicitly
+    override t1.PowTT(t2) = RawTensorCPU.PowTT(t1.ToFloat32(), t2) |> createf
+    override t1.PowT0T(t2) = RawTensorCPU.PowT0T(t1.ToFloat32(), t2) |> createf
+    override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1.ToFloat32(), t2) |> createf
+    override t.FloorT() = RawTensorCPU.FloorT(t.ToFloat32()) |> createf
+    override t.CeilT() = RawTensorCPU.CeilT(t.ToFloat32()) |> createf
+    override t.RoundT() = RawTensorCPU.RoundT(t.ToFloat32()) |> createf
+    override t.SigmoidT() = RawTensorCPU.SigmoidT(t.ToFloat32()) |> createf
+    override t.ExpT() = RawTensorCPU.ExpT(t.ToFloat32()) |> createf
+    override t.LogT() = RawTensorCPU.LogT(t.ToFloat32()) |> createf
+    override t.Log10T() = RawTensorCPU.Log10T(t.ToFloat32()) |> createf
+    override t.SqrtT() = RawTensorCPU.SqrtT(t.ToFloat32()) |> createf
+    override t.SinT() = RawTensorCPU.SinT(t.ToFloat32()) |> createf
+    override t.CosT() = RawTensorCPU.CosT(t.ToFloat32()) |> createf
+    override t.TanT() = RawTensorCPU.TanT(t.ToFloat32()) |> createf
+    override t.SinhT() = RawTensorCPU.SinhT(t.ToFloat32()) |> createf
+    override t.CoshT() = RawTensorCPU.CoshT(t.ToFloat32()) |> createf
+    override t.TanhT() = RawTensorCPU.TanhT(t.ToFloat32()) |> createf
+    override t.AsinT() = RawTensorCPU.AsinT(t.ToFloat32()) |> createf
+    override t.AcosT() = RawTensorCPU.AcosT(t.ToFloat32()) |> createf
+    override t.AtanT() = RawTensorCPU.AtanT(t.ToFloat32()) |> createf
+
+and RawTensorInt32CPUStatics() = 
+
+    inherit RawTensorStatics()
+
+    override __.Zero = upcast RawTensorInt32CPU.Zero()
+    override __.One = upcast RawTensorInt32CPU.One()
+    override __.Zeros(shape:int[]) = upcast RawTensorInt32CPU.Zeros(shape)
+    override __.Ones(shape:int[]) = upcast RawTensorInt32CPU.Ones(shape)
+    override __.Random(shape:int[]) = upcast RawTensorInt32CPU.Random(shape)
+    override __.RandomNormal(shape:int[]) = upcast RawTensorInt32CPU.RandomNormal(shape)
+    override __.Create(values:obj) : RawTensor = upcast RawTensorInt32CPU.Create(values)
+
+                

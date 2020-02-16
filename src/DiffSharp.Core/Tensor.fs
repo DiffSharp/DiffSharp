@@ -593,7 +593,7 @@ type Tensor =
     static member Sign (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SignT()
         let inline fTensor(a) = Tensor.Sign(a)
-        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Sign() = Tensor.Sign(t)
@@ -601,7 +601,7 @@ type Tensor =
     static member Floor (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.FloorT()
         let inline fTensor(a) = Tensor.Floor(a)
-        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Floor() = Tensor.Floor(t)
@@ -609,7 +609,7 @@ type Tensor =
     static member Ceil (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.CeilT()
         let inline fTensor(a) = Tensor.Ceil(a)
-        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Ceil() = Tensor.Ceil(t)
@@ -617,7 +617,7 @@ type Tensor =
     static member Round (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.RoundT()
         let inline fTensor(a) = Tensor.Round(a)
-        let inline dfTensorFwd(cp,ap,_ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Round() = Tensor.Round(t)
