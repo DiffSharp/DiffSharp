@@ -200,6 +200,103 @@ type TestDerivatives () =
     // TODO: add test for PowTConstT0
 
     [<Test>]
+    member this.TestDerivativeConv1D () =
+        let fwdx = Tensor.Create([[[  0.1264;   5.3183;   6.6905; -10.6416];
+                                 [ 13.8060;   4.5253;   2.8568;  -3.2037];
+                                 [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
+
+                                [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
+                                 [  4.2547;   2.6049;  -9.8226;  -5.4543];
+                                 [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
+        let fwdx = fwdx.ForwardDiff(Tensor.Create([[[-4.3197; -6.5898; -6.2003;  2.1058];
+                                 [ 7.0684; -3.7964;  4.4218;  3.9533];
+                                 [-7.1559; -7.6799; -9.5234; -3.9351]];
+
+                                [[-0.2089; -7.8695;  6.5383;  5.1090];
+                                 [-3.8272;  7.6264;  6.8205;  5.7346];
+                                 [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
+
+        let fwdy = Tensor.Create([[[ 4.0332e+00;  6.3036e+00];
+                                 [ 8.4410e+00; -5.7543e+00];
+                                 [-5.6937e-03; -6.7241e+00]];
+
+                                [[-2.2619e+00;  1.2082e+00];
+                                 [-1.2203e-01; -4.9373e+00];
+                                 [-4.1881e+00; -3.4198e+00]]])
+        let fwdy = fwdy.ForwardDiff(Tensor.Create([[[-1.5107; -0.0610];
+                                 [-0.2609;  5.9220];
+                                 [ 2.8221; -5.7314]];
+
+                                [[ 5.0064;  3.8631];
+                                 [-4.6264; -7.9380];
+                                 [ 8.2204; -1.9833]]]))
+
+        let fwdz = Tensor.Conv1D(fwdx, fwdy, padding=0, stride=1)
+        let fwdzCorrect = Tensor.Create([[[ 143.3192;  108.0332;   11.2241];
+                                         [  -5.9062;    4.6091;    6.0273]];
+
+                                        [[  27.3032;   97.9855; -133.8372];
+                                         [  -1.4792;   45.6659;   29.8705]]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[[ 111.2865;  -40.3692;   -1.8573];
+                                         [   -1.9154;   43.3470;   29.3626]];
+
+                                        [[ -168.6758;  -43.1578;   25.4470];
+                                         [ -149.6851;   23.1963;  -50.1932]]])
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+
+    //TODO: add test for Conv1DTTConst
+    //TODO: add test for Conv1DTConstT
+
+    [<Test>]
+    member this.TestDerivativeConv1Dp2s2 () =
+        let fwdx = Tensor.Create([[[  0.1264;   5.3183;   6.6905; -10.6416];
+                                 [ 13.8060;   4.5253;   2.8568;  -3.2037];
+                                 [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
+
+                                [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
+                                 [  4.2547;   2.6049;  -9.8226;  -5.4543];
+                                 [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
+        let fwdx = fwdx.ForwardDiff(Tensor.Create([[[-4.3197; -6.5898; -6.2003;  2.1058];
+                                 [ 7.0684; -3.7964;  4.4218;  3.9533];
+                                 [-7.1559; -7.6799; -9.5234; -3.9351]];
+
+                                [[-0.2089; -7.8695;  6.5383;  5.1090];
+                                 [-3.8272;  7.6264;  6.8205;  5.7346];
+                                 [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
+
+        let fwdy = Tensor.Create([[[ 4.0332e+00;  6.3036e+00];
+                                 [ 8.4410e+00; -5.7543e+00];
+                                 [-5.6937e-03; -6.7241e+00]];
+
+                                [[-2.2619e+00;  1.2082e+00];
+                                 [-1.2203e-01; -4.9373e+00];
+                                 [-4.1881e+00; -3.4198e+00]]])
+        let fwdy = fwdy.ForwardDiff(Tensor.Create([[[-1.5107; -0.0610];
+                                 [-0.2609;  5.9220];
+                                 [ 2.8221; -5.7314]];
+
+                                [[ 5.0064;  3.8631];
+                                 [-4.6264; -7.9380];
+                                 [ 8.2204; -1.9833]]]))
+
+        let fwdz = Tensor.Conv1D(fwdx, fwdy, padding=2, stride=2)
+        let fwdzCorrect = Tensor.Create([[[   0.0000;  143.3192;   11.2241;    0.0000];
+                                          [   0.0000;   -5.9062;    6.0273;    0.0000]];
+
+                                         [[   0.0000;   27.3032; -133.8372;    0.0000];
+                                          [   0.0000;   -1.4792;   29.8705;    0.0000]]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[[   0.0000;  111.2865;   -1.8573;    0.0000];
+                                          [    0.0000;   -1.9154;   29.3626;    0.0000]];
+
+                                         [[   0.0000;  -168.6758;   25.4470;    0.0000];
+                                          [   0.0000;  -149.6851;  -50.1932;    0.0000]]])
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+
+    [<Test>]
     member this.TestDerivativeMatMulT2T2 () =
         let fwdx = Tensor.Create([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
             [9.8762; 3.2263; 6.2866; 4.7111; 0.0652];
@@ -976,6 +1073,26 @@ type TestDerivatives () =
         let revz = revx.Unsqueeze(1)
         let revzCorrect =  Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
         revz.Reverse(Tensor.Create([[[10.; 20.]]; [[30.;40.]]]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.]])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeFlipT () =
+        let fwdx = Tensor.Create([[1.;2.];[3.;4.]]).ForwardDiff(Tensor.Create([[10.;20.];[30.;40.]]))
+        let fwdz = fwdx.Flip([|0; 1|])
+        let fwdzCorrect =  Tensor.Create([[4.; 3.]; [2.;1.]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect =  Tensor.Create([[40.; 30.]; [20.;10.]])
+
+        let revx = Tensor.Create([[1.;2.];[3.;4.]]).ReverseDiff()
+        let revz = revx.Flip([|0; 1|])
+        let revzCorrect =  Tensor.Create([[4.; 3.]; [2.;1.]])
+        revz.Reverse(Tensor.Create([[40.; 30.]; [20.;10.]]))
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.]])
 
