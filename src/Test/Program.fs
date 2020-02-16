@@ -132,12 +132,16 @@ let main argv =
                              [-0.9613;  1.0958]]]).ReverseDiff()
 
     let revz = Tensor.Conv1D(revx, revy, padding=0, stride=1)
-    revz.[1,1,1].Reverse()
-    let revzCorrect = Tensor.Create([[[ 143.3192;  108.0332;   11.2241];
-                                     [  -5.9062;    4.6091;    6.0273]];
+    revz.Reverse(Tensor.Create([[[ 4.5763;  2.7538;  2.0173];
+                                 [-2.7543;  7.9257; -1.3670]];
 
-                                    [[  27.3032;   97.9855; -133.8372];
-                                     [  -1.4792;   45.6659;   29.8705]]])
+                                [[ 1.7997; -1.2354;  4.6313];
+                                 [-4.0646;  0.0384;  4.1437]]]))
+    let revzCorrect = Tensor.Create([[[ -1.3005; -43.8321;  62.9678];
+                                     [-26.6931; -22.6506; -69.1848]];
+
+                                    [[ 55.3161;  -3.6187;   6.3480];
+                                     [ 37.6982;  98.2438;  64.8643]]])
 
     printfn "revx %A" revx.Shape
     printfn "revy %A" revy.Shape
