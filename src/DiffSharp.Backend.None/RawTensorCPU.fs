@@ -205,7 +205,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let values = [|1.f|]
         RawTensorFloat32CPU(values, [||])
     
-    static member Zeros(shape:int[]) =
+    static member Zeros(shape:int[]) : RawTensorFloat32CPU =
         let values = Array.create (shapeLength shape) 0.f
         RawTensorFloat32CPU(values, shape)
 
