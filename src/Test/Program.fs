@@ -59,52 +59,95 @@ let main _argv =
     // let t2 = Tensor.RandomNormal([|2; 4; 3|])
     // let t3 = Tensor.Conv1D(t1, t2)
 
-    let t1 = Tensor.Create([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
-                             [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];
-                             [0.3373; 0.0863; 0.8137; 0.2649; 0.7125];
-                             [0.7144; 0.1020; 0.0437; 0.5316; 0.7366]];
+    let fwdx = Tensor.Create([[[  0.1264;   5.3183;   6.6905; -10.6416];
+                             [ 13.8060;   4.5253;   2.8568;  -3.2037];
+                             [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
 
-                            [[0.9871; 0.7569; 0.4329; 0.1443; 0.1515];
-                             [0.5950; 0.7549; 0.8619; 0.0196; 0.8741];
-                             [0.4595; 0.7844; 0.3580; 0.6469; 0.7782];
-                             [0.0130; 0.8869; 0.8532; 0.2119; 0.8120]];
+                            [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
+                             [  4.2547;   2.6049;  -9.8226;  -5.4543];
+                             [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
+    let fwdx = fwdx.ForwardDiff(Tensor.Create([[[-4.3197; -6.5898; -6.2003;  2.1058];
+                             [ 7.0684; -3.7964;  4.4218;  3.9533];
+                             [-7.1559; -7.6799; -9.5234; -3.9351]];
 
-                            [[0.5163; 0.5590; 0.5155; 0.1905; 0.4255];
-                             [0.0823; 0.7887; 0.8918; 0.9243; 0.1068];
-                             [0.0337; 0.2771; 0.9744; 0.0459; 0.4082];
-                             [0.9154; 0.2569; 0.9235; 0.9234; 0.3148]]])
-    let t2 = Tensor.Create([[[0.4941; 0.8710; 0.0606];
-                             [0.2831; 0.7930; 0.5602];
-                             [0.0024; 0.1236; 0.4394];
-                             [0.9086; 0.1277; 0.2450]];
+                            [[-0.2089; -7.8695;  6.5383;  5.1090];
+                             [-3.8272;  7.6264;  6.8205;  5.7346];
+                             [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
 
-                            [[0.5196; 0.1349; 0.0282];
-                             [0.1749; 0.6234; 0.5502];
-                             [0.7678; 0.0733; 0.3396];
-                             [0.6023; 0.6546; 0.3439]]])
+    let fwdy = Tensor.Create([[[ 4.0332e+00;  6.3036e+00];
+                             [ 8.4410e+00; -5.7543e+00];
+                             [-5.6937e-03; -6.7241e+00]];
 
-    let t3 = Tensor.Conv1D(t1, t2, padding=1, stride=2)
-    let _t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
-                                     [2.3239; 1.7078; 2.7450]];
-    
-                                    [[3.0127; 2.9651; 2.5219];
-                                     [3.0899; 3.1496; 2.4110]];
-    
-                                    [[3.4749; 2.9038; 2.7131];
-                                     [2.7692; 2.9444; 3.2554]]])
+                            [[-2.2619e+00;  1.2082e+00];
+                             [-1.2203e-01; -4.9373e+00];
+                             [-4.1881e+00; -3.4198e+00]]])
+    let fwdy = fwdy.ForwardDiff(Tensor.Create([[[-1.5107; -0.0610];
+                             [-0.2609;  5.9220];
+                             [ 2.8221; -5.7314]];
 
-    printfn "t1 %A" t1.Shape
-    printfn "t2 %A" t2.Shape
-    printfn "t3 %A" t3.Shape
+                            [[ 5.0064;  3.8631];
+                             [-4.6264; -7.9380];
+                             [ 8.2204; -1.9833]]]))
 
-    printfn "t1 %A" t1
-    printfn "t2 %A" t2
-    printfn "t3 %A" t3
+    let fwdz = Tensor.Conv1D(fwdx, fwdy, padding=0, stride=1)
+    let fwdzCorrect = Tensor.Create([[[ 143.3192;  108.0332;   11.2241];
+                                     [  -5.9062;    4.6091;    6.0273]];
+
+                                    [[  27.3032;   97.9855; -133.8372];
+                                     [  -1.4792;   45.6659;   29.8705]]])
+    let fwdzd = fwdz.Derivative
+    let fwdzdCorrect = Tensor.Create([[[ 111.2865;  -40.3692;   -1.8573];
+                                     [   -1.9154;   43.3470;   29.3626]];
+
+                                    [[ -168.6758;  -43.1578;   25.4470];
+                                     [ -149.6851;   23.1963;  -50.1932]]])
+
+    printfn "fwdx %A" fwdx.Shape
+    printfn "fwdy %A" fwdy.Shape
+    printfn "fwdz %A" fwdz.Shape
+
+    // printfn "t1 %A" t1
+    // printfn "t2 %A" t2
+    printfn "fwdz %A" fwdz
+    printfn "fwdzCorrect %A" fwdzCorrect
+
+    printfn "fwdzd %A" fwdzd
+    printfn "fwdzdCorrect %A" fwdzdCorrect
+
     // printfn "t3Correct %A" t3Correct
 
     // let a = 7
     // let b = 2
     // let c = (float a) / (float b) |> ceil |> int
     // printfn "%A" c
+
+    let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
+        if coordinates.Length <> shape.Length then invalidOp <| sprintf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
+        let result = Array.copy coordinates
+        for d=0 to coordinates.Length-1 do
+            if mirrorDims |> Array.contains d then
+                result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
+        result
+
+    let a = Tensor.Create([[0; 1]; [2; 3]])
+    printfn "a %A" a
+    let b = a.Flip([|1|])
+    printfn "b %A" b
+    let c = b.Flip([|1|])
+    printfn "c %A" c
+
+    // let duplicates l =
+    //    l |> List.ofSeq
+    //    |> List.groupBy id
+    //    |> List.choose ( function
+    //           | _, x::_::_ -> Some x
+    //           | _ -> None )
+
+    // let hasDuplicates l =
+    //     (duplicates l) |> List.isEmpty |> not
+
+    // let a = [|1; 2; 3; 0|]
+    // printfn "%A" (duplicates a)        
+    // printfn "%A" (hasDuplicates a)
 
     0 // return an integer exit code

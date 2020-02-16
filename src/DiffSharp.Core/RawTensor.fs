@@ -130,6 +130,7 @@ and [<AbstractClass>]
     abstract member CompareTo: RawTensor -> int
     abstract member Create : values: obj -> RawTensor
     abstract member CreateFromScalar : value: obj * shape: int[] -> RawTensor
+    abstract member Copy : unit -> RawTensor
     abstract member StackTs: seq<RawTensor> -> RawTensor
     abstract member UnstackT: unit -> seq<RawTensor>
     abstract member Zero : unit -> RawTensor
@@ -176,6 +177,7 @@ and [<AbstractClass>]
     abstract member TransposeT2: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
     abstract member UnsqueezeT: int -> RawTensor
+    abstract member FlipT: int[] -> RawTensor
     abstract member ViewT: int[] -> RawTensor
     abstract member SignT: unit -> RawTensor
     abstract member FloorT: unit -> RawTensor

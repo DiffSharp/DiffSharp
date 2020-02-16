@@ -95,6 +95,24 @@ let shapeComplete (nelement:int) (shape:int[]) =
         let missing = nelement / divisor
         [|for d in shape do if d = -1 then yield missing else yield d|]
 
+let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
+    if coordinates.Length <> shape.Length then invalidOp <| sprintf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
+    let result = Array.copy coordinates
+    for d=0 to coordinates.Length-1 do
+        if mirrorDims |> Array.contains d then
+            result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
+    result
+
+let duplicates l =
+   l |> List.ofSeq
+   |> List.groupBy id
+   |> List.choose ( function
+          | _, x::_::_ -> Some x
+          | _ -> None )
+
+let hasDuplicates l =
+    (duplicates l) |> List.isEmpty |> not
+        
 let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length

@@ -62,6 +62,8 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
         slice bounds [||]
         t.CreateShaped(array, shape)
 
+    override t.Copy() = t.CreateShaped(Array.copy t.Values, Array.copy t.Shape)
+
     override t.CreateFromScalar(value: obj, shape) =
         let value = value:?>'T
         match shape.Length with
@@ -144,6 +146,26 @@ type RawTensorCPU<'T>(values: 'T[], shape: int[], dtype: DType) =
     override t.UnsqueezeT(dim) =
         let result = Array.copy t.Values
         t.CreateShaped(result, shapeUnsqueeze dim t.Shape)
+
+    override t.FlipT(dims:int[]) =
+        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than the Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+        if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
+        match t.Dim with
+        | 0 -> t.Copy()
+        | _ ->
+            let result = t.Zeros(t.Shape) :?> RawTensorCPU<'T>
+            let rec flip (shape:int[]) externalCoords = 
+                let currentDim = t.Shape.Length - shape.Length
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[mirrorCoordinates globalCoords t.Shape dims] <- t.[globalCoords]
+                else
+                    for i=0 to shape.[0]-1 do
+                        flip shape.[1..] (Array.append externalCoords [|i|])
+            flip t.Shape [||]        
+            upcast result
 
     override t.ViewT(shape:int[]) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
