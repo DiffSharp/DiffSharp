@@ -9,45 +9,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     member __.Values = values
 
-    static member Zero() =
-        let values = [|0.f|]
-        RawTensorFloat32CPU(values, [||])
-
-    static member One() =
-        let values = [|1.f|]
-        RawTensorFloat32CPU(values, [||])
-    
-    static member Zeros(shape:int[]) =
-        let values = Array.create (shapeLength shape) 0.f
-        RawTensorFloat32CPU(values, shape)
-
-    static member Ones(shape:int[]) =
-        let values = Array.create (shapeLength shape) 1.f
-        RawTensorFloat32CPU(values, shape)
-
-    static member Random(shape:int[])  =
-        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform()))
-        RawTensorFloat32CPU(values, shape)
-
-    static member RandomNormal(shape:int[]) =
-        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal()))
-        RawTensorFloat32CPU(values, shape)
-
-    static member Create(value:obj) = 
-        let array, shape = value |> flatArrayAndShape<float32>
-        if notNull array then 
-            RawTensorFloat32CPU(array, shape)
-        else 
-            let array, shape = value |> flatArrayAndShape<double>
-            if notNull array then 
-                RawTensorFloat32CPU(array |> Array.map float32, shape)
-            else
-                let array, shape = value |> flatArrayAndShape<int>
-                if notNull array then 
-                    RawTensorFloat32CPU(array |> Array.map float32, shape)
-                else
-                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
-
     member private t.IndexToFlatIndex(index:int[]) =
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
@@ -235,6 +196,45 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
         let result = Array.copy t.Values
         upcast RawTensorFloat32CPU(result, shape)
+
+    static member Zero() =
+        let values = [|0.f|]
+        RawTensorFloat32CPU(values, [||])
+
+    static member One() =
+        let values = [|1.f|]
+        RawTensorFloat32CPU(values, [||])
+    
+    static member Zeros(shape:int[]) =
+        let values = Array.create (shapeLength shape) 0.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Ones(shape:int[]) =
+        let values = Array.create (shapeLength shape) 1.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Random(shape:int[])  =
+        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform()))
+        RawTensorFloat32CPU(values, shape)
+
+    static member RandomNormal(shape:int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal()))
+        RawTensorFloat32CPU(values, shape)
+
+    static member Create(value:obj) = 
+        let array, shape = value |> flatArrayAndShape<float32>
+        if notNull array then 
+            RawTensorFloat32CPU(array, shape)
+        else 
+            let array, shape = value |> flatArrayAndShape<double>
+            if notNull array then 
+                RawTensorFloat32CPU(array |> Array.map float32, shape)
+            else
+                let array, shape = value |> flatArrayAndShape<int>
+                if notNull array then 
+                    RawTensorFloat32CPU(array |> Array.map float32, shape)
+                else
+                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
