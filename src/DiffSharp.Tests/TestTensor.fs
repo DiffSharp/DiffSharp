@@ -806,9 +806,26 @@ type TestTensor () =
     member this.TestTensorUnsqueezeT () =
         let t1 = Tensor.Create([[1.;2.];[3.;4.]])
         let t1Unsqueeze = t1.Unsqueeze(1)
-        let t1UnsqueezeCorrect = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
+        let t1UnsqueezeCorrect = Tensor.Create([[[1.;2.]]; [[3.;4.]]])
 
         Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
+
+    [<Test>]
+    member this.TestTensorFlipT () =
+        let t1 = Tensor.Create([[1.;2.];[3.;4.]])
+        let t2 = t1.Flip([|0|])
+        let t2Correct = Tensor.Create([[3.;4.]; [1.;2.]])
+        let t3 = t1.Flip([|1|])
+        let t3Correct = Tensor.Create([[2.;1.]; [4.;3.]])
+        let t4 = t1.Flip([|0; 1|])
+        let t4Correct = Tensor.Create([[4.;3.]; [2.;1.]])
+        let t5 = t1.Flip([|0; 1|]).Flip([|0; 1|])
+        let t5Correct = Tensor.Create([[1.;2.]; [3.;4.]])
+
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t3, t3Correct)
+        Assert.AreEqual(t4, t4Correct)
+        Assert.AreEqual(t5, t5Correct)
 
     [<Test>]
     member this.TestTensorView () =

@@ -129,10 +129,12 @@ let main argv =
                 result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
         result
 
-    let a = RawTensorFloat32CPU.Create([[0; 1]; [2; 3]])
+    let a = Tensor.Create([[0; 1]; [2; 3]])
     printfn "a %A" a
-    let b = a.FlipT([|1; 0|])
+    let b = a.Flip([|1|])
     printfn "b %A" b
+    let c = b.Flip([|1|])
+    printfn "c %A" c
 
     // let duplicates l =
     //    l |> List.ofSeq

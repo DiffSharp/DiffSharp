@@ -420,8 +420,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
-        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims, list of dimension indices to flip, of length less than the Tensor's dimensions, received %A, %A" dims.Length t.Dim
-        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims without repetition, received %A" dims
+        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than the Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+        if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
         match t.Dim with
         | 0 -> t.Copy()
         | _ ->

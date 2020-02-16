@@ -549,6 +549,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
 
+    static member Flip (a:Tensor, dims:int[]) =
+        let inline fRaw(a:RawTensor) = a.FlipT(dims)
+        let inline fTensor(a) = Tensor.Flip(a, dims)
+        let inline dfTensorFwd(cp,ap,ad) = Tensor.Flip(ad, dims)
+        let inline dfTensorRev(a) = FlipT(a, dims)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    member t.Flip(dims) = Tensor.Flip(t, dims)
+
     static member Repeat (a:Tensor, dim:int, times:int) =
         if a.Shape.[dim] <> 1 then invalidOp <| sprintf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.Shape dim
         let newShape = a.Shape |> Array.copy
@@ -855,6 +863,7 @@ type Tensor =
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
+                        | FlipT(a,_) -> reset (a::tt)
                         | ViewT(a,_) -> reset (a::tt)
                         | SliceT(a,_) -> reset (a::tt)
                         | AddTTSlice(a,_,b) -> reset (a::b::tt)
@@ -957,6 +966,7 @@ type Tensor =
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
+                        | FlipT(a, dims) -> push ((t.Derivative.Flip(dims), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
@@ -1058,6 +1068,7 @@ and TensorOp =
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor
+    | FlipT of Tensor * int[]
     | ViewT of Tensor * int[]
     | SignT of Tensor
     | FloorT of Tensor
