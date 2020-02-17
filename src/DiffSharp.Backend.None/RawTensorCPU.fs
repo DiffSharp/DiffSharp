@@ -60,7 +60,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.CompareTo(t2) =
         compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
     
-    override t.Copy() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
+    override t.Clone() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
     override t.CreateFromScalar(value, shape) =
         let value = value:?>float32
         match shape.Length with
@@ -155,8 +155,8 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let n = t.Shape.[0]
         let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
         let unstackedLength = shapeLength unstackedShape
-        Seq.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Seq.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
+        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
 
     override t.TransposeT2() =
         if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
@@ -177,11 +177,10 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
         if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
         match t.Dim with
-        | 0 -> t.Copy()
+        | 0 -> t.Clone()
         | _ ->
             let result = RawTensorFloat32CPU.Zeros(t.Shape)
             let rec flip (shape:int[]) externalCoords = 
-                let currentDim = t.Shape.Length - shape.Length
                 if shape.Length = 1 then
                     for i=0 to shape.[0]-1 do
                         let globalCoords = Array.append externalCoords [|i|]
@@ -384,9 +383,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU.Create(result)
     
     override t1.Conv1D(t2, stride, padding) =
-        // t1: input, NxCxI (batchSize x inputChannels, inputLength)
-        // t2: filters, KxCxF (outputChannels x inputChannels, kernelLength)
-        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels, inputLength) and filters: KxCxF (outputChannels x inputChannels, kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        // t1: input, NxCxI (batchSize x inputChannels x inputLength)
+        // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels x inputLength) and filters: KxCxF (outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1 =
             if padding = 0 then
                 t1
