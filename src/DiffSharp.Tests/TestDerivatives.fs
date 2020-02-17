@@ -29,11 +29,11 @@ type TestDerivatives () =
         let revyd = revy.Derivative
         let revydCorrect = Tensor.Create([5.; 5.; 5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
-        Assert.AreEqual(revyd, revydCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+        Assert.AreEqual(revydCorrect, revyd)
 
     [<Test>]
     member this.TestDerivativeAddT2T1 () =
@@ -54,11 +54,11 @@ type TestDerivatives () =
         let revyd = revy.Derivative
         let revydCorrect = Tensor.Create([6.; 8.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
-        Assert.AreEqual(revyd, revydCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+        Assert.AreEqual(revydCorrect, revyd)
 
     // TODO: add test for AddTTConst
     // TODO: add test for AddTT0
@@ -86,11 +86,11 @@ type TestDerivatives () =
         let revyd = revy.Derivative
         let revydCorrect = Tensor.Create([-5.; -5.; -5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
-        Assert.AreEqual(revyd, revydCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+        Assert.AreEqual(revydCorrect, revyd)
 
     // TODO: add test for SubTTConst
     // TODO: add test for SubTConstT
@@ -120,11 +120,11 @@ type TestDerivatives () =
         let revyd = revy.Derivative
         let revydCorrect = Tensor.Create([5.; 10.; 15.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
-        Assert.AreEqual(revyd, revydCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+        Assert.AreEqual(revydCorrect, revyd)
 
     // TODO: add test for MulTTConst
     // TODO: add test for MulTT0
@@ -520,14 +520,12 @@ type TestDerivatives () =
         let revxdc = revxc.Derivative
         let revxdcCorrect = Tensor.Create([50.; 60.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxda, revxdaCorrect)
-        Assert.AreEqual(revxdb, revxdbCorrect)
-        Assert.AreEqual(revxdc, revxdcCorrect)
-
-    // TODO: add test for UnstackT
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdaCorrect, revxda)
+        Assert.AreEqual(revxdbCorrect, revxdb)
+        Assert.AreEqual(revxdcCorrect, revxdc)
 
     [<Test>]
     member this.TestDerivativeNeg () =
@@ -544,10 +542,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([-5.; -5.; -5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeSum () =
@@ -564,10 +562,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([5.; 5.; 5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeSumT2Dim0 () =
@@ -584,10 +582,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[5.; 6.]; [5.; 6.]])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)        
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeTransposeT2 () =
@@ -604,10 +602,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[5.; 2.; 3.]; [5.; 5.; 7.]])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeSignT () =
@@ -624,10 +622,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([0.; 0.; 0.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeFloorT () =
@@ -704,10 +702,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([-5.; 0.; 5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeReluT () =
@@ -724,10 +722,10 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([0.; 0.; 0.; 5.; -5.])
 
-        Assert.AreEqual(fwdz, fwdzCorrect)
-        Assert.AreEqual(fwdzd, fwdzdCorrect)
-        Assert.AreEqual(revz, revzCorrect)
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeLeakyRelu () =
@@ -1135,7 +1133,7 @@ type TestDerivatives () =
         Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
         Assert.True(revza.ApproximatelyEqual(revzaCorrect))
         Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
-        Assert.AreEqual(revxd, revxdCorrect)
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
 
     [<Test>]
     member this.TestDerivativeSliceT () =
@@ -1265,6 +1263,46 @@ type TestDerivatives () =
         revz.Reverse(Tensor.Create([[40.; 30.]; [20.;10.]]))
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.]])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeDilateT () =
+        let fwdx = Tensor.Create([[1.;2.];[3.;4.]]).ForwardDiff(Tensor.Create([[10.;20.];[30.;40.]]))
+        let fwdz = fwdx.Dilate([|2; 2|])
+        let fwdzCorrect =  Tensor.Create([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect =  Tensor.Create([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
+
+        let revx = Tensor.Create([[1.;2.];[3.;4.]]).ReverseDiff()
+        let revz = revx.Dilate([|2; 2|])
+        let revzCorrect =  Tensor.Create([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
+        revz.Reverse(Tensor.Create([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.]])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeUndilateT () =
+        let fwdx = Tensor.Create([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).ForwardDiff(Tensor.Create([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
+        let fwdz = fwdx.Undilate([|2; 2|])
+        let fwdzCorrect =  Tensor.Create([[1.;2.];[3.;4.]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect =  Tensor.Create([[10.;20.];[30.;40.]])
+
+        let revx = Tensor.Create([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).ReverseDiff()
+        let revz = revx.Undilate([|2; 2|])
+        let revzCorrect =  Tensor.Create([[1.;2.];[3.;4.]])
+        revz.Reverse(Tensor.Create([[10.;20.];[30.;40.]]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
 
         Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
         Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
