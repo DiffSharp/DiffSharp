@@ -177,11 +177,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override __.StackTs(tensors) =
-        let tensors = tensors |> Seq.toList
-        let values, shapes = tensors |> List.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> List.unzip
+    override __.StackTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
         if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
-        let n = tensors |> List.length
+        if dim <> 0 then invalidArg "dim" "non=zero dim NYI"
+        let n = tensors |> Array.length
         let m = shapeLength shapes.[0]
         let result = Array.create (n * m) 0.f
         for i=0 to n-1 do
@@ -189,13 +189,20 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 result.[i*m+j] <-values.[i].[j]
         upcast RawTensorFloat32CPU(result, Array.append [|n|] shapes.[0])
 
-    override t.UnstackT() =
+    override t.UnstackT(dim) =
         if t.Dim < 1 then invalidOp "Cannot unstack scalar Tensor (dim < 1)"
+        if dim <> 0 then invalidArg "dim" "non=zero dim NYI"
         let n = t.Shape.[0]
         let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
         let unstackedLength = shapeLength unstackedShape
-        Seq.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Seq.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
+        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+
+    override __.ConcatTs(tensors, dim) =
+        failwith "nyi"
+
+    override t.Split(sizes, dim) =
+        failwith "nyi"
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
