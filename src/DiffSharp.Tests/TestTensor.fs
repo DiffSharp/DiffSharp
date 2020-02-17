@@ -42,23 +42,23 @@ type TestTensor () =
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
 
-        Assert.AreEqual(t0Shape, t0ShapeCorrect)
-        Assert.AreEqual(t1Shape, t1ShapeCorrect)
-        Assert.AreEqual(t2Shape, t2ShapeCorrect)
-        Assert.AreEqual(t3Shape, t3ShapeCorrect)
-        Assert.AreEqual(t4Shape, t4ShapeCorrect)
-        Assert.AreEqual(t0Dim, t0DimCorrect)
-        Assert.AreEqual(t1Dim, t1DimCorrect)
-        Assert.AreEqual(t2Dim, t2DimCorrect)
-        Assert.AreEqual(t3Dim, t3DimCorrect)
-        Assert.AreEqual(t4Dim, t4DimCorrect)
+        Assert.AreEqual(t0ShapeCorrect, t0Shape)
+        Assert.AreEqual(t1ShapeCorrect, t1Shape)
+        Assert.AreEqual(t2ShapeCorrect, t2Shape)
+        Assert.AreEqual(t3ShapeCorrect, t3Shape)
+        Assert.AreEqual(t4ShapeCorrect, t4Shape)
+        Assert.AreEqual(t0DimCorrect, t0Dim)
+        Assert.AreEqual(t1DimCorrect, t1Dim)
+        Assert.AreEqual(t2DimCorrect, t2Dim)
+        Assert.AreEqual(t3DimCorrect, t3Dim)
+        Assert.AreEqual(t4DimCorrect, t4Dim)
 
     [<Test>]
     member this.TestTensorToArray () =
         let a = array2D [[1.; 2.]; [3.; 4.]]
         let t = Tensor.Create(a)
         let v = t.ToArray()
-        Assert.AreEqual(a, v)
+        Assert.AreEqual(v, a)
 
     [<Test>]
     member this.TestTensorToString () =
@@ -77,11 +77,11 @@ type TestTensor () =
         let t2StringCorrect = "Tensor [[[2.0f; 2.0f]]]"
         let t3StringCorrect = "Tensor [[1.0f; 2.0f]; [3.0f; 4.0f]]"
         let t4StringCorrect = "Tensor [[[[1.0f]]]]"
-        Assert.AreEqual(t0String, t0StringCorrect)
-        Assert.AreEqual(t1String, t1StringCorrect)
-        Assert.AreEqual(t2String, t2StringCorrect)
-        Assert.AreEqual(t3String, t3StringCorrect)
-        Assert.AreEqual(t4String, t4StringCorrect)
+        Assert.AreEqual(t0StringCorrect, t0String)
+        Assert.AreEqual(t1StringCorrect, t1String)
+        Assert.AreEqual(t2StringCorrect, t2String)
+        Assert.AreEqual(t3StringCorrect, t3String)
+        Assert.AreEqual(t4StringCorrect, t4String)
 
     [<Test>]
     member this.TestTensorCompare () =
@@ -95,9 +95,9 @@ type TestTensor () =
         let t2t3Equal = t2 = t3
         let t2t3EqualCorrect = true
 
-        Assert.AreEqual(t1t2Less, t1t2LessCorrect)
-        Assert.AreEqual(t1t2Equal, t1t2EqualCorrect)
-        Assert.AreEqual(t2t3Equal, t2t3EqualCorrect)
+        Assert.AreEqual(t1t2LessCorrect, t1t2Less)
+        Assert.AreEqual(t1t2EqualCorrect, t1t2Equal)
+        Assert.AreEqual(t2t3EqualCorrect, t2t3Equal)
 
     [<Test>]
     member this.TestTensorLtTT () =
@@ -106,7 +106,7 @@ type TestTensor () =
         let t1t2Lt = t1.Lt(t2)
         let t1t2LtCorrect = Tensor.Create([0.; 1.; 1.; 0.])
 
-        Assert.AreEqual(t1t2Lt, t1t2LtCorrect)
+        Assert.AreEqual(t1t2LtCorrect, t1t2Lt)
 
     [<Test>]
     member this.TestTensorLeTT () =
@@ -115,7 +115,7 @@ type TestTensor () =
         let t1t2Le = t1.Le(t2)
         let t1t2LeCorrect = Tensor.Create([1.; 1.; 1.; 0.])
 
-        Assert.AreEqual(t1t2Le, t1t2LeCorrect)
+        Assert.AreEqual(t1t2LeCorrect, t1t2Le)
 
     [<Test>]
     member this.TestTensorGtTT () =
@@ -124,7 +124,7 @@ type TestTensor () =
         let t1t2Gt = t1.Gt(t2)
         let t1t2GtCorrect = Tensor.Create([0.; 0.; 0.; 1.])
 
-        Assert.AreEqual(t1t2Gt, t1t2GtCorrect)
+        Assert.AreEqual(t1t2GtCorrect, t1t2Gt)
 
     [<Test>]
     member this.TestTensorGeTT () =
@@ -133,7 +133,7 @@ type TestTensor () =
         let t1t2Ge = t1.Ge(t2)
         let t1t2GeCorrect = Tensor.Create([1.; 0.; 0.; 1.])
 
-        Assert.AreEqual(t1t2Ge, t1t2GeCorrect)
+        Assert.AreEqual(t1t2GeCorrect, t1t2Ge)
 
     [<Test>]
     member this.TestTensorAddTT () =
@@ -152,11 +152,11 @@ type TestTensor () =
         let t5 = Tensor.Create([1.; 2.]) + 5
         let t5Correct = Tensor.Create([6.; 7.])
 
-        Assert.AreEqual(t1, t1Correct)
-        Assert.AreEqual(t2, t2Correct)
-        Assert.AreEqual(t3, t3Correct)
-        Assert.AreEqual(t4, t4Correct)
-        Assert.AreEqual(t5, t5Correct)
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
+        Assert.AreEqual(t4Correct, t4)
+        Assert.AreEqual(t5Correct, t5)
 
     [<Test>]
     member this.TestTensorStackTs () =
@@ -172,8 +172,8 @@ type TestTensor () =
         let t1 = Tensor.Stack([t1a;t1b;t1c])
         let t1Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
 
-        Assert.AreEqual(t0, t0Correct)
-        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t0Correct, t0)
+        Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorUnstackT () =
@@ -189,15 +189,15 @@ type TestTensor () =
         let t1Correct = [t1a;t1b;t1c]
         let t1 = Tensor.Stack(t1Correct).Unstack()
 
-        Assert.AreEqual(t0, t0Correct)
-        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t0Correct, t0)
+        Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorAddT2T1 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
         let t1Correct = Tensor.Create([[6.; 8.]; [8.; 10.]])
 
-        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorSubTT () =
@@ -213,10 +213,10 @@ type TestTensor () =
         let t4 = 5. - Tensor.Create([1.; 2.])
         let t4Correct = Tensor.Create([4.; 3.])
 
-        Assert.AreEqual(t1, t1Correct)
-        Assert.AreEqual(t2, t2Correct)
-        Assert.AreEqual(t3, t3Correct)
-        Assert.AreEqual(t4, t4Correct)
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
+        Assert.AreEqual(t4Correct, t4)
 
     [<Test>]
     member this.TestTensorMulTT () =
@@ -232,10 +232,10 @@ type TestTensor () =
         let t4 = 5. * Tensor.Create([1.; 2.])
         let t4Correct = Tensor.Create([5.; 10.])
 
-        Assert.AreEqual(t1, t1Correct)
-        Assert.AreEqual(t2, t2Correct)
-        Assert.AreEqual(t3, t3Correct)
-        Assert.AreEqual(t4, t4Correct)
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
+        Assert.AreEqual(t4Correct, t4)
 
     [<Test>]
     member this.TestTensorDivTT () =
@@ -267,9 +267,9 @@ type TestTensor () =
         let t3 = Tensor.Create(5.) ** Tensor.Create([1.; 2.])
         let t3Correct = Tensor.Create([5.; 25.])
 
-        Assert.AreEqual(t1, t1Correct)
-        Assert.AreEqual(t2, t2Correct)
-        Assert.AreEqual(t3, t3Correct)
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
 
     [<Test>]
     member this.TestTensorMatMulT2T2 () =
@@ -399,7 +399,7 @@ type TestTensor () =
         let t1Neg = -t1
         let t1NegCorrect = Tensor.Create([-1.; -2.; -3.])
 
-        Assert.AreEqual(t1Neg, t1NegCorrect)
+        Assert.AreEqual(t1NegCorrect, t1Neg)
 
     [<Test>]
     member this.TestTensorSumT () =
@@ -411,8 +411,8 @@ type TestTensor () =
         let t2Sum = t2.Sum()
         let t2SumCorrect = Tensor.Create(10.)
 
-        Assert.AreEqual(t1Sum, t1SumCorrect)
-        Assert.AreEqual(t2Sum, t2SumCorrect)
+        Assert.AreEqual(t1SumCorrect, t1Sum)
+        Assert.AreEqual(t2SumCorrect, t2Sum)
 
     [<Test>]
     member this.TestTensorSumT2Dim0 () =
@@ -420,7 +420,7 @@ type TestTensor () =
         let t1Sum = t1.SumT2Dim0()
         let t1SumCorrect = Tensor.Create([4.; 6.])
 
-        Assert.AreEqual(t1Sum, t1SumCorrect)
+        Assert.AreEqual(t1SumCorrect, t1Sum)
     
     [<Test>]
     member this.TestTensorSumDim () =
@@ -432,9 +432,9 @@ type TestTensor () =
         let tSum2 = t.Sum(2)
         let tSum2Correct = Tensor.Create([[10.0f; 26.0f; 42.0f]; [58.0f; 74.0f; 90.0f]])
 
-        Assert.AreEqual(tSum0, tSum0Correct)
-        Assert.AreEqual(tSum1, tSum1Correct)
-        Assert.AreEqual(tSum2, tSum2Correct)
+        Assert.AreEqual(tSum0Correct, tSum0)
+        Assert.AreEqual(tSum1Correct, tSum1)
+        Assert.AreEqual(tSum2Correct, tSum2)
     
     [<Test>]
     member this.TestTensorSumDimKeepDim () =
@@ -446,9 +446,9 @@ type TestTensor () =
         let tSum2 = t.Sum(2, keepDim=true)
         let tSum2Correct = Tensor.Create([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
 
-        Assert.AreEqual(tSum0, tSum0Correct)
-        Assert.AreEqual(tSum1, tSum1Correct)
-        Assert.AreEqual(tSum2, tSum2Correct)
+        Assert.AreEqual(tSum0Correct, tSum0)
+        Assert.AreEqual(tSum1Correct, tSum1)
+        Assert.AreEqual(tSum2Correct, tSum2)
 
     [<Test>]
     member this.TestTensorMean () =
@@ -456,7 +456,7 @@ type TestTensor () =
         let tMean = t.Mean()
         let tMeanCorrect = Tensor.Create(12.5)
 
-        Assert.AreEqual(tMean, tMeanCorrect)
+        Assert.AreEqual(tMeanCorrect, tMean)
 
     [<Test>]
     member this.TestTensorMeanDim () =
@@ -468,9 +468,9 @@ type TestTensor () =
         let tMean2 = t.Mean(2)
         let tMean2Correct = Tensor.Create([[2.5f; 6.5f; 10.5f]; [14.5f; 18.5f; 22.5f]])
 
-        Assert.AreEqual(tMean0, tMean0Correct)
-        Assert.AreEqual(tMean1, tMean1Correct)
-        Assert.AreEqual(tMean2, tMean2Correct)
+        Assert.AreEqual(tMean0Correct, tMean0)
+        Assert.AreEqual(tMean1Correct, tMean1)
+        Assert.AreEqual(tMean2Correct, tMean2)
 
 
     [<Test>]
@@ -521,8 +521,8 @@ type TestTensor () =
         let t2TransposeTranspose = t2.Transpose().Transpose()
         let t2TransposeTransposeCorrect = t2
 
-        Assert.AreEqual(t1Transpose, t1TransposeCorrect)
-        Assert.AreEqual(t2TransposeTranspose, t2TransposeTransposeCorrect)
+        Assert.AreEqual(t1TransposeCorrect, t1Transpose)
+        Assert.AreEqual(t2TransposeTransposeCorrect, t2TransposeTranspose)
 
     [<Test>]
     member this.TestTensorSignT () =
@@ -530,7 +530,7 @@ type TestTensor () =
         let t1Sign = t1.Sign()
         let t1SignCorrect = Tensor.Create([-1.; -1.; 0.; 1.])
 
-        Assert.AreEqual(t1Sign, t1SignCorrect)
+        Assert.AreEqual(t1SignCorrect, t1Sign)
 
     [<Test>]
     member this.TestTensorFloorT () =
@@ -562,7 +562,7 @@ type TestTensor () =
         let t1Abs = t1.Abs()
         let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
 
-        Assert.AreEqual(t1Abs, t1AbsCorrect)
+        Assert.AreEqual(t1AbsCorrect, t1Abs)
 
     [<Test>]
     member this.TestTensorReluT () =
@@ -570,7 +570,7 @@ type TestTensor () =
         let t1Relu = t1.Relu()
         let t1ReluCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
 
-        Assert.AreEqual(t1Relu, t1ReluCorrect)
+        Assert.AreEqual(t1ReluCorrect, t1Relu)
 
     [<Test>]
     member this.TestTensorLeakyRelu () =
@@ -578,7 +578,7 @@ type TestTensor () =
         let t1LeakyRelu = t1.LeakyRelu()
         let t1LeakyReluCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
 
-        Assert.AreEqual(t1LeakyRelu, t1LeakyReluCorrect)
+        Assert.AreEqual(t1LeakyReluCorrect, t1LeakyRelu)
 
     [<Test>]
     member this.TestTensorSigmoidT () =
@@ -750,33 +750,33 @@ type TestTensor () =
         let t3s13Correct = Tensor.Create([[1.;3.];[5.;7.]])
         let t3s14Correct = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
 
-        Assert.AreEqual(t1s1, t1s1Correct)
-        Assert.AreEqual(t1s2, t1s2Correct)
+        Assert.AreEqual(t1s1Correct, t1s1)
+        Assert.AreEqual(t1s2Correct, t1s2)
 
-        Assert.AreEqual(t2s1, t2s1Correct)
-        Assert.AreEqual(t2s2, t2s2Correct)
-        Assert.AreEqual(t2s3, t2s3Correct)
-        Assert.AreEqual(t2s4, t2s4Correct)
-        Assert.AreEqual(t2s5, t2s5Correct)
-        Assert.AreEqual(t2s6, t2s6Correct)
+        Assert.AreEqual(t2s1Correct, t2s1)
+        Assert.AreEqual(t2s2Correct, t2s2)
+        Assert.AreEqual(t2s3Correct, t2s3)
+        Assert.AreEqual(t2s4Correct, t2s4)
+        Assert.AreEqual(t2s5Correct, t2s5)
+        Assert.AreEqual(t2s6Correct, t2s6)
 
-        Assert.AreEqual(t2bs1, t2bs1Correct)
-        Assert.AreEqual(t2bs2, t2bs2Correct)
+        Assert.AreEqual(t2bs1Correct, t2bs1)
+        Assert.AreEqual(t2bs2Correct, t2bs2)
 
-        Assert.AreEqual(t3s1, t3s1Correct)
-        Assert.AreEqual(t3s2, t3s2Correct)
-        Assert.AreEqual(t3s3, t3s3Correct)
-        Assert.AreEqual(t3s4, t3s4Correct)
-        Assert.AreEqual(t3s5, t3s5Correct)
-        Assert.AreEqual(t3s6, t3s6Correct)
-        Assert.AreEqual(t3s7, t3s7Correct)
-        Assert.AreEqual(t3s8, t3s8Correct)
-        Assert.AreEqual(t3s9, t3s9Correct)
-        Assert.AreEqual(t3s10, t3s10Correct)
-        Assert.AreEqual(t3s11, t3s11Correct)
-        Assert.AreEqual(t3s12, t3s12Correct)
-        Assert.AreEqual(t3s13, t3s13Correct)
-        Assert.AreEqual(t3s14, t3s14Correct)
+        Assert.AreEqual(t3s1Correct, t3s1)
+        Assert.AreEqual(t3s2Correct, t3s2)
+        Assert.AreEqual(t3s3Correct, t3s3)
+        Assert.AreEqual(t3s4Correct, t3s4)
+        Assert.AreEqual(t3s5Correct, t3s5)
+        Assert.AreEqual(t3s6Correct, t3s6)
+        Assert.AreEqual(t3s7Correct, t3s7)
+        Assert.AreEqual(t3s8Correct, t3s8)
+        Assert.AreEqual(t3s9Correct, t3s9)
+        Assert.AreEqual(t3s10Correct, t3s10)
+        Assert.AreEqual(t3s11Correct, t3s11)
+        Assert.AreEqual(t3s12Correct, t3s12)
+        Assert.AreEqual(t3s13Correct, t3s13)
+        Assert.AreEqual(t3s14Correct, t3s14)
 
     [<Test>]
     member this.TestTensorAddTTSlice () =
@@ -822,10 +822,10 @@ type TestTensor () =
         let t5 = t1.Flip([|0; 1|]).Flip([|0; 1|])
         let t5Correct = Tensor.Create([[1.;2.]; [3.;4.]])
 
-        Assert.AreEqual(t2, t2Correct)
-        Assert.AreEqual(t3, t3Correct)
-        Assert.AreEqual(t4, t4Correct)
-        Assert.AreEqual(t5, t5Correct)
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
+        Assert.AreEqual(t4Correct, t4)
+        Assert.AreEqual(t5Correct, t5)
 
     [<Test>]
     member this.TestTensorView () =
@@ -839,10 +839,10 @@ type TestTensor () =
         let t4Shape = t.View([2;-1;10]).Shape
         let t4ShapeCorrect = [|2;5;10|]
         
-        Assert.AreEqual(t1Shape, t1ShapeCorrect)
-        Assert.AreEqual(t2Shape, t2ShapeCorrect)
-        Assert.AreEqual(t3Shape, t3ShapeCorrect)
-        Assert.AreEqual(t4Shape, t4ShapeCorrect)
+        Assert.AreEqual(t1ShapeCorrect, t1Shape)
+        Assert.AreEqual(t2ShapeCorrect, t2Shape)
+        Assert.AreEqual(t3ShapeCorrect, t3Shape)
+        Assert.AreEqual(t4ShapeCorrect, t4Shape)
 
 
     [<Test>]
@@ -903,10 +903,10 @@ type TestTensor () =
         let t4Max = t4.Max()
         let t4MaxCorrect = Tensor.Create(9.7456)
 
-        Assert.AreEqual(t1Max, t1MaxCorrect)
-        Assert.AreEqual(t2Max, t2MaxCorrect)
-        Assert.AreEqual(t3Max, t3MaxCorrect)
-        Assert.AreEqual(t4Max, t4MaxCorrect)
+        Assert.AreEqual(t1MaxCorrect, t1Max)
+        Assert.AreEqual(t2MaxCorrect, t2Max)
+        Assert.AreEqual(t3MaxCorrect, t3Max)
+        Assert.AreEqual(t4MaxCorrect, t4Max)
 
 
     [<Test>]
@@ -967,10 +967,10 @@ type TestTensor () =
         let t4Min = t4.Min()
         let t4MinCorrect = Tensor.Create(0.5370)
 
-        Assert.AreEqual(t1Min, t1MinCorrect)
-        Assert.AreEqual(t2Min, t2MinCorrect)
-        Assert.AreEqual(t3Min, t3MinCorrect)
-        Assert.AreEqual(t4Min, t4MinCorrect)
+        Assert.AreEqual(t1MinCorrect, t1Min)
+        Assert.AreEqual(t2MinCorrect, t2Min)
+        Assert.AreEqual(t3MinCorrect, t3Min)
+        Assert.AreEqual(t4MinCorrect, t4Min)
 
     [<Test>]
     member this.TestTensorMaxBinary () =
@@ -1103,7 +1103,7 @@ type TestTensor () =
         let t3Depth = t3.Depth
         let t3DepthCorrect = 3
 
-        Assert.AreEqual(t0Depth, t0DepthCorrect)
-        Assert.AreEqual(t1Depth, t1DepthCorrect)
-        Assert.AreEqual(t2Depth, t2DepthCorrect)
-        Assert.AreEqual(t3Depth, t3DepthCorrect)
+        Assert.AreEqual(t0DepthCorrect, t0Depth)
+        Assert.AreEqual(t1DepthCorrect, t1Depth)
+        Assert.AreEqual(t2DepthCorrect, t2Depth)
+        Assert.AreEqual(t3DepthCorrect, t3Depth)
