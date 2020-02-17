@@ -989,11 +989,11 @@ type Tensor =
                             for k=0 to outputChannels-1 do
                                 let b = bFlipped.[k].Unsqueeze(1)
                                 let dBounds = array2D [[0; batchSize-1]; [k; k]; [0; tderivative.Shape.[2]-1]]
-                                let mutable d = tderivative.GetSlice(dBounds).Unsqueeze(1)
+                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
                                 let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
                                 if padding > 0 then
                                     let cBounds = array2D [[0; batchSize-1]; [0; inputChannels-1]; [padding; c.Shape.[2]-1-padding]]
-                                    c <- c.GetSlice(cBounds)
+                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
                                 aderivative <- aderivative + c
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)

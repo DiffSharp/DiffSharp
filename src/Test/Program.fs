@@ -115,43 +115,33 @@ let main argv =
     // printfn "fwdzdCorrect %A" fwdzdCorrect
 
 
-    // let revx = Tensor.Create([[[ 2.0028; -8.1570;  8.1037; -6.6905];
-    //                          [ 3.6960; -3.8631; -7.0608; -1.4756];
-    //                          [ 0.8208; -1.9973;  1.9964; -0.8280]];
+    let revx = Tensor.Create([[[-3.4155;  5.2289;  0.0303; -1.6122];
+                             [ 1.4227;  7.3972;  4.1210;  6.4673];
+                             [ 3.3055;  1.5121; -8.1204; -8.6264]]]).ReverseDiff()
 
-    //                         [[-0.9567;  0.2317; -1.7773; -1.1823];
-    //                          [ 5.1062;  0.2814;  6.3003;  1.3638];
-    //                          [-4.9674;  3.9325;  3.8709; -0.6739]]]).ReverseDiff()
+    let revy = Tensor.Create([[[  4.4970;  -8.1408];
+                             [  5.8271;   7.3181];
+                             [ -4.9394;  -6.2304]];
 
-    // let revy = Tensor.Create([[[-1.7830; -1.9625];
-    //                          [-5.0868;  3.1041];
-    //                          [ 7.7795;  1.4873]];
+                            [[  2.2818;   5.5851];
+                             [-10.1460;  -1.2779];
+                             [ -5.1429;  -1.6317]]]).ReverseDiff()
 
-    //                         [[-1.3655;  1.6386];
-    //                          [-6.1317;  3.5536];
-    //                          [ 5.2382;  9.9893]]]).ReverseDiff()
+    printfn "revx %A" revx.Shape
+    printfn "revy %A" revy.Shape
 
-    // let revz = Tensor.Conv1D(revx, revy, padding=1, stride=1)
-    // revz.Reverse(Tensor.Create([[[-3.7189; -0.4834;  1.2958; -6.2053;  3.5560];
-    //                              [ 5.8734;  0.3692; -6.7996;  5.7922;  3.0245]];
+    let revz = Tensor.Conv1D(revx, revy, padding=0, stride=2)
+    printfn "revz %A" revz.Shape
 
-    //                             [[-1.5334;  1.5764; -5.1078;  3.8610;  3.4756];
-    //                              [-7.4071;  6.3234; -3.9537;  5.0018;  3.8255]]]))
-    // let revzCorrect = Tensor.Create([[[ -1.3005; -43.8321;  62.9678];
-    //                                  [-26.6931; -22.6506; -69.1848]];
+    revz.Reverse(Tensor.Create([[[-5.1654;  0.8065];
+                                 [-2.7493; -4.2543]]]))
 
-    //                                 [[ 55.3161;  -3.6187;   6.3480];
-    //                                  [ 37.6982;  98.2438;  64.8643]]])
-
-    // printfn "revx %A" revx.Shape
-    // printfn "revy %A" revy.Shape
-    // printfn "revz %A" revz.Shape
 
     // // printfn "revx %A" revx
     // // printfn "revy %A" revy
-    // printfn "revz %A" revz.Primal
-    // printfn "revxd %A" revx.Derivative
-    // printfn "revyd %A" revy.Derivative
+    printfn "revz %A" revz.Primal
+    printfn "revxd %A" revx.Derivative
+    printfn "revyd %A" revy.Derivative
 
     // printfn "t3Correct %A" t3Correct
 
@@ -189,11 +179,11 @@ let main argv =
     // printfn "%A" (duplicates a)        
     // printfn "%A" (hasDuplicates a)
 
-    let a = RawTensorFloat32CPU.Random([|2;3|])
-    let b = a.DilateT([|2; 3|])
-    let c = b.UndilateT([|2; 3|])
-    printfn "a %A\n" a
-    printfn "b %A\n" b
-    printfn "c %A" c
+    // let a = RawTensorFloat32CPU.Random([|2;3|])
+    // let b = a.DilateT([|2; 3|])
+    // let c = b.UndilateT([|2; 3|])
+    // printfn "a %A\n" a
+    // printfn "b %A\n" b
+    // printfn "c %A" c
 
     0 // return an integer exit code
