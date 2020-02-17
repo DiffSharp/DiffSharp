@@ -180,23 +180,42 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override __.StackTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
         if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
-        if dim <> 0 then invalidArg "dim" "non=zero dim NYI"
+        let shape = shapes.[0]
         let n = tensors |> Array.length
-        let m = shapeLength shapes.[0]
-        let result = Array.create (n * m) 0.f
-        for i=0 to n-1 do
-            for j=0 to m-1 do
-                result.[i*m+j] <-values.[i].[j]
-        upcast RawTensorFloat32CPU(result, Array.append [|n|] shapes.[0])
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let m = m1 * m2
+        let result = Array.zeroCreate (n * m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            result.[i] <-values.[i2].[j2]
+
+        let outShape = [| yield! shape1; yield n; yield! shape2 |]
+        upcast RawTensorFloat32CPU(result, outShape)
 
     override t.UnstackT(dim) =
         if t.Dim < 1 then invalidOp "Cannot unstack scalar Tensor (dim < 1)"
-        if dim <> 0 then invalidArg "dim" "non=zero dim NYI"
-        let n = t.Shape.[0]
-        let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
-        let unstackedLength = shapeLength unstackedShape
-        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        let shape = t.Shape
+        let n = shape.[dim]
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let unstackedShape = Array.append shape1 shape2
+        let m = m1 * m2
+        let values = t.Values
+        let results = Array.init n (fun _ -> Array.zeroCreate m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            //printfn "i = %d, i2 = %d, j2 = %d, chunk = %d" i i2 j2 chunk
+            results.[i2].[j2] <- values.[i]
+        results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
 
     override __.ConcatTs(tensors, dim) =
         failwith "nyi"

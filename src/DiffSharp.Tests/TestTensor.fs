@@ -164,16 +164,38 @@ type TestTensor () =
         let t0b = Tensor.Create(3.)
         let t0c = Tensor.Create(5.)
         let t0 = Tensor.Stack([t0a;t0b;t0c])
+        let t0_dim0 = Tensor.Stack([t0a;t0b;t0c], dim=0)
         let t0Correct = Tensor.Create([1.;3.;5.])
 
         let t1a = Tensor.Create([1.; 2.])
         let t1b = Tensor.Create([3.; 4.])
         let t1c = Tensor.Create([5.; 6.])
         let t1 = Tensor.Stack([t1a;t1b;t1c])
-        let t1Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+        let t1_dim0 = Tensor.Stack([t1a;t1b;t1c], dim=0)
+        let t1_dim1 = Tensor.Stack([t1a;t1b;t1c], dim=1)
+        let t1Correct_dim0 = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+        let t1Correct_dim1 = Tensor.Create([[1.;3.;5.];[2.;4.;6.]])
+
+        let t2a = Tensor.Create([ [1.; 2.] ])
+        let t2b = Tensor.Create([ [3.; 4.] ])
+        let t2c = Tensor.Create([ [5.; 6.] ])
+        let t2 = Tensor.Stack([t2a;t2b;t2c])
+        let t2_dim0 = Tensor.Stack([t2a;t2b;t2c], dim=0)
+        let t2_dim1 = Tensor.Stack([t2a;t2b;t2c], dim=1)
+        let t2_dim2 = Tensor.Stack([t2a;t2b;t2c], dim=2)
+        let t2Correct_dim0 = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t2Correct_dim1 = Tensor.Create([[[1.;2.];[3.;4.];[5.;6.]]])
+        let t2Correct_dim2 = Tensor.Create([[[1.;3.;5.];[2.;4.;6.]]])
 
         Assert.AreEqual(t0, t0Correct)
-        Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t1, t1Correct_dim0)
+        Assert.AreEqual(t2, t2Correct_dim0)
+        Assert.AreEqual(t0_dim0, t0Correct)
+        Assert.AreEqual(t1_dim0, t1Correct_dim0)
+        Assert.AreEqual(t1_dim1, t1Correct_dim1)
+        Assert.AreEqual(t2_dim0, t2Correct_dim0)
+        Assert.AreEqual(t2_dim1, t2Correct_dim1)
+        Assert.AreEqual(t2_dim2, t2Correct_dim2)
 
     [<Test>]
     member this.TestTensorUnstackT () =
@@ -187,10 +209,28 @@ type TestTensor () =
         let t1b = Tensor.Create([3.; 4.])
         let t1c = Tensor.Create([5.; 6.])
         let t1Correct = [t1a;t1b;t1c]
+        let t1Correct_dim1 = [Tensor.Create [1.;3.;5.]; Tensor.Create [2.;4.;6.]]
         let t1 = Tensor.Stack(t1Correct).Unstack()
+        let t1_dim1 = Tensor.Stack(t1Correct).Unstack(dim=1)
+
+        // 3x1x2
+        let t2a = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t2 = t2a.Unstack()
+        let t2_dim1 = t2a.Unstack(dim=1)
+        let t2_dim2 = t2a.Unstack(dim=2)
+        // 3 of 1x2
+        let t2Correct = [Tensor.Create [[1.;2.]]; Tensor.Create [[3.;4.]]; Tensor.Create [[5.;6.]]]
+        // 1 of 3x2
+        let t2Correct_dim1 = [Tensor.Create [[1.;2.];[3.;4.];[5.;6.]]]
+        // 2 of 3x1
+        let t2Correct_dim2 = [Tensor.Create [[1.];[3.];[5.]]; Tensor.Create [[2.];[4.];[6.]]]
 
         Assert.AreEqual(t0, t0Correct)
         Assert.AreEqual(t1, t1Correct)
+        Assert.AreEqual(t1_dim1, t1Correct_dim1)
+        Assert.AreEqual(t2, t2Correct)
+        Assert.AreEqual(t2_dim1, t2Correct_dim1)
+        Assert.AreEqual(t2_dim2, t2Correct_dim2)
 
     [<Test>]
     member this.TestTensorAddT2T1 () =

@@ -1106,6 +1106,38 @@ type TestDerivatives () =
         Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
 
     [<Test>]
+    member this.TestDerivativeUnstackT_Dim1 () =
+        let fwdx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ForwardDiff(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
+        let fwdz = Tensor.Unstack(fwdx, dim=1) |> Seq.toArray
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzda = fwdza.Derivative
+        let fwdzdb = fwdzb.Derivative
+        let fwdzaCorrect = Tensor.Create([1.; 3.; 5.])
+        let fwdzbCorrect = Tensor.Create([2.; 4.; 6.])
+        let fwdzdaCorrect = Tensor.Create([10.; 30.; 50.])
+        let fwdzdbCorrect = Tensor.Create([20.; 40.; 60.])
+
+        let revx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ReverseDiff()
+        let revz = Tensor.Unstack(revx, dim=1) |> Seq.toArray
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzaCorrect = Tensor.Create([1.; 3.; 5.])
+        let revzbCorrect = Tensor.Create([2.; 4.; 6.])
+        revza.Reverse(Tensor.Create([10.; 30.; 50.]))
+        revzb.Reverse(Tensor.Create([20.; 40.; 60.]), zeroDerivatives=false)
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[10.;20.];[30.;40.];[50.;60.]])
+
+        Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
+        Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))
+        Assert.True(fwdzda.ApproximatelyEqual(fwdzdaCorrect))
+        Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
+        Assert.True(revza.ApproximatelyEqual(revzaCorrect))
+        Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
+        Assert.AreEqual(revxd, revxdCorrect)
+
+    [<Test>]
     member this.TestDerivativeSliceT () =
         let fwdx = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).ForwardDiff(Tensor.Create([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
         let fwdz = fwdx.[2..]
