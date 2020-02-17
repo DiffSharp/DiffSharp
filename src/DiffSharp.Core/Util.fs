@@ -103,6 +103,15 @@ let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
             result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
     result
 
+let dilatedShape (shape:int[]) (dilations:int[]) =
+    Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
+
+let undilatedShape (shape:int[]) (dilations:int[]) =
+    Array.map2 (fun n d -> (n + d - 1) / d) shape dilations
+
+let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
+    Array.map2 (*) coordinates dilations
+
 let duplicates l =
    l |> List.ofSeq
    |> List.groupBy id

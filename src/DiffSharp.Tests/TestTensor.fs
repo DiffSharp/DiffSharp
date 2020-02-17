@@ -828,6 +828,37 @@ type TestTensor () =
         Assert.AreEqual(t5Correct, t5)
 
     [<Test>]
+    member this.TestTensorDilateT () =
+        let t1 = Tensor.Create([[1.;2.]; [3.;4.]])
+        let t2 = t1.Dilate([|1; 2|])
+        let t2Correct = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
+        let t3 = t1.Dilate([|2; 2|])
+        let t3Correct = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t4 = Tensor.Create([1.;2.;3.;4.])
+        let t5 = t4.Dilate([|3|])
+        let t5Correct = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t3Correct, t3)
+        Assert.AreEqual(t5Correct, t5)
+
+    [<Test>]
+    member this.TestTensorUndilateT () =
+        let t1 = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
+        let t2 = t1.Undilate([|1; 2|])
+        let t2Correct = Tensor.Create([[1.;2.]; [3.;4.]])
+        let t3 = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t4 = t3.Undilate([|2; 2|])
+        let t4Correct = Tensor.Create([[1.;2.]; [3.;4.]])
+        let t5 = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+        let t6 = t5.Undilate([|3|])
+        let t6Correct = Tensor.Create([1.;2.;3.;4.])
+
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t4Correct, t4)
+        Assert.AreEqual(t6Correct, t6)
+
+    [<Test>]
     member this.TestTensorView () =
         let t = Tensor.Random([10;10])
         let t1Shape = t.View(-1).Shape
