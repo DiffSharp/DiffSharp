@@ -14,7 +14,6 @@ type TestDistributions () =
 
     [<Test>]
     member this.TestDistributionsNormal () =
-
         let meanCorrect = Tensor.Create(10.)
         let stddevCorrect = Tensor.Create(3.5)
         let d = Normal(meanCorrect, stddevCorrect)
@@ -36,7 +35,6 @@ type TestDistributions () =
 
     [<Test>]
     member this.TestDistributionsNormalBatched () =
-
         let meanCorrect = Tensor.Create([10.; 20.])
         let stddevCorrect = Tensor.Create([3.5; 1.2])
         let d = Normal(meanCorrect, stddevCorrect)
@@ -58,7 +56,6 @@ type TestDistributions () =
 
     [<Test>]
     member this.TestDistributionsUniform () =
-
         let d = Uniform(Tensor.Create(0.5), Tensor.Create(10.5))
         let batchShape = d.BatchShape
         let batchShapeCorrect = [||]
@@ -81,7 +78,6 @@ type TestDistributions () =
 
     [<Test>]
     member this.TestDistributionsUniformBatched () =
-
         let d = Uniform(Tensor.Create([0.5; 0.; -5.]), Tensor.Create([10.5; 1.; 5.]))
         let batchShape = d.BatchShape
         let batchShapeCorrect = [|3|]
