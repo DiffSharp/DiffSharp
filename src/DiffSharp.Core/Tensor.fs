@@ -175,7 +175,7 @@ type Tensor =
     static member Stack(tensors:seq<Tensor>) = 
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.map (fun t -> t.PrimalRaw)))
+        | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.toArray |> Array.map (fun t -> t.PrimalRaw)))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.Primal)
             let ad = tensors |> Seq.map (fun t -> t.Derivative)
@@ -186,9 +186,9 @@ type Tensor =
 
     static member Unstack (a:Tensor) =
         match a with
-        | Tensor(ap) -> ap.UnstackT() |> Seq.map Tensor
-        | TensorF(ap,ad,at) -> Seq.map2 (fun p d -> TensorF(p,d,at)) (ap.Unstack()) (ad.Unstack())
-        | TensorR(ap,_,_,_,at) -> Seq.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.Unstack())
+        | Tensor(ap) -> ap.UnstackT() |> Array.map Tensor
+        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.Unstack()) (ad.Unstack())
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.Unstack())
     member t.Unstack() = Tensor.Unstack(t)
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =

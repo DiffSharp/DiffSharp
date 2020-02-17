@@ -194,8 +194,8 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let n = t.Shape.[0]
         let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
         let unstackedLength = shapeLength unstackedShape
-        Seq.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Seq.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
+        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
