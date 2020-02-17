@@ -800,8 +800,7 @@ type Tensor =
     static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).Mean()
 
     static member Conv1D(a:Tensor, b:Tensor, ?stride:int, ?padding:int) =
-        // a: input
-        // b: filter
+        // a: input, b: filter
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
@@ -809,12 +808,10 @@ type Tensor =
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv1D(ad, bp, stride, padding) + Tensor.Conv1D(ap, bd, stride, padding)
         let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv1D(ad, b, stride, padding)
         let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv1D(a, bd, stride, padding)
-        // TODO: implement the derivatives (the following are placeholders from Tensor.MatMul)
         let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
         let inline dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-
 
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
@@ -981,9 +978,44 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
-                        | Conv1DTT(a,b,_,_) -> failwith "Not implemented"
+                        | Conv1DTT(a,b,stride,padding) -> 
+                            // TODO: implement stride
+                            if stride <> 1 then invalidOp <| sprintf "stride=%A currently not supported in reverse mode." stride
+                            // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                            // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                            // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                            let batchSize = t.Shape.[0]
+                            let outputChannels = t.Shape.[1]
+                            let outputLength = t.Shape.[2]
+                            let inputChannels = a.Shape.[1]
+                            // let inputLength = a.Shape.[2]
+                            let kernelLength = b.Shape.[2]
+                            let bFlipped = b.Primal.Flip([|2|])
+                            // propagate to a
+                            let mutable aderivative = Tensor.ZerosLike(a)
+                            for k=0 to outputChannels-1 do
+                                let b = bFlipped.[k].Unsqueeze(1)  // 
+                                let dBounds = array2D [[0; batchSize-1]; [k; k]; [0; outputLength-1]]
+                                let d = t.Derivative.GetSlice(dBounds).Unsqueeze(1)
+                                let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                if padding > 0 then
+                                    let cBounds = array2D [[0; batchSize-1]; [0; inputChannels-1]; [padding; c.Shape.[2]-1-padding]]
+                                    // printfn "padding %A inputlength %A" padding inputLength
+                                    c <- c.GetSlice(cBounds)
+                                    // printfn "c.Shape %A" c.Shape
+                                aderivative <- aderivative + c
+                            // propagate to b
+                            let mutable bderivative = Tensor.ZerosLike(b)
+                            for n=0 to batchSize-1 do
+                                let aa = a.Primal.[n].Unsqueeze(1) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let d = t.Derivative.[n]
+                                for k=0 to outputChannels-1 do
+                                    let dd = d.[k].Unsqueeze(0).Unsqueeze(0)
+                                    let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                            push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"           
+                        | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)

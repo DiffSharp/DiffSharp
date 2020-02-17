@@ -127,7 +127,7 @@ and [<AbstractClass>]
     abstract member CompareTo: RawTensor -> int
     abstract member Create : obj -> RawTensor
     abstract member CreateFromScalar : obj * int[] -> RawTensor
-    abstract member Copy : unit -> RawTensor
+    abstract member Clone : unit -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
     abstract member UnstackT: dim:int -> RawTensor[]
     abstract member ConcatTs: RawTensor[] * dim: int -> RawTensor

@@ -77,7 +77,7 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
             let i = value.ToValue() |> toInt
             d.Probs.[i] |> Tensor.Log
         else
-            let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
+            // let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
             Seq.init d.BatchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.Stack |> Tensor.Log
     override d.GetString() = sprintf "Categorical(probs:%A)" d.Probs
 
