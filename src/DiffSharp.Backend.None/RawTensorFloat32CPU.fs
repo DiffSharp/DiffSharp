@@ -213,15 +213,14 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             let chunk = i/m2
             let i2 = chunk%n
             let j2 = (chunk/n)*m2+i%m2
-            //printfn "i = %d, i2 = %d, j2 = %d, chunk = %d" i i2 j2 chunk
             results.[i2].[j2] <- values.[i]
         results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
 
-    override __.ConcatTs(tensors, dim) =
-        failwith "nyi"
+    //override __.ConcatTs(tensors, dim) =
+    //    failwith "nyi"
 
-    override t.Split(sizes, dim) =
-        failwith "nyi"
+    //override t.Split(sizes, dim) =
+    //    failwith "nyi"
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
