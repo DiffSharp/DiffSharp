@@ -59,6 +59,7 @@ let shapeSqueeze (dim:int) (shape:int[]) =
     else shape
 
 let shapeUnsqueeze (dim:int) (shape:int[]) =
+    if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A]" shape.Length
     [|for i=0 to shape.Length - 1 + 1 do 
         if i < dim then yield shape.[i]
         elif i = dim then yield 1

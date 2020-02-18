@@ -372,7 +372,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels x inputLength) and filters: KxCxF (outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1 =
             if padding = 0 then
                 t1
@@ -410,7 +410,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
             for v=0 to outputLength-1 do
                 let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v * stride; v * stride]]
-                let slice = result.GetSlice(sliceBounds).UnsqueezeT(2)
+                let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1|])
                 sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
         else
