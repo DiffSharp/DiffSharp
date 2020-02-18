@@ -385,11 +385,6 @@ type TestTensor () =
                                             [[0.3165; 2.9038; 0.5275];
                                              [0.3861; 2.9444; 0.7428]]])
         
-        let t3b1 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2)
-        let t3b1correct = t3Correct.[0,*,*].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2, stride = 2)
-        let t3b1s2correct = t3s2Correct.[0,*,*].Unsqueeze(0)
-        
         let t3d2 = Tensor.Conv1D(t1, t2, dilation=2)
         let t3d2Correct = Tensor.Create([[[2.8030];
                                          [2.4735]];
@@ -420,18 +415,23 @@ type TestTensor () =
                                             [[0.3165; 1.4118; 2.1327; 1.1949];
                                              [0.3861; 1.5697; 2.0696; 0.8520]]])
 
+        let t3b1 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2)
+        let t3b1correct = t3Correct.[0,*,*].Unsqueeze(0)
+        let t3b1s2 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2, stride = 2)
+        let t3b1s2correct = t3s2Correct.[0,*,*].Unsqueeze(0)
+
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
         Assert.True(t3p2.ApproximatelyEqual(t3p2Correct))
         Assert.True(t3s2.ApproximatelyEqual(t3s2Correct))
         Assert.True(t3s3.ApproximatelyEqual(t3s3Correct))
-        Assert.True(t3b1.ApproximatelyEqual(t3b1correct))
-        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2correct))
         Assert.True(t3s2p1.ApproximatelyEqual(t3s2p1Correct))
         Assert.True(t3s3p2.ApproximatelyEqual(t3s3p2Correct))
         Assert.True(t3d2.ApproximatelyEqual(t3d2Correct))
         Assert.True(t3p2d3.ApproximatelyEqual(t3p2d3Correct))
         Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
+        Assert.True(t3b1.ApproximatelyEqual(t3b1correct))
+        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2correct))
 
     [<Test>]
     member this.TestTensorNegT () =
