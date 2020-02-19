@@ -174,6 +174,8 @@ and [<AbstractClass>]
     abstract member SqueezeT: int -> RawTensor
     abstract member UnsqueezeT: int -> RawTensor
     abstract member FlipT: int[] -> RawTensor
+    abstract member DilateT: int[] -> RawTensor
+    abstract member UndilateT: int[] -> RawTensor
     abstract member ViewT: int[] -> RawTensor
     abstract member SignT: unit -> RawTensor
     abstract member FloorT: unit -> RawTensor
