@@ -569,4 +569,4 @@ and RawTensorFloat32CPUStatics() =
     override __.RandomNormal(shape:int[]) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override __.Create(values:obj) : RawTensor = upcast RawTensorFloat32CPU.Create(values)
 
-    
+ 
