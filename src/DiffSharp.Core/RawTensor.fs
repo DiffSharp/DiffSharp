@@ -130,8 +130,8 @@ and [<AbstractClass>]
     abstract member Clone : unit -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
     abstract member UnstackT: dim:int -> RawTensor[]
-    //abstract member ConcatTs: RawTensor[] * dim: int -> RawTensor
-    //abstract member Split: int[] * dim: int -> RawTensor[]
+    abstract member ConcatTs: RawTensor[] * dim: int -> RawTensor
+    abstract member Split: int[] * dim: int -> RawTensor[]
     abstract member Zero : unit -> RawTensor
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor

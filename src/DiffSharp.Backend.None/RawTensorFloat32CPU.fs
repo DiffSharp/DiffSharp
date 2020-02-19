@@ -181,6 +181,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
         if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
         let shape = shapes.[0]
+        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
         let n = tensors |> Array.length
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim..]
@@ -199,6 +200,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override t.UnstackT(dim) =
         if t.Dim < 1 then invalidOp "Cannot unstack scalar Tensor (dim < 1)"
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         let shape = t.Shape
         let n = shape.[dim]
         let shape1 = shape.[0..dim-1]
@@ -216,11 +218,62 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             results.[i2].[j2] <- values.[i]
         results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
 
-    //override __.ConcatTs(tensors, dim) =
-    //    failwith "nyi"
+    override __.ConcatTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
+        let n = shapes.Length
+        if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
+        let shape = shapes.[0]
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape2) then
+            invalidArg "tensors" "Expecting Tensors with similar shapes"
+        let m1 = shapeLength shape1
+        let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
+        let m3 = shapeLength shape2
+        let m = m1 * m2 * m3
+        let result = Array.zeroCreate m
+        let outShape = [| yield! shape1; yield m2; yield! shape2 |]
+        printfn "shape = %A, outShape = %A, m1 = %d, m2 = %d, m3 = %d, m = %d" shape outShape m1 m2 m3 m
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = shapes.[k].[dim]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
+                    result.[i+j2] <-values.[k].[b+j2]
+                i <- i + d*m3
 
-    //override t.Split(sizes, dim) =
-    //    failwith "nyi"
+        upcast RawTensorFloat32CPU(result, outShape)
+
+    override t.Split(sizes, dim) =
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape = t.Shape
+        if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
+        let n = sizes.Length
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m3 = shapeLength shape2
+        let values = t.Values
+        let results = Array.init n (fun k -> Array.zeroCreate (m1 * sizes.[k] * m3))
+        let mutable i = 0
+        printfn "shape = %A, dim = %d, m1 = %d, m3 = %d" shape dim m1 m3
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = sizes.[k]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
+                    results.[k].[b+j2] <-values.[i+j2]
+                i <- i + d*m3
+
+        results |> Array.mapi (fun k rvalues -> 
+            let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
+            upcast RawTensorFloat32CPU(rvalues, splitShape))
+
 
     override t1.LtTT(t2) =
         let t1value = t1.Values

@@ -231,6 +231,132 @@ type TestTensor () =
         Assert.AreEqual(t2Correct_dim2, t2_dim2)
 
     [<Test>]
+    member this.TestTensorConcatTs () =
+
+        let t0a = Tensor.Create([1.; 2.])
+        let t0 = Tensor.Concat([t0a])
+        let t0Correct = Tensor.Create([1.;2.])
+
+        Assert.AreEqual(t0Correct, t0)
+
+        let t1a = Tensor.Create([1.; 2.]) // 2
+        let t1b = Tensor.Create([3.; 4.]) // 2
+        let t1c = Tensor.Create([5.; 6.]) // 2
+        let t1 = Tensor.Concat([t1a;t1b;t1c]) // 6
+        let t1_dim0 = Tensor.Concat([t1a;t1b;t1c],dim=0) // 6
+        let t1Correct = Tensor.Create([1.;2.;3.;4.;5.;6.])
+
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t1Correct, t1_dim0)
+
+        let t2a = Tensor.Create([ [1.; 2.] ]) // 1x2
+        let t2b = Tensor.Create([ [3.; 4.] ]) // 1x2
+        let t2c = Tensor.Create([ [5.; 6.] ]) // 1x2
+        let t2 = Tensor.Concat([t2a;t2b;t2c]) // 3x2
+        let t2_dim0 = Tensor.Concat([t2a;t2b;t2c], dim=0) // 3x2
+        let t2_dim1 = Tensor.Concat([t2a;t2b;t2c], dim=1) // 1x6
+        let t2Correct_dim0 = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]) // 3x2
+        let t2Correct_dim1 = Tensor.Create([[1.;2.;3.;4.;5.;6.]]) // 1x6
+
+        Assert.AreEqual(t2Correct_dim0, t2)
+        Assert.AreEqual(t2Correct_dim0, t2_dim0)
+        Assert.AreEqual(t2Correct_dim1, t2_dim1)
+
+        // irregular sizes dim0
+        let t3a = Tensor.Create([ [1.; 2.] ]) // 1x2
+        let t3b = Tensor.Create([ [3.; 4.];[5.; 6.] ]) // 2x2
+        let t3c = Tensor.Create([ [7.; 8.] ]) // 1x2
+        let t3 = Tensor.Concat([t3a;t3b;t3c]) // 4x2
+        let t3Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.];[7.;8.]]) // 4x2
+
+        Assert.AreEqual(t3Correct, t3)
+
+        // irregular sizes dim1
+        let t4a = Tensor.Create([ [1.]; [2.] ]) // 2x1
+        let t4b = Tensor.Create([ [3.; 4.];[5.; 6.] ]) // 2x2
+        let t4c = Tensor.Create([ [7.]; [8.] ]) // 2x1
+        let t4_dim1 = Tensor.Concat([t4a;t4b;t4c],dim=1) // 2x4
+        let t4Correct_dim1 = Tensor.Create([[1.;3.;4.;7.];[2.;5.;6.;8.]]) // 2x4
+
+        Assert.AreEqual(t4Correct_dim1, t4_dim1)
+
+    [<Test>]
+    member this.TestTensorSplitT () =
+        
+        //6 --> 2;2;2
+        let t1in = Tensor.Create([1.;2.;3.;4.;5.;6.]) // 6
+        let t1 = t1in.Split([2;2;2]) |> Seq.toList // 3 of 2
+        let t1Correct = [Tensor.Create([1.; 2.]);Tensor.Create([3.; 4.]);Tensor.Create([5.; 6.])]
+
+        Assert.AreEqual(t1Correct, t1)
+
+        // 3x1x2
+        let t2in = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t2 = t2in.Split(sizes=[1;1;1], dim=0)  |> Seq.toList // 3 of 1x1x2
+        let t2Correct = [Tensor.Create [[[1.;2.]]]; Tensor.Create [[[3.;4.]]]; Tensor.Create [[[5.;6.]]]]
+
+        Assert.AreEqual(t2Correct, t2)
+
+        let t3in = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t3 = t3in.Split(sizes=[1;2], dim=0)  |> Seq.toList // 2 of 1x1x1 and 2x1x2
+        let t3Correct = [Tensor.Create [[[1.;2.]]]; Tensor.Create [[[3.;4.]];[[5.;6.]]]]
+
+        Assert.AreEqual(t3Correct, t3)
+
+        let t4in = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t4 = t4in.Split(sizes=[1], dim=1)  |> Seq.toList // 1 of 3x1x2
+        let t4Correct = [Tensor.Create [[[1.;2.]];[[3.;4.]];[[5.;6.]]]] // 1 of 3x1x2
+
+        Assert.AreEqual(t4Correct, t4)
+
+        let t5in = Tensor.Create([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t5 = t5in.Split(sizes=[1;1], dim=2)  |> Seq.toList // 2 of 3x1x1
+        let t5Correct = [Tensor.Create [[[1.]];[[3.]];[[5.]]]; Tensor.Create [[[2.]];[[4.]];[[6.]]]] // 2 of 3x1x1
+
+        Assert.AreEqual(t5Correct, t5)
+
+        //systematic split of 6 
+        let t6vs = [1..6]
+        let t6in = Tensor.Create(t6vs) // 6
+        for p1 in 0..6 do
+          for p2 in 0..6 do
+            for p3 in 0..6 do
+               if p1+p2+p3 = 6 then 
+                  let t6 = 
+                      t6in.Split([if p1 > 0 then p1 
+                                  if p2 > 0 then p2
+                                  if p3 > 0 then p3])
+                      |> Seq.toList 
+                  let t6Correct = 
+                      [if p1 > 0 then Tensor.Create(t6vs.[0..p1-1]);
+                       if p2 > 0 then Tensor.Create(t6vs.[p1..p1+p2-1]);
+                       if p3 > 0 then Tensor.Create(t6vs.[p1+p2..])]
+
+                  Assert.AreEqual(t6Correct, t6)
+
+
+        //systematic split of 2x6 along dim1
+        let t7vs1 = [1..6]
+        let t7vs2 = [7..12]
+        let t7in = Tensor.Create([ t7vs1; t7vs2] ) // 2x6
+        for p1 in 0..6 do
+          for p2 in 0..6 do
+            for p3 in 0..6 do
+               if p1+p2+p3 = 6 then 
+                  let sizes =
+                      [if p1 > 0 then p1 
+                       if p2 > 0 then p2
+                       if p3 > 0 then p3]
+                  let t7 = t7in.Split(sizes,dim=1) |> Seq.toList 
+                  let t7Correct = 
+                      [if p1 > 0 then Tensor.Create([ t7vs1.[0..p1-1];     t7vs2.[0..p1-1] ]);
+                       if p2 > 0 then Tensor.Create([ t7vs1.[p1..p1+p2-1]; t7vs2.[p1..p1+p2-1] ]);
+                       if p3 > 0 then Tensor.Create([ t7vs1.[p1+p2..];     t7vs2.[p1+p2..] ])]
+
+                  Assert.AreEqual(t7Correct, t7)
+
+
+    [<Test>]
     member this.TestTensorAddT2T1 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
         let t1Correct = Tensor.Create([[6.; 8.]; [8.; 10.]])
