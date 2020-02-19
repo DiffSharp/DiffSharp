@@ -234,14 +234,14 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let m = m1 * m2 * m3
         let result = Array.zeroCreate m
         let outShape = [| yield! shape1; yield m2; yield! shape2 |]
-        printfn "shape = %A, outShape = %A, m1 = %d, m2 = %d, m3 = %d, m = %d" shape outShape m1 m2 m3 m
+        //printfn "shape = %A, outShape = %A, m1 = %d, m2 = %d, m3 = %d, m = %d" shape outShape m1 m2 m3 m
         let mutable i = 0
         for j1 = 0 to m1-1 do 
             for k = 0 to n-1 do
                 let d = shapes.[k].[dim]
                 let b = j1*m3*d
                 for j2 = 0 to d*m3-1 do
-                    printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
+                    //printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
                     result.[i+j2] <-values.[k].[b+j2]
                 i <- i + d*m3
 
@@ -259,14 +259,14 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let values = t.Values
         let results = Array.init n (fun k -> Array.zeroCreate (m1 * sizes.[k] * m3))
         let mutable i = 0
-        printfn "shape = %A, dim = %d, m1 = %d, m3 = %d" shape dim m1 m3
+        //printfn "shape = %A, dim = %d, m1 = %d, m3 = %d" shape dim m1 m3
         let mutable i = 0
         for j1 = 0 to m1-1 do 
             for k = 0 to n-1 do
                 let d = sizes.[k]
                 let b = j1*m3*d
                 for j2 = 0 to d*m3-1 do
-                    printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
+                    //printfn "i = %d, j1 = %d, k = %d, b = %d, d = %d, j2 = %d, i+j2 = %d, b+j2 = %d" i j1 k b d j2 (i+j2) (b+j2) //values.[k].[b+j2]
                     results.[k].[b+j2] <-values.[i+j2]
                 i <- i + d*m3
 
