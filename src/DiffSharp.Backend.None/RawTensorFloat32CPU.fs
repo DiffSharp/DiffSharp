@@ -347,7 +347,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 = input: NxCxI (batchSize x inputChannels x inputLength) and filters: KxCxF (outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1 =
             if padding = 0 then
                 t1
@@ -385,7 +385,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
             for v=0 to outputLength-1 do
                 let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v * stride; v * stride]]
-                let slice = result.GetSlice(sliceBounds).UnsqueezeT(2)
+                let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1|])
                 sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
         else
@@ -420,7 +420,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
-        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than the Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
         if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
         if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
         match t.Dim with
@@ -437,6 +437,40 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                         flip shape.[1..] (Array.append externalCoords [|i|])
             flip t.Shape [||]        
             upcast result
+
+    override t.DilateT(dilations:int[]) =
+        if dilations.Length <> t.Dim then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
+        if (Array.min dilations) < 1 then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+        match t.Dim with
+        | 0 -> t.Clone()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(dilatedShape t.Shape dilations)
+            let rec dilate (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[dilatedCoordinates globalCoords dilations] <- t.[globalCoords]
+                else
+                    for i=0 to shape.[0]-1 do
+                        dilate shape.[1..] (Array.append externalCoords [|i|])
+            dilate t.Shape [||]        
+            upcast result        
+
+    override t.UndilateT(dilations:int[]) =
+        match t.Dim with
+        | 0 -> t.Clone()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(undilatedShape t.Shape dilations)
+            let rec dilate (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[globalCoords] <- t.[dilatedCoordinates globalCoords dilations]
+                else
+                    for i=0 to shape.[0]-1 do
+                        dilate shape.[1..] (Array.append externalCoords [|i|])
+            dilate result.Shape [||]        
+            upcast result        
 
     override t.ViewT(shape:int[]) =
         if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape

@@ -59,6 +59,7 @@ let shapeSqueeze (dim:int) (shape:int[]) =
     else shape
 
 let shapeUnsqueeze (dim:int) (shape:int[]) =
+    if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A]" shape.Length
     [|for i=0 to shape.Length - 1 + 1 do 
         if i < dim then yield shape.[i]
         elif i = dim then yield 1
@@ -103,6 +104,15 @@ let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
             result.[d] <- abs (coordinates.[d] - shape.[d] + 1)
     result
 
+let dilatedShape (shape:int[]) (dilations:int[]) =
+    Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
+
+let undilatedShape (shape:int[]) (dilations:int[]) =
+    Array.map2 (fun n d -> (n + d - 1) / d) shape dilations
+
+let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
+    Array.map2 (*) coordinates dilations
+
 let duplicates l =
    l |> List.ofSeq
    |> List.groupBy id
@@ -117,7 +127,7 @@ let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
     if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) < tolerance) } |> Seq.forall id
+    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
 
 let allEqual (items:seq<'a>) =
     let item0 = items |> Seq.head
