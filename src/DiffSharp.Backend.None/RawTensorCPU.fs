@@ -472,7 +472,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
                 t1
-            elif padding.[0] > 0 && padding.[1] > 0 then
+            elif padding.[0] >= 0 && padding.[1] >= 0 then
                 let tshape = Array.copy t1.Shape
                 tshape.[2] <- t1.Shape.[2] + padding.[0] * 2
                 tshape.[3] <- t1.Shape.[3] + padding.[1] * 2
