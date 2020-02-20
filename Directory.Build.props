@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
+  </PropertyGroup>
+
+</Project>

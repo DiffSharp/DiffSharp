@@ -2,6 +2,8 @@
 open DiffSharp.Backend
 open DiffSharp.Util
 
+#nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
+
 [<CustomEquality; CustomComparison>]
 type Tensor = 
     | Tensor of RawTensor

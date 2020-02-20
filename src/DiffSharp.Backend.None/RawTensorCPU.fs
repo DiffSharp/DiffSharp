@@ -79,7 +79,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         if probs.Dim < 1 || probs.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.Shape
         if probs.Dim = 1 then
             let p = probs.Values |> Array.map float
-            let result = [|for i=0 to numSamples-1 do yield float32 (Random.ChoiceIndex(p))|]
+            let result = Array.init numSamples (fun _ -> float32 (Random.ChoiceIndex(p)))
             upcast RawTensorFloat32CPU(result, [|numSamples|])
         else
             let p = probs.ToArray() :?> float32[,] |> Array2D.map float
