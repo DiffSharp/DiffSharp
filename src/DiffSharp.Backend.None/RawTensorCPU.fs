@@ -505,8 +505,21 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                                 for u1=0 to kernelWidth-1 do
                                     value <- value + t2.[k, c, u0, u1] * t1.[n, c, v0+u0, v1+u1]
                         result.[[|n; k; v0; v1|]] <- value
-        // TODO: implement stride
-        result :> RawTensor
+        if stride.[0] = 1 && stride.[1] = 1 then
+            result :> RawTensor
+        elif stride.[0] >= 1 && stride.[1] >= 1 then
+            let outputHeight = (float outputHeight) / (float stride.[0]) |> ceil |> int
+            let outputWidth = (float outputWidth) / (float stride.[1]) |> ceil |> int
+            let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
+            let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
+            for v0=0 to outputHeight-1 do
+                for v1=0 to outputWidth-1 do
+                    let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v0 * stride.[0]; v0 * stride.[0]]; [v1 * stride.[1]; v1 * stride.[1]]]
+                    let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1; 1|])
+                    sresult <- sresult.AddTTSlice([|0; 0; v0; v1|], slice) :?> RawTensorFloat32CPU
+            sresult :> RawTensor
+        else
+            failwithf "Expecting all strides >= 1, received %A" stride
 
 
     override t.NegT() =
