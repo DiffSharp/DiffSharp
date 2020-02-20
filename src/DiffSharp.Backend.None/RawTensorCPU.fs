@@ -28,16 +28,16 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =
-            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            if index.Length <> t.Dim then failwithf "Expecting a %id index" t.Dim
             t.Values.[t.IndexToFlatIndex(index)]
         and set ([<System.ParamArray>] index:int[]) v =
-            if index.Length <> t.Dim then invalidArg "index" (sprintf "Expecting a %id index" t.Dim)
+            if index.Length <> t.Dim then failwithf "Expecting a %id index" t.Dim
             t.Values.[t.IndexToFlatIndex(index)] <- v
 
     override t.GetItem(index:int[]) = upcast RawTensorFloat32CPU.Create(t.[index])
     
     override t.GetSlice(bounds:int[,]) =
-        // if bounds.GetLength(0) <> t.Dim then invalidArg "bounds" (sprintf "Expecting %i-by-2 bounds" t.Dim)
+        // if bounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-2 bounds" t.Dim
         // printfn "%A" bounds
         let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1) |> shapeSqueeze -1
         // printfn "%A" shape
@@ -116,32 +116,32 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.ToValue() =
         match t.Dim with
         | 0 -> upcast t.Values.[0]
-        | _ -> invalidOp (sprintf "Cannot convert %Ad Tensor to scalar" t.Dim)
+        | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
 
     override t.ToArray() =
         match t.Dim with
-        | 0 -> invalidOp "Cannot convert 0d Tensor to array"
+        | 0 -> failwith "Cannot convert 0d Tensor to array"
         | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.[i])
         | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.[i, j])
         | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.[i, j, k])
         | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.[i, j, k, l])
-        | _ -> invalidOp (sprintf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape)
+        | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override t1.Equals(t2:RawTensor) = 
         match t2 with
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
-        | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+        | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
     override t1.ApproximatelyEquals(t2:RawTensor, tolerance) =
         let tolerance = float32 <| tolerance
         match t2 with
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
-        | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+        | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
     override __.StackTs(tensors) =
         let tensors = tensors |> Seq.toList
         let values, shapes = tensors |> List.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> List.unzip
-        if not (allEqual shapes) then invalidArg "tensors" "Expecting Tensors with same shape"
+        if not (allEqual shapes) then failwith "Expecting Tensors with same shape"
         let n = tensors |> List.length
         let m = shapeLength shapes.[0]
         let result = Array.create (n * m) 0.f
@@ -151,7 +151,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, Array.append [|n|] shapes.[0])
 
     override t.UnstackT() =
-        if t.Dim < 1 then invalidOp "Cannot unstack scalar Tensor (dim < 1)"
+        if t.Dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
         let n = t.Shape.[0]
         let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
         let unstackedLength = shapeLength unstackedShape
@@ -159,7 +159,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
 
     override t.TransposeT2() =
-        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
+        if t.Dim <> 2 then failwith "Expecting a 2d Tensor"
         let tcols = t.Shape.[1]
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         upcast RawTensorFloat32CPU.Create(result)
@@ -173,9 +173,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
-        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
-        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
-        if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
+        if dims.Length > t.Dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if hasDuplicates dims then failwithf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+        if (Array.max dims) >= t.Dim then failwithf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
@@ -192,8 +192,8 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             upcast result
 
     override t.DilateT(dilations:int[]) =
-        if dilations.Length <> t.Dim then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
-        if (Array.min dilations) < 1 then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+        if dilations.Length <> t.Dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
+        if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
@@ -226,7 +226,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             upcast result        
 
     override t.ViewT(shape:int[]) =
-        if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
+        if shapeLength t.Shape <> shapeLength shape then failwithf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
         let result = Array.copy t.Values
         upcast RawTensorFloat32CPU(result, shape)
 
@@ -267,7 +267,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 if notNull array then 
                     RawTensorFloat32CPU(array |> Array.map float32, shape)
                 else
-                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
+                    failwith "Cannot convert value to RawTensorFloat32CPU"
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
@@ -407,10 +407,10 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
     override t1.MatMulT2T2(t2) =
-        if t1.Dim <> 2 || t2.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if t1.Dim <> 2 || t2.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
         let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
-        if t1cols <> t2rows then invalidOp <| sprintf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if t1cols <> t2rows then failwithf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorFloat32CPU).Values        
         let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
@@ -419,7 +419,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        if t1.Dim <> 3 || t2.Dim <> 3 then invalidOp <| sprintf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if t1.Dim <> 3 || t2.Dim <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1 =
             if padding = 0 then
                 t1
@@ -429,14 +429,14 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 let t = RawTensorFloat32CPU.Zeros(tshape)
                 t.AddTTSlice([|0; 0; padding|], t1) :?> RawTensorFloat32CPU
             else
-                invalidOp <| sprintf "Expecting padding >= 0, received %A" padding
+                failwithf "Expecting padding >= 0, received %A" padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
         let inputLength = t1.Shape.[2]
         let outputChannels = t2.Shape.[0]
-        if t2.Shape.[1] <> inputChannels then invalidOp <| sprintf "Input and filters have different num_channels: %A, %A" inputChannels t2.Shape.[1]
+        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different num_channels: %A, %A" inputChannels t2.Shape.[1]
         let kernelLength = t2.Shape.[2]
-        if kernelLength > inputLength then invalidOp <| sprintf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
+        if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
         let outputLength = inputLength - kernelLength + 1
         let outputShape = [|batchSize; outputChannels; outputLength|]
         let result = RawTensorFloat32CPU.Zeros(outputShape)
@@ -461,7 +461,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
         else
-            invalidOp <| sprintf "Expecting stride >= 1, received %A" stride
+            failwithf "Expecting stride >= 1, received %A" stride
 
     override t.NegT() =
         let result = Array.map (~-) t.Values
@@ -472,7 +472,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU([|result|], [||])
     
     override t.SumT2Dim0() =
-        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
+        if t.Dim <> 2 then failwith "Expecting a 2d Tensor"
         let result = Array.init t.Shape.[1] (fun j -> Array.init t.Shape.[0] (fun i -> t.Values.[i * t.Shape.[1] + j]) |> Array.reduce (+))
         let resultShape = [|t.Shape.[1]|]
         upcast RawTensorFloat32CPU(result, resultShape)
