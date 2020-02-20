@@ -84,20 +84,20 @@ let boundsToShape (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|] 
 
 let shapeComplete (nelement:int) (shape:int[]) =
-    if (shape |> Array.filter (fun x -> x < -1) |> Array.length) > 0 then failwith <| sprintf "Invalid shape %A" shape
+    if (shape |> Array.filter (fun x -> x < -1) |> Array.length) > 0 then failwithf "Invalid shape %A" shape
     let numUnspecified = shape |> Array.filter ((=) -1) |> Array.length
     if numUnspecified > 1 then
-        failwith <| sprintf "Cannot complete shape %A, expecting at most one unspecified dimension (-1)" shape
+        failwithf "Cannot complete shape %A, expecting at most one unspecified dimension (-1)" shape
     elif numUnspecified = 0 then 
         shape
     else
         let divisor = shape |> Array.filter ((<>) -1) |> shapeLength
-        if nelement % divisor <> 0 then failwith <| sprintf "Cannot complete shape %A to have %A elements" shape nelement
+        if nelement % divisor <> 0 then failwithf "Cannot complete shape %A to have %A elements" shape nelement
         let missing = nelement / divisor
         [|for d in shape do if d = -1 then yield missing else yield d|]
 
 let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
-    if coordinates.Length <> shape.Length then invalidOp <| sprintf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
+    if coordinates.Length <> shape.Length then failwithf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
     let result = Array.copy coordinates
     for d=0 to coordinates.Length-1 do
         if mirrorDims |> Array.contains d then
@@ -173,15 +173,15 @@ let rec flatArrayAndShape<'T> (value:obj) =
     | :? seq<'T> as v -> Seq.toArray v, [|Seq.length v|]
     | :? seq<seq<'T>> as v ->
         let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | :? seq<seq<seq<'T>>> as v ->
         let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | :? seq<seq<seq<seq<'T>>>> as v ->
         let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then invalidArg "value" "Expecting a rectangular sequence"
+        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
         Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
     | _ -> null, null
     // TODO: add list of tuples parsing
