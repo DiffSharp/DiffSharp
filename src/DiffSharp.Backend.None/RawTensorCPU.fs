@@ -467,7 +467,19 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
         if t1.Dim <> 4 || t2.Dim <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" t1.Shape t2.Shape
-        // TODO: implement padding
+        if stride.Length <> 2 then failwithf "Expecting stride to be a length-two array, received %A" stride
+        if padding.Length <> 2 then failwithf "Expecting padding to be a length-two array, received %A" padding
+        let t1 =
+            if padding.[0] = 0 && padding.[1] = 0 then
+                t1
+            elif padding.[0] > 0 && padding.[1] > 0 then
+                let tshape = Array.copy t1.Shape
+                tshape.[2] <- t1.Shape.[2] + padding.[0] * 2
+                tshape.[3] <- t1.Shape.[3] + padding.[1] * 2
+                let t = RawTensorFloat32CPU.Zeros(tshape)
+                t.AddTTSlice([|0; 0; padding.[0]; padding.[1]|], t1) :?> RawTensorFloat32CPU
+            else
+                failwithf "Expecting all paddings >= 0, received %A" padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
         let inputHeight = t1.Shape.[2]

@@ -64,7 +64,7 @@ let main argv =
                                           [0.1245; 0.7355; 0.3074];
                                           [0.8194; 0.1950; 0.0755]]]])
 
-    let t3 = t1.Conv2D(t2, [||], [||])
+    let t3 = t1.Conv2D(t2, [|0; 0|], [|2; 2|])
     printfn "%A" t1.Shape
     printfn "%A" t2.Shape
     printfn "%A" t3.Shape
