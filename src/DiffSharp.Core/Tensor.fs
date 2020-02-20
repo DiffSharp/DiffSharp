@@ -805,6 +805,33 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    static member Conv2D(a:Tensor, b:Tensor, ?stride:int[], ?padding:int[], ?dilation:int[]) =
+        let stride = defaultArg stride [|1; 1|]
+        let padding = defaultArg padding [|0; 0|]
+        let dilation = defaultArg dilation [|1; 1|]
+        // TODO: implement dilation
+        // let mutable b = b
+        // if dilation.[0] >= 1 && dilation.[1] >= 1 then
+        //     b <- b.Dilate([|1; 1; dilation.[0]; dilation.[1]|])
+        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
+        let inline fTensor(a,b) = Tensor.Conv2D(a, b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv2D(ad, bp, stride, padding) + Tensor.Conv2D(ap, bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv2D(ad, b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv2D(a, bd, stride, padding)
+        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, stride, padding)
+        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, stride, padding)
+        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, stride, padding)
+        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+
+    static member Conv2D(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+        let stride = defaultArg stride 1
+        let padding = defaultArg padding 0
+        let dilation = defaultArg dilation 1
+        Tensor.Conv2D(a, b, [|stride; stride|], [|padding; padding|], [|dilation; dilation|])
+
+    static member Conv2D(a:Tensor, b:Tensor) =
+        Tensor.Conv2D(a, b, [|1; 1|], [|0; 0|], [|1; 1|])
+
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
         let zeroDerivatives = defaultArg zeroDerivatives true
@@ -871,6 +898,9 @@ type Tensor =
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
+                        | Conv2DTT(a,b,_,_) -> reset (a::b::tt)
+                        | Conv2DTTConst(a,_,_,_) -> reset (a::tt)
+                        | Conv2DTConstT(_,b,_,_) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim0(a) -> reset (a::tt)
@@ -1007,6 +1037,9 @@ type Tensor =
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
                         | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"
+                        | Conv2DTT(a,b,_,_) -> failwith "Not implemented"
+                        | Conv2DTTConst(a,_,_,_) -> failwith "Not implemented"
+                        | Conv2DTConstT(_,b,_,_) -> failwith "Not implemented"
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
@@ -1109,6 +1142,10 @@ and TensorOp =
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int
     | Conv1DTConstT of Tensor * Tensor * int * int
+
+    | Conv2DTT of Tensor * Tensor * int[] * int[]
+    | Conv2DTTConst of Tensor * Tensor * int[] * int[]
+    | Conv2DTConstT of Tensor * Tensor * int[] * int[]
 
     | NegT of Tensor
     | SumT of Tensor
