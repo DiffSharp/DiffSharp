@@ -434,7 +434,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let inputChannels = t1.Shape.[1]
         let inputLength = t1.Shape.[2]
         let outputChannels = t2.Shape.[0]
-        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different num_channels: %A, %A" inputChannels t2.Shape.[1]
+        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
         let kernelLength = t2.Shape.[2]
         if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
         let outputLength = inputLength - kernelLength + 1
@@ -462,6 +462,40 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             sresult :> RawTensor
         else
             failwithf "Expecting stride >= 1, received %A" stride
+
+    override t1.Conv2D(t2, stride, padding) =
+        // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
+        // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
+        if t1.Dim <> 4 || t2.Dim <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        // TODO: implement padding
+        let batchSize = t1.Shape.[0]
+        let inputChannels = t1.Shape.[1]
+        let inputHeight = t1.Shape.[2]
+        let inputWidth = t1.Shape.[3]
+        let outputChannels = t2.Shape.[0]
+        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
+        let kernelHeight = t2.Shape.[2]
+        let kernelWidth = t2.Shape.[3]
+        if kernelHeight > inputHeight then failwithf "Expecting kernelHeight <= inputHeight, received %A, %A" kernelHeight inputHeight
+        if kernelWidth > inputWidth then failwithf "Expecting kernelWidth <= inputWidth, received %A, %A" kernelWidth inputWidth
+        let outputHeight = inputHeight - kernelHeight + 1
+        let outputWidth = inputWidth - kernelWidth + 1
+        let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
+        let result = RawTensorFloat32CPU.Zeros(outputShape)
+        let t2 = t2 :?> RawTensorFloat32CPU
+        for n=0 to batchSize-1 do
+            for k=0 to outputChannels-1 do
+                for v0=0 to outputHeight-1 do
+                    for v1=0 to outputWidth-1 do
+                        let mutable value = 0.f
+                        for c=0 to inputChannels-1 do
+                            for u0=0 to kernelHeight-1 do
+                                for u1=0 to kernelWidth-1 do
+                                    value <- value + t2.[k, c, u0, u1] * t1.[n, c, v0+u0, v1+u1]
+                        result.[[|n; k; v0; v1|]] <- value
+        // TODO: implement stride
+        result :> RawTensor
+
 
     override t.NegT() =
         let result = Array.map (~-) t.Values
