@@ -9,45 +9,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     member __.Values = values
 
-    static member Zero() =
-        let values = [|0.f|]
-        RawTensorFloat32CPU(values, [||])
-
-    static member One() =
-        let values = [|1.f|]
-        RawTensorFloat32CPU(values, [||])
-    
-    static member Zeros(shape:int[]) =
-        let values = Array.create (shapeLength shape) 0.f
-        RawTensorFloat32CPU(values, shape)
-
-    static member Ones(shape:int[]) =
-        let values = Array.create (shapeLength shape) 1.f
-        RawTensorFloat32CPU(values, shape)
-
-    static member Random(shape:int[])  =
-        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform()))
-        RawTensorFloat32CPU(values, shape)
-
-    static member RandomNormal(shape:int[]) =
-        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal()))
-        RawTensorFloat32CPU(values, shape)
-
-    static member Create(value:obj) = 
-        let array, shape = value |> flatArrayAndShape<float32>
-        if notNull array then 
-            RawTensorFloat32CPU(array, shape)
-        else 
-            let array, shape = value |> flatArrayAndShape<double>
-            if notNull array then 
-                RawTensorFloat32CPU(array |> Array.map float32, shape)
-            else
-                let array, shape = value |> flatArrayAndShape<int>
-                if notNull array then 
-                    RawTensorFloat32CPU(array |> Array.map float32, shape)
-                else
-                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
-
     member private t.IndexToFlatIndex(index:int[]) =
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
@@ -196,6 +157,117 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let unstackedLength = shapeLength unstackedShape
         Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
         |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+
+    override t.TransposeT2() =
+        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
+        let tcols = t.Shape.[1]
+        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
+        upcast RawTensorFloat32CPU.Create(result)
+
+    override t.SqueezeT(dim) =
+        let result = Array.copy t.Values
+        upcast RawTensorFloat32CPU(result, shapeSqueeze dim t.Shape)
+
+    override t.UnsqueezeT(dim) =
+        let result = Array.copy t.Values
+        upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
+
+    override t.FlipT(dims:int[]) =
+        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
+        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+        if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
+        match t.Dim with
+        | 0 -> t.Clone()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(t.Shape)
+            let rec flip (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[mirrorCoordinates globalCoords t.Shape dims] <- t.[globalCoords]
+                else
+                    for i=0 to shape.[0]-1 do
+                        flip shape.[1..] (Array.append externalCoords [|i|])
+            flip t.Shape [||]        
+            upcast result
+
+    override t.DilateT(dilations:int[]) =
+        if dilations.Length <> t.Dim then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
+        if (Array.min dilations) < 1 then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+        match t.Dim with
+        | 0 -> t.Clone()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(dilatedShape t.Shape dilations)
+            let rec dilate (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[dilatedCoordinates globalCoords dilations] <- t.[globalCoords]
+                else
+                    for i=0 to shape.[0]-1 do
+                        dilate shape.[1..] (Array.append externalCoords [|i|])
+            dilate t.Shape [||]        
+            upcast result        
+
+    override t.UndilateT(dilations:int[]) =
+        match t.Dim with
+        | 0 -> t.Clone()
+        | _ ->
+            let result = RawTensorFloat32CPU.Zeros(undilatedShape t.Shape dilations)
+            let rec dilate (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        result.[globalCoords] <- t.[dilatedCoordinates globalCoords dilations]
+                else
+                    for i=0 to shape.[0]-1 do
+                        dilate shape.[1..] (Array.append externalCoords [|i|])
+            dilate result.Shape [||]        
+            upcast result        
+
+    override t.ViewT(shape:int[]) =
+        if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
+        let result = Array.copy t.Values
+        upcast RawTensorFloat32CPU(result, shape)
+
+    static member Zero() =
+        let values = [|0.f|]
+        RawTensorFloat32CPU(values, [||])
+
+    static member One() =
+        let values = [|1.f|]
+        RawTensorFloat32CPU(values, [||])
+    
+    static member Zeros(shape:int[]) : RawTensorFloat32CPU =
+        let values = Array.create (shapeLength shape) 0.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Ones(shape:int[]) =
+        let values = Array.create (shapeLength shape) 1.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Random(shape:int[])  =
+        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Uniform()))
+        RawTensorFloat32CPU(values, shape)
+
+    static member RandomNormal(shape:int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> float32 (Random.Normal()))
+        RawTensorFloat32CPU(values, shape)
+
+    static member Create(value:obj) = 
+        let array, shape = value |> flatArrayAndShape<float32>
+        if notNull array then 
+            RawTensorFloat32CPU(array, shape)
+        else 
+            let array, shape = value |> flatArrayAndShape<double>
+            if notNull array then 
+                RawTensorFloat32CPU(array |> Array.map float32, shape)
+            else
+                let array, shape = value |> flatArrayAndShape<int>
+                if notNull array then 
+                    RawTensorFloat32CPU(array |> Array.map float32, shape)
+                else
+                    invalidArg "value" "Cannot convert value to RawTensorFloat32CPU"
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
@@ -405,78 +477,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let resultShape = [|t.Shape.[1]|]
         upcast RawTensorFloat32CPU(result, resultShape)
 
-    override t.TransposeT2() =
-        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
-        let tcols = t.Shape.[1]
-        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
-        upcast RawTensorFloat32CPU.Create(result)
-
-    override t.SqueezeT(dim) =
-        let result = Array.copy t.Values
-        upcast RawTensorFloat32CPU(result, shapeSqueeze dim t.Shape)
-
-    override t.UnsqueezeT(dim) =
-        let result = Array.copy t.Values
-        upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
-
-    override t.FlipT(dims:int[]) =
-        if dims.Length > t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
-        if hasDuplicates dims then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
-        if (Array.max dims) >= t.Dim then invalidOp <| sprintf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
-        match t.Dim with
-        | 0 -> t.Clone()
-        | _ ->
-            let result = RawTensorFloat32CPU.Zeros(t.Shape)
-            let rec flip (shape:int[]) externalCoords = 
-                if shape.Length = 1 then
-                    for i=0 to shape.[0]-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        result.[mirrorCoordinates globalCoords t.Shape dims] <- t.[globalCoords]
-                else
-                    for i=0 to shape.[0]-1 do
-                        flip shape.[1..] (Array.append externalCoords [|i|])
-            flip t.Shape [||]        
-            upcast result
-
-    override t.DilateT(dilations:int[]) =
-        if dilations.Length <> t.Dim then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
-        if (Array.min dilations) < 1 then invalidOp <| sprintf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
-        match t.Dim with
-        | 0 -> t.Clone()
-        | _ ->
-            let result = RawTensorFloat32CPU.Zeros(dilatedShape t.Shape dilations)
-            let rec dilate (shape:int[]) externalCoords = 
-                if shape.Length = 1 then
-                    for i=0 to shape.[0]-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        result.[dilatedCoordinates globalCoords dilations] <- t.[globalCoords]
-                else
-                    for i=0 to shape.[0]-1 do
-                        dilate shape.[1..] (Array.append externalCoords [|i|])
-            dilate t.Shape [||]        
-            upcast result        
-
-    override t.UndilateT(dilations:int[]) =
-        match t.Dim with
-        | 0 -> t.Clone()
-        | _ ->
-            let result = RawTensorFloat32CPU.Zeros(undilatedShape t.Shape dilations)
-            let rec dilate (shape:int[]) externalCoords = 
-                if shape.Length = 1 then
-                    for i=0 to shape.[0]-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        result.[globalCoords] <- t.[dilatedCoordinates globalCoords dilations]
-                else
-                    for i=0 to shape.[0]-1 do
-                        dilate shape.[1..] (Array.append externalCoords [|i|])
-            dilate result.Shape [||]        
-            upcast result        
-
-    override t.ViewT(shape:int[]) =
-        if shapeLength t.Shape <> shapeLength shape then invalidOp <| sprintf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
-        let result = Array.copy t.Values
-        upcast RawTensorFloat32CPU(result, shape)
-
     override t.SignT() =
         let result = t.Values |> Array.map (sign >> float32)
         upcast RawTensorFloat32CPU(result, t.Shape)
@@ -569,4 +569,4 @@ and RawTensorFloat32CPUStatics() =
     override __.RandomNormal(shape:int[]) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override __.Create(values:obj) : RawTensor = upcast RawTensorFloat32CPU.Create(values)
 
-    
+ 
