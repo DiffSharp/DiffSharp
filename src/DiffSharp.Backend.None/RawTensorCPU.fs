@@ -511,7 +511,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let inputChannels = t1.Shape.[1]
         let inputLength = t1.Shape.[2]
         let outputChannels = t2.Shape.[0]
-        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different num_channels: %A, %A" inputChannels t2.Shape.[1]
+        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
         let kernelLength = t2.Shape.[2]
         if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
         let outputLength = inputLength - kernelLength + 1
@@ -539,6 +539,65 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             sresult :> RawTensor
         else
             failwithf "Expecting stride >= 1, received %A" stride
+
+    override t1.Conv2D(t2, stride, padding) =
+        // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
+        // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
+        if t1.Dim <> 4 || t2.Dim <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        if stride.Length <> 2 then failwithf "Expecting stride to be a length-two array, received %A" stride
+        if padding.Length <> 2 then failwithf "Expecting padding to be a length-two array, received %A" padding
+        let t1 =
+            if padding.[0] = 0 && padding.[1] = 0 then
+                t1
+            elif padding.[0] >= 0 && padding.[1] >= 0 then
+                let tshape = Array.copy t1.Shape
+                tshape.[2] <- t1.Shape.[2] + padding.[0] * 2
+                tshape.[3] <- t1.Shape.[3] + padding.[1] * 2
+                let t = RawTensorFloat32CPU.Zeros(tshape)
+                t.AddTTSlice([|0; 0; padding.[0]; padding.[1]|], t1) :?> RawTensorFloat32CPU
+            else
+                failwithf "Expecting all paddings >= 0, received %A" padding
+        let batchSize = t1.Shape.[0]
+        let inputChannels = t1.Shape.[1]
+        let inputHeight = t1.Shape.[2]
+        let inputWidth = t1.Shape.[3]
+        let outputChannels = t2.Shape.[0]
+        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
+        let kernelHeight = t2.Shape.[2]
+        let kernelWidth = t2.Shape.[3]
+        if kernelHeight > inputHeight then failwithf "Expecting kernelHeight <= inputHeight, received %A, %A" kernelHeight inputHeight
+        if kernelWidth > inputWidth then failwithf "Expecting kernelWidth <= inputWidth, received %A, %A" kernelWidth inputWidth
+        let outputHeight = inputHeight - kernelHeight + 1
+        let outputWidth = inputWidth - kernelWidth + 1
+        let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
+        let result = RawTensorFloat32CPU.Zeros(outputShape)
+        let t2 = t2 :?> RawTensorFloat32CPU
+        for n=0 to batchSize-1 do
+            for k=0 to outputChannels-1 do
+                for v0=0 to outputHeight-1 do
+                    for v1=0 to outputWidth-1 do
+                        let mutable value = 0.f
+                        for c=0 to inputChannels-1 do
+                            for u0=0 to kernelHeight-1 do
+                                for u1=0 to kernelWidth-1 do
+                                    value <- value + t2.[k, c, u0, u1] * t1.[n, c, v0+u0, v1+u1]
+                        result.[[|n; k; v0; v1|]] <- value
+        if stride.[0] = 1 && stride.[1] = 1 then
+            result :> RawTensor
+        elif stride.[0] >= 1 && stride.[1] >= 1 then
+            let outputHeight = (float outputHeight) / (float stride.[0]) |> ceil |> int
+            let outputWidth = (float outputWidth) / (float stride.[1]) |> ceil |> int
+            let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
+            let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
+            for v0=0 to outputHeight-1 do
+                for v1=0 to outputWidth-1 do
+                    let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v0 * stride.[0]; v0 * stride.[0]]; [v1 * stride.[1]; v1 * stride.[1]]]
+                    let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1; 1|])
+                    sresult <- sresult.AddTTSlice([|0; 0; v0; v1|], slice) :?> RawTensorFloat32CPU
+            sresult :> RawTensor
+        else
+            failwithf "Expecting all strides >= 1, received %A" stride
+
 
     override t.NegT() =
         let result = Array.map (~-) t.Values
