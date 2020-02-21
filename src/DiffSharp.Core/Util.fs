@@ -1,6 +1,8 @@
 module DiffSharp.Util
 open System
+open System.Collections
 open System.Collections.Generic
+open FSharp.Reflection
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
 let log10Val = log 10.
@@ -133,58 +135,181 @@ let allEqual (items:seq<'a>) =
     let item0 = items |> Seq.head
     items |> Seq.forall ((=) item0)
 
+/// Create a non-jagged 3D array from jagged data
+let array3D data = 
+    let data = data |> Array.ofSeq |> Array.map array2D
+    let r1, r2, r3 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1)
+    for i in 0 .. r1-1 do 
+        let q2 = data.[i].GetLength(0)
+        let q3 = data.[i].GetLength(1)
+        if q2 <> r2 || q3 <> r3 then 
+            invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d, later is _ x _ x %d x %d" i r2 r3 q2 q3)
+    Array3D.init r1 r2 r3 (fun i j k -> data.[i].[j,k])
+
+/// Create a non-jagged 4D array from jagged data
+let array4D data = 
+    let data = data |> array2D |> Array2D.map array2D
+    let r1,r2,r3,r4 = (data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0),data.[0,0].GetLength(1))
+    for i in 0 .. r1-1 do 
+      for j in 0 .. r2-1 do 
+        let q3 = data.[i,j].GetLength(0)
+        let q4 = data.[i,j].GetLength(1)
+        if q3 <> r3 || q4 <> r4 then 
+            invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
+    Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+
+/// Get the elements of an arbitrary IEnumerble
+let private seqElements (ie: obj) = 
+    let e = (ie :?> IEnumerable).GetEnumerator()
+    [| while e.MoveNext() do yield e.Current |]
+
+/// Match an array type of arbitrary rank
+let private (|ArrayTy|_|) (ty: Type) = 
+    if ty.IsArray && ty.GetArrayRank() <= 4 then
+        Some(ty.GetArrayRank(), ty.GetElementType())
+    else 
+       None
+
+/// Match an tuple type
+let private (|TupleTy|_|) (ty: Type) = 
+    if FSharpType.IsTuple ty then 
+        Some(FSharpType.GetTupleElements ty)
+    else 
+       None
+
+let rec private  (|ListTy|_|) (ty: Type) = 
+    if ty.IsGenericType && ty.GetGenericTypeDefinition().Equals(typedefof<list<int>>) then
+       Some (ty.GetGenericArguments().[0])
+    else   
+        None
+
+/// Match a 1D sequence type (seq<_>) or a subclass
+let rec private  (|SeqTy|_|) (ty: Type) = 
+    if ty.IsGenericType && ty.GetGenericTypeDefinition().Equals(typedefof<seq<int>>) then
+       Some (ty.GetGenericArguments().[0])
+    else   
+        match ty.BaseType with 
+        | null -> None 
+        | _ -> 
+            match ty.BaseType with 
+            | SeqTy ety -> Some ety
+            | _ -> 
+                ty.GetInterfaces() |> Array.tryPick (|SeqTy|_|)
+
+let rec formatType (ty: Type) = 
+    match ty with 
+    | ListTy ety -> sprintf "list<%s>" (formatType ety)
+    | ArrayTy (_,ety) -> sprintf "%s[]" (formatType ety)
+    | SeqTy ety -> sprintf "seq<%s>" (formatType ety)
+    | TupleTy etys -> String.concat "*" (Array.map formatType etys)
+    | ty when ty = typeof<int64> -> "int64"
+    | ty when ty = typeof<int> -> "int"
+    | ty when ty = typeof<double> -> "double"
+    | ty when ty = typeof<float32> -> "float32"
+    | _ -> ty.ToString()
+
+let private (|SeqTupleTy|_|) (ty: Type) = 
+    match ty with 
+    | SeqTy (TupleTy etys) -> 
+        match etys |> Array.tryFind (fun ety -> ety <> etys.[0]) with
+        | None -> ()
+        | Some ety2 -> failwithf "jagged input: unexpected mixed types in tuple being used as sequence notation, %s and %s" (formatType etys.[0]) (formatType ety2)
+        Some (etys.[0])
+    | _ -> None
+
+let private (|TupleLeafTy|_|) (tgt: Type) (ty: Type) = 
+    match ty with 
+    | TupleTy etys when etys |> Array.forall (fun ety -> ety = tgt) -> Some ()
+    | _ -> None
+
+let private (|SeqTupleLeafTy|_|) (tgt: Type) (ty: Type) = 
+    match ty with 
+    | SeqTy (TupleLeafTy tgt) -> Some ()
+    | _ -> None
+
+let private flatArrayAndShape1D<'T> (v: 'T[]) =
+    v, [|Array.length v|]
+
+let private flatArrayAndShape2D<'T> (v: 'T[,]) =
+    let n1 = Array2D.length1 v
+    let n2 = Array2D.length2 v
+    let arr =
+        [|  for i=0 to n1-1 do
+                for j=0 to n2-1 do
+                   yield v.[i, j] |]
+    arr, [| n1;n2|]
+
+let private flatArrayAndShape3D<'T> (v: 'T[,,]) =
+    let n1 = Array3D.length1 v
+    let n2 = Array3D.length2 v
+    let n3 = Array3D.length3 v
+    let arr =
+        [|  for i=0 to n1-1 do
+                for j=0 to n2-1 do
+                    for k=0 to n3-1 do
+                        yield v.[i, j, k] |]
+    arr, [| n1;n2;n3 |]
+
+let private flatArrayAndShape4D<'T> (v: 'T[,,,]) =
+    let n1 = Array4D.length1 v
+    let n2 = Array4D.length2 v
+    let n3 = Array4D.length3 v
+    let n4 = Array4D.length4 v
+    let arr =
+        [|  for i=0 to n1-1 do
+                for j=0 to n2-1 do
+                    for k=0 to n3-1 do
+                        for m=0 to n4-1 do
+                            yield v.[i, j, k, m] |]
+    arr, [| n1;n2;n3;n4 |]
+
+let private flatSeqTuple (els: obj) =
+    match seqElements els with 
+    | [| el |] -> FSharpValue.GetTupleFields(el) 
+    | tup -> failwithf "unexpected multiple values in tuple list input: %A" (Array.toList tup)
+
+let private flatSeqTupleLeaf<'T> (els: obj) =
+    flatSeqTuple els |> Array.map (fun v -> v :?> 'T)
+
+let private (|SeqOrSeqTupleTy|_|) ty =
+    match ty with 
+    | SeqTupleTy ety -> Some (flatSeqTuple, ety)
+    | SeqTy ety -> Some (seqElements, ety)
+    | _ -> None
+
 let rec flatArrayAndShape<'T> (value:obj) =
+
     match value with
     | :? 'T as v -> [|v|], [||]
-    | :? ('T[]) as v -> v |> Array.toSeq |> flatArrayAndShape<'T>
-    | :? ('T[,]) as v ->
-        seq {
-            for i=0 to v.GetLength(0)-1 do
-                yield seq {
-                    for j=0 to v.GetLength(1)-1 do
-                        yield v.[i, j]
-                }
-        } |> flatArrayAndShape<'T>
-    | :? ('T[,,]) as v ->
-        seq {
-            for i=0 to v.GetLength(0)-1 do
-                yield seq {
-                    for j=0 to v.GetLength(1)-1 do
-                        yield seq {
-                            for k=0 to v.GetLength(2)-1 do
-                                yield v.[i, j, k]
-                        }
-                }
-        } |> flatArrayAndShape<'T>        
-    | :? ('T[,,,]) as v ->
-        seq {
-            for i=0 to v.GetLength(0)-1 do
-                yield seq {
-                    for j=0 to v.GetLength(1)-1 do
-                        yield seq {
-                            for k=0 to v.GetLength(2)-1 do
-                                yield seq {
-                                    for l=0 to v.GetLength(3)-1 do
-                                        yield v.[i, j, k, l]
-                                }
-                        }
-                }
-        } |> flatArrayAndShape<'T>    
-    | :? seq<'T> as v -> Seq.toArray v, [|Seq.length v|]
-    | :? seq<seq<'T>> as v ->
-        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
-    | :? seq<seq<seq<'T>>> as v ->
-        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
-    | :? seq<seq<seq<seq<'T>>>> as v ->
-        let arrays, shapes = v |> Seq.map flatArrayAndShape<'T> |> Seq.toArray |> Array.unzip
-        if not (allEqual shapes) then failwith "Expecting a rectangular sequence"
-        Array.reduce (Array.append) arrays, Array.append [|(v |> Seq.length)|] shapes.[0]
+    | :? ('T[]) as v -> flatArrayAndShape1D v
+    | :? ('T[,]) as v -> flatArrayAndShape2D<'T> v
+    | :? ('T[,,]) as v -> flatArrayAndShape3D<'T> v
+    | :? ('T[,,,]) as v -> flatArrayAndShape4D<'T> v
+    | :? seq<'T> as v -> flatArrayAndShape1D (Seq.toArray v)
+    | :? seq<seq<'T>> as v -> flatArrayAndShape2D (array2D v)
+    | :? seq<seq<seq<'T>>> as v -> flatArrayAndShape3D (array3D v)
+    | :? seq<seq<seq<seq<'T>>>> as v -> flatArrayAndShape4D (array4D v)
+    | _ -> 
+    let vty = value.GetType()
+    let tgt = (typeof<'T>)
+    match vty with
+    // list<int * int> -> dim 1
+    | SeqTupleLeafTy tgt -> 
+        let arr = value |> flatSeqTupleLeaf<'T>
+        arr, [| arr.Length |]
+    // list<list<int * int>> etc. -> dim 2
+    | SeqOrSeqTupleTy (fetcher, (SeqTupleLeafTy tgt)) -> 
+        let els = value |> fetcher |> Array.map flatSeqTupleLeaf<'T> |> array2D
+        flatArrayAndShape2D<'T> els
+    // ... -> dim 3
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqTupleLeafTy tgt)) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map flatSeqTupleLeaf) |> array3D
+        flatArrayAndShape3D<'T> els
+    // ... -> dim 4
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqTupleLeafTy tgt))) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map flatSeqTupleLeaf)) |> array4D
+        flatArrayAndShape4D<'T> els
     | _ -> null, null
-    // TODO: add list of tuples parsing
 
 let toInt a =
     match box a with

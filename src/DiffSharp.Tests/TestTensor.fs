@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Backend
 
 [<TestFixture>]
 type TestTensor () =
@@ -11,47 +12,142 @@ type TestTensor () =
         ()
 
     [<Test>]
-    member this.TestTensorCreate () =
+    member this.TestTensorCreate0 () =
         let t0 = Tensor.Create(1.)
         let t0Shape = t0.Shape
         let t0Dim = t0.Dim
         let t0ShapeCorrect = [||]
         let t0DimCorrect = 0
 
+        Assert.AreEqual(t0DimCorrect, t0Dim)
+        Assert.AreEqual(t0ShapeCorrect, t0Shape)
+
+    [<Test>]
+    member this.TestTensorCreate1 () =
+        // create from double list
         let t1 = Tensor.Create([1.; 2.; 3.])
-        let t1Shape = t1.Shape
-        let t1Dim = t1.Dim
         let t1ShapeCorrect = [|3|]
         let t1DimCorrect = 1
 
-        let t2 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
-        let t2Shape = t2.Shape
-        let t2Dim = t2.Dim
+        Assert.AreEqual(t1ShapeCorrect, t1.Shape)
+        Assert.AreEqual(t1DimCorrect, t1.Dim)
+
+        // create from double[]
+        let t1Array = Tensor.Create([| 1.; 2.; 3. |])
+
+        Assert.AreEqual(t1ShapeCorrect, t1Array.Shape)
+        Assert.AreEqual(t1DimCorrect, t1Array.Dim)
+
+        // create from seq<double>
+        let t1Seq = Tensor.Create(seq { 1.; 2.; 3. })
+
+        Assert.AreEqual(t1ShapeCorrect, t1Seq.Shape)
+        Assert.AreEqual(t1DimCorrect, t1Seq.Dim)
+
+    [<Test>]
+    member this.TestTensorCreate2 () =
+        let t2Values = [[1.; 2.; 3.]; [4.; 5.; 6.]]
         let t2ShapeCorrect = [|2; 3|]
         let t2DimCorrect = 2
+        let t2DTypeCorrect = DType.Float32
+        let t2ValuesCorrect = array2D (List.map (List.map float32) t2Values)
 
-        let t3 = Tensor.Create([[[1.; 2.; 3.]; [4.; 5.; 6.]]])
-        let t3Shape = t3.Shape
-        let t3Dim = t3.Dim
+        // create from double list list
+        let t2 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
+        Assert.AreEqual(t2ShapeCorrect, t2.Shape)
+        Assert.AreEqual(t2DimCorrect, t2.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2.ToArray())
+
+        // create from double array list
+        let t2ArrayList = Tensor.Create([[|1.; 2.; 3.|]; [|4.; 5.; 6.|]])
+        Assert.AreEqual(t2ShapeCorrect, t2ArrayList.Shape)
+        Assert.AreEqual(t2DimCorrect, t2ArrayList.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArrayList.ToArray())
+
+        // create from double list array
+        let t2ListArray = Tensor.Create([| [1.; 2.; 3.]; [4.; 5.; 6.] |])
+        Assert.AreEqual(t2ShapeCorrect, t2ListArray.Shape)
+        Assert.AreEqual(t2DimCorrect, t2ListArray.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ListArray.ToArray())
+
+        // create from double[][]
+        let t2ArrayArray = Tensor.Create([| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
+        Assert.AreEqual(t2ShapeCorrect, t2ArrayArray.Shape)
+        Assert.AreEqual(t2DimCorrect, t2ArrayArray.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArrayArray.ToArray())
+
+        // create from double[,]
+        let t2Array2D = Tensor.Create(array2D [| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
+        Assert.AreEqual(t2ShapeCorrect, t2Array2D.Shape)
+        Assert.AreEqual(t2DimCorrect, t2Array2D.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2Array2D.ToArray())
+
+        // create from seq<double[]>
+        let t2ArraySeq = Tensor.Create(seq { yield [| 1.; 2.; 3. |]; yield [| 4.; 5.; 6.|] })
+        Assert.AreEqual(t2ShapeCorrect, t2ArraySeq.Shape)
+        Assert.AreEqual(t2DimCorrect, t2ArraySeq.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArraySeq.ToArray())
+
+        // create from seq<seq<double>>
+        let t2SeqSeq = Tensor.Create(seq { seq { 1.; 2.; 3. }; seq { 4.; 5.; 6.} })
+        Assert.AreEqual(t2ShapeCorrect, t2SeqSeq.Shape)
+        Assert.AreEqual(t2DimCorrect, t2SeqSeq.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2SeqSeq.ToArray())
+
+        // create from (double * double * double) list list
+        let t2TupleListList = Tensor.Create([ [ 1., 2., 3. ]; [ 4., 5., 6. ] ])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleListList.Shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleListList.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleListList.ToArray())
+
+        // create from ((double * double * double) list * (double * double * double) list) list
+        let t2TupleListTupleList = Tensor.Create([ [ 1., 2., 3. ], [ 4., 5., 6. ] ])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleListTupleList.Shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleListTupleList.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleListTupleList.ToArray())
+
+        // create from (double * double * double)[]
+        let t2TupleArray = Tensor.Create([| [ 1., 2., 3. ]; [ 4., 5., 6. ] |])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.Shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArray.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.ToArray())
+
+        // create from ((double * double * double) [] * (double * double * double) []) []
+        let t2TupleArrayTupleArray = Tensor.Create([| [| 1., 2., 3. |], [| 4., 5., 6. |] |])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArrayTupleArray.Shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArrayTupleArray.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.ToArray())
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.ToArray())
+
+        // create from (double * double * double)seq
+        let t2TupleArray = Tensor.Create(seq { [ 1., 2., 3. ]; [ 4., 5., 6. ] })
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.Shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArray.Dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.ToArray())
+
+    [<Test>]
+    member this.TestTensorCreate3 () =
+        let t3Values = [[[1.; 2.; 3.]; [4.; 5.; 6.]]]
+        let t3 = Tensor.Create(t3Values)
         let t3ShapeCorrect = [|1; 2; 3|]
         let t3DimCorrect = 3
+        let t3ValuesCorrect = Util.array3D (List.map (List.map (List.map float32)) t3Values)
 
-        let t4 = Tensor.Create([[[[1.; 2.]]]])
-        let t4Shape = t4.Shape
-        let t4Dim = t4.Dim
+        Assert.AreEqual(t3ShapeCorrect, t3.Shape)
+        Assert.AreEqual(t3DimCorrect, t3.Dim)
+        Assert.AreEqual(t3ValuesCorrect, t3.ToArray())
+
+    [<Test>]
+    member this.TestTensorCreate4 () =
+        let t4Values = [[[[1.; 2.]]]]
+        let t4 = Tensor.Create(t4Values)
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
+        let t4ValuesCorrect = Util.array4D (List.map (List.map (List.map (List.map float32))) t4Values)
 
-        Assert.AreEqual(t0ShapeCorrect, t0Shape)
-        Assert.AreEqual(t1ShapeCorrect, t1Shape)
-        Assert.AreEqual(t2ShapeCorrect, t2Shape)
-        Assert.AreEqual(t3ShapeCorrect, t3Shape)
-        Assert.AreEqual(t4ShapeCorrect, t4Shape)
-        Assert.AreEqual(t0DimCorrect, t0Dim)
-        Assert.AreEqual(t1DimCorrect, t1Dim)
-        Assert.AreEqual(t2DimCorrect, t2Dim)
-        Assert.AreEqual(t3DimCorrect, t3Dim)
-        Assert.AreEqual(t4DimCorrect, t4Dim)
+        Assert.AreEqual(t4ShapeCorrect, t4.Shape)
+        Assert.AreEqual(t4DimCorrect, t4.Dim)
+        Assert.AreEqual(t4ValuesCorrect, t4.ToArray())
 
     [<Test>]
     member this.TestTensorToArray () =
@@ -708,13 +804,13 @@ type TestTensor () =
     
     [<Test>]
     member this.TestTensorSumDim () =
-        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let t = Tensor.Create([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
         let tSum0 = t.Sum(0)
-        let tSum0Correct = Tensor.Create([[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]])
+        let tSum0Correct = Tensor.Create([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
         let tSum1 = t.Sum(1)
-        let tSum1Correct = Tensor.Create([[15.0f; 18.0f; 21.0f; 24.0f]; [51.0f; 54.0f; 57.0f; 60.0f]])
+        let tSum1Correct = Tensor.Create([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
         let tSum2 = t.Sum(2)
-        let tSum2Correct = Tensor.Create([[10.0f; 26.0f; 42.0f]; [58.0f; 74.0f; 90.0f]])
+        let tSum2Correct = Tensor.Create([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
         Assert.AreEqual(tSum1Correct, tSum1)
