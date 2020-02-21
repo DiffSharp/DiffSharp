@@ -54,7 +54,7 @@ type Tensor =
 
     member t.ForwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else invalidArg "derivative" (sprintf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative)
+        if t.Shape = derivative.Shape then TensorF(t, derivative, tag) else failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
     member t.ReverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
@@ -85,8 +85,8 @@ type Tensor =
                 if t.Dim = tensor.Dim && t.Dim = 0 then
                     t.PrimalRaw.CompareTo(tensor.PrimalRaw)
                 else
-                    invalidOp "Cannot compare non-scalar Tensors"
-            | _ -> invalidOp "Cannot compare Tensor with another type"
+                    failwith "Cannot compare non-scalar Tensors"
+            | _ -> failwith "Cannot compare Tensor with another type"
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with
         | Tensor(_),  Tensor(_)  -> true
@@ -143,7 +143,7 @@ type Tensor =
         Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     static member Extend(a:Tensor, shape:seq<int>) =
-        if a.Dim <> 0 then invalidArg "tensor" (sprintf "Expecting a 0d Tensor, received shape: %A" a.Shape)
+        if a.Dim <> 0 then failwithf "Expecting a 0d Tensor, received shape: %A" a.Shape
         match a with
         | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
         | TensorF(ap,ad,at) ->
@@ -155,7 +155,7 @@ type Tensor =
             TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
     member internal t.GetSlice(bounds:int[,]) =
-        if t.Dim = 0 then invalidOp "Cannot slice a scalar Tensor"
+        if t.Dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
@@ -167,8 +167,8 @@ type Tensor =
 
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
-            if t.Dim = 0 then invalidOp "Cannot index a scalar Tensor"
-            if index.Length > t.Dim then invalidArg "index" (sprintf "Expecting an index with <=%i dimensions" t.Dim)
+            if t.Dim = 0 then failwith "Cannot index a scalar Tensor"
+            if index.Length > t.Dim then failwithf "Expecting an index with <=%i dimensions" t.Dim
             let bounds = Array2D.init index.Length 2 (fun i _ -> index.[i])
             t.GetSlice(bounds)
 
@@ -260,7 +260,7 @@ type Tensor =
                 let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
                 let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
+            else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         elif a.Dim = 1 && b.Dim = 2 then
             if a.Shape.[0] = b.Shape.[1] then
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
@@ -272,7 +272,7 @@ type Tensor =
                 let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
                 let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
                 Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-            else invalidOp <| sprintf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
+            else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         // TODO: implement general broadcasting additions
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
     static member (+) (a:Tensor, b) = a + a.Create(b)
@@ -430,7 +430,7 @@ type Tensor =
     member t1.Pow(t2) = t1 ** t1.Create(t2)
 
     static member MatMul (a:Tensor, b:Tensor) =
-        if a.Dim <> 2 || b.Dim <> 2 then invalidOp <| sprintf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
+        if a.Dim <> 2 || b.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
         if a.Shape.[1] = b.Shape.[0] then
             let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
             let inline fTensor(a,b) = Tensor.MatMul(a, b)
@@ -468,7 +468,7 @@ type Tensor =
        let res =
         if dim = 0 && a.Dim = 0 then a
         else
-            if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
+            if dim >= a.Dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.Dim
             let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
             sBounds.[dim, 1] <- 0
             let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
@@ -494,7 +494,7 @@ type Tensor =
     // TODO: this is the naive algorithm, can be improved for better numerical stability
     static member Variance(a:Tensor, dim:int, ?keepDim:bool) =
         let keepDim = defaultArg keepDim false
-        if dim >= a.Dim || dim < 0 then invalidArg "dim" <| sprintf "Expecting dim to be between 0 and %A" a.Dim
+        if dim >= a.Dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.Dim
         let sBounds = Array2D.init a.Dim 2 (fun i j -> if j=0 then 0 else a.Shape.[i]-1)
         sBounds.[dim, 1] <- 0
         let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
@@ -526,7 +526,7 @@ type Tensor =
     member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
     
     static member Transpose (a:Tensor) =
-        if a.Dim <> 2 then invalidOp <| sprintf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
+        if a.Dim <> 2 then failwithf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
         let inline fRaw(a:RawTensor) = a.TransposeT2()
         let inline fTensor(a) = Tensor.Transpose(a)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
@@ -578,7 +578,7 @@ type Tensor =
     member t.Undilate(dilations) = Tensor.Undilate(t, dilations)
 
     static member Repeat (a:Tensor, dim:int, times:int) =
-        if a.Shape.[dim] <> 1 then invalidOp <| sprintf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.Shape dim
+        if a.Shape.[dim] <> 1 then failwithf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.Shape dim
         let newShape = a.Shape |> Array.copy
         newShape.[dim] <- times
         let mutable ret = Tensor.ZerosLike(a, newShape)
@@ -809,10 +809,37 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    static member Conv2D(a:Tensor, b:Tensor, ?stride:int[], ?padding:int[], ?dilation:int[]) =
+        let stride = defaultArg stride [|1; 1|]
+        let padding = defaultArg padding [|0; 0|]
+        let dilation = defaultArg dilation [|1; 1|]
+        // TODO: implement dilation
+        // let mutable b = b
+        // if dilation.[0] >= 1 && dilation.[1] >= 1 then
+        //     b <- b.Dilate([|1; 1; dilation.[0]; dilation.[1]|])
+        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
+        let inline fTensor(a,b) = Tensor.Conv2D(a, b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv2D(ad, bp, stride, padding) + Tensor.Conv2D(ap, bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv2D(ad, b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv2D(a, bd, stride, padding)
+        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, stride, padding)
+        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, stride, padding)
+        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, stride, padding)
+        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+
+    static member Conv2D(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+        let stride = defaultArg stride 1
+        let padding = defaultArg padding 0
+        let dilation = defaultArg dilation 1
+        Tensor.Conv2D(a, b, [|stride; stride|], [|padding; padding|], [|dilation; dilation|])
+
+    static member Conv2D(a:Tensor, b:Tensor) =
+        Tensor.Conv2D(a, b, [|1; 1|], [|0; 0|], [|1; 1|])
+
     member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
         let zeroDerivatives = defaultArg zeroDerivatives true
-        if value.Shape <> t.Shape then invalidArg "value" <| sprintf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
+        if value.Shape <> t.Shape then failwithf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
         t.ReverseReset(zeroDerivatives)
         t.ReversePush(value)
 
@@ -875,6 +902,9 @@ type Tensor =
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
+                        | Conv2DTT(a,b,_,_) -> reset (a::b::tt)
+                        | Conv2DTTConst(a,_,_,_) -> reset (a::tt)
+                        | Conv2DTConstT(_,b,_,_) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim0(a) -> reset (a::tt)
@@ -1011,6 +1041,9 @@ type Tensor =
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
                         | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"
+                        | Conv2DTT(a,b,_,_) -> failwith "Not implemented"
+                        | Conv2DTTConst(a,_,_,_) -> failwith "Not implemented"
+                        | Conv2DTConstT(_,b,_,_) -> failwith "Not implemented"
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
@@ -1113,6 +1146,10 @@ and TensorOp =
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int
     | Conv1DTConstT of Tensor * Tensor * int * int
+
+    | Conv2DTT of Tensor * Tensor * int[] * int[]
+    | Conv2DTTConst of Tensor * Tensor * int[] * int[]
+    | Conv2DTConstT of Tensor * Tensor * int[] * int[]
 
     | NegT of Tensor
     | SumT of Tensor

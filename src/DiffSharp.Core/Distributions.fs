@@ -32,7 +32,7 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.Stddev = d.Range * d.Range / 12.
     override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
     override d.Logprob(value) = 
-        if value.Shape <> d.BatchShape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
+        if value.Shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
         let lb = d.Low.Le(value)
         let ub = d.High.Gt(value)
         log (lb * ub) - log d.Range
@@ -48,7 +48,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.Stddev = stddev
     override d.Sample() = d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev
     override d.Logprob(value) = 
-        if value.Shape <> d.BatchShape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
+        if value.Shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
         let v = value - d.Mean in -(v * v) / (2. * d.Variance) - (log d.Stddev) - logSqrt2Pi
     override d.GetString() = sprintf "Normal(mean:%A, stddev:%A)" d.Mean d.Stddev
 
@@ -72,7 +72,7 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
         Tensor(d.Probs.PrimalRaw.RandomMultinomial(numSamples))
     override d.Sample() = d.Sample(1)
     override d.Logprob(value) =
-        if value.Shape <> d.BatchShape then invalidArg "value" <| sprintf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
+        if value.Shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
         if d.BatchShape.Length = 0 then
             let i = value.ToValue() |> toInt
             d.Probs.[i] |> Tensor.Log
