@@ -168,11 +168,11 @@ type TestTensor () =
         let t2String = t2.ToString()
         let t3String = t3.ToString()
         let t4String = t4.ToString()
-        let t0StringCorrect = "Tensor 2.0f"
-        let t1StringCorrect = "Tensor [[2.0f]; [2.0f]]"
-        let t2StringCorrect = "Tensor [[[2.0f; 2.0f]]]"
-        let t3StringCorrect = "Tensor [[1.0f; 2.0f]; [3.0f; 4.0f]]"
-        let t4StringCorrect = "Tensor [[[[1.0f]]]]"
+        let t0StringCorrect = "Tensor 2.000000"
+        let t1StringCorrect = "Tensor [[2.000000], \n [2.000000]]"
+        let t2StringCorrect = "Tensor [[[2.000000, 2.000000]]]"
+        let t3StringCorrect = "Tensor [[1.000000, 2.000000], \n [3.000000, 4.000000]]"
+        let t4StringCorrect = "Tensor [[[[1.000000]]]]"
         Assert.AreEqual(t0StringCorrect, t0String)
         Assert.AreEqual(t1StringCorrect, t1String)
         Assert.AreEqual(t2StringCorrect, t2String)
@@ -461,7 +461,7 @@ type TestTensor () =
                                         [[3.4749];
                                          [2.7692]]])
 
-        let t3s2p1 = Tensor.Conv1D(t1, t2, padding=1, stride=2)
+        let t3s2p1 = Tensor.Conv1D(t1, t2, stride=2, padding=1)
         let t3s2p1Correct = Tensor.Create([[[1.4392; 2.0732; 2.1177];
                                              [1.4345; 1.7078; 2.1474]];
 
@@ -471,7 +471,7 @@ type TestTensor () =
                                             [[1.2965; 2.9038; 1.7408];
                                              [1.3549; 2.9444; 1.2120]]])
 
-        let t3s3p2 = Tensor.Conv1D(t1, t2, padding=2, stride=3)
+        let t3s3p2 = Tensor.Conv1D(t1, t2, stride=3, padding=2)
         let t3s3p2Correct = Tensor.Create([[[0.6333; 2.0732; 1.0258];
                                              [0.6539; 1.7078; 1.2585]];
 
@@ -511,10 +511,10 @@ type TestTensor () =
                                             [[0.3165; 1.4118; 2.1327; 1.1949];
                                              [0.3861; 1.5697; 2.0696; 0.8520]]])
 
-        let t3b1 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2)
-        let t3b1correct = t3Correct.[0,*,*].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2, stride = 2)
-        let t3b1s2correct = t3s2Correct.[0,*,*].Unsqueeze(0)
+        let t3b1 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2)
+        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
+        let t3b1s2 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
@@ -526,56 +526,56 @@ type TestTensor () =
         Assert.True(t3d2.ApproximatelyEqual(t3d2Correct))
         Assert.True(t3p2d3.ApproximatelyEqual(t3p2d3Correct))
         Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
-        Assert.True(t3b1.ApproximatelyEqual(t3b1correct))
-        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2correct))
+        Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
+        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
 
     [<Test>]
     member this.TestTensorConv2D () =
-        let t1 = Tensor.Create([[[[ 10.7072;  -5.0993;   3.6884;   2.0982];
-                                  [ -6.4356;   0.6351;  -2.3156;  -1.3384];
-                                  [ -5.1846;   0.6805; -14.1961;   0.8657];
-                                  [ -8.8655;  -7.1694;  -3.4903;  -2.9479]];
+        let t1 = Tensor.Create([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
+                                  [ -6.4356,   0.6351,  -2.3156,  -1.3384],
+                                  [ -5.1846,   0.6805, -14.1961,   0.8657],
+                                  [ -8.8655,  -7.1694,  -3.4903,  -2.9479]],
 
-                                 [[  2.5630;  -2.2935;  -0.8665;   6.7999];
-                                  [  1.8098;   3.2082;   2.3160;  -4.7734];
-                                  [ 14.7205;   0.9631;   8.1039;   6.7437];
-                                  [  3.7847;  -5.9792;  -2.7371;  -7.8548]]];
-
-
-                                [[[  3.5499;   0.9546;  -7.5715;   2.8211];
-                                  [ -1.2659;   5.2366;  -7.2322;  -5.8877];
-                                  [ -2.8041;   2.1746;   2.2397;   0.1242];
-                                  [  1.8172;  -0.3989;  -0.2394;   7.1078]];
-
-                                 [[ -3.7765;   2.1584;   6.8627;  -4.1471];
-                                  [  4.6748;   7.9756;  -6.0065;   2.0826];
-                                  [  5.1038;  -5.5801;  -4.4420;  -2.9498];
-                                  [  0.1037;   4.6578;   3.0760;  -4.9566]]]])
-        let t2 = Tensor.Create([[[[-5.6745; -1.9422;  4.1369];
-                                  [ 4.4623;  4.8385;  0.8345];
-                                  [ 1.3015;  0.0708;  3.8132]];
-
-                                 [[ 0.9448; -1.9028; -8.0195];
-                                  [-5.3200;  0.4264; -1.2142];
-                                  [ 1.4442; -7.3623; 14.5340]]];
+                                 [[  2.5630,  -2.2935,  -0.8665,   6.7999],
+                                  [  1.8098,   3.2082,   2.3160,  -4.7734],
+                                  [ 14.7205,   0.9631,   8.1039,   6.7437],
+                                  [  3.7847,  -5.9792,  -2.7371,  -7.8548]]],
 
 
-                                [[[-3.3486; -3.2725; -3.4595];
-                                  [-5.0818; -0.5769; -3.5363];
-                                  [ 3.1498;  0.6293; -1.2527]];
+                                [[[  3.5499,   0.9546,  -7.5715,   2.8211],
+                                  [ -1.2659,   5.2366,  -7.2322,  -5.8877],
+                                  [ -2.8041,   2.1746,   2.2397,   0.1242],
+                                  [  1.8172,  -0.3989,  -0.2394,   7.1078]],
 
-                                 [[ 3.2029;  3.9409; 12.6924];
-                                  [ 4.1056; -3.2890;  2.4071];
-                                  [ 4.2373; -1.8852;  4.4640]]];
+                                 [[ -3.7765,   2.1584,   6.8627,  -4.1471],
+                                  [  4.6748,   7.9756,  -6.0065,   2.0826],
+                                  [  5.1038,  -5.5801,  -4.4420,  -2.9498],
+                                  [  0.1037,   4.6578,   3.0760,  -4.9566]]]])
+        let t2 = Tensor.Create([[[[-5.6745, -1.9422,  4.1369],
+                                  [ 4.4623,  4.8385,  0.8345],
+                                  [ 1.3015,  0.0708,  3.8132]],
+
+                                 [[ 0.9448, -1.9028, -8.0195],
+                                  [-5.3200,  0.4264, -1.2142],
+                                  [ 1.4442, -7.3623, 14.5340]]],
 
 
-                                [[[ 4.0582; -4.6075;  6.2574];
-                                  [-0.9867;  3.4303; -1.9686];
-                                  [-5.0618;  5.0045; -2.0878]];
+                                [[[-3.3486, -3.2725, -3.4595],
+                                  [-5.0818, -0.5769, -3.5363],
+                                  [ 3.1498,  0.6293, -1.2527]],
 
-                                 [[ 1.0605; -3.2697; -1.9856];
-                                  [-6.5763; -6.3535;  7.2228];
-                                  [15.1009;  4.9045;  5.1197]]]])
+                                 [[ 3.2029,  3.9409, 12.6924],
+                                  [ 4.1056, -3.2890,  2.4071],
+                                  [ 4.2373, -1.8852,  4.4640]]],
+
+
+                                [[[ 4.0582, -4.6075,  6.2574],
+                                  [-0.9867,  3.4303, -1.9686],
+                                  [-5.0618,  5.0045, -2.0878]],
+
+                                 [[ 1.0605, -3.2697, -1.9856],
+                                  [-6.5763, -6.3535,  7.2228],
+                                  [15.1009,  4.9045,  5.1197]]]])
 
         let t3 = Tensor.Conv2D(t1, t2)
         let t3Correct = Tensor.Create([[[[  10.6089;   -1.4459];
@@ -695,7 +695,7 @@ type TestTensor () =
                                          [[-106.0468];
                                           [ -78.6259]]]])
 
-        let t3s2p1 = Tensor.Conv2D(t1, t2, padding=1, stride=2)
+        let t3s2p1 = Tensor.Conv2D(t1, t2, stride=2, padding=1)
         let t3s2p1Correct = Tensor.Create([[[[  86.6988;  -85.8172];
                                               [-176.1860; -165.9882]];
 
@@ -715,63 +715,140 @@ type TestTensor () =
                                              [[  96.3737;  -68.9841];
                                               [ -44.8701;  136.6283]]]])
 
-        // let t3s3p2 = Tensor.Conv1D(t1, t2, padding=2, stride=3)
-        // let t3s3p2Correct = Tensor.Create([[[0.6333; 2.0732; 1.0258];
-        //                                      [0.6539; 1.7078; 1.2585]];
+        let t3s23p32 = Tensor.Conv2D(t1, t2, stride=[2; 3], padding=[3; 2])
+        let t3s23p32Correct = Tensor.Create([[[[   0.0000,    0.0000],
+                                                  [   7.5866,  -85.8172],
+                                                  [ -42.1364, -165.9885],
+                                                  [ -67.0271,   97.8170]],
 
-        //                                     [[0.5982; 2.9651; 1.0620];
-        //                                      [0.5157; 3.1496; 1.3182]];
+                                                 [[   0.0000,    0.0000],
+                                                  [ -15.5537,   16.3071],
+                                                  [ 127.0034, -112.2239],
+                                                  [  78.7071,  -84.0060]],
 
-        //                                     [[0.3165; 2.9038; 0.5275];
-        //                                      [0.3861; 2.9444; 0.7428]]])
+                                                 [[   0.0000,    0.0000],
+                                                  [  20.1357,  106.6139],
+                                                  [ 110.5519, -168.9587],
+                                                  [ -62.9899,  -13.2544]]],
+
+
+                                                [[[   0.0000,    0.0000],
+                                                  [  70.6642,   36.3191],
+                                                  [ -42.8270,  -47.1361],
+                                                  [   6.6860,   70.4299]],
+
+                                                 [[   0.0000,    0.0000],
+                                                  [   0.8102,   39.5820],
+                                                  [  84.1018,    8.1256],
+                                                  [  -4.9704,  -58.3407]],
+
+                                                 [[   0.0000,    0.0000],
+                                                  [  -7.6887,  -68.9838],
+                                                  [  21.9173,  136.6280],
+                                                  [  11.1650,   48.6844]]]])
         
-        // let t3d2 = Tensor.Conv1D(t1, t2, dilation=2)
-        // let t3d2Correct = Tensor.Create([[[2.8030];
-        //                                  [2.4735]];
+        let t3p1d2 = Tensor.Conv2D(t1, t2, padding=1, dilation=2)
+        let t3p1d2Correct = Tensor.Create([[[[ -72.7697,  -34.7305],
+                                              [ -35.3463, -230.5320]],
 
-        //                                 [[2.9226];
-        //                                  [3.1868]];
+                                             [[ -42.2859,   24.9292],
+                                              [  96.3085,   25.1894]],
 
-        //                                 [[2.8469];
-        //                                  [2.4790]]])
+                                             [[-149.3111,   42.9268],
+                                              [  73.8409, -159.8669]]],
 
-        // let t3p2d3 = Tensor.Conv1D(t1, t2, padding=2, dilation=3)
-        // let t3p2d3Correct = Tensor.Create([[[2.1121; 0.8484; 2.2709];
-        //                                      [1.6692; 0.5406; 1.8381]];
 
-        //                                     [[2.5078; 1.2137; 0.9173];
-        //                                      [2.2395; 1.1805; 1.1954]];
+                                            [[[ -57.9600,  -88.2215],
+                                              [  50.7950,  -52.7872]],
 
-        //                                     [[1.5215; 1.3946; 2.1327];
-        //                                      [1.0732; 1.3014; 2.0696]]])
+                                             [[ -43.4812,   49.7672],
+                                              [ -47.4554,   76.3617]],
 
-        // let t3s3p6d3 = Tensor.Conv1D(t1, t2, stride=3, padding=6, dilation=3)
-        // let t3s3p6d3Correct = Tensor.Create([[[0.6333; 1.5018; 2.2709; 1.0580];
-        //                                      [0.6539; 1.5130; 1.8381; 1.0479]];
+                                             [[ -25.4452,   -9.8843],
+                                              [  35.7940,   27.9557]]]])
 
-        //                                     [[0.5982; 1.7459; 0.9173; 0.2709];
-        //                                      [0.5157; 0.8537; 1.1954; 0.7027]];
+        let t3p22d23 = Tensor.Conv2D(t1, t2, padding=[2;2], dilation=[2;3])
+        let t3p22d23Correct = Tensor.Create([[[[-3.2693e+01, -4.3192e+01],
+                                                  [ 4.7954e+01,  9.6877e+00],
+                                                  [ 1.7971e+01, -7.0747e+01],
+                                                  [-4.4577e+01, -1.7964e+01]],
 
-        //                                     [[0.3165; 1.4118; 2.1327; 1.1949];
-        //                                      [0.3861; 1.5697; 2.0696; 0.8520]]])
+                                                 [[ 9.0977e+00, -2.3489e+01],
+                                                  [-4.1579e+00, -3.3179e+00],
+                                                  [ 4.0888e+00, -3.3949e+01],
+                                                  [ 3.4366e+01,  2.7721e+01]],
 
-        // let t3b1 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2)
-        // let t3b1correct = t3Correct.[0,*,*].Unsqueeze(0)
-        // let t3b1s2 = Tensor.Conv1D(t1.[0,*,*].Unsqueeze(0) , t2, stride = 2)
-        // let t3b1s2correct = t3s2Correct.[0,*,*].Unsqueeze(0)
+                                                 [[ 5.2087e+00, -1.3141e+01],
+                                                  [-8.3409e+01, -5.3549e+01],
+                                                  [ 2.7209e+01, -1.1435e+02],
+                                                  [-2.0424e-02,  8.5139e+00]]],
 
+
+                                                [[[ 4.6776e+01, -8.4654e-01],
+                                                  [-5.5823e+00, -6.0218e+01],
+                                                  [ 2.1814e+00,  1.0590e+01],
+                                                  [-2.5290e+01,  2.5629e+01]],
+
+                                                 [[ 4.2384e+00, -8.4199e+00],
+                                                  [-3.8285e+01,  1.7978e+01],
+                                                  [ 2.2481e+01,  6.5141e+01],
+                                                  [-7.9511e-01, -9.9825e+00]],
+
+                                                 [[-2.6924e+01, -8.0152e+01],
+                                                  [-1.1862e+01,  2.7242e+01],
+                                                  [ 3.1457e+01,  4.8352e+01],
+                                                  [-8.1167e+01,  3.2597e+01]]]])
+
+        let t3s3p6d3 = Tensor.Conv2D(t1, t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3Correct = Tensor.Create([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
+                                                  [  27.0241, -107.5002,   98.7433,  -41.9933],
+                                                  [  11.7470, -105.7288, -152.6583,   23.1514],
+                                                  [ -67.0271,   60.8134,   74.5546,    9.3066]],
+
+                                                 [[  -1.9717,   29.6326,   33.0870,   35.4221],
+                                                  [  -3.6938,  -49.7435,  -66.3994,  -25.3134],
+                                                  [  35.9503,   38.2935,   80.4125,   -2.5147],
+                                                  [  78.7071,  -45.5705,   20.5010,  -15.2868]],
+
+                                                 [[  -9.2327,   96.5872,   28.3565,   92.0639],
+                                                  [  35.3198,    5.5638,  -14.6744, -150.4814],
+                                                  [ 106.6989, -163.4741,   37.9205,   70.2904],
+                                                  [ -62.9899,   25.6233,    7.3010,  -20.2932]]],
+
+
+                                                [[[ -41.3512,  -21.4615,   29.8981,   -2.3176],
+                                                  [  15.9843,  -22.6151,   87.3233,   36.7436],
+                                                  [  46.3618,   66.0061,   18.5348,   38.1597],
+                                                  [   6.6860,   65.4270,  -14.5871,  -45.0162]],
+
+                                                 [[ -21.3053,  -12.6932,    4.7727,   -8.6866],
+                                                  [ -23.4574,  -39.6679,   -1.5520,  -29.9771],
+                                                  [ -66.3903, -127.3519,  -46.1654,  -79.1997],
+                                                  [  -4.9704,  -93.0387,  -48.5467,  -39.6767]],
+
+                                                 [[ -26.7460,  -27.8782,  -81.2187,  -76.9048],
+                                                  [ -37.5283,  -29.9493,   60.9875,  -86.3384],
+                                                  [  26.8834,  -22.3392,   64.3614,   32.6334],
+                                                  [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
+
+        // let t3b1 = Tensor.Conv2D(t1.[0].Unsqueeze(0) , t2)
+        // let t3b1Correct = t3Correct.[0].Unsqueeze(0)
+        // let t3b1s2 = Tensor.Conv2D(t1.[0].Unsqueeze(0), t2, stride = 2)
+        // let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+
+        // Assert.True(false)
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
         Assert.True(t3p12.ApproximatelyEqual(t3p12Correct))
         Assert.True(t3s2.ApproximatelyEqual(t3s2Correct))
         Assert.True(t3s13.ApproximatelyEqual(t3s13Correct))
         Assert.True(t3s2p1.ApproximatelyEqual(t3s2p1Correct))
-        // Assert.True(t3s3p2.ApproximatelyEqual(t3s3p2Correct))
-        // Assert.True(t3d2.ApproximatelyEqual(t3d2Correct))
-        // Assert.True(t3p2d3.ApproximatelyEqual(t3p2d3Correct))
-        // Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
-        // Assert.True(t3b1.ApproximatelyEqual(t3b1correct))
-        // Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2correct))
+        Assert.True(t3s23p32.ApproximatelyEqual(t3s23p32Correct))
+        Assert.True(t3p1d2.ApproximatelyEqual(t3p1d2Correct))
+        Assert.True(t3p22d23.ApproximatelyEqual(t3p22d23Correct))
+        Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
+        // Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
+        // Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
 
     [<Test>]
     member this.TestTensorNegT () =
@@ -1130,6 +1207,19 @@ type TestTensor () =
         let t3s13Correct = Tensor.Create([[1.;3.];[5.;7.]])
         let t3s14Correct = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
 
+        // let t4 = Tensor.Create([[[[1.]]; 
+        //                          [[2.]]; 
+        //                          [[3.]]]; 
+        //                         [[[4.]]; 
+        //                          [[5.]]; 
+        //                          [[6.]]]])
+        // let t4s1 = t4.[0]
+        // let t4s2 = t4.[0,*,*,*]
+        // let t4s1Correct = Tensor.Create([[[1]],
+        //                                  [[2]],
+        //                                  [[3]]])
+        // let t4s2Correct = t4s1Correct
+
         Assert.AreEqual(t1s1Correct, t1s1)
         Assert.AreEqual(t1s2Correct, t1s2)
 
@@ -1157,6 +1247,9 @@ type TestTensor () =
         Assert.AreEqual(t3s12Correct, t3s12)
         Assert.AreEqual(t3s13Correct, t3s13)
         Assert.AreEqual(t3s14Correct, t3s14)
+
+        // Assert.AreEqual(t4s1Correct, t4s1)
+        // Assert.AreEqual(t4s2Correct, t4s2)
 
     [<Test>]
     member this.TestTensorAddTTSlice () =

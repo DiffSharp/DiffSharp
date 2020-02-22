@@ -157,11 +157,13 @@ type Tensor =
             TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
     member internal t.GetSlice(bounds:int[,]) =
+        // printfn "getting slice\n bounds\n %A" bounds
         if t.Dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = Array2D.init t.Dim 2 (fun i j -> if j=0 then 0 else t.Shape.[i]-1)
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.Shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.Shape
             fullBounds.[i, j] <- v)
+        // printfn "fullBounds\n %A" fullBounds
         match t with
         | Tensor(ap) -> Tensor(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
@@ -807,14 +809,13 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    static member Conv2D(a:Tensor, b:Tensor, ?stride:int[], ?padding:int[], ?dilation:int[]) =
-        let stride = defaultArg stride [|1; 1|]
-        let padding = defaultArg padding [|0; 0|]
-        let dilation = defaultArg dilation [|1; 1|]
-        // TODO: implement dilation
-        // let mutable b = b
-        // if dilation.[0] >= 1 && dilation.[1] >= 1 then
-        //     b <- b.Dilate([|1; 1; dilation.[0]; dilation.[1]|])
+    static member Conv2D(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) =
+        let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
+        let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
+        let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
+        let mutable b = b
+        if dilation.[0] >= 1 && dilation.[1] >= 1 then
+            b <- b.Dilate([|1; 1; dilation.[0]; dilation.[1]|])
         let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
         let inline fTensor(a,b) = Tensor.Conv2D(a, b, stride, padding)
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv2D(ad, bp, stride, padding) + Tensor.Conv2D(ap, bd, stride, padding)
