@@ -12,7 +12,7 @@ open DiffSharp.Backend.None
 
 
 [<EntryPoint>]
-let main argv =
+let main _argv =
     printfn "Hello World from F#!"
 
     DiffSharp.Seed(12)
