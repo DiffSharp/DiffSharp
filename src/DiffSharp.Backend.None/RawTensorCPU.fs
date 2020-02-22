@@ -89,7 +89,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         match t.Dim with
-        | 0 -> sprintf "%A" t.Values.[0]
+        | 0 -> sprintf "%f" t.Values.[0]
         | _ ->
             let sb = System.Text.StringBuilder()
             let rec print (shape:int[]) externalCoords = 
@@ -99,16 +99,17 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                     for i=0 to shape.[0]-1 do
                         let globalCoords = Array.append externalCoords [|i|]
                         sb.Append(prefix) |> ignore
-                        sb.Append(sprintf "%A" (t.[globalCoords])) |> ignore
-                        prefix <- "; "
+                        sb.Append(sprintf "%f" (t.[globalCoords])) |> ignore
+                        prefix <- ", "
                     sb.Append("]") |> ignore
                 else
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
+                    let prefix2 = sprintf ", %s%s" (String.replicate (max 1 (shape.Length-1)) "\n") (String.replicate (externalCoords.Length+1) " ")
                     for i=0 to shape.[0]-1 do
                         sb.Append(prefix) |> ignore
                         print shape.[1..] (Array.append externalCoords [|i|])
-                        prefix <- "; "
+                        prefix <- prefix2
                     sb.Append("]") |> ignore
             print t.Shape [||]
             sb.ToString()
