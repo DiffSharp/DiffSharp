@@ -49,7 +49,7 @@ type TestTensor () =
         let t2Values = [[1.; 2.; 3.]; [4.; 5.; 6.]]
         let t2ShapeCorrect = [|2; 3|]
         let t2DimCorrect = 2
-        let t2DTypeCorrect = DType.Float32
+        // let t2DTypeCorrect = DType.Float32
         let t2ValuesCorrect = array2D (List.map (List.map float32) t2Values)
 
         // create from double list list
@@ -154,7 +154,7 @@ type TestTensor () =
         let a = array2D [[1.; 2.]; [3.; 4.]]
         let t = Tensor.Create(a)
         let v = t.ToArray()
-        Assert.AreEqual(v, a)
+        Assert.AreEqual(a, v)
 
     [<Test>]
     member this.TestTensorToString () =
