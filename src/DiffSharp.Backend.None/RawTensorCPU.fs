@@ -267,7 +267,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 if notNull array then 
                     RawTensorFloat32CPU(array |> Array.map float32, shape)
                 else
-                    failwith "Cannot convert value to RawTensorFloat32CPU"
+                    failwithf "Cannot convert value of type %A to RawTensorFloat32CPU" (value.GetType())
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
