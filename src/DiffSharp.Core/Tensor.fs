@@ -4,9 +4,9 @@ open DiffSharp.Util
 
 [<CustomEquality; CustomComparison>]
 type Tensor = 
-    | Tensor of raw:RawTensor
-    | TensorF of tensor:Tensor * diff:Tensor * nestingTag:uint32
-    | TensorR of tensor:Tensor * diff:(Tensor ref) * operation:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
+    | Tensor of primalRaw:RawTensor
+    | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
+    | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOperation:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
     member t.Primal =
         match t with
