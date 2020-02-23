@@ -1118,7 +1118,7 @@ type Tensor =
                                 let mutable c = Tensor.Conv2D(d, b, padding=[|kernelHeight-1; kernelWidth-1|])
                                 if padding.[0] > 0 || padding.[1] > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.Shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.Shape.[3]-1-padding.[1]; 1]]
-                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; c.Shape.[2]-padding.[0]; c.Shape.[3]-padding.[1]|])
+                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
                                 aderivative <- aderivative + c
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
