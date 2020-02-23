@@ -1081,7 +1081,7 @@ type Tensor =
                             let mutable tderivative = t.Derivative
                             if stride > 1 then
                                 tderivative <- tderivative.Dilate([|1;1;stride|])
-                            let bFlipped = b.Primal.Flip([|2|])
+                            // let bFlipped = b.Primal.Flip([|2|])
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
