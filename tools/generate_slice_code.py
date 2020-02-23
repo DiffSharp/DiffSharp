@@ -8,17 +8,21 @@ def generate(num_dims, fixed_dims):
             str += '{}i{}min:int option, i{}max:int option'.format(prefix, i, i)
         prefix = ', '
     str += ') ='
+    str += '\n    // Dims: {}'.format(num_dims)
+    # str += '\n    // Specified dims: {}'.format(fixed_dims)
     for i in range(num_dims):
         if fixed_dims[i]:
-            str += '\n    let i{}min = i{}'.format(i, i)
-            str += '\n    let i{}max = i{}'.format(i, i)
+            str += '\n    let i{}given = 1'.format(i)
+            str += '\n    let i{}min   = i{}'.format(i, i)
+            str += '\n    let i{}max   = i{}'.format(i, i)
         else:
-            str += '\n    let i{}min = defaultArg i{}min 0'.format(i, i)
-            str += '\n    let i{}max = defaultArg i{}max (t.Shape.[{}] - 1)'.format(i, i, i)
+            str += '\n    let i{}given = if i{}min.IsSome || i{}max.IsSome then 1 else 0'.format(i, i, i)
+            str += '\n    let i{}min   = defaultArg i{}min 0'.format(i, i)
+            str += '\n    let i{}max   = defaultArg i{}max (t.Shape.[{}] - 1)'.format(i, i, i)
     str += '\n    let bounds = array2D ['
     prefix = ''
     for i in range(num_dims):
-        str += '{}[i{}min; i{}max]'.format(prefix, i, i)
+        str += '{}[i{}min; i{}max; i{}given]'.format(prefix, i, i, i)
         prefix = '; '
     str += ']'
     str += '\n    t.GetSlice(bounds)\n'

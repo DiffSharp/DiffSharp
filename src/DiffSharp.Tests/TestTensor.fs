@@ -831,10 +831,10 @@ type TestTensor () =
                                                   [  26.8834,  -22.3392,   64.3614,   32.6334],
                                                   [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
 
-        // let t3b1 = Tensor.Conv2D(t1.[0].Unsqueeze(0) , t2)
-        // let t3b1Correct = t3Correct.[0].Unsqueeze(0)
-        // let t3b1s2 = Tensor.Conv2D(t1.[0].Unsqueeze(0), t2, stride = 2)
-        // let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+        let t3b1 = Tensor.Conv2D(t1.[0].Unsqueeze(0) , t2)
+        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
+        let t3b1s2 = Tensor.Conv2D(t1.[0].Unsqueeze(0), t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
 
         // Assert.True(false)
         Assert.True(t3.ApproximatelyEqual(t3Correct))
@@ -847,8 +847,8 @@ type TestTensor () =
         Assert.True(t3p1d2.ApproximatelyEqual(t3p1d2Correct))
         Assert.True(t3p22d23.ApproximatelyEqual(t3p22d23Correct))
         Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
-        // Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
-        // Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
+        Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
+        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
 
     [<Test>]
     member this.TestTensorNegT () =
@@ -1207,18 +1207,18 @@ type TestTensor () =
         let t3s13Correct = Tensor.Create([[1.;3.];[5.;7.]])
         let t3s14Correct = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
 
-        // let t4 = Tensor.Create([[[[1.]]; 
-        //                          [[2.]]; 
-        //                          [[3.]]]; 
-        //                         [[[4.]]; 
-        //                          [[5.]]; 
-        //                          [[6.]]]])
-        // let t4s1 = t4.[0]
-        // let t4s2 = t4.[0,*,*,*]
-        // let t4s1Correct = Tensor.Create([[[1]],
-        //                                  [[2]],
-        //                                  [[3]]])
-        // let t4s2Correct = t4s1Correct
+        let t4 = Tensor.Create([[[[1.]]; 
+                                 [[2.]]; 
+                                 [[3.]]]; 
+                                [[[4.]]; 
+                                 [[5.]]; 
+                                 [[6.]]]])
+        let t4s1 = t4.[0]
+        let t4s2 = t4.[0,*,*,*]
+        let t4s1Correct = Tensor.Create([[[1]];
+                                         [[2]];
+                                         [[3]]])
+        let t4s2Correct = t4s1Correct
 
         Assert.AreEqual(t1s1Correct, t1s1)
         Assert.AreEqual(t1s2Correct, t1s2)
@@ -1248,8 +1248,8 @@ type TestTensor () =
         Assert.AreEqual(t3s13Correct, t3s13)
         Assert.AreEqual(t3s14Correct, t3s14)
 
-        // Assert.AreEqual(t4s1Correct, t4s1)
-        // Assert.AreEqual(t4s2Correct, t4s2)
+        Assert.AreEqual(t4s1Correct, t4s1)
+        Assert.AreEqual(t4s2Correct, t4s2)
 
     [<Test>]
     member this.TestTensorAddTTSlice () =

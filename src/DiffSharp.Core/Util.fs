@@ -51,14 +51,18 @@ let shapeLength (shape:int[]) =
     if shape.Length = 0 then 1
     else Array.reduce (*) shape
 
-let shapeSqueeze (dim:int) (shape:int[]) =
+let rec shapeSqueeze (dim:int) (shape:int[]) =
     if dim = -1 then
+        printfn "aa"
         [|for s in shape do if s <> 1 then yield s|]
     elif shape.[dim] = 1 then
-        [|for i=0 to shape.Length - 1 - 1 do 
+        printfn "bb"
+        [|for i=0 to shape.Length - 1 do 
             if i < dim then yield shape.[i]
-            elif i > dim then yield shape.[i+1]|]
-    else shape
+            elif i > dim then yield shape.[i]|]
+    else
+        printfn "cc" 
+        shape
 
 let shapeUnsqueeze (dim:int) (shape:int[]) =
     if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A]" shape.Length
@@ -77,7 +81,7 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
     Array.map2 (<=) smallShape bigShape |> Array.forall id
 
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
-    Array2D.init location.Length 2 (fun i j -> if j=0 then location.[i] else location.[i] + shape.[i] - 1)
+    Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
 let boundsToLocation (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
