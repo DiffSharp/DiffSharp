@@ -117,4 +117,11 @@ let main _argv =
     // printfn "t4s1\n%A" t4s1
     // printfn "\nt4s2shape\n%A" t4s2.Shape
     // printfn "t4s2\n%A" t4s2
+
+    let a = Tensor.Create([[[1.,2.,3.], [4.,5.,6.]], [[7.,8.,9.], [10.,11.,12.]]])
+    printfn "a\n%A" a
+    let b = a.Flip([|1|])
+    printfn "b\n%A" b
+    let c = a.Flip([|1;2|])
+    printfn "c\n%A" c
     0 // return an integer exit code
