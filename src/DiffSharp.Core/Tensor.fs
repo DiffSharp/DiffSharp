@@ -1042,8 +1042,56 @@ type Tensor =
                                     let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
                                     bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
-                        | Conv1DTTConst(a,_,_,_) -> failwith "Not implemented"
-                        | Conv1DTConstT(_,b,_,_) -> failwith "Not implemented"
+                        | Conv1DTTConst(a,b,stride,padding) ->
+                            // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                            // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                            // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                            let batchSize = t.Shape.[0]
+                            let outputChannels = t.Shape.[1]
+                            // let outputLength = t.Shape.[2]
+                            let inputChannels = a.Shape.[1]
+                            // let inputLength = a.Shape.[2]
+                            let kernelLength = b.Shape.[2]
+                            let mutable tderivative = t.Derivative
+                            if stride > 1 then
+                                tderivative <- tderivative.Dilate([|1;1;stride|])
+                            let bFlipped = b.Flip([|2|])
+                            // propagate to a
+                            let mutable aderivative = Tensor.ZerosLike(a)
+                            for k=0 to outputChannels-1 do
+                                let b = bFlipped.[k].Unsqueeze(1)
+                                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
+                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
+                                let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                if padding > 0 then
+                                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
+                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
+                                aderivative <- aderivative + c
+                            push ((aderivative, a) :: tt)                        
+                        | Conv1DTConstT(a,b,stride,padding) ->
+                            // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                            // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                            // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                            let batchSize = t.Shape.[0]
+                            let outputChannels = t.Shape.[1]
+                            // let outputLength = t.Shape.[2]
+                            let inputChannels = a.Shape.[1]
+                            // let inputLength = a.Shape.[2]
+                            let kernelLength = b.Shape.[2]
+                            let mutable tderivative = t.Derivative
+                            if stride > 1 then
+                                tderivative <- tderivative.Dilate([|1;1;stride|])
+                            let bFlipped = b.Primal.Flip([|2|])
+                            // propagate to b
+                            let mutable bderivative = Tensor.ZerosLike(b)
+                            for n=0 to batchSize-1 do
+                                let aa = a.[n].Unsqueeze(1) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let d = tderivative.[n]
+                                for k=0 to outputChannels-1 do
+                                    let dd = d.[k].Unsqueeze(0).Unsqueeze(0)
+                                    let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                            push ((bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,_,_) -> failwith "Not implemented"
                         | Conv2DTTConst(a,_,_,_) -> failwith "Not implemented"
                         | Conv2DTConstT(_,b,_,_) -> failwith "Not implemented"
