@@ -36,25 +36,30 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override t.GetItem(index:int[]) = upcast RawTensorFloat32CPU.Create(t.[index])
     
-    override t.GetSlice(bounds:int[,]) =
-        // if bounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-2 bounds" t.Dim
-        // printfn "%A" bounds
-        let shape = Array.init (bounds.GetLength(0)) (fun i -> bounds.[i,1] - bounds.[i,0] + 1) |> shapeSqueeze -1
-        // printfn "%A" shape
+    override t.GetSlice(fullBounds:int[,]) =
+        // if fullBounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-3 fullBounds" t.Dim
+        // printfn "rfullBounds\n%A" fullBounds
+        let mutable shape = [|for i=0 to (fullBounds.GetLength(0) - 1) do
+                                let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
+                                if fullBounds.[i, 2] = 1 then
+                                    if len > 1 then yield len // if len=1 then squeeze this dimension
+                                else
+                                    yield len|]
+        // printfn "rshape\n%A" shape
         let array = Array.create (shapeLength shape) 0.f
         let mutable arrayi = 0
-        let rec slice (bounds:int[,]) externalCoords =
-            if bounds.GetLength(0) = 1 then
-                for i=bounds.[0,0] to bounds.[0,1] do
+        let rec slice (fullBounds:int[,]) externalCoords =
+            if fullBounds.GetLength(0) = 1 then
+                for i=fullBounds.[0,0] to fullBounds.[0,1] do
                     // printfn "inner %A" i
                     let globalCoords = Array.append externalCoords [|i|]
                     array.[arrayi] <- t.[globalCoords]
                     arrayi <- arrayi + 1
             else
-                for i=bounds.[0,0] to bounds.[0,1] do
+                for i=fullBounds.[0,0] to fullBounds.[0,1] do
                     // printfn "outer %A" i
-                    slice bounds.[1..,*] (Array.append externalCoords [|i|])
-        slice bounds [||]
+                    slice fullBounds.[1..,*] (Array.append externalCoords [|i|])
+        slice fullBounds [||]
         upcast RawTensorFloat32CPU(array, shape)
 
     override t1.CompareTo(t2) =
@@ -79,7 +84,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         if probs.Dim < 1 || probs.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.Shape
         if probs.Dim = 1 then
             let p = probs.Values |> Array.map float
-            let result = [|for i=0 to numSamples-1 do yield float32 (Random.ChoiceIndex(p))|]
+            let result = Array.init numSamples (fun _ -> float32 (Random.ChoiceIndex(p)))
             upcast RawTensorFloat32CPU(result, [|numSamples|])
         else
             let p = probs.ToArray() :?> float32[,] |> Array2D.map float
@@ -89,7 +94,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         match t.Dim with
-        | 0 -> sprintf "%A" t.Values.[0]
+        | 0 -> sprintf "%f" t.Values.[0]
         | _ ->
             let sb = System.Text.StringBuilder()
             let rec print (shape:int[]) externalCoords = 
@@ -99,16 +104,17 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                     for i=0 to shape.[0]-1 do
                         let globalCoords = Array.append externalCoords [|i|]
                         sb.Append(prefix) |> ignore
-                        sb.Append(sprintf "%A" (t.[globalCoords])) |> ignore
-                        prefix <- "; "
+                        sb.Append(sprintf "%f" (t.[globalCoords])) |> ignore
+                        prefix <- ", "
                     sb.Append("]") |> ignore
                 else
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
+                    let prefix2 = sprintf ", %s%s" (String.replicate (max 1 (shape.Length-1)) "\n") (String.replicate (externalCoords.Length+1) " ")
                     for i=0 to shape.[0]-1 do
                         sb.Append(prefix) |> ignore
                         print shape.[1..] (Array.append externalCoords [|i|])
-                        prefix <- "; "
+                        prefix <- prefix2
                     sb.Append("]") |> ignore
             print t.Shape [||]
             sb.ToString()
@@ -344,7 +350,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 if notNull array then 
                     RawTensorFloat32CPU(array |> Array.map float32, shape)
                 else
-                    failwith "Cannot convert value to RawTensorFloat32CPU"
+                    failwithf "Cannot convert value of type %A to RawTensorFloat32CPU" (value.GetType())
 
     override t1.LtTT(t2) =
         let t1value = t1.Values
@@ -533,7 +539,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             let outputShape = [|batchSize; outputChannels; outputLength|]
             let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
             for v=0 to outputLength-1 do
-                let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v * stride; v * stride]]
+                let sliceBounds = array2D [[0; batchSize-1; 1]; [0; outputChannels-1; 1]; [v * stride; v * stride; 1]]
                 let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1|])
                 sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
@@ -591,7 +597,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
             for v0=0 to outputHeight-1 do
                 for v1=0 to outputWidth-1 do
-                    let sliceBounds = array2D [[0; batchSize-1]; [0; outputChannels-1]; [v0 * stride.[0]; v0 * stride.[0]]; [v1 * stride.[1]; v1 * stride.[1]]]
+                    let sliceBounds = array2D [[0; batchSize-1; 1]; [0; outputChannels-1; 1]; [v0 * stride.[0]; v0 * stride.[0]; 1]; [v1 * stride.[1]; v1 * stride.[1]; 1];]
                     let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1; 1|])
                     sresult <- sresult.AddTTSlice([|0; 0; v0; v1|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
