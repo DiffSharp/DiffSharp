@@ -229,8 +229,21 @@ type TestTensor () =
         let hashSameCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
 
         Assert.AreEqual(hashSameResults, hashSameCorrect)
-        Assert.AreEqual(Tensor.Create([ 1.] ).GetHashCode(), Tensor.Create([ 1.] ).GetHashCode())
-        Assert.AreEqual(Tensor.Create([ 1.] ).ForwardDiff(Tensor.Create([1.])).GetHashCode(), Tensor.Create([ 1.] ).GetHashCode())
+
+        // Check reallocating an identical tensor doesn't change the hash
+        let t2a = Tensor.Create([ 1.] )
+        let t2b = Tensor.Create([ 1.] )
+        Assert.AreEqual(t2a.GetHashCode(), t2b.GetHashCode())
+
+        // Check adding `ForwardDiff` doesn't change the hash, compare or equality
+        Assert.AreEqual(t2a.ForwardDiff(Tensor.Create([1.])).GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(0, compare (t2a.ForwardDiff(Tensor.Create([1.]))) t2a)
+        Assert.AreEqual(true, (t2a.ForwardDiff(Tensor.Create([1.]))) = t2a)
+
+        // Check adding `ReverseDiff` doesn't change the hash, compare or equality
+        Assert.AreEqual(t2a.ReverseDiff().GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(0, compare (t2a.ReverseDiff()) t2a)
+        Assert.AreEqual(true, (t2a.ReverseDiff()) = t2a)
 
     [<Test>]
     member this.TestTensorLtTT () =
