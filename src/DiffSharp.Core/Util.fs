@@ -83,6 +83,26 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let expandShape2 (shape1:int[]) (shape2:int[]) =
+    let n1 = shape1.Length
+    let n2 = shape2.Length
+    let mx = max n1 n2
+    let mn = mx - min n1 n2
+    Array.init mx (fun i -> 
+        printfn "i = %d, mn = %d" i mn
+        if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
+        elif n1 > n2 then max shape1.[i] shape2.[i-mn]
+        else max shape1.[i-mn] shape2.[i])
+
+//expandShape2 [| |] [| 1 |] = [| 1 |]
+//expandShape2 [| 1 |] [| 1 |] = [| 1 |]
+//expandShape2 [| 1 |] [| 2 |] = [| 2 |]
+//expandShape2 [| 3 |] [| 1;2;3 |] = [| 1;2;3 |]
+//expandShape2 [| 1;2;3 |] [| 3 |] = [| 1;2;3 |]
+//expandShape2 [| 1;2;3 |] [| 1 |] = [| 1;2;3 |]
+
+let expandShapes (shapes:int[][]) = Array.reduce expandShape2 shapes
+
 let boundsToLocation (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 

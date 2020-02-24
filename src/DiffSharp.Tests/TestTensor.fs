@@ -872,6 +872,68 @@ type TestTensor () =
         Assert.AreEqual(t2SumCorrect, t2Sum)
 
     [<Test>]
+    member this.TestTensorSumUnexpandT () =
+        let t1 = Tensor.Create([1.; 2.; 3.])
+        let t1Sum = Tensor.SumUnexpand(t1, [| |])
+        let t1SumCorrect = Tensor.Create(6.)
+
+        Assert.AreEqual(t1SumCorrect, t1Sum)
+
+        let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t2Sum = Tensor.SumUnexpand(t2, [| |])
+        let t2SumCorrect = Tensor.Create(10.)
+
+        Assert.AreEqual(t2SumCorrect, t2Sum)
+
+        let t3 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t3Sum = Tensor.SumUnexpand(t3, [| 2 |])
+        let t3SumCorrect = Tensor.Create( [4.; 6.] )
+
+        Assert.AreEqual(t3SumCorrect, t3Sum)
+
+        let t4 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t4Sum = Tensor.SumUnexpand(t4, [| 1; 2 |])
+        let t4SumCorrect = Tensor.Create( [ [4.; 6.] ] )
+
+        Assert.AreEqual(t4SumCorrect, t4Sum)
+
+        let t5 = Tensor.Create([[1.; 2.]; [3.; 4.]])
+        let t5Sum = Tensor.SumUnexpand(t5, [| 2; 1 |])
+        let t5SumCorrect = Tensor.Create( [ [3.]; [7.] ] )
+
+        Assert.AreEqual(t5SumCorrect, t5Sum)
+
+        let t6 = Tensor.Create([ [[1.; 2.]; [3.; 4.] ]; [[5.; 6.]; [7.; 8.] ] ])
+        let systematicResults = 
+            [| for i1 in 0..2 do 
+                  for i2 in (if i1 = 0 then 0 else 1)..2 do
+                     for i3 in (if i2 = 0 then 0 else 1)..2 do
+                        let newShape = 
+                            [| if i1 > 0 then yield i1
+                               if i2 > 0 then yield i2
+                               if i3 > 0 then yield i3 |]
+                        yield (newShape, Tensor.SumUnexpand(t6, newShape)) |]
+        
+        let expectedResults = 
+            [|([||], Tensor.Create 36.);
+              ([|1|], Tensor.Create [36.]);
+              ([|2|], Tensor.Create [16.; 20.]);
+              ([|1; 1|], Tensor.Create [[36.]]);
+              ([|1; 2|], Tensor.Create [[16.; 20.]]);
+              ([|2; 1|], Tensor.Create [[14.]; [22.]]);
+              ([|2; 2|], Tensor.Create [[6.; 8.]; [10.; 12.]]);
+              ([|1; 1; 1|], Tensor.Create [[[36.]]]);
+              ([|1; 1; 2|], Tensor.Create [[[16.; 20.]]]);
+              ([|1; 2; 1|], Tensor.Create [[[14.]; [22.]]]);
+              ([|1; 2; 2|], Tensor.Create [[[6.; 8.]; [10.; 12.]]]);
+              ([|2; 1; 1|], Tensor.Create [[[10.]]; [[26.]]]);
+              ([|2; 1; 2|], Tensor.Create [[[4.; 6.]]; [[12.; 14.]]]);
+              ([|2; 2; 1|], Tensor.Create [[[3.]; [7.]]; [[11.]; [15.]]]);
+              ([|2; 2; 2|], Tensor.Create [[[1.; 2.]; [3.; 4.]]; [[5.; 6.]; [7.; 8.]]])|]
+
+        Assert.AreEqual(systematicResults, expectedResults)
+
+    [<Test>]
     member this.TestTensorSumT2Dim0 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]])
         let t1Sum = t1.SumT2Dim0()
@@ -1266,6 +1328,37 @@ type TestTensor () =
             [   0.6776;    1.5844;   -0.5686]])
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorExpandT () =
+        let t1 = Tensor.Create(1.0)
+        let t1Expand = t1.Expand([2;3])
+        let t1ExpandCorrect = Tensor.Create([[1.;1.;1.];[1.;1.;1.]])
+        Assert.AreEqual(t1ExpandCorrect, t1Expand)
+
+        let t2 = Tensor.Create([1.0])
+        let t2Expand = t2.Expand([2;3])
+        let t2ExpandCorrect = Tensor.Create([[1.;1.;1.];[1.;1.;1.]])
+
+        Assert.AreEqual(t2ExpandCorrect, t2Expand)
+
+        let t3 = Tensor.Create([1.; 2.]) // 2
+        let t3Expand = t3.Expand([3;2]) // 3x2
+        let t3ExpandCorrect = Tensor.Create([[1.;2.];[1.;2.];[1.;2.]]) // 3x2
+
+        Assert.AreEqual(t3ExpandCorrect, t3Expand)
+
+        let t4 = Tensor.Create([[1.]; [2.]]) // 2x1
+        let t4Expand = t4.Expand([2;2]) // 2x2
+        let t4ExpandCorrect = Tensor.Create([[1.;1.];[2.;2.]])
+
+        Assert.AreEqual(t4ExpandCorrect, t4Expand)
+
+        let t5 = Tensor.Create([[1.]; [2.]]) // 2x1
+        let t5Expand = t5.Expand([2;2;2]) // 2x2x2
+        let t5ExpandCorrect = Tensor.Create([[[1.;1.];[2.;2.]];[[1.;1.];[2.;2.]]])
+
+        Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
     [<Test>]
     member this.TestTensorSqueezeT () =

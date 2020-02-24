@@ -144,17 +144,20 @@ type Tensor =
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
-    static member Extend(a:Tensor, shape:seq<int>) =
-        if a.Dim <> 0 then failwithf "Expecting a 0d Tensor, received shape: %A" a.Shape
+    static member Expand(a:Tensor, newShape:seq<int>) =
+        let newShape = newShape|>Seq.toArray
+        if a.Shape = newShape then a else
         match a with
-        | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
+        | Tensor(ap) -> Tensor(ap.Expand(newShape))
         | TensorF(ap,ad,at) ->
-            let cp = Tensor.Extend(ap, shape)
-            let cd = Tensor.Extend(ad, shape)
+            let cp = Tensor.Expand(ap, newShape)
+            let cd = Tensor.Expand(ad, newShape)
             TensorF(cp,cd,at)
         | TensorR(ap,_,_,_,at) ->
-            let cp = Tensor.Extend(ap, shape)
-            TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
+            let cp = Tensor.Expand(ap, newShape)
+            TensorR(cp, ref (a.Zero()), ExpandT(a), ref 0u, at)
+
+    member a.Expand(newShape:seq<int>) = Tensor.Expand(a, newShape)
 
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
@@ -237,7 +240,7 @@ type Tensor =
             let inline fRaw(a,b:RawTensor) = b.AddTT0(a)
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
-            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Expand(ad, b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT0(b,a)
             let inline dfTensorRevTC(a,b) = AddTConstT0(a)
@@ -248,37 +251,36 @@ type Tensor =
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
-            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(bd, a.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Expand(bd, a.Shape)
             let inline dfTensorRevTT(a,b) = AddTT0(a,b)
             let inline dfTensorRevTC(a,b) = AddTT0Const(a)
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.Dim = 2 && b.Dim = 1 then
-            if a.Shape.[1] = b.Shape.[0] then
-                let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
-                let inline fTensor(a,b) = a + b
-                let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
-                let inline dfTensorFwdTC(cp,ap,ad) = ad
-                let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp) + bd
-                let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
-                let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
-                let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
-                Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-            else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
-        elif a.Dim = 1 && b.Dim = 2 then
-            if a.Shape.[0] = b.Shape.[1] then
-                let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
-                let inline fTensor(a,b) = a + b
-                let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
-                let inline dfTensorFwdTC(cp,ap,ad) = ad + Tensor.ZerosLike(cp)
-                let inline dfTensorFwdCT(cp,bp,bd) = bd
-                let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
-                let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
-                let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
-                Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-            else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
-        // TODO: implement general broadcasting additions
-        else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
+        elif a.Dim = 2 && b.Dim = 1 && a.Shape.[1] = b.Shape.[0] then
+            let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
+            let inline fTensor(a,b) = a + b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp) + bd
+            let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
+            let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
+            let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        elif a.Dim = 1 && b.Dim = 2 && a.Shape.[0] = b.Shape.[1] then
+            let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
+            let inline fTensor(a,b) = a + b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad + Tensor.ZerosLike(cp)
+            let inline dfTensorFwdCT(cp,bp,bd) = bd
+            let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
+            let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
+            let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        else
+            let newShape = expandShape2 a.Shape b.Shape
+            let aExp = a.Expand(newShape)
+            let bExp = b.Expand(newShape)
+            aExp + bExp
     static member (+) (a:Tensor, b) = a + a.Create(b)
     static member (+) (a, b:Tensor) = b.Create(a) + b
     member t1.Add(t2:Tensor) = t1 + t2
@@ -299,7 +301,7 @@ type Tensor =
             let inline fRaw(a:RawTensor,b) = a.SubT0T(b)
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Expand(ad, b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubT0T(a,b)
             let inline dfTensorRevTC(a,b) = SubT0TConst(a)
@@ -310,12 +312,16 @@ type Tensor =
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
-            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(-bd, a.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Expand(-bd, a.Shape)
             let inline dfTensorRevTT(a,b) = SubTT0(a,b)
             let inline dfTensorRevTC(a,b) = SubTT0Const(a)
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
+        else
+            let newShape = expandShape2 a.Shape b.Shape
+            let aExp = a.Expand(newShape)
+            let bExp = b.Expand(newShape)
+            aExp - bExp
     static member (-) (a:Tensor, b) = a - a.Create(b)
     static member (-) (a, b:Tensor) = b.Create(a) - b
     member t1.Sub(t2:Tensor) = t1 - t2
@@ -352,8 +358,11 @@ type Tensor =
             let inline dfTensorRevTC(a,b) = MulTT0Const(a,b)
             let inline dfTensorRevCT(a,b) = MulTConstT0(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        // TODO: implement general broadcasting?
-        else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
+        else
+            let newShape = expandShape2 a.Shape b.Shape
+            let aExp = a.Expand(newShape)
+            let bExp = b.Expand(newShape)
+            aExp * bExp
     static member (*) (a:Tensor, b) = a * a.Create(b)
     static member (*) (a, b:Tensor) = b.Create(a) * b
     member t1.Mul(t2:Tensor) = t1 * t2
@@ -390,7 +399,11 @@ type Tensor =
             let inline dfTensorRevTC(a,b) = DivTT0Const(a,b)
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
+        else
+            let newShape = expandShape2 a.Shape b.Shape
+            let aExp = a.Expand(newShape)
+            let bExp = b.Expand(newShape)
+            aExp / bExp
     static member (/) (a:Tensor, b) = a / a.Create(b)
     static member (/) (a, b:Tensor) = b.Create(a) / b
     member t1.Div(t2:Tensor) = t1 / t2
@@ -427,7 +440,11 @@ type Tensor =
             let inline dfTensorRevTC(a,b) = PowTT0Const(a,b)
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.Shape b.Shape
+        else
+            let newShape = expandShape2 a.Shape b.Shape
+            let aExp = a.Expand(newShape)
+            let bExp = b.Expand(newShape)
+            Tensor.Pow(aExp, bExp)
     static member Pow (a:Tensor, b) = a ** a.Create(b)
     static member Pow (a, b:Tensor) = b.Create(a) ** b
     member t1.Pow(t2:Tensor) = t1 ** t2
@@ -479,13 +496,32 @@ type Tensor =
                 sBounds.[dim,2] <- 1
                 s <- s + a.GetSlice(sBounds)
             s
-    member t.Sum(dim) = Tensor.Sum(t, dim)
+    member t.Sum(dim:int) = Tensor.Sum(t, dim)
 
     static member Sum(a:Tensor, dim:int, keepDim:bool) = if keepDim then Tensor.Sum(a, dim).Unsqueeze(dim) else Tensor.Sum(a, dim)
     member t.Sum(dim, keepDim) = Tensor.Sum(t, dim, keepDim)
 
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
+
+    /// Reduce the dimensionality via summation (used in the derivative of an Expand operation)
+    static member SumUnexpand(a:Tensor, newShape:int[]) =
+        let oldShape = a.Shape
+        if oldShape = newShape then a
+        elif newShape.Length = 0 then a.Sum()
+        else
+            if newShape.Length > oldShape.Length then invalidArg "newShape" "must be equal or lower dimensionality"
+            let trim = oldShape.Length - newShape.Length
+            if (oldShape.[trim..],newShape) ||> Array.exists2 (fun n m -> m <> 1 && n <> m)  then invalidArg "newShape" "must either maintain or reduce any non-prefix dimensions to 1"
+            let mutable s = a
+            // collapse the eliminated dimensions
+            for _dim in 0 .. trim-1 do 
+                s <- s.Sum(0, keepDim=false)
+            // reduce the squeezed dimensions
+            for dim in 0 .. newShape.Length-1 do 
+                if oldShape.[trim+dim] <> newShape.[dim] then 
+                    s <- s.Sum(dim, keepDim=true)
+            s
 
     static member Mean(a:Tensor, dim:int) = 
         if dim = 0 && a.Dim = 0 then a
@@ -914,7 +950,7 @@ type Tensor =
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim0(a) -> reset (a::tt)
-                        | MakeTofT0(a) -> reset (a::tt)
+                        | ExpandT(a) -> reset (a::tt)
                         | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
@@ -1190,9 +1226,9 @@ type Tensor =
                                     bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0; 0|], c)
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
-                        | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
+                        | SumT(a) -> push ((Tensor.Expand(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
-                        | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
+                        | ExpandT(a) -> push ((Tensor.SumUnexpand(t.Derivative, a.Shape), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
@@ -1299,7 +1335,7 @@ and TensorOp =
     | NegT of Tensor
     | SumT of Tensor
     | SumT2Dim0 of Tensor
-    | MakeTofT0 of Tensor
+    | ExpandT of Tensor
     | StackTs of seq<Tensor>
     | UnstackT of Tensor * int
     | SliceT of Tensor * int[,]
