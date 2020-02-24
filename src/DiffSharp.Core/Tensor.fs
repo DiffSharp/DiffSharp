@@ -75,19 +75,11 @@ type Tensor =
     member t.ApproximatelyEqual(tensor:Tensor, ?tolerance) =
         let tolerance = defaultArg tolerance 0.01
         t.PrimalRaw.ApproximatelyEquals(tensor.PrimalRaw, tolerance)
-    override t.GetHashCode() =
-        match t with
-        | Tensor(tp) -> hash (tp)
-        | TensorF(tp,td,tt) -> hash (tp, td, tt)
-        | TensorR(tp,td,_,_,tt) -> hash (tp, !td, tt)
+    override t.GetHashCode() = hash t.PrimalRaw
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
-            | :? Tensor as tensor -> 
-                if t.Dim = tensor.Dim && t.Dim = 0 then
-                    t.PrimalRaw.CompareTo(tensor.PrimalRaw)
-                else
-                    failwith "Cannot compare non-scalar Tensors"
+            | :? Tensor as tensor -> t.PrimalRaw.CompareTo(tensor.PrimalRaw)
             | _ -> failwith "Cannot compare Tensor with another type"
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with

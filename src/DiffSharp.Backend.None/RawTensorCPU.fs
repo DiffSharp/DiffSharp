@@ -63,7 +63,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(array, shape)
 
     override t1.CompareTo(t2) =
-        compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
+        match t2 with
+        | :? RawTensorFloat32CPU as t2 -> let c = compare t1.Shape t2.Shape in if c <> 0 then c else compare t1.Values t2.Values
+        | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
     
     override t.Clone() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
     override t.CreateFromScalar(value, shape) =
@@ -118,6 +120,8 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                     sb.Append("]") |> ignore
             print t.Shape [||]
             sb.ToString()
+
+    override x.ComputeHash() = hash shape + hash values
 
     override t.ToValue() =
         match t.Dim with
