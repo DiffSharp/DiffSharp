@@ -126,11 +126,10 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     
     override t.Expand(newShape) =
         if shape = newShape then t :> _ else
-        if newShape.Length < shape.Length then invalidArg "newShape" "must be equal or higher dimensionality"
+        checkCanExpandFrom shape newShape
         let trim = newShape.Length - shape.Length
         let exp = shapeLength newShape.[0..trim-1]
         let jshape = newShape.[trim..]
-        if (shape,jshape) ||> Array.exists2 (fun n m -> n <> 1 && n <> m)  then invalidArg "newShape" "must either maintain or expand from 1"
         let n = shapeLength newShape
         let result = Array.zeroCreate n 
         if jshape.Length = 0 then 

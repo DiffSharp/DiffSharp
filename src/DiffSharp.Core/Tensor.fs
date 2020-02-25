@@ -504,15 +504,16 @@ type Tensor =
     static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
     member t.Mean() = Tensor.Mean(t)
 
-    /// Reduce the dimensionality via summation (used in the derivative of an Expand operation)
+    /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
+    /// from newShape to shape must be possible.
+    /// This operation is internal and used when computing the reverse derivative of an Expand operation.
     static member internal SumCollapse(a:Tensor, newShape:int[]) =
         let oldShape = a.Shape
         if oldShape = newShape then a
         elif newShape.Length = 0 then a.Sum()
         else
-            if newShape.Length > oldShape.Length then invalidArg "newShape" "must be equal or lower dimensionality"
+            checkCanExpandFrom newShape oldShape
             let trim = oldShape.Length - newShape.Length
-            if (oldShape.[trim..],newShape) ||> Array.exists2 (fun n m -> m <> 1 && n <> m)  then invalidArg "newShape" "must either maintain or reduce any non-prefix dimensions to 1"
             let mutable result = a
             // collapse the eliminated dimensions
             for _dim in 0 .. trim-1 do 

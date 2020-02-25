@@ -83,6 +83,13 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let checkCanExpandFrom (oldShape: int[]) (newShape: int[]) =
+    let isOK = 
+        newShape.Length >= oldShape.Length &&
+        let trim = newShape.Length - oldShape.Length
+        (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+    if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
+
 let expandShape2 (shape1:int[]) (shape2:int[]) =
     let n1 = shape1.Length
     let n2 = shape2.Length
