@@ -277,7 +277,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = AddT2T1Const(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = expandShape2 a.Shape b.Shape
+            let newShape = broadcastShapes2 a.Shape b.Shape
             let aExp = a.Expand(newShape)
             let bExp = b.Expand(newShape)
             aExp + bExp
@@ -318,7 +318,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = expandShape2 a.Shape b.Shape
+            let newShape = broadcastShapes2 a.Shape b.Shape
             let aExp = a.Expand(newShape)
             let bExp = b.Expand(newShape)
             aExp - bExp
@@ -359,7 +359,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = MulTConstT0(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = expandShape2 a.Shape b.Shape
+            let newShape = broadcastShapes2 a.Shape b.Shape
             let aExp = a.Expand(newShape)
             let bExp = b.Expand(newShape)
             aExp * bExp
@@ -400,7 +400,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = expandShape2 a.Shape b.Shape
+            let newShape = broadcastShapes2 a.Shape b.Shape
             let aExp = a.Expand(newShape)
             let bExp = b.Expand(newShape)
             aExp / bExp
@@ -441,7 +441,7 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = expandShape2 a.Shape b.Shape
+            let newShape = broadcastShapes2 a.Shape b.Shape
             let aExp = a.Expand(newShape)
             let bExp = b.Expand(newShape)
             Tensor.Pow(aExp, bExp)
@@ -512,7 +512,7 @@ type Tensor =
         if oldShape = newShape then a
         elif newShape.Length = 0 then a.Sum()
         else
-            checkCanExpandFrom newShape oldShape
+            checkCanExpandShape newShape oldShape
             let trim = oldShape.Length - newShape.Length
             let mutable result = a
             // collapse the eliminated dimensions

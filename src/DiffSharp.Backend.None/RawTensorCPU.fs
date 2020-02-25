@@ -126,7 +126,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     
     override t.Expand(newShape) =
         if shape = newShape then t :> _ else
-        checkCanExpandFrom shape newShape
+        checkCanExpandShape shape newShape
         let trim = newShape.Length - shape.Length
         let exp = shapeLength newShape.[0..trim-1]
         let jshape = newShape.[trim..]

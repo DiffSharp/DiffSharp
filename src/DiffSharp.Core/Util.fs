@@ -83,31 +83,30 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
-let checkCanExpandFrom (oldShape: int[]) (newShape: int[]) =
-    let isOK = 
-        newShape.Length >= oldShape.Length &&
-        let trim = newShape.Length - oldShape.Length
-        (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+let canExpandShape (oldShape: int[]) (newShape: int[]) =
+    newShape.Length >= oldShape.Length &&
+    let trim = newShape.Length - oldShape.Length
+    (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+
+let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
+    let isOK = canExpandShape oldShape newShape
     if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
 
-let expandShape2 (shape1:int[]) (shape2:int[]) =
-    let n1 = shape1.Length
-    let n2 = shape2.Length
-    let mx = max n1 n2
-    let mn = mx - min n1 n2
-    Array.init mx (fun i -> 
-        if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
-        elif n1 > n2 then max shape1.[i] shape2.[i-mn]
-        else max shape1.[i-mn] shape2.[i])
+/// Find the shape into which shape1 and shape2 can be expanded
+let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
+    if canExpandShape shape1 shape2 || canExpandShape shape2 shape1 then 
+        let n1 = shape1.Length
+        let n2 = shape2.Length
+        let mx = max n1 n2
+        let mn = mx - min n1 n2
+        Array.init mx (fun i -> 
+            if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
+            elif n1 > n2 then max shape1.[i] shape2.[i-mn]
+            else max shape1.[i-mn] shape2.[i])
+    else failwithf "shapes %A and %A are not related by broadcasting - each dimension must either be extra, equal, expand from 1" shape1 shape2
 
-//expandShape2 [| |] [| 1 |] = [| 1 |]
-//expandShape2 [| 1 |] [| 1 |] = [| 1 |]
-//expandShape2 [| 1 |] [| 2 |] = [| 2 |]
-//expandShape2 [| 3 |] [| 1;2;3 |] = [| 1;2;3 |]
-//expandShape2 [| 1;2;3 |] [| 3 |] = [| 1;2;3 |]
-//expandShape2 [| 1;2;3 |] [| 1 |] = [| 1;2;3 |]
-
-let expandShapes (shapes:int[][]) = Array.reduce expandShape2 shapes
+/// Find the shape into which all the shapes can be expanded
+let broadcastShapes (shapes:int[][]) = Array.reduce broadcastShapes2 shapes
 
 let boundsToLocation (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
