@@ -267,18 +267,23 @@ let private flatArrayAndShape4D<'T> (v: 'T[,,,]) =
                             yield v.[i, j, k, m] |]
     arr, [| n1;n2;n3;n4 |]
 
-let private flatSeqTuple (els: obj) =
+let private seqTupleElements (els: obj) =
     match seqElements els with 
     | [| el |] -> FSharpValue.GetTupleFields(el) 
     | tup -> failwithf "unexpected multiple values in tuple list input: %A" (Array.toList tup)
 
-let private flatSeqTupleLeaf<'T> (els: obj) =
-    flatSeqTuple els |> Array.map (fun v -> v :?> 'T)
+let private arrayCast<'T> (els: obj[]) = els |> Array.map (fun v -> v :?> 'T)
 
 let private (|SeqOrSeqTupleTy|_|) ty =
     match ty with 
-    | SeqTupleTy ety -> Some (flatSeqTuple, ety)
+    | SeqTupleTy ety -> Some (seqTupleElements, ety)
     | SeqTy ety -> Some (seqElements, ety)
+    | _ -> None
+
+let private (|SeqOrSeqTupleLeafTy|_|) tgt ty =
+    match ty with 
+    | SeqTupleLeafTy tgt -> Some (seqTupleElements)
+    | SeqTy ety when ety = tgt -> Some (seqElements)
     | _ -> None
 
 let rec flatArrayAndShape<'T> (value:obj) =
@@ -299,19 +304,19 @@ let rec flatArrayAndShape<'T> (value:obj) =
     match vty with
     // list<int * int> -> dim 1
     | SeqTupleLeafTy tgt -> 
-        let arr = value |> flatSeqTupleLeaf<'T>
+        let arr = value |> seqTupleElements |> arrayCast<'T>
         arr, [| arr.Length |]
     // list<list<int * int>> etc. -> dim 2
-    | SeqOrSeqTupleTy (fetcher, (SeqTupleLeafTy tgt)) -> 
-        let els = value |> fetcher |> Array.map flatSeqTupleLeaf<'T> |> array2D
+    | SeqOrSeqTupleTy (fetcher, (SeqOrSeqTupleLeafTy tgt fetcher2)) -> 
+        let els = value |> fetcher |> Array.map (fetcher2 >> arrayCast<'T>) |> array2D
         flatArrayAndShape2D<'T> els
     // ... -> dim 3
-    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqTupleLeafTy tgt)) -> 
-        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map flatSeqTupleLeaf) |> array3D
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleLeafTy tgt fetcher3)) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> arrayCast<'T>)) |> array3D
         flatArrayAndShape3D<'T> els
     // ... -> dim 4
-    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqTupleLeafTy tgt))) -> 
-        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map flatSeqTupleLeaf)) |> array4D
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleLeafTy tgt fetcher4))) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
         flatArrayAndShape4D<'T> els
     | _ -> null, null
 
