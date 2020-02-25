@@ -254,6 +254,70 @@ type TestTensor () =
         Assert.AreEqual(t4Correct, t4)
         Assert.AreEqual(t5Correct, t5)
 
+        // Check all broadcasts into 2x2
+        // 2x2 * 1  (broadcast --> 2x2)
+        // 2x2 * 2  (broadcast --> 2x2)
+        // 2x2 * 2x1  (broadcast --> 2x2)
+        // 2x2 * 1x2  (broadcast --> 2x2)
+        let t6a = Tensor.Create([ [1.; 2.]; [3.; 4.] ])
+        for t6b in [ Tensor.Create([ 5.0 ])
+                     Tensor.Create([ 5.0; 5.0 ])
+                     Tensor.Create([ [5.0]; [5.0] ])
+                     Tensor.Create([ [5.0; 5.0] ]) ] do
+            let t6 = t6a + t6b
+            let t6Commute = t6b + t6a
+            let t6Correct = Tensor.Create([ [6.; 7.]; [8.; 9.] ])
+
+            Assert.AreEqual(t6Correct, t6)
+            Assert.AreEqual(t6Correct, t6Commute)
+
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 + 1  (broadcast --> 2x3x4)
+        // 2x3x4 + 4  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t7a = Tensor.Create([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                  [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+        let t7Shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        let t7Results, t7CommuteResults = 
+            [| for shape in t7Shapes do 
+                  let t7b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7 = t7a + t7b
+                  let t7Commute = t7b + t7a
+                  yield (t7b, t7), (t7b, t7Commute) |]
+            |> Array.unzip
+
+        let t7Expected =
+            [|(Tensor.Create 2.,                                                       Tensor.Create [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (Tensor.Create [2.],                                                     Tensor.Create [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (Tensor.Create [2., 3., 4., 5.],                                         Tensor.Create [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (Tensor.Create [[2.]],                                                   Tensor.Create [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (Tensor.Create [[2., 3., 4., 5.]],                                       Tensor.Create [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (Tensor.Create [[2.], [3.], [4.]],                                       Tensor.Create [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[15., 16., 17., 18.], [20., 21., 22., 23.], [25., 26., 27., 28.]]]);
+              (Tensor.Create [[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]],   Tensor.Create [[[3., 5., 7., 9.], [8., 10., 12., 14.], [13., 15., 17., 19.]], [[15., 17., 19., 21.], [20., 22., 24., 26.], [25., 27., 29., 31.]]]);
+              (Tensor.Create [[[2.]]],                                                 Tensor.Create [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.]]],                                     Tensor.Create [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (Tensor.Create [[[2.], [3.], [4.]]],                                     Tensor.Create [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[15., 16., 17., 18.], [20., 21., 22., 23.], [25., 26., 27., 28.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]]], Tensor.Create [[[3., 5., 7., 9.], [8., 10., 12., 14.], [13., 15., 17., 19.]], [[15., 17., 19., 21.], [20., 22., 24., 26.], [25., 27., 29., 31.]]]);
+              (Tensor.Create [[[2.]], [[3.]]],                                         Tensor.Create [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[16., 17., 18., 19.], [20., 21., 22., 23.], [24., 25., 26., 27.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.]], [[3., 4., 5., 6.]]],                 Tensor.Create [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[16., 18., 20., 22.], [20., 22., 24., 26.], [24., 26., 28., 30.]]]);
+              (Tensor.Create [[[2.], [3.], [4.]], [[3.], [4.], [5.]]],                 Tensor.Create [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[16., 17., 18., 19.], [21., 22., 23., 24.], [26., 27., 28., 29.]]])|]
+
+
+        Assert.AreEqual(t7Expected, t7Results)
+        Assert.AreEqual(t7Expected, t7CommuteResults)
+
     [<Test>]
     member this.TestTensorStackTs () =
         let t0a = Tensor.Create(1.)
@@ -319,19 +383,86 @@ type TestTensor () =
         let t1 = Tensor.Create([1.; 2.]) * Tensor.Create([3.; 4.])
         let t1Correct = Tensor.Create([3.; 8.])
 
+        Assert.AreEqual(t1Correct, t1)
+
         let t2 = Tensor.Create([1.; 2.]) * Tensor.Create(5.)
         let t2Correct = Tensor.Create([5.; 10.])
+
+        Assert.AreEqual(t2Correct, t2)
 
         let t3 = Tensor.Create([1.; 2.]) * 5.f
         let t3Correct = Tensor.Create([5.; 10.])
 
+        Assert.AreEqual(t3Correct, t3)
+
         let t4 = 5. * Tensor.Create([1.; 2.])
         let t4Correct = Tensor.Create([5.; 10.])
 
-        Assert.AreEqual(t1Correct, t1)
-        Assert.AreEqual(t2Correct, t2)
-        Assert.AreEqual(t3Correct, t3)
         Assert.AreEqual(t4Correct, t4)
+
+        // 2x2 * 1  (broadcast --> 2x2)
+        // 2x2 * 2  (broadcast --> 2x2)
+        // 2x2 * 2x1  (broadcast --> 2x2)
+        // 2x2 * 1x2  (broadcast --> 2x2)
+        let t5a = Tensor.Create([ [1.; 2.]; [3.; 4.] ])
+        for t5b in [ Tensor.Create([ 5.0 ])
+                     Tensor.Create([ 5.0; 5.0 ])
+                     Tensor.Create([ [5.0]; [5.0] ])
+                     Tensor.Create([ [5.0; 5.0] ]) ] do
+            let t5 = t5a * t5b
+            let t5Commute = t5b * t5a
+            let t5Correct = Tensor.Create([ [5.; 10.]; [15.; 20.] ])
+
+            Assert.AreEqual(t5Correct, t5)
+            Assert.AreEqual(t5Correct, t5Commute)
+
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 * 1  (broadcast --> 2x3x4)
+        // 2x3x4 * 4  (broadcast --> 2x3x4)
+        // 2x3x4 * 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 * 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 * 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t6a = Tensor.Create([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                    [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+
+        // These are all the interesting shapes that broadcast into t6a
+        let t6Shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        let t6Results, t6CommuteResults = 
+            [| for shape in t6Shapes do 
+                  let t6b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6 = t6a * t6b
+                  let t6Commute = t6b * t6a
+                  yield (t6b, t6 ), (t6b, t6Commute ) |]
+            |> Array.unzip
+
+        let t6Expected =
+            [|(Tensor.Create 2.,                                                      Tensor.Create [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (Tensor.Create [2.],                                                    Tensor.Create [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (Tensor.Create [2., 3., 4., 5.],                                        Tensor.Create [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (Tensor.Create [[2.]],                                                  Tensor.Create [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (Tensor.Create [[2., 3., 4., 5.]],                                      Tensor.Create [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (Tensor.Create [[2.], [3.], [4.]],                                      Tensor.Create [[[2., 4., 6., 8.], [15., 18., 21., 24.], [36., 40., 44., 48.]], [[26., 28., 30., 32.], [51., 54., 57., 60.], [84., 88., 92., 96.]]]);
+              (Tensor.Create [[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]],  Tensor.Create [[[2., 6., 12., 20.], [15., 24., 35., 48.], [36., 50., 66., 84.]], [[26., 42., 60., 80.], [51., 72., 95., 120.], [84., 110., 138., 168.]]]);
+              (Tensor.Create [[[2.]]],                                                Tensor.Create [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.]]],                                    Tensor.Create [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (Tensor.Create [[[2.], [3.], [4.]]],                                    Tensor.Create [[[2., 4., 6., 8.], [15., 18., 21., 24.], [36., 40., 44., 48.]], [[26., 28., 30., 32.], [51., 54., 57., 60.], [84., 88., 92., 96.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]]],Tensor.Create [[[2., 6., 12., 20.], [15., 24., 35., 48.], [36., 50., 66., 84.]], [[26., 42., 60., 80.], [51., 72., 95., 120.], [84., 110., 138., 168.]]]);
+              (Tensor.Create [[[2.]], [[3.]]],                                        Tensor.Create [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[39., 42., 45., 48.], [51., 54., 57., 60.], [63., 66., 69., 72.]]]);
+              (Tensor.Create [[[2., 3., 4., 5.]], [[3., 4., 5., 6.]]],                Tensor.Create [[[2., 6., 12., 20.],  [10., 18., 28., 40.], [18., 30., 44., 60.]], [[39., 56., 75., 96.], [51., 72., 95., 120.], [63., 88., 115., 144.]]]);
+              (Tensor.Create [[[2.], [3.], [4.]], [[3.], [4.], [5.]]],                Tensor.Create [[[2., 4., 6., 8.],  [15., 18., 21., 24.], [36., 40., 44., 48.]], [[39., 42., 45., 48.], [68., 72., 76., 80.], [105., 110., 115., 120.]]]); |]
+
+        Assert.AreEqual(t6Expected, t6Results)
+        Assert.AreEqual(t6Expected, t6CommuteResults)
 
     [<Test>]
     member this.TestTensorDivTT () =
@@ -872,37 +1003,38 @@ type TestTensor () =
         Assert.AreEqual(t2SumCorrect, t2Sum)
 
     [<Test>]
-    member this.TestTensorSumUnexpandT () =
+    member this.TestTensorSumCollapseT () =
         let t1 = Tensor.Create([1.; 2.; 3.])
-        let t1Sum = Tensor.SumUnexpand(t1, [| |])
+        let t1Sum = Tensor.SumCollapse(t1, [| |])
         let t1SumCorrect = Tensor.Create(6.)
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
 
         let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t2Sum = Tensor.SumUnexpand(t2, [| |])
+        let t2Sum = Tensor.SumCollapse(t2, [| |])
         let t2SumCorrect = Tensor.Create(10.)
 
         Assert.AreEqual(t2SumCorrect, t2Sum)
 
         let t3 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t3Sum = Tensor.SumUnexpand(t3, [| 2 |])
+        let t3Sum = Tensor.SumCollapse(t3, [| 2 |])
         let t3SumCorrect = Tensor.Create( [4.; 6.] )
 
         Assert.AreEqual(t3SumCorrect, t3Sum)
 
         let t4 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t4Sum = Tensor.SumUnexpand(t4, [| 1; 2 |])
+        let t4Sum = Tensor.SumCollapse(t4, [| 1; 2 |])
         let t4SumCorrect = Tensor.Create( [ [4.; 6.] ] )
 
         Assert.AreEqual(t4SumCorrect, t4Sum)
 
         let t5 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t5Sum = Tensor.SumUnexpand(t5, [| 2; 1 |])
+        let t5Sum = Tensor.SumCollapse(t5, [| 2; 1 |])
         let t5SumCorrect = Tensor.Create( [ [3.]; [7.] ] )
 
         Assert.AreEqual(t5SumCorrect, t5Sum)
 
+        // Systematically test all legitimate reductions of 2x2x2 to smaller sizes
         let t6 = Tensor.Create([ [[1.; 2.]; [3.; 4.] ]; [[5.; 6.]; [7.; 8.] ] ])
         let systematicResults = 
             [| for i1 in 0..2 do 
@@ -912,7 +1044,7 @@ type TestTensor () =
                             [| if i1 > 0 then yield i1
                                if i2 > 0 then yield i2
                                if i3 > 0 then yield i3 |]
-                        yield (newShape, Tensor.SumUnexpand(t6, newShape)) |]
+                        yield (newShape, Tensor.SumCollapse(t6, newShape)) |]
         
         let expectedResults = 
             [|([||], Tensor.Create 36.);

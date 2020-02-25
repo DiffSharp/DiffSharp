@@ -505,7 +505,7 @@ type Tensor =
     member t.Mean() = Tensor.Mean(t)
 
     /// Reduce the dimensionality via summation (used in the derivative of an Expand operation)
-    static member SumUnexpand(a:Tensor, newShape:int[]) =
+    static member internal SumCollapse(a:Tensor, newShape:int[]) =
         let oldShape = a.Shape
         if oldShape = newShape then a
         elif newShape.Length = 0 then a.Sum()
@@ -513,15 +513,15 @@ type Tensor =
             if newShape.Length > oldShape.Length then invalidArg "newShape" "must be equal or lower dimensionality"
             let trim = oldShape.Length - newShape.Length
             if (oldShape.[trim..],newShape) ||> Array.exists2 (fun n m -> m <> 1 && n <> m)  then invalidArg "newShape" "must either maintain or reduce any non-prefix dimensions to 1"
-            let mutable s = a
+            let mutable result = a
             // collapse the eliminated dimensions
             for _dim in 0 .. trim-1 do 
-                s <- s.Sum(0, keepDim=false)
+                result <- result.Sum(0, keepDim=false)
             // reduce the squeezed dimensions
             for dim in 0 .. newShape.Length-1 do 
                 if oldShape.[trim+dim] <> newShape.[dim] then 
-                    s <- s.Sum(dim, keepDim=true)
-            s
+                    result <- result.Sum(dim, keepDim=true)
+            result
 
     static member Mean(a:Tensor, dim:int) = 
         if dim = 0 && a.Dim = 0 then a
@@ -1228,7 +1228,7 @@ type Tensor =
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((Tensor.Expand(t.Derivative, a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
-                        | ExpandT(a) -> push ((Tensor.SumUnexpand(t.Derivative, a.Shape), a) :: tt)
+                        | ExpandT(a) -> push ((Tensor.SumCollapse(t.Derivative, a.Shape), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
@@ -3810,3 +3810,7 @@ module Tensor =
     let init (count:int) (initializer:int->float32) = Tensor.Create(Array.init count initializer)
     let shape (t:Tensor) = t.Shape
     let dim (t:Tensor) = t.Dim
+
+
+[<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
+do()

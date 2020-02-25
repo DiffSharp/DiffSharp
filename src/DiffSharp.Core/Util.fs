@@ -89,7 +89,6 @@ let expandShape2 (shape1:int[]) (shape2:int[]) =
     let mx = max n1 n2
     let mn = mx - min n1 n2
     Array.init mx (fun i -> 
-        printfn "i = %d, mn = %d" i mn
         if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
         elif n1 > n2 then max shape1.[i] shape2.[i-mn]
         else max shape1.[i-mn] shape2.[i])
@@ -181,6 +180,15 @@ let array4D data =
         if q3 <> r3 || q4 <> r4 then 
             invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
     Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+
+let arrayND (shape: int[]) f =
+    match shape with 
+    | [| |] -> f [| |] |> box
+    | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
+    | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
+    | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
+    | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
+    | _ -> failwith "arrayND - nyi for dim > 4"
 
 /// Get the elements of an arbitrary IEnumerble
 let private seqElements (ie: obj) = 
@@ -287,18 +295,23 @@ let private flatArrayAndShape4D<'T> (v: 'T[,,,]) =
                             yield v.[i, j, k, m] |]
     arr, [| n1;n2;n3;n4 |]
 
-let private flatSeqTuple (els: obj) =
+let private seqTupleElements (els: obj) =
     match seqElements els with 
     | [| el |] -> FSharpValue.GetTupleFields(el) 
     | tup -> failwithf "unexpected multiple values in tuple list input: %A" (Array.toList tup)
 
-let private flatSeqTupleLeaf<'T> (els: obj) =
-    flatSeqTuple els |> Array.map (fun v -> v :?> 'T)
+let private arrayCast<'T> (els: obj[]) = els |> Array.map (fun v -> v :?> 'T)
 
 let private (|SeqOrSeqTupleTy|_|) ty =
     match ty with 
-    | SeqTupleTy ety -> Some (flatSeqTuple, ety)
+    | SeqTupleTy ety -> Some (seqTupleElements, ety)
     | SeqTy ety -> Some (seqElements, ety)
+    | _ -> None
+
+let private (|SeqOrSeqTupleLeafTy|_|) tgt ty =
+    match ty with 
+    | SeqTupleLeafTy tgt -> Some (seqTupleElements)
+    | SeqTy ety when ety = tgt -> Some (seqElements)
     | _ -> None
 
 let rec flatArrayAndShape<'T> (value:obj) =
@@ -319,19 +332,19 @@ let rec flatArrayAndShape<'T> (value:obj) =
     match vty with
     // list<int * int> -> dim 1
     | SeqTupleLeafTy tgt -> 
-        let arr = value |> flatSeqTupleLeaf<'T>
+        let arr = value |> seqTupleElements |> arrayCast<'T>
         arr, [| arr.Length |]
     // list<list<int * int>> etc. -> dim 2
-    | SeqOrSeqTupleTy (fetcher, (SeqTupleLeafTy tgt)) -> 
-        let els = value |> fetcher |> Array.map flatSeqTupleLeaf<'T> |> array2D
+    | SeqOrSeqTupleTy (fetcher, (SeqOrSeqTupleLeafTy tgt fetcher2)) -> 
+        let els = value |> fetcher |> Array.map (fetcher2 >> arrayCast<'T>) |> array2D
         flatArrayAndShape2D<'T> els
     // ... -> dim 3
-    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqTupleLeafTy tgt)) -> 
-        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map flatSeqTupleLeaf) |> array3D
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleLeafTy tgt fetcher3)) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> arrayCast<'T>)) |> array3D
         flatArrayAndShape3D<'T> els
     // ... -> dim 4
-    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqTupleLeafTy tgt))) -> 
-        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map flatSeqTupleLeaf)) |> array4D
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleLeafTy tgt fetcher4))) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
         flatArrayAndShape4D<'T> els
     | _ -> null, null
 

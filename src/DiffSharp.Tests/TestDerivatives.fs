@@ -70,6 +70,67 @@ type TestDerivatives () =
     // TODO: add test for AddT2ConstT1
 
     [<Test>]
+    member this.TestDerivativeAddWithBroadcast () =
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 + 1  (broadcast --> 2x3x4)
+        // 2x3x4 + 4  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t1a = Tensor.Create([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                  [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+        
+        // Get all the interesting shapes that broadcast into t1a
+        let shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        // For each shape, create a broadcasting addition and take forward and reverse derivatives
+        for shape in shapes do 
+            let t1b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+            let t1a_deriv = t1a + 1.0
+            let t1b_delta = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) - 2.0))
+            let fwda = t1a.ForwardDiff(t1a_deriv)
+            let fwdb = t1b.ForwardDiff(t1b_delta)
+            let fwdz = fwda + fwdb
+            let fwdzd = fwdz.Derivative
+
+            let revx = t1a.ReverseDiff()
+            let revy = t1b.ReverseDiff()
+            let revz = revx + revy
+            let revz_grad = t1a - 1.0
+            revz.Reverse(revz_grad)
+            let revxd = revx.Derivative
+            let revyd = revy.Derivative
+
+            // In the simple case of broadcasting a constant, check the result against the non-broadcast case
+            if t1b.Sum() = Tensor.Create(2.0) then 
+                let t1c = Tensor.Create( Util.arrayND [| 2;3;4 |] (fun _idxs -> 2.0))
+                let t1c_deriv = Tensor.Create( Util.arrayND [| 2;3;4 |] (fun _idxs -> -2.0))
+                let fwda = t1a.ForwardDiff(t1a_deriv)
+                let fwdc = t1c.ForwardDiff(t1c_deriv)
+                let fwdz2 = fwda + fwdc
+                let fwdzd2 = fwdz2.Derivative
+
+                let revx2 = t1a.ReverseDiff()
+                let revy2 = t1c.ReverseDiff()
+                let revz2 = revx2 + revy2
+                revz2.Reverse(revz_grad)
+                let revxd2 = revx2.Derivative
+                let revyd2 = revy2.Derivative
+                Assert.AreEqual(fwdzd,fwdzd2)
+                Assert.AreEqual(revxd,revxd2)
+                // note the difference in shape here, and the need to summate down
+                Assert.AreEqual(revyd.Sum(),revyd2.Sum())
+
+    [<Test>]
     member this.TestDerivativeSubTT () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
         let fwdy = Tensor.Create([5.; 6.; 7.]).ForwardDiff(Tensor.Create([2.; 2.; 3.]))
