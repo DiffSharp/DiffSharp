@@ -125,6 +125,10 @@ type TestTensor () =
         Assert.AreEqual(t2DimCorrect, t2TupleArray.Dim)
         Assert.AreEqual(t2ValuesCorrect, t2TupleArray.ToArray())
 
+        let t2TupleOfList = Tensor.Create [[2.], [3.], [4.]]
+        Assert.AreEqual([| 3; 1 |], t2TupleOfList.Shape)
+        Assert.AreEqual(array2D [ [2]; [3]; [4] ], t2TupleOfList.ToArray())
+
     [<Test>]
     member this.TestTensorCreate3 () =
         let t3Values = [[[1.; 2.; 3.]; [4.; 5.; 6.]]]
