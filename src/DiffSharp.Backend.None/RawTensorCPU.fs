@@ -197,10 +197,19 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
 
     override t.TransposeT2() =
-        if t.Dim <> 2 then failwith "Expecting a 2d Tensor"
-        let tcols = t.Shape.[1]
-        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
-        upcast RawTensorFloat32CPU.Create(result)
+        if t.Dim < 2 then failwith "Expecting at least a 2D tensor"
+        let oldShape = t.Shape
+        let batch = oldShape.[0..oldShape.Length-3]
+        let nrows = oldShape.[oldShape.Length-2]
+        let ncols = oldShape.[oldShape.Length-1]
+        let newShape = Array.append batch [| ncols; nrows |]
+        let result = Array.zeroCreate values.Length
+        for i = 0 to values.Length-1 do
+            let col = i % ncols 
+            let row = (i / ncols ) % nrows
+            let j = (i / ncols / nrows) + col*nrows + row
+            result.[j] <- values.[i]
+        upcast RawTensorFloat32CPU(result, newShape)
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
@@ -444,15 +453,33 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let result = Array.map (fun t -> t ** t2value) t1value
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
-    override t1.MatMulT2T2(t2) =
-        if t1.Dim <> 2 || t2.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" t1.Shape t2.Shape
-        let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
-        let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
-        if t1cols <> t2rows then failwithf "Cannot multiply Tensors with shapes %A, %A" t1.Shape t2.Shape
+    override t1.BatchMatMulTT(t2) =
+        if t1.Dim < 2 || t2.Dim < 2 then failwithf "Expecting two tensors each at least 2D, received tensors with shapes %A, %A" t1.Shape t2.Shape
+
+        let t1BatchPart, t1MatrixPart = t1.Shape |> Array.splitAt (t1.Shape.Length-2)
+        let t2BatchPart, t2MatrixPart = t2.Shape |> Array.splitAt (t2.Shape.Length-2)
+        if t1BatchPart <> t2BatchPart then failwithf "No expansion on RawTensor, should have been done on tensor with shapes %A, %A" t1.Shape t2.Shape
+
+        let t1rows, t1cols = t1MatrixPart.[0], t1MatrixPart.[1]
+        let t2rows, t2cols = t2MatrixPart.[0], t2MatrixPart.[1]
+        if t1cols <> t2rows then failwithf "Cannot matrix multiply tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorFloat32CPU).Values        
-        let result = Array2D.init t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
-        upcast RawTensorFloat32CPU.Create(result)
+        let t2value = (t2 :?> RawTensorFloat32CPU).Values   
+        let newShape = Array.append t1BatchPart [| t1rows; t2cols |]
+        let values = 
+            match t1.Dim with 
+            | 2 ->
+                array2DFlat t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
+            | 3 ->
+                let nb = t1BatchPart.[0]
+                array3DFlat nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
+            | 4 ->
+                let nb0 = t1BatchPart.[0]
+                let nb1 = t1BatchPart.[1]
+                array4DFlat nb0 nb1 t1rows t2cols (fun b0 b1 i j -> Array.sumBy (fun k -> t1value.[((b0*nb1+b1)*t1rows+i)*t1cols+k] * t2value.[((b0*nb1+b1)*t2rows+k)*t2cols+j]) [|0..(t2rows-1)|] )
+            | _ -> failwith "BatchMatMulTT - tensor size > 4 nyi"
+
+        upcast RawTensorFloat32CPU(values, newShape)
     
     override t1.Conv1D(t2, stride, padding) =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)

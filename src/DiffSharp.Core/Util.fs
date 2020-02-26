@@ -196,6 +196,23 @@ let arrayND (shape: int[]) f =
     | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
     | _ -> failwith "arrayND - nyi for dim > 4"
 
+let array2DFlat i j f = Array.init (i*j) (fun ij -> f (ij/j) (ij%j))
+
+let array3DFlat i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
+
+let array4DFlat i j k l f = Array.init (i*j*k*l) (fun ijkl -> f (ijkl/j/k/l) ((ijkl/k/l)%j) ((ijkl/l)%k) (ijkl%l))
+
+//array2DFlat 3 4 (fun i j -> i + j) |> Array.iter (printf "%A;")
+//Array2D.init 3 4 (fun i j -> i + j) |> Array2D.iter (printf "%A;")
+
+//array3DFlat 3 4 5 (fun i j k -> i + j + 2*k)  |> Array.iter (printf "%A;")
+//Array3D.init 3 4 5 (fun i j k -> i + j + 2*k) |> Array3D.iter (printf "%A;")
+
+//let s1 = array4DFlat 3 4 5 6 (fun i j k l -> i + j + 2*k + 20*l)  |> Array.iter (printf "%A;")
+//let s2 = Array4D.init 3 4 5 6 (fun i j k l -> i + j + 2*k + 20*l) |> (fun arr -> for i in 0 .. 2 do for j in 0..3 do for k in 0..4 do for l in 0..5 do printf "%A;" arr.[i,j,k,l])
+
+//(s1 = s2)
+
 /// Get the elements of an arbitrary IEnumerble
 let private seqElements (ie: obj) = 
     let e = (ie :?> IEnumerable).GetEnumerator()

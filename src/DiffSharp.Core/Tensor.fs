@@ -278,9 +278,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp + bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded + bExpanded
     static member (+) (a:Tensor, b) = a + a.Create(b)
     static member (+) (a, b:Tensor) = b.Create(a) + b
     member t1.Add(t2:Tensor) = t1 + t2
@@ -319,9 +319,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp - bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded - bExpanded
     static member (-) (a:Tensor, b) = a - a.Create(b)
     static member (-) (a, b:Tensor) = b.Create(a) - b
     member t1.Sub(t2:Tensor) = t1 - t2
@@ -360,9 +360,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp * bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded * bExpanded
     static member (*) (a:Tensor, b) = a * a.Create(b)
     static member (*) (a, b:Tensor) = b.Create(a) * b
     member t1.Mul(t2:Tensor) = t1 * t2
@@ -401,9 +401,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp / bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded / bExpanded
     static member (/) (a:Tensor, b) = a / a.Create(b)
     static member (/) (a, b:Tensor) = b.Create(a) / b
     member t1.Div(t2:Tensor) = t1 / t2
@@ -442,27 +442,37 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            Tensor.Pow(aExp, bExp)
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            Tensor.Pow(aExpanded, bExpanded)
     static member Pow (a:Tensor, b) = a ** a.Create(b)
     static member Pow (a, b:Tensor) = b.Create(a) ** b
     member t1.Pow(t2:Tensor) = t1 ** t2
     member t1.Pow(t2) = t1 ** t1.Create(t2)
 
     static member MatMul (a:Tensor, b:Tensor) =
-        if a.Dim <> 2 || b.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
-        if a.Shape.[1] = b.Shape.[0] then
-            let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
+        if a.Dim < 2 || b.Dim < 2 then failwithf "Expecting both tensors to be at least 2D, received tensors with shapes %A, %A" a.Shape b.Shape
+
+        let aBatchPart, aMatrixPart = Array.splitAt (a.Shape.Length-2) a.Shape
+        let bBatchPart, bMatrixPart = Array.splitAt (b.Shape.Length-2) b.Shape
+        if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot multiply tensors with shapes %A, %A" a.Shape b.Shape
+        if aBatchPart = bBatchPart then
+            let inline fRaw(a:RawTensor,b) = a.BatchMatMulTT(b)
             let inline fTensor(a,b) = Tensor.MatMul(a, b)
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
             let inline dfTensorFwdTC(cp,ap,ad) = Tensor.MatMul(ad, b)
             let inline dfTensorFwdCT(cp,bp,bd) = Tensor.MatMul(a, bd)
-            let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
-            let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
-            let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
+            let inline dfTensorRevTT(a,b) = MatMulTT(a,b)
+            let inline dfTensorRevTC(a,b) = MatMulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MatMulTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
+        else
+            let newBatchPart = broadcastShapes2 aBatchPart bBatchPart
+            let aNewShape = Array.append newBatchPart aMatrixPart
+            let bNewShape = Array.append newBatchPart bMatrixPart
+            let aExpanded = a.Expand(aNewShape)
+            let bExpanded = b.Expand(bNewShape)
+            Tensor.MatMul (aExpanded, bExpanded)
     member t1.MatMul(t2:Tensor) = Tensor.MatMul(t1, t2)
 
     static member (~-) (a:Tensor) =
@@ -567,7 +577,7 @@ type Tensor =
     member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
     
     static member Transpose (a:Tensor) =
-        if a.Dim <> 2 then failwithf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
+        if a.Dim > 2 then failwithf "Expecting at least a 2d tensor, received Tensor with shape %A" a.Shape
         let inline fRaw(a:RawTensor) = a.TransposeT2()
         let inline fTensor(a) = Tensor.Transpose(a)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
@@ -939,9 +949,9 @@ type Tensor =
                         | PowTT0(a,b) -> reset (a::b::tt)
                         | PowTT0Const(a,_) -> reset (a::tt)
                         | PowTConstT0(_,b) -> reset (b::tt)
-                        | MatMulT2T2(a,b) -> reset (a::b::tt)
-                        | MatMulT2T2Const(a,_) -> reset (a::tt)
-                        | MatMulT2ConstT2(_,b) -> reset (b::tt)
+                        | MatMulTT(a,b) -> reset (a::b::tt)
+                        | MatMulTTConst(a,_) -> reset (a::tt)
+                        | MatMulTConstT(_,b) -> reset (b::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
@@ -1044,9 +1054,9 @@ type Tensor =
                         | PowTT0(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: ((t.Derivative * (a.Primal ** b.Primal) * log a.Primal).Sum(), b) :: tt)
                         | PowTT0Const(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT0(a,b) -> push (((t.Derivative * (a ** b.Primal) * log a).Sum(), b) :: tt)
-                        | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
-                        | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
-                        | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
+                        | MatMulTT(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
+                        | MatMulTTConst(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
+                        | MatMulTConstT(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             // a: input, NxCxI (batchSize x inputChannels x inputLength)
                             // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
@@ -1321,9 +1331,9 @@ and TensorOp =
     | PowTT0Const of Tensor * Tensor
     | PowTConstT0 of Tensor * Tensor
 
-    | MatMulT2T2 of Tensor * Tensor
-    | MatMulT2T2Const of Tensor * Tensor
-    | MatMulT2ConstT2 of Tensor * Tensor
+    | MatMulTT of Tensor * Tensor
+    | MatMulTTConst of Tensor * Tensor
+    | MatMulTConstT of Tensor * Tensor
 
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int

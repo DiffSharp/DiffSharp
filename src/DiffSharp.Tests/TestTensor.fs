@@ -521,6 +521,82 @@ type TestTensor () =
         Assert.True(t3.ApproximatelyEqual(t3Correct))
 
     [<Test>]
+    member this.TestTensorBatchMatMul33 () =
+        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = Tensor.Create([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.Expand([| 6;3;5 |])
+        let t2Expanded = t2.Expand([| 6;5;2 |])
+        let t3Unexpanded = Tensor.MatMul(t1, t2)
+        let t3 = Tensor.MatMul(t1Expanded, t2Expanded)
+        let t3Correct = t3Unexpanded.Expand([| 6;3;2 |])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorBatchMatMul44 () =
+        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = Tensor.Create([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.Expand([| 2;6;3;5 |])
+        let t2Expanded = t2.Expand([| 2;6;5;2 |])
+        let t3Unexpanded = Tensor.MatMul(t1, t2)
+        let t3 = Tensor.MatMul(t1Expanded, t2Expanded)
+        let t3Correct = t3Unexpanded.Expand([| 2;6;3;2 |])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorBatchMatMulBroadcast1 () =
+        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = Tensor.Create([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.Expand([| 3;5 |])
+        let t2Expanded = t2.Expand([| 2;6;5;2 |])
+        let t3Unexpanded = Tensor.MatMul(t1, t2)
+        let t3 = Tensor.MatMul(t1Expanded, t2Expanded)
+        let t3Correct = t3Unexpanded.Expand([| 2;6;3;2 |])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorBatchMatMulBroadcast2 () =
+        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = Tensor.Create([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.Expand([| 2;6;3;5 |])
+        let t2Expanded = t2.Expand([| 2;1;5;2 |])
+        let t3Unexpanded = Tensor.MatMul(t1, t2)
+        let t3 = Tensor.MatMul(t1Expanded, t2Expanded)
+        let t3Correct = t3Unexpanded.Expand([| 2;6;3;2 |])
+
+        Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
     member this.TestTensorConv1D () =
         let t1 = Tensor.Create([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                  [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];

@@ -165,7 +165,7 @@ and [<AbstractClass>]
     abstract member PowTT : RawTensor -> RawTensor
     abstract member PowT0T: RawTensor -> RawTensor
     abstract member PowTT0 : RawTensor -> RawTensor
-    abstract member MatMulT2T2: RawTensor -> RawTensor
+    abstract member BatchMatMulTT: RawTensor -> RawTensor
     abstract member Conv1D: RawTensor * int * int -> RawTensor
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member NegT : unit -> RawTensor
