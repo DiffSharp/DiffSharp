@@ -2924,3 +2924,75 @@ type TestDerivatives () =
         Assert.True(revz.ApproximatelyEqual(revzCorrect))
         Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
         Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+
+    [<Test>]
+    member this.TestDerivativeExtension () =
+        
+        let rec MySin = 
+            Tensor.UnaryExtension
+               { new UnaryExtension with 
+                    member _.Raw(a) = a.SinT()
+                    member _.GradForward(_cp,ap,ad) = ad * MyCos(ap)
+                    member _.GradReverse (t,a) = t.Derivative * MyCos(a.Primal) }
+        and MyCos = 
+            Tensor.UnaryExtension
+               { new UnaryExtension with 
+                    member _.Raw(a) = a.CosT()
+                    member _.GradForward(_cp,ap,ad) = -ad * MySin(ap)
+                    member _.GradReverse(t,a) = -t.Derivative * MySin(a.Primal) }
+
+        begin
+            let fwdx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ForwardDiff(Tensor.Create([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+            let fwdz = MySin(fwdx)
+            let fwdzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+            let fwdzd = fwdz.Derivative
+            let fwdzdCorrect = Tensor.Create([1.0022; 0.0237; 1.4571; 1.0510; 0.3840])
+
+            let revx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ReverseDiff()
+            let revz = MySin(revx)
+            let revzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+            revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+            let revxd = revx.Derivative
+            let revxdCorrect = Tensor.Create([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
+
+            Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+            Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+            Assert.True(revz.ApproximatelyEqual(revzCorrect))
+            Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        end
+
+        let rec MyMul = 
+            Tensor.BinaryExtension
+                { new BinaryExtension with 
+                    member _.Raw(a,b) = a.MulTT(b)
+                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = (MyMul(ad, bp)) + MyMul(ap, bd)
+                    member _.GradForwardTC(_cp,_a,ad,b) = MyMul(ad, b)
+                    member _.GradForwardCT(_cp,a,_b,bd) = MyMul(a, bd)
+                    member _.GradReverseTT(t,a,b) = MyMul(t.Derivative, b.Primal), MyMul(t.Derivative, a.Primal)
+                    member _.GradReverseTC(t,_a,b) = MyMul(t.Derivative, b)
+                    member _.GradReverseCT(t,a,_b) = MyMul(t.Derivative, a) }
+
+        begin
+            let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+            let fwdy = Tensor.Create([5.; 6.; 7.]).ForwardDiff(Tensor.Create([2.; 2.; 3.]))
+            let fwdz = MyMul(fwdx, fwdy)
+            let fwdzCorrect = Tensor.Create([5.; 12.; 21.])
+            let fwdzd = fwdz.Derivative
+            let fwdzdCorrect = Tensor.Create([12.; 22.; 37.])
+
+            let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+            let revy = Tensor.Create([5.; 6.; 7.]).ReverseDiff()
+            let revz = MyMul(revx, revy)
+            let revzCorrect = Tensor.Create([5.; 12.; 21.])
+            revz.Reverse(Tensor.Create([5.; 5.; 5.]))
+            let revxd = revx.Derivative
+            let revxdCorrect = Tensor.Create([25.; 30.; 35.])
+            let revyd = revy.Derivative
+            let revydCorrect = Tensor.Create([5.; 10.; 15.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+            Assert.AreEqual(revydCorrect, revyd)
+        end

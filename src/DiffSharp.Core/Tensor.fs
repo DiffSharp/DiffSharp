@@ -949,6 +949,7 @@ type Tensor =
                         | AcosT(a) -> reset (a::tt)
                         | AtanT(a) -> reset (a::tt)
                         | NewT -> reset tt
+                        | OpExtensionT(inps, _) -> reset (inps@tt)
                     else reset tt
                 | _ -> reset tt
         reset [t]
@@ -1234,6 +1235,7 @@ type Tensor =
                         | AcosT(a) -> push ((-t.Derivative / Tensor.Sqrt(1. - a.Primal*a.Primal), a) :: tt)
                         | AtanT(a) -> push ((t.Derivative / (1. + a.Primal*a.Primal), a) :: tt)
                         | NewT -> push tt
+                        | OpExtensionT(inps, backpropf) -> push (List.zip (backpropf t) inps @ tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -1334,6 +1336,7 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
+    | OpExtensionT of (* inputs *) Tensor list * (* backpropf *) ((* tangent *) Tensor -> (* input-grad *) Tensor list)
 
 type Tensor with
     member t.GetSlice(i0min:int option, i0max:int option) =
@@ -3766,6 +3769,38 @@ type Tensor with
         let i5max   = i5
         let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
         t.GetSlice(bounds)
+
+type UnaryExtension =
+    abstract Raw: ap: RawTensor -> RawTensor
+    abstract GradForward: fp: Tensor * a: Tensor * ad: Tensor -> Tensor
+    abstract GradReverse: t: Tensor * a: Tensor -> Tensor
+
+type BinaryExtension =
+    abstract Raw: a: RawTensor * b: RawTensor -> RawTensor
+    abstract GradForwardTT: fp: Tensor * a: Tensor * ad: Tensor * b: Tensor * bd: Tensor -> Tensor
+    abstract GradForwardTC: fp: Tensor * a: Tensor * ad: Tensor * b: Tensor -> Tensor
+    abstract GradForwardCT: fp: Tensor * a: Tensor * b: Tensor * bd: Tensor  -> Tensor
+    abstract GradReverseTT: t: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
+    abstract GradReverseTC: t: Tensor * a: Tensor * b: Tensor -> Tensor
+    abstract GradReverseCT: t: Tensor * a: Tensor * b: Tensor -> Tensor
+
+type Tensor with
+    static member UnaryExtension(ext: UnaryExtension) =
+        (fun a -> 
+            Tensor.OpUnary(a, ext.Raw, Tensor.UnaryExtension ext, ext.GradForward, 
+                (fun a -> OpExtensionT([a], (fun t -> [ext.GradReverse (t,a)])))
+            ))
+
+    static member BinaryExtension(ext: BinaryExtension) =
+        (fun (a, b) -> 
+            Tensor.OpBinary(a, b, ext.Raw, Tensor.BinaryExtension ext, 
+                ext.GradForwardTT, 
+                (fun (cp,a,ad) -> ext.GradForwardTC(cp,a,ad,b)), 
+                (fun (cp,b,bd) -> ext.GradForwardCT(cp,a,b,bd)),
+                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let ra, rb = ext.GradReverseTT (t,a,b) in [ra; rb]))),
+                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let ra = ext.GradReverseTC (t,a,b) in [ra]))),
+                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let rb = ext.GradReverseCT (t,a,b) in [rb])))
+            ))
 
 [<RequireQualifiedAccess>]
 module Tensor =
