@@ -3019,9 +3019,6 @@ module TestExtensions =
                     member _.GradForwardTC(_cp,_a,ad,b) = Tensor.conv1dx(ad, b, stride, padding)
                     member _.GradForwardCT(_cp,a,_b,bd) = Tensor.conv1dx(a, bd, stride, padding)
                     member _.GradReverseTT(t,a,b) = 
-                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
-                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
                         let batchSize = t.Shape.[0]
                         let outputChannels = t.Shape.[1]
                         let inputChannels = a.Shape.[1]
@@ -3031,7 +3028,6 @@ module TestExtensions =
                         if stride > 1 then
                             tderivative <- tderivative.Dilate([|1;1;stride|])
                         let bFlipped = b.Primal.Flip([|2|])
-                        // propagate to a
                         let mutable aderivative = Tensor.ZerosLike(a)
                         for k=0 to outputChannels-1 do
                             let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
@@ -3042,10 +3038,9 @@ module TestExtensions =
                                 let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
                                 c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
                             aderivative <- aderivative + c
-                        // propagate to b
                         let mutable bderivative = Tensor.ZerosLike(b)
                         for n=0 to batchSize-1 do
-                            let aa = a.Primal.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                            let aa = a.Primal.[n].View([|inputChannels; 1; inputLength|]) 
                             let d = tderivative.[n]
                             for k=0 to outputChannels-1 do
                                 let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
@@ -3053,20 +3048,14 @@ module TestExtensions =
                                 bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
                         (aderivative, bderivative)
                     member _.GradReverseTC(t,_a,b) = 
-                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
-                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
                         let batchSize = t.Shape.[0]
                         let outputChannels = t.Shape.[1]
-                        // let outputLength = t.Shape.[2]
                         let inputChannels = a.Shape.[1]
-                        // let inputLength = a.Shape.[2]
                         let kernelLength = b.Shape.[2]
                         let mutable tderivative = t.Derivative
                         if stride > 1 then
                             tderivative <- tderivative.Dilate([|1;1;stride|])
                         let bFlipped = b.Flip([|2|])
-                        // propagate to a
                         let mutable aderivative = Tensor.ZerosLike(a)
                         for k=0 to outputChannels-1 do
                             let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
@@ -3079,23 +3068,17 @@ module TestExtensions =
                             aderivative <- aderivative + c
                         aderivative
                     member _.GradReverseCT(t,a,_b) = 
-                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
-                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
                         let batchSize = t.Shape.[0]
                         let outputChannels = t.Shape.[1]
-                        // let outputLength = t.Shape.[2]
                         let inputChannels = a.Shape.[1]
                         let inputLength = a.Shape.[2]
                         let kernelLength = b.Shape.[2]
                         let mutable tderivative = t.Derivative
                         if stride > 1 then
                             tderivative <- tderivative.Dilate([|1;1;stride|])
-                        // let bFlipped = b.Primal.Flip([|2|])
-                        // propagate to b
                         let mutable bderivative = Tensor.ZerosLike(b)
                         for n=0 to batchSize-1 do
-                            let aa = a.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                            let aa = a.[n].View([|inputChannels; 1; inputLength|])
                             let d = tderivative.[n]
                             for k=0 to outputChannels-1 do
                                 let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
