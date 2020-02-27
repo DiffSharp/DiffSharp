@@ -156,7 +156,7 @@ type Tensor =
             let cp = Tensor.Extend(ap, shape)
             TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
-    member internal t.GetSlice(bounds:int[,]) =
+    member t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
         if t.Dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = Array2D.init t.Dim 3 (fun i j -> if j=0 then 0 elif j=1 then t.Shape.[i]-1 else 0)
@@ -3770,30 +3770,43 @@ type Tensor with
         let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
         t.GetSlice(bounds)
 
+/// Defines an extension implementing a unary function and its gradients
 type UnaryExtension =
-    abstract Raw: ap: RawTensor -> RawTensor
-    abstract GradForward: fp: Tensor * a: Tensor * ad: Tensor -> Tensor
+
+    /// Compute the function f(a)
+    abstract Compute: a: RawTensor -> RawTensor
+
+    /// Compute the forward gradient of function.
+    abstract GradForward: fa: Tensor * a: Tensor * da: Tensor -> Tensor
+
+    /// Compute the reverse gradient (adjoint) of function.
     abstract GradReverse: t: Tensor * a: Tensor -> Tensor
 
+/// Defines an extension implementing a binary function and its gradients
 type BinaryExtension =
-    abstract Raw: a: RawTensor * b: RawTensor -> RawTensor
-    abstract GradForwardTT: fp: Tensor * a: Tensor * ad: Tensor * b: Tensor * bd: Tensor -> Tensor
-    abstract GradForwardTC: fp: Tensor * a: Tensor * ad: Tensor * b: Tensor -> Tensor
-    abstract GradForwardCT: fp: Tensor * a: Tensor * b: Tensor * bd: Tensor  -> Tensor
+    /// Compute the function on raw tensors
+    abstract Compute: a: RawTensor * b: RawTensor -> RawTensor
+
+    /// Compute the forward gradient of function.
+    abstract GradForwardTT: fab: Tensor * a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
+    abstract GradForwardTC: fab: Tensor * a: Tensor * da: Tensor * b: Tensor -> Tensor
+    abstract GradForwardCT: fab: Tensor * a: Tensor * b: Tensor * db: Tensor  -> Tensor
+
+    /// Compute the reverse gradient (adjoint) of function.
     abstract GradReverseTT: t: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
     abstract GradReverseTC: t: Tensor * a: Tensor * b: Tensor -> Tensor
     abstract GradReverseCT: t: Tensor * a: Tensor * b: Tensor -> Tensor
 
 type Tensor with
-    static member UnaryExtension(ext: UnaryExtension) =
+    static member Extension(ext: UnaryExtension) =
         (fun a -> 
-            Tensor.OpUnary(a, ext.Raw, Tensor.UnaryExtension ext, ext.GradForward, 
+            Tensor.OpUnary(a, ext.Compute, Tensor.Extension ext, ext.GradForward, 
                 (fun a -> OpExtensionT([a], (fun t -> [ext.GradReverse (t,a)])))
             ))
 
-    static member BinaryExtension(ext: BinaryExtension) =
+    static member Extension(ext: BinaryExtension) =
         (fun (a, b) -> 
-            Tensor.OpBinary(a, b, ext.Raw, Tensor.BinaryExtension ext, 
+            Tensor.OpBinary(a, b, ext.Compute, Tensor.Extension ext, 
                 ext.GradForwardTT, 
                 (fun (cp,a,ad) -> ext.GradForwardTC(cp,a,ad,b)), 
                 (fun (cp,b,bd) -> ext.GradForwardCT(cp,a,b,bd)),

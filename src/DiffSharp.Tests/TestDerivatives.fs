@@ -2925,74 +2925,275 @@ type TestDerivatives () =
         Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
         Assert.True(revyd.ApproximatelyEqual(revydCorrect))
 
-    [<Test>]
-    member this.TestDerivativeExtension () =
-        
-        let rec MySin = 
-            Tensor.UnaryExtension
-               { new UnaryExtension with 
-                    member _.Raw(a) = a.SinT()
-                    member _.GradForward(_cp,ap,ad) = ad * MyCos(ap)
-                    member _.GradReverse (t,a) = t.Derivative * MyCos(a.Primal) }
-        and MyCos = 
-            Tensor.UnaryExtension
-               { new UnaryExtension with 
-                    member _.Raw(a) = a.CosT()
-                    member _.GradForward(_cp,ap,ad) = -ad * MySin(ap)
-                    member _.GradReverse(t,a) = -t.Derivative * MySin(a.Primal) }
+[<TestFixture>]
+module TestExtensions =
 
-        begin
-            let fwdx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ForwardDiff(Tensor.Create([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
-            let fwdz = MySin(fwdx)
-            let fwdzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
-            let fwdzd = fwdz.Derivative
-            let fwdzdCorrect = Tensor.Create([1.0022; 0.0237; 1.4571; 1.0510; 0.3840])
+    type Tensor with
 
-            let revx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ReverseDiff()
-            let revz = MySin(revx)
-            let revzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
-            revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
-            let revxd = revx.Derivative
-            let revxdCorrect = Tensor.Create([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
-
-            Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-            Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-            Assert.True(revz.ApproximatelyEqual(revzCorrect))
-            Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        end
-
-        let rec MyMul = 
-            Tensor.BinaryExtension
+        static member mulx (a,b) = 
+            Tensor.Extension
                 { new BinaryExtension with 
-                    member _.Raw(a,b) = a.MulTT(b)
-                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = (MyMul(ad, bp)) + MyMul(ap, bd)
-                    member _.GradForwardTC(_cp,_a,ad,b) = MyMul(ad, b)
-                    member _.GradForwardCT(_cp,a,_b,bd) = MyMul(a, bd)
-                    member _.GradReverseTT(t,a,b) = MyMul(t.Derivative, b.Primal), MyMul(t.Derivative, a.Primal)
-                    member _.GradReverseTC(t,_a,b) = MyMul(t.Derivative, b)
-                    member _.GradReverseCT(t,a,_b) = MyMul(t.Derivative, a) }
+                    member _.Compute(a,b) = a.MulTT(b)
+                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = (Tensor.mulx(ad, bp)) + Tensor.mulx(ap, bd)
+                    member _.GradForwardTC(_cp,_a,ad,b) = Tensor.mulx(ad, b)
+                    member _.GradForwardCT(_cp,a,_b,bd) = Tensor.mulx(a, bd)
+                    member _.GradReverseTT(t,a,b) = Tensor.mulx(t.Derivative, b.Primal), Tensor.mulx(t.Derivative, a.Primal)
+                    member _.GradReverseTC(t,_a,b) = Tensor.mulx(t.Derivative, b)
+                    member _.GradReverseCT(t,a,_b) = Tensor.mulx(t.Derivative, a) }
+                (a,b)
+    [<Test>]
+    let ``test mulx extension``() = 
+        let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+        let fwdy = Tensor.Create([5.; 6.; 7.]).ForwardDiff(Tensor.Create([2.; 2.; 3.]))
+        let fwdz = Tensor.mulx(fwdx, fwdy)
+        let fwdzCorrect = Tensor.Create([5.; 12.; 21.])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([12.; 22.; 37.])
 
-        begin
-            let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-            let fwdy = Tensor.Create([5.; 6.; 7.]).ForwardDiff(Tensor.Create([2.; 2.; 3.]))
-            let fwdz = MyMul(fwdx, fwdy)
-            let fwdzCorrect = Tensor.Create([5.; 12.; 21.])
-            let fwdzd = fwdz.Derivative
-            let fwdzdCorrect = Tensor.Create([12.; 22.; 37.])
+        let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+        let revy = Tensor.Create([5.; 6.; 7.]).ReverseDiff()
+        let revz = Tensor.mulx(revx, revy)
+        let revzCorrect = Tensor.Create([5.; 12.; 21.])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([25.; 30.; 35.])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([5.; 10.; 15.])
 
-            let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-            let revy = Tensor.Create([5.; 6.; 7.]).ReverseDiff()
-            let revz = MyMul(revx, revy)
-            let revzCorrect = Tensor.Create([5.; 12.; 21.])
-            revz.Reverse(Tensor.Create([5.; 5.; 5.]))
-            let revxd = revx.Derivative
-            let revxdCorrect = Tensor.Create([25.; 30.; 35.])
-            let revyd = revy.Derivative
-            let revydCorrect = Tensor.Create([5.; 10.; 15.])
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+        Assert.AreEqual(revydCorrect, revyd)
 
-            Assert.AreEqual(fwdzCorrect, fwdz)
-            Assert.AreEqual(fwdzdCorrect, fwdzd)
-            Assert.AreEqual(revzCorrect, revz)
-            Assert.AreEqual(revxdCorrect, revxd)
-            Assert.AreEqual(revydCorrect, revyd)
-        end
+    type Tensor with
+        member a.sinx() = 
+            Tensor.Extension
+               { new UnaryExtension with 
+                    member _.Compute(a) = a.SinT()
+                    member _.GradForward(_cp,ap,ad) = ad * ap.cosx()
+                    member _.GradReverse (t,a) = t.Derivative * a.Primal.cosx() }
+               a
+
+        member a.cosx() = 
+            Tensor.Extension
+               { new UnaryExtension with 
+                    member _.Compute(a) = a.CosT()
+                    member _.GradForward(_cp,ap,ad) = -ad * ap.sinx()
+                    member _.GradReverse(t,a) = -t.Derivative * a.Primal.sinx() }
+                a
+
+
+    [<Test>]
+    let ``test sinx extension``() = 
+        let fwdx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ForwardDiff(Tensor.Create([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+        let fwdz = fwdx.sinx()
+        let fwdzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([1.0022; 0.0237; 1.4571; 1.0510; 0.3840])
+
+        let revx = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).ReverseDiff()
+        let revz = revx.sinx()
+        let revzCorrect = Tensor.Create([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+        revz.Reverse(Tensor.Create([5.; 5.; 5.; 5.; -5.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    type Tensor with
+        static member conv1dx(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = 
+            let stride = defaultArg stride 1
+            let padding = defaultArg padding 0
+            let dilation = defaultArg dilation 1
+            let mutable b = b
+            if dilation > 1 then
+                b <- b.Dilate([|1;1;dilation|])
+            Tensor.Extension
+                { new BinaryExtension with 
+                    member _.Compute(a,b) = a.Conv1D(b, stride, padding)
+                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = Tensor.conv1dx(ad, bp, stride, padding) + Tensor.conv1dx(ap, bd, stride, padding)
+                    member _.GradForwardTC(_cp,_a,ad,b) = Tensor.conv1dx(ad, b, stride, padding)
+                    member _.GradForwardCT(_cp,a,_b,bd) = Tensor.conv1dx(a, bd, stride, padding)
+                    member _.GradReverseTT(t,a,b) = 
+                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                        let batchSize = t.Shape.[0]
+                        let outputChannels = t.Shape.[1]
+                        let inputChannels = a.Shape.[1]
+                        let inputLength = a.Shape.[2]
+                        let kernelLength = b.Shape.[2]
+                        let mutable tderivative = t.Derivative
+                        if stride > 1 then
+                            tderivative <- tderivative.Dilate([|1;1;stride|])
+                        let bFlipped = b.Primal.Flip([|2|])
+                        // propagate to a
+                        let mutable aderivative = Tensor.ZerosLike(a)
+                        for k=0 to outputChannels-1 do
+                            let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
+                            let dBounds: int[,] = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
+                            let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
+                            let mutable c = Tensor.conv1dx(d, b, padding=kernelLength-1)
+                            if padding > 0 then
+                                let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
+                                c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
+                            aderivative <- aderivative + c
+                        // propagate to b
+                        let mutable bderivative = Tensor.ZerosLike(b)
+                        for n=0 to batchSize-1 do
+                            let aa = a.Primal.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                            let d = tderivative.[n]
+                            for k=0 to outputChannels-1 do
+                                let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
+                                let c = Tensor.conv1dx(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                        (aderivative, bderivative)
+                    member _.GradReverseTC(t,_a,b) = 
+                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                        let batchSize = t.Shape.[0]
+                        let outputChannels = t.Shape.[1]
+                        // let outputLength = t.Shape.[2]
+                        let inputChannels = a.Shape.[1]
+                        // let inputLength = a.Shape.[2]
+                        let kernelLength = b.Shape.[2]
+                        let mutable tderivative = t.Derivative
+                        if stride > 1 then
+                            tderivative <- tderivative.Dilate([|1;1;stride|])
+                        let bFlipped = b.Flip([|2|])
+                        // propagate to a
+                        let mutable aderivative = Tensor.ZerosLike(a)
+                        for k=0 to outputChannels-1 do
+                            let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
+                            let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
+                            let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
+                            let mutable c = Tensor.conv1dx(d, b, padding=kernelLength-1)
+                            if padding > 0 then
+                                let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
+                                c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
+                            aderivative <- aderivative + c
+                        aderivative
+                    member _.GradReverseCT(t,a,_b) = 
+                        // a: input, NxCxI (batchSize x inputChannels x inputLength)
+                        // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
+                        // t: output, NxKxL (batchSize x outputChannels x outputLength)
+                        let batchSize = t.Shape.[0]
+                        let outputChannels = t.Shape.[1]
+                        // let outputLength = t.Shape.[2]
+                        let inputChannels = a.Shape.[1]
+                        let inputLength = a.Shape.[2]
+                        let kernelLength = b.Shape.[2]
+                        let mutable tderivative = t.Derivative
+                        if stride > 1 then
+                            tderivative <- tderivative.Dilate([|1;1;stride|])
+                        // let bFlipped = b.Primal.Flip([|2|])
+                        // propagate to b
+                        let mutable bderivative = Tensor.ZerosLike(b)
+                        for n=0 to batchSize-1 do
+                            let aa = a.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                            let d = tderivative.[n]
+                            for k=0 to outputChannels-1 do
+                                let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
+                                let c = Tensor.conv1dx(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                        bderivative }
+                (a,b)
+
+    [<Test>]
+    let ``test conv1dx extension``() = 
+        let fwdx = Tensor.Create([[[  0.1264;   5.3183;   6.6905; -10.6416];
+                                 [ 13.8060;   4.5253;   2.8568;  -3.2037];
+                                 [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
+
+                                [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
+                                 [  4.2547;   2.6049;  -9.8226;  -5.4543];
+                                 [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
+        let fwdx = fwdx.ForwardDiff(Tensor.Create([[[-4.3197; -6.5898; -6.2003;  2.1058];
+                                 [ 7.0684; -3.7964;  4.4218;  3.9533];
+                                 [-7.1559; -7.6799; -9.5234; -3.9351]];
+
+                                [[-0.2089; -7.8695;  6.5383;  5.1090];
+                                 [-3.8272;  7.6264;  6.8205;  5.7346];
+                                 [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
+
+        let fwdy = Tensor.Create([[[ 4.0332e+00;  6.3036e+00];
+                                 [ 8.4410e+00; -5.7543e+00];
+                                 [-5.6937e-03; -6.7241e+00]];
+
+                                [[-2.2619e+00;  1.2082e+00];
+                                 [-1.2203e-01; -4.9373e+00];
+                                 [-4.1881e+00; -3.4198e+00]]])
+        let fwdy = fwdy.ForwardDiff(Tensor.Create([[[-1.5107; -0.0610];
+                                 [-0.2609;  5.9220];
+                                 [ 2.8221; -5.7314]];
+
+                                [[ 5.0064;  3.8631];
+                                 [-4.6264; -7.9380];
+                                 [ 8.2204; -1.9833]]]))
+
+        let fwdz = Tensor.conv1dx(fwdx, fwdy, stride=1)
+        let fwdzCorrect = Tensor.Create([[[ 143.3192;  108.0332;   11.2241];
+                                         [  -5.9062;    4.6091;    6.0273]];
+
+                                        [[  27.3032;   97.9855; -133.8372];
+                                         [  -1.4792;   45.6659;   29.8705]]])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[[ 111.2865;  -40.3692;   -1.8573];
+                                         [   -1.9154;   43.3470;   29.3626]];
+
+                                        [[ -168.6758;  -43.1578;   25.4470];
+                                         [ -149.6851;   23.1963;  -50.1932]]])
+
+        let revx = Tensor.Create([[[ 2.8564;  0.0424;  7.0984; -2.5130];
+                                 [-1.1502;  0.1410;  2.5438;  4.4798];
+                                 [ 0.4381; -4.3649;  2.5502;  2.5141]];
+
+                                [[-2.8894; -7.1729; -7.1368;  1.1060];
+                                 [-1.3253;  0.0257; -2.8552; -0.4933];
+                                 [ 4.7305; -5.6787;  3.4658;  4.5768]]]).ReverseDiff()
+        let revy = Tensor.Create([[[ 0.6355; -5.8100];
+                                 [ 0.6244;  6.0336];
+                                 [ 4.8205;  1.1716]];
+
+                                [[-8.2315; -3.0400];
+                                 [-2.2282; -2.9084];
+                                 [-0.9613;  1.0958]]]).ReverseDiff()
+        let revz = Tensor.conv1dx(revx, revy, stride=1)
+        let revzCorrect = Tensor.Create([[[ -1.3005; -43.8321;  62.9678];
+                                         [-26.6931; -22.6506; -69.1848]];
+
+                                        [[ 55.3161;  -3.6187;   6.3480];
+                                         [ 37.6982;  98.2438;  64.8643]]])
+        revz.Reverse(Tensor.Create([[[ 4.5763;  2.7538;  2.0173];
+                                     [-2.7543;  7.9257; -1.3670]];
+
+                                    [[ 1.7997; -1.2354;  4.6313];
+                                     [-4.0646;  0.0384;  4.1437]]]))            
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[[ 25.5806; -81.7051; -27.5597;  -7.5648];
+                                         [  8.9949;  19.6812;  -2.1304;  16.1472];
+                                         [ 24.7076;   7.9984;  22.9497;   0.8655]];
+
+                                        [[ 34.6019;   0.7992; -24.1050; -39.5052];
+                                         [ 10.1808;  21.8231; -13.9067;  15.8920];
+                                         [ 12.5828;  -8.3376;  16.9365;   9.9666]]])
+        let revyd = revy.Derivative
+        let revydCorrect = Tensor.Create([[[ -1.8835;  15.7019];
+                                         [-15.3840;  17.9761];
+                                         [ 26.7091;  -1.1857]];
+
+                                        [[-35.3382;  93.0419];
+                                         [ -5.6351;  11.3910];
+                                         [-44.3729;  70.9775]]])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+
