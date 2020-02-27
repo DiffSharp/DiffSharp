@@ -79,7 +79,7 @@ Literate.ProcessScriptFile(relative "input/examples-stochasticgradientdescent.fs
 // Generate API reference
 //
 
-let library = relative "../src/DiffSharp/bin/Debug/DiffSharp.dll"
+let library = relative "../src/DiffSharp/bin/Debug/netstandard2.0/DiffSharp.dll"
 let layoutRoots = [relative "input/templates"; relative "input/templates/reference" ]
 
 MetadataFormat.Generate(library, relative "output/reference", layoutRoots, tags, markDownComments = true)

@@ -1,5 +1,5 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp/bin/Debug/DiffSharp.dll"
+#r "../../src/DiffSharp/bin/Debug/netstandard2.0/DiffSharp.dll"
 
 (**
 Numerical Differentiation
