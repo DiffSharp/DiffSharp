@@ -145,6 +145,7 @@ and [<AbstractClass>]
     abstract member ToValue: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
+    abstract member ComputeHash: unit -> int
     abstract member ApproximatelyEquals: RawTensor * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
@@ -200,3 +201,16 @@ and [<AbstractClass>]
     abstract member AsinT: unit -> RawTensor
     abstract member AcosT: unit -> RawTensor
     abstract member AtanT: unit -> RawTensor
+    
+    override x.Equals(yobj: obj) = 
+        match yobj with
+        | :? RawTensor as y -> x.Equals(y)
+        | _ -> false
+
+    override x.GetHashCode() = x.ComputeHash()
+
+    interface System.IComparable with 
+        member x.CompareTo(yobj) =
+            match yobj with
+            | :? RawTensor as y -> x.CompareTo(y)
+            | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())

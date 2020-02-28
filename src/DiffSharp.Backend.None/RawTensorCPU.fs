@@ -119,6 +119,8 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             print t.Shape [||]
             sb.ToString()
 
+    override x.ComputeHash() = hash shape + hash values
+
     override t.ToValue() =
         match t.Dim with
         | 0 -> upcast t.Values.[0]

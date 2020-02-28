@@ -33,8 +33,8 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
     override d.Logprob(value) = 
         if value.Shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.Shape
-        let lb = d.Low.Le(value)
-        let ub = d.High.Gt(value)
+        let lb = d.Low.le(value)
+        let ub = d.High.gt(value)
         log (lb * ub) - log d.Range
     override d.GetString() = sprintf "Uniform(low:%A, high:%A)" d.Low d.High
 
