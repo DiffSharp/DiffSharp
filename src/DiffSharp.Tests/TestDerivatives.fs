@@ -86,7 +86,7 @@ type TestDerivatives () =
         t1.grad
         --> tensor([[12.],[24.]])
         *)
-        let revy = t1.ReverseDiff()
+        let revy = Tensor.Create([[1.]; [2.]]).ReverseDiff()
         let revz = revy.Expand([2;2;2])
         let revz_grad = Tensor.Create([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]])
         revz.Reverse(revz_grad)

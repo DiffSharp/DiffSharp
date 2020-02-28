@@ -16,7 +16,7 @@ open DiffSharp.Backend.None
 let main _argv =
     printfn "Hello World from F#!"
 
-    DiffSharp.seed(12)
+    DiffSharp.Seed(12)
 
 
     // let t1 = RawTensorFloat32CPU.Create([[[[3.4798e-01; 2.5763e-01; 8.5592e-02; 5.5208e-01];
