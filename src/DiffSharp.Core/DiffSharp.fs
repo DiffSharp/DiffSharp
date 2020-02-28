@@ -16,6 +16,22 @@ type DiffSharp =
     static member max(a:Tensor, b:Tensor) = a.max(b)
     static member min(a:Tensor, b:Tensor) = a.min(b)
     static member extend(a:Tensor, shape:seq<int>) = a.extend(shape)
+    static member stack(tensors:seq<Tensor>) = Tensor.stack(tensors)
+    static member unstack(a:Tensor) = a.unstack()
+    static member add(a:Tensor, b:Tensor) = a.add(b)
+    static member sub(a:Tensor, b:Tensor) = a.sub(b)
+    static member mul(a:Tensor, b:Tensor) = a.mul(b)
+    static member div(a:Tensor, b:Tensor) = a.div(b)
+    static member pow(a:Tensor, b:Tensor) = a.pow(b)
+    static member matmul(a:Tensor, b:Tensor) = a.matmul(b)
+    static member neg(a:Tensor) = a.neg()
+    static member sum(a:Tensor) = a.sum()
+    static member mean(a:Tensor) = a.mean()
+    static member mean(a:Tensor, dim:int, ?keepDim:bool) = a.mean(dim, ?keepDim=keepDim)
+    static member variance(a:Tensor) = a.variance()
+    static member variance(a:Tensor, dim:int, ?keepDim:bool) = a.variance(dim, ?keepDim=keepDim)
+    static member stddev(a:Tensor) = a.stddev()
+    static member stddev(a:Tensor, dim:int, ?keepDim:bool) = a.stddev(dim, ?keepDim=keepDim)
 
 // Functional differentiation API
 type DiffSharp with

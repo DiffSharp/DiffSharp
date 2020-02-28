@@ -169,24 +169,23 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    static member Stack(tensors:seq<Tensor>) = 
+    static member stack(tensors:seq<Tensor>) = 
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         match Seq.head tensors with
         | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.toArray |> Array.map (fun t -> t.PrimalRaw)))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.Primal)
             let ad = tensors |> Seq.map (fun t -> t.Derivative)
-            TensorF(Tensor.Stack(ap), Tensor.Stack(ad), at)
+            TensorF(Tensor.stack(ap), Tensor.stack(ad), at)
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.Primal)
-            let cp = Tensor.Stack(ap) in TensorR(cp, ref (cp.Zero()), StackTs(tensors), ref 0u, at)
+            let cp = Tensor.stack(ap) in TensorR(cp, ref (cp.Zero()), StackTs(tensors), ref 0u, at)
 
-    static member Unstack (a:Tensor) =
+    member a.unstack () =
         match a with
         | Tensor(ap) -> ap.UnstackT() |> Array.map Tensor
-        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.Unstack()) (ad.Unstack())
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.Unstack())
-    member t.Unstack() = Tensor.Unstack(t)
+        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack()) (ad.unstack())
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.unstack())
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
@@ -274,8 +273,8 @@ type Tensor =
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
     static member (+) (a:Tensor, b) = a + a.CreateLike(b)
     static member (+) (a, b:Tensor) = b.CreateLike(a) + b
-    member t1.Add(t2:Tensor) = t1 + t2
-    member t1.Add(t2) = t1 + t1.CreateLike(t2)
+    member t1.add(t2:Tensor) = t1 + t2
+    member t1.add(t2) = t1 + t1.CreateLike(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -311,8 +310,8 @@ type Tensor =
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
     static member (-) (a:Tensor, b) = a - a.CreateLike(b)
     static member (-) (a, b:Tensor) = b.CreateLike(a) - b
-    member t1.Sub(t2:Tensor) = t1 - t2
-    member t1.Sub(t2) = t1 - t1.CreateLike(t2)
+    member t1.sub(t2:Tensor) = t1 - t2
+    member t1.sub(t2) = t1 - t1.CreateLike(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -349,8 +348,8 @@ type Tensor =
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
     static member (*) (a:Tensor, b) = a * a.CreateLike(b)
     static member (*) (a, b:Tensor) = b.CreateLike(a) * b
-    member t1.Mul(t2:Tensor) = t1 * t2
-    member t1.Mul(t2) = t1 * t1.CreateLike(t2)
+    member t1.mul(t2:Tensor) = t1 * t2
+    member t1.mul(t2) = t1 * t1.CreateLike(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -386,8 +385,8 @@ type Tensor =
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
     static member (/) (a:Tensor, b) = a / a.CreateLike(b)
     static member (/) (a, b:Tensor) = b.CreateLike(a) / b
-    member t1.Div(t2:Tensor) = t1 / t2
-    member t1.Div(t2) = t1 / t1.CreateLike(t2)
+    member t1.div(t2:Tensor) = t1 / t2
+    member t1.div(t2) = t1 / t1.CreateLike(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -423,23 +422,22 @@ type Tensor =
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.Shape b.Shape
     static member Pow (a:Tensor, b) = a ** a.CreateLike(b)
     static member Pow (a, b:Tensor) = b.CreateLike(a) ** b
-    member t1.Pow(t2:Tensor) = t1 ** t2
-    member t1.Pow(t2) = t1 ** t1.CreateLike(t2)
+    member t1.pow(t2:Tensor) = t1 ** t2
+    member t1.pow(t2) = t1 ** t1.CreateLike(t2)
 
-    static member MatMul (a:Tensor, b:Tensor) =
+    member a.matmul (b:Tensor) =
         if a.Dim <> 2 || b.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
         if a.Shape.[1] = b.Shape.[0] then
             let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
-            let inline fTensor(a,b) = Tensor.MatMul(a, b)
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
-            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.MatMul(ad, b)
-            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.MatMul(a, bd)
+            let inline fTensor(a:Tensor,b) = a.matmul(b)
+            let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.matmul(bp) + ap.matmul(bd)
+            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+            let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
             let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
             let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
             let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot multiply Tensors with shapes %A, %A" a.Shape b.Shape
-    member t1.MatMul(t2:Tensor) = Tensor.MatMul(t1, t2)
 
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.NegT()
@@ -447,20 +445,17 @@ type Tensor =
         let inline dfTensorFwd(cp,ap,ad) = -ad
         let inline dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Neg() = -t
+    member t.neg() = -t
 
-    static member Sum (a:Tensor) =
+    member a.sum () =
         let inline fRaw(a:RawTensor) = a.SumT()
-        let inline fTensor(a) = Tensor.Sum(a)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Sum(ad)
+        let inline fTensor(a:Tensor) = a.sum()
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.sum()
         let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sum() = Tensor.Sum(t)
-
-    member t.Sum(dim, ?keepDim) = Tensor.Sum(t, dim, ?keepDim=keepDim)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    static member Sum(a:Tensor, dim:int, ?keepDim:bool) =
+    member a.sum(dim:int, ?keepDim:bool) =
        let keepDim = defaultArg keepDim false
        let res =
         if dim = 0 && a.Dim = 0 then a
@@ -478,20 +473,19 @@ type Tensor =
             s
        if keepDim then res.Unsqueeze(dim) else res
 
-    static member Mean (a:Tensor) = Tensor.Sum(a) / a.Nelement
-    member t.Mean() = Tensor.Mean(t)
+    member a.sum(dim, ?keepDim) = a.sum(dim, ?keepDim=keepDim)
 
-    static member Mean(a:Tensor, dim:int, ?keepDim:bool) = 
+    member a.mean() = a.sum() / a.Nelement
+
+    member a.mean(dim:int, ?keepDim:bool) = 
         if dim = 0 && a.Dim = 0 then a
-        else a.Sum(dim, ?keepDim=keepDim) / a.Shape.[dim]
-    member t.Mean(dim, ?keepDim) = Tensor.Mean(t, dim, ?keepDim=keepDim)
+        else a.sum(dim, ?keepDim=keepDim) / a.Shape.[dim]
 
     // This is the two-pass algorithm better than the naive algorithm
-    static member Variance (a:Tensor) = let a' = a - Tensor.Mean(a) in Tensor.Sum(a' * a') / (a.Nelement - 1)
-    member t.Variance() = Tensor.Variance(t)
+    member a.variance() = let a' = a - a.mean() in (a' * a').sum() / (a.Nelement - 1)
 
     // TODO: this is the naive algorithm, can be improved for better numerical stability
-    static member Variance(a:Tensor, dim:int, ?keepDim:bool) =
+    member a.variance(dim:int, ?keepDim:bool) =
         let keepDim = defaultArg keepDim false
         if dim >= a.Dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.Dim
         let sBounds = Array2D.init a.Dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.Shape.[i]-1 else 0)
@@ -510,13 +504,9 @@ type Tensor =
         let res = (sSquare - (s * s) / n) / (n - 1)
         if keepDim then res.Unsqueeze(dim) else res
 
-    member t.Variance(dim, ?keepDim) = Tensor.Variance(t, dim, ?keepDim=keepDim)
+    member a.stddev(dim:int, ?keepDim) = a.variance(dim, ?keepDim=keepDim) |> Tensor.Sqrt
 
-    static member Stddev (a:Tensor, dim:int, ?keepDim) = Tensor.Variance(a, dim, ?keepDim=keepDim) |> Tensor.Sqrt
-    member t.Stddev(dim, ?keepDim) = Tensor.Stddev(t, dim, ?keepDim=keepDim)
-
-    static member Stddev (a:Tensor) = Tensor.Variance(a) |> Tensor.Sqrt
-    member t.Stddev() = Tensor.Stddev(t)
+    member a.stddev() = a.variance() |> Tensor.Sqrt
 
     static member SumT2Dim0 (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SumT2Dim0()
@@ -589,7 +579,7 @@ type Tensor =
         let location = Array.create a.Dim 0
         for i=0 to times-1 do
             location.[dim] <- i
-            ret <- Tensor.AddSlice(ret, location, a)
+            ret <- ret.addSlice(location, a)
         ret
     member t.Repeat(dim:int, times:int) = Tensor.Repeat(t, dim, times)
 
@@ -772,15 +762,15 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Atan() = Tensor.Atan(t)
 
-    static member AddSlice (a:Tensor, location:seq<int>, b:Tensor) =
+    member a.addSlice(location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
         if location |> Seq.length <> a.Dim then failwithf "Expecting location of the same length as a.Dim, received %A, %A" (location |> Seq.length) a.Dim
         let location = location |> Seq.toArray
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
-        let inline fTensor(a,b) = Tensor.AddSlice(a, location, b)
-        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.AddSlice(ad, location, bd)
+        let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
+        let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp,bd) = ad.addSlice(location, bd)
         let inline dfTensorFwdTC(cp,ap,ad) = ad
-        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.AddSlice(Tensor.ZerosLike(cp), location, bd)
+        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp).addSlice(location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
         let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
         let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
@@ -789,11 +779,11 @@ type Tensor =
     static member Softmax(a:Tensor, dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
         let e = (a - a.max().NoDiff()).Exp()
-        let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
+        let esum = e.sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
 
-    static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).Mean()
+    static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).mean()
 
     static member Conv1D(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
@@ -966,47 +956,47 @@ type Tensor =
                         match o with
                         | AddTT(a,b) -> push ((t.Derivative, a) :: (t.Derivative, b) :: tt)
                         | AddTTConst(a) -> push ((t.Derivative, a) :: tt)
-                        | AddTT0(a,b) -> push ((t.Derivative, a) :: (t.Derivative.Sum(), b) :: tt)
+                        | AddTT0(a,b) -> push ((t.Derivative, a) :: (t.Derivative.sum(), b) :: tt)
                         | AddTT0Const(a) -> push ((t.Derivative, a) :: tt)
-                        | AddTConstT0(b) -> push ((t.Derivative.Sum(), b) :: tt)
+                        | AddTConstT0(b) -> push ((t.Derivative.sum(), b) :: tt)
                         | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.SumT2Dim0(), b) :: tt)
                         | AddT2T1Const(a) -> push ((t.Derivative, a) :: tt)
                         | AddT2ConstT1(b) -> push ((t.Derivative.SumT2Dim0(), b) :: tt)
                         | SubTT(a,b) -> push ((t.Derivative, a) :: (-t.Derivative, b) :: tt)
                         | SubTTConst(a) -> push ((t.Derivative, a) :: tt)
                         | SubTConstT(b) -> push ((-t.Derivative, b) :: tt)
-                        | SubT0T(a,b) -> push ((t.Derivative.Sum(), a) :: (-t.Derivative, b) :: tt)
-                        | SubT0TConst(a) -> push ((t.Derivative.Sum(), a) :: tt)
+                        | SubT0T(a,b) -> push ((t.Derivative.sum(), a) :: (-t.Derivative, b) :: tt)
+                        | SubT0TConst(a) -> push ((t.Derivative.sum(), a) :: tt)
                         | SubT0ConstT(b) -> push ((-t.Derivative, b) :: tt)
-                        | SubTT0(a,b) -> push ((t.Derivative, a) :: (-t.Derivative.Sum(), b) :: tt)
+                        | SubTT0(a,b) -> push ((t.Derivative, a) :: (-t.Derivative.sum(), b) :: tt)
                         | SubTT0Const(a) -> push ((t.Derivative, a) :: tt)
-                        | SubTConstT0(b) -> push ((-t.Derivative.Sum(), b) :: tt)      
+                        | SubTConstT0(b) -> push ((-t.Derivative.sum(), b) :: tt)      
                         | MulTT(a,b) -> push ((t.Derivative * b.Primal, a) :: (t.Derivative * a.Primal, b) :: tt)
                         | MulTTConst(a,b) -> push ((t.Derivative * b, a) :: tt)
-                        | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: ((t.Derivative * a.Primal).Sum(), b) :: tt)
-                        | MulTConstT0(a,b) -> push (((t.Derivative * a).Sum(), b) :: tt)
+                        | MulTT0(a,b) -> push ((t.Derivative * b.Primal, a) :: ((t.Derivative * a.Primal).sum(), b) :: tt)
+                        | MulTConstT0(a,b) -> push (((t.Derivative * a).sum(), b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.Derivative * b, a) :: tt)
                         | DivTT(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
                         | DivTTConst(a,b) -> push ((t.Derivative / b, a) :: tt)
                         | DivTConstT(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))), b) :: tt)
-                        | DivT0T(a,b) -> push (((t.Derivative / b.Primal).Sum(), a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
-                        | DivT0TConst(a,b) -> push (((t.Derivative / b).Sum(), a) :: tt)
+                        | DivT0T(a,b) -> push (((t.Derivative / b.Primal).sum(), a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))), b) :: tt)
+                        | DivT0TConst(a,b) -> push (((t.Derivative / b).sum(), a) :: tt)
                         | DivT0ConstT(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))), b) :: tt)
-                        | DivTT0(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))).Sum(), b) :: tt)
+                        | DivTT0(a,b) -> push ((t.Derivative / b.Primal, a) :: ((t.Derivative * (-a.Primal / (b.Primal * b.Primal))).sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push ((t.Derivative / b, a) :: tt)
-                        | DivTConstT0(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))).Sum(), b) :: tt)
+                        | DivTConstT0(a,b) -> push (((t.Derivative * (-a / (b.Primal * b.Primal))).sum(), b) :: tt)
                         | PowTT(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: (t.Derivative * (a.Primal ** b.Primal) * log a.Primal, b) :: tt)
                         | PowTTConst(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT(a,b) -> push ((t.Derivative * (a ** b.Primal) * log a, b) :: tt)
-                        | PowT0T(a,b) -> push (((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal).Sum(), a) :: (t.Derivative * (a.Primal ** b.Primal) * log a.Primal, b) :: tt)
-                        | PowT0TConst(a,b) -> push (((t.Derivative * (a.Primal ** (b - 1.)) * b).Sum(), a) :: tt)
+                        | PowT0T(a,b) -> push (((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal).sum(), a) :: (t.Derivative * (a.Primal ** b.Primal) * log a.Primal, b) :: tt)
+                        | PowT0TConst(a,b) -> push (((t.Derivative * (a.Primal ** (b - 1.)) * b).sum(), a) :: tt)
                         | PowT0ConstT(a,b) -> push ((t.Derivative * (a ** b.Primal) * log a, b) :: tt)
-                        | PowTT0(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: ((t.Derivative * (a.Primal ** b.Primal) * log a.Primal).Sum(), b) :: tt)
+                        | PowTT0(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: ((t.Derivative * (a.Primal ** b.Primal) * log a.Primal).sum(), b) :: tt)
                         | PowTT0Const(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
-                        | PowTConstT0(a,b) -> push (((t.Derivative * (a ** b.Primal) * log a).Sum(), b) :: tt)
-                        | MatMulT2T2(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Primal.Transpose()), a) :: (Tensor.MatMul(a.Primal.Transpose(), t.Derivative), b) :: tt)
-                        | MatMulT2T2Const(a,b) -> push ((Tensor.MatMul(t.Derivative, b.Transpose()), a) :: tt)
-                        | MatMulT2ConstT2(a,b) -> push ((Tensor.MatMul(a.Transpose(), t.Derivative), b) :: tt)
+                        | PowTConstT0(a,b) -> push (((t.Derivative * (a ** b.Primal) * log a).sum(), b) :: tt)
+                        | MatMulT2T2(a,b) -> push ((t.Derivative.matmul(b.Primal.Transpose()), a) :: (a.Primal.Transpose().matmul(t.Derivative), b) :: tt)
+                        | MatMulT2T2Const(a,b) -> push ((t.Derivative.matmul(b.Transpose()), a) :: tt)
+                        | MatMulT2ConstT2(a,b) -> push ((a.Transpose().matmul(t.Derivative), b) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             // a: input, NxCxI (batchSize x inputChannels x inputLength)
                             // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
@@ -1040,7 +1030,7 @@ type Tensor =
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
                                     let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
-                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                                    bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,b,stride,padding) ->
                             // a: input, NxCxI (batchSize x inputChannels x inputLength)
@@ -1090,7 +1080,7 @@ type Tensor =
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
                                     let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
-                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0|], c)
+                                    bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,stride,padding) -> 
                             // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
@@ -1128,7 +1118,7 @@ type Tensor =
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].View([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
                                     let c = Tensor.Conv2D(aa, dd, padding=padding).View([|1; inputChannels; kernelHeight; kernelWidth|])
-                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0; 0|], c)
+                                    bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv2DTTConst(a,b,stride,padding) ->
                             // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
@@ -1184,16 +1174,16 @@ type Tensor =
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].View([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
                                     let c = Tensor.Conv2D(aa, dd, padding=padding).View([|1; inputChannels; kernelHeight; kernelWidth|])
-                                    bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0; 0|], c)
+                                    bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
                         | SumT(a) -> push ((t.Derivative.extend(a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
-                        | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
-                        | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)
+                        | MakeTofT0(a) -> push ((t.Derivative.sum(), a) :: tt)
+                        | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.Unsqueeze(0))
+                            a.Derivative <- a.Derivative.addSlice(Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.Unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
@@ -1205,7 +1195,7 @@ type Tensor =
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- Tensor.AddSlice(a.Derivative, boundsToLocation bounds, t.Derivative.View(boundsToShape bounds))
+                            a.Derivative <- a.Derivative.addSlice(boundsToLocation bounds, t.Derivative.View(boundsToShape bounds))
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)

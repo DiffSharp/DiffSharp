@@ -6,7 +6,7 @@ open DiffSharp.Util
 type Distribution() =
     abstract member Sample: unit -> Tensor
     abstract member Sample: int -> Tensor
-    default d.Sample(numSamples:int) = Seq.init numSamples (fun _ -> d.Sample()) |> Tensor.Stack
+    default d.Sample(numSamples:int) = Seq.init numSamples (fun _ -> d.Sample()) |> Tensor.stack
     abstract member GetString: unit -> string
     override t.ToString() = t.GetString()
     abstract member BatchShape: int[]
@@ -78,7 +78,7 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
             d.Probs.[i] |> Tensor.Log
         else
             // let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
-            Seq.init d.BatchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.Stack |> Tensor.Log
+            Seq.init d.BatchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.stack |> Tensor.Log
     override d.GetString() = sprintf "Categorical(probs:%A)" d.Probs
 
 // type Empirical(values:obj[], ?weights:Tensor, ?logweights:Tensor) =

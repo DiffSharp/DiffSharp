@@ -263,13 +263,13 @@ type TestTensor () =
         let t0a = Tensor.Create(1.)
         let t0b = Tensor.Create(3.)
         let t0c = Tensor.Create(5.)
-        let t0 = Tensor.Stack([t0a;t0b;t0c])
+        let t0 = Tensor.stack([t0a;t0b;t0c])
         let t0Correct = Tensor.Create([1.;3.;5.])
 
         let t1a = Tensor.Create([1.; 2.])
         let t1b = Tensor.Create([3.; 4.])
         let t1c = Tensor.Create([5.; 6.])
-        let t1 = Tensor.Stack([t1a;t1b;t1c])
+        let t1 = Tensor.stack([t1a;t1b;t1c])
         let t1Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
 
         Assert.AreEqual(t0Correct, t0)
@@ -281,13 +281,13 @@ type TestTensor () =
         let t0b = Tensor.Create(3.)
         let t0c = Tensor.Create(5.)
         let t0Correct = [t0a;t0b;t0c]
-        let t0 = Tensor.Stack(t0Correct).Unstack()
+        let t0 = Tensor.stack(t0Correct).unstack()
 
         let t1a = Tensor.Create([1.; 2.])
         let t1b = Tensor.Create([3.; 4.])
         let t1c = Tensor.Create([5.; 6.])
         let t1Correct = [t1a;t1b;t1c]
-        let t1 = Tensor.Stack(t1Correct).Unstack()
+        let t1 = Tensor.stack(t1Correct).unstack()
 
         Assert.AreEqual(t0Correct, t0)
         Assert.AreEqual(t1Correct, t1)
@@ -382,7 +382,7 @@ type TestTensor () =
                                 [2.6639; 2.8728];
                                 [7.9229; 2.3695]])
 
-        let t3 = Tensor.MatMul(t1, t2)
+        let t3 = dsharp.matmul(t1, t2)
         let t3Correct = Tensor.Create([[118.0367; 56.6266];
                                         [190.5926; 90.8155];
                                         [134.3925; 64.1030]])
@@ -865,11 +865,11 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumT () =
         let t1 = Tensor.Create([1.; 2.; 3.])
-        let t1Sum = t1.Sum()
+        let t1Sum = t1.sum()
         let t1SumCorrect = Tensor.Create(6.)
 
         let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t2Sum = t2.Sum()
+        let t2Sum = t2.sum()
         let t2SumCorrect = Tensor.Create(10.)
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
@@ -894,11 +894,11 @@ type TestTensor () =
         # --> array([[10., 26., 42.],[58., 74., 90.]])
         *)
         let t = Tensor.Create([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
-        let tSum0 = t.Sum(0)
+        let tSum0 = t.sum(0)
         let tSum0Correct = Tensor.Create([[14., 16., 18., 20.], [22., 24., 26., 28.], [30., 32., 34., 36.]])
-        let tSum1 = t.Sum(1)
+        let tSum1 = t.sum(1)
         let tSum1Correct = Tensor.Create([[15., 18., 21., 24.], [51., 54., 57., 60.]])
-        let tSum2 = t.Sum(2)
+        let tSum2 = t.sum(2)
         let tSum2Correct = Tensor.Create([[10., 26., 42.], [58., 74., 90.]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
@@ -918,11 +918,11 @@ type TestTensor () =
         # --> tensor([[[10.],[26.],[42.]],[[58.],[74.],[90.]]])
         *)
         let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tSum0 = t.Sum(0, keepDim=true)
+        let tSum0 = t.sum(0, keepDim=true)
         let tSum0Correct = Tensor.Create([[[14.; 16.; 18.; 20.]; [22.; 24.; 26.; 28.]; [30.; 32.; 34.; 36.]]])
-        let tSum1 = t.Sum(1, keepDim=true)
+        let tSum1 = t.sum(1, keepDim=true)
         let tSum1Correct = Tensor.Create([[[15.; 18.; 21.; 24.]]; [[51.; 54.; 57.; 60.]]])
-        let tSum2 = t.Sum(2, keepDim=true)
+        let tSum2 = t.sum(2, keepDim=true)
         let tSum2Correct = Tensor.Create([[[10.]; [26.]; [42.]]; [[58.]; [74.]; [90.]]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
@@ -932,7 +932,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorMean () =
         let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tMean = t.Mean()
+        let tMean = t.mean()
         let tMeanCorrect = Tensor.Create(12.5)
 
         Assert.AreEqual(tMeanCorrect, tMean)
@@ -946,11 +946,11 @@ type TestTensor () =
         input.sum(2)
         --> array([[10., 26., 42.],[58., 74., 90.]])
         *)
-        let tMean0 = t.Mean(0)
+        let tMean0 = t.mean(0)
         let tMean0Correct = Tensor.Create([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
-        let tMean1 = t.Mean(1)
+        let tMean1 = t.mean(1)
         let tMean1Correct = Tensor.Create([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
-        let tMean2 = t.Mean(2)
+        let tMean2 = t.mean(2)
         let tMean2Correct = Tensor.Create([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
 
         Assert.AreEqual(tMean0Correct, tMean0)
@@ -968,11 +968,11 @@ type TestTensor () =
         input.mean(2,keepdim=True)
         # --> tensor([[[ 2.5000],[ 6.5000],[10.5000]],[[14.5000],[18.5000],[22.5000]]])
         *)
-        let tMeanKeepDim0 = t.Mean(0, keepDim=true)
+        let tMeanKeepDim0 = t.mean(0, keepDim=true)
         let tMeanKeepDim0Correct = Tensor.Create([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
-        let tMeanKeepDim1 = t.Mean(1, keepDim=true)
+        let tMeanKeepDim1 = t.mean(1, keepDim=true)
         let tMeanKeepDim1Correct = Tensor.Create([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
-        let tMeanKeepDim2 = t.Mean(2, keepDim=true)
+        let tMeanKeepDim2 = t.mean(2, keepDim=true)
         let tMeanKeepDim2Correct = Tensor.Create([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
 
         Assert.AreEqual(tMeanKeepDim0, tMeanKeepDim0Correct)
@@ -988,20 +988,20 @@ type TestTensor () =
          [[0.0848;0.4156;0.5542;0.4166];
           [0.5187;0.0520;0.4763;0.1509];
           [0.4767;0.8096;0.1729;0.6671]]])
-        let tStddev = t.Stddev()
+        let tStddev = t.stddev()
         let tStddevCorrect = Tensor.Create(0.2398)
 
         Assert.True(tStddev.ApproximatelyEqual(tStddevCorrect))
 
         // stddev, dim={0,1,2,3}, keepDim=true
-        let tStddev0 = t.Stddev(0)
+        let tStddev0 = t.stddev(0)
         let tStddev0Correct = Tensor.Create([[0.2078; 0.2375; 0.2326; 0.0530];
          [0.0630; 0.2985; 0.2179; 0.0383];
          [0.2370; 0.4623; 0.3339; 0.3715]])
-        let tStddev1 = t.Stddev(1)
+        let tStddev1 = t.stddev(1)
         let tStddev1Correct = Tensor.Create([[0.2331; 0.2981; 0.2911; 0.1304];
          [0.2393; 0.3789; 0.2014; 0.2581]])
-        let tStddev2 = t.Stddev(2)
+        let tStddev2 = t.stddev(2)
         let tStddev2Correct = Tensor.Create([[0.2277; 0.2918; 0.2495];
          [0.1996; 0.2328; 0.2753]])
 
@@ -1020,11 +1020,11 @@ type TestTensor () =
         input.std(2,keepdim=True)
         # --> tensor([[[0.2278],[0.2918],[0.2495]],[[0.1996],[0.2328],[0.2753]]]) 
         *)
-        let tStddev0 = t.Stddev(0, keepDim=true)
+        let tStddev0 = t.stddev(0, keepDim=true)
         let tStddev0Correct = Tensor.Create([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
-        let tStddev1 = t.Stddev(1, keepDim=true)
+        let tStddev1 = t.stddev(1, keepDim=true)
         let tStddev1Correct = Tensor.Create([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
-        let tStddev2 = t.Stddev(2, keepDim=true)
+        let tStddev2 = t.stddev(2, keepDim=true)
         let tStddev2Correct = Tensor.Create([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
 
         Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
@@ -1039,7 +1039,7 @@ type TestTensor () =
         input.var()
         *)
         let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
-        let tVariance = t.Variance()
+        let tVariance = t.variance()
         let tVarianceCorrect = Tensor.Create(0.0575)
 
         Assert.True(tVariance.ApproximatelyEqual(tVarianceCorrect))
@@ -1053,11 +1053,11 @@ type TestTensor () =
         input.var(2)
         # --> tensor([[0.0519, 0.0852, 0.0622],[0.0398, 0.0542, 0.0758]])
         *)
-        let tVariance0 = t.Variance(0)
+        let tVariance0 = t.variance(0)
         let tVariance0Correct = Tensor.Create([[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]])
-        let tVariance1 = t.Variance(1)
+        let tVariance1 = t.variance(1)
         let tVariance1Correct = Tensor.Create([[0.0543; 0.0888; 0.0847; 0.0170];[0.0573; 0.1436; 0.0406; 0.0666]])
-        let tVariance2 = t.Variance(2)
+        let tVariance2 = t.variance(2)
         let tVariance2Correct = Tensor.Create([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
 
         Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
@@ -1075,11 +1075,11 @@ type TestTensor () =
         input.var(2,keepdim=True)
         # --> tensor([[[0.0519],[0.0852],[0.0622]],[[0.0398],[0.0542],[0.0758]]])
         *)
-        let tVariance0 = t.Variance(0, keepDim=true)
+        let tVariance0 = t.variance(0, keepDim=true)
         let tVariance0Correct = Tensor.Create([[[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]]])
-        let tVariance1 = t.Variance(1, keepDim=true)
+        let tVariance1 = t.variance(1, keepDim=true)
         let tVariance1Correct = Tensor.Create([[[0.0543; 0.0888; 0.0847; 0.0170]];[[0.0573; 0.1436; 0.0406; 0.0666]]])
-        let tVariance2 = t.Variance(2, keepDim=true)
+        let tVariance2 = t.variance(2, keepDim=true)
         let tVariance2Correct = Tensor.Create([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
 
         Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
@@ -1377,7 +1377,7 @@ type TestTensor () =
             [ 0.6776;  1.5844; -0.5686]])
         let t2 = Tensor.Create([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]])
-        let t3 = Tensor.AddSlice(t1, [0;1], t2)
+        let t3 = t1.addSlice([0;1], t2)
         let t3Correct = Tensor.Create([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];

@@ -2023,7 +2023,7 @@ type TestDerivatives () =
             [3.5503; 1.3757];
             [8.3172; 6.6748];
             [2.2959; 0.6784]]))
-        let fwdz = Tensor.MatMul(fwdx, fwdy)
+        let fwdz = dsharp.matmul(fwdx, fwdy)
         let fwdzCorrect = Tensor.Create([[ 89.6516; 53.7260];
             [ 99.7751; 58.7331];
             [120.2113; 49.1116]])
@@ -2040,7 +2040,7 @@ type TestDerivatives () =
             [0.0525; 1.2494];
             [7.5281; 1.4816];
             [5.0328; 2.2756]]).ReverseDiff()
-        let revz = Tensor.MatMul(revx, revy)
+        let revz = dsharp.matmul(revx, revy)
         let revzCorrect = Tensor.Create([[ 89.6516; 53.7260];
             [ 99.7751; 58.7331];
             [120.2113; 49.1116]])
@@ -2072,7 +2072,7 @@ type TestDerivatives () =
         let fwdxa = Tensor.Create([1.; 2.]).ForwardDiff(Tensor.Create([10.; 20.]))
         let fwdxb = Tensor.Create([3.; 4.]).ForwardDiff(Tensor.Create([30.; 40.]))
         let fwdxc = Tensor.Create([5.; 6.]).ForwardDiff(Tensor.Create([50.; 60.]))
-        let fwdz = Tensor.Stack([fwdxa;fwdxb;fwdxc])
+        let fwdz = dsharp.stack([fwdxa;fwdxb;fwdxc])
         let fwdzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create([[10.;20.];[30.;40.];[50.;60.]])
@@ -2080,7 +2080,7 @@ type TestDerivatives () =
         let revxa = Tensor.Create([1.; 2.]).ReverseDiff()
         let revxb = Tensor.Create([3.; 4.]).ReverseDiff()
         let revxc = Tensor.Create([5.; 6.]).ReverseDiff()
-        let revz = Tensor.Stack([revxa;revxb;revxc])
+        let revz = dsharp.stack([revxa;revxb;revxc])
         let revzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
         revz.Reverse(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
         let revxda = revxa.Derivative
@@ -2122,13 +2122,13 @@ type TestDerivatives () =
     [<Test>]
     member this.TestDerivativeSum () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-        let fwdz = fwdx.Sum()
+        let fwdz = fwdx.sum()
         let fwdzCorrect = Tensor.Create(6.)
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create(9.)
 
         let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-        let revz = revx.Sum()
+        let revz = revx.sum()
         let revzCorrect = Tensor.Create(6.)
         revz.Reverse(Tensor.Create(5.))
         let revxd = revx.Derivative
@@ -2162,7 +2162,7 @@ type TestDerivatives () =
     [<Test>]
     member this.TestDerivativeMean () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-        let fwdz = fwdx.Mean()
+        let fwdz = fwdx.mean()
         let fwdzCorrect = Tensor.Create(2.)
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create(3.)
@@ -2178,7 +2178,7 @@ type TestDerivatives () =
         --> tensor([1., 1., 1.])
         *)
         let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-        let revz = revx.Mean()
+        let revz = revx.mean()
         let revzCorrect = Tensor.Create(2.)
         revz.Reverse(Tensor.Create(3.))
         let revxd = revx.Derivative
@@ -2190,7 +2190,7 @@ type TestDerivatives () =
     [<Test>]
     member this.TestDerivativeVariance () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-        let fwdz = fwdx.Variance()
+        let fwdz = fwdx.variance()
         let fwdzCorrect = Tensor.Create(1.0)
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create(2.0)
@@ -2206,7 +2206,7 @@ type TestDerivatives () =
         --> tensor([-3.,  0.,  3.])
         *)
         let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-        let revz = revx.Variance()
+        let revz = revx.variance()
         let revzCorrect = Tensor.Create(1.)
         revz.Reverse(Tensor.Create(3.))
         let revxd = revx.Derivative
@@ -2217,7 +2217,7 @@ type TestDerivatives () =
 
         // keepDim = true, forward
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-        let fwdz = fwdx.Variance(0,keepDim=true)
+        let fwdz = fwdx.variance(0,keepDim=true)
         let fwdzCorrect = Tensor.Create([1.0])
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create([2.0])
@@ -2234,7 +2234,7 @@ type TestDerivatives () =
         --> tensor([-3.,  0.,  3.])
         *)
         let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-        let revz = revx.Variance(0,keepDim=true)
+        let revz = revx.variance(0,keepDim=true)
         let revzCorrect = Tensor.Create([1.])
         revz.Reverse(Tensor.Create([3.]))
         let revxd = revx.Derivative
@@ -2246,7 +2246,7 @@ type TestDerivatives () =
     [<Test>]
     member this.TestDerivativeStddev () =
         let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
-        let fwdz = fwdx.Stddev()
+        let fwdz = fwdx.stddev()
         let fwdzCorrect = Tensor.Create(1.0)
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create(1.0)
@@ -2263,7 +2263,7 @@ type TestDerivatives () =
         --> tensor([-1.5000,  0.0000,  1.5000])
         *)
         let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
-        let revz = revx.Stddev()
+        let revz = revx.stddev()
         let revzCorrect = Tensor.Create(1.)
         revz.Reverse(Tensor.Create(3.))
         let revxd = revx.Derivative
@@ -2721,7 +2721,7 @@ type TestDerivatives () =
         let fwdxa = Tensor.Create([1.; 2.]).ForwardDiff(Tensor.Create([10.;20.]))
         let fwdxb = Tensor.Create([3.; 4.]).ForwardDiff(Tensor.Create([30.;40.]))
         let fwdxc = Tensor.Create([5.; 6.]).ForwardDiff(Tensor.Create([50.;60.]))
-        let fwdz = Tensor.Stack([fwdxa;fwdxb;fwdxc])
+        let fwdz = dsharp.stack([fwdxa;fwdxb;fwdxc])
         let fwdzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create([[10.;20.];[30.;40.];[50.;60.]])
@@ -2729,7 +2729,7 @@ type TestDerivatives () =
         let revxa = Tensor.Create([1.; 2.]).ReverseDiff()
         let revxb = Tensor.Create([3.; 4.]).ReverseDiff()
         let revxc = Tensor.Create([5.; 6.]).ReverseDiff()
-        let revz = Tensor.Stack([revxa;revxb;revxc])
+        let revz = dsharp.stack([revxa;revxb;revxc])
         let revzCorrect = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
         revz.Reverse(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
         let revxda = revxa.Derivative
@@ -2749,7 +2749,7 @@ type TestDerivatives () =
     [<Test>]
     member this.TestDerivativeUnstackT () =
         let fwdx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ForwardDiff(Tensor.Create([[10.;20.];[30.;40.];[50.;60.]]))
-        let fwdz = Tensor.Unstack(fwdx) |> Seq.toArray
+        let fwdz = dsharp.unstack(fwdx) |> Seq.toArray
         let fwdza = fwdz.[0]
         let fwdzb = fwdz.[1]
         let fwdzc = fwdz.[2]
@@ -2764,7 +2764,7 @@ type TestDerivatives () =
         let fwdzdcCorrect = Tensor.Create([50.; 60.])
 
         let revx = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]]).ReverseDiff()
-        let revz = Tensor.Unstack(revx) |> Seq.toArray
+        let revz = dsharp.unstack(revx) |> Seq.toArray
         let revza = revz.[0]
         let revzb = revz.[1]
         let revzc = revz.[2]
@@ -2822,7 +2822,7 @@ type TestDerivatives () =
             [  18.7557;  -86.2308]])            
         let fwdy = fwdy.ForwardDiff(Tensor.Create([[ 1.3431; 23.0647];
             [71.1838; 39.8339]]))        
-        let fwdz = Tensor.AddSlice(fwdx, [0;1], fwdy)
+        let fwdz = fwdx.addSlice([0;1], fwdy)
         let fwdzCorrect = Tensor.Create([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
@@ -2839,7 +2839,7 @@ type TestDerivatives () =
             [ 0.6776;  1.5844; -0.5686]]).ReverseDiff()
         let revy = Tensor.Create([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]]).ReverseDiff()
-        let revz = Tensor.AddSlice(revx, [0;1], revy)
+        let revz = revx.addSlice([0;1], revy)
         let revzCorrect = Tensor.Create([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
