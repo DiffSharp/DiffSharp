@@ -75,11 +75,7 @@ type Tensor =
     member t.ApproximatelyEqual(tensor:Tensor, ?tolerance) =
         let tolerance = defaultArg tolerance 0.01
         t.PrimalRaw.ApproximatelyEquals(tensor.PrimalRaw, tolerance)
-    override t.GetHashCode() =
-        match t with
-        | Tensor(tp) -> hash (tp)
-        | TensorF(tp,td,tt) -> hash (tp, td, tt)
-        | TensorR(tp,td,_,_,tt) -> hash (tp, !td, tt)
+    override t.GetHashCode() = hash t.PrimalRaw
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
