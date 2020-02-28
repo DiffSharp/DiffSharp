@@ -70,7 +70,39 @@ type TestDerivatives () =
     // TODO: add test for AddT2ConstT1
 
     [<Test>]
-    member this.TestDerivativeAddWithBroadcast () =
+    member this.TestDerivativeExpand () =
+
+        let t1 = Tensor.Create([[1.]; [2.]]).ForwardDiff(Tensor.Create([[5.]; [6.]])) // 2x1
+        let t1Expand = t1.Expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
+        let fwdz = t1Expand
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
+
+        (* Python:
+        import torch 
+        t1 = torch.tensor([[1.], [2.]], requires_grad=True)
+        revz = t1.expand([2,2,2])
+        revz.backward(torch.tensor([[[3.,3.], [6.,6.]], [[3.,3.], [6.,6.]]]))
+        t1.grad
+        --> tensor([[12.],[24.]])
+        *)
+        let revy = t1.ReverseDiff()
+        let revz = revy.Expand([2;2;2])
+        let revz_grad = Tensor.Create([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]])
+        revz.Reverse(revz_grad)
+        let revyd = revy.Derivative
+        // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
+        let revydCorrect = Tensor.Create [[12.], [24.]]
+        Assert.AreEqual(fwdzd,fwdzdCorrect)
+        Assert.AreEqual(revyd,revydCorrect)
+
+    [<Test>]
+    member this.TestAddWithBroadcastSystematic () =
+
+        // This is a somewhat adhoc extra test to do a whole range of additiosn
+        // with broadcast, mainly to check that not problems occur in taking the
+        // derivatives.
+        //
         // Systematically do all allowed broadcasts into 2x3x4
         // 2x3x4 + 1  (broadcast --> 2x3x4)
         // 2x3x4 + 4  (broadcast --> 2x3x4)
