@@ -467,7 +467,7 @@ type Tensor =
                 sBounds.[dim,2] <- 1
                 s <- s + a.GetSlice(sBounds)
             s
-       if keepDim then res.Unsqueeze(dim) else res
+       if keepDim then res.unsqueeze(dim) else res
 
     member a.sum(dim, ?keepDim) = a.sum(dim, ?keepDim=keepDim)
 
@@ -498,76 +498,67 @@ type Tensor =
             s <- s + slice
             sSquare <- sSquare + slice * slice
         let res = (sSquare - (s * s) / n) / (n - 1)
-        if keepDim then res.Unsqueeze(dim) else res
+        if keepDim then res.unsqueeze(dim) else res
 
     member a.stddev(dim:int, ?keepDim) = a.variance(dim, ?keepDim=keepDim) |> Tensor.Sqrt
 
     member a.stddev() = a.variance() |> Tensor.Sqrt
 
-    static member SumT2Dim0 (a:Tensor) =
+    member a.sumT2Dim0() =
         let inline fRaw(a:RawTensor) = a.SumT2Dim0()
-        let inline fTensor(a) = Tensor.SumT2Dim0(a)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.SumT2Dim0(ad)
+        let inline fTensor(a:Tensor) = a.sumT2Dim0()
+        let inline dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
         let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
     
-    static member Transpose (a:Tensor) =
+    member a.transpose() =
         if a.Dim <> 2 then failwithf "Expecting a 2d Tensor, received Tensor with shape %A" a.Shape
         let inline fRaw(a:RawTensor) = a.TransposeT2()
-        let inline fTensor(a) = Tensor.Transpose(a)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
+        let inline fTensor(a:Tensor) = a.transpose()
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
         let inline dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Transpose() = Tensor.Transpose(t)
 
-    static member Squeeze (a:Tensor, ?dim:int) =
+    member a.squeeze(?dim:int) =
         let dim = defaultArg dim -1
         let inline fRaw(a:RawTensor) = a.SqueezeT(dim)
-        let inline fTensor(a) = Tensor.Squeeze(a, dim)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Squeeze(ad, dim)
+        let inline fTensor(a:Tensor) = a.squeeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.squeeze(dim)
         let inline dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Squeeze(?dim) = 
-        let dim = defaultArg dim -1
-        Tensor.Squeeze(t, dim)
 
-    static member Unsqueeze (a:Tensor, dim:int) =
+    member a.unsqueeze(dim:int) =
         let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
-        let inline fTensor(a) = Tensor.Unsqueeze(a, dim)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Unsqueeze(ad, dim)
+        let inline fTensor(a:Tensor) = a.unsqueeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
         let inline dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Unsqueeze(dim) = Tensor.Unsqueeze(t, dim)
 
-    static member Flip (a:Tensor, dims:seq<int>) =
+    member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
         let inline fRaw(a:RawTensor) = a.FlipT(dims)
-        let inline fTensor(a) = Tensor.Flip(a, dims)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Flip(ad, dims)
+        let inline fTensor(a:Tensor) = a.flip(dims)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
         let inline dfTensorRev(a) = FlipT(a, dims)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Flip(dims) = Tensor.Flip(t, dims)
 
-    static member Dilate (a:Tensor, dilations:seq<int>) =
+    member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         let inline fRaw(a:RawTensor) = a.DilateT(dilations)
-        let inline fTensor(a) = Tensor.Dilate(a, dilations)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Dilate(ad, dilations)
+        let inline fTensor(a:Tensor) = a.dilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
         let inline dfTensorRev(a) = DilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Dilate(dilations) = Tensor.Dilate(t, dilations)
 
-    static member Undilate (a:Tensor, dilations:seq<int>) =
+    member a.undilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         let inline fRaw(a:RawTensor) = a.UndilateT(dilations)
-        let inline fTensor(a) = Tensor.Undilate(a, dilations)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.Undilate(ad, dilations)
+        let inline fTensor(a:Tensor) = a.undilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.undilate(dilations)
         let inline dfTensorRev(a) = UndilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Undilate(dilations) = Tensor.Undilate(t, dilations)
 
-    static member Repeat (a:Tensor, dim:int, times:int) =
+    member a.repeat(dim:int, times:int) =
         if a.Shape.[dim] <> 1 then failwithf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.Shape dim
         let newShape = a.Shape |> Array.copy
         newShape.[dim] <- times
@@ -577,7 +568,6 @@ type Tensor =
             location.[dim] <- i
             ret <- ret.addSlice(location, a)
         ret
-    member t.Repeat(dim:int, times:int) = Tensor.Repeat(t, dim, times)
 
     static member View (a:Tensor, shape:seq<int>) =
         let shape = shape |> Seq.toArray |> shapeComplete a.Nelement  // Handles -1 semantics
@@ -775,7 +765,7 @@ type Tensor =
     static member Softmax(a:Tensor, dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
         let e = (a - a.max().NoDiff()).Exp()
-        let esum = e.sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
+        let esum = e.sum(dim, keepDim=true).repeat(dim, a.Shape.[dim])
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
 
@@ -788,7 +778,7 @@ type Tensor =
         let dilation = defaultArg dilation 1
         let mutable b = b
         if dilation > 1 then
-            b <- b.Dilate([|1;1;dilation|])
+            b <- b.dilate([|1;1;dilation|])
         let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
         let inline fTensor(a,b) = Tensor.Conv1D(a, b, stride, padding)
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv1D(ad, bp, stride, padding) + Tensor.Conv1D(ap, bd, stride, padding)
@@ -805,7 +795,7 @@ type Tensor =
         let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
         let mutable b = b
         if dilation.[0] > 1 || dilation.[1] > 1 then
-            b <- b.Dilate([|1; 1; dilation.[0]; dilation.[1]|])
+            b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
         let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
         let inline fTensor(a,b) = Tensor.Conv2D(a, b, stride, padding)
         let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv2D(ad, bp, stride, padding) + Tensor.Conv2D(ap, bd, stride, padding)
@@ -955,9 +945,9 @@ type Tensor =
                         | AddTT0(a,b) -> push ((t.Derivative, a) :: (t.Derivative.sum(), b) :: tt)
                         | AddTT0Const(a) -> push ((t.Derivative, a) :: tt)
                         | AddTConstT0(b) -> push ((t.Derivative.sum(), b) :: tt)
-                        | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.SumT2Dim0(), b) :: tt)
+                        | AddT2T1(a,b) -> push ((t.Derivative, a) :: (t.Derivative.sumT2Dim0(), b) :: tt)
                         | AddT2T1Const(a) -> push ((t.Derivative, a) :: tt)
-                        | AddT2ConstT1(b) -> push ((t.Derivative.SumT2Dim0(), b) :: tt)
+                        | AddT2ConstT1(b) -> push ((t.Derivative.sumT2Dim0(), b) :: tt)
                         | SubTT(a,b) -> push ((t.Derivative, a) :: (-t.Derivative, b) :: tt)
                         | SubTTConst(a) -> push ((t.Derivative, a) :: tt)
                         | SubTConstT(b) -> push ((-t.Derivative, b) :: tt)
@@ -990,9 +980,9 @@ type Tensor =
                         | PowTT0(a,b) -> push ((t.Derivative * (a.Primal ** (b.Primal - 1.)) * b.Primal, a) :: ((t.Derivative * (a.Primal ** b.Primal) * log a.Primal).sum(), b) :: tt)
                         | PowTT0Const(a,b) -> push ((t.Derivative * (a.Primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT0(a,b) -> push (((t.Derivative * (a ** b.Primal) * log a).sum(), b) :: tt)
-                        | MatMulT2T2(a,b) -> push ((t.Derivative.matmul(b.Primal.Transpose()), a) :: (a.Primal.Transpose().matmul(t.Derivative), b) :: tt)
-                        | MatMulT2T2Const(a,b) -> push ((t.Derivative.matmul(b.Transpose()), a) :: tt)
-                        | MatMulT2ConstT2(a,b) -> push ((a.Transpose().matmul(t.Derivative), b) :: tt)
+                        | MatMulT2T2(a,b) -> push ((t.Derivative.matmul(b.Primal.transpose()), a) :: (a.Primal.transpose().matmul(t.Derivative), b) :: tt)
+                        | MatMulT2T2Const(a,b) -> push ((t.Derivative.matmul(b.transpose()), a) :: tt)
+                        | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.Derivative), b) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             // a: input, NxCxI (batchSize x inputChannels x inputLength)
                             // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
@@ -1005,8 +995,8 @@ type Tensor =
                             let kernelLength = b.Shape.[2]
                             let mutable tderivative = t.Derivative
                             if stride > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride|])
-                            let bFlipped = b.Primal.Flip([|2|])
+                                tderivative <- tderivative.dilate([|1;1;stride|])
+                            let bFlipped = b.Primal.flip([|2|])
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
@@ -1040,8 +1030,8 @@ type Tensor =
                             let kernelLength = b.Shape.[2]
                             let mutable tderivative = t.Derivative
                             if stride > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride|])
-                            let bFlipped = b.Flip([|2|])
+                                tderivative <- tderivative.dilate([|1;1;stride|])
+                            let bFlipped = b.flip([|2|])
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
@@ -1066,8 +1056,8 @@ type Tensor =
                             let kernelLength = b.Shape.[2]
                             let mutable tderivative = t.Derivative
                             if stride > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride|])
-                            // let bFlipped = b.Primal.Flip([|2|])
+                                tderivative <- tderivative.dilate([|1;1;stride|])
+                            // let bFlipped = b.Primal.flip([|2|])
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
@@ -1093,8 +1083,8 @@ type Tensor =
                             let kernelWidth = b.Shape.[3]
                             let mutable tderivative = t.Derivative
                             if stride.[0] > 1 || stride.[1] > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride.[0];stride.[1]|])
-                            let bFlipped = b.Primal.Flip([|2;3|])
+                                tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
+                            let bFlipped = b.Primal.flip([|2;3|])
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
@@ -1131,8 +1121,8 @@ type Tensor =
                             let kernelWidth = b.Shape.[3]
                             let mutable tderivative = t.Derivative
                             if stride.[0] > 1 || stride.[1] > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride.[0];stride.[1]|])
-                            let bFlipped = b.Flip([|2;3|])
+                                tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
+                            let bFlipped = b.flip([|2;3|])
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
@@ -1160,8 +1150,8 @@ type Tensor =
                             let kernelWidth = b.Shape.[3]
                             let mutable tderivative = t.Derivative
                             if stride.[0] > 1 || stride.[1] > 1 then
-                                tderivative <- tderivative.Dilate([|1;1;stride.[0];stride.[1]|])
-                            // let bFlipped = b.Primal.Flip([|2;3|])
+                                tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
+                            // let bFlipped = b.Primal.flip([|2;3|])
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
@@ -1179,14 +1169,14 @@ type Tensor =
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- a.Derivative.addSlice(Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.Unsqueeze(0))
+                            a.Derivative <- a.Derivative.addSlice(Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
-                        | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
+                        | TransposeT2(a) -> push ((t.Derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
-                        | FlipT(a, dims) -> push ((t.Derivative.Flip(dims), a) :: tt)
-                        | DilateT(a, dilations) -> push ((t.Derivative.Undilate(dilations), a) :: tt)
-                        | UndilateT(a, dilations) -> push ((t.Derivative.Dilate(dilations), a) :: tt)
+                        | FlipT(a, dims) -> push ((t.Derivative.flip(dims), a) :: tt)
+                        | DilateT(a, dilations) -> push ((t.Derivative.undilate(dilations), a) :: tt)
+                        | UndilateT(a, dilations) -> push ((t.Derivative.dilate(dilations), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.

@@ -551,10 +551,10 @@ type TestTensor () =
                                             [[0.3165; 1.4118; 2.1327; 1.1949];
                                              [0.3861; 1.5697; 2.0696; 0.8520]]])
 
-        let t3b1 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2)
-        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2, stride = 2)
-        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+        let t3b1 = Tensor.Conv1D(t1.[0].unsqueeze(0) , t2)
+        let t3b1Correct = t3Correct.[0].unsqueeze(0)
+        let t3b1s2 = Tensor.Conv1D(t1.[0].unsqueeze(0) , t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
@@ -871,10 +871,10 @@ type TestTensor () =
                                                   [  26.8834,  -22.3392,   64.3614,   32.6334],
                                                   [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
 
-        let t3b1 = Tensor.Conv2D(t1.[0].Unsqueeze(0) , t2)
-        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv2D(t1.[0].Unsqueeze(0), t2, stride = 2)
-        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+        let t3b1 = Tensor.Conv2D(t1.[0].unsqueeze(0) , t2)
+        let t3b1Correct = t3Correct.[0].unsqueeze(0)
+        let t3b1s2 = Tensor.Conv2D(t1.[0].unsqueeze(0), t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         // Assert.True(false)
         Assert.True(t3.ApproximatelyEqual(t3Correct))
@@ -914,7 +914,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumT2Dim0 () =
         let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t1Sum = t1.SumT2Dim0()
+        let t1Sum = t1.sumT2Dim0()
         let t1SumCorrect = Tensor.Create([4.; 6.])
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
@@ -1125,11 +1125,11 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorTransposeT2 () =
         let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
-        let t1Transpose = t1.Transpose()
+        let t1Transpose = t1.transpose()
         let t1TransposeCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
 
         let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t2TransposeTranspose = t2.Transpose().Transpose()
+        let t2TransposeTranspose = t2.transpose().transpose()
         let t2TransposeTransposeCorrect = t2
 
         Assert.AreEqual(t1TransposeCorrect, t1Transpose)
@@ -1424,7 +1424,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSqueezeT () =
         let t1 = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
-        let t1Squeeze = t1.Squeeze()
+        let t1Squeeze = t1.squeeze()
         let t1SqueezeCorrect = Tensor.Create([[1.;2.];[3.;4.]])
 
         Assert.True(t1Squeeze.ApproximatelyEqual(t1SqueezeCorrect))
@@ -1432,7 +1432,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorUnsqueezeT () =
         let t1 = Tensor.Create([[1.;2.];[3.;4.]])
-        let t1Unsqueeze = t1.Unsqueeze(1)
+        let t1Unsqueeze = t1.unsqueeze(1)
         let t1UnsqueezeCorrect = Tensor.Create([[[1.;2.]]; [[3.;4.]]])
 
         Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
@@ -1440,13 +1440,13 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorFlipT () =
         let t1 = Tensor.Create([[1.;2.];[3.;4.]])
-        let t2 = t1.Flip([|0|])
+        let t2 = t1.flip([|0|])
         let t2Correct = Tensor.Create([[3.;4.]; [1.;2.]])
-        let t3 = t1.Flip([|1|])
+        let t3 = t1.flip([|1|])
         let t3Correct = Tensor.Create([[2.;1.]; [4.;3.]])
-        let t4 = t1.Flip([|0; 1|])
+        let t4 = t1.flip([|0; 1|])
         let t4Correct = Tensor.Create([[4.;3.]; [2.;1.]])
-        let t5 = t1.Flip([|0; 1|]).Flip([|0; 1|])
+        let t5 = t1.flip([|0; 1|]).flip([|0; 1|])
         let t5Correct = Tensor.Create([[1.;2.]; [3.;4.]])
 
         Assert.AreEqual(t2Correct, t2)
@@ -1457,12 +1457,12 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorDilateT () =
         let t1 = Tensor.Create([[1.;2.]; [3.;4.]])
-        let t2 = t1.Dilate([|1; 2|])
+        let t2 = t1.dilate([|1; 2|])
         let t2Correct = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
-        let t3 = t1.Dilate([|2; 2|])
+        let t3 = t1.dilate([|2; 2|])
         let t3Correct = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
         let t4 = Tensor.Create([1.;2.;3.;4.])
-        let t5 = t4.Dilate([|3|])
+        let t5 = t4.dilate([|3|])
         let t5Correct = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
 
         Assert.AreEqual(t2Correct, t2)
@@ -1472,13 +1472,13 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorUndilateT () =
         let t1 = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
-        let t2 = t1.Undilate([|1; 2|])
+        let t2 = t1.undilate([|1; 2|])
         let t2Correct = Tensor.Create([[1.;2.]; [3.;4.]])
         let t3 = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
-        let t4 = t3.Undilate([|2; 2|])
+        let t4 = t3.undilate([|2; 2|])
         let t4Correct = Tensor.Create([[1.;2.]; [3.;4.]])
         let t5 = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
-        let t6 = t5.Undilate([|3|])
+        let t6 = t5.undilate([|3|])
         let t6Correct = Tensor.Create([1.;2.;3.;4.])
 
         Assert.AreEqual(t2Correct, t2)

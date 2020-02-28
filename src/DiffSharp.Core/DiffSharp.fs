@@ -32,7 +32,14 @@ type DiffSharp =
     static member variance(a:Tensor, dim:int, ?keepDim:bool) = a.variance(dim, ?keepDim=keepDim)
     static member stddev(a:Tensor) = a.stddev()
     static member stddev(a:Tensor, dim:int, ?keepDim:bool) = a.stddev(dim, ?keepDim=keepDim)
-
+    static member transpose(a:Tensor) = a.transpose()
+    static member squeeze(a:Tensor, ?dim:int) = a.squeeze(?dim=dim)
+    static member unsqueeze(a:Tensor, dim:int) = a.unsqueeze(dim)
+    static member flip(a:Tensor, dims:seq<int>) = a.flip(dims)
+    static member dilate(a:Tensor, dilations:seq<int>) = a.dilate(dilations)
+    static member undilate(a:Tensor, dilations:seq<int>) = a.undilate(dilations)
+    static member repeat(a:Tensor, dim:int, times:int) = a.repeat(dim, times)
+    
 // Functional differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
