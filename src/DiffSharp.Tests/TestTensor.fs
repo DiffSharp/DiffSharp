@@ -1256,6 +1256,19 @@ type TestTensor () =
         Assert.AreEqual(t2TransposeTransposeCorrect, t2TransposeTranspose)
 
     [<Test>]
+    member this.TestTensorTransposeBatch () =
+        let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).Expand([|3;2;3|])
+        let t1Transpose = t1.Transpose()
+        let t1TransposeCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]]).Expand([|3;3;2|])
+
+        let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]]).Expand([|3;2;2|])
+        let t2TransposeTranspose = t2.Transpose().Transpose()
+        let t2TransposeTransposeCorrect = t2
+
+        Assert.AreEqual(t1TransposeCorrect, t1Transpose)
+        Assert.AreEqual(t2TransposeTransposeCorrect, t2TransposeTranspose)
+
+    [<Test>]
     member this.TestTensorSignT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
         let t1Sign = t1.Sign()

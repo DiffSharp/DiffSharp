@@ -577,11 +577,11 @@ type Tensor =
     member t.SumT2Dim0() = Tensor.SumT2Dim0(t)
     
     static member Transpose (a:Tensor) =
-        if a.Dim > 2 then failwithf "Expecting at least a 2d tensor, received Tensor with shape %A" a.Shape
-        let inline fRaw(a:RawTensor) = a.TransposeT2()
+        if a.Dim < 2 then failwithf "Expecting at least a 2d tensor, received Tensor with shape %A" a.Shape
+        let inline fRaw(a:RawTensor) = a.TransposeT()
         let inline fTensor(a) = Tensor.Transpose(a)
         let inline dfTensorFwd(cp,ap,ad) = Tensor.Transpose(ad)
-        let inline dfTensorRev(a) = TransposeT2(a)
+        let inline dfTensorRev(a) = TransposeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member t.Transpose() = Tensor.Transpose(t)
 
@@ -964,7 +964,7 @@ type Tensor =
                         | ExpandT(a) -> reset (a::tt)
                         | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_) -> reset (a::tt)
-                        | TransposeT2(a) -> reset (a::tt)
+                        | TransposeT(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
                         | FlipT(a,_) -> reset (a::tt)
@@ -1245,7 +1245,7 @@ type Tensor =
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
                             a.Derivative <- Tensor.AddSlice(a.Derivative, Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.Unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
-                        | TransposeT2(a) -> push ((t.Derivative.Transpose(), a) :: tt)
+                        | TransposeT(a) -> push ((t.Derivative.Transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
                         | FlipT(a, dims) -> push ((t.Derivative.Flip(dims), a) :: tt)
@@ -1353,7 +1353,7 @@ and TensorOp =
     | AddTTSlice of Tensor * int[] * Tensor
     | AddTTConstSlice of Tensor
     | AddTConstTSlice of int[] * Tensor
-    | TransposeT2 of Tensor
+    | TransposeT of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor
     | FlipT of Tensor * int[]

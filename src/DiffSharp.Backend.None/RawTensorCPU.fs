@@ -196,7 +196,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
         |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
 
-    override t.TransposeT2() =
+    override t.TransposeT() =
         if t.Dim < 2 then failwith "Expecting at least a 2D tensor"
         let oldShape = t.Shape
         let batch = oldShape.[0..oldShape.Length-3]
@@ -207,7 +207,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         for i = 0 to values.Length-1 do
             let col = i % ncols 
             let row = (i / ncols ) % nrows
-            let j = (i / ncols / nrows) + col*nrows + row
+            let j = (i / ncols / nrows)*ncols*nrows + col*nrows + row
             result.[j] <- values.[i]
         upcast RawTensorFloat32CPU(result, newShape)
 

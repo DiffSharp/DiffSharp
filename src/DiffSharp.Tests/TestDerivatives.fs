@@ -70,7 +70,39 @@ type TestDerivatives () =
     // TODO: add test for AddT2ConstT1
 
     [<Test>]
-    member this.TestDerivativeAddWithBroadcast () =
+    member this.TestDerivativeExpand () =
+
+        let t1 = Tensor.Create([[1.]; [2.]]).ForwardDiff(Tensor.Create([[5.]; [6.]])) // 2x1
+        let t1Expand = t1.Expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
+        let fwdz = t1Expand
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
+
+        (* Python:
+        import torch 
+        t1 = torch.tensor([[1.], [2.]], requires_grad=True)
+        revz = t1.expand([2,2,2])
+        revz.backward(torch.tensor([[[3.,3.], [6.,6.]], [[3.,3.], [6.,6.]]]))
+        t1.grad
+        --> tensor([[12.],[24.]])
+        *)
+        let revy = t1.ReverseDiff()
+        let revz = revy.Expand([2;2;2])
+        let revz_grad = Tensor.Create([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]])
+        revz.Reverse(revz_grad)
+        let revyd = revy.Derivative
+        // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
+        let revydCorrect = Tensor.Create [[12.], [24.]]
+        Assert.AreEqual(fwdzd,fwdzdCorrect)
+        Assert.AreEqual(revyd,revydCorrect)
+
+    [<Test>]
+    member this.TestAddWithBroadcastSystematic () =
+
+        // This is a somewhat adhoc extra test to do a whole range of additiosn
+        // with broadcast, mainly to check that not problems occur in taking the
+        // derivatives.
+        //
         // Systematically do all allowed broadcasts into 2x3x4
         // 2x3x4 + 1  (broadcast --> 2x3x4)
         // 2x3x4 + 4  (broadcast --> 2x3x4)
@@ -81,7 +113,7 @@ type TestDerivatives () =
         let t1a = Tensor.Create([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
                                   [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
         
-        // Get all the interesting shapes that broadcast into t1a
+        // Get all the interesting shapes that expand into t1a
         let shapes = 
             [ for i1 in [0;1;2] do
                 for i2 in [0;1;3] do
@@ -2228,6 +2260,9 @@ type TestDerivatives () =
         let fwdzd = fwdz.Derivative
         let fwdzdCorrect = Tensor.Create([[2.; 10.]; [3.; 20.]; [4.; 30.]])
 
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+
         let revx = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).ReverseDiff()
         let revz = revx.Transpose()
         let revzCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
@@ -2235,8 +2270,30 @@ type TestDerivatives () =
         let revxd = revx.Derivative
         let revxdCorrect = Tensor.Create([[5.; 2.; 3.]; [5.; 5.; 7.]])
 
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member this.TestDerivativeTransposeBatch () =
+        // This test is the same as TestDerivativeTransposeT2 except we add a batching expansion to
+        // both input and expected results
+        let t = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).Expand([| 3;2;3 |])
+        let fwdx = t.ForwardDiff(Tensor.Create([[2.; 3.; 4.]; [10.; 20.; 30.]]).Expand([| 3;2;3 |]))
+        let fwdz = fwdx.Transpose()
+        let fwdzCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]]).Expand([| 3;3;2 |])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([[2.; 10.]; [3.; 20.]; [4.; 30.]]).Expand([| 3;3;2 |])
+
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
+
+        let revx = t.ReverseDiff()
+        let revz = revx.Transpose()
+        let revzCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]]).Expand([| 3;3;2 |])
+        revz.Reverse(Tensor.Create([[5.; 5.]; [2.; 5.]; [3.; 7.]]).Expand([| 3;3;2 |]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([[5.; 2.; 3.]; [5.; 5.; 7.]]).Expand([| 3;2;3 |])
+
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
 
