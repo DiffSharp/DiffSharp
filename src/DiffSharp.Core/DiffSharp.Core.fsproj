@@ -8,9 +8,9 @@
     <Compile Include="Util.fs" />
     <Compile Include="RawTensor.fs" />
     <Compile Include="Tensor.fs" />
+    <Compile Include="DiffSharp.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Optim.fs" />
-    <Compile Include="DiffSharp.fs" />
   </ItemGroup>
 </Project>
