@@ -39,6 +39,9 @@ type DiffSharp =
     static member dilate(a:Tensor, dilations:seq<int>) = a.dilate(dilations)
     static member undilate(a:Tensor, dilations:seq<int>) = a.undilate(dilations)
     static member repeat(a:Tensor, dim:int, times:int) = a.repeat(dim, times)
+    static member view(a:Tensor, shape:seq<int>) = a.view(shape)
+    static member view(a:Tensor, shape:int) = a.view(shape)
+    static member viewAs(a:Tensor, b:Tensor) = a.viewAs(b)
     
 // Functional differentiation API
 type DiffSharp with

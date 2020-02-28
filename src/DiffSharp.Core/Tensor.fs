@@ -569,18 +569,16 @@ type Tensor =
             ret <- ret.addSlice(location, a)
         ret
 
-    static member View (a:Tensor, shape:seq<int>) =
+    member a.view(shape:seq<int>) =
         let shape = shape |> Seq.toArray |> shapeComplete a.Nelement  // Handles -1 semantics
         let inline fRaw(a:RawTensor) = a.ViewT(shape)
-        let inline fTensor(a) = Tensor.View(a, shape)
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.View(ad, shape)
+        let inline fTensor(a:Tensor) = a.view(shape)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
         let inline dfTensorRev(a) = ViewT(a, a.Shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.View(shape) = Tensor.View(t, shape)
-    member t.View(shape:int) = Tensor.View(t, [|shape|])
+    member t.view(shape:int) = t.view([|shape|])
 
-    static member ViewAs(a:Tensor, b:Tensor) = a.View(b.Shape)
-    member a.ViewAs(b:Tensor) = a.View(b.Shape)
+    member a.viewAs(b:Tensor) = a.view(b.Shape)
 
     static member Sign (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.SignT()
@@ -1000,22 +998,22 @@ type Tensor =
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
-                                let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
+                                let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
-                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
+                                let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
                                 let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
                                 if padding > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
-                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
+                                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
                                 aderivative <- aderivative + c
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
-                                let aa = a.Primal.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let aa = a.Primal.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
-                                    let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
-                                    let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                    let dd = d.[k].view([|1; 1; tderivative.Shape.[2]|])
+                                    let c = Tensor.Conv1D(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,b,stride,padding) ->
@@ -1035,13 +1033,13 @@ type Tensor =
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
-                                let b = bFlipped.[k].View([|inputChannels; 1; kernelLength|])
+                                let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
-                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; -1|])
+                                let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
                                 let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
                                 if padding > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
-                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; -1|])
+                                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
                                 aderivative <- aderivative + c
                             push ((aderivative, a) :: tt)                        
                         | Conv1DTConstT(a,b,stride,padding) ->
@@ -1061,11 +1059,11 @@ type Tensor =
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
-                                let aa = a.[n].View([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let aa = a.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
-                                    let dd = d.[k].View([|1; 1; tderivative.Shape.[2]|])
-                                    let c = Tensor.Conv1D(aa, dd, padding=padding).View([|1; inputChannels; kernelLength|])
+                                    let dd = d.[k].view([|1; 1; tderivative.Shape.[2]|])
+                                    let c = Tensor.Conv1D(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,stride,padding) -> 
@@ -1088,22 +1086,22 @@ type Tensor =
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
-                                let b = bFlipped.[k].View([|inputChannels; 1; kernelHeight; kernelWidth|])
+                                let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]; [0; tderivative.Shape.[3]-1; 1]]
-                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
+                                let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
                                 let mutable c = Tensor.Conv2D(d, b, padding=[|kernelHeight-1; kernelWidth-1|])
                                 if padding.[0] > 0 || padding.[1] > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.Shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.Shape.[3]-1-padding.[1]; 1]]
-                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
+                                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
                                 aderivative <- aderivative + c
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
-                                let aa = a.Primal.[n].View([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let aa = a.Primal.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
-                                    let dd = d.[k].View([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                    let c = Tensor.Conv2D(aa, dd, padding=padding).View([|1; inputChannels; kernelHeight; kernelWidth|])
+                                    let dd = d.[k].view([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
+                                    let c = Tensor.Conv2D(aa, dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv2DTTConst(a,b,stride,padding) ->
@@ -1126,13 +1124,13 @@ type Tensor =
                             // propagate to a
                             let mutable aderivative = Tensor.ZerosLike(a)
                             for k=0 to outputChannels-1 do
-                                let b = bFlipped.[k].View([|inputChannels; 1; kernelHeight; kernelWidth|])
+                                let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]; [0; tderivative.Shape.[3]-1; 1]]
-                                let d = tderivative.GetSlice(dBounds).View([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
+                                let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
                                 let mutable c = Tensor.Conv2D(d, b, padding=[|kernelHeight-1; kernelWidth-1|])
                                 if padding.[0] > 0 || padding.[1] > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.Shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.Shape.[3]-1-padding.[1]; 1]]
-                                    c <- c.GetSlice(cBounds).View([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
+                                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
                                 aderivative <- aderivative + c
                             push ((aderivative, a) :: tt)
                         | Conv2DTConstT(a,b,stride,padding) ->
@@ -1155,11 +1153,11 @@ type Tensor =
                             // propagate to b
                             let mutable bderivative = Tensor.ZerosLike(b)
                             for n=0 to batchSize-1 do
-                                let aa = a.[n].View([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                                let aa = a.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
-                                    let dd = d.[k].View([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                    let c = Tensor.Conv2D(aa, dd, padding=padding).View([|1; inputChannels; kernelHeight; kernelWidth|])
+                                    let dd = d.[k].view([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
+                                    let c = Tensor.Conv2D(aa, dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
@@ -1172,16 +1170,16 @@ type Tensor =
                             a.Derivative <- a.Derivative.addSlice(Array.init a.Dim (fun j -> if j=0 then i else 0), t.Derivative.unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.Derivative.transpose(), a) :: tt)
-                        | SqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
-                        | UnsqueezeT(a) -> push ((t.Derivative.ViewAs(a), a) :: tt)
+                        | SqueezeT(a) -> push ((t.Derivative.viewAs(a), a) :: tt)
+                        | UnsqueezeT(a) -> push ((t.Derivative.viewAs(a), a) :: tt)
                         | FlipT(a, dims) -> push ((t.Derivative.flip(dims), a) :: tt)
                         | DilateT(a, dilations) -> push ((t.Derivative.undilate(dilations), a) :: tt)
                         | UndilateT(a, dilations) -> push ((t.Derivative.dilate(dilations), a) :: tt)
-                        | ViewT(a,aShape) -> push (((t.Derivative.View(aShape)), a) :: tt)
+                        | ViewT(a,aShape) -> push (((t.Derivative.view(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.Derivative.Dim = 0 then a.Derivative <- Tensor.ZerosLike(a) + a.Derivative
-                            a.Derivative <- a.Derivative.addSlice(boundsToLocation bounds, t.Derivative.View(boundsToShape bounds))
+                            a.Derivative <- a.Derivative.addSlice(boundsToLocation bounds, t.Derivative.view(boundsToShape bounds))
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.Derivative, a) :: (t.Derivative.GetSlice(shapeLocationToBounds b.Shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.Derivative, a) :: tt)
