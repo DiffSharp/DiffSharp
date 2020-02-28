@@ -9,6 +9,10 @@ type DiffSharp =
     static member gt(a:Tensor, b:Tensor) = a.gt(b)
     static member le(a:Tensor, b:Tensor) = a.le(b)
     static member ge(a:Tensor, b:Tensor) = a.ge(b)
+    static member maxIndex(a:Tensor) = a.maxIndex()
+    static member minIndex(a:Tensor) = a.minIndex()
+    static member max(a:Tensor) = a.max()
+    static member min(a:Tensor) = a.min()
 
 // Functional differentiation API
 type DiffSharp with

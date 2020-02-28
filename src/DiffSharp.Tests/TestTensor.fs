@@ -1470,11 +1470,11 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorMax () =
         let t1 = Tensor.Create([4.;1.;20.;3.])
-        let t1Max = t1.Max()
+        let t1Max = t1.max()
         let t1MaxCorrect = Tensor.Create(20.)
 
         let t2 = Tensor.Create([[1.;4.];[2.;3.]])
-        let t2Max = t2.Max()
+        let t2Max = t2.max()
         let t2MaxCorrect = Tensor.Create(4.)
 
         let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
@@ -1488,7 +1488,7 @@ type TestTensor () =
             [[59.8422; 47.1146; 36.7614];
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
-        let t3Max = t3.Max()
+        let t3Max = t3.max()
         let t3MaxCorrect = Tensor.Create(95.7660)
         
         let t4 = Tensor.Create([[[[8.8978; 8.0936];
@@ -1522,7 +1522,7 @@ type TestTensor () =
              [[5.0444; 0.5447];
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
-        let t4Max = t4.Max()
+        let t4Max = t4.max()
         let t4MaxCorrect = Tensor.Create(9.7456)
 
         Assert.AreEqual(t1MaxCorrect, t1Max)
@@ -1534,11 +1534,11 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorMin () =
         let t1 = Tensor.Create([4.;1.;20.;3.])
-        let t1Min = t1.Min()
+        let t1Min = t1.min()
         let t1MinCorrect = Tensor.Create(1.)
 
         let t2 = Tensor.Create([[1.;4.];[2.;3.]])
-        let t2Min = t2.Min()
+        let t2Min = t2.min()
         let t2MinCorrect = Tensor.Create(1.)
 
         let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
@@ -1552,7 +1552,7 @@ type TestTensor () =
             [[59.8422; 47.1146; 36.7614];
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
-        let t3Min = t3.Min()
+        let t3Min = t3.min()
         let t3MinCorrect = Tensor.Create(4.0114)
        
         let t4 = Tensor.Create([[[[8.8978; 8.0936];
@@ -1586,7 +1586,7 @@ type TestTensor () =
              [[5.0444; 0.5447];
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
-        let t4Min = t4.Min()
+        let t4Min = t4.min()
         let t4MinCorrect = Tensor.Create(0.5370)
 
         Assert.AreEqual(t1MinCorrect, t1Min)

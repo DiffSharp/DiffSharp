@@ -105,14 +105,10 @@ type Tensor =
     member a.gt(b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
     member a.le(b:Tensor) =Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
     member a.ge(b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
-    static member MaxIndex(a:Tensor) = a.PrimalRaw.MaxIndexT()
-    member t.MaxIndex() = Tensor.MaxIndex(t)
-    static member MinIndex(a:Tensor) = a.PrimalRaw.MinIndexT()
-    member t.MinIndex() = Tensor.MinIndex(t)
-    static member Max(a:Tensor) = a.[a.MaxIndex()]
-    member t.Max() = Tensor.Max(t)
-    static member Min(a:Tensor) = a.[a.MinIndex()]
-    member t.Min() = Tensor.Min(t)
+    member a.maxIndex() = a.PrimalRaw.MaxIndexT()
+    member a.minIndex() = a.PrimalRaw.MinIndexT()
+    member a.max() = a.[a.maxIndex()]
+    member a.min() = a.[a.minIndex()]
     static member Max(a:Tensor, b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
     static member Min(a:Tensor, b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
@@ -791,7 +787,7 @@ type Tensor =
 
     static member Softmax(a:Tensor, dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
-        let e = (a - a.Max().NoDiff()).Exp()
+        let e = (a - a.max().NoDiff()).Exp()
         let esum = e.Sum(dim, keepDim=true).Repeat(dim, a.Shape.[dim])
         e / esum
     member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
