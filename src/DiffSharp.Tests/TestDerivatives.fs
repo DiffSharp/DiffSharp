@@ -2160,6 +2160,119 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member this.TestDerivativeMean () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+        let fwdz = fwdx.Mean()
+        let fwdzCorrect = Tensor.Create(2.)
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create(3.)
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+
+        (* Python:
+        input = torch.tensor([1.0,2.0,3.0], requires_grad=True)
+        loss = input.mean()
+        loss.backward(torch.tensor(3.0))
+        input.grad
+        --> tensor([1., 1., 1.])
+        *)
+        let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+        let revz = revx.Mean()
+        let revzCorrect = Tensor.Create(2.)
+        revz.Reverse(Tensor.Create(3.))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([1.; 1.; 1.])
+
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member this.TestDerivativeVariance () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+        let fwdz = fwdx.Variance()
+        let fwdzCorrect = Tensor.Create(1.0)
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create(2.0)
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+
+        (* Python:
+        input = torch.tensor([1.0,2.0,3.0], requires_grad=True)
+        loss = input.var()
+        loss.backward(torch.tensor(3.0))
+        input.grad
+        --> tensor([-3.,  0.,  3.])
+        *)
+        let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+        let revz = revx.Variance()
+        let revzCorrect = Tensor.Create(1.)
+        revz.Reverse(Tensor.Create(3.))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([-3.; 0.; 3.])
+
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+        // keepDim = true, forward
+        let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+        let fwdz = fwdx.Variance(0,keepDim=true)
+        let fwdzCorrect = Tensor.Create([1.0])
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create([2.0])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+
+        // keepDim = true, backward
+        (* Python:
+        input = torch.tensor([1.0,2.0,3.0], requires_grad=True)
+        loss = input.var(0, keepdim=True)
+        loss.backward(torch.tensor([3.0]))
+        input.grad
+        --> tensor([-3.,  0.,  3.])
+        *)
+        let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+        let revz = revx.Variance(0,keepDim=true)
+        let revzCorrect = Tensor.Create([1.])
+        revz.Reverse(Tensor.Create([3.]))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([-3.; 0.; 3.])
+
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member this.TestDerivativeStddev () =
+        let fwdx = Tensor.Create([1.; 2.; 3.]).ForwardDiff(Tensor.Create([2.; 3.; 4.]))
+        let fwdz = fwdx.Stddev()
+        let fwdzCorrect = Tensor.Create(1.0)
+        let fwdzd = fwdz.Derivative
+        let fwdzdCorrect = Tensor.Create(1.0)
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+
+        (* Python:
+        import torch
+        input = torch.tensor([1.0,2.0,3.0], requires_grad=True)
+        loss = input.std()
+        loss.backward(torch.tensor(3.0))
+        input.grad
+        --> tensor([-1.5000,  0.0000,  1.5000])
+        *)
+        let revx = Tensor.Create([1.; 2.; 3.]).ReverseDiff()
+        let revz = revx.Stddev()
+        let revzCorrect = Tensor.Create(1.)
+        revz.Reverse(Tensor.Create(3.))
+        let revxd = revx.Derivative
+        let revxdCorrect = Tensor.Create([-1.5; 0.; 1.5])
+
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
     member this.TestDerivativeTransposeT2 () =
         let fwdx = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]]).ForwardDiff(Tensor.Create([[2.; 3.; 4.]; [10.; 20.; 30.]]))
         let fwdz = fwdx.Transpose()
