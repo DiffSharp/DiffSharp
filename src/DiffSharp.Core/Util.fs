@@ -53,15 +53,12 @@ let shapeLength (shape:int[]) =
 
 let rec shapeSqueeze (dim:int) (shape:int[]) =
     if dim = -1 then
-        printfn "aa"
         [|for s in shape do if s <> 1 then yield s|]
     elif shape.[dim] = 1 then
-        printfn "bb"
         [|for i=0 to shape.Length - 1 do 
             if i < dim then yield shape.[i]
             elif i > dim then yield shape.[i]|]
     else
-        printfn "cc" 
         shape
 
 let shapeUnsqueeze (dim:int) (shape:int[]) =
