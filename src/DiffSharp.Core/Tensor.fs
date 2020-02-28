@@ -278,9 +278,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp + bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded + bExpanded
     static member (+) (a:Tensor, b) = a + a.Create(b)
     static member (+) (a, b:Tensor) = b.Create(a) + b
     member t1.Add(t2:Tensor) = t1 + t2
@@ -319,9 +319,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp - bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded - bExpanded
     static member (-) (a:Tensor, b) = a - a.Create(b)
     static member (-) (a, b:Tensor) = b.Create(a) - b
     member t1.Sub(t2:Tensor) = t1 - t2
@@ -360,9 +360,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp * bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded * bExpanded
     static member (*) (a:Tensor, b) = a * a.Create(b)
     static member (*) (a, b:Tensor) = b.Create(a) * b
     member t1.Mul(t2:Tensor) = t1 * t2
@@ -401,9 +401,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            aExp / bExp
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            aExpanded / bExpanded
     static member (/) (a:Tensor, b) = a / a.Create(b)
     static member (/) (a, b:Tensor) = b.Create(a) / b
     member t1.Div(t2:Tensor) = t1 / t2
@@ -442,9 +442,9 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = broadcastShapes2 a.Shape b.Shape
-            let aExp = a.Expand(newShape)
-            let bExp = b.Expand(newShape)
-            Tensor.Pow(aExp, bExp)
+            let aExpanded = a.Expand(newShape)
+            let bExpanded = b.Expand(newShape)
+            Tensor.Pow(aExpanded, bExpanded)
     static member Pow (a:Tensor, b) = a ** a.Create(b)
     static member Pow (a, b:Tensor) = b.Create(a) ** b
     member t1.Pow(t2:Tensor) = t1 ** t2
