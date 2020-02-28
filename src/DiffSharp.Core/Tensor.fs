@@ -949,7 +949,7 @@ type Tensor =
                         | AcosT(a) -> reset (a::tt)
                         | AtanT(a) -> reset (a::tt)
                         | NewT -> reset tt
-                        | OpExtensionT(inps, _) -> reset (inps@tt)
+                        | OpT(inps, _) -> reset (inps@tt)
                     else reset tt
                 | _ -> reset tt
         reset [t]
@@ -1235,7 +1235,7 @@ type Tensor =
                         | AcosT(a) -> push ((-t.Derivative / Tensor.Sqrt(1. - a.Primal*a.Primal), a) :: tt)
                         | AtanT(a) -> push ((t.Derivative / (1. + a.Primal*a.Primal), a) :: tt)
                         | NewT -> push tt
-                        | OpExtensionT(inps, backpropf) -> push (List.zip (backpropf t) inps @ tt)
+                        | OpT(inps, gradients) -> push (List.zip (gradients t) inps @ tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -1336,7 +1336,7 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-    | OpExtensionT of (* inputs *) Tensor list * (* backpropf *) ((* tangent *) Tensor -> (* input-grad *) Tensor list)
+    | OpT of (* inputs *) Tensor list * (* gradients *) ((* tangent *) Tensor -> (* input-grad *) Tensor list)
 
 type Tensor with
     member t.GetSlice(i0min:int option, i0max:int option) =
@@ -3771,48 +3771,56 @@ type Tensor with
         t.GetSlice(bounds)
 
 /// Defines an extension implementing a unary function and its gradients
-type UnaryExtension =
+type UnaryOp =
 
     /// Compute the function f(a)
     abstract Compute: a: RawTensor -> RawTensor
 
-    /// Compute the forward gradient of function.
+    /// Compute d(fa)/dx given da/dx, for use in the forward phase
     abstract GradForward: fa: Tensor * a: Tensor * da: Tensor -> Tensor
 
-    /// Compute the reverse gradient (adjoint) of function.
-    abstract GradReverse: t: Tensor * a: Tensor -> Tensor
+    /// Compute the gradient, for use in the reverse phase
+    abstract GradReverse: fa: Tensor * a: Tensor -> Tensor
 
 /// Defines an extension implementing a binary function and its gradients
-type BinaryExtension =
+type BinaryOp =
     /// Compute the function on raw tensors
     abstract Compute: a: RawTensor * b: RawTensor -> RawTensor
 
-    /// Compute the forward gradient of function.
+    /// Compute d(fab), for use in the forward phase
     abstract GradForwardTT: fab: Tensor * a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
+
+    /// Compute d(fab), assuming a constant 'b', for use in the forward phase
     abstract GradForwardTC: fab: Tensor * a: Tensor * da: Tensor * b: Tensor -> Tensor
+
+    /// Compute d(fab), assuming a constant 'a', for use in the forward phase
     abstract GradForwardCT: fab: Tensor * a: Tensor * b: Tensor * db: Tensor  -> Tensor
 
-    /// Compute the reverse gradient (adjoint) of function.
-    abstract GradReverseTT: t: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
-    abstract GradReverseTC: t: Tensor * a: Tensor * b: Tensor -> Tensor
-    abstract GradReverseCT: t: Tensor * a: Tensor * b: Tensor -> Tensor
+    /// Compute the separated gradients of function, for use in the reverse phase
+    abstract GradReverseTT: fab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
+
+    /// Compute the gradient of function assuming a constant 'b', for use in the reverse phase
+    abstract GradReverseTC: fab: Tensor * a: Tensor * b: Tensor -> Tensor
+
+    /// Compute the gradient of function assuming a constant 'a', for use in the reverse phase
+    abstract GradReverseCT: fab: Tensor * a: Tensor * b: Tensor -> Tensor
 
 type Tensor with
-    static member Extension(ext: UnaryExtension) =
+    static member Op(ext: UnaryOp) =
         (fun a -> 
-            Tensor.OpUnary(a, ext.Compute, Tensor.Extension ext, ext.GradForward, 
-                (fun a -> OpExtensionT([a], (fun t -> [ext.GradReverse (t,a)])))
+            Tensor.OpUnary(a, ext.Compute, Tensor.Op ext, ext.GradForward, 
+                (fun a -> OpT([a], (fun fa -> [ext.GradReverse (fa,a)])))
             ))
 
-    static member Extension(ext: BinaryExtension) =
+    static member Op(ext: BinaryOp) =
         (fun (a, b) -> 
-            Tensor.OpBinary(a, b, ext.Compute, Tensor.Extension ext, 
+            Tensor.OpBinary(a, b, ext.Compute, Tensor.Op ext, 
                 ext.GradForwardTT, 
-                (fun (cp,a,ad) -> ext.GradForwardTC(cp,a,ad,b)), 
-                (fun (cp,b,bd) -> ext.GradForwardCT(cp,a,b,bd)),
-                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let ra, rb = ext.GradReverseTT (t,a,b) in [ra; rb]))),
-                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let ra = ext.GradReverseTC (t,a,b) in [ra]))),
-                (fun (a,b) -> OpExtensionT([a;b], (fun t -> let rb = ext.GradReverseCT (t,a,b) in [rb])))
+                (fun (fab,a,da) -> ext.GradForwardTC(fab,a,da,b)), 
+                (fun (fab,b,db) -> ext.GradForwardCT(fab,a,b,db)),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverseTT (fab,a,b) in [da; db]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da = ext.GradReverseTC (fab,a,b) in [da]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let db = ext.GradReverseCT (fab,a,b) in [db])))
             ))
 
 [<RequireQualifiedAccess>]

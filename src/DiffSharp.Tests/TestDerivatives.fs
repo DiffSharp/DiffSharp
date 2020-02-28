@@ -2926,17 +2926,17 @@ type TestDerivatives () =
         Assert.True(revyd.ApproximatelyEqual(revydCorrect))
 
 [<TestFixture>]
-module TestExtensions =
+module TestOps =
 
     type Tensor with
 
         static member mulx (a,b) = 
-            Tensor.Extension
-                { new BinaryExtension with 
+            Tensor.Op
+                { new BinaryOp with 
                     member _.Compute(a,b) = a.MulTT(b)
-                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = (Tensor.mulx(ad, bp)) + Tensor.mulx(ap, bd)
-                    member _.GradForwardTC(_cp,_a,ad,b) = Tensor.mulx(ad, b)
-                    member _.GradForwardCT(_cp,a,_b,bd) = Tensor.mulx(a, bd)
+                    member _.GradForwardTT(fab,ap,ad,bp,bd) = (Tensor.mulx(ad, bp)) + Tensor.mulx(ap, bd)
+                    member _.GradForwardTC(fab,_a,ad,b) = Tensor.mulx(ad, b)
+                    member _.GradForwardCT(fab,a,_b,bd) = Tensor.mulx(a, bd)
                     member _.GradReverseTT(t,a,b) = Tensor.mulx(t.Derivative, b.Primal), Tensor.mulx(t.Derivative, a.Primal)
                     member _.GradReverseTC(t,_a,b) = Tensor.mulx(t.Derivative, b)
                     member _.GradReverseCT(t,a,_b) = Tensor.mulx(t.Derivative, a) }
@@ -2968,19 +2968,19 @@ module TestExtensions =
 
     type Tensor with
         member a.sinx() = 
-            Tensor.Extension
-               { new UnaryExtension with 
+            Tensor.Op
+               { new UnaryOp with 
                     member _.Compute(a) = a.SinT()
-                    member _.GradForward(_cp,ap,ad) = ad * ap.cosx()
-                    member _.GradReverse (t,a) = t.Derivative * a.Primal.cosx() }
+                    member _.GradForward(_fa,a,da) = da * a.cosx()
+                    member _.GradReverse (fa,a) = fa.Derivative * a.Primal.cosx() }
                a
 
         member a.cosx() = 
-            Tensor.Extension
-               { new UnaryExtension with 
+            Tensor.Op
+               { new UnaryOp with 
                     member _.Compute(a) = a.CosT()
-                    member _.GradForward(_cp,ap,ad) = -ad * ap.sinx()
-                    member _.GradReverse(t,a) = -t.Derivative * a.Primal.sinx() }
+                    member _.GradForward(_fa,a,da) = -da * a.sinx()
+                    member _.GradReverse(fa,a) = -fa.Derivative * a.Primal.sinx() }
                 a
 
 
@@ -3012,19 +3012,19 @@ module TestExtensions =
             let mutable b = b
             if dilation > 1 then
                 b <- b.Dilate([|1;1;dilation|])
-            Tensor.Extension
-                { new BinaryExtension with 
+            Tensor.Op
+                { new BinaryOp with 
                     member _.Compute(a,b) = a.Conv1D(b, stride, padding)
-                    member _.GradForwardTT(_cp,ap,ad,bp,bd) = Tensor.conv1dx(ad, bp, stride, padding) + Tensor.conv1dx(ap, bd, stride, padding)
-                    member _.GradForwardTC(_cp,_a,ad,b) = Tensor.conv1dx(ad, b, stride, padding)
-                    member _.GradForwardCT(_cp,a,_b,bd) = Tensor.conv1dx(a, bd, stride, padding)
-                    member _.GradReverseTT(t,a,b) = 
-                        let batchSize = t.Shape.[0]
-                        let outputChannels = t.Shape.[1]
+                    member _.GradForwardTT(_fab,a,da,b,db) = Tensor.conv1dx(da, b, stride, padding) + Tensor.conv1dx(a, db, stride, padding)
+                    member _.GradForwardTC(_fab,_a,da,b) = Tensor.conv1dx(da, b, stride, padding)
+                    member _.GradForwardCT(_fab,a,_b,db) = Tensor.conv1dx(a, db, stride, padding)
+                    member _.GradReverseTT(fab,a,b) = 
+                        let batchSize = fab.Shape.[0]
+                        let outputChannels = fab.Shape.[1]
                         let inputChannels = a.Shape.[1]
                         let inputLength = a.Shape.[2]
                         let kernelLength = b.Shape.[2]
-                        let mutable tderivative = t.Derivative
+                        let mutable tderivative = fab.Derivative
                         if stride > 1 then
                             tderivative <- tderivative.Dilate([|1;1;stride|])
                         let bFlipped = b.Primal.Flip([|2|])
