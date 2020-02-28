@@ -469,14 +469,14 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let values = 
             match t1.Dim with 
             | 2 ->
-                array2DFlat t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
+                Array.init2D t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
             | 3 ->
                 let nb = t1BatchPart.[0]
-                array3DFlat nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
+                Array.init3D nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
             | 4 ->
                 let nb0 = t1BatchPart.[0]
                 let nb1 = t1BatchPart.[1]
-                array4DFlat nb0 nb1 t1rows t2cols (fun b0 b1 i j -> Array.sumBy (fun k -> t1value.[((b0*nb1+b1)*t1rows+i)*t1cols+k] * t2value.[((b0*nb1+b1)*t2rows+k)*t2cols+j]) [|0..(t2rows-1)|] )
+                Array.init4D nb0 nb1 t1rows t2cols (fun b0 b1 i j -> Array.sumBy (fun k -> t1value.[((b0*nb1+b1)*t1rows+i)*t1cols+k] * t2value.[((b0*nb1+b1)*t2rows+k)*t2cols+j]) [|0..(t2rows-1)|] )
             | _ -> failwith "BatchMatMulTT - tensor size > 4 nyi"
 
         upcast RawTensorFloat32CPU(values, newShape)

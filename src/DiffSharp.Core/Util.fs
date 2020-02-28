@@ -187,31 +187,26 @@ let array4D data =
             invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
     Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
 
-let arrayND (shape: int[]) f =
-    match shape with 
-    | [| |] -> f [| |] |> box
-    | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
-    | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
-    | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
-    | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
-    | _ -> failwith "arrayND - nyi for dim > 4"
+module ArrayND = 
 
-let array2DFlat i j f = Array.init (i*j) (fun ij -> f (ij/j) (ij%j))
+    let init (shape: int[]) f =
+        match shape with 
+        | [| |] -> f [| |] |> box
+        | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
+        | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
+        | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
+        | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
+        | _ -> failwith "arrayND - nyi for dim > 4"
 
-let array3DFlat i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
+module Array = 
+    // Create a 2D array using a flat representation
+    let init2D i j f = Array.init (i*j) (fun ij -> f (ij/j) (ij%j))
 
-let array4DFlat i j k l f = Array.init (i*j*k*l) (fun ijkl -> f (ijkl/j/k/l) ((ijkl/k/l)%j) ((ijkl/l)%k) (ijkl%l))
+    // Create a 3D array using a flat representation
+    let init3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
 
-//array2DFlat 3 4 (fun i j -> i + j) |> Array.iter (printf "%A;")
-//Array2D.init 3 4 (fun i j -> i + j) |> Array2D.iter (printf "%A;")
-
-//array3DFlat 3 4 5 (fun i j k -> i + j + 2*k)  |> Array.iter (printf "%A;")
-//Array3D.init 3 4 5 (fun i j k -> i + j + 2*k) |> Array3D.iter (printf "%A;")
-
-//let s1 = array4DFlat 3 4 5 6 (fun i j k l -> i + j + 2*k + 20*l)  |> Array.iter (printf "%A;")
-//let s2 = Array4D.init 3 4 5 6 (fun i j k l -> i + j + 2*k + 20*l) |> (fun arr -> for i in 0 .. 2 do for j in 0..3 do for k in 0..4 do for l in 0..5 do printf "%A;" arr.[i,j,k,l])
-
-//(s1 = s2)
+    // Create a 4D array using a flat representation
+    let init4D i j k l f = Array.init (i*j*k*l) (fun ijkl -> f (ijkl/j/k/l) ((ijkl/k/l)%j) ((ijkl/l)%k) (ijkl%l))
 
 /// Get the elements of an arbitrary IEnumerble
 let private seqElements (ie: obj) = 

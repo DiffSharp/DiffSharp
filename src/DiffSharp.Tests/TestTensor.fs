@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Util
 open DiffSharp.Backend
 
 [<TestFixture>]
@@ -296,7 +297,7 @@ type TestTensor () =
 
         let t7Results, t7CommuteResults = 
             [| for shape in t7Shapes do 
-                  let t7b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7b = Tensor.Create( ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
                   let t7 = t7a + t7b
                   let t7Commute = t7b + t7a
                   yield (t7b, t7), (t7b, t7Commute) |]
@@ -443,7 +444,7 @@ type TestTensor () =
 
         let t6Results, t6CommuteResults = 
             [| for shape in t6Shapes do 
-                  let t6b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6b = Tensor.Create( ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
                   let t6 = t6a * t6b
                   let t6Commute = t6b * t6a
                   yield (t6b, t6 ), (t6b, t6Commute ) |]

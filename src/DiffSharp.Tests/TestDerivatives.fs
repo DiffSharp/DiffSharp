@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Util
 
 #nowarn "0058"
 
@@ -126,9 +127,9 @@ type TestDerivatives () =
 
         // For each shape, create a broadcasting addition and take forward and reverse derivatives
         for shape in shapes do 
-            let t1b = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+            let t1b = Tensor.Create( ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
             let t1a_deriv = t1a + 1.0
-            let t1b_delta = Tensor.Create( Util.arrayND shape (fun is -> double (Array.sum is) - 2.0))
+            let t1b_delta = Tensor.Create( ArrayND.init shape (fun is -> double (Array.sum is) - 2.0))
             let fwda = t1a.ForwardDiff(t1a_deriv)
             let fwdb = t1b.ForwardDiff(t1b_delta)
             let fwdz = fwda + fwdb
@@ -144,8 +145,8 @@ type TestDerivatives () =
 
             // In the simple case of broadcasting a constant, check the result against the non-broadcast case
             if t1b.Sum() = Tensor.Create(2.0) then 
-                let t1c = Tensor.Create( Util.arrayND [| 2;3;4 |] (fun _idxs -> 2.0))
-                let t1c_deriv = Tensor.Create( Util.arrayND [| 2;3;4 |] (fun _idxs -> -2.0))
+                let t1c = Tensor.Create( ArrayND.init [| 2;3;4 |] (fun _idxs -> 2.0))
+                let t1c_deriv = Tensor.Create( ArrayND.init [| 2;3;4 |] (fun _idxs -> -2.0))
                 let fwda = t1a.ForwardDiff(t1a_deriv)
                 let fwdc = t1c.ForwardDiff(t1c_deriv)
                 let fwdz2 = fwda + fwdc
