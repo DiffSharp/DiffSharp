@@ -444,7 +444,7 @@ type Tensor =
         let bBatchPart, bMatrixPart = Array.splitAt (b.Shape.Length-2) b.Shape
         if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot multiply tensors with shapes %A, %A" a.Shape b.Shape
         if aBatchPart = bBatchPart then
-            let inline fRaw(a:RawTensor,b) = a.BatchMatMulTT(b)
+            let inline fRaw(a:RawTensor,b) = a.MatMulTT(b)
             let inline fTensor(a,b) = Tensor.MatMul(a, b)
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.MatMul(ad, bp) + Tensor.MatMul(ap, bd)
             let inline dfTensorFwdTC(cp,ap,ad) = Tensor.MatMul(ad, b)

@@ -455,7 +455,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let result = Array.map (fun t -> t ** t2value) t1value
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
-    override t1.BatchMatMulTT(t2) =
+    override t1.MatMulTT(t2) =
         if t1.Dim < 2 || t2.Dim < 2 then failwithf "Expecting two tensors each at least 2D, received tensors with shapes %A, %A" t1.Shape t2.Shape
 
         let t1BatchPart, t1MatrixPart = t1.Shape |> Array.splitAt (t1.Shape.Length-2)
@@ -479,7 +479,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 let nb0 = t1BatchPart.[0]
                 let nb1 = t1BatchPart.[1]
                 Array.init4D nb0 nb1 t1rows t2cols (fun b0 b1 i j -> Array.sumBy (fun k -> t1value.[((b0*nb1+b1)*t1rows+i)*t1cols+k] * t2value.[((b0*nb1+b1)*t2rows+k)*t2cols+j]) [|0..(t2rows-1)|] )
-            | _ -> failwith "BatchMatMulTT - tensor size > 4 nyi"
+            | _ -> failwith "MatMulTT - tensor size > 4 nyi"
 
         upcast RawTensorFloat32CPU(values, newShape)
     
