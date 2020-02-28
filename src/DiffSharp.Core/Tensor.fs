@@ -101,16 +101,6 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
-    member a.lt(b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
-    member a.gt(b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
-    member a.le(b:Tensor) =Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
-    member a.ge(b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
-    member a.maxIndex() = a.PrimalRaw.MaxIndexT()
-    member a.minIndex() = a.PrimalRaw.MinIndexT()
-    member a.max() = a.[a.maxIndex()]
-    member a.min() = a.[a.minIndex()]
-    static member Max(a:Tensor, b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
-    static member Min(a:Tensor, b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.PrimalRaw.ToValue()
     static member ZerosLike(tensor:Tensor) = Tensor(tensor.PrimalRaw.Zeros(tensor.Shape))
     static member ZerosLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.PrimalRaw.Zeros(shape |> Array.ofSeq))
@@ -136,16 +126,27 @@ type Tensor =
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
-    static member Extend(a:Tensor, shape:seq<int>) =
+    member a.lt(b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
+    member a.gt(b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
+    member a.le(b:Tensor) =Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
+    member a.ge(b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
+    member a.maxIndex() = a.PrimalRaw.MaxIndexT()
+    member a.minIndex() = a.PrimalRaw.MinIndexT()
+    member a.max() = a.[a.maxIndex()]
+    member a.min() = a.[a.minIndex()]
+    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
+    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+
+    member a.extend(shape:seq<int>) =
         if a.Dim <> 0 then failwithf "Expecting a 0d Tensor, received shape: %A" a.Shape
         match a with
         | Tensor(ap) -> Tensor(ap.Extend(shape|>Seq.toArray))
         | TensorF(ap,ad,at) ->
-            let cp = Tensor.Extend(ap, shape)
-            let cd = Tensor.Extend(ad, shape)
+            let cp = ap.extend(shape)
+            let cd = ad.extend(shape)
             TensorF(cp,cd,at)
         | TensorR(ap,_,_,_,at) ->
-            let cp = Tensor.Extend(ap, shape)
+            let cp = ap.extend(shape)
             TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
 
     member internal t.GetSlice(bounds:int[,]) =
@@ -229,7 +230,7 @@ type Tensor =
             let inline fRaw(a,b:RawTensor) = b.AddTT0(a)
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
-            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.extend(b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT0(b,a)
             let inline dfTensorRevTC(a,b) = AddTConstT0(a)
@@ -240,7 +241,7 @@ type Tensor =
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
-            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(bd, a.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd:Tensor) = bd.extend(a.Shape)
             let inline dfTensorRevTT(a,b) = AddTT0(a,b)
             let inline dfTensorRevTC(a,b) = AddTT0Const(a)
             let inline dfTensorRevCT(a,b) = AddTConstT0(b)
@@ -291,7 +292,7 @@ type Tensor =
             let inline fRaw(a:RawTensor,b) = a.SubT0T(b)
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Extend(ad, b.Shape)
+            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.extend(b.Shape)
             let inline dfTensorFwdCT(cp,bp,bd) = -bd
             let inline dfTensorRevTT(a,b) = SubT0T(a,b)
             let inline dfTensorRevTC(a,b) = SubT0TConst(a)
@@ -302,7 +303,7 @@ type Tensor =
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
-            let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Extend(-bd, a.Shape)
+            let inline dfTensorFwdCT(cp,bp,bd:Tensor) = (-bd).extend(a.Shape)
             let inline dfTensorRevTT(a,b) = SubTT0(a,b)
             let inline dfTensorRevTC(a,b) = SubTT0Const(a)
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
@@ -655,7 +656,7 @@ type Tensor =
 
     static member LeakyRelu (a:Tensor, ?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
-        Tensor.Max(Tensor.Create(0.), a) + negativeSlope * Tensor.Min(Tensor.Create(0.), a)
+        Tensor.Create(0.).max(a) + negativeSlope * Tensor.Create(0.).min(a)
     member t.LeakyRelu() = Tensor.LeakyRelu(t)
     member t.LeakyRelu(negativeSlope) = Tensor.LeakyRelu(t, negativeSlope)
 
@@ -1186,7 +1187,7 @@ type Tensor =
                                     bderivative <- Tensor.AddSlice(bderivative, [|k; 0; 0; 0|], c)
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
-                        | SumT(a) -> push ((Tensor.Extend(t.Derivative, a.Shape), a) :: tt)
+                        | SumT(a) -> push ((t.Derivative.extend(a.Shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.Derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.Derivative.Sum(), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.Derivative.Unstack()) |> Seq.toList) tt)

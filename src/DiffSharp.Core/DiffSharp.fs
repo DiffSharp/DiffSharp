@@ -13,6 +13,9 @@ type DiffSharp =
     static member minIndex(a:Tensor) = a.minIndex()
     static member max(a:Tensor) = a.max()
     static member min(a:Tensor) = a.min()
+    static member max(a:Tensor, b:Tensor) = a.max(b)
+    static member min(a:Tensor, b:Tensor) = a.min(b)
+    static member extend(a:Tensor, shape:seq<int>) = a.extend(shape)
 
 // Functional differentiation API
 type DiffSharp with
