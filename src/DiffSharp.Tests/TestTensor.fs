@@ -210,23 +210,11 @@ type TestTensor () =
               Tensor.Create([ 2.; 1. ] ) 
               Tensor.Create([ [ 1.; 1.] ]) ]
 
-        // Check the F# generic 'compare' gives expected results
-        let compareResults = [| for a in t2S -> [| for b in t2S -> compare a b |] |]
-        let compareCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> compare i j |] |]
-
-        Assert.AreEqual(compareCorrect, compareResults)
-
         // Check the F# generic '=' gives expected results
         let equalsResults = [| for a in t2S -> [| for b in t2S -> a = b |] |]
         let equalsCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
 
         Assert.AreEqual(equalsResults, equalsCorrect)
-
-        // Check the F# generic '<' gives expected results
-        let ltResults = [| for a in t2S -> [| for b in t2S -> a < b |] |]
-        let ltCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i<j) |] |]
-
-        Assert.AreEqual(ltResults, ltCorrect)
 
         // Check the F# generic hashes are the same for identical tensors, and different for this small sample of tensors
         let hashSameResults = [| for a in t2S -> [| for b in t2S -> hash a = hash b |] |]
@@ -239,14 +227,12 @@ type TestTensor () =
         let t2b = Tensor.Create([ 1.] )
         Assert.AreEqual(t2a.GetHashCode(), t2b.GetHashCode())
 
-        // Check adding `ForwardDiff` doesn't change the hash, compare or equality
+        // Check adding `ForwardDiff` doesn't change the hash or equality
         Assert.AreEqual(t2a.ForwardDiff(Tensor.Create([1.])).GetHashCode(), t2a.GetHashCode())
-        Assert.AreEqual(0, compare (t2a.ForwardDiff(Tensor.Create([1.]))) t2a)
         Assert.AreEqual(true, (t2a.ForwardDiff(Tensor.Create([1.]))) = t2a)
 
-        // Check adding `ReverseDiff` doesn't change the hash, compare or equality
+        // Check adding `ReverseDiff` doesn't change the hash or equality
         Assert.AreEqual(t2a.ReverseDiff().GetHashCode(), t2a.GetHashCode())
-        Assert.AreEqual(0, compare (t2a.ReverseDiff()) t2a)
         Assert.AreEqual(true, (t2a.ReverseDiff()) = t2a)
 
     [<Test>]

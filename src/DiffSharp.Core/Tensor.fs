@@ -79,7 +79,11 @@ type Tensor =
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
-            | :? Tensor as tensor -> t.PrimalRaw.CompareTo(tensor.PrimalRaw)
+            | :? Tensor as tensor -> 
+                if t.Dim = tensor.Dim && t.Dim = 0 then
+                    t.PrimalRaw.CompareTo(tensor.PrimalRaw)
+                else
+                    failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
     member t1.IsSameDiffType(t2:Tensor) =
         match t1, t2 with
