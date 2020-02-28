@@ -67,7 +67,7 @@ type Tensor =
     member t.ToArray() = t.PrimalRaw.ToArray()
     member t.ToValue() = t.PrimalRaw.ToValue()
     member t.Zero() = Tensor(t.PrimalRaw.Zero())
-    member t.Create(value) = Tensor(t.PrimalRaw.Create(value))
+    member t.CreateLike(value) = Tensor(t.PrimalRaw.Create(value))
     override t.Equals(other) =
         match other with
         | :? Tensor as tensor -> t.PrimalRaw.Equals(tensor.PrimalRaw)
@@ -279,10 +279,10 @@ type Tensor =
             else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape                
         // TODO: implement general broadcasting additions
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (+) (a:Tensor, b) = a + a.Create(b)
-    static member (+) (a, b:Tensor) = b.Create(a) + b
+    static member (+) (a:Tensor, b) = a + a.CreateLike(b)
+    static member (+) (a, b:Tensor) = b.CreateLike(a) + b
     member t1.Add(t2:Tensor) = t1 + t2
-    member t1.Add(t2) = t1 + t1.Create(t2)
+    member t1.Add(t2) = t1 + t1.CreateLike(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -316,10 +316,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (-) (a:Tensor, b) = a - a.Create(b)
-    static member (-) (a, b:Tensor) = b.Create(a) - b
+    static member (-) (a:Tensor, b) = a - a.CreateLike(b)
+    static member (-) (a, b:Tensor) = b.CreateLike(a) - b
     member t1.Sub(t2:Tensor) = t1 - t2
-    member t1.Sub(t2) = t1 - t1.Create(t2)
+    member t1.Sub(t2) = t1 - t1.CreateLike(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -354,10 +354,10 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         // TODO: implement general broadcasting?
         else failwithf "Cannot add Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (*) (a:Tensor, b) = a * a.Create(b)
-    static member (*) (a, b:Tensor) = b.Create(a) * b
+    static member (*) (a:Tensor, b) = a * a.CreateLike(b)
+    static member (*) (a, b:Tensor) = b.CreateLike(a) * b
     member t1.Mul(t2:Tensor) = t1 * t2
-    member t1.Mul(t2) = t1 * t1.Create(t2)
+    member t1.Mul(t2) = t1 * t1.CreateLike(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -391,10 +391,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.Shape b.Shape
-    static member (/) (a:Tensor, b) = a / a.Create(b)
-    static member (/) (a, b:Tensor) = b.Create(a) / b
+    static member (/) (a:Tensor, b) = a / a.CreateLike(b)
+    static member (/) (a, b:Tensor) = b.CreateLike(a) / b
     member t1.Div(t2:Tensor) = t1 / t2
-    member t1.Div(t2) = t1 / t1.Create(t2)
+    member t1.Div(t2) = t1 / t1.CreateLike(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.Shape = b.Shape then
@@ -428,10 +428,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.Shape b.Shape
-    static member Pow (a:Tensor, b) = a ** a.Create(b)
-    static member Pow (a, b:Tensor) = b.Create(a) ** b
+    static member Pow (a:Tensor, b) = a ** a.CreateLike(b)
+    static member Pow (a, b:Tensor) = b.CreateLike(a) ** b
     member t1.Pow(t2:Tensor) = t1 ** t2
-    member t1.Pow(t2) = t1 ** t1.Create(t2)
+    member t1.Pow(t2) = t1 ** t1.CreateLike(t2)
 
     static member MatMul (a:Tensor, b:Tensor) =
         if a.Dim <> 2 || b.Dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.Shape b.Shape
