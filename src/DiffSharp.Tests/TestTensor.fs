@@ -185,19 +185,55 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCompare () =
-        let t1 = Tensor.Create(-1.)
-        let t2 = Tensor.Create(1.)
-        let t3 = Tensor.Create(1.)
-        let t1t2Less = t1 < t2
-        let t1t2LessCorrect = true
-        let t1t2Equal = t1 = t2
-        let t1t2EqualCorrect = false
-        let t2t3Equal = t2 = t3
-        let t2t3EqualCorrect = true
+        let t1A = Tensor.Create(-1.)
+        let t1B = Tensor.Create(1.)
+        let t1C = Tensor.Create(1.)
+        let t1At1BLess = t1A < t1B
+        let t1At1BLessCorrect = true
+        let t1At1BEqual = t1A = t1B
+        let t1At1BEqualCorrect = false
+        let t1Bt1CEqual = t1B = t1C
+        let t1Bt1CEqualCorrect = true
 
-        Assert.AreEqual(t1t2LessCorrect, t1t2Less)
-        Assert.AreEqual(t1t2EqualCorrect, t1t2Equal)
-        Assert.AreEqual(t2t3EqualCorrect, t2t3Equal)
+        Assert.AreEqual(t1At1BLessCorrect, t1At1BLess)
+        Assert.AreEqual(t1At1BEqualCorrect, t1At1BEqual)
+        Assert.AreEqual(t1Bt1CEqualCorrect, t1Bt1CEqual)
+
+        // Systematic testing. The tensors below are listed in expected order of comparison
+        let t2S =
+            [ Tensor.Create( 0. )
+              Tensor.Create( 1. )
+              Tensor.Create([ 1.] )
+              Tensor.Create([ 2.] )
+              Tensor.Create([ 1.; 1.] )
+              Tensor.Create([ 1.; 2. ] )
+              Tensor.Create([ 2.; 1. ] ) 
+              Tensor.Create([ [ 1.; 1.] ]) ]
+
+        // Check the F# generic '=' gives expected results
+        let equalsResults = [| for a in t2S -> [| for b in t2S -> a = b |] |]
+        let equalsCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
+
+        Assert.AreEqual(equalsResults, equalsCorrect)
+
+        // Check the F# generic hashes are the same for identical tensors, and different for this small sample of tensors
+        let hashSameResults = [| for a in t2S -> [| for b in t2S -> hash a = hash b |] |]
+        let hashSameCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
+
+        Assert.AreEqual(hashSameResults, hashSameCorrect)
+
+        // Check reallocating an identical tensor doesn't change the hash
+        let t2a = Tensor.Create([ 1.] )
+        let t2b = Tensor.Create([ 1.] )
+        Assert.AreEqual(t2a.GetHashCode(), t2b.GetHashCode())
+
+        // Check adding `ForwardDiff` doesn't change the hash or equality
+        Assert.AreEqual(t2a.ForwardDiff(Tensor.Create([1.])).GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(true, (t2a.ForwardDiff(Tensor.Create([1.]))) = t2a)
+
+        // Check adding `ReverseDiff` doesn't change the hash or equality
+        Assert.AreEqual(t2a.ReverseDiff().GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(true, (t2a.ReverseDiff()) = t2a)
 
     [<Test>]
     member this.TestTensorLtTT () =
