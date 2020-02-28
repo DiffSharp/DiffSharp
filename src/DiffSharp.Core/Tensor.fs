@@ -101,14 +101,10 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
-    static member Lt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
-    member t1.Lt(t2) = Tensor.Lt(t1, t2)
-    static member Gt(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
-    member t1.Gt(t2) = Tensor.Gt(t1, t2)
-    static member Le(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
-    member t1.Le(t2) = Tensor.Le(t1, t2)
-    static member Ge(a:Tensor, b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
-    member t1.Ge(t2) = Tensor.Ge(t1, t2)
+    member a.lt(b:Tensor) = Tensor(a.PrimalRaw.LtTT(b.PrimalRaw))
+    member a.gt(b:Tensor) = Tensor(a.PrimalRaw.GtTT(b.PrimalRaw))
+    member a.le(b:Tensor) =Tensor(a.PrimalRaw.LeTT(b.PrimalRaw))
+    member a.ge(b:Tensor) = Tensor(a.PrimalRaw.GeTT(b.PrimalRaw))
     static member MaxIndex(a:Tensor) = a.PrimalRaw.MaxIndexT()
     member t.MaxIndex() = Tensor.MaxIndex(t)
     static member MinIndex(a:Tensor) = a.PrimalRaw.MinIndexT()
