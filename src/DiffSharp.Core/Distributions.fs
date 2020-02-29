@@ -75,10 +75,10 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
         if value.shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.shape
         if d.BatchShape.Length = 0 then
             let i = value.toScalar() |> toInt
-            d.Probs.[i] |> Tensor.Log
+            d.Probs.[i] |> dsharp.log
         else
             // let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
-            Seq.init d.BatchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.stack |> Tensor.Log
+            Seq.init d.BatchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.stack |> dsharp.log
     override d.GetString() = sprintf "Categorical(probs:%A)" d.Probs
 
 // type Empirical(values:obj[], ?weights:Tensor, ?logweights:Tensor) =
@@ -95,7 +95,7 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
 //             | Some weights -> weights
 //         if weights.dim <> 1 then failwithf "Expecting a vector (1d) of weights or logweights, received shape %A" weights.shape
 //         weights
-//     member d.Logweights = d.Weights |> Tensor.Log
+//     member d.Logweights = d.Weights |> dsharp.log
 //     member d.Categorical = Categorical(probs=d.Weights)
 //     override d.BatchShape = failwith "Not implemented"
 //     override d.EventShape = failwith "Not implemented"
