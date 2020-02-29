@@ -451,7 +451,7 @@ type TestTensor () =
                                  [0.7678; 0.0733; 0.3396];
                                  [0.6023; 0.6546; 0.3439]]])
 
-        let t3 = Tensor.Conv1D(t1, t2)
+        let t3 = t1.conv1d(t2)
         let t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
                                          [2.3239; 1.7078; 2.7450]];
 
@@ -461,7 +461,7 @@ type TestTensor () =
                                         [[3.4749; 2.9038; 2.7131];
                                          [2.7692; 2.9444; 3.2554]]])
 
-        let t3p1 = Tensor.Conv1D(t1, t2, padding=1)
+        let t3p1 = t1.conv1d(t2, padding=1)
         let t3p1Correct = Tensor.Create([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
                                          [1.4345; 2.3239; 1.7078; 2.7450; 2.1474]];
 
@@ -471,7 +471,7 @@ type TestTensor () =
                                         [[1.2965; 3.4749; 2.9038; 2.7131; 1.7408];
                                          [1.3549; 2.7692; 2.9444; 3.2554; 1.2120]]])
 
-        let t3p2 = Tensor.Conv1D(t1, t2, padding=2)
+        let t3p2 = t1.conv1d(t2, padding=2)
         let t3p2Correct = Tensor.Create([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
                                          [0.6539; 1.4345; 2.3239; 1.7078; 2.7450; 2.1474; 1.2585]];
 
@@ -481,7 +481,7 @@ type TestTensor () =
                                         [[0.3165; 1.2965; 3.4749; 2.9038; 2.7131; 1.7408; 0.5275];
                                          [0.3861; 1.3549; 2.7692; 2.9444; 3.2554; 1.2120; 0.7428]]])
 
-        let t3s2 = Tensor.Conv1D(t1, t2, stride=2)
+        let t3s2 = t1.conv1d(t2, stride=2)
         let t3s2Correct = Tensor.Create([[[2.8516; 2.6420];
                                          [2.3239; 2.7450]];
 
@@ -491,7 +491,7 @@ type TestTensor () =
                                         [[3.4749; 2.7131];
                                          [2.7692; 3.2554]]])
 
-        let t3s3 = Tensor.Conv1D(t1, t2, stride=3)
+        let t3s3 = t1.conv1d(t2, stride=3)
         let t3s3Correct = Tensor.Create([[[2.8516];
                                          [2.3239]];
 
@@ -501,7 +501,7 @@ type TestTensor () =
                                         [[3.4749];
                                          [2.7692]]])
 
-        let t3s2p1 = Tensor.Conv1D(t1, t2, stride=2, padding=1)
+        let t3s2p1 = t1.conv1d(t2, stride=2, padding=1)
         let t3s2p1Correct = Tensor.Create([[[1.4392; 2.0732; 2.1177];
                                              [1.4345; 1.7078; 2.1474]];
 
@@ -511,7 +511,7 @@ type TestTensor () =
                                             [[1.2965; 2.9038; 1.7408];
                                              [1.3549; 2.9444; 1.2120]]])
 
-        let t3s3p2 = Tensor.Conv1D(t1, t2, stride=3, padding=2)
+        let t3s3p2 = t1.conv1d(t2, stride=3, padding=2)
         let t3s3p2Correct = Tensor.Create([[[0.6333; 2.0732; 1.0258];
                                              [0.6539; 1.7078; 1.2585]];
 
@@ -521,7 +521,7 @@ type TestTensor () =
                                             [[0.3165; 2.9038; 0.5275];
                                              [0.3861; 2.9444; 0.7428]]])
         
-        let t3d2 = Tensor.Conv1D(t1, t2, dilation=2)
+        let t3d2 = t1.conv1d(t2, dilation=2)
         let t3d2Correct = Tensor.Create([[[2.8030];
                                          [2.4735]];
 
@@ -531,7 +531,7 @@ type TestTensor () =
                                         [[2.8469];
                                          [2.4790]]])
 
-        let t3p2d3 = Tensor.Conv1D(t1, t2, padding=2, dilation=3)
+        let t3p2d3 = t1.conv1d(t2, padding=2, dilation=3)
         let t3p2d3Correct = Tensor.Create([[[2.1121; 0.8484; 2.2709];
                                              [1.6692; 0.5406; 1.8381]];
 
@@ -541,7 +541,7 @@ type TestTensor () =
                                             [[1.5215; 1.3946; 2.1327];
                                              [1.0732; 1.3014; 2.0696]]])
 
-        let t3s3p6d3 = Tensor.Conv1D(t1, t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3 = t1.conv1d(t2, stride=3, padding=6, dilation=3)
         let t3s3p6d3Correct = Tensor.Create([[[0.6333; 1.5018; 2.2709; 1.0580];
                                              [0.6539; 1.5130; 1.8381; 1.0479]];
 
@@ -551,9 +551,9 @@ type TestTensor () =
                                             [[0.3165; 1.4118; 2.1327; 1.1949];
                                              [0.3861; 1.5697; 2.0696; 0.8520]]])
 
-        let t3b1 = Tensor.Conv1D(t1.[0].unsqueeze(0) , t2)
+        let t3b1 = t1.[0].unsqueeze(0).conv1d(t2)
         let t3b1Correct = t3Correct.[0].unsqueeze(0)
-        let t3b1s2 = Tensor.Conv1D(t1.[0].unsqueeze(0) , t2, stride = 2)
+        let t3b1s2 = t1.[0].unsqueeze(0).conv1d(t2, stride = 2)
         let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
@@ -617,7 +617,7 @@ type TestTensor () =
                                   [-6.5763, -6.3535,  7.2228],
                                   [15.1009,  4.9045,  5.1197]]]])
 
-        let t3 = Tensor.Conv2D(t1, t2)
+        let t3 = t1.conv2d(t2)
         let t3Correct = Tensor.Create([[[[  10.6089;   -1.4459];
                                           [-132.3437; -165.9882]];
 
@@ -637,7 +637,7 @@ type TestTensor () =
                                          [[-106.0468;  -94.3428];
                                           [ -78.6259;  136.6283]]]])
 
-        let t3p1 = Tensor.Conv2D(t1, t2, padding=1)
+        let t3p1 = t1.conv2d(t2, padding=1)
         let t3p1Correct = Tensor.Create([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
                                           [-154.2592;   10.6089;   -1.4459; -126.2889];
                                           [-176.1860; -132.3437; -165.9882;  -23.2585];
@@ -669,7 +669,7 @@ type TestTensor () =
                                           [ -44.8701;  -78.6259;  136.6283;   89.6921];
                                           [  60.9218;   14.3467;  -86.6495;   49.3313]]]])
 
-        let t3p12 = Tensor.Conv2D(t1, t2, padding=[|1; 2|])
+        let t3p12 = t1.conv2d(t2, padding=[|1; 2|])
         let t3p12Correct = Tensor.Create([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
                                           [ 210.3501; -154.2592;   10.6089;   -1.4459; -126.2889;   24.8066];
                                           [ -42.1367; -176.1860; -132.3437; -165.9882;  -23.2585;  -44.1093];
@@ -701,7 +701,7 @@ type TestTensor () =
                                           [  21.9169;  -44.8701;  -78.6259;  136.6283;   89.6921; -113.2355];
                                           [ -30.5091;   60.9218;   14.3467;  -86.6495;   49.3313;   22.9582]]]])
 
-        let t3s2 = Tensor.Conv2D(t1, t2, stride=2)
+        let t3s2 = t1.conv2d(t2, stride=2)
         let t3s2Correct = Tensor.Create([[[[  10.6089]];
 
                                          [[  97.8425]];
@@ -715,7 +715,7 @@ type TestTensor () =
 
                                          [[-106.0468]]]])
 
-        let t3s13 = Tensor.Conv2D(t1, t2, stride=[|1; 3|])
+        let t3s13 = t1.conv2d(t2, stride=[|1; 3|])
         let t3s13Correct = Tensor.Create([[[[  10.6089];
                                           [-132.3437]];
 
@@ -735,7 +735,7 @@ type TestTensor () =
                                          [[-106.0468];
                                           [ -78.6259]]]])
 
-        let t3s2p1 = Tensor.Conv2D(t1, t2, stride=2, padding=1)
+        let t3s2p1 = t1.conv2d(t2, stride=2, padding=1)
         let t3s2p1Correct = Tensor.Create([[[[  86.6988;  -85.8172];
                                               [-176.1860; -165.9882]];
 
@@ -755,7 +755,7 @@ type TestTensor () =
                                              [[  96.3737;  -68.9841];
                                               [ -44.8701;  136.6283]]]])
 
-        let t3s23p32 = Tensor.Conv2D(t1, t2, stride=[2; 3], padding=[3; 2])
+        let t3s23p32 = t1.conv2d(t2, stride=[2; 3], padding=[3; 2])
         let t3s23p32Correct = Tensor.Create([[[[   0.0000,    0.0000],
                                                   [   7.5866,  -85.8172],
                                                   [ -42.1364, -165.9885],
@@ -787,7 +787,7 @@ type TestTensor () =
                                                   [  21.9173,  136.6280],
                                                   [  11.1650,   48.6844]]]])
         
-        let t3p1d2 = Tensor.Conv2D(t1, t2, padding=1, dilation=2)
+        let t3p1d2 = t1.conv2d(t2, padding=1, dilation=2)
         let t3p1d2Correct = Tensor.Create([[[[ -72.7697,  -34.7305],
                                               [ -35.3463, -230.5320]],
 
@@ -807,7 +807,7 @@ type TestTensor () =
                                              [[ -25.4452,   -9.8843],
                                               [  35.7940,   27.9557]]]])
 
-        let t3p22d23 = Tensor.Conv2D(t1, t2, padding=[2;2], dilation=[2;3])
+        let t3p22d23 = t1.conv2d(t2, padding=[2;2], dilation=[2;3])
         let t3p22d23Correct = Tensor.Create([[[[-3.2693e+01, -4.3192e+01],
                                                   [ 4.7954e+01,  9.6877e+00],
                                                   [ 1.7971e+01, -7.0747e+01],
@@ -839,7 +839,7 @@ type TestTensor () =
                                                   [ 3.1457e+01,  4.8352e+01],
                                                   [-8.1167e+01,  3.2597e+01]]]])
 
-        let t3s3p6d3 = Tensor.Conv2D(t1, t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3 = t1.conv2d(t2, stride=3, padding=6, dilation=3)
         let t3s3p6d3Correct = Tensor.Create([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
                                                   [  27.0241, -107.5002,   98.7433,  -41.9933],
                                                   [  11.7470, -105.7288, -152.6583,   23.1514],
@@ -871,9 +871,9 @@ type TestTensor () =
                                                   [  26.8834,  -22.3392,   64.3614,   32.6334],
                                                   [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
 
-        let t3b1 = Tensor.Conv2D(t1.[0].unsqueeze(0) , t2)
+        let t3b1 = t1.[0].unsqueeze(0).conv2d(t2)
         let t3b1Correct = t3Correct.[0].unsqueeze(0)
-        let t3b1s2 = Tensor.Conv2D(t1.[0].unsqueeze(0), t2, stride = 2)
+        let t3b1s2 = t1.[0].unsqueeze(0).conv2d(t2, stride = 2)
         let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         // Assert.True(false)
@@ -1138,7 +1138,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSignT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Sign = t1.Sign()
+        let t1Sign = t1.sign()
         let t1SignCorrect = Tensor.Create([-1.; -1.; 0.; 1.])
 
         Assert.AreEqual(t1SignCorrect, t1Sign)
@@ -1146,7 +1146,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorFloorT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Floor = t1.Floor()
+        let t1Floor = t1.floor()
         let t1FloorCorrect = Tensor.Create([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(t1Floor.ApproximatelyEqual(t1FloorCorrect))
@@ -1154,7 +1154,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorCeilT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Ceil = t1.Ceil()
+        let t1Ceil = t1.ceil()
         let t1CeilCorrect = Tensor.Create([1.; 1.; 1.; 1.; 1.])
 
         Assert.True(t1Ceil.ApproximatelyEqual(t1CeilCorrect))
@@ -1162,7 +1162,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorRoundT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Round = t1.Round()
+        let t1Round = t1.round()
         let t1RoundCorrect = Tensor.Create([1.; 0.; 0.; 1.; 1.])
 
         Assert.True(t1Round.ApproximatelyEqual(t1RoundCorrect))
@@ -1170,7 +1170,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAbsT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Abs = t1.Abs()
+        let t1Abs = t1.abs()
         let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
 
         Assert.AreEqual(t1AbsCorrect, t1Abs)
@@ -1178,7 +1178,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorReluT () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
-        let t1Relu = t1.Relu()
+        let t1Relu = t1.relu()
         let t1ReluCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
 
         Assert.AreEqual(t1ReluCorrect, t1Relu)
@@ -1186,7 +1186,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorLeakyRelu () =
         let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
-        let t1LeakyRelu = t1.LeakyRelu()
+        let t1LeakyRelu = t1.leakyRelu()
         let t1LeakyReluCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
 
         Assert.AreEqual(t1LeakyReluCorrect, t1LeakyRelu)
@@ -1194,7 +1194,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSigmoidT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Sigmoid = t1.Sigmoid()
+        let t1Sigmoid = t1.sigmoid()
         let t1SigmoidCorrect = Tensor.Create([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
 
         Assert.True(t1Sigmoid.ApproximatelyEqual(t1SigmoidCorrect))
@@ -1202,7 +1202,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorExpT () =
         let t1 = Tensor.Create([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
-        let t1Exp = t1.Exp()
+        let t1Exp = t1.exp()
         let t1ExpCorrect = Tensor.Create([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
 
         Assert.True(t1Exp.ApproximatelyEqual(t1ExpCorrect))
@@ -1210,7 +1210,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorLogT () =
         let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
-        let t1Log = t1.Log()
+        let t1Log = t1.log()
         let t1LogCorrect = Tensor.Create([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
 
         Assert.True(t1Log.ApproximatelyEqual(t1LogCorrect))
@@ -1218,7 +1218,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorLog10T () =
         let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
-        let t1Log10 = t1.Log10()
+        let t1Log10 = t1.log10()
         let t1Log10Correct = Tensor.Create([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
 
         Assert.True(t1Log10.ApproximatelyEqual(t1Log10Correct))
@@ -1226,7 +1226,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSqrtT () =
         let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Sqrt = t1.Sqrt()
+        let t1Sqrt = t1.sqrt()
         let t1SqrtCorrect = Tensor.Create([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
 
         Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
@@ -1234,7 +1234,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSinT () =
         let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Sin = t1.Sin()
+        let t1Sin = t1.sin()
         let t1SinCorrect = Tensor.Create([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
 
         Assert.True(t1Sin.ApproximatelyEqual(t1SinCorrect))
@@ -1242,7 +1242,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorCosT () =
         let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Cos = t1.Cos()
+        let t1Cos = t1.cos()
         let t1CosCorrect = Tensor.Create([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
 
         Assert.True(t1Cos.ApproximatelyEqual(t1CosCorrect))
@@ -1250,7 +1250,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorTanT () =
         let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Tan = t1.Tan()
+        let t1Tan = t1.tan()
         let t1TanCorrect = Tensor.Create([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
 
         Assert.True(t1Tan.ApproximatelyEqual(t1TanCorrect))
@@ -1258,7 +1258,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSinhT () =
         let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Sinh = t1.Sinh()
+        let t1Sinh = t1.sinh()
         let t1SinhCorrect = Tensor.Create([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
 
         Assert.True(t1Sinh.ApproximatelyEqual(t1SinhCorrect))
@@ -1266,7 +1266,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorCoshT () =
         let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Cosh = t1.Cosh()
+        let t1Cosh = t1.cosh()
         let t1CoshCorrect = Tensor.Create([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
 
         Assert.True(t1Cosh.ApproximatelyEqual(t1CoshCorrect))
@@ -1274,7 +1274,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorTanhT () =
         let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Tanh = t1.Tanh()
+        let t1Tanh = t1.tanh()
         let t1TanhCorrect = Tensor.Create([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
 
         Assert.True(t1Tanh.ApproximatelyEqual(t1TanhCorrect))
@@ -1282,7 +1282,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAsinT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Asin = t1.Asin()
+        let t1Asin = t1.asin()
         let t1AsinCorrect = Tensor.Create([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
 
         Assert.True(t1Asin.ApproximatelyEqual(t1AsinCorrect))
@@ -1290,7 +1290,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAcosT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Acos = t1.Acos()
+        let t1Acos = t1.acos()
         let t1AcosCorrect = Tensor.Create([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
 
         Assert.True(t1Acos.ApproximatelyEqual(t1AcosCorrect))
@@ -1298,7 +1298,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAtanT () =
         let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Atan = t1.Atan()
+        let t1Atan = t1.atan()
         let t1AtanCorrect = Tensor.Create([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
 
         Assert.True(t1Atan.ApproximatelyEqual(t1AtanCorrect))
@@ -1663,17 +1663,17 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSoftmax () =
         let t1 = Tensor.Create([2.7291; 0.0607; 0.8290])
-        let t1Softmax0 = t1.Softmax(0)
+        let t1Softmax0 = t1.softmax(0)
         let t1Softmax0Correct = Tensor.Create([0.8204; 0.0569; 0.1227])
 
         let t2 = Tensor.Create([[1.3335; 1.6616; 2.4874; 6.1722];
             [3.3478; 9.3019; 1.0844; 8.9874];
             [8.6300; 1.8842; 9.1387; 9.1321]])
-        let t2Softmax0 = t2.Softmax(0)
+        let t2Softmax0 = t2.softmax(0)
         let t2Softmax0Correct = Tensor.Create([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
             [5.0519e-03; 9.9892e-01; 3.1723e-04; 4.5134e-01];
             [9.9427e-01; 5.9987e-04; 9.9839e-01; 5.2163e-01]])
-        let t2Softmax1 = t2.Softmax(1)
+        let t2Softmax1 = t2.softmax(1)
         let t2Softmax1Correct = Tensor.Create([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
             [1.4974e-03; 5.7703e-01; 1.5573e-04; 4.2131e-01];
             [2.3167e-01; 2.7240e-04; 3.8528e-01; 3.8277e-01]])
@@ -1693,7 +1693,7 @@ type TestTensor () =
              [0.1873; 8.7840];
              [9.3609; 0.6493]]])
              
-        let t3Softmax0 = t3.Softmax(0)
+        let t3Softmax0 = t3.softmax(0)
         let t3Softmax0Correct = Tensor.Create([[[2.4662e-03; 3.7486e-03];
              [3.1467e-03; 1.6136e-04];
              [3.4316e-01; 4.9885e-01];
@@ -1708,7 +1708,7 @@ type TestTensor () =
              [9.5644e-01; 2.5410e-02];
              [4.9412e-02; 5.0077e-01];
              [9.9244e-01; 4.6122e-02]]])
-        let t3Softmax1 = t3.Softmax(1)
+        let t3Softmax1 = t3.softmax(1)
         let t3Softmax1Correct = Tensor.Create([[[1.8050e-01; 1.2351e-03];
              [9.1058e-02; 5.2978e-04];
              [6.8813e-02; 9.9344e-01];
@@ -1723,7 +1723,7 @@ type TestTensor () =
              [1.8387e-01; 6.6997e-02];
              [6.5824e-05; 8.0087e-01];
              [6.3451e-01; 2.3479e-04]]])
-        let t3Softmax2 = t3.Softmax(2)
+        let t3Softmax2 = t3.softmax(2)
         let t3Softmax2Correct = Tensor.Create([[[7.3096e-01; 2.6904e-01];
              [7.6165e-01; 2.3835e-01];
              [1.2861e-03; 9.9871e-01];

@@ -42,7 +42,33 @@ type DiffSharp =
     static member view(a:Tensor, shape:seq<int>) = a.view(shape)
     static member view(a:Tensor, shape:int) = a.view(shape)
     static member viewAs(a:Tensor, b:Tensor) = a.viewAs(b)
-    
+    static member sign(a:Tensor) = a.sign()
+    static member floor(a:Tensor) = a.floor()
+    static member ceil(a:Tensor) = a.ceil()
+    static member round(a:Tensor) = a.round()
+    static member abs(a:Tensor) = a.abs()
+    static member relu(a:Tensor) = a.relu()
+    static member leakyRelu(a:Tensor, ?negativeSlope:float) = a.leakyRelu(?negativeSlope=negativeSlope)
+    static member sigmoid(a:Tensor) = a.sigmoid()
+    static member exp(a:Tensor) = a.exp()
+    static member log(a:Tensor) = a.log()
+    static member log10(a:Tensor) = a.log10()
+    static member sqrt(a:Tensor) = a.sqrt()
+    static member sin(a:Tensor) = a.sin()
+    static member cos(a:Tensor) = a.cos()
+    static member tan(a:Tensor) = a.tan()
+    static member sinh(a:Tensor) = a.sinh()
+    static member cosh(a:Tensor) = a.cosh()
+    static member tanh(a:Tensor) = a.tanh()
+    static member asin(a:Tensor) = a.asin()
+    static member acos(a:Tensor) = a.acos()
+    static member atan(a:Tensor) = a.atan()
+    static member softmax(a:Tensor, dim:int) = a.softmax(dim)
+    static member mseLoss(a:Tensor, b:Tensor) = a.mseLoss(b)
+    static member conv1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+
 // Functional differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
@@ -54,8 +80,8 @@ type DiffSharp with
     static member primalDerivative tensor = tensor |> DiffSharp.primal, tensor |> DiffSharp.derivative
     static member makeForward (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.ForwardDiff(derivative, tag)
     static member makeReverse (tag:uint32) (tensor:Tensor) = tensor.ReverseDiff(tag)
-    static member reverseReset (tensor:Tensor) = tensor.ReverseReset(true)
-    static member reversePush (value:Tensor) (tensor:Tensor) = tensor.ReversePush(value)
+    static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
+    static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverseProp (value:Tensor) (tensor:Tensor) = tensor |> DiffSharp.reverseReset; tensor |> DiffSharp.reversePush value
     static member jacobianv' f x v = x |> DiffSharp.makeForward (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
     static member jacobianv f x v = DiffSharp.jacobianv' f x v |> snd

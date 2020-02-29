@@ -580,171 +580,166 @@ type Tensor =
 
     member a.viewAs(b:Tensor) = a.view(b.Shape)
 
-    static member Sign (a:Tensor) =
+    member a.sign() =
         let inline fRaw(a:RawTensor) = a.SignT()
-        let inline fTensor(a) = Tensor.Sign(a)
+        let inline fTensor(a:Tensor) = a.sign()
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sign() = Tensor.Sign(t)
+    static member Sign(a:Tensor) = a.sign() // needed for FSharp.Core sign operator overload
 
-    static member Floor (a:Tensor) =
+    member a.floor() =
         let inline fRaw(a:RawTensor) = a.FloorT()
-        let inline fTensor(a) = Tensor.Floor(a)
+        let inline fTensor(a:Tensor) = a.floor()
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Floor() = Tensor.Floor(t)
+    static member Floor(a:Tensor) = a.floor() // needed for FSharp.Core floor operator overload
 
-    static member Ceil (a:Tensor) =
+    member a.ceil() =
         let inline fRaw(a:RawTensor) = a.CeilT()
-        let inline fTensor(a) = Tensor.Ceil(a)
+        let inline fTensor(a:Tensor) = a.ceil()
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Ceil() = Tensor.Ceil(t)
+    static member Ceiling(a:Tensor) = a.ceil() // needed for FSharp.Core ceil operator overload
 
-    static member Round (a:Tensor) =
+    member a.round() =
         let inline fRaw(a:RawTensor) = a.RoundT()
-        let inline fTensor(a) = Tensor.Round(a)
+        let inline fTensor(a:Tensor) = a.round()
         let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
         let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Round() = Tensor.Round(t)
+    static member Round(a:Tensor) = a.round() // needed for FSharp.Core round operator overload
 
-    static member Abs (a:Tensor) =
+    member a.abs() =
         let inline fRaw(a:RawTensor) = a.AbsT()
-        let inline fTensor(a) = Tensor.Abs(a)
-        let inline dfTensorFwd(cp,ap,ad) = ad * Tensor.Sign(ap)
+        let inline fTensor(a:Tensor) = a.abs()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
         let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Abs() = Tensor.Abs(t)
+    static member Abs(a:Tensor) = a.abs() // needed for FSharp.Core abs operator overload
 
-    static member Relu (a:Tensor) =
+    member a.relu() =
         let inline fRaw(a:RawTensor) = a.ReluT()
-        let inline fTensor(a) = Tensor.Relu(a)
-        let inline dfTensorFwd(cp,ap,ad) = let sap = Tensor.Sign(ap) in ad * Tensor.Abs(sap) * (1. + sap) / 2.
+        let inline fTensor(a:Tensor) = a.relu()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = let sap = ap.sign() in ad * sap.abs() * (1. + sap) / 2.
         let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Relu() = Tensor.Relu(t)
 
-    static member LeakyRelu (a:Tensor, ?negativeSlope:float) =
+    member a.leakyRelu(?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
         Tensor.Create(0.).max(a) + negativeSlope * Tensor.Create(0.).min(a)
-    member t.LeakyRelu() = Tensor.LeakyRelu(t)
-    member t.LeakyRelu(negativeSlope) = Tensor.LeakyRelu(t, negativeSlope)
 
-    static member Sigmoid (a:Tensor) =
+    member a.sigmoid() =
         let inline fRaw(a:RawTensor) = a.SigmoidT()
-        let inline fTensor(a) = Tensor.Sigmoid(a)
+        let inline fTensor(a:Tensor) = a.sigmoid()
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
         let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sigmoid() = Tensor.Sigmoid(t)
 
-    static member Exp (a:Tensor) =
+    member a.exp() =
         let inline fRaw(a:RawTensor) = a.ExpT()
-        let inline fTensor(a) = Tensor.Exp(a)
+        let inline fTensor(a:Tensor) = a.exp()
         let inline dfTensorFwd(cp,ap,ad) = ad * cp
         let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Exp() = Tensor.Exp(t)
+    static member Exp(a:Tensor) = a.exp() // needed for FSharp.Core exp operator overload
 
-    static member Log (a:Tensor) =
+    member a.log() =
         let inline fRaw(a:RawTensor) = a.LogT()
-        let inline fTensor(a) = Tensor.Log(a)
+        let inline fTensor(a:Tensor) = a.log()
         let inline dfTensorFwd(cp,ap,ad) = ad / ap
         let inline dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Log() = Tensor.Log(t)
+    static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
 
-    static member Log10 (a:Tensor) =
+    member a.log10() =
         let inline fRaw(a:RawTensor) = a.Log10T()
-        let inline fTensor(a) = Tensor.Log10(a)
+        let inline fTensor(a:Tensor) = a.log10()
         let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
         let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Log10() = Tensor.Log10(t)
 
-    static member Sqrt (a:Tensor) =
+    member a.sqrt() =
         let inline fRaw(a:RawTensor) = a.SqrtT()
-        let inline fTensor(a) = Tensor.Sqrt(a)
+        let inline fTensor(a:Tensor) = a.sqrt()
         let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
         let inline dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sqrt() = Tensor.Sqrt(t)
+    static member Sqrt(a:Tensor) = a.sqrt() // needed for FSharp.Core sqrt operator overload
 
-    static member Sin (a:Tensor) =
+    member a.sin() =
         let inline fRaw(a:RawTensor) = a.SinT()
-        let inline fTensor(a) = Tensor.Sin(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cos(ap)
+        let inline fTensor(a:Tensor) = a.sin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
         let inline dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sin() = Tensor.Sin(t)
+    static member Sin(a:Tensor) = a.sin() // needed for FSharp.Core sin operator overload
 
-    static member Cos (a:Tensor) =
+    member a.cos() =
         let inline fRaw(a:RawTensor) = a.CosT()
-        let inline fTensor(a) = Tensor.Cos(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = -ad * Tensor.Sin(ap)
+        let inline fTensor(a:Tensor) = a.cos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
         let inline dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Cos() = Tensor.Cos(t)
+    static member Cos(a:Tensor) = a.cos() // needed for FSharp.Core cos operator overload
 
-    static member Tan (a:Tensor) =
+    member a.tan() =
         let inline fRaw(a:RawTensor) = a.TanT()
-        let inline fTensor(a) = Tensor.Tan(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = let cosap = Tensor.Cos(ap) in ad / (cosap * cosap)
+        let inline fTensor(a:Tensor) = a.tan()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
         let inline dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Tan() = Tensor.Tan(t)
+    static member Tan(a:Tensor) = a.tan() // needed for FSharp.Core tan operator overload
 
-    static member Sinh (a:Tensor) =
+    member a.sinh() =
         let inline fRaw(a:RawTensor) = a.SinhT()
-        let inline fTensor(a) = Tensor.Sinh(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Cosh(ap)
+        let inline fTensor(a:Tensor) = a.sinh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
         let inline dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Sinh() = Tensor.Sinh(t)
+    static member Sinh(a:Tensor) = a.sinh() // needed for FSharp.Core sinh operator overload
 
-    static member Cosh (a:Tensor) =
+    member a.cosh() =
         let inline fRaw(a:RawTensor) = a.CoshT()
-        let inline fTensor(a) = Tensor.Cosh(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * Tensor.Sinh(ap)
+        let inline fTensor(a:Tensor) = a.cosh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
         let inline dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Cosh() = Tensor.Cosh(t)
+    static member Cosh(a:Tensor) = a.cosh() // needed for FSharp.Core cosh operator overload
 
-    static member Tanh (a:Tensor) =
+    member a.tanh() =
         let inline fRaw(a:RawTensor) = a.TanhT()
-        let inline fTensor(a) = Tensor.Tanh(a)
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = let coshap = Tensor.Cosh(ap) in ad / (coshap * coshap)
+        let inline fTensor(a:Tensor) = a.tanh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
         let inline dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Tanh() = Tensor.Tanh(t)
+    static member Tanh(a:Tensor) = a.tanh() // needed for FSharp.Core tanh operator overload
 
-    static member Asin (a:Tensor) =
+    member a.asin() =
         let inline fRaw(a:RawTensor) = a.AsinT()
-        let inline fTensor(a) = Tensor.Asin(a)
-        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / Tensor.Sqrt(1. - ap*ap)
+        let inline fTensor(a:Tensor) = a.asin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
         let inline dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Asin() = Tensor.Asin(t)
+    static member Asin(a:Tensor) = a.asin() // needed for FSharp.Core asin operator overload
 
-    static member Acos (a:Tensor) =
+    member a.acos() =
         let inline fRaw(a:RawTensor) = a.AcosT()
-        let inline fTensor(a) = Tensor.Acos(a)
-        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / Tensor.Sqrt(1. - ap*ap)
+        let inline fTensor(a:Tensor) = a.acos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
         let inline dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Acos() = Tensor.Acos(t)
+    static member Acos(a:Tensor) = a.acos() // needed for FSharp.Core acos operator overload
 
-    static member Atan (a:Tensor) =
+    member a.atan() =
         let inline fRaw(a:RawTensor) = a.AtanT()
-        let inline fTensor(a) = Tensor.Atan(a)
+        let inline fTensor(a:Tensor) = a.atan()
         let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
         let inline dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.Atan() = Tensor.Atan(t)
+    static member Atan(a:Tensor) = a.atan() // needed for FSharp.Core atan operator overload
 
     member a.addSlice(location:seq<int>, b:Tensor) =
         if not (shapeContains a.Shape b.Shape) then failwithf "Expecting a.Shape to contain b.Shape, received %A, %A" a.Shape b.Shape
@@ -760,16 +755,15 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    static member Softmax(a:Tensor, dim:int) =
+    member a.softmax(dim:int) =
         if dim < 0 || dim >= a.Dim then failwithf "Expecting 0 <= dim < a.Dim, received %A, %A" dim a.Dim
-        let e = (a - a.max().NoDiff()).Exp()
+        let e = (a - a.max().NoDiff()).exp()
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.Shape.[dim])
         e / esum
-    member t.Softmax(dim:int) = Tensor.Softmax(t, dim)
 
-    static member MSELoss(a:Tensor, b:Tensor) = let z = a - b in (z * z).mean()
+    member a.mseLoss(b:Tensor) = let z = a - b in (z * z).mean()
 
-    static member Conv1D(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+    member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
@@ -778,16 +772,16 @@ type Tensor =
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
         let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
-        let inline fTensor(a,b) = Tensor.Conv1D(a, b, stride, padding)
-        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv1D(ad, bp, stride, padding) + Tensor.Conv1D(ap, bd, stride, padding)
-        let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv1D(ad, b, stride, padding)
-        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv1D(a, bd, stride, padding)
+        let inline fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
         let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
         let inline dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
         let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    static member Conv2D(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) =
+    member a.conv2d(b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) =
         let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
         let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
         let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
@@ -795,34 +789,33 @@ type Tensor =
         if dilation.[0] > 1 || dilation.[1] > 1 then
             b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
         let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
-        let inline fTensor(a,b) = Tensor.Conv2D(a, b, stride, padding)
-        let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = Tensor.Conv2D(ad, bp, stride, padding) + Tensor.Conv2D(ap, bd, stride, padding)
-        let inline dfTensorFwdTC(cp,ap,ad) = Tensor.Conv2D(ad, b, stride, padding)
-        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.Conv2D(a, bd, stride, padding)
+        let inline fTensor(a:Tensor,b) = a.conv2d(b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, stride, padding) + ap.conv2d(bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, stride, padding)
         let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, stride, padding)
         let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, stride, padding)
         let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    static member Conv2D(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+    member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
-        Tensor.Conv2D(a, b, [|stride; stride|], [|padding; padding|], [|dilation; dilation|])
+        a.conv2d(b, [|stride; stride|], [|padding; padding|], [|dilation; dilation|])
 
-    static member Conv2D(a:Tensor, b:Tensor) =
-        Tensor.Conv2D(a, b, [|1; 1|], [|0; 0|], [|1; 1|])
+    member a.conv2d(b:Tensor) = a.conv2d(b, [1; 1], [0; 0], [1; 1])
 
-    member t.Reverse(?value:Tensor, ?zeroDerivatives:bool) =
+    member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (Tensor.OnesLike(t))
         let zeroDerivatives = defaultArg zeroDerivatives true
         if value.Shape <> t.Shape then failwithf "Expecting an adjoint value of shape %A, but received of shape %A" t.Shape value.Shape
-        t.ReverseReset(zeroDerivatives)
-        t.ReversePush(value)
+        t.reverseReset(zeroDerivatives)
+        t.reversePush(value)
 
-    member inline t.Backward(value) = t.Reverse(value)
+    member inline t.backward(value) = t.reverse(value)
 
-    member t.ReverseReset(zeroDerivatives:bool) =
+    member t.reverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
             match ts with
             | [] -> ()
@@ -924,7 +917,7 @@ type Tensor =
                 | _ -> reset tt
         reset [t]
 
-    member t.ReversePush(value:Tensor) =
+    member t.reversePush(value:Tensor) =
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with
             | [] -> ()
@@ -1001,7 +994,7 @@ type Tensor =
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
                                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                                let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                let mutable c = d.conv1d(b, padding=kernelLength-1)
                                 if padding > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
@@ -1013,7 +1006,7 @@ type Tensor =
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].view([|1; 1; tderivative.Shape.[2]|])
-                                    let c = Tensor.Conv1D(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
+                                    let c = aa.conv1d(dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,b,stride,padding) ->
@@ -1036,7 +1029,7 @@ type Tensor =
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]]
                                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                                let mutable c = Tensor.Conv1D(d, b, padding=kernelLength-1)
+                                let mutable c = d.conv1d(b, padding=kernelLength-1)
                                 if padding > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.Shape.[2]-1-padding; 1]]
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
@@ -1063,7 +1056,7 @@ type Tensor =
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].view([|1; 1; tderivative.Shape.[2]|])
-                                    let c = Tensor.Conv1D(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
+                                    let c = aa.conv1d(dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
                             push ((bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,stride,padding) -> 
@@ -1089,7 +1082,7 @@ type Tensor =
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]; [0; tderivative.Shape.[3]-1; 1]]
                                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                let mutable c = Tensor.Conv2D(d, b, padding=[|kernelHeight-1; kernelWidth-1|])
+                                let mutable c = d.conv2d(b, padding=[|kernelHeight-1; kernelWidth-1|])
                                 if padding.[0] > 0 || padding.[1] > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.Shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.Shape.[3]-1-padding.[1]; 1]]
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
@@ -1101,7 +1094,7 @@ type Tensor =
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].view([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                    let c = Tensor.Conv2D(aa, dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
+                                    let c = aa.conv2d(dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv2DTTConst(a,b,stride,padding) ->
@@ -1127,7 +1120,7 @@ type Tensor =
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.Shape.[2]-1; 1]; [0; tderivative.Shape.[3]-1; 1]]
                                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                let mutable c = Tensor.Conv2D(d, b, padding=[|kernelHeight-1; kernelWidth-1|])
+                                let mutable c = d.conv2d(b, padding=[|kernelHeight-1; kernelWidth-1|])
                                 if padding.[0] > 0 || padding.[1] > 0 then
                                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.Shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.Shape.[3]-1-padding.[1]; 1]]
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.Shape.[2]-2*padding.[0]; c.Shape.[3]-2*padding.[1]|])
@@ -1157,7 +1150,7 @@ type Tensor =
                                 let d = tderivative.[n]
                                 for k=0 to outputChannels-1 do
                                     let dd = d.[k].view([|1; 1; tderivative.Shape.[2]; tderivative.Shape.[3]|])
-                                    let c = Tensor.Conv2D(aa, dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
+                                    let c = aa.conv2d(dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
                                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.Derivative, a) :: tt)
@@ -1188,19 +1181,19 @@ type Tensor =
                         | FloorT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | CeilT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
                         | RoundT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
-                        | AbsT(a) -> push ((t.Derivative * a.Primal.Sign(), a) :: tt)
-                        | ReluT(a) -> let sap = a.Primal.Sign() in push ((t.Derivative * (sap.Abs()) * (sap + 1.) / 2., a) :: tt)
+                        | AbsT(a) -> push ((t.Derivative * a.Primal.sign(), a) :: tt)
+                        | ReluT(a) -> let sap = a.Primal.sign() in push ((t.Derivative * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
                         | SigmoidT(a) -> push ((t.Derivative * t.Primal * (1. - t.Primal), a) :: tt)
                         | ExpT(a) -> push ((t.Derivative * t.Primal, a) :: tt)
                         | LogT(a) -> push ((t.Derivative / a.Primal, a) :: tt)
                         | Log10T(a) -> push ((t.Derivative / (a.Primal * log10Val), a) :: tt)
                         | SqrtT(a) -> push ((t.Derivative / (2. * t.Primal), a) :: tt)
-                        | SinT(a) -> push ((t.Derivative * (a.Primal.Cos()), a) :: tt)
-                        | CosT(a) -> push ((-t.Derivative * (a.Primal.Sin()), a) :: tt)
-                        | TanT(a) -> let cosap = a.Primal.Cos() in push ((t.Derivative / (cosap * cosap), a) :: tt)
-                        | SinhT(a) -> push ((t.Derivative * (a.Primal.Cosh()), a) :: tt)
-                        | CoshT(a) -> push ((t.Derivative * (a.Primal.Sinh()), a) :: tt)
-                        | TanhT(a) -> let coshap = a.Primal.Cosh() in push ((t.Derivative / (coshap * coshap), a) :: tt)
+                        | SinT(a) -> push ((t.Derivative * (a.Primal.cos()), a) :: tt)
+                        | CosT(a) -> push ((-t.Derivative * (a.Primal.sin()), a) :: tt)
+                        | TanT(a) -> let cosap = a.Primal.cos() in push ((t.Derivative / (cosap * cosap), a) :: tt)
+                        | SinhT(a) -> push ((t.Derivative * (a.Primal.cosh()), a) :: tt)
+                        | CoshT(a) -> push ((t.Derivative * (a.Primal.sinh()), a) :: tt)
+                        | TanhT(a) -> let coshap = a.Primal.cosh() in push ((t.Derivative / (coshap * coshap), a) :: tt)
                         | AsinT(a) -> push ((t.Derivative / Tensor.Sqrt(1. - a.Primal*a.Primal), a) :: tt)
                         | AcosT(a) -> push ((-t.Derivative / Tensor.Sqrt(1. - a.Primal*a.Primal), a) :: tt)
                         | AtanT(a) -> push ((t.Derivative / (1. + a.Primal*a.Primal), a) :: tt)
