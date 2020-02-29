@@ -13,6 +13,7 @@ type DiffSharp =
     static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)
     static member randLike(a:Tensor, ?shape:seq<int>) = a.randLike(?shape=shape)
     static member randnLike(a:Tensor, ?shape:seq<int>) = a.randnLike(?shape=shape)
+    static member clone(a:Tensor) = a.clone()
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
     static member gt(a:Tensor, b:Tensor) = a.gt(b)
     static member le(a:Tensor, b:Tensor) = a.le(b)
