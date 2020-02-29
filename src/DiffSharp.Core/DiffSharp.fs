@@ -75,11 +75,11 @@ type DiffSharp with
     static member nest(level) = GlobalNestingLevel.Set(level)
     static member nestReset() = GlobalNestingLevel.Reset()
     static member nestNext() = GlobalNestingLevel.Next() |> ignore
-    static member primal (tensor:Tensor) = tensor.Primal
-    static member derivative (tensor:Tensor) = tensor.Derivative
+    static member primal (tensor:Tensor) = tensor.primal
+    static member derivative (tensor:Tensor) = tensor.derivative
     static member primalDerivative tensor = tensor |> DiffSharp.primal, tensor |> DiffSharp.derivative
-    static member makeForward (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.ForwardDiff(derivative, tag)
-    static member makeReverse (tag:uint32) (tensor:Tensor) = tensor.ReverseDiff(tag)
+    static member makeForward (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
+    static member makeReverse (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverseProp (value:Tensor) (tensor:Tensor) = tensor |> DiffSharp.reverseReset; tensor |> DiffSharp.reversePush value
