@@ -110,23 +110,9 @@ type Tensor =
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
 
-    static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-
-    static member Ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-
-    static member Random(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-
-    static member RandomNormal(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-
-    static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
-
     member t.Zero() = Tensor(t.primalRaw.Zero())
     member t.CreateLike(value) = Tensor(t.primalRaw.Create(value))
+
 
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
@@ -635,7 +621,7 @@ type Tensor =
 
     member a.leakyRelu(?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
-        Tensor.Create(0.).max(a) + negativeSlope * Tensor.Create(0.).min(a)
+        let zeros = a.zerosLike() in zeros.max(a) + negativeSlope * zeros.min(a)
 
     member a.sigmoid() =
         let inline fRaw(a:RawTensor) = a.SigmoidT()
@@ -3736,11 +3722,3 @@ type Tensor with
         let i5max   = i5
         let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
         t.GetSlice(bounds)
-
-[<RequireQualifiedAccess>]
-module Tensor =
-    let create (count:int) (value:float32) = Tensor.Create(Array.create count value)
-    let zeroCreate (count:int) = Tensor.Create(Array.zeroCreate count)
-    let init (count:int) (initializer:int->float32) = Tensor.Create(Array.init count initializer)
-    let shape (t:Tensor) = t.shape
-    let dim (t:Tensor) = t.dim

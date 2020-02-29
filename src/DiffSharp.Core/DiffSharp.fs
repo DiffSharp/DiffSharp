@@ -4,7 +4,11 @@ open DiffSharp.Util
 
 // Tensor operations
 type DiffSharp =
-    static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
     static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)
     static member randLike(a:Tensor, ?shape:seq<int>) = a.randLike(?shape=shape)

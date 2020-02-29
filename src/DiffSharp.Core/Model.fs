@@ -51,8 +51,8 @@ type Model() =
 
 type Linear(inFeatures, outFeatures) =
     inherit Model()
-    let w = Tensor.RandomNormal([inFeatures; outFeatures])
-    let b = Tensor.RandomNormal([outFeatures])
+    let w = dsharp.randn([inFeatures; outFeatures])
+    let b = dsharp.randn([outFeatures])
     do base.AddParameters(["weight", w; "bias", b])
     override l.Forward(value) =
         dsharp.matmul(value, l.Parameters.["weight"])
