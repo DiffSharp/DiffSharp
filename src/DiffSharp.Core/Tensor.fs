@@ -59,7 +59,7 @@ type Tensor =
         if t.shape = derivative.shape then TensorF(t, derivative, tag) else failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        TensorR(t, ref (t.Zero()), NewT, ref 0u, tag)
+        TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
     member t.noDiff() = Tensor(t.primalRaw)
     member t.shape = t.primalRaw.Shape
     member t.dim = t.primalRaw.Dim
@@ -109,10 +109,9 @@ type Tensor =
     member a.randnLike(?shape:seq<int>) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
-
-    member t.Zero() = Tensor(t.primalRaw.Zero())
-    member t.CreateLike(value) = Tensor(t.primalRaw.Create(value))
-
+    member t.zeroLike() = Tensor(t.primalRaw.Zero())
+    member t.oneLike() = Tensor(t.primalRaw.One())
+    member t.newLike(value) = Tensor(t.primalRaw.Create(value))
 
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
@@ -135,7 +134,7 @@ type Tensor =
             TensorF(cp,cd,at)
         | TensorR(ap,_,_,_,at) ->
             let cp = ap.extend(shape)
-            TensorR(cp, ref (a.Zero()), MakeTofT0(a), ref 0u, at)
+            TensorR(cp, ref (a.zeroLike()), MakeTofT0(a), ref 0u, at)
 
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
@@ -148,7 +147,7 @@ type Tensor =
         match t with
         | Tensor(ap) -> Tensor(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
-        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.Zero()), SliceT(t, fullBounds), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
 
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
@@ -167,39 +166,39 @@ type Tensor =
             TensorF(Tensor.stack(ap), Tensor.stack(ad), at)
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
-            let cp = Tensor.stack(ap) in TensorR(cp, ref (cp.Zero()), StackTs(tensors), ref 0u, at)
+            let cp = Tensor.stack(ap) in TensorR(cp, ref (cp.zeroLike()), StackTs(tensors), ref 0u, at)
 
     member a.unstack () =
         match a with
         | Tensor(ap) -> ap.UnstackT() |> Array.map Tensor
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack()) (ad.unstack())
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.Zero()), UnstackT(a, i), ref 0u, at)) (ap.unstack())
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, i), ref 0u, at)) (ap.unstack())
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor(ap)           -> Tensor(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
-        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.Zero()), dfTensorRev(a), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
 
     static member inline OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
         | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
+        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
         | TensorF(ap,ad,at),    Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
-        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
-        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
-        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, ref (a.Zero()), dfTensorRevTT(a,b), ref 0u, at)
-        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.Zero()), dfTensorRevTC(a,b), ref 0u, at)
-        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.Zero()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, ref (a.zeroLike()), dfTensorRevTT(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     static member (+) (a:Tensor, b:Tensor) =
@@ -259,10 +258,10 @@ type Tensor =
             else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape                
         // TODO: implement general broadcasting additions
         else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape
-    static member (+) (a:Tensor, b) = a + a.CreateLike(b)
-    static member (+) (a, b:Tensor) = b.CreateLike(a) + b
+    static member (+) (a:Tensor, b) = a + a.newLike(b)
+    static member (+) (a, b:Tensor) = b.newLike(a) + b
     member t1.add(t2:Tensor) = t1 + t2
-    member t1.add(t2) = t1 + t1.CreateLike(t2)
+    member t1.add(t2) = t1 + t1.newLike(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -296,10 +295,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.shape b.shape
-    static member (-) (a:Tensor, b) = a - a.CreateLike(b)
-    static member (-) (a, b:Tensor) = b.CreateLike(a) - b
+    static member (-) (a:Tensor, b) = a - a.newLike(b)
+    static member (-) (a, b:Tensor) = b.newLike(a) - b
     member t1.sub(t2:Tensor) = t1 - t2
-    member t1.sub(t2) = t1 - t1.CreateLike(t2)
+    member t1.sub(t2) = t1 - t1.newLike(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -334,10 +333,10 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         // TODO: implement general broadcasting?
         else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape
-    static member (*) (a:Tensor, b) = a * a.CreateLike(b)
-    static member (*) (a, b:Tensor) = b.CreateLike(a) * b
+    static member (*) (a:Tensor, b) = a * a.newLike(b)
+    static member (*) (a, b:Tensor) = b.newLike(a) * b
     member t1.mul(t2:Tensor) = t1 * t2
-    member t1.mul(t2) = t1 * t1.CreateLike(t2)
+    member t1.mul(t2) = t1 * t1.newLike(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -371,10 +370,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.shape b.shape
-    static member (/) (a:Tensor, b) = a / a.CreateLike(b)
-    static member (/) (a, b:Tensor) = b.CreateLike(a) / b
+    static member (/) (a:Tensor, b) = a / a.newLike(b)
+    static member (/) (a, b:Tensor) = b.newLike(a) / b
     member t1.div(t2:Tensor) = t1 / t2
-    member t1.div(t2) = t1 / t1.CreateLike(t2)
+    member t1.div(t2) = t1 / t1.newLike(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -408,10 +407,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.shape b.shape
-    static member Pow (a:Tensor, b) = a ** a.CreateLike(b)
-    static member Pow (a, b:Tensor) = b.CreateLike(a) ** b
+    static member Pow (a:Tensor, b) = a ** a.newLike(b)
+    static member Pow (a, b:Tensor) = b.newLike(a) ** b
     member t1.pow(t2:Tensor) = t1 ** t2
-    member t1.pow(t2) = t1 ** t1.CreateLike(t2)
+    member t1.pow(t2) = t1 ** t1.newLike(t2)
 
     member a.matmul (b:Tensor) =
         if a.dim <> 2 || b.dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.shape b.shape
@@ -578,7 +577,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    static member Sign(a:Tensor) = a.sign() // needed for FSharp.Core sign operator overload
+    // static member Sign(a:Tensor) = a.sign() // not supported becaose FSharp.Core sign operator returns int
 
     member a.floor() =
         let inline fRaw(a:RawTensor) = a.FloorT()
@@ -652,6 +651,7 @@ type Tensor =
         let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
         let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+    static member Log10(a:Tensor) = a.log10() // needed for FSharp.Core log10 operator overload
 
     member a.sqrt() =
         let inline fRaw(a:RawTensor) = a.SqrtT()
@@ -814,7 +814,7 @@ type Tensor =
             | t :: tt ->
                 match t with
                 | TensorR(_,_,o,_,_) ->
-                    if zeroDerivatives then t.derivative <- t.Zero()
+                    if zeroDerivatives then t.derivative <- t.zeroLike()
                     t.fanout <- t.fanout + 1u
                     if t.fanout = 1u then
                         match o with
@@ -1153,7 +1153,7 @@ type Tensor =
                         | UnstackT(a,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=0 then i else 0), t.derivative.unsqueeze(0))
-                            push ((a.Zero(), a) :: tt)
+                            push ((a.zeroLike(), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
@@ -1165,7 +1165,7 @@ type Tensor =
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
-                            push ((a.Zero(), a) :: tt)
+                            push ((a.zeroLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.derivative, a) :: tt)
                         | AddTConstTSlice(location, b) -> push ((t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)

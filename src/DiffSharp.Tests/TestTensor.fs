@@ -1765,3 +1765,80 @@ type TestTensor () =
         Assert.AreEqual(t1DepthCorrect, t1Depth)
         Assert.AreEqual(t2DepthCorrect, t2Depth)
         Assert.AreEqual(t3DepthCorrect, t3Depth)
+
+    [<Test>]
+    member this.FSharpCoreOps () =
+        let t = dsharp.tensor([0.1; 0.2; 0.3])
+        let add = t + t
+        let addCorrect = t.add(t)
+        let sub = t - t
+        let subCorrect = t.sub(t)
+        let mul = t * t
+        let mulCorrect = t.mul(t)
+        let div = t / t
+        let divCorrect = t.div(t)
+        let pow = t ** t
+        let powCorrect = t.pow(t)
+        let neg = -t
+        let negCorrect = t.neg()
+        // sign t not supported because FSharp.Core sign operator returns int
+        let floor = floor t
+        let floorCorrect = t.floor()
+        let ceil = ceil t
+        let ceilCorrect = t.ceil()
+        let round = round t
+        let roundCorrect = t.round()
+        let abs = abs t
+        let absCorrect = t.abs()
+        let exp = exp t
+        let expCorrect = t.exp()
+        let log = log t
+        let logCorrect = t.log()
+        let log10 = log10 t
+        let log10Correct = t.log10()
+        let sqrt = sqrt t
+        let sqrtCorrect = t.sqrt()
+        let sin = sin t
+        let sinCorrect = t.sin()
+        let cos = cos t
+        let cosCorrect = t.cos()
+        let tan = tan t
+        let tanCorrect = t.tan()
+        let sinh = sinh t
+        let sinhCorrect = t.sinh()
+        let cosh = cosh t
+        let coshCorrect = t.cosh()
+        let tanh = tanh t
+        let tanhCorrect = t.tanh()
+        let asin = asin t
+        let asinCorrect = t.asin()
+        let acos = acos t
+        let acosCorrect = t.acos()
+        let atan = atan t
+        let atanCorrect = t.atan()
+        
+        Assert.AreEqual(addCorrect, add)
+        Assert.AreEqual(subCorrect, sub)
+        Assert.AreEqual(mulCorrect, mul)
+        Assert.AreEqual(divCorrect, div)
+        Assert.AreEqual(powCorrect, pow)
+        Assert.AreEqual(negCorrect, neg)
+        Assert.AreEqual(floorCorrect, floor)
+        Assert.AreEqual(ceilCorrect, ceil)
+        Assert.AreEqual(roundCorrect, round)
+        Assert.AreEqual(absCorrect, abs)
+        Assert.AreEqual(expCorrect, exp)
+        Assert.AreEqual(logCorrect, log)
+        Assert.AreEqual(log10Correct, log10)
+        Assert.AreEqual(sqrtCorrect, sqrt)
+        Assert.AreEqual(sinCorrect, sin)
+        Assert.AreEqual(cosCorrect, cos)
+        Assert.AreEqual(tanCorrect, tan)
+        Assert.AreEqual(sinhCorrect, sinh)
+        Assert.AreEqual(coshCorrect, cosh)
+        Assert.AreEqual(tanhCorrect, tanh)
+        Assert.AreEqual(asinCorrect, asin)
+        Assert.AreEqual(acosCorrect, acos)
+        Assert.AreEqual(atanCorrect, atan)
+
+
