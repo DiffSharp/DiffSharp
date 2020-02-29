@@ -66,8 +66,18 @@ type Tensor =
     member t.nelement = t.primalRaw.Nelement
     member t.toArray() = t.primalRaw.ToArray()
     member t.toScalar() = t.primalRaw.ToValue()
-    member t.Zero() = Tensor(t.primalRaw.Zero())
-    member t.CreateLike(value) = Tensor(t.primalRaw.Create(value))
+    member t1.isSameDiffType(t2:Tensor) =
+        match t1, t2 with
+        | Tensor(_),  Tensor(_)  -> true
+        | Tensor(_),  TensorF(_) -> false
+        | Tensor(_),  TensorR(_) -> false
+        | TensorF(_), Tensor(_)  -> false
+        | TensorF(_), TensorF(_) -> true
+        | TensorF(_), TensorR(_) -> false
+        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), TensorF(_) -> false
+        | TensorR(_), TensorR(_) -> true
+
     override t.Equals(other) =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
@@ -85,27 +95,20 @@ type Tensor =
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
-    member t1.IsSameDiffType(t2:Tensor) =
-        match t1, t2 with
-        | Tensor(_),  Tensor(_)  -> true
-        | Tensor(_),  TensorF(_) -> false
-        | Tensor(_),  TensorR(_) -> false
-        | TensorF(_), Tensor(_)  -> false
-        | TensorF(_), TensorF(_) -> true
-        | TensorF(_), TensorR(_) -> false
-        | TensorR(_), Tensor(_)  -> false
-        | TensorR(_), TensorF(_) -> false
-        | TensorR(_), TensorR(_) -> true
-
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.primalRaw.ToValue()
-    static member ZerosLike(tensor:Tensor) = Tensor(tensor.primalRaw.Zeros(tensor.shape))
-    static member ZerosLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.primalRaw.Zeros(shape |> Array.ofSeq))
-    static member OnesLike(tensor:Tensor) = Tensor(tensor.primalRaw.Ones(tensor.shape))
-    static member OnesLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.primalRaw.Ones(shape |> Array.ofSeq))
-    static member RandomLike(tensor:Tensor) = Tensor(tensor.primalRaw.Random(tensor.shape))
-    static member RandomLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.primalRaw.Random(shape |> Array.ofSeq))
-    static member RandomNormalLike(tensor:Tensor) = Tensor(tensor.primalRaw.RandomNormal(tensor.shape))
-    static member RandomNormalLike(tensor:Tensor, shape:seq<int>) = Tensor(tensor.primalRaw.RandomNormal(shape |> Array.ofSeq))
+
+    member a.zerosLike(?shape:seq<int>) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.Zeros(shape |> Array.ofSeq))
+    member a.onesLike(?shape:seq<int>) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.Ones(shape |> Array.ofSeq))
+    member a.randLike(?shape:seq<int>) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.Random(shape |> Array.ofSeq))
+    member a.randnLike(?shape:seq<int>) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
 
     static member Zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) =
         Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
@@ -121,6 +124,9 @@ type Tensor =
 
     static member Create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
         Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    member t.Zero() = Tensor(t.primalRaw.Zero())
+    member t.CreateLike(value) = Tensor(t.primalRaw.Create(value))
 
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
@@ -247,7 +253,7 @@ type Tensor =
                 let inline fTensor(a,b) = a + b
                 let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
                 let inline dfTensorFwdTC(cp,ap,ad) = ad
-                let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp) + bd
+                let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike() + bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
                 let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
                 let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
@@ -258,7 +264,7 @@ type Tensor =
                 let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
                 let inline fTensor(a,b) = a + b
                 let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
-                let inline dfTensorFwdTC(cp,ap,ad) = ad + Tensor.ZerosLike(cp)
+                let inline dfTensorFwdTC(cp:Tensor,ap,ad) = ad + cp.zerosLike()
                 let inline dfTensorFwdCT(cp,bp,bd) = bd
                 let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
                 let inline dfTensorRevTC(a,b) = AddT2ConstT1(a)
@@ -460,7 +466,7 @@ type Tensor =
             let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
             sBounds.[dim, 1] <- 0
             sBounds.[dim, 2] <- 1
-            let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
+            let mutable s = a.zerosLike().GetSlice(sBounds)
             for i=0 to a.shape.[dim]-1 do
                 sBounds.[dim,0] <- i
                 sBounds.[dim,1] <- i
@@ -487,8 +493,8 @@ type Tensor =
         let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
         sBounds.[dim, 1] <- 0
         sBounds.[dim, 2] <- 1
-        let mutable s = Tensor.ZerosLike(a).GetSlice(sBounds)
-        let mutable sSquare = Tensor.ZerosLike(a).GetSlice(sBounds)
+        let mutable s = a.zerosLike().GetSlice(sBounds)
+        let mutable sSquare = a.zerosLike().GetSlice(sBounds)
         let n = a.shape.[dim]
         for i=0 to n-1 do
             sBounds.[dim,0] <- i
@@ -562,7 +568,7 @@ type Tensor =
         if a.shape.[dim] <> 1 then failwithf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.shape dim
         let newShape = a.shape |> Array.copy
         newShape.[dim] <- times
-        let mutable ret = Tensor.ZerosLike(a, newShape)
+        let mutable ret = a.zerosLike(newShape)
         let location = Array.create a.dim 0
         for i=0 to times-1 do
             location.[dim] <- i
@@ -583,7 +589,7 @@ type Tensor =
     member a.sign() =
         let inline fRaw(a:RawTensor) = a.SignT()
         let inline fTensor(a:Tensor) = a.sign()
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     static member Sign(a:Tensor) = a.sign() // needed for FSharp.Core sign operator overload
@@ -591,7 +597,7 @@ type Tensor =
     member a.floor() =
         let inline fRaw(a:RawTensor) = a.FloorT()
         let inline fTensor(a:Tensor) = a.floor()
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     static member Floor(a:Tensor) = a.floor() // needed for FSharp.Core floor operator overload
@@ -599,7 +605,7 @@ type Tensor =
     member a.ceil() =
         let inline fRaw(a:RawTensor) = a.CeilT()
         let inline fTensor(a:Tensor) = a.ceil()
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     static member Ceiling(a:Tensor) = a.ceil() // needed for FSharp.Core ceil operator overload
@@ -607,7 +613,7 @@ type Tensor =
     member a.round() =
         let inline fRaw(a:RawTensor) = a.RoundT()
         let inline fTensor(a:Tensor) = a.round()
-        let inline dfTensorFwd(cp,ap,ad) = Tensor.ZerosLike(cp)
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     static member Round(a:Tensor) = a.round() // needed for FSharp.Core round operator overload
@@ -749,7 +755,7 @@ type Tensor =
         let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
         let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp,bd) = ad.addSlice(location, bd)
         let inline dfTensorFwdTC(cp,ap,ad) = ad
-        let inline dfTensorFwdCT(cp,bp,bd) = Tensor.ZerosLike(cp).addSlice(location, bd)
+        let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
         let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
         let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
@@ -807,7 +813,7 @@ type Tensor =
     member a.conv2d(b:Tensor) = a.conv2d(b, [1; 1], [0; 0], [1; 1])
 
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
-        let value = defaultArg value (Tensor.OnesLike(t))
+        let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
         if value.shape <> t.shape then failwithf "Expecting an adjoint value of shape %A, but received of shape %A" t.shape value.shape
         t.reverseReset(zeroDerivatives)
@@ -989,7 +995,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride|])
                             let bFlipped = b.primal.flip([|2|])
                             // propagate to a
-                            let mutable aderivative = Tensor.ZerosLike(a)
+                            let mutable aderivative = a.zerosLike()
                             for k=0 to outputChannels-1 do
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]]
@@ -1000,7 +1006,7 @@ type Tensor =
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
                                 aderivative <- aderivative + c
                             // propagate to b
-                            let mutable bderivative = Tensor.ZerosLike(b)
+                            let mutable bderivative = b.zerosLike()
                             for n=0 to batchSize-1 do
                                 let aa = a.primal.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
@@ -1024,7 +1030,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride|])
                             let bFlipped = b.flip([|2|])
                             // propagate to a
-                            let mutable aderivative = Tensor.ZerosLike(a)
+                            let mutable aderivative = a.zerosLike()
                             for k=0 to outputChannels-1 do
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]]
@@ -1050,7 +1056,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride|])
                             // let bFlipped = b.primal.flip([|2|])
                             // propagate to b
-                            let mutable bderivative = Tensor.ZerosLike(b)
+                            let mutable bderivative = b.zerosLike()
                             for n=0 to batchSize-1 do
                                 let aa = a.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
@@ -1077,7 +1083,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
                             let bFlipped = b.primal.flip([|2;3|])
                             // propagate to a
-                            let mutable aderivative = Tensor.ZerosLike(a)
+                            let mutable aderivative = a.zerosLike()
                             for k=0 to outputChannels-1 do
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]; [0; tderivative.shape.[3]-1; 1]]
@@ -1088,7 +1094,7 @@ type Tensor =
                                     c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.shape.[2]-2*padding.[0]; c.shape.[3]-2*padding.[1]|])
                                 aderivative <- aderivative + c
                             // propagate to b
-                            let mutable bderivative = Tensor.ZerosLike(b)
+                            let mutable bderivative = b.zerosLike()
                             for n=0 to batchSize-1 do
                                 let aa = a.primal.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
@@ -1115,7 +1121,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
                             let bFlipped = b.flip([|2;3|])
                             // propagate to a
-                            let mutable aderivative = Tensor.ZerosLike(a)
+                            let mutable aderivative = a.zerosLike()
                             for k=0 to outputChannels-1 do
                                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]; [0; tderivative.shape.[3]-1; 1]]
@@ -1144,7 +1150,7 @@ type Tensor =
                                 tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
                             // let bFlipped = b.primal.flip([|2;3|])
                             // propagate to b
-                            let mutable bderivative = Tensor.ZerosLike(b)
+                            let mutable bderivative = b.zerosLike()
                             for n=0 to batchSize-1 do
                                 let aa = a.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                                 let d = tderivative.[n]
@@ -1155,11 +1161,11 @@ type Tensor =
                             push ((bderivative, b) :: tt)
                         | NegT(a) -> push ((-t.derivative, a) :: tt)
                         | SumT(a) -> push ((t.derivative.extend(a.shape), a) :: tt)
-                        | SumT2Dim0(a) -> push ((Tensor.ZerosLike(a) + t.derivative, a) :: tt)
+                        | SumT2Dim0(a) -> push ((a.zerosLike() + t.derivative, a) :: tt)
                         | MakeTofT0(a) -> push ((t.derivative.sum(), a) :: tt)
                         | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.derivative.unstack()) |> Seq.toList) tt)
                         | UnstackT(a,i) -> 
-                            if a.derivative.dim = 0 then a.derivative <- Tensor.ZerosLike(a) + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=0 then i else 0), t.derivative.unsqueeze(0))
                             push ((a.Zero(), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
@@ -1171,16 +1177,16 @@ type Tensor =
                         | ViewT(a,aShape) -> push (((t.derivative.view(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
-                            if a.derivative.dim = 0 then a.derivative <- Tensor.ZerosLike(a) + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
                             push ((a.Zero(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.derivative, a) :: tt)
                         | AddTConstTSlice(location, b) -> push ((t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)
-                        | SignT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
-                        | FloorT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
-                        | CeilT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
-                        | RoundT(a) -> push ((Tensor.ZerosLike(a), a) :: tt)
+                        | SignT(a) -> push ((a.zerosLike(), a) :: tt)
+                        | FloorT(a) -> push ((a.zerosLike(), a) :: tt)
+                        | CeilT(a) -> push ((a.zerosLike(), a) :: tt)
+                        | RoundT(a) -> push ((a.zerosLike(), a) :: tt)
                         | AbsT(a) -> push ((t.derivative * a.primal.sign(), a) :: tt)
                         | ReluT(a) -> let sap = a.primal.sign() in push ((t.derivative * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
                         | SigmoidT(a) -> push ((t.derivative * t.primal * (1. - t.primal), a) :: tt)

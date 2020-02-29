@@ -30,7 +30,7 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.EventShape = [||]
     override d.Mean = (low + high) / 2.
     override d.Stddev = d.Range * d.Range / 12.
-    override d.Sample() = d.Low + Tensor.RandomLike(d.Low) * d.Range
+    override d.Sample() = d.Low + dsharp.randLike(d.Low) * d.Range
     override d.Logprob(value) = 
         if value.shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.shape
         let lb = d.Low.le(value)
@@ -46,7 +46,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.EventShape = [||]
     override d.Mean = mean
     override d.Stddev = stddev
-    override d.Sample() = d.Mean + Tensor.RandomNormalLike(d.Mean) * d.Stddev
+    override d.Sample() = d.Mean + dsharp.randnLike(d.Mean) * d.Stddev
     override d.Logprob(value) = 
         if value.shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.shape
         let v = value - d.Mean in -(v * v) / (2. * d.Variance) - (log d.Stddev) - logSqrt2Pi
@@ -66,8 +66,8 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
         probs
     override d.BatchShape = if d.Probs.dim = 1 then [||] else [|d.Probs.shape.[0]|]
     override d.EventShape = [||]
-    override d.Mean = Tensor.OnesLike(d.Probs) * System.Double.NaN
-    override d.Stddev = Tensor.OnesLike(d.Probs) * System.Double.NaN
+    override d.Mean = dsharp.onesLike(d.Probs) * System.Double.NaN
+    override d.Stddev = dsharp.onesLike(d.Probs) * System.Double.NaN
     override d.Sample(numSamples) =
         Tensor(d.Probs.primalRaw.RandomMultinomial(numSamples))
     override d.Sample() = d.Sample(1)

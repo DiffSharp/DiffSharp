@@ -5,6 +5,10 @@ open DiffSharp.Util
 // Tensor operations
 type DiffSharp =
     static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
+    static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)
+    static member randLike(a:Tensor, ?shape:seq<int>) = a.randLike(?shape=shape)
+    static member randnLike(a:Tensor, ?shape:seq<int>) = a.randnLike(?shape=shape)
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
     static member gt(a:Tensor, b:Tensor) = a.gt(b)
     static member le(a:Tensor, b:Tensor) = a.le(b)
@@ -98,9 +102,9 @@ type DiffSharp with
     static member jacobianTv f x v = DiffSharp.jacobianTv' f x v |> snd
     static member gradv f x v = DiffSharp.jacobianv f x v
     static member gradv' f x v = DiffSharp.jacobianv' f x v
-    static member diff' f x = DiffSharp.jacobianv' f x (x |> Tensor.OnesLike)
+    static member diff' f x = DiffSharp.jacobianv' f x (x |> DiffSharp.onesLike)
     static member diff f x = DiffSharp.diff' f x |> snd
-    static member grad' f x = let zp, r = DiffSharp.jacobianTv'' f x in zp, r (zp |> Tensor.OnesLike)
+    static member grad' f x = let zp, r = DiffSharp.jacobianTv'' f x in zp, r (zp |> DiffSharp.onesLike)
     static member grad f x = DiffSharp.grad' f x |> snd
 
 type dsharp = DiffSharp
