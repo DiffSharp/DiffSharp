@@ -161,6 +161,12 @@ type TestTensor () =
         Assert.AreEqual(a, v)
 
     [<Test>]
+    member this.TestTensorClone () =
+        let a = dsharp.randn([2;3])
+        let b = a.clone()
+        Assert.AreEqual(a, b)
+
+    [<Test>]
     member this.TestTensorToString () =
         let t0 = dsharp.tensor(2.)
         let t1 = dsharp.tensor([[2.]; [2.]])

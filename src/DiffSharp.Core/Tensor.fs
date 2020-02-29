@@ -109,9 +109,10 @@ type Tensor =
     member a.randnLike(?shape:seq<int>) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
-    member t.zeroLike() = Tensor(t.primalRaw.Zero())
-    member t.oneLike() = Tensor(t.primalRaw.One())
-    member t.newLike(value) = Tensor(t.primalRaw.Create(value))
+    member a.zeroLike() = Tensor(a.primalRaw.Zero())
+    member a.oneLike() = Tensor(a.primalRaw.One())
+    member a.newLike(value) = Tensor(a.primalRaw.Create(value))
+    member a.clone() = Tensor(a.primalRaw.Clone())
 
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
