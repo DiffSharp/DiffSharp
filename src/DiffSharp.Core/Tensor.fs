@@ -111,7 +111,7 @@ type Tensor =
         Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
     member a.zeroLike() = Tensor(a.primalRaw.Zero())
     member a.oneLike() = Tensor(a.primalRaw.One())
-    member a.newLike(value) = Tensor(a.primalRaw.Create(value))
+    member a.like(value) = Tensor(a.primalRaw.Create(value))
     member a.clone() = Tensor(a.primalRaw.Clone())
 
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
@@ -259,10 +259,10 @@ type Tensor =
             else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape                
         // TODO: implement general broadcasting additions
         else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape
-    static member (+) (a:Tensor, b) = a + a.newLike(b)
-    static member (+) (a, b:Tensor) = b.newLike(a) + b
+    static member (+) (a:Tensor, b) = a + a.like(b)
+    static member (+) (a, b:Tensor) = b.like(a) + b
     member t1.add(t2:Tensor) = t1 + t2
-    member t1.add(t2) = t1 + t1.newLike(t2)
+    member t1.add(t2) = t1 + t1.like(t2)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -296,10 +296,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot subtract Tensors with shapes %A, %A" a.shape b.shape
-    static member (-) (a:Tensor, b) = a - a.newLike(b)
-    static member (-) (a, b:Tensor) = b.newLike(a) - b
+    static member (-) (a:Tensor, b) = a - a.like(b)
+    static member (-) (a, b:Tensor) = b.like(a) - b
     member t1.sub(t2:Tensor) = t1 - t2
-    member t1.sub(t2) = t1 - t1.newLike(t2)
+    member t1.sub(t2) = t1 - t1.like(t2)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -334,10 +334,10 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         // TODO: implement general broadcasting?
         else failwithf "Cannot add Tensors with shapes %A, %A" a.shape b.shape
-    static member (*) (a:Tensor, b) = a * a.newLike(b)
-    static member (*) (a, b:Tensor) = b.newLike(a) * b
+    static member (*) (a:Tensor, b) = a * a.like(b)
+    static member (*) (a, b:Tensor) = b.like(a) * b
     member t1.mul(t2:Tensor) = t1 * t2
-    member t1.mul(t2) = t1 * t1.newLike(t2)
+    member t1.mul(t2) = t1 * t1.like(t2)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -371,10 +371,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot divide Tensors with shapes %A, %A" a.shape b.shape
-    static member (/) (a:Tensor, b) = a / a.newLike(b)
-    static member (/) (a, b:Tensor) = b.newLike(a) / b
+    static member (/) (a:Tensor, b) = a / a.like(b)
+    static member (/) (a, b:Tensor) = b.like(a) / b
     member t1.div(t2:Tensor) = t1 / t2
-    member t1.div(t2) = t1 / t1.newLike(t2)
+    member t1.div(t2) = t1 / t1.like(t2)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -408,10 +408,10 @@ type Tensor =
             let inline dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else failwithf "Cannot exponentiate Tensors with shapes %A, %A" a.shape b.shape
-    static member Pow (a:Tensor, b) = a ** a.newLike(b)
-    static member Pow (a, b:Tensor) = b.newLike(a) ** b
+    static member Pow (a:Tensor, b) = a ** a.like(b)
+    static member Pow (a, b:Tensor) = b.like(a) ** b
     member t1.pow(t2:Tensor) = t1 ** t2
-    member t1.pow(t2) = t1 ** t1.newLike(t2)
+    member t1.pow(t2) = t1 ** t1.like(t2)
 
     member a.matmul (b:Tensor) =
         if a.dim <> 2 || b.dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.shape b.shape
