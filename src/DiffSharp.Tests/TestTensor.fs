@@ -13,9 +13,9 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCreate0 () =
-        let t0 = Tensor.Create(1.)
-        let t0Shape = t0.Shape
-        let t0Dim = t0.Dim
+        let t0 = dsharp.tensor(1.)
+        let t0Shape = t0.shape
+        let t0Dim = t0.dim
         let t0ShapeCorrect = [||]
         let t0DimCorrect = 0
 
@@ -25,24 +25,24 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorCreate1 () =
         // create from double list
-        let t1 = Tensor.Create([1.; 2.; 3.])
+        let t1 = dsharp.tensor([1.; 2.; 3.])
         let t1ShapeCorrect = [|3|]
         let t1DimCorrect = 1
 
-        Assert.AreEqual(t1ShapeCorrect, t1.Shape)
-        Assert.AreEqual(t1DimCorrect, t1.Dim)
+        Assert.AreEqual(t1ShapeCorrect, t1.shape)
+        Assert.AreEqual(t1DimCorrect, t1.dim)
 
         // create from double[]
-        let t1Array = Tensor.Create([| 1.; 2.; 3. |])
+        let t1Array = dsharp.tensor([| 1.; 2.; 3. |])
 
-        Assert.AreEqual(t1ShapeCorrect, t1Array.Shape)
-        Assert.AreEqual(t1DimCorrect, t1Array.Dim)
+        Assert.AreEqual(t1ShapeCorrect, t1Array.shape)
+        Assert.AreEqual(t1DimCorrect, t1Array.dim)
 
         // create from seq<double>
-        let t1Seq = Tensor.Create(seq { 1.; 2.; 3. })
+        let t1Seq = dsharp.tensor(seq { 1.; 2.; 3. })
 
-        Assert.AreEqual(t1ShapeCorrect, t1Seq.Shape)
-        Assert.AreEqual(t1DimCorrect, t1Seq.Dim)
+        Assert.AreEqual(t1ShapeCorrect, t1Seq.shape)
+        Assert.AreEqual(t1DimCorrect, t1Seq.dim)
 
     [<Test>]
     member this.TestTensorCreate2 () =
@@ -53,120 +53,126 @@ type TestTensor () =
         let t2ValuesCorrect = array2D (List.map (List.map float32) t2Values)
 
         // create from double list list
-        let t2 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
-        Assert.AreEqual(t2ShapeCorrect, t2.Shape)
-        Assert.AreEqual(t2DimCorrect, t2.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2.ToArray())
+        let t2 = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
+        Assert.AreEqual(t2ShapeCorrect, t2.shape)
+        Assert.AreEqual(t2DimCorrect, t2.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2.toArray())
 
         // create from double array list
-        let t2ArrayList = Tensor.Create([[|1.; 2.; 3.|]; [|4.; 5.; 6.|]])
-        Assert.AreEqual(t2ShapeCorrect, t2ArrayList.Shape)
-        Assert.AreEqual(t2DimCorrect, t2ArrayList.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2ArrayList.ToArray())
+        let t2ArrayList = dsharp.tensor([[|1.; 2.; 3.|]; [|4.; 5.; 6.|]])
+        Assert.AreEqual(t2ShapeCorrect, t2ArrayList.shape)
+        Assert.AreEqual(t2DimCorrect, t2ArrayList.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArrayList.toArray())
 
         // create from double list array
-        let t2ListArray = Tensor.Create([| [1.; 2.; 3.]; [4.; 5.; 6.] |])
-        Assert.AreEqual(t2ShapeCorrect, t2ListArray.Shape)
-        Assert.AreEqual(t2DimCorrect, t2ListArray.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2ListArray.ToArray())
+        let t2ListArray = dsharp.tensor([| [1.; 2.; 3.]; [4.; 5.; 6.] |])
+        Assert.AreEqual(t2ShapeCorrect, t2ListArray.shape)
+        Assert.AreEqual(t2DimCorrect, t2ListArray.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ListArray.toArray())
 
         // create from double[][]
-        let t2ArrayArray = Tensor.Create([| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
-        Assert.AreEqual(t2ShapeCorrect, t2ArrayArray.Shape)
-        Assert.AreEqual(t2DimCorrect, t2ArrayArray.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2ArrayArray.ToArray())
+        let t2ArrayArray = dsharp.tensor([| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
+        Assert.AreEqual(t2ShapeCorrect, t2ArrayArray.shape)
+        Assert.AreEqual(t2DimCorrect, t2ArrayArray.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArrayArray.toArray())
 
         // create from double[,]
-        let t2Array2D = Tensor.Create(array2D [| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
-        Assert.AreEqual(t2ShapeCorrect, t2Array2D.Shape)
-        Assert.AreEqual(t2DimCorrect, t2Array2D.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2Array2D.ToArray())
+        let t2Array2D = dsharp.tensor(array2D [| [| 1.; 2.; 3. |]; [| 4.; 5.; 6.|] |])
+        Assert.AreEqual(t2ShapeCorrect, t2Array2D.shape)
+        Assert.AreEqual(t2DimCorrect, t2Array2D.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2Array2D.toArray())
 
         // create from seq<double[]>
-        let t2ArraySeq = Tensor.Create(seq { yield [| 1.; 2.; 3. |]; yield [| 4.; 5.; 6.|] })
-        Assert.AreEqual(t2ShapeCorrect, t2ArraySeq.Shape)
-        Assert.AreEqual(t2DimCorrect, t2ArraySeq.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2ArraySeq.ToArray())
+        let t2ArraySeq = dsharp.tensor(seq { yield [| 1.; 2.; 3. |]; yield [| 4.; 5.; 6.|] })
+        Assert.AreEqual(t2ShapeCorrect, t2ArraySeq.shape)
+        Assert.AreEqual(t2DimCorrect, t2ArraySeq.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2ArraySeq.toArray())
 
         // create from seq<seq<double>>
-        let t2SeqSeq = Tensor.Create(seq { seq { 1.; 2.; 3. }; seq { 4.; 5.; 6.} })
-        Assert.AreEqual(t2ShapeCorrect, t2SeqSeq.Shape)
-        Assert.AreEqual(t2DimCorrect, t2SeqSeq.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2SeqSeq.ToArray())
+        let t2SeqSeq = dsharp.tensor(seq { seq { 1.; 2.; 3. }; seq { 4.; 5.; 6.} })
+        Assert.AreEqual(t2ShapeCorrect, t2SeqSeq.shape)
+        Assert.AreEqual(t2DimCorrect, t2SeqSeq.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2SeqSeq.toArray())
 
         // create from (double * double * double) list list
-        let t2TupleListList = Tensor.Create([ [ 1., 2., 3. ]; [ 4., 5., 6. ] ])
-        Assert.AreEqual(t2ShapeCorrect, t2TupleListList.Shape)
-        Assert.AreEqual(t2DimCorrect, t2TupleListList.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2TupleListList.ToArray())
+        let t2TupleListList = dsharp.tensor([ [ 1., 2., 3. ]; [ 4., 5., 6. ] ])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleListList.shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleListList.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleListList.toArray())
 
         // create from ((double * double * double) list * (double * double * double) list) list
-        let t2TupleListTupleList = Tensor.Create([ [ 1., 2., 3. ], [ 4., 5., 6. ] ])
-        Assert.AreEqual(t2ShapeCorrect, t2TupleListTupleList.Shape)
-        Assert.AreEqual(t2DimCorrect, t2TupleListTupleList.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2TupleListTupleList.ToArray())
+        let t2TupleListTupleList = dsharp.tensor([ [ 1., 2., 3. ], [ 4., 5., 6. ] ])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleListTupleList.shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleListTupleList.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleListTupleList.toArray())
 
         // create from (double * double * double)[]
-        let t2TupleArray = Tensor.Create([| [ 1., 2., 3. ]; [ 4., 5., 6. ] |])
-        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.Shape)
-        Assert.AreEqual(t2DimCorrect, t2TupleArray.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.ToArray())
+        let t2TupleArray = dsharp.tensor([| [ 1., 2., 3. ]; [ 4., 5., 6. ] |])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArray.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.toArray())
 
         // create from ((double * double * double) [] * (double * double * double) []) []
-        let t2TupleArrayTupleArray = Tensor.Create([| [| 1., 2., 3. |], [| 4., 5., 6. |] |])
-        Assert.AreEqual(t2ShapeCorrect, t2TupleArrayTupleArray.Shape)
-        Assert.AreEqual(t2DimCorrect, t2TupleArrayTupleArray.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.ToArray())
-        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.ToArray())
+        let t2TupleArrayTupleArray = dsharp.tensor([| [| 1., 2., 3. |], [| 4., 5., 6. |] |])
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArrayTupleArray.shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArrayTupleArray.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.toArray())
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArrayTupleArray.toArray())
 
         // create from (double * double * double)seq
-        let t2TupleArray = Tensor.Create(seq { [ 1., 2., 3. ]; [ 4., 5., 6. ] })
-        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.Shape)
-        Assert.AreEqual(t2DimCorrect, t2TupleArray.Dim)
-        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.ToArray())
+        let t2TupleArray = dsharp.tensor(seq { [ 1., 2., 3. ]; [ 4., 5., 6. ] })
+        Assert.AreEqual(t2ShapeCorrect, t2TupleArray.shape)
+        Assert.AreEqual(t2DimCorrect, t2TupleArray.dim)
+        Assert.AreEqual(t2ValuesCorrect, t2TupleArray.toArray())
 
-        let t2TupleOfList = Tensor.Create [[2.], [3.], [4.]]
-        Assert.AreEqual([| 3; 1 |], t2TupleOfList.Shape)
-        Assert.AreEqual(array2D [ [2]; [3]; [4] ], t2TupleOfList.ToArray())
+        let t2TupleOfList = dsharp.tensor [[2.], [3.], [4.]]
+        Assert.AreEqual([| 3; 1 |], t2TupleOfList.shape)
+        Assert.AreEqual(array2D [ [2]; [3]; [4] ], t2TupleOfList.toArray())
 
     [<Test>]
     member this.TestTensorCreate3 () =
         let t3Values = [[[1.; 2.; 3.]; [4.; 5.; 6.]]]
-        let t3 = Tensor.Create(t3Values)
+        let t3 = dsharp.tensor(t3Values)
         let t3ShapeCorrect = [|1; 2; 3|]
         let t3DimCorrect = 3
         let t3ValuesCorrect = Util.array3D (List.map (List.map (List.map float32)) t3Values)
 
-        Assert.AreEqual(t3ShapeCorrect, t3.Shape)
-        Assert.AreEqual(t3DimCorrect, t3.Dim)
-        Assert.AreEqual(t3ValuesCorrect, t3.ToArray())
+        Assert.AreEqual(t3ShapeCorrect, t3.shape)
+        Assert.AreEqual(t3DimCorrect, t3.dim)
+        Assert.AreEqual(t3ValuesCorrect, t3.toArray())
 
     [<Test>]
     member this.TestTensorCreate4 () =
         let t4Values = [[[[1.; 2.]]]]
-        let t4 = Tensor.Create(t4Values)
+        let t4 = dsharp.tensor(t4Values)
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
         let t4ValuesCorrect = Util.array4D (List.map (List.map (List.map (List.map float32))) t4Values)
 
-        Assert.AreEqual(t4ShapeCorrect, t4.Shape)
-        Assert.AreEqual(t4DimCorrect, t4.Dim)
-        Assert.AreEqual(t4ValuesCorrect, t4.ToArray())
+        Assert.AreEqual(t4ShapeCorrect, t4.shape)
+        Assert.AreEqual(t4DimCorrect, t4.dim)
+        Assert.AreEqual(t4ValuesCorrect, t4.toArray())
 
     [<Test>]
     member this.TestTensorToArray () =
         let a = array2D [[1.; 2.]; [3.; 4.]]
-        let t = Tensor.Create(a)
-        let v = t.ToArray()
+        let t = dsharp.tensor(a)
+        let v = t.toArray()
         Assert.AreEqual(a, v)
 
     [<Test>]
+    member this.TestTensorClone () =
+        let a = dsharp.randn([2;3])
+        let b = a.clone()
+        Assert.AreEqual(a, b)
+
+    [<Test>]
     member this.TestTensorToString () =
-        let t0 = Tensor.Create(2.)
-        let t1 = Tensor.Create([[2.]; [2.]])
-        let t2 = Tensor.Create([[[2.; 2.]]])
-        let t3 = Tensor.Create([[1.;2.]; [3.;4.]])
-        let t4 = Tensor.Create([[[[1.]]]])
+        let t0 = dsharp.tensor(2.)
+        let t1 = dsharp.tensor([[2.]; [2.]])
+        let t2 = dsharp.tensor([[[2.; 2.]]])
+        let t3 = dsharp.tensor([[1.;2.]; [3.;4.]])
+        let t4 = dsharp.tensor([[[[1.]]]])
         let t0String = t0.ToString()
         let t1String = t1.ToString()
         let t2String = t2.ToString()
@@ -185,72 +191,108 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCompare () =
-        let t1 = Tensor.Create(-1.)
-        let t2 = Tensor.Create(1.)
-        let t3 = Tensor.Create(1.)
-        let t1t2Less = t1 < t2
-        let t1t2LessCorrect = true
-        let t1t2Equal = t1 = t2
-        let t1t2EqualCorrect = false
-        let t2t3Equal = t2 = t3
-        let t2t3EqualCorrect = true
+        let t1A = dsharp.tensor(-1.)
+        let t1B = dsharp.tensor(1.)
+        let t1C = dsharp.tensor(1.)
+        let t1At1BLess = t1A < t1B
+        let t1At1BLessCorrect = true
+        let t1At1BEqual = t1A = t1B
+        let t1At1BEqualCorrect = false
+        let t1Bt1CEqual = t1B = t1C
+        let t1Bt1CEqualCorrect = true
 
-        Assert.AreEqual(t1t2LessCorrect, t1t2Less)
-        Assert.AreEqual(t1t2EqualCorrect, t1t2Equal)
-        Assert.AreEqual(t2t3EqualCorrect, t2t3Equal)
+        Assert.AreEqual(t1At1BLessCorrect, t1At1BLess)
+        Assert.AreEqual(t1At1BEqualCorrect, t1At1BEqual)
+        Assert.AreEqual(t1Bt1CEqualCorrect, t1Bt1CEqual)
+
+        // Systematic testing. The tensors below are listed in expected order of comparison
+        let t2S =
+            [ dsharp.tensor( 0. )
+              dsharp.tensor( 1. )
+              dsharp.tensor([ 1.] )
+              dsharp.tensor([ 2.] )
+              dsharp.tensor([ 1.; 1.] )
+              dsharp.tensor([ 1.; 2. ] )
+              dsharp.tensor([ 2.; 1. ] ) 
+              dsharp.tensor([ [ 1.; 1.] ]) ]
+
+        // Check the F# generic '=' gives expected results
+        let equalsResults = [| for a in t2S -> [| for b in t2S -> a = b |] |]
+        let equalsCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
+
+        Assert.AreEqual(equalsResults, equalsCorrect)
+
+        // Check the F# generic hashes are the same for identical tensors, and different for this small sample of tensors
+        let hashSameResults = [| for a in t2S -> [| for b in t2S -> hash a = hash b |] |]
+        let hashSameCorrect = [| for i in 0..t2S.Length-1 -> [| for j in 0..t2S.Length-1 -> (i=j) |] |]
+
+        Assert.AreEqual(hashSameResults, hashSameCorrect)
+
+        // Check reallocating an identical tensor doesn't change the hash
+        let t2a = dsharp.tensor([ 1.] )
+        let t2b = dsharp.tensor([ 1.] )
+        Assert.AreEqual(t2a.GetHashCode(), t2b.GetHashCode())
+
+        // Check adding `ForwardDiff` doesn't change the hash or equality
+        Assert.AreEqual(t2a.forwardDiff(dsharp.tensor([1.])).GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(true, (t2a.forwardDiff(dsharp.tensor([1.]))) = t2a)
+
+        // Check adding `ReverseDiff` doesn't change the hash or equality
+        Assert.AreEqual(t2a.reverseDiff().GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(true, (t2a.reverseDiff()) = t2a)
 
     [<Test>]
     member this.TestTensorLtTT () =
-        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
-        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
-        let t1t2Lt = t1.Lt(t2)
-        let t1t2LtCorrect = Tensor.Create([0.; 1.; 1.; 0.])
+        let t1 = dsharp.tensor([1.; 2.; 3.; 5.])
+        let t2 = dsharp.tensor([1.; 3.; 5.; 4.])
+        let t1t2Lt = t1.lt(t2)
+        let t1t2LtCorrect = dsharp.tensor([0.; 1.; 1.; 0.])
 
         Assert.AreEqual(t1t2LtCorrect, t1t2Lt)
 
     [<Test>]
     member this.TestTensorLeTT () =
-        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
-        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
-        let t1t2Le = t1.Le(t2)
-        let t1t2LeCorrect = Tensor.Create([1.; 1.; 1.; 0.])
+        let t1 = dsharp.tensor([1.; 2.; 3.; 5.])
+        let t2 = dsharp.tensor([1.; 3.; 5.; 4.])
+        let t1t2Le = t1.le(t2)
+        let t1t2LeCorrect = dsharp.tensor([1.; 1.; 1.; 0.])
 
         Assert.AreEqual(t1t2LeCorrect, t1t2Le)
 
     [<Test>]
     member this.TestTensorGtTT () =
-        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
-        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
-        let t1t2Gt = t1.Gt(t2)
-        let t1t2GtCorrect = Tensor.Create([0.; 0.; 0.; 1.])
+        let t1 = dsharp.tensor([1.; 2.; 3.; 5.])
+        let t2 = dsharp.tensor([1.; 3.; 5.; 4.])
+        let t1t2Gt = t1.gt(t2)
+        let t1t2GtCorrect = dsharp.tensor([0.; 0.; 0.; 1.])
 
         Assert.AreEqual(t1t2GtCorrect, t1t2Gt)
 
     [<Test>]
     member this.TestTensorGeTT () =
-        let t1 = Tensor.Create([1.; 2.; 3.; 5.])
-        let t2 = Tensor.Create([1.; 3.; 5.; 4.])
-        let t1t2Ge = t1.Ge(t2)
-        let t1t2GeCorrect = Tensor.Create([1.; 0.; 0.; 1.])
+        let t1 = dsharp.tensor([1.; 2.; 3.; 5.])
+        let t2 = dsharp.tensor([1.; 3.; 5.; 4.])
+        let t1t2Ge = t1.ge(t2)
+        let t1t2GeCorrect = dsharp.tensor([1.; 0.; 0.; 1.])
 
         Assert.AreEqual(t1t2GeCorrect, t1t2Ge)
 
     [<Test>]
     member this.TestTensorAddTT () =
-        let t1 = Tensor.Create([1.; 2.]) + Tensor.Create([3.; 4.])
-        let t1Correct = Tensor.Create([4.; 6.])
+        let t1 = dsharp.tensor([1.; 2.]) + dsharp.tensor([3.; 4.])
+        let t1Correct = dsharp.tensor([4.; 6.])
 
-        let t2 = Tensor.Create([1.; 2.]) + Tensor.Create(5.)
-        let t2Correct = Tensor.Create([6.; 7.])
+        let t2 = dsharp.tensor([1.; 2.]) + dsharp.tensor(5.)
+        let t2Correct = dsharp.tensor([6.; 7.])
 
-        let t3 = Tensor.Create([1.; 2.]) + 5.f
-        let t3Correct = Tensor.Create([6.; 7.])
+        let t3 = dsharp.tensor([1.; 2.]) + 5.f
+        let t3Correct = dsharp.tensor([6.; 7.])
 
-        let t4 = Tensor.Create([1.; 2.]) + 5.
-        let t4Correct = Tensor.Create([6.; 7.])
+        let t4 = dsharp.tensor([1.; 2.]) + 5.
+        let t4Correct = dsharp.tensor([6.; 7.])
 
-        let t5 = Tensor.Create([1.; 2.]) + 5
-        let t5Correct = Tensor.Create([6.; 7.])
+        let t5 = dsharp.tensor([1.; 2.]) + 5
+        let t5Correct = dsharp.tensor([6.; 7.])
 
         Assert.AreEqual(t1Correct, t1)
         Assert.AreEqual(t2Correct, t2)
@@ -260,58 +302,58 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorStackTs () =
-        let t0a = Tensor.Create(1.)
-        let t0b = Tensor.Create(3.)
-        let t0c = Tensor.Create(5.)
-        let t0 = Tensor.Stack([t0a;t0b;t0c])
-        let t0Correct = Tensor.Create([1.;3.;5.])
+        let t0a = dsharp.tensor(1.)
+        let t0b = dsharp.tensor(3.)
+        let t0c = dsharp.tensor(5.)
+        let t0 = Tensor.stack([t0a;t0b;t0c])
+        let t0Correct = dsharp.tensor([1.;3.;5.])
 
-        let t1a = Tensor.Create([1.; 2.])
-        let t1b = Tensor.Create([3.; 4.])
-        let t1c = Tensor.Create([5.; 6.])
-        let t1 = Tensor.Stack([t1a;t1b;t1c])
-        let t1Correct = Tensor.Create([[1.;2.];[3.;4.];[5.;6.]])
+        let t1a = dsharp.tensor([1.; 2.])
+        let t1b = dsharp.tensor([3.; 4.])
+        let t1c = dsharp.tensor([5.; 6.])
+        let t1 = Tensor.stack([t1a;t1b;t1c])
+        let t1Correct = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]])
 
         Assert.AreEqual(t0Correct, t0)
         Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorUnstackT () =
-        let t0a = Tensor.Create(1.)
-        let t0b = Tensor.Create(3.)
-        let t0c = Tensor.Create(5.)
+        let t0a = dsharp.tensor(1.)
+        let t0b = dsharp.tensor(3.)
+        let t0c = dsharp.tensor(5.)
         let t0Correct = [t0a;t0b;t0c]
-        let t0 = Tensor.Stack(t0Correct).Unstack()
+        let t0 = Tensor.stack(t0Correct).unstack()
 
-        let t1a = Tensor.Create([1.; 2.])
-        let t1b = Tensor.Create([3.; 4.])
-        let t1c = Tensor.Create([5.; 6.])
+        let t1a = dsharp.tensor([1.; 2.])
+        let t1b = dsharp.tensor([3.; 4.])
+        let t1c = dsharp.tensor([5.; 6.])
         let t1Correct = [t1a;t1b;t1c]
-        let t1 = Tensor.Stack(t1Correct).Unstack()
+        let t1 = Tensor.stack(t1Correct).unstack()
 
         Assert.AreEqual(t0Correct, t0)
         Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorAddT2T1 () =
-        let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]]) + Tensor.Create([5.; 6.])
-        let t1Correct = Tensor.Create([[6.; 8.]; [8.; 10.]])
+        let t1 = dsharp.tensor([[1.; 2.]; [3.; 4.]]) + dsharp.tensor([5.; 6.])
+        let t1Correct = dsharp.tensor([[6.; 8.]; [8.; 10.]])
 
         Assert.AreEqual(t1Correct, t1)
 
     [<Test>]
     member this.TestTensorSubTT () =
-        let t1 = Tensor.Create([1.; 2.]) - Tensor.Create([3.; 4.])
-        let t1Correct = Tensor.Create([-2.; -2.])
+        let t1 = dsharp.tensor([1.; 2.]) - dsharp.tensor([3.; 4.])
+        let t1Correct = dsharp.tensor([-2.; -2.])
 
-        let t2 = Tensor.Create([1.; 2.]) - Tensor.Create(5.)
-        let t2Correct = Tensor.Create([-4.; -3.])
+        let t2 = dsharp.tensor([1.; 2.]) - dsharp.tensor(5.)
+        let t2Correct = dsharp.tensor([-4.; -3.])
 
-        let t3 = Tensor.Create([1.; 2.]) - 5.f
-        let t3Correct = Tensor.Create([-4.; -3.])
+        let t3 = dsharp.tensor([1.; 2.]) - 5.f
+        let t3Correct = dsharp.tensor([-4.; -3.])
 
-        let t4 = 5. - Tensor.Create([1.; 2.])
-        let t4Correct = Tensor.Create([4.; 3.])
+        let t4 = 5. - dsharp.tensor([1.; 2.])
+        let t4Correct = dsharp.tensor([4.; 3.])
 
         Assert.AreEqual(t1Correct, t1)
         Assert.AreEqual(t2Correct, t2)
@@ -320,17 +362,17 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMulTT () =
-        let t1 = Tensor.Create([1.; 2.]) * Tensor.Create([3.; 4.])
-        let t1Correct = Tensor.Create([3.; 8.])
+        let t1 = dsharp.tensor([1.; 2.]) * dsharp.tensor([3.; 4.])
+        let t1Correct = dsharp.tensor([3.; 8.])
 
-        let t2 = Tensor.Create([1.; 2.]) * Tensor.Create(5.)
-        let t2Correct = Tensor.Create([5.; 10.])
+        let t2 = dsharp.tensor([1.; 2.]) * dsharp.tensor(5.)
+        let t2Correct = dsharp.tensor([5.; 10.])
 
-        let t3 = Tensor.Create([1.; 2.]) * 5.f
-        let t3Correct = Tensor.Create([5.; 10.])
+        let t3 = dsharp.tensor([1.; 2.]) * 5.f
+        let t3Correct = dsharp.tensor([5.; 10.])
 
-        let t4 = 5. * Tensor.Create([1.; 2.])
-        let t4Correct = Tensor.Create([5.; 10.])
+        let t4 = 5. * dsharp.tensor([1.; 2.])
+        let t4Correct = dsharp.tensor([5.; 10.])
 
         Assert.AreEqual(t1Correct, t1)
         Assert.AreEqual(t2Correct, t2)
@@ -339,17 +381,17 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDivTT () =
-        let t1 = Tensor.Create([1.; 2.]) / Tensor.Create([3.; 4.])
-        let t1Correct = Tensor.Create([0.333333; 0.5])
+        let t1 = dsharp.tensor([1.; 2.]) / dsharp.tensor([3.; 4.])
+        let t1Correct = dsharp.tensor([0.333333; 0.5])
 
-        let t2 = Tensor.Create([1.; 2.]) / Tensor.Create(5.)
-        let t2Correct = Tensor.Create([0.2; 0.4])
+        let t2 = dsharp.tensor([1.; 2.]) / dsharp.tensor(5.)
+        let t2Correct = dsharp.tensor([0.2; 0.4])
 
-        let t3 = Tensor.Create([1.; 2.]) / 5.
-        let t3Correct = Tensor.Create([0.2; 0.4])
+        let t3 = dsharp.tensor([1.; 2.]) / 5.
+        let t3Correct = dsharp.tensor([0.2; 0.4])
 
-        let t4 = 5. / Tensor.Create([1.; 2.])
-        let t4Correct = Tensor.Create([5.; 2.5])
+        let t4 = 5. / dsharp.tensor([1.; 2.])
+        let t4Correct = dsharp.tensor([5.; 2.5])
 
         Assert.True(t1.ApproximatelyEqual(t1Correct))
         Assert.True(t2.ApproximatelyEqual(t2Correct))
@@ -358,14 +400,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorPowTT () =
-        let t1 = Tensor.Create([1.; 2.]) ** Tensor.Create([3.; 4.])
-        let t1Correct = Tensor.Create([1.; 16.])
+        let t1 = dsharp.tensor([1.; 2.]) ** dsharp.tensor([3.; 4.])
+        let t1Correct = dsharp.tensor([1.; 16.])
 
-        let t2 = Tensor.Create([1.; 2.]) ** Tensor.Create(5.)
-        let t2Correct = Tensor.Create([1.; 32.])
+        let t2 = dsharp.tensor([1.; 2.]) ** dsharp.tensor(5.)
+        let t2Correct = dsharp.tensor([1.; 32.])
 
-        let t3 = Tensor.Create(5.) ** Tensor.Create([1.; 2.])
-        let t3Correct = Tensor.Create([5.; 25.])
+        let t3 = dsharp.tensor(5.) ** dsharp.tensor([1.; 2.])
+        let t3Correct = dsharp.tensor([5.; 25.])
 
         Assert.AreEqual(t1Correct, t1)
         Assert.AreEqual(t2Correct, t2)
@@ -373,17 +415,17 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMatMulT2T2 () =
-        let t1 = Tensor.Create([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                 [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                 [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
-        let t2 = Tensor.Create([[5.1067; 0.0681];
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
                                 [7.4633; 3.6027];
                                 [9.0070; 7.3012];
                                 [2.6639; 2.8728];
                                 [7.9229; 2.3695]])
 
-        let t3 = Tensor.MatMul(t1, t2)
-        let t3Correct = Tensor.Create([[118.0367; 56.6266];
+        let t3 = dsharp.matmul(t1, t2)
+        let t3Correct = dsharp.tensor([[118.0367; 56.6266];
                                         [190.5926; 90.8155];
                                         [134.3925; 64.1030]])
 
@@ -391,7 +433,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorConv1D () =
-        let t1 = Tensor.Create([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
+        let t1 = dsharp.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                  [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];
                                  [0.3373; 0.0863; 0.8137; 0.2649; 0.7125];
                                  [0.7144; 0.1020; 0.0437; 0.5316; 0.7366]];
@@ -405,7 +447,7 @@ type TestTensor () =
                                  [0.0823; 0.7887; 0.8918; 0.9243; 0.1068];
                                  [0.0337; 0.2771; 0.9744; 0.0459; 0.4082];
                                  [0.9154; 0.2569; 0.9235; 0.9234; 0.3148]]])
-        let t2 = Tensor.Create([[[0.4941; 0.8710; 0.0606];
+        let t2 = dsharp.tensor([[[0.4941; 0.8710; 0.0606];
                                  [0.2831; 0.7930; 0.5602];
                                  [0.0024; 0.1236; 0.4394];
                                  [0.9086; 0.1277; 0.2450]];
@@ -415,8 +457,8 @@ type TestTensor () =
                                  [0.7678; 0.0733; 0.3396];
                                  [0.6023; 0.6546; 0.3439]]])
 
-        let t3 = Tensor.Conv1D(t1, t2)
-        let t3Correct = Tensor.Create([[[2.8516; 2.0732; 2.6420];
+        let t3 = t1.conv1d(t2)
+        let t3Correct = dsharp.tensor([[[2.8516; 2.0732; 2.6420];
                                          [2.3239; 1.7078; 2.7450]];
 
                                         [[3.0127; 2.9651; 2.5219];
@@ -425,8 +467,8 @@ type TestTensor () =
                                         [[3.4749; 2.9038; 2.7131];
                                          [2.7692; 2.9444; 3.2554]]])
 
-        let t3p1 = Tensor.Conv1D(t1, t2, padding=1)
-        let t3p1Correct = Tensor.Create([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
+        let t3p1 = t1.conv1d(t2, padding=1)
+        let t3p1Correct = dsharp.tensor([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
                                          [1.4345; 2.3239; 1.7078; 2.7450; 2.1474]];
 
                                         [[2.4208; 3.0127; 2.9651; 2.5219; 1.2960];
@@ -435,8 +477,8 @@ type TestTensor () =
                                         [[1.2965; 3.4749; 2.9038; 2.7131; 1.7408];
                                          [1.3549; 2.7692; 2.9444; 3.2554; 1.2120]]])
 
-        let t3p2 = Tensor.Conv1D(t1, t2, padding=2)
-        let t3p2Correct = Tensor.Create([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
+        let t3p2 = t1.conv1d(t2, padding=2)
+        let t3p2Correct = dsharp.tensor([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
                                          [0.6539; 1.4345; 2.3239; 1.7078; 2.7450; 2.1474; 1.2585]];
 
                                         [[0.5982; 2.4208; 3.0127; 2.9651; 2.5219; 1.2960; 1.0620];
@@ -445,8 +487,8 @@ type TestTensor () =
                                         [[0.3165; 1.2965; 3.4749; 2.9038; 2.7131; 1.7408; 0.5275];
                                          [0.3861; 1.3549; 2.7692; 2.9444; 3.2554; 1.2120; 0.7428]]])
 
-        let t3s2 = Tensor.Conv1D(t1, t2, stride=2)
-        let t3s2Correct = Tensor.Create([[[2.8516; 2.6420];
+        let t3s2 = t1.conv1d(t2, stride=2)
+        let t3s2Correct = dsharp.tensor([[[2.8516; 2.6420];
                                          [2.3239; 2.7450]];
 
                                         [[3.0127; 2.5219];
@@ -455,8 +497,8 @@ type TestTensor () =
                                         [[3.4749; 2.7131];
                                          [2.7692; 3.2554]]])
 
-        let t3s3 = Tensor.Conv1D(t1, t2, stride=3)
-        let t3s3Correct = Tensor.Create([[[2.8516];
+        let t3s3 = t1.conv1d(t2, stride=3)
+        let t3s3Correct = dsharp.tensor([[[2.8516];
                                          [2.3239]];
 
                                         [[3.0127];
@@ -465,8 +507,8 @@ type TestTensor () =
                                         [[3.4749];
                                          [2.7692]]])
 
-        let t3s2p1 = Tensor.Conv1D(t1, t2, stride=2, padding=1)
-        let t3s2p1Correct = Tensor.Create([[[1.4392; 2.0732; 2.1177];
+        let t3s2p1 = t1.conv1d(t2, stride=2, padding=1)
+        let t3s2p1Correct = dsharp.tensor([[[1.4392; 2.0732; 2.1177];
                                              [1.4345; 1.7078; 2.1474]];
 
                                             [[2.4208; 2.9651; 1.2960];
@@ -475,8 +517,8 @@ type TestTensor () =
                                             [[1.2965; 2.9038; 1.7408];
                                              [1.3549; 2.9444; 1.2120]]])
 
-        let t3s3p2 = Tensor.Conv1D(t1, t2, stride=3, padding=2)
-        let t3s3p2Correct = Tensor.Create([[[0.6333; 2.0732; 1.0258];
+        let t3s3p2 = t1.conv1d(t2, stride=3, padding=2)
+        let t3s3p2Correct = dsharp.tensor([[[0.6333; 2.0732; 1.0258];
                                              [0.6539; 1.7078; 1.2585]];
 
                                             [[0.5982; 2.9651; 1.0620];
@@ -485,8 +527,8 @@ type TestTensor () =
                                             [[0.3165; 2.9038; 0.5275];
                                              [0.3861; 2.9444; 0.7428]]])
         
-        let t3d2 = Tensor.Conv1D(t1, t2, dilation=2)
-        let t3d2Correct = Tensor.Create([[[2.8030];
+        let t3d2 = t1.conv1d(t2, dilation=2)
+        let t3d2Correct = dsharp.tensor([[[2.8030];
                                          [2.4735]];
 
                                         [[2.9226];
@@ -495,8 +537,8 @@ type TestTensor () =
                                         [[2.8469];
                                          [2.4790]]])
 
-        let t3p2d3 = Tensor.Conv1D(t1, t2, padding=2, dilation=3)
-        let t3p2d3Correct = Tensor.Create([[[2.1121; 0.8484; 2.2709];
+        let t3p2d3 = t1.conv1d(t2, padding=2, dilation=3)
+        let t3p2d3Correct = dsharp.tensor([[[2.1121; 0.8484; 2.2709];
                                              [1.6692; 0.5406; 1.8381]];
 
                                             [[2.5078; 1.2137; 0.9173];
@@ -505,8 +547,8 @@ type TestTensor () =
                                             [[1.5215; 1.3946; 2.1327];
                                              [1.0732; 1.3014; 2.0696]]])
 
-        let t3s3p6d3 = Tensor.Conv1D(t1, t2, stride=3, padding=6, dilation=3)
-        let t3s3p6d3Correct = Tensor.Create([[[0.6333; 1.5018; 2.2709; 1.0580];
+        let t3s3p6d3 = t1.conv1d(t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3Correct = dsharp.tensor([[[0.6333; 1.5018; 2.2709; 1.0580];
                                              [0.6539; 1.5130; 1.8381; 1.0479]];
 
                                             [[0.5982; 1.7459; 0.9173; 0.2709];
@@ -515,10 +557,10 @@ type TestTensor () =
                                             [[0.3165; 1.4118; 2.1327; 1.1949];
                                              [0.3861; 1.5697; 2.0696; 0.8520]]])
 
-        let t3b1 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2)
-        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv1D(t1.[0].Unsqueeze(0) , t2, stride = 2)
-        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+        let t3b1 = t1.[0].unsqueeze(0).conv1d(t2)
+        let t3b1Correct = t3Correct.[0].unsqueeze(0)
+        let t3b1s2 = t1.[0].unsqueeze(0).conv1d(t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
         Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
@@ -535,7 +577,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorConv2D () =
-        let t1 = Tensor.Create([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
+        let t1 = dsharp.tensor([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
                                   [ -6.4356,   0.6351,  -2.3156,  -1.3384],
                                   [ -5.1846,   0.6805, -14.1961,   0.8657],
                                   [ -8.8655,  -7.1694,  -3.4903,  -2.9479]],
@@ -555,7 +597,7 @@ type TestTensor () =
                                   [  4.6748,   7.9756,  -6.0065,   2.0826],
                                   [  5.1038,  -5.5801,  -4.4420,  -2.9498],
                                   [  0.1037,   4.6578,   3.0760,  -4.9566]]]])
-        let t2 = Tensor.Create([[[[-5.6745, -1.9422,  4.1369],
+        let t2 = dsharp.tensor([[[[-5.6745, -1.9422,  4.1369],
                                   [ 4.4623,  4.8385,  0.8345],
                                   [ 1.3015,  0.0708,  3.8132]],
 
@@ -581,8 +623,8 @@ type TestTensor () =
                                   [-6.5763, -6.3535,  7.2228],
                                   [15.1009,  4.9045,  5.1197]]]])
 
-        let t3 = Tensor.Conv2D(t1, t2)
-        let t3Correct = Tensor.Create([[[[  10.6089;   -1.4459];
+        let t3 = t1.conv2d(t2)
+        let t3Correct = dsharp.tensor([[[[  10.6089;   -1.4459];
                                           [-132.3437; -165.9882]];
 
                                          [[  97.8425;   81.2322];
@@ -601,8 +643,8 @@ type TestTensor () =
                                          [[-106.0468;  -94.3428];
                                           [ -78.6259;  136.6283]]]])
 
-        let t3p1 = Tensor.Conv2D(t1, t2, padding=1)
-        let t3p1Correct = Tensor.Create([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
+        let t3p1 = t1.conv2d(t2, padding=1)
+        let t3p1Correct = dsharp.tensor([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
                                           [-154.2592;   10.6089;   -1.4459; -126.2889];
                                           [-176.1860; -132.3437; -165.9882;  -23.2585];
                                           [ -62.8550; -180.0650;  -52.4599;   55.0733]];
@@ -633,8 +675,8 @@ type TestTensor () =
                                           [ -44.8701;  -78.6259;  136.6283;   89.6921];
                                           [  60.9218;   14.3467;  -86.6495;   49.3313]]]])
 
-        let t3p12 = Tensor.Conv2D(t1, t2, padding=[|1; 2|])
-        let t3p12Correct = Tensor.Create([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
+        let t3p12 = t1.conv2d(t2, padding=[|1; 2|])
+        let t3p12Correct = dsharp.tensor([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
                                           [ 210.3501; -154.2592;   10.6089;   -1.4459; -126.2889;   24.8066];
                                           [ -42.1367; -176.1860; -132.3437; -165.9882;  -23.2585;  -44.1093];
                                           [-151.4929;  -62.8550; -180.0650;  -52.4599;   55.0733;   30.0922]];
@@ -665,8 +707,8 @@ type TestTensor () =
                                           [  21.9169;  -44.8701;  -78.6259;  136.6283;   89.6921; -113.2355];
                                           [ -30.5091;   60.9218;   14.3467;  -86.6495;   49.3313;   22.9582]]]])
 
-        let t3s2 = Tensor.Conv2D(t1, t2, stride=2)
-        let t3s2Correct = Tensor.Create([[[[  10.6089]];
+        let t3s2 = t1.conv2d(t2, stride=2)
+        let t3s2Correct = dsharp.tensor([[[[  10.6089]];
 
                                          [[  97.8425]];
 
@@ -679,8 +721,8 @@ type TestTensor () =
 
                                          [[-106.0468]]]])
 
-        let t3s13 = Tensor.Conv2D(t1, t2, stride=[|1; 3|])
-        let t3s13Correct = Tensor.Create([[[[  10.6089];
+        let t3s13 = t1.conv2d(t2, stride=[|1; 3|])
+        let t3s13Correct = dsharp.tensor([[[[  10.6089];
                                           [-132.3437]];
 
                                          [[  97.8425];
@@ -699,8 +741,8 @@ type TestTensor () =
                                          [[-106.0468];
                                           [ -78.6259]]]])
 
-        let t3s2p1 = Tensor.Conv2D(t1, t2, stride=2, padding=1)
-        let t3s2p1Correct = Tensor.Create([[[[  86.6988;  -85.8172];
+        let t3s2p1 = t1.conv2d(t2, stride=2, padding=1)
+        let t3s2p1Correct = dsharp.tensor([[[[  86.6988;  -85.8172];
                                               [-176.1860; -165.9882]];
 
                                              [[   3.9697;   16.3075];
@@ -719,8 +761,8 @@ type TestTensor () =
                                              [[  96.3737;  -68.9841];
                                               [ -44.8701;  136.6283]]]])
 
-        let t3s23p32 = Tensor.Conv2D(t1, t2, stride=[2; 3], padding=[3; 2])
-        let t3s23p32Correct = Tensor.Create([[[[   0.0000,    0.0000],
+        let t3s23p32 = t1.conv2d(t2, stride=[2; 3], padding=[3; 2])
+        let t3s23p32Correct = dsharp.tensor([[[[   0.0000,    0.0000],
                                                   [   7.5866,  -85.8172],
                                                   [ -42.1364, -165.9885],
                                                   [ -67.0271,   97.8170]],
@@ -751,8 +793,8 @@ type TestTensor () =
                                                   [  21.9173,  136.6280],
                                                   [  11.1650,   48.6844]]]])
         
-        let t3p1d2 = Tensor.Conv2D(t1, t2, padding=1, dilation=2)
-        let t3p1d2Correct = Tensor.Create([[[[ -72.7697,  -34.7305],
+        let t3p1d2 = t1.conv2d(t2, padding=1, dilation=2)
+        let t3p1d2Correct = dsharp.tensor([[[[ -72.7697,  -34.7305],
                                               [ -35.3463, -230.5320]],
 
                                              [[ -42.2859,   24.9292],
@@ -771,8 +813,8 @@ type TestTensor () =
                                              [[ -25.4452,   -9.8843],
                                               [  35.7940,   27.9557]]]])
 
-        let t3p22d23 = Tensor.Conv2D(t1, t2, padding=[2;2], dilation=[2;3])
-        let t3p22d23Correct = Tensor.Create([[[[-3.2693e+01, -4.3192e+01],
+        let t3p22d23 = t1.conv2d(t2, padding=[2;2], dilation=[2;3])
+        let t3p22d23Correct = dsharp.tensor([[[[-3.2693e+01, -4.3192e+01],
                                                   [ 4.7954e+01,  9.6877e+00],
                                                   [ 1.7971e+01, -7.0747e+01],
                                                   [-4.4577e+01, -1.7964e+01]],
@@ -803,8 +845,8 @@ type TestTensor () =
                                                   [ 3.1457e+01,  4.8352e+01],
                                                   [-8.1167e+01,  3.2597e+01]]]])
 
-        let t3s3p6d3 = Tensor.Conv2D(t1, t2, stride=3, padding=6, dilation=3)
-        let t3s3p6d3Correct = Tensor.Create([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
+        let t3s3p6d3 = t1.conv2d(t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3Correct = dsharp.tensor([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
                                                   [  27.0241, -107.5002,   98.7433,  -41.9933],
                                                   [  11.7470, -105.7288, -152.6583,   23.1514],
                                                   [ -67.0271,   60.8134,   74.5546,    9.3066]],
@@ -835,10 +877,10 @@ type TestTensor () =
                                                   [  26.8834,  -22.3392,   64.3614,   32.6334],
                                                   [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
 
-        let t3b1 = Tensor.Conv2D(t1.[0].Unsqueeze(0) , t2)
-        let t3b1Correct = t3Correct.[0].Unsqueeze(0)
-        let t3b1s2 = Tensor.Conv2D(t1.[0].Unsqueeze(0), t2, stride = 2)
-        let t3b1s2Correct = t3s2Correct.[0].Unsqueeze(0)
+        let t3b1 = t1.[0].unsqueeze(0).conv2d(t2)
+        let t3b1Correct = t3Correct.[0].unsqueeze(0)
+        let t3b1s2 = t1.[0].unsqueeze(0).conv2d(t2, stride = 2)
+        let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         // Assert.True(false)
         Assert.True(t3.ApproximatelyEqual(t3Correct))
@@ -856,42 +898,50 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorNegT () =
-        let t1 = Tensor.Create([1.; 2.; 3.])
+        let t1 = dsharp.tensor([1.; 2.; 3.])
         let t1Neg = -t1
-        let t1NegCorrect = Tensor.Create([-1.; -2.; -3.])
+        let t1NegCorrect = dsharp.tensor([-1.; -2.; -3.])
 
         Assert.AreEqual(t1NegCorrect, t1Neg)
 
     [<Test>]
     member this.TestTensorSumT () =
-        let t1 = Tensor.Create([1.; 2.; 3.])
-        let t1Sum = t1.Sum()
-        let t1SumCorrect = Tensor.Create(6.)
+        let t1 = dsharp.tensor([1.; 2.; 3.])
+        let t1Sum = t1.sum()
+        let t1SumCorrect = dsharp.tensor(6.)
 
-        let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t2Sum = t2.Sum()
-        let t2SumCorrect = Tensor.Create(10.)
+        let t2 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t2Sum = t2.sum()
+        let t2SumCorrect = dsharp.tensor(10.)
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
         Assert.AreEqual(t2SumCorrect, t2Sum)
 
     [<Test>]
     member this.TestTensorSumT2Dim0 () =
-        let t1 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t1Sum = t1.SumT2Dim0()
-        let t1SumCorrect = Tensor.Create([4.; 6.])
+        let t1 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t1Sum = t1.sumT2Dim0()
+        let t1SumCorrect = dsharp.tensor([4.; 6.])
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
     
     [<Test>]
     member this.TestTensorSumDim () =
-        let t = Tensor.Create([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
-        let tSum0 = t.Sum(0)
-        let tSum0Correct = Tensor.Create([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
-        let tSum1 = t.Sum(1)
-        let tSum1Correct = Tensor.Create([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
-        let tSum2 = t.Sum(2)
-        let tSum2Correct = Tensor.Create([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
+        (* Python:
+        import numpy as np
+        input = np.array([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+        input.sum(1)
+        # --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
+        input.sum(2)
+        # --> array([[10., 26., 42.],[58., 74., 90.]])
+        *)
+        let t = dsharp.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+        let tSum0 = t.sum(0)
+        let tSum0Correct = dsharp.tensor([[14., 16., 18., 20.], [22., 24., 26., 28.], [30., 32., 34., 36.]])
+        let tSum1 = t.sum(1)
+        let tSum1Correct = dsharp.tensor([[15., 18., 21., 24.], [51., 54., 57., 60.]])
+        let tSum2 = t.sum(2)
+        let tSum2Correct = dsharp.tensor([[10., 26., 42.], [58., 74., 90.]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
         Assert.AreEqual(tSum1Correct, tSum1)
@@ -899,13 +949,23 @@ type TestTensor () =
     
     [<Test>]
     member this.TestTensorSumDimKeepDim () =
-        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tSum0 = t.Sum(0, keepDim=true)
-        let tSum0Correct = Tensor.Create([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
-        let tSum1 = t.Sum(1, keepDim=true)
-        let tSum1Correct = Tensor.Create([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
-        let tSum2 = t.Sum(2, keepDim=true)
-        let tSum2Correct = Tensor.Create([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
+        (* Python:
+        import torch
+        input = torch.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+        input.sum(0,keepdim=True)
+        # --> tensor([[[14., 16., 18., 20.],[22., 24., 26., 28.],[30., 32., 34., 36.]]])
+        input.sum(1,keepdim=True)
+        # --> tensor([[[15., 18., 21., 24.]],[[51., 54., 57., 60.]]])
+        input.sum(2,keepdim=True)
+        # --> tensor([[[10.],[26.],[42.]],[[58.],[74.],[90.]]])
+        *)
+        let t = dsharp.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let tSum0 = t.sum(0, keepDim=true)
+        let tSum0Correct = dsharp.tensor([[[14.; 16.; 18.; 20.]; [22.; 24.; 26.; 28.]; [30.; 32.; 34.; 36.]]])
+        let tSum1 = t.sum(1, keepDim=true)
+        let tSum1Correct = dsharp.tensor([[[15.; 18.; 21.; 24.]]; [[51.; 54.; 57.; 60.]]])
+        let tSum2 = t.sum(2, keepDim=true)
+        let tSum2Correct = dsharp.tensor([[[10.]; [26.]; [42.]]; [[58.]; [74.]; [90.]]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
         Assert.AreEqual(tSum1Correct, tSum1)
@@ -913,73 +973,169 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMean () =
-        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tMean = t.Mean()
-        let tMeanCorrect = Tensor.Create(12.5)
+        let t = dsharp.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+        let tMean = t.mean()
+        let tMeanCorrect = dsharp.tensor(12.5)
 
         Assert.AreEqual(tMeanCorrect, tMean)
 
-    [<Test>]
-    member this.TestTensorMeanDim () =
-        let t = Tensor.Create([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tMean0 = t.Mean(0)
-        let tMean0Correct = Tensor.Create([[7.0f; 8.0f; 9.0f; 10.0f]; [11.0f; 12.0f; 13.0f; 14.0f]; [15.0f; 16.0f; 17.0f; 18.0f]])
-        let tMean1 = t.Mean(1)
-        let tMean1Correct = Tensor.Create([[5.0f; 6.0f; 7.0f; 8.0f]; [17.0f; 18.0f; 19.0f; 20.0f]])
-        let tMean2 = t.Mean(2)
-        let tMean2Correct = Tensor.Create([[2.5f; 6.5f; 10.5f]; [14.5f; 18.5f; 22.5f]])
+        // mean, dim={0,1,2}
+        (* Python:
+        import pytorch as torch
+        input = np.[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
+        input.mean(1)
+        --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
+        input.sum(2)
+        --> array([[10., 26., 42.],[58., 74., 90.]])
+        *)
+        let tMean0 = t.mean(0)
+        let tMean0Correct = dsharp.tensor([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
+        let tMean1 = t.mean(1)
+        let tMean1Correct = dsharp.tensor([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
+        let tMean2 = t.mean(2)
+        let tMean2Correct = dsharp.tensor([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
 
         Assert.AreEqual(tMean0Correct, tMean0)
         Assert.AreEqual(tMean1Correct, tMean1)
         Assert.AreEqual(tMean2Correct, tMean2)
 
+        // mean, dim={0,1,2}, keepDim=true
+        (* Python:
+        import torch
+        input = torch.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+        input.mean(0,keepdim=True)
+        # --> tensor([[[ 7.,  8.,  9., 10.],[11., 12., 13., 14.],[15., 16., 17., 18.]]])
+        input.mean(1,keepdim=True)
+        # --> tensor([[[ 5.,  6.,  7.,  8.]],[[17., 18., 19., 20.]]])
+        input.mean(2,keepdim=True)
+        # --> tensor([[[ 2.5000],[ 6.5000],[10.5000]],[[14.5000],[18.5000],[22.5000]]])
+        *)
+        let tMeanKeepDim0 = t.mean(0, keepDim=true)
+        let tMeanKeepDim0Correct = dsharp.tensor([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
+        let tMeanKeepDim1 = t.mean(1, keepDim=true)
+        let tMeanKeepDim1Correct = dsharp.tensor([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
+        let tMeanKeepDim2 = t.mean(2, keepDim=true)
+        let tMeanKeepDim2Correct = dsharp.tensor([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
+
+        Assert.AreEqual(tMeanKeepDim0, tMeanKeepDim0Correct)
+        Assert.AreEqual(tMeanKeepDim1, tMeanKeepDim1Correct)
+        Assert.AreEqual(tMeanKeepDim2, tMeanKeepDim2Correct)
 
     [<Test>]
     member this.TestTensorStddev () =
-        let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
+        let t = dsharp.tensor([[[0.3787;0.7515;0.2252;0.3416];
           [0.6078;0.4742;0.7844;0.0967];
           [0.1416;0.1559;0.6452;0.1417]];
  
          [[0.0848;0.4156;0.5542;0.4166];
           [0.5187;0.0520;0.4763;0.1509];
           [0.4767;0.8096;0.1729;0.6671]]])
-        let tStddev = t.Stddev()
-        let tStddevCorrect = Tensor.Create(0.2398)
+        let tStddev = t.stddev()
+        let tStddevCorrect = dsharp.tensor(0.2398)
 
         Assert.True(tStddev.ApproximatelyEqual(tStddevCorrect))
 
-    [<Test>]
-    member this.TestTensorStddevDim () =
-        let t = Tensor.Create([[[0.3787;0.7515;0.2252;0.3416];
-          [0.6078;0.4742;0.7844;0.0967];
-          [0.1416;0.1559;0.6452;0.1417]];
- 
-         [[0.0848;0.4156;0.5542;0.4166];
-          [0.5187;0.0520;0.4763;0.1509];
-          [0.4767;0.8096;0.1729;0.6671]]])
-        let tStddev0 = t.Stddev(0)
-        let tStddev0Correct = Tensor.Create([[0.2078; 0.2375; 0.2326; 0.0530];
+        // stddev, dim={0,1,2,3}, keepDim=true
+        let tStddev0 = t.stddev(0)
+        let tStddev0Correct = dsharp.tensor([[0.2078; 0.2375; 0.2326; 0.0530];
          [0.0630; 0.2985; 0.2179; 0.0383];
          [0.2370; 0.4623; 0.3339; 0.3715]])
-        let tStddev1 = t.Stddev(1)
-        let tStddev1Correct = Tensor.Create([[0.2331; 0.2981; 0.2911; 0.1304];
+        let tStddev1 = t.stddev(1)
+        let tStddev1Correct = dsharp.tensor([[0.2331; 0.2981; 0.2911; 0.1304];
          [0.2393; 0.3789; 0.2014; 0.2581]])
-        let tStddev2 = t.Stddev(2)
-        let tStddev2Correct = Tensor.Create([[0.2277; 0.2918; 0.2495];
+        let tStddev2 = t.stddev(2)
+        let tStddev2Correct = dsharp.tensor([[0.2277; 0.2918; 0.2495];
          [0.1996; 0.2328; 0.2753]])
 
         Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
         Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
         Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
 
+        // stddev, dim={0,1,2,3}, keepDim=true
+        (* Python:
+        import torch
+        input = torch.tensor([[[0.3787,0.7515,0.2252,0.3416],[0.6078,0.4742,0.7844,0.0967],[0.1416,0.1559,0.6452,0.1417]],[[0.0848,0.4156,0.5542,0.4166],[0.5187,0.0520,0.4763,0.1509],[0.4767,0.8096,0.1729,0.6671]]])
+        input.std(0,keepdim=True)
+        # --> tensor([[[0.2078, 0.2375, 0.2326, 0.0530],[0.0630, 0.2985, 0.2179, 0.0383],[0.2370, 0.4622, 0.3340, 0.3715]]])
+        input.std(1,keepdim=True)
+        # --> tensor([[[0.2331, 0.2980, 0.2911, 0.1304]],[[0.2393, 0.3789, 0.2015, 0.2581]]])
+        input.std(2,keepdim=True)
+        # --> tensor([[[0.2278],[0.2918],[0.2495]],[[0.1996],[0.2328],[0.2753]]]) 
+        *)
+        let tStddev0 = t.stddev(0, keepDim=true)
+        let tStddev0Correct = dsharp.tensor([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
+        let tStddev1 = t.stddev(1, keepDim=true)
+        let tStddev1Correct = dsharp.tensor([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
+        let tStddev2 = t.stddev(2, keepDim=true)
+        let tStddev2Correct = dsharp.tensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
+
+        Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
+        Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
+        Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
+
+    [<Test>]
+    member this.TestTensorVariance () =
+        (* Python:
+        import torch
+        input = torch.tensor([[[0.3787,0.7515,0.2252,0.3416],[0.6078,0.4742,0.7844,0.0967],[0.1416,0.1559,0.6452,0.1417]],[[0.0848,0.4156,0.5542,0.4166],[0.5187,0.0520,0.4763,0.1509],[0.4767,0.8096,0.1729,0.6671]]])
+        input.var()
+        *)
+        let t = dsharp.tensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
+        let tVariance = t.variance()
+        let tVarianceCorrect = dsharp.tensor(0.0575)
+
+        Assert.True(tVariance.ApproximatelyEqual(tVarianceCorrect))
+
+        // Variance, dim={0,1,2,3}
+        (* Python:
+        input.var(0)
+        # --> tensor([[0.0432, 0.0564, 0.0541, 0.0028],[0.0040, 0.0891, 0.0475, 0.0015],[0.0561, 0.2137, 0.1115, 0.1380]])
+        input.var(1)
+        # --> tensor([[0.0543, 0.0888, 0.0847, 0.0170],[0.0573, 0.1436, 0.0406, 0.0666]])
+        input.var(2)
+        # --> tensor([[0.0519, 0.0852, 0.0622],[0.0398, 0.0542, 0.0758]])
+        *)
+        let tVariance0 = t.variance(0)
+        let tVariance0Correct = dsharp.tensor([[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]])
+        let tVariance1 = t.variance(1)
+        let tVariance1Correct = dsharp.tensor([[0.0543; 0.0888; 0.0847; 0.0170];[0.0573; 0.1436; 0.0406; 0.0666]])
+        let tVariance2 = t.variance(2)
+        let tVariance2Correct = dsharp.tensor([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
+
+        Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
+        Assert.True(tVariance1.ApproximatelyEqual(tVariance1Correct))
+        Assert.True(tVariance2.ApproximatelyEqual(tVariance2Correct))
+
+        // Variance, dim={0,1,2,3}, keepDim=true
+        (* Python:
+        import torch
+        input = torch.tensor([[[0.3787,0.7515,0.2252,0.3416],[0.6078,0.4742,0.7844,0.0967],[0.1416,0.1559,0.6452,0.1417]],[[0.0848,0.4156,0.5542,0.4166],[0.5187,0.0520,0.4763,0.1509],[0.4767,0.8096,0.1729,0.6671]]])
+        input.var(0,keepdim=True)
+        # --> tensor([[[0.0432, 0.0564, 0.0541, 0.0028],[0.0040, 0.0891, 0.0475, 0.0015],[0.0561, 0.2137, 0.1115, 0.1380]]])
+        input.var(1,keepdim=True)
+        # --> tensor([[[0.0543, 0.0888, 0.0847, 0.0170]],[[0.0573, 0.1436, 0.0406, 0.0666]]])
+        input.var(2,keepdim=True)
+        # --> tensor([[[0.0519],[0.0852],[0.0622]],[[0.0398],[0.0542],[0.0758]]])
+        *)
+        let tVariance0 = t.variance(0, keepDim=true)
+        let tVariance0Correct = dsharp.tensor([[[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]]])
+        let tVariance1 = t.variance(1, keepDim=true)
+        let tVariance1Correct = dsharp.tensor([[[0.0543; 0.0888; 0.0847; 0.0170]];[[0.0573; 0.1436; 0.0406; 0.0666]]])
+        let tVariance2 = t.variance(2, keepDim=true)
+        let tVariance2Correct = dsharp.tensor([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
+
+        Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
+        Assert.True(tVariance1.ApproximatelyEqual(tVariance1Correct))
+        Assert.True(tVariance2.ApproximatelyEqual(tVariance2Correct))
+
     [<Test>]
     member this.TestTensorTransposeT2 () =
-        let t1 = Tensor.Create([[1.; 2.; 3.]; [4.; 5.; 6.]])
-        let t1Transpose = t1.Transpose()
-        let t1TransposeCorrect = Tensor.Create([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        let t1 = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
+        let t1Transpose = t1.transpose()
+        let t1TransposeCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
 
-        let t2 = Tensor.Create([[1.; 2.]; [3.; 4.]])
-        let t2TransposeTranspose = t2.Transpose().Transpose()
+        let t2 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t2TransposeTranspose = t2.transpose().transpose()
         let t2TransposeTransposeCorrect = t2
 
         Assert.AreEqual(t1TransposeCorrect, t1Transpose)
@@ -987,201 +1143,201 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorSignT () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Sign = t1.Sign()
-        let t1SignCorrect = Tensor.Create([-1.; -1.; 0.; 1.])
+        let t1 = dsharp.tensor([-1.; -2.; 0.; 3.])
+        let t1Sign = t1.sign()
+        let t1SignCorrect = dsharp.tensor([-1.; -1.; 0.; 1.])
 
         Assert.AreEqual(t1SignCorrect, t1Sign)
 
     [<Test>]
     member this.TestTensorFloorT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Floor = t1.Floor()
-        let t1FloorCorrect = Tensor.Create([0.; 0.; 0.; 0.; 0.])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Floor = t1.floor()
+        let t1FloorCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(t1Floor.ApproximatelyEqual(t1FloorCorrect))
 
     [<Test>]
     member this.TestTensorCeilT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Ceil = t1.Ceil()
-        let t1CeilCorrect = Tensor.Create([1.; 1.; 1.; 1.; 1.])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Ceil = t1.ceil()
+        let t1CeilCorrect = dsharp.tensor([1.; 1.; 1.; 1.; 1.])
 
         Assert.True(t1Ceil.ApproximatelyEqual(t1CeilCorrect))
 
     [<Test>]
     member this.TestTensorRoundT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Round = t1.Round()
-        let t1RoundCorrect = Tensor.Create([1.; 0.; 0.; 1.; 1.])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Round = t1.round()
+        let t1RoundCorrect = dsharp.tensor([1.; 0.; 0.; 1.; 1.])
 
         Assert.True(t1Round.ApproximatelyEqual(t1RoundCorrect))
 
     [<Test>]
     member this.TestTensorAbsT () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.])
-        let t1Abs = t1.Abs()
-        let t1AbsCorrect = Tensor.Create([1.; 2.; 0.; 3.])
+        let t1 = dsharp.tensor([-1.; -2.; 0.; 3.])
+        let t1Abs = t1.abs()
+        let t1AbsCorrect = dsharp.tensor([1.; 2.; 0.; 3.])
 
         Assert.AreEqual(t1AbsCorrect, t1Abs)
 
     [<Test>]
     member this.TestTensorReluT () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
-        let t1Relu = t1.Relu()
-        let t1ReluCorrect = Tensor.Create([0.; 0.; 0.; 3.; 10.])
+        let t1 = dsharp.tensor([-1.; -2.; 0.; 3.; 10.])
+        let t1Relu = t1.relu()
+        let t1ReluCorrect = dsharp.tensor([0.; 0.; 0.; 3.; 10.])
 
         Assert.AreEqual(t1ReluCorrect, t1Relu)
 
     [<Test>]
     member this.TestTensorLeakyRelu () =
-        let t1 = Tensor.Create([-1.; -2.; 0.; 3.; 10.])
-        let t1LeakyRelu = t1.LeakyRelu()
-        let t1LeakyReluCorrect = Tensor.Create([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+        let t1 = dsharp.tensor([-1.; -2.; 0.; 3.; 10.])
+        let t1LeakyRelu = t1.leakyRelu()
+        let t1LeakyReluCorrect = dsharp.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
 
         Assert.AreEqual(t1LeakyReluCorrect, t1LeakyRelu)
 
     [<Test>]
     member this.TestTensorSigmoidT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Sigmoid = t1.Sigmoid()
-        let t1SigmoidCorrect = Tensor.Create([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Sigmoid = t1.sigmoid()
+        let t1SigmoidCorrect = dsharp.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
 
         Assert.True(t1Sigmoid.ApproximatelyEqual(t1SigmoidCorrect))
 
     [<Test>]
     member this.TestTensorExpT () =
-        let t1 = Tensor.Create([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
-        let t1Exp = t1.Exp()
-        let t1ExpCorrect = Tensor.Create([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
+        let t1 = dsharp.tensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
+        let t1Exp = t1.exp()
+        let t1ExpCorrect = dsharp.tensor([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
 
         Assert.True(t1Exp.ApproximatelyEqual(t1ExpCorrect))
 
     [<Test>]
     member this.TestTensorLogT () =
-        let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
-        let t1Log = t1.Log()
-        let t1LogCorrect = Tensor.Create([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
+        let t1 = dsharp.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+        let t1Log = t1.log()
+        let t1LogCorrect = dsharp.tensor([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
 
         Assert.True(t1Log.ApproximatelyEqual(t1LogCorrect))
 
     [<Test>]
     member this.TestTensorLog10T () =
-        let t1 = Tensor.Create([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
-        let t1Log10 = t1.Log10()
-        let t1Log10Correct = Tensor.Create([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
+        let t1 = dsharp.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+        let t1Log10 = t1.log10()
+        let t1Log10Correct = dsharp.tensor([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
 
         Assert.True(t1Log10.ApproximatelyEqual(t1Log10Correct))
 
     [<Test>]
     member this.TestTensorSqrtT () =
-        let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Sqrt = t1.Sqrt()
-        let t1SqrtCorrect = Tensor.Create([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        let t1 = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+        let t1Sqrt = t1.sqrt()
+        let t1SqrtCorrect = dsharp.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
 
         Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
 
     [<Test>]
     member this.TestTensorSinT () =
-        let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Sin = t1.Sin()
-        let t1SinCorrect = Tensor.Create([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
+        let t1 = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+        let t1Sin = t1.sin()
+        let t1SinCorrect = dsharp.tensor([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
 
         Assert.True(t1Sin.ApproximatelyEqual(t1SinCorrect))
 
     [<Test>]
     member this.TestTensorCosT () =
-        let t1 = Tensor.Create([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
-        let t1Cos = t1.Cos()
-        let t1CosCorrect = Tensor.Create([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
+        let t1 = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+        let t1Cos = t1.cos()
+        let t1CosCorrect = dsharp.tensor([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
 
         Assert.True(t1Cos.ApproximatelyEqual(t1CosCorrect))
 
     [<Test>]
     member this.TestTensorTanT () =
-        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Tan = t1.Tan()
-        let t1TanCorrect = Tensor.Create([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
+        let t1 = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Tan = t1.tan()
+        let t1TanCorrect = dsharp.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
 
         Assert.True(t1Tan.ApproximatelyEqual(t1TanCorrect))
 
     [<Test>]
     member this.TestTensorSinhT () =
-        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Sinh = t1.Sinh()
-        let t1SinhCorrect = Tensor.Create([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
+        let t1 = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Sinh = t1.sinh()
+        let t1SinhCorrect = dsharp.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
 
         Assert.True(t1Sinh.ApproximatelyEqual(t1SinhCorrect))
 
     [<Test>]
     member this.TestTensorCoshT () =
-        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Cosh = t1.Cosh()
-        let t1CoshCorrect = Tensor.Create([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
+        let t1 = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Cosh = t1.cosh()
+        let t1CoshCorrect = dsharp.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
 
         Assert.True(t1Cosh.ApproximatelyEqual(t1CoshCorrect))
 
     [<Test>]
     member this.TestTensorTanhT () =
-        let t1 = Tensor.Create([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
-        let t1Tanh = t1.Tanh()
-        let t1TanhCorrect = Tensor.Create([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
+        let t1 = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+        let t1Tanh = t1.tanh()
+        let t1TanhCorrect = dsharp.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
 
         Assert.True(t1Tanh.ApproximatelyEqual(t1TanhCorrect))
 
     [<Test>]
     member this.TestTensorAsinT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Asin = t1.Asin()
-        let t1AsinCorrect = Tensor.Create([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Asin = t1.asin()
+        let t1AsinCorrect = dsharp.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
 
         Assert.True(t1Asin.ApproximatelyEqual(t1AsinCorrect))
 
     [<Test>]
     member this.TestTensorAcosT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Acos = t1.Acos()
-        let t1AcosCorrect = Tensor.Create([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Acos = t1.acos()
+        let t1AcosCorrect = dsharp.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
 
         Assert.True(t1Acos.ApproximatelyEqual(t1AcosCorrect))
 
     [<Test>]
     member this.TestTensorAtanT () =
-        let t1 = Tensor.Create([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
-        let t1Atan = t1.Atan()
-        let t1AtanCorrect = Tensor.Create([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
+        let t1 = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+        let t1Atan = t1.atan()
+        let t1AtanCorrect = dsharp.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
 
         Assert.True(t1Atan.ApproximatelyEqual(t1AtanCorrect))
 
     [<Test>]
     member this.TestTensorSlice () =
-        let t1 = Tensor.Create([1.;2.])
+        let t1 = dsharp.tensor([1.;2.])
         let t1s1 = t1.[0]
         let t1s2 = t1.[*]
-        let t1s1Correct = Tensor.Create(1.)
-        let t1s2Correct = Tensor.Create([1.;2.])
+        let t1s1Correct = dsharp.tensor(1.)
+        let t1s2Correct = dsharp.tensor([1.;2.])
 
-        let t2 = Tensor.Create([[1.;2.];[3.;4.]])
+        let t2 = dsharp.tensor([[1.;2.];[3.;4.]])
         let t2s1 = t2.[0]
         let t2s2 = t2.[*]
         let t2s3 = t2.[0,0]
         let t2s4 = t2.[0,*]
         let t2s5 = t2.[*,0]
         let t2s6 = t2.[*,*]
-        let t2s1Correct = Tensor.Create([1.;2.])
-        let t2s2Correct = Tensor.Create([[1.;2.];[3.;4.]])
-        let t2s3Correct = Tensor.Create(1.)
-        let t2s4Correct = Tensor.Create([1.;2.])
-        let t2s5Correct = Tensor.Create([1.;3.])
-        let t2s6Correct = Tensor.Create([[1.;2.];[3.;4.]])
+        let t2s1Correct = dsharp.tensor([1.;2.])
+        let t2s2Correct = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t2s3Correct = dsharp.tensor(1.)
+        let t2s4Correct = dsharp.tensor([1.;2.])
+        let t2s5Correct = dsharp.tensor([1.;3.])
+        let t2s6Correct = dsharp.tensor([[1.;2.];[3.;4.]])
 
-        let t2b = Tensor.Create([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
+        let t2b = dsharp.tensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
         let t2bs1 = t2b.[1..,2..]
-        let t2bs1Correct = Tensor.Create([[7.;8.];[11.;12.]])
+        let t2bs1Correct = dsharp.tensor([[7.;8.];[11.;12.]])
         let t2bs2 = t2b.[1..2,2..3]
-        let t2bs2Correct = Tensor.Create([[7.;8.];[11.;12.]])
+        let t2bs2Correct = dsharp.tensor([[7.;8.];[11.;12.]])
 
-        let t3 = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3 = dsharp.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
         let t3s1  = t3.[0]
         let t3s2  = t3.[*]
         let t3s3  = t3.[0,0]
@@ -1196,22 +1352,22 @@ type TestTensor () =
         let t3s12 = t3.[*,0,*]
         let t3s13 = t3.[*,*,0]
         let t3s14 = t3.[*,*,*]
-        let t3s1Correct  = Tensor.Create([[1.;2.];[3.;4.]])
-        let t3s2Correct  = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-        let t3s3Correct  = Tensor.Create([1.;2.])
-        let t3s4Correct  = Tensor.Create([[1.;2.];[3.;4.]])
-        let t3s5Correct  = Tensor.Create([[1.;2.];[5.;6.]])
-        let t3s6Correct  = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-        let t3s7Correct  = Tensor.Create(1.)
-        let t3s8Correct  = Tensor.Create([1.;2.])
-        let t3s9Correct  = Tensor.Create([1.;3.])
-        let t3s10Correct = Tensor.Create([[1.;2.];[3.;4.]])
-        let t3s11Correct = Tensor.Create([1.;5.])
-        let t3s12Correct = Tensor.Create([[1.;2.];[5.;6.]])
-        let t3s13Correct = Tensor.Create([[1.;3.];[5.;7.]])
-        let t3s14Correct = Tensor.Create([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s1Correct  = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t3s2Correct  = dsharp.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s3Correct  = dsharp.tensor([1.;2.])
+        let t3s4Correct  = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t3s5Correct  = dsharp.tensor([[1.;2.];[5.;6.]])
+        let t3s6Correct  = dsharp.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s7Correct  = dsharp.tensor(1.)
+        let t3s8Correct  = dsharp.tensor([1.;2.])
+        let t3s9Correct  = dsharp.tensor([1.;3.])
+        let t3s10Correct = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t3s11Correct = dsharp.tensor([1.;5.])
+        let t3s12Correct = dsharp.tensor([[1.;2.];[5.;6.]])
+        let t3s13Correct = dsharp.tensor([[1.;3.];[5.;7.]])
+        let t3s14Correct = dsharp.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
 
-        let t4 = Tensor.Create([[[[1.]]; 
+        let t4 = dsharp.tensor([[[[1.]]; 
                                  [[2.]]; 
                                  [[3.]]]; 
                                 [[[4.]]; 
@@ -1219,7 +1375,7 @@ type TestTensor () =
                                  [[6.]]]])
         let t4s1 = t4.[0]
         let t4s2 = t4.[0,*,*,*]
-        let t4s1Correct = Tensor.Create([[[1]];
+        let t4s1Correct = dsharp.tensor([[[1]];
                                          [[2]];
                                          [[3]]])
         let t4s2Correct = t4s1Correct
@@ -1257,14 +1413,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorAddTTSlice () =
-        let t1 = Tensor.Create([[-0.2754;  0.0172;  0.7105];
+        let t1 = dsharp.tensor([[-0.2754;  0.0172;  0.7105];
             [-0.1890;  1.7664;  0.5377];
             [-0.5313; -2.2530; -0.6235];
             [ 0.6776;  1.5844; -0.5686]])
-        let t2 = Tensor.Create([[-111.8892;   -7.0328];
+        let t2 = dsharp.tensor([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]])
-        let t3 = Tensor.AddSlice(t1, [0;1], t2)
-        let t3Correct = Tensor.Create([[  -0.2754; -111.8720;   -6.3222];
+        let t3 = t1.addSlice([0;1], t2)
+        let t3Correct = dsharp.tensor([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
@@ -1273,31 +1429,31 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorSqueezeT () =
-        let t1 = Tensor.Create([[[1.; 2.]]; [[3.;4.]]])
-        let t1Squeeze = t1.Squeeze()
-        let t1SqueezeCorrect = Tensor.Create([[1.;2.];[3.;4.]])
+        let t1 = dsharp.tensor([[[1.; 2.]]; [[3.;4.]]])
+        let t1Squeeze = t1.squeeze()
+        let t1SqueezeCorrect = dsharp.tensor([[1.;2.];[3.;4.]])
 
         Assert.True(t1Squeeze.ApproximatelyEqual(t1SqueezeCorrect))
 
     [<Test>]
     member this.TestTensorUnsqueezeT () =
-        let t1 = Tensor.Create([[1.;2.];[3.;4.]])
-        let t1Unsqueeze = t1.Unsqueeze(1)
-        let t1UnsqueezeCorrect = Tensor.Create([[[1.;2.]]; [[3.;4.]]])
+        let t1 = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t1Unsqueeze = t1.unsqueeze(1)
+        let t1UnsqueezeCorrect = dsharp.tensor([[[1.;2.]]; [[3.;4.]]])
 
         Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
 
     [<Test>]
     member this.TestTensorFlipT () =
-        let t1 = Tensor.Create([[1.;2.];[3.;4.]])
-        let t2 = t1.Flip([|0|])
-        let t2Correct = Tensor.Create([[3.;4.]; [1.;2.]])
-        let t3 = t1.Flip([|1|])
-        let t3Correct = Tensor.Create([[2.;1.]; [4.;3.]])
-        let t4 = t1.Flip([|0; 1|])
-        let t4Correct = Tensor.Create([[4.;3.]; [2.;1.]])
-        let t5 = t1.Flip([|0; 1|]).Flip([|0; 1|])
-        let t5Correct = Tensor.Create([[1.;2.]; [3.;4.]])
+        let t1 = dsharp.tensor([[1.;2.];[3.;4.]])
+        let t2 = t1.flip([|0|])
+        let t2Correct = dsharp.tensor([[3.;4.]; [1.;2.]])
+        let t3 = t1.flip([|1|])
+        let t3Correct = dsharp.tensor([[2.;1.]; [4.;3.]])
+        let t4 = t1.flip([|0; 1|])
+        let t4Correct = dsharp.tensor([[4.;3.]; [2.;1.]])
+        let t5 = t1.flip([|0; 1|]).flip([|0; 1|])
+        let t5Correct = dsharp.tensor([[1.;2.]; [3.;4.]])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t3Correct, t3)
@@ -1306,14 +1462,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDilateT () =
-        let t1 = Tensor.Create([[1.;2.]; [3.;4.]])
-        let t2 = t1.Dilate([|1; 2|])
-        let t2Correct = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
-        let t3 = t1.Dilate([|2; 2|])
-        let t3Correct = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
-        let t4 = Tensor.Create([1.;2.;3.;4.])
-        let t5 = t4.Dilate([|3|])
-        let t5Correct = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+        let t1 = dsharp.tensor([[1.;2.]; [3.;4.]])
+        let t2 = t1.dilate([|1; 2|])
+        let t2Correct = dsharp.tensor([[1.;0.;2.];[3.;0.;4.]])
+        let t3 = t1.dilate([|2; 2|])
+        let t3Correct = dsharp.tensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t4 = dsharp.tensor([1.;2.;3.;4.])
+        let t5 = t4.dilate([|3|])
+        let t5Correct = dsharp.tensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t3Correct, t3)
@@ -1321,15 +1477,15 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorUndilateT () =
-        let t1 = Tensor.Create([[1.;0.;2.];[3.;0.;4.]])
-        let t2 = t1.Undilate([|1; 2|])
-        let t2Correct = Tensor.Create([[1.;2.]; [3.;4.]])
-        let t3 = Tensor.Create([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
-        let t4 = t3.Undilate([|2; 2|])
-        let t4Correct = Tensor.Create([[1.;2.]; [3.;4.]])
-        let t5 = Tensor.Create([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
-        let t6 = t5.Undilate([|3|])
-        let t6Correct = Tensor.Create([1.;2.;3.;4.])
+        let t1 = dsharp.tensor([[1.;0.;2.];[3.;0.;4.]])
+        let t2 = t1.undilate([|1; 2|])
+        let t2Correct = dsharp.tensor([[1.;2.]; [3.;4.]])
+        let t3 = dsharp.tensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t4 = t3.undilate([|2; 2|])
+        let t4Correct = dsharp.tensor([[1.;2.]; [3.;4.]])
+        let t5 = dsharp.tensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+        let t6 = t5.undilate([|3|])
+        let t6Correct = dsharp.tensor([1.;2.;3.;4.])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t4Correct, t4)
@@ -1337,14 +1493,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorView () =
-        let t = Tensor.Random([10;10])
-        let t1Shape = t.View(-1).Shape
+        let t = dsharp.rand([10;10])
+        let t1Shape = t.view(-1).shape
         let t1ShapeCorrect = [|100|]
-        let t2Shape = t.View([-1;50]).Shape
+        let t2Shape = t.view([-1;50]).shape
         let t2ShapeCorrect = [|2;50|]
-        let t3Shape = t.View([2;-1;50]).Shape
+        let t3Shape = t.view([2;-1;50]).shape
         let t3ShapeCorrect = [|2;1;50|]
-        let t4Shape = t.View([2;-1;10]).Shape
+        let t4Shape = t.view([2;-1;10]).shape
         let t4ShapeCorrect = [|2;5;10|]
         
         Assert.AreEqual(t1ShapeCorrect, t1Shape)
@@ -1355,15 +1511,15 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMax () =
-        let t1 = Tensor.Create([4.;1.;20.;3.])
-        let t1Max = t1.Max()
-        let t1MaxCorrect = Tensor.Create(20.)
+        let t1 = dsharp.tensor([4.;1.;20.;3.])
+        let t1Max = t1.max()
+        let t1MaxCorrect = dsharp.tensor(20.)
 
-        let t2 = Tensor.Create([[1.;4.];[2.;3.]])
-        let t2Max = t2.Max()
-        let t2MaxCorrect = Tensor.Create(4.)
+        let t2 = dsharp.tensor([[1.;4.];[2.;3.]])
+        let t2Max = t2.max()
+        let t2MaxCorrect = dsharp.tensor(4.)
 
-        let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
+        let t3 = dsharp.tensor([[[ 7.6884; 65.9125;  4.0114];
              [46.7944; 61.5331; 40.1627];
              [48.3240;  4.9910; 50.1571]];
 
@@ -1374,10 +1530,10 @@ type TestTensor () =
             [[59.8422; 47.1146; 36.7614];
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
-        let t3Max = t3.Max()
-        let t3MaxCorrect = Tensor.Create(95.7660)
+        let t3Max = t3.max()
+        let t3MaxCorrect = dsharp.tensor(95.7660)
         
-        let t4 = Tensor.Create([[[[8.8978; 8.0936];
+        let t4 = dsharp.tensor([[[[8.8978; 8.0936];
               [4.8087; 1.0921];
               [8.5664; 3.7814]];
 
@@ -1408,8 +1564,8 @@ type TestTensor () =
              [[5.0444; 0.5447];
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
-        let t4Max = t4.Max()
-        let t4MaxCorrect = Tensor.Create(9.7456)
+        let t4Max = t4.max()
+        let t4MaxCorrect = dsharp.tensor(9.7456)
 
         Assert.AreEqual(t1MaxCorrect, t1Max)
         Assert.AreEqual(t2MaxCorrect, t2Max)
@@ -1419,15 +1575,15 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMin () =
-        let t1 = Tensor.Create([4.;1.;20.;3.])
-        let t1Min = t1.Min()
-        let t1MinCorrect = Tensor.Create(1.)
+        let t1 = dsharp.tensor([4.;1.;20.;3.])
+        let t1Min = t1.min()
+        let t1MinCorrect = dsharp.tensor(1.)
 
-        let t2 = Tensor.Create([[1.;4.];[2.;3.]])
-        let t2Min = t2.Min()
-        let t2MinCorrect = Tensor.Create(1.)
+        let t2 = dsharp.tensor([[1.;4.];[2.;3.]])
+        let t2Min = t2.min()
+        let t2MinCorrect = dsharp.tensor(1.)
 
-        let t3 = Tensor.Create([[[ 7.6884; 65.9125;  4.0114];
+        let t3 = dsharp.tensor([[[ 7.6884; 65.9125;  4.0114];
              [46.7944; 61.5331; 40.1627];
              [48.3240;  4.9910; 50.1571]];
 
@@ -1438,10 +1594,10 @@ type TestTensor () =
             [[59.8422; 47.1146; 36.7614];
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
-        let t3Min = t3.Min()
-        let t3MinCorrect = Tensor.Create(4.0114)
+        let t3Min = t3.min()
+        let t3MinCorrect = dsharp.tensor(4.0114)
        
-        let t4 = Tensor.Create([[[[8.8978; 8.0936];
+        let t4 = dsharp.tensor([[[[8.8978; 8.0936];
               [4.8087; 1.0921];
               [8.5664; 3.7814]];
 
@@ -1472,8 +1628,8 @@ type TestTensor () =
              [[5.0444; 0.5447];
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
-        let t4Min = t4.Min()
-        let t4MinCorrect = Tensor.Create(0.5370)
+        let t4Min = t4.min()
+        let t4MinCorrect = dsharp.tensor(0.5370)
 
         Assert.AreEqual(t1MinCorrect, t1Min)
         Assert.AreEqual(t2MinCorrect, t2Min)
@@ -1482,14 +1638,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMaxBinary () =
-        let t1 = Tensor.Create([[-4.9385; 12.6206; 10.1783];
+        let t1 = dsharp.tensor([[-4.9385; 12.6206; 10.1783];
             [-2.9624; 17.6992;  2.2506];
             [-2.3536;  8.0772; 13.5639]])
-        let t2 = Tensor.Create([[  0.7027;  22.3251; -11.4533];
+        let t2 = dsharp.tensor([[  0.7027;  22.3251; -11.4533];
             [  3.6887;   4.3355;   3.3767];
             [  0.1203;  -5.4088;   1.5658]])
-        let t3 = Tensor.Max(t1, t2)
-        let t3Correct = Tensor.Create([[ 0.7027; 22.3251; 10.1783];
+        let t3 = dsharp.max(t1, t2)
+        let t3Correct = dsharp.tensor([[ 0.7027; 22.3251; 10.1783];
             [ 3.6887; 17.6992;  3.3767];
             [ 0.1203;  8.0772; 13.5639]])
 
@@ -1497,14 +1653,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMinBinary () =
-        let t1 = Tensor.Create([[-4.9385; 12.6206; 10.1783];
+        let t1 = dsharp.tensor([[-4.9385; 12.6206; 10.1783];
             [-2.9624; 17.6992;  2.2506];
             [-2.3536;  8.0772; 13.5639]])
-        let t2 = Tensor.Create([[  0.7027;  22.3251; -11.4533];
+        let t2 = dsharp.tensor([[  0.7027;  22.3251; -11.4533];
             [  3.6887;   4.3355;   3.3767];
             [  0.1203;  -5.4088;   1.5658]])
-        let t3 = Tensor.Min(t1, t2)
-        let t3Correct = Tensor.Create([[ -4.9385;  12.6206; -11.4533];
+        let t3 = dsharp.min(t1, t2)
+        let t3Correct = dsharp.tensor([[ -4.9385;  12.6206; -11.4533];
             [ -2.9624;   4.3355;   2.2506];
             [ -2.3536;  -5.4088;   1.5658]])
 
@@ -1512,23 +1668,23 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorSoftmax () =
-        let t1 = Tensor.Create([2.7291; 0.0607; 0.8290])
-        let t1Softmax0 = t1.Softmax(0)
-        let t1Softmax0Correct = Tensor.Create([0.8204; 0.0569; 0.1227])
+        let t1 = dsharp.tensor([2.7291; 0.0607; 0.8290])
+        let t1Softmax0 = t1.softmax(0)
+        let t1Softmax0Correct = dsharp.tensor([0.8204; 0.0569; 0.1227])
 
-        let t2 = Tensor.Create([[1.3335; 1.6616; 2.4874; 6.1722];
+        let t2 = dsharp.tensor([[1.3335; 1.6616; 2.4874; 6.1722];
             [3.3478; 9.3019; 1.0844; 8.9874];
             [8.6300; 1.8842; 9.1387; 9.1321]])
-        let t2Softmax0 = t2.Softmax(0)
-        let t2Softmax0Correct = Tensor.Create([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
+        let t2Softmax0 = t2.softmax(0)
+        let t2Softmax0Correct = dsharp.tensor([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
             [5.0519e-03; 9.9892e-01; 3.1723e-04; 4.5134e-01];
             [9.9427e-01; 5.9987e-04; 9.9839e-01; 5.2163e-01]])
-        let t2Softmax1 = t2.Softmax(1)
-        let t2Softmax1Correct = Tensor.Create([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
+        let t2Softmax1 = t2.softmax(1)
+        let t2Softmax1Correct = dsharp.tensor([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
             [1.4974e-03; 5.7703e-01; 1.5573e-04; 4.2131e-01];
             [2.3167e-01; 2.7240e-04; 3.8528e-01; 3.8277e-01]])
 
-        let t3 = Tensor.Create([[[3.0897; 2.0902];
+        let t3 = dsharp.tensor([[[3.0897; 2.0902];
              [2.4055; 1.2437];
              [2.1253; 8.7802];
              [4.3856; 3.4456]];
@@ -1543,8 +1699,8 @@ type TestTensor () =
              [0.1873; 8.7840];
              [9.3609; 0.6493]]])
              
-        let t3Softmax0 = t3.Softmax(0)
-        let t3Softmax0Correct = Tensor.Create([[[2.4662e-03; 3.7486e-03];
+        let t3Softmax0 = t3.softmax(0)
+        let t3Softmax0Correct = dsharp.tensor([[[2.4662e-03; 3.7486e-03];
              [3.1467e-03; 1.6136e-04];
              [3.4316e-01; 4.9885e-01];
              [6.8542e-03; 7.5571e-01]];
@@ -1558,8 +1714,8 @@ type TestTensor () =
              [9.5644e-01; 2.5410e-02];
              [4.9412e-02; 5.0077e-01];
              [9.9244e-01; 4.6122e-02]]])
-        let t3Softmax1 = t3.Softmax(1)
-        let t3Softmax1Correct = Tensor.Create([[[1.8050e-01; 1.2351e-03];
+        let t3Softmax1 = t3.softmax(1)
+        let t3Softmax1Correct = dsharp.tensor([[[1.8050e-01; 1.2351e-03];
              [9.1058e-02; 5.2978e-04];
              [6.8813e-02; 9.9344e-01];
              [6.5963e-01; 4.7904e-03]];
@@ -1573,8 +1729,8 @@ type TestTensor () =
              [1.8387e-01; 6.6997e-02];
              [6.5824e-05; 8.0087e-01];
              [6.3451e-01; 2.3479e-04]]])
-        let t3Softmax2 = t3.Softmax(2)
-        let t3Softmax2Correct = Tensor.Create([[[7.3096e-01; 2.6904e-01];
+        let t3Softmax2 = t3.softmax(2)
+        let t3Softmax2Correct = dsharp.tensor([[[7.3096e-01; 2.6904e-01];
              [7.6165e-01; 2.3835e-01];
              [1.2861e-03; 9.9871e-01];
              [7.1910e-01; 2.8090e-01]];
@@ -1598,20 +1754,97 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDepth () =
-        let t0 = Tensor.Create([1.;2.])
-        let t0Depth = t0.Depth
+        let t0 = dsharp.tensor([1.;2.])
+        let t0Depth = t0.depth
         let t0DepthCorrect = 0
-        let t1 = Tensor.Create([1.;2.]).ReverseDiff()
-        let t1Depth = t1.Depth
+        let t1 = dsharp.tensor([1.;2.]).reverseDiff()
+        let t1Depth = t1.depth
         let t1DepthCorrect = 1
-        let t2 = Tensor.Create([1.;2.]).ReverseDiff().ReverseDiff()
-        let t2Depth = t2.Depth
+        let t2 = dsharp.tensor([1.;2.]).reverseDiff().reverseDiff()
+        let t2Depth = t2.depth
         let t2DepthCorrect = 2
-        let t3 = Tensor.Create([1.;2.]).ReverseDiff().ReverseDiff().ForwardDiff(Tensor.Create([1.; 1.]))
-        let t3Depth = t3.Depth
+        let t3 = dsharp.tensor([1.;2.]).reverseDiff().reverseDiff().forwardDiff(dsharp.tensor([1.; 1.]))
+        let t3Depth = t3.depth
         let t3DepthCorrect = 3
 
         Assert.AreEqual(t0DepthCorrect, t0Depth)
         Assert.AreEqual(t1DepthCorrect, t1Depth)
         Assert.AreEqual(t2DepthCorrect, t2Depth)
         Assert.AreEqual(t3DepthCorrect, t3Depth)
+
+    [<Test>]
+    member this.FSharpCoreOps () =
+        let t = dsharp.tensor([0.1; 0.2; 0.3])
+        let add = t + t
+        let addCorrect = t.add(t)
+        let sub = t - t
+        let subCorrect = t.sub(t)
+        let mul = t * t
+        let mulCorrect = t.mul(t)
+        let div = t / t
+        let divCorrect = t.div(t)
+        let pow = t ** t
+        let powCorrect = t.pow(t)
+        let neg = -t
+        let negCorrect = t.neg()
+        // sign t not supported because FSharp.Core sign operator returns int
+        let floor = floor t
+        let floorCorrect = t.floor()
+        let ceil = ceil t
+        let ceilCorrect = t.ceil()
+        let round = round t
+        let roundCorrect = t.round()
+        let abs = abs t
+        let absCorrect = t.abs()
+        let exp = exp t
+        let expCorrect = t.exp()
+        let log = log t
+        let logCorrect = t.log()
+        let log10 = log10 t
+        let log10Correct = t.log10()
+        let sqrt = sqrt t
+        let sqrtCorrect = t.sqrt()
+        let sin = sin t
+        let sinCorrect = t.sin()
+        let cos = cos t
+        let cosCorrect = t.cos()
+        let tan = tan t
+        let tanCorrect = t.tan()
+        let sinh = sinh t
+        let sinhCorrect = t.sinh()
+        let cosh = cosh t
+        let coshCorrect = t.cosh()
+        let tanh = tanh t
+        let tanhCorrect = t.tanh()
+        let asin = asin t
+        let asinCorrect = t.asin()
+        let acos = acos t
+        let acosCorrect = t.acos()
+        let atan = atan t
+        let atanCorrect = t.atan()
+        
+        Assert.AreEqual(addCorrect, add)
+        Assert.AreEqual(subCorrect, sub)
+        Assert.AreEqual(mulCorrect, mul)
+        Assert.AreEqual(divCorrect, div)
+        Assert.AreEqual(powCorrect, pow)
+        Assert.AreEqual(negCorrect, neg)
+        Assert.AreEqual(floorCorrect, floor)
+        Assert.AreEqual(ceilCorrect, ceil)
+        Assert.AreEqual(roundCorrect, round)
+        Assert.AreEqual(absCorrect, abs)
+        Assert.AreEqual(expCorrect, exp)
+        Assert.AreEqual(logCorrect, log)
+        Assert.AreEqual(log10Correct, log10)
+        Assert.AreEqual(sqrtCorrect, sqrt)
+        Assert.AreEqual(sinCorrect, sin)
+        Assert.AreEqual(cosCorrect, cos)
+        Assert.AreEqual(tanCorrect, tan)
+        Assert.AreEqual(sinhCorrect, sinh)
+        Assert.AreEqual(coshCorrect, cosh)
+        Assert.AreEqual(tanhCorrect, tanh)
+        Assert.AreEqual(asinCorrect, asin)
+        Assert.AreEqual(acosCorrect, acos)
+        Assert.AreEqual(atanCorrect, atan)
+
+

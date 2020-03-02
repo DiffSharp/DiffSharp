@@ -14,9 +14,9 @@ type TensorDict() =
         let ret = TensorDict()
         for KeyValue(n, t) in d.Tensors do ret.Add(n, f n t)
         ret
-    member d.ForwardDiff(derivatives:TensorDict) = d.Map(fun n t -> t.ForwardDiff(derivatives.[n]))
-    member d.ReverseDiff() = d.Map(fun _ t -> t.ReverseDiff())
-    member d.NoDiff() = d.Map(fun _ t -> t.NoDiff())
+    member d.forwardDiff(derivatives:TensorDict) = d.Map(fun n t -> t.forwardDiff(derivatives.[n]))
+    member d.reverseDiff() = d.Map(fun _ t -> t.reverseDiff())
+    member d.noDiff() = d.Map(fun _ t -> t.noDiff())
 
 [<AbstractClass>]
 type Model() =
@@ -43,17 +43,17 @@ type Model() =
             let keys = getKeys model.Parameters.Tensors
             for nn in keys do
                 model.Parameters.Tensors.[nn] <- m.Parameters.[n + "__" + nn]
-    member m.ForwardDiff(derivatives) = m.UpdateParameters(m.Parameters.ForwardDiff(derivatives))
-    member m.ReverseDiff() = m.UpdateParameters(m.Parameters.ReverseDiff())
-    member m.NoDiff() = m.UpdateParameters(m.Parameters.NoDiff())
+    member m.forwardDiff(derivatives) = m.UpdateParameters(m.Parameters.forwardDiff(derivatives))
+    member m.reverseDiff() = m.UpdateParameters(m.Parameters.reverseDiff())
+    member m.noDiff() = m.UpdateParameters(m.Parameters.noDiff())
     abstract member Forward: Tensor -> Tensor
 
 
 type Linear(inFeatures, outFeatures) =
     inherit Model()
-    let w = Tensor.RandomNormal([inFeatures; outFeatures])
-    let b = Tensor.RandomNormal([outFeatures])
+    let w = dsharp.randn([inFeatures; outFeatures])
+    let b = dsharp.randn([outFeatures])
     do base.AddParameters(["weight", w; "bias", b])
     override l.Forward(value) =
-        Tensor.MatMul(value, l.Parameters.["weight"])
+        dsharp.matmul(value, l.Parameters.["weight"])
         + l.Parameters.["bias"]
