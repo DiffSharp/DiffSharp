@@ -18,7 +18,7 @@ def generate(num_dims, fixed_dims):
         else:
             str += '\n    let i{}given = if i{}min.IsSome || i{}max.IsSome then 1 else 0'.format(i, i, i)
             str += '\n    let i{}min   = defaultArg i{}min 0'.format(i, i)
-            str += '\n    let i{}max   = defaultArg i{}max (t.Shape.[{}] - 1)'.format(i, i, i)
+            str += '\n    let i{}max   = defaultArg i{}max (t.shape.[{}] - 1)'.format(i, i, i)
     str += '\n    let bounds = array2D ['
     prefix = ''
     for i in range(num_dims):
