@@ -80,6 +80,26 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let duplicates l =
+   l |> List.ofSeq
+   |> List.groupBy id
+   |> List.choose ( function
+          | _, x::_::_ -> Some x
+          | _ -> None )
+
+let hasDuplicates l =
+    (duplicates l) |> List.isEmpty |> not
+        
+let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
+    let dim1 = array1.Length
+    let dim2 = array2.Length
+    if dim1 <> dim2 then false
+    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
+
+let allEqual (items:seq<'a>) =
+    let item0 = items |> Seq.head
+    items |> Seq.forall ((=) item0)
+
 let canExpandShape (oldShape: int[]) (newShape: int[]) =
     newShape.Length >= oldShape.Length &&
     let trim = newShape.Length - oldShape.Length
@@ -88,6 +108,31 @@ let canExpandShape (oldShape: int[]) (newShape: int[]) =
 let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
     let isOK = canExpandShape oldShape newShape
     if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
+
+let checkCanStack (shapes:seq<int[]>) =
+    if not (allEqual shapes) then failwith "Cannot stack Tensors with same shapes"
+
+let checkCanUnstack (dim:int) =
+    if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
+
+let checkCanTranspose (dim:int) =
+    if dim <> 2 then failwith "Cannot transpose Tensor when dim=2"
+
+let checkCanFlip (dim:int) (dims:int[]) =
+    if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim
+    if hasDuplicates dims then failwithf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+    if (Array.max dims) >= dim then failwithf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims dim
+
+let checkCanDilate (dim:int) (dilations:int[]) =
+    if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
+    if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+
+let checkCanView (shape1:int[]) (shape2:int[]) =
+    if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+
+let checkCanAddSlice (shape1:int[]) (location:int[]) (shape2:int[]) =
+    if not (shapeContains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
+    if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
 
 /// Find the shape into which shape1 and shape2 can be expanded
 let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
@@ -140,26 +185,6 @@ let undilatedShape (shape:int[]) (dilations:int[]) =
 
 let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
     Array.map2 (*) coordinates dilations
-
-let duplicates l =
-   l |> List.ofSeq
-   |> List.groupBy id
-   |> List.choose ( function
-          | _, x::_::_ -> Some x
-          | _ -> None )
-
-let hasDuplicates l =
-    (duplicates l) |> List.isEmpty |> not
-        
-let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
-    let dim1 = array1.Length
-    let dim2 = array2.Length
-    if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
-
-let allEqual (items:seq<'a>) =
-    let item0 = items |> Seq.head
-    items |> Seq.forall ((=) item0)
 
 /// Create a non-jagged 3D array from jagged data
 let array3D data = 

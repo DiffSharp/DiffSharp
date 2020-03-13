@@ -160,6 +160,8 @@ type Tensor =
 
     static member stack(tensors:seq<Tensor>) = 
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
+        let shapes = tensors |> Seq.map (fun t -> t.shape)
+        checkCanStack shapes
         match Seq.head tensors with
         | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.toArray |> Array.map (fun t -> t.primalRaw)))
         | TensorF(_,_,at) ->
@@ -171,6 +173,7 @@ type Tensor =
             let cp = Tensor.stack(ap) in TensorR(cp, ref (cp.zeroLike()), StackTs(tensors), ref 0u, at)
 
     member a.unstack () =
+        checkCanUnstack a.dim
         match a with
         | Tensor(ap) -> ap.UnstackT() |> Array.map Tensor
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack()) (ad.unstack())
@@ -539,7 +542,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
     member a.transpose() =
-        if a.dim <> 2 then failwithf "Expecting a 2d Tensor, received Tensor with shape %A" a.shape
+        checkCanTranspose a.dim
         let inline fRaw(a:RawTensor) = a.TransposeT2()
         let inline fTensor(a:Tensor) = a.transpose()
         let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
@@ -563,6 +566,7 @@ type Tensor =
 
     member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
+        checkCanFlip a.dim dims
         let inline fRaw(a:RawTensor) = a.FlipT(dims)
         let inline fTensor(a:Tensor) = a.flip(dims)
         let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
@@ -571,6 +575,7 @@ type Tensor =
 
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
+        checkCanDilate a.dim dilations
         let inline fRaw(a:RawTensor) = a.DilateT(dilations)
         let inline fTensor(a:Tensor) = a.dilate(dilations)
         let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
@@ -598,6 +603,7 @@ type Tensor =
 
     member a.view(shape:seq<int>) =
         let shape = shape |> Seq.toArray |> shapeComplete a.nelement  // Handles -1 semantics
+        checkCanView a.shape shape
         let inline fRaw(a:RawTensor) = a.ViewT(shape)
         let inline fTensor(a:Tensor) = a.view(shape)
         let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
@@ -770,9 +776,8 @@ type Tensor =
     static member Atan(a:Tensor) = a.atan() // needed for FSharp.Core atan operator overload
 
     member a.addSlice(location:seq<int>, b:Tensor) =
-        if not (shapeContains a.shape b.shape) then failwithf "Expecting a.shape to contain b.shape, received %A, %A" a.shape b.shape
-        if location |> Seq.length <> a.dim then failwithf "Expecting location of the same length as a.dim, received %A, %A" (location |> Seq.length) a.dim
         let location = location |> Seq.toArray
+        checkCanAddSlice a.shape location b.shape
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
         let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp,bd) = ad.addSlice(location, bd)
