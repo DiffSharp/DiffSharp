@@ -125,6 +125,38 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         match t.Dim with
         | 0 -> upcast t.Values.[0]
         | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
+    
+    override t.Expand(newShape) =
+        if shape = newShape then t :> _ else
+        checkCanExpandShape shape newShape
+        let trim = newShape.Length - shape.Length
+        let exp = shapeLength newShape.[0..trim-1]
+        let jshape = newShape.[trim..]
+        let n = shapeLength newShape
+        let result = Array.zeroCreate n 
+        if jshape.Length = 0 then 
+            // The expansion is everything
+            for jP = 0 to exp-1 do
+                result.[jP] <- values.[0]
+        else
+            for jP = 0 to exp-1 do
+                let rec loop ibase jbase d = 
+                    let strideD = if (shape.[d] = jshape.[d]) then 1 else 0
+                    if d < jshape.Length-1 then
+                        let mutable iD = 0
+                        for jD = 0 to jshape.[d]-1 do 
+                            let ibaseD = (ibase+iD)*shape.[d+1]
+                            let jbaseD = (jbase+jD)*jshape.[d+1]
+                            loop ibaseD jbaseD (d+1)
+                            iD <- iD + strideD
+                    else
+                        let mutable iD = 0
+                        // last loop does the actual copy fragments
+                        for jD = 0 to jshape.[d]-1 do 
+                            result.[jbase+jD] <- values.[ibase+iD]
+                            iD <- iD + strideD
+                loop 0 (jP*jshape.[0]) 0
+        RawTensorFloat32CPU(result, newShape) :> _
 
     override t.ToArray() =
         match t.Dim with

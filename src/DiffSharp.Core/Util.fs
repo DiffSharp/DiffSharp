@@ -80,6 +80,31 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let canExpandShape (oldShape: int[]) (newShape: int[]) =
+    newShape.Length >= oldShape.Length &&
+    let trim = newShape.Length - oldShape.Length
+    (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+
+let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
+    let isOK = canExpandShape oldShape newShape
+    if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
+
+/// Find the shape into which shape1 and shape2 can be expanded
+let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
+    if canExpandShape shape1 shape2 || canExpandShape shape2 shape1 then 
+        let n1 = shape1.Length
+        let n2 = shape2.Length
+        let mx = max n1 n2
+        let mn = mx - min n1 n2
+        Array.init mx (fun i -> 
+            if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
+            elif n1 > n2 then max shape1.[i] shape2.[i-mn]
+            else max shape1.[i-mn] shape2.[i])
+    else failwithf "shapes %A and %A are not related by broadcasting - each dimension must either be extra, equal, expand from 1" shape1 shape2
+
+/// Find the shape into which all the shapes can be expanded
+let broadcastShapes (shapes:int[][]) = Array.reduce broadcastShapes2 shapes
+
 let boundsToLocation (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 
@@ -158,6 +183,15 @@ let array4D data =
         if q3 <> r3 || q4 <> r4 then 
             invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
     Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+
+let arrayND (shape: int[]) f =
+    match shape with 
+    | [| |] -> f [| |] |> box
+    | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
+    | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
+    | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
+    | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
+    | _ -> failwith "arrayND - nyi for dim > 4"
 
 /// Get the elements of an arbitrary IEnumerble
 let private seqElements (ie: obj) = 
