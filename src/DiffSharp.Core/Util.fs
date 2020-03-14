@@ -134,6 +134,38 @@ let checkCanAddSlice (shape1:int[]) (location:int[]) (shape2:int[]) =
     if not (shapeContains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
     if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
 
+let checkCanMatmul (shape1:int[]) (shape2:int[]) =
+    if shape1.Length <> 2 || shape2.Length <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+    if shape1.[1] <> shape2.[0] then failwithf "Cannot multiply Tensors with shapes %A, %A" shape1 shape2
+
+let checkCanConv1d (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
+    if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
+    if padding < 0 then failwithf "Expecting padding >= 0, received %A" padding
+    if stride < 1 then failwithf "Expecting stride >= 1, received %A" stride
+    if dilation < 1 then failwithf "Expecting dilation >=1, received %A" dilation
+    let inputChannels = shape1.[1]
+    let inputLength = shape1.[2] + 2*padding
+    let kernelLength = shape2.[2]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
+
+let checkCanConv2d (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
+    if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+    if stride.Length <> 2 then failwithf "Expecting stride to be a length-two array, received %A" stride
+    if padding.Length <> 2 then failwithf "Expecting padding to be a length-two array, received %A" padding
+    if dilation.Length <> 2 then failwithf "Expecting dilation to be a length-two array, received %A" dilation
+    if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings >= 0, received %A" padding
+    if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides >= 1, received %A" stride
+    if dilation.[0] < 1 || dilation.[1] < 1 then failwithf "Expecting all dilations >= 1, received %A" dilation
+    let inputChannels = shape1.[1]
+    let inputHeight = shape1.[2] + 2*padding.[0]
+    let inputWidth = shape1.[3] + 2*padding.[1]
+    let kernelHeight = shape2.[2]
+    let kernelWidth = shape2.[3]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelHeight > inputHeight then failwithf "Expecting kernelHeight <= inputHeight, received %A, %A" kernelHeight inputHeight
+    if kernelWidth > inputWidth then failwithf "Expecting kernelWidth <= inputWidth, received %A, %A" kernelWidth inputWidth
+
 /// Find the shape into which shape1 and shape2 can be expanded
 let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
     if canExpandShape shape1 shape2 || canExpandShape shape2 shape1 then 

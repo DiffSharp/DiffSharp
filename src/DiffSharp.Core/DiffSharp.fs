@@ -38,6 +38,7 @@ type DiffSharp =
     static member matmul(a:Tensor, b:Tensor) = a.matmul(b)
     static member neg(a:Tensor) = a.neg()
     static member sum(a:Tensor) = a.sum()
+    static member sum(a:Tensor, dim:int, ?keepDim:bool) = a.sum(dim, ?keepDim=keepDim)
     static member mean(a:Tensor) = a.mean()
     static member mean(a:Tensor, dim:int, ?keepDim:bool) = a.mean(dim, ?keepDim=keepDim)
     static member variance(a:Tensor) = a.variance()

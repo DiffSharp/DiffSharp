@@ -433,18 +433,16 @@ type Tensor =
     member t1.pow(t2) = t1 ** t1.like(t2)
 
     member a.matmul (b:Tensor) =
-        if a.dim <> 2 || b.dim <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" a.shape b.shape
-        if a.shape.[1] = b.shape.[0] then
-            let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
-            let inline fTensor(a:Tensor,b) = a.matmul(b)
-            let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.matmul(bp) + ap.matmul(bd)
-            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
-            let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
-            let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
-            let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
-            let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        else failwithf "Cannot multiply Tensors with shapes %A, %A" a.shape b.shape
+        checkCanMatmul a.shape b.shape
+        let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
+        let inline fTensor(a:Tensor,b) = a.matmul(b)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.matmul(bp) + ap.matmul(bd)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
+        let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
+        let inline dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
+        let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
+        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.NegT()
@@ -534,7 +532,8 @@ type Tensor =
 
     member a.stddev() = a.variance() |> Tensor.Sqrt
 
-    member a.sumT2Dim0() =
+    // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
+    member internal a.sumT2Dim0() =
         let inline fRaw(a:RawTensor) = a.SumT2Dim0()
         let inline fTensor(a:Tensor) = a.sumT2Dim0()
         let inline dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
@@ -801,6 +800,7 @@ type Tensor =
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
+        checkCanConv1d a.shape b.shape stride padding dilation
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
@@ -860,6 +860,7 @@ type Tensor =
         let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
         let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
         let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
+        checkCanConv2d a.shape b.shape stride padding dilation
         let mutable b = b
         if dilation.[0] > 1 || dilation.[1] > 1 then
             b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
