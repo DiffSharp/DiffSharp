@@ -71,10 +71,9 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeExpand () =
-
-        let t1 = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
-        let t1Expand = t1.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
-        let fwdz = t1Expand
+        let fwdx = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
+        let fwdz = fwdx.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
+        let fwdzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
 
@@ -86,19 +85,21 @@ type TestDerivatives () =
         t1.grad
         --> tensor([[12.],[24.]])
         *)
-        let revy = dsharp.tensor([[1.]; [2.]]).reverseDiff()
-        let revz = revy.expand([2;2;2])
-        let revz_grad = dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]])
-        revz.reverse(revz_grad)
-        let revyd = revy.derivative
+        let revx = dsharp.tensor([[1.]; [2.]]).reverseDiff()
+        let revz = revx.expand([2;2;2])
+        let revzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        revz.reverse(dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]]))
+        let revxd = revx.derivative
         // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
-        let revydCorrect = dsharp.tensor [[12.], [24.]]
+        let revxdCorrect = dsharp.tensor [[12.], [24.]]
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
         Assert.AreEqual(fwdzd,fwdzdCorrect)
-        Assert.AreEqual(revyd,revydCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd,revxdCorrect)
 
     [<Test>]
     member this.TestAddWithBroadcastSystematic () =
-
         // This is a somewhat adhoc extra test to do a whole range of additiosn
         // with broadcast, mainly to check that not problems occur in taking the
         // derivatives.
