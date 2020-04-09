@@ -218,7 +218,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             results.[i2].[j2] <- values.[i]
         results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
 
-    override __.ConcatTs(tensors, dim) =
+    override __.CatTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
         let n = shapes.Length
         if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
@@ -245,7 +245,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
         upcast RawTensorFloat32CPU(result, outShape)
 
-    override t.Split(sizes, dim) =
+    override t.SplitT(sizes, dim) =
         if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         let shape = t.Shape
         if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"

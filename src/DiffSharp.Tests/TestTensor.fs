@@ -437,10 +437,10 @@ type TestTensor () =
         Assert.AreEqual(t2Correct_dim2, t2_dim2)
 
     [<Test>]
-    member this.TestTensorConcatTs () =
+    member this.TestTensorCatTs () =
 
         let t0a = dsharp.tensor([1.; 2.])
-        let t0 = Tensor.concat([t0a])
+        let t0 = Tensor.cat([t0a])
         let t0Correct = dsharp.tensor([1.;2.])
 
         Assert.AreEqual(t0Correct, t0)
@@ -448,8 +448,8 @@ type TestTensor () =
         let t1a = dsharp.tensor([1.; 2.]) // 2
         let t1b = dsharp.tensor([3.; 4.]) // 2
         let t1c = dsharp.tensor([5.; 6.]) // 2
-        let t1 = Tensor.concat([t1a;t1b;t1c]) // 6
-        let t1_dim0 = Tensor.concat([t1a;t1b;t1c],dim=0) // 6
+        let t1 = Tensor.cat([t1a;t1b;t1c]) // 6
+        let t1_dim0 = Tensor.cat([t1a;t1b;t1c],dim=0) // 6
         let t1Correct = dsharp.tensor([1.;2.;3.;4.;5.;6.])
 
         Assert.AreEqual(t1Correct, t1)
@@ -458,9 +458,9 @@ type TestTensor () =
         let t2a = dsharp.tensor([ [1.; 2.] ]) // 1x2
         let t2b = dsharp.tensor([ [3.; 4.] ]) // 1x2
         let t2c = dsharp.tensor([ [5.; 6.] ]) // 1x2
-        let t2 = Tensor.concat([t2a;t2b;t2c]) // 3x2
-        let t2_dim0 = Tensor.concat([t2a;t2b;t2c], dim=0) // 3x2
-        let t2_dim1 = Tensor.concat([t2a;t2b;t2c], dim=1) // 1x6
+        let t2 = Tensor.cat([t2a;t2b;t2c]) // 3x2
+        let t2_dim0 = Tensor.cat([t2a;t2b;t2c], dim=0) // 3x2
+        let t2_dim1 = Tensor.cat([t2a;t2b;t2c], dim=1) // 1x6
         let t2Correct_dim0 = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]) // 3x2
         let t2Correct_dim1 = dsharp.tensor([[1.;2.;3.;4.;5.;6.]]) // 1x6
 
@@ -472,7 +472,7 @@ type TestTensor () =
         let t3a = dsharp.tensor([ [1.; 2.] ]) // 1x2
         let t3b = dsharp.tensor([ [3.; 4.];[5.; 6.] ]) // 2x2
         let t3c = dsharp.tensor([ [7.; 8.] ]) // 1x2
-        let t3 = Tensor.concat([t3a;t3b;t3c]) // 4x2
+        let t3 = Tensor.cat([t3a;t3b;t3c]) // 4x2
         let t3Correct = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.];[7.;8.]]) // 4x2
 
         Assert.AreEqual(t3Correct, t3)
@@ -481,7 +481,7 @@ type TestTensor () =
         let t4a = dsharp.tensor([ [1.]; [2.] ]) // 2x1
         let t4b = dsharp.tensor([ [3.; 4.];[5.; 6.] ]) // 2x2
         let t4c = dsharp.tensor([ [7.]; [8.] ]) // 2x1
-        let t4_dim1 = Tensor.concat([t4a;t4b;t4c],dim=1) // 2x4
+        let t4_dim1 = Tensor.cat([t4a;t4b;t4c],dim=1) // 2x4
         let t4Correct_dim1 = dsharp.tensor([[1.;3.;4.;7.];[2.;5.;6.;8.]]) // 2x4
 
         Assert.AreEqual(t4Correct_dim1, t4_dim1)

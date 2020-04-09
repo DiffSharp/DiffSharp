@@ -2913,11 +2913,11 @@ type TestDerivatives () =
         Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
 
     [<Test>]
-    member this.TestDerivativeConcatTs () =
+    member this.TestDerivativeCatTs () =
         let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.;20.]))
         let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.;40.]))
         let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.;60.]))
-        let fwdz = Tensor.concat([fwdxa;fwdxb;fwdxc])
+        let fwdz = Tensor.cat([fwdxa;fwdxb;fwdxc])
         let fwdzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
@@ -2925,7 +2925,7 @@ type TestDerivatives () =
         let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
         let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
         let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
-        let revz = Tensor.concat([revxa;revxb;revxc])
+        let revz = Tensor.cat([revxa;revxb;revxc])
         let revzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
         revz.reverse(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
         let revxda = revxa.derivative
