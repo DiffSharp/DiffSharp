@@ -94,8 +94,7 @@ and [<AbstractClass>]
     member t.Device = device
     member t.Backend = backend
     override t.ToString() = t.GetString()
-    member t.Extend(shape) = t.CreateFromScalar(t.ToValue(), shape)
-
+    
     static member Zero(?dtype, ?device, ?backend) = 
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Zero
@@ -128,6 +127,7 @@ and [<AbstractClass>]
     abstract member Create : obj -> RawTensor
     abstract member CreateFromScalar : obj * int[] -> RawTensor
     abstract member Clone : unit -> RawTensor
+    abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
     abstract member UnstackT: dim:int -> RawTensor[]
     abstract member ConcatTs: RawTensor[] * dim: int -> RawTensor

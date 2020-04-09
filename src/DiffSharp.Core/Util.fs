@@ -80,6 +80,108 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let duplicates l =
+   l |> List.ofSeq
+   |> List.groupBy id
+   |> List.choose ( function
+          | _, x::_::_ -> Some x
+          | _ -> None )
+
+let hasDuplicates l =
+    (duplicates l) |> List.isEmpty |> not
+        
+let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
+    let dim1 = array1.Length
+    let dim2 = array2.Length
+    if dim1 <> dim2 then false
+    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
+
+let allEqual (items:seq<'a>) =
+    let item0 = items |> Seq.head
+    items |> Seq.forall ((=) item0)
+
+let canExpandShape (oldShape: int[]) (newShape: int[]) =
+    newShape.Length >= oldShape.Length &&
+    let trim = newShape.Length - oldShape.Length
+    (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+
+let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
+    let isOK = canExpandShape oldShape newShape
+    if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
+
+let checkCanStack (shapes:seq<int[]>) =
+    if not (allEqual shapes) then failwith "Cannot stack Tensors with different shapes"
+
+let checkCanUnstack (dim:int) =
+    if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
+
+let checkCanTranspose (dim:int) =
+    if dim <> 2 then failwith "Cannot transpose Tensor when dim=2"
+
+let checkCanFlip (dim:int) (dims:int[]) =
+    if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim
+    if hasDuplicates dims then failwithf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
+    if (Array.max dims) >= dim then failwithf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims dim
+
+let checkCanDilate (dim:int) (dilations:int[]) =
+    if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
+    if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+
+let checkCanView (shape1:int[]) (shape2:int[]) =
+    if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+
+let checkCanAddSlice (shape1:int[]) (location:int[]) (shape2:int[]) =
+    if not (shapeContains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
+    if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
+
+let checkCanMatmul (shape1:int[]) (shape2:int[]) =
+    if shape1.Length <> 2 || shape2.Length <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+    if shape1.[1] <> shape2.[0] then failwithf "Cannot multiply Tensors with shapes %A, %A" shape1 shape2
+
+let checkCanConv1d (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
+    if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
+    if padding < 0 then failwithf "Expecting padding >= 0, received %A" padding
+    if stride < 1 then failwithf "Expecting stride >= 1, received %A" stride
+    if dilation < 1 then failwithf "Expecting dilation >=1, received %A" dilation
+    let inputChannels = shape1.[1]
+    let inputLength = shape1.[2] + 2*padding
+    let kernelLength = shape2.[2]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
+
+let checkCanConv2d (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
+    if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+    if stride.Length <> 2 then failwithf "Expecting stride to be a length-two array, received %A" stride
+    if padding.Length <> 2 then failwithf "Expecting padding to be a length-two array, received %A" padding
+    if dilation.Length <> 2 then failwithf "Expecting dilation to be a length-two array, received %A" dilation
+    if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings >= 0, received %A" padding
+    if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides >= 1, received %A" stride
+    if dilation.[0] < 1 || dilation.[1] < 1 then failwithf "Expecting all dilations >= 1, received %A" dilation
+    let inputChannels = shape1.[1]
+    let inputHeight = shape1.[2] + 2*padding.[0]
+    let inputWidth = shape1.[3] + 2*padding.[1]
+    let kernelHeight = shape2.[2]
+    let kernelWidth = shape2.[3]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelHeight > inputHeight then failwithf "Expecting kernelHeight <= inputHeight, received %A, %A" kernelHeight inputHeight
+    if kernelWidth > inputWidth then failwithf "Expecting kernelWidth <= inputWidth, received %A, %A" kernelWidth inputWidth
+
+/// Find the shape into which shape1 and shape2 can be expanded
+let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
+    if canExpandShape shape1 shape2 || canExpandShape shape2 shape1 then 
+        let n1 = shape1.Length
+        let n2 = shape2.Length
+        let mx = max n1 n2
+        let mn = mx - min n1 n2
+        Array.init mx (fun i -> 
+            if i < mn then (if n1 > n2 then shape1.[i] else shape2.[i])
+            elif n1 > n2 then max shape1.[i] shape2.[i-mn]
+            else max shape1.[i-mn] shape2.[i])
+    else failwithf "shapes %A and %A are not related by broadcasting - each dimension must either be extra, equal, expand from 1" shape1 shape2
+
+/// Find the shape into which all the shapes can be expanded
+let broadcastShapes (shapes:int[][]) = Array.reduce broadcastShapes2 shapes
+
 let boundsToLocation (bounds:int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 
@@ -116,26 +218,6 @@ let undilatedShape (shape:int[]) (dilations:int[]) =
 let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
     Array.map2 (*) coordinates dilations
 
-let duplicates l =
-   l |> List.ofSeq
-   |> List.groupBy id
-   |> List.choose ( function
-          | _, x::_::_ -> Some x
-          | _ -> None )
-
-let hasDuplicates l =
-    (duplicates l) |> List.isEmpty |> not
-        
-let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
-    let dim1 = array1.Length
-    let dim2 = array2.Length
-    if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
-
-let allEqual (items:seq<'a>) =
-    let item0 = items |> Seq.head
-    items |> Seq.forall ((=) item0)
-
 /// Create a non-jagged 3D array from jagged data
 let array3D data = 
     let data = data |> Array.ofSeq |> Array.map array2D
@@ -158,6 +240,15 @@ let array4D data =
         if q3 <> r3 || q4 <> r4 then 
             invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
     Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+
+let arrayND (shape: int[]) f =
+    match shape with 
+    | [| |] -> f [| |] |> box
+    | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
+    | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
+    | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
+    | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
+    | _ -> failwith "arrayND - nyi for dim > 4"
 
 /// Get the elements of an arbitrary IEnumerble
 let private seqElements (ie: obj) = 

@@ -70,6 +70,100 @@ type TestDerivatives () =
     // TODO: add test for AddT2ConstT1
 
     [<Test>]
+    member this.TestDerivativeExpand () =
+        let fwdx = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
+        let fwdz = fwdx.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
+        let fwdzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
+
+        (* Python:
+        import torch 
+        t1 = torch.tensor([[1.], [2.]], requires_grad=True)
+        revz = t1.expand([2,2,2])
+        revz.backward(torch.tensor([[[3.,3.], [6.,6.]], [[3.,3.], [6.,6.]]]))
+        t1.grad
+        --> tensor([[12.],[24.]])
+        *)
+        let revx = dsharp.tensor([[1.]; [2.]]).reverseDiff()
+        let revz = revx.expand([2;2;2])
+        let revzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        revz.reverse(dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]]))
+        let revxd = revx.derivative
+        // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
+        let revxdCorrect = dsharp.tensor [[12.], [24.]]
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
+        Assert.AreEqual(fwdzd,fwdzdCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd,revxdCorrect)
+
+    [<Test>]
+    member this.TestAddWithBroadcastSystematic () =
+        // This is a somewhat adhoc extra test to do a whole range of additiosn
+        // with broadcast, mainly to check that not problems occur in taking the
+        // derivatives.
+        //
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 + 1  (broadcast --> 2x3x4)
+        // 2x3x4 + 4  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t1a = dsharp.tensor([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                  [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+        
+        // Get all the interesting shapes that broadcast into t1a
+        let shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        // For each shape, create a broadcasting addition and take forward and reverse derivatives
+        for shape in shapes do 
+            let t1b = dsharp.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+            let t1a_deriv = t1a + 1.0
+            let t1b_delta = dsharp.tensor( Util.arrayND shape (fun is -> double (Array.sum is) - 2.0))
+            let fwda = t1a.forwardDiff(t1a_deriv)
+            let fwdb = t1b.forwardDiff(t1b_delta)
+            let fwdz = fwda + fwdb
+            let fwdzd = fwdz.derivative
+
+            let revx = t1a.reverseDiff()
+            let revy = t1b.reverseDiff()
+            let revz = revx + revy
+            let revz_grad = t1a - 1.0
+            revz.reverse(revz_grad)
+            let revxd = revx.derivative
+            let revyd = revy.derivative
+
+            // In the simple case of broadcasting a constant, check the result against the non-broadcast case
+            if t1b.sum() = dsharp.tensor(2.0) then 
+                let t1c = dsharp.tensor( Util.arrayND [| 2;3;4 |] (fun _idxs -> 2.0))
+                let t1c_deriv = dsharp.tensor( Util.arrayND [| 2;3;4 |] (fun _idxs -> -2.0))
+                let fwda = t1a.forwardDiff(t1a_deriv)
+                let fwdc = t1c.forwardDiff(t1c_deriv)
+                let fwdz2 = fwda + fwdc
+                let fwdzd2 = fwdz2.derivative
+
+                let revx2 = t1a.reverseDiff()
+                let revy2 = t1c.reverseDiff()
+                let revz2 = revx2 + revy2
+                revz2.reverse(revz_grad)
+                let revxd2 = revx2.derivative
+                let revyd2 = revy2.derivative
+                Assert.AreEqual(fwdzd,fwdzd2)
+                Assert.AreEqual(revxd,revxd2)
+                // note the difference in shape here, and the need to summate down
+                Assert.AreEqual(revyd.sum(),revyd2.sum())
+
+    [<Test>]
     member this.TestDerivativeSubTT () =
         let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
         let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))

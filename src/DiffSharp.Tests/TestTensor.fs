@@ -300,6 +300,70 @@ type TestTensor () =
         Assert.AreEqual(t4Correct, t4)
         Assert.AreEqual(t5Correct, t5)
 
+        // Check all broadcasts into 2x2
+        // 2x2 * 1  (broadcast --> 2x2)
+        // 2x2 * 2  (broadcast --> 2x2)
+        // 2x2 * 2x1  (broadcast --> 2x2)
+        // 2x2 * 1x2  (broadcast --> 2x2)
+        let t6a = dsharp.tensor([ [1.; 2.]; [3.; 4.] ])
+        for t6b in [ dsharp.tensor([ 5.0 ])
+                     dsharp.tensor([ 5.0; 5.0 ])
+                     dsharp.tensor([ [5.0]; [5.0] ])
+                     dsharp.tensor([ [5.0; 5.0] ]) ] do
+            let t6 = t6a + t6b
+            let t6Commute = t6b + t6a
+            let t6Correct = dsharp.tensor([ [6.; 7.]; [8.; 9.] ])
+
+            Assert.AreEqual(t6Correct, t6)
+            Assert.AreEqual(t6Correct, t6Commute)
+
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 + 1  (broadcast --> 2x3x4)
+        // 2x3x4 + 4  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 + 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t7a = dsharp.tensor([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                  [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+        let t7Shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        let t7Results, t7CommuteResults = 
+            [| for shape in t7Shapes do 
+                  let t7b = dsharp.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7 = t7a + t7b
+                  let t7Commute = t7b + t7a
+                  yield (t7b, t7), (t7b, t7Commute) |]
+            |> Array.unzip
+
+        let t7Expected =
+            [|(dsharp.tensor 2.,                                                       dsharp.tensor [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (dsharp.tensor [2.],                                                     dsharp.tensor [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (dsharp.tensor [2., 3., 4., 5.],                                         dsharp.tensor [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (dsharp.tensor [[2.]],                                                   dsharp.tensor [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (dsharp.tensor [[2., 3., 4., 5.]],                                       dsharp.tensor [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (dsharp.tensor [[2.], [3.], [4.]],                                       dsharp.tensor [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[15., 16., 17., 18.], [20., 21., 22., 23.], [25., 26., 27., 28.]]]);
+              (dsharp.tensor [[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]],   dsharp.tensor [[[3., 5., 7., 9.], [8., 10., 12., 14.], [13., 15., 17., 19.]], [[15., 17., 19., 21.], [20., 22., 24., 26.], [25., 27., 29., 31.]]]);
+              (dsharp.tensor [[[2.]]],                                                 dsharp.tensor [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[15., 16., 17., 18.], [19., 20., 21., 22.], [23., 24., 25., 26.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.]]],                                     dsharp.tensor [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[15., 17., 19., 21.], [19., 21., 23., 25.], [23., 25., 27., 29.]]]);
+              (dsharp.tensor [[[2.], [3.], [4.]]],                                     dsharp.tensor [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[15., 16., 17., 18.], [20., 21., 22., 23.], [25., 26., 27., 28.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]]], dsharp.tensor [[[3., 5., 7., 9.], [8., 10., 12., 14.], [13., 15., 17., 19.]], [[15., 17., 19., 21.], [20., 22., 24., 26.], [25., 27., 29., 31.]]]);
+              (dsharp.tensor [[[2.]], [[3.]]],                                         dsharp.tensor [[[3., 4., 5., 6.], [7., 8., 9., 10.], [11., 12., 13., 14.]], [[16., 17., 18., 19.], [20., 21., 22., 23.], [24., 25., 26., 27.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.]], [[3., 4., 5., 6.]]],                 dsharp.tensor [[[3., 5., 7., 9.], [7., 9., 11., 13.], [11., 13., 15., 17.]], [[16., 18., 20., 22.], [20., 22., 24., 26.], [24., 26., 28., 30.]]]);
+              (dsharp.tensor [[[2.], [3.], [4.]], [[3.], [4.], [5.]]],                 dsharp.tensor [[[3., 4., 5., 6.], [8., 9., 10., 11.], [13., 14., 15., 16.]], [[16., 17., 18., 19.], [21., 22., 23., 24.], [26., 27., 28., 29.]]])|]
+
+
+        Assert.AreEqual(t7Expected, t7Results)
+        Assert.AreEqual(t7Expected, t7CommuteResults)
+
     [<Test>]
     member this.TestTensorStackTs () =
         let t0a = dsharp.tensor(1.)
@@ -529,19 +593,86 @@ type TestTensor () =
         let t1 = dsharp.tensor([1.; 2.]) * dsharp.tensor([3.; 4.])
         let t1Correct = dsharp.tensor([3.; 8.])
 
+        Assert.AreEqual(t1Correct, t1)
+
         let t2 = dsharp.tensor([1.; 2.]) * dsharp.tensor(5.)
         let t2Correct = dsharp.tensor([5.; 10.])
+
+        Assert.AreEqual(t2Correct, t2)
 
         let t3 = dsharp.tensor([1.; 2.]) * 5.f
         let t3Correct = dsharp.tensor([5.; 10.])
 
+        Assert.AreEqual(t3Correct, t3)
+
         let t4 = 5. * dsharp.tensor([1.; 2.])
         let t4Correct = dsharp.tensor([5.; 10.])
 
-        Assert.AreEqual(t1Correct, t1)
-        Assert.AreEqual(t2Correct, t2)
-        Assert.AreEqual(t3Correct, t3)
         Assert.AreEqual(t4Correct, t4)
+
+        // 2x2 * 1  (broadcast --> 2x2)
+        // 2x2 * 2  (broadcast --> 2x2)
+        // 2x2 * 2x1  (broadcast --> 2x2)
+        // 2x2 * 1x2  (broadcast --> 2x2)
+        let t5a = dsharp.tensor([ [1.; 2.]; [3.; 4.] ])
+        for t5b in [ dsharp.tensor([ 5.0 ])
+                     dsharp.tensor([ 5.0; 5.0 ])
+                     dsharp.tensor([ [5.0]; [5.0] ])
+                     dsharp.tensor([ [5.0; 5.0] ]) ] do
+            let t5 = t5a * t5b
+            let t5Commute = t5b * t5a
+            let t5Correct = dsharp.tensor([ [5.; 10.]; [15.; 20.] ])
+
+            Assert.AreEqual(t5Correct, t5)
+            Assert.AreEqual(t5Correct, t5Commute)
+
+        // Systematically do all allowed broadcasts into 2x3x4
+        // 2x3x4 * 1  (broadcast --> 2x3x4)
+        // 2x3x4 * 4  (broadcast --> 2x3x4)
+        // 2x3x4 * 1x1  (broadcast --> 2x3x4)
+        // 2x3x4 * 3x1  (broadcast --> 2x3x4)
+        // 2x3x4 * 1x4  (broadcast --> 2x3x4)
+        // etc.
+        let t6a = dsharp.tensor([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+                                    [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
+
+        // These are all the interesting shapes that broadcast into t6a
+        let t6Shapes = 
+            [ for i1 in [0;1;2] do
+                for i2 in [0;1;3] do
+                  for i3 in [0;1;4] do 
+                    if i1 <> 2 || i2 <> 3 || i3 <> 4 then
+                        [| if i1 <> 0 && i2 <> 0 && i3 <> 0 then yield i1
+                           if i2 <> 0 && i3 <> 0 then yield i2
+                           if i3 <> 0 then yield i3 |] ]
+            |> List.distinct
+
+        let t6Results, t6CommuteResults = 
+            [| for shape in t6Shapes do 
+                  let t6b = dsharp.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6 = t6a * t6b
+                  let t6Commute = t6b * t6a
+                  yield (t6b, t6 ), (t6b, t6Commute ) |]
+            |> Array.unzip
+
+        let t6Expected =
+            [|(dsharp.tensor 2.,                                                      dsharp.tensor [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (dsharp.tensor [2.],                                                    dsharp.tensor [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (dsharp.tensor [2., 3., 4., 5.],                                        dsharp.tensor [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (dsharp.tensor [[2.]],                                                  dsharp.tensor [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (dsharp.tensor [[2., 3., 4., 5.]],                                      dsharp.tensor [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (dsharp.tensor [[2.], [3.], [4.]],                                      dsharp.tensor [[[2., 4., 6., 8.], [15., 18., 21., 24.], [36., 40., 44., 48.]], [[26., 28., 30., 32.], [51., 54., 57., 60.], [84., 88., 92., 96.]]]);
+              (dsharp.tensor [[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]],  dsharp.tensor [[[2., 6., 12., 20.], [15., 24., 35., 48.], [36., 50., 66., 84.]], [[26., 42., 60., 80.], [51., 72., 95., 120.], [84., 110., 138., 168.]]]);
+              (dsharp.tensor [[[2.]]],                                                dsharp.tensor [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[26., 28., 30., 32.], [34., 36., 38., 40.], [42., 44., 46., 48.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.]]],                                    dsharp.tensor [[[2., 6., 12., 20.], [10., 18., 28., 40.], [18., 30., 44., 60.]], [[26., 42., 60., 80.], [34., 54., 76., 100.], [42., 66., 92., 120.]]]);
+              (dsharp.tensor [[[2.], [3.], [4.]]],                                    dsharp.tensor [[[2., 4., 6., 8.], [15., 18., 21., 24.], [36., 40., 44., 48.]], [[26., 28., 30., 32.], [51., 54., 57., 60.], [84., 88., 92., 96.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.], [3., 4., 5., 6.], [4., 5., 6., 7.]]],dsharp.tensor [[[2., 6., 12., 20.], [15., 24., 35., 48.], [36., 50., 66., 84.]], [[26., 42., 60., 80.], [51., 72., 95., 120.], [84., 110., 138., 168.]]]);
+              (dsharp.tensor [[[2.]], [[3.]]],                                        dsharp.tensor [[[2., 4., 6., 8.], [10., 12., 14., 16.], [18., 20., 22., 24.]], [[39., 42., 45., 48.], [51., 54., 57., 60.], [63., 66., 69., 72.]]]);
+              (dsharp.tensor [[[2., 3., 4., 5.]], [[3., 4., 5., 6.]]],                dsharp.tensor [[[2., 6., 12., 20.],  [10., 18., 28., 40.], [18., 30., 44., 60.]], [[39., 56., 75., 96.], [51., 72., 95., 120.], [63., 88., 115., 144.]]]);
+              (dsharp.tensor [[[2.], [3.], [4.]], [[3.], [4.], [5.]]],                dsharp.tensor [[[2., 4., 6., 8.],  [15., 18., 21., 24.], [36., 40., 44., 48.]], [[39., 42., 45., 48.], [68., 72., 76., 80.], [105., 110., 115., 120.]]]); |]
+
+        Assert.AreEqual(t6Expected, t6Results)
+        Assert.AreEqual(t6Expected, t6CommuteResults)
 
     [<Test>]
     member this.TestTensorDivTT () =
@@ -1082,6 +1213,69 @@ type TestTensor () =
         Assert.AreEqual(t2SumCorrect, t2Sum)
 
     [<Test>]
+    member this.TestTensorSumCollapseT () =
+        let t1 = dsharp.tensor([1.; 2.; 3.])
+        let t1Sum = t1.sumToSize([| |])
+        let t1SumCorrect = dsharp.tensor(6.)
+
+        Assert.AreEqual(t1SumCorrect, t1Sum)
+
+        let t2 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t2Sum = t2.sumToSize([| |])
+        let t2SumCorrect = dsharp.tensor(10.)
+
+        Assert.AreEqual(t2SumCorrect, t2Sum)
+
+        let t3 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t3Sum = t3.sumToSize([| 2 |])
+        let t3SumCorrect = dsharp.tensor( [4.; 6.] )
+
+        Assert.AreEqual(t3SumCorrect, t3Sum)
+
+        let t4 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t4Sum = t4.sumToSize([| 1; 2 |])
+        let t4SumCorrect = dsharp.tensor( [ [4.; 6.] ] )
+
+        Assert.AreEqual(t4SumCorrect, t4Sum)
+
+        let t5 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
+        let t5Sum = t5.sumToSize([| 2; 1 |])
+        let t5SumCorrect = dsharp.tensor( [ [3.]; [7.] ] )
+
+        Assert.AreEqual(t5SumCorrect, t5Sum)
+
+        // Systematically test all legitimate reductions of 2x2x2 to smaller sizes
+        let t6 = dsharp.tensor([ [[1.; 2.]; [3.; 4.] ]; [[5.; 6.]; [7.; 8.] ] ])
+        let systematicResults = 
+            [| for i1 in 0..2 do 
+                  for i2 in (if i1 = 0 then 0 else 1)..2 do
+                     for i3 in (if i2 = 0 then 0 else 1)..2 do
+                        let newShape = 
+                            [| if i1 > 0 then yield i1
+                               if i2 > 0 then yield i2
+                               if i3 > 0 then yield i3 |]
+                        yield (newShape, t6.sumToSize(newShape)) |]
+        
+        let expectedResults = 
+            [|([||], dsharp.tensor 36.);
+              ([|1|], dsharp.tensor [36.]);
+              ([|2|], dsharp.tensor [16.; 20.]);
+              ([|1; 1|], dsharp.tensor [[36.]]);
+              ([|1; 2|], dsharp.tensor [[16.; 20.]]);
+              ([|2; 1|], dsharp.tensor [[14.]; [22.]]);
+              ([|2; 2|], dsharp.tensor [[6.; 8.]; [10.; 12.]]);
+              ([|1; 1; 1|], dsharp.tensor [[[36.]]]);
+              ([|1; 1; 2|], dsharp.tensor [[[16.; 20.]]]);
+              ([|1; 2; 1|], dsharp.tensor [[[14.]; [22.]]]);
+              ([|1; 2; 2|], dsharp.tensor [[[6.; 8.]; [10.; 12.]]]);
+              ([|2; 1; 1|], dsharp.tensor [[[10.]]; [[26.]]]);
+              ([|2; 1; 2|], dsharp.tensor [[[4.; 6.]]; [[12.; 14.]]]);
+              ([|2; 2; 1|], dsharp.tensor [[[3.]; [7.]]; [[11.]; [15.]]]);
+              ([|2; 2; 2|], dsharp.tensor [[[1.; 2.]; [3.; 4.]]; [[5.; 6.]; [7.; 8.]]])|]
+
+        Assert.AreEqual(systematicResults, expectedResults)
+
+    [<Test>]
     member this.TestTensorSumT2Dim0 () =
         let t1 = dsharp.tensor([[1.; 2.]; [3.; 4.]])
         let t1Sum = t1.sumT2Dim0()
@@ -1590,6 +1784,37 @@ type TestTensor () =
             [   0.6776;    1.5844;   -0.5686]])
 
         Assert.True(t3.ApproximatelyEqual(t3Correct))
+
+    [<Test>]
+    member this.TestTensorExpandT () =
+        let t1 = dsharp.tensor(1.0)
+        let t1Expand = t1.expand([2;3])
+        let t1ExpandCorrect = dsharp.tensor([[1.;1.;1.];[1.;1.;1.]])
+        Assert.AreEqual(t1ExpandCorrect, t1Expand)
+
+        let t2 = dsharp.tensor([1.0])
+        let t2Expand = t2.expand([2;3])
+        let t2ExpandCorrect = dsharp.tensor([[1.;1.;1.];[1.;1.;1.]])
+
+        Assert.AreEqual(t2ExpandCorrect, t2Expand)
+
+        let t3 = dsharp.tensor([1.; 2.]) // 2
+        let t3Expand = t3.expand([3;2]) // 3x2
+        let t3ExpandCorrect = dsharp.tensor([[1.;2.];[1.;2.];[1.;2.]]) // 3x2
+
+        Assert.AreEqual(t3ExpandCorrect, t3Expand)
+
+        let t4 = dsharp.tensor([[1.]; [2.]]) // 2x1
+        let t4Expand = t4.expand([2;2]) // 2x2
+        let t4ExpandCorrect = dsharp.tensor([[1.;1.];[2.;2.]])
+
+        Assert.AreEqual(t4ExpandCorrect, t4Expand)
+
+        let t5 = dsharp.tensor([[1.]; [2.]]) // 2x1
+        let t5Expand = t5.expand([2;2;2]) // 2x2x2
+        let t5ExpandCorrect = dsharp.tensor([[[1.;1.];[2.;2.]];[[1.;1.];[2.;2.]]])
+
+        Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
     [<Test>]
     member this.TestTensorSqueezeT () =
