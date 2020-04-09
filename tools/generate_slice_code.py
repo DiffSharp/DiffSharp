@@ -1,5 +1,6 @@
 def generate(num_dims, fixed_dims):
-    str = 'member t.GetSlice('
+    str = '[<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]'
+    str += '\nmember t.GetSlice('
     prefix = ''
     for i in range(num_dims):
         if fixed_dims[i]:
