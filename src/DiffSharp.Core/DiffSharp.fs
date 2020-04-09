@@ -93,20 +93,20 @@ type DiffSharp with
     static member primal (tensor:Tensor) = tensor.primal
     static member derivative (tensor:Tensor) = tensor.derivative
     static member primalDerivative tensor = tensor |> DiffSharp.primal, tensor |> DiffSharp.derivative
-    static member makeForward (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
-    static member makeReverse (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
+    static member forwardDiff (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
+    static member reverseDiff (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
-    static member reverseProp (value:Tensor) (tensor:Tensor) = tensor |> DiffSharp.reverseReset; tensor |> DiffSharp.reversePush value
-    static member jacobianv' f x v = x |> DiffSharp.makeForward (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
+    static member reverse (value:Tensor) (tensor:Tensor) = tensor |> DiffSharp.reverseReset; tensor |> DiffSharp.reversePush value
+    static member jacobianv' f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
     static member jacobianv f x v = DiffSharp.jacobianv' f x v |> snd
     static member jacobianTv'' f x =
-        let xa = x |> DiffSharp.makeReverse (GlobalNestingLevel.Next())
+        let xa = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
         let z = f xa
         let zp = z |> DiffSharp.primal
         let r =
             fun v ->
-                z |> DiffSharp.reverseProp v
+                z |> DiffSharp.reverse v
                 xa |> DiffSharp.derivative
         zp, r
     static member jacobianTv' f x v = let zp, r = DiffSharp.jacobianTv'' f x in zp, r v
