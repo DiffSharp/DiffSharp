@@ -211,5 +211,7 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
+*opencover.xml 
+
 .ionide
 .vscode
