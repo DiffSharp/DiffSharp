@@ -2191,8 +2191,6 @@ type TestDerivatives () =
         Assert.AreEqual(revxdbCorrect, revxdb)
         Assert.AreEqual(revxdcCorrect, revxdc)
 
-    // TODO: add test for UnstackT
-
     [<Test>]
     member this.TestDerivativeNeg () =
         let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
@@ -2870,6 +2868,110 @@ type TestDerivatives () =
         revzc.reverse(dsharp.tensor([50.; 60.]), zeroDerivatives=false)
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+
+        Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
+        Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))
+        Assert.True(fwdzc.ApproximatelyEqual(fwdzcCorrect))
+        Assert.True(fwdzda.ApproximatelyEqual(fwdzdaCorrect))
+        Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
+        Assert.True(fwdzdc.ApproximatelyEqual(fwdzdcCorrect))
+        Assert.True(revza.ApproximatelyEqual(revzaCorrect))
+        Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
+        Assert.True(revzc.ApproximatelyEqual(revzcCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeUnstackT_Dim1 () =
+        let fwdx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+        let fwdz = fwdx.unstack(dim=1) |> Seq.toArray
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzda = fwdza.derivative
+        let fwdzdb = fwdzb.derivative
+        let fwdzaCorrect = dsharp.tensor([1.; 3.; 5.])
+        let fwdzbCorrect = dsharp.tensor([2.; 4.; 6.])
+        let fwdzdaCorrect = dsharp.tensor([10.; 30.; 50.])
+        let fwdzdbCorrect = dsharp.tensor([20.; 40.; 60.])
+
+        let revx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
+        let revz = revx.unstack(dim=1) |> Seq.toArray
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzaCorrect = dsharp.tensor([1.; 3.; 5.])
+        let revzbCorrect = dsharp.tensor([2.; 4.; 6.])
+        revza.reverse(dsharp.tensor([10.; 30.; 50.]))
+        revzb.reverse(dsharp.tensor([20.; 40.; 60.]), zeroDerivatives=false)
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+
+        Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
+        Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))
+        Assert.True(fwdzda.ApproximatelyEqual(fwdzdaCorrect))
+        Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
+        Assert.True(revza.ApproximatelyEqual(revzaCorrect))
+        Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
+        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+
+    [<Test>]
+    member this.TestDerivativeConcatTs () =
+        let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.;20.]))
+        let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.;40.]))
+        let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.;60.]))
+        let fwdz = Tensor.concat([fwdxa;fwdxb;fwdxc])
+        let fwdzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
+
+        let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
+        let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
+        let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revz = Tensor.concat([revxa;revxb;revxc])
+        let revzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
+        revz.reverse(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+        let revxda = revxa.derivative
+        let revxdb = revxb.derivative
+        let revxdc = revxc.derivative
+        let revxdaCorrect = dsharp.tensor([10.; 20.])
+        let revxdbCorrect = dsharp.tensor([30.; 40.])
+        let revxdcCorrect = dsharp.tensor([50.; 60.])
+
+        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
+        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
+        Assert.True(revz.ApproximatelyEqual(revzCorrect))
+        Assert.True(revxda.ApproximatelyEqual(revxdaCorrect))
+        Assert.True(revxdb.ApproximatelyEqual(revxdbCorrect))
+        Assert.True(revxdc.ApproximatelyEqual(revxdcCorrect))
+
+    [<Test>]
+    member this.TestDerivativeSplitT () =
+        let fwdx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+        let fwdz = fwdx.split([| 1;3;2 |])
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzc = fwdz.[2]
+        let fwdzda = fwdza.derivative
+        let fwdzdb = fwdzb.derivative
+        let fwdzdc = fwdzc.derivative
+        let fwdzaCorrect = dsharp.tensor([1.])
+        let fwdzbCorrect = dsharp.tensor([2.; 3.; 4.])
+        let fwdzcCorrect = dsharp.tensor([5.; 6.])
+        let fwdzdaCorrect = dsharp.tensor([10.])
+        let fwdzdbCorrect = dsharp.tensor([20.;30.; 40.])
+        let fwdzdcCorrect = dsharp.tensor([50.; 60.])
+
+        let revx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).reverseDiff()
+        let revz = revx.split([| 1;3;2 |])
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzc = revz.[2]
+        let revzaCorrect = dsharp.tensor([1.])
+        let revzbCorrect = dsharp.tensor([2.;3.; 4.])
+        let revzcCorrect = dsharp.tensor([5.; 6.])
+        revza.reverse(dsharp.tensor([10.]))
+        revzb.reverse(dsharp.tensor([20.;30.; 40.]), zeroDerivatives=false)
+        revzc.reverse(dsharp.tensor([50.; 60.]), zeroDerivatives=false)
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
 
         Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
         Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))

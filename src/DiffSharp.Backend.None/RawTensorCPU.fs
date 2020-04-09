@@ -177,25 +177,97 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
         | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override __.StackTs(tensors) =
-        let tensors = tensors |> Seq.toList
-        let values, shapes = tensors |> List.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> List.unzip
+    override __.StackTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
         checkCanStack shapes
-        let n = tensors |> List.length
-        let m = shapeLength shapes.[0]
-        let result = Array.create (n * m) 0.f
-        for i=0 to n-1 do
-            for j=0 to m-1 do
-                result.[i*m+j] <-values.[i].[j]
-        upcast RawTensorFloat32CPU(result, Array.append [|n|] shapes.[0])
+        let shape = shapes.[0]
+        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
+        let n = tensors |> Array.length
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let m = m1 * m2
+        let result = Array.zeroCreate (n * m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            result.[i] <-values.[i2].[j2]
 
-    override t.UnstackT() =
+        let outShape = [| yield! shape1; yield n; yield! shape2 |]
+        upcast RawTensorFloat32CPU(result, outShape)
+
+    override t.UnstackT(dim) =
         checkCanUnstack t.Dim
-        let n = t.Shape.[0]
-        let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
-        let unstackedLength = shapeLength unstackedShape
-        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape = t.Shape
+        let n = shape.[dim]
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let unstackedShape = Array.append shape1 shape2
+        let m = m1 * m2
+        let values = t.Values
+        let results = Array.init n (fun _ -> Array.zeroCreate m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            results.[i2].[j2] <- values.[i]
+        results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
+
+    override __.ConcatTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
+        let n = shapes.Length
+        if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
+        let shape = shapes.[0]
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape2) then
+            invalidArg "tensors" "Expecting Tensors with similar shapes"
+        let m1 = shapeLength shape1
+        let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
+        let m3 = shapeLength shape2
+        let m = m1 * m2 * m3
+        let result = Array.zeroCreate m
+        let outShape = [| yield! shape1; yield m2; yield! shape2 |]
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = shapes.[k].[dim]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    result.[i+j2] <-values.[k].[b+j2]
+                i <- i + d*m3
+
+        upcast RawTensorFloat32CPU(result, outShape)
+
+    override t.Split(sizes, dim) =
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape = t.Shape
+        if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
+        let n = sizes.Length
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m3 = shapeLength shape2
+        let values = t.Values
+        let results = Array.init n (fun k -> Array.zeroCreate (m1 * sizes.[k] * m3))
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = sizes.[k]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    results.[k].[b+j2] <-values.[i+j2]
+                i <- i + d*m3
+
+        results |> Array.mapi (fun k rvalues -> 
+            let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
+            upcast RawTensorFloat32CPU(rvalues, splitShape))
 
     override t.TransposeT2() =
         checkCanTranspose t.Dim

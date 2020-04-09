@@ -110,7 +110,7 @@ let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
     if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
 
 let checkCanStack (shapes:seq<int[]>) =
-    if not (allEqual shapes) then failwith "Cannot stack Tensors with same shapes"
+    if not (allEqual shapes) then failwith "Cannot stack Tensors with different shapes"
 
 let checkCanUnstack (dim:int) =
     if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"

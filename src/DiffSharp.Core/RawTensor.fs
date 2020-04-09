@@ -128,8 +128,10 @@ and [<AbstractClass>]
     abstract member CreateFromScalar : obj * int[] -> RawTensor
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
-    abstract member StackTs: RawTensor[] -> RawTensor
-    abstract member UnstackT: unit -> RawTensor[]
+    abstract member StackTs: RawTensor[] * dim:int -> RawTensor
+    abstract member UnstackT: dim:int -> RawTensor[]
+    abstract member ConcatTs: RawTensor[] * dim: int -> RawTensor
+    abstract member Split: int[] * dim: int -> RawTensor[]
     abstract member Zero : unit -> RawTensor
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor

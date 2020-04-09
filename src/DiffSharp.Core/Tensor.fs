@@ -158,26 +158,53 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    static member stack(tensors:seq<Tensor>) = 
+    static member stack(tensors:seq<Tensor>, ?dim:int) = 
+        let dim = defaultArg dim 0 
+        let tensors = tensors |> Seq.toArray
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         let shapes = tensors |> Seq.map (fun t -> t.shape)
         checkCanStack shapes
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.StackTs(tensors |> Seq.toArray |> Array.map (fun t -> t.primalRaw)))
+        | Tensor(ap) -> Tensor(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
-            TensorF(Tensor.stack(ap), Tensor.stack(ad), at)
+            TensorF(Tensor.stack(ap,dim=dim), Tensor.stack(ad,dim=dim), at)
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
-            let cp = Tensor.stack(ap) in TensorR(cp, ref (cp.zeroLike()), StackTs(tensors), ref 0u, at)
+            let cp = Tensor.stack(ap,dim=dim)
+            TensorR(cp, ref (cp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
 
-    member a.unstack () =
+    member a.unstack (?dim:int) =
+        let dim = defaultArg dim 0 
         checkCanUnstack a.dim
         match a with
-        | Tensor(ap) -> ap.UnstackT() |> Array.map Tensor
-        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack()) (ad.unstack())
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, i), ref 0u, at)) (ap.unstack())
+        | Tensor(ap) -> ap.UnstackT(dim) |> Array.map Tensor
+        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
+
+    static member concat(tensors:seq<Tensor>, ?dim: int) = 
+        let dim = defaultArg dim 0 
+        let tensors = tensors |> Seq.toArray
+        // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
+        match Seq.head tensors with
+        | Tensor(ap) -> Tensor(ap .ConcatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | TensorF(_,_,at) ->
+            let ap = tensors |> Seq.map (fun t -> t.primal)
+            let ad = tensors |> Seq.map (fun t -> t.derivative)
+            TensorF(Tensor.concat(ap, dim=dim), Tensor.concat(ad, dim=dim), at)
+        | TensorR(_,_,_,_,at) ->
+            let ap = tensors |> Seq.map (fun t -> t.primal)
+            let cp = Tensor.concat(ap, dim=dim)
+            TensorR(cp, ref (cp.zeroLike()), ConcatTs(tensors, dim), ref 0u, at)
+
+    member a.split (sizes: seq<int>, ?dim: int) =
+        let dim = defaultArg dim 0
+        let sizes = sizes |> Seq.toArray
+        match a with
+        | Tensor(ap) -> ap.Split(sizes, dim=dim) |> Array.map Tensor
+        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
@@ -1000,8 +1027,10 @@ type Tensor =
                         | SumT(a) -> reset (a::tt)
                         | SumT2Dim0(a) -> reset (a::tt)
                         | ExpandT(a) -> reset (a::tt)
-                        | StackTs(a) -> reset (List.append (a |> List.ofSeq) tt)
-                        | UnstackT(a,_) -> reset (a::tt)
+                        | StackTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
+                        | UnstackT(a,_,_) -> reset (a::tt)
+                        | ConcatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
+                        | SplitT(a,_,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
@@ -1117,10 +1146,19 @@ type Tensor =
                         | SumT(a) -> push ((t.derivative.expand(a.shape), a) :: tt)
                         | SumT2Dim0(a) -> push ((a.zerosLike() + t.derivative, a) :: tt)
                         | ExpandT(a) -> push ((t.derivative.sumToSize(a.shape), a) :: tt)
-                        | StackTs(a) ->  push (List.append (a |> Seq.map2 (fun t a -> (t, a)) (t.derivative.unstack()) |> Seq.toList) tt)
-                        | UnstackT(a,i) -> 
+                        | StackTs(a,dim) ->
+                            push (List.append (Array.zip (t.derivative.unstack(dim)) a |> Array.toList) tt)
+                        | UnstackT(a,dim,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=0 then i else 0), t.derivative.unsqueeze(0))
+                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), t.derivative.unsqueeze(dim))
+                            push ((a.zeroLike(), a) :: tt)
+                        | ConcatTs(a, dim) ->
+                            let sizes = a |> Array.map (fun x -> x.shape.[dim])
+                            push (List.append (Array.zip (t.derivative.split(sizes, dim=dim)) a |> Array.toList) tt)
+                        | SplitT(a,sizes,dim,i) -> 
+                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            let locs = (0,sizes) ||> Array.scan (+)
+                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
@@ -1224,8 +1262,10 @@ and TensorOp =
     | SumT of Tensor
     | SumT2Dim0 of Tensor
     | ExpandT of Tensor
-    | StackTs of seq<Tensor>
-    | UnstackT of Tensor * int
+    | StackTs of Tensor[] * dim:int
+    | UnstackT of Tensor * dim:int * i:int
+    | ConcatTs of Tensor[] * dim:int
+    | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
     | AddTTSlice of Tensor * int[] * Tensor
     | AddTTConstSlice of Tensor
