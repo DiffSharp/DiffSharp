@@ -4,3 +4,4 @@ dotnet: 3.1
 script:
   - dotnet build
   - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+  - bash <(curl -s https://codecov.io/bash)
