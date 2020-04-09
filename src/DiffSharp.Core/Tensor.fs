@@ -1300,6 +1300,7 @@ and TensorOp =
     | NewT
 
 type Tensor with
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
     member t.GetSlice(i0min:int option, i0max:int option) =
         // Dims: 1
         let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
@@ -1307,6 +1308,7 @@ type Tensor with
         let i0max   = defaultArg i0max (t.shape.[0] - 1)
         let bounds = array2D [[i0min; i0max; i0given]]
         t.GetSlice(bounds)
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
     member t.GetSlice(i0:int) =
         // Dims: 1
         let i0given = 1
