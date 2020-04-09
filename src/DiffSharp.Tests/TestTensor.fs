@@ -504,7 +504,7 @@ type TestTensor () =
         Assert.AreEqual(t2Correct, t2)
 
         let t3in = dsharp.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
-        let t3 = t3in.split(sizes=[1;2], dim=0)  |> Seq.toList // 2 of 1x1x1 and 2x1x2
+        let t3 = t3in.split(sizes=[1;2], dim=0)  |> Seq.toList // 2 of 1x1x2 and 2x1x2
         let t3Correct = [dsharp.tensor [[[1.;2.]]]; dsharp.tensor [[[3.;4.]];[[5.;6.]]]]
 
         Assert.AreEqual(t3Correct, t3)
