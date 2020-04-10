@@ -146,7 +146,7 @@ and [<AbstractClass>]
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
     abstract member ComputeHash: unit -> int
-    abstract member ApproximatelyEquals: RawTensor * float -> bool
+    abstract member AllClose: RawTensor * float * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor

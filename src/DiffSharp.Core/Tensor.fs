@@ -82,9 +82,10 @@ type Tensor =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
         | _ -> false
-    member t.ApproximatelyEqual(tensor:Tensor, ?tolerance) =
-        let tolerance = defaultArg tolerance 0.01
-        t.primalRaw.ApproximatelyEquals(tensor.primalRaw, tolerance)
+    member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
+        let relativeTolerance = defaultArg relativeTolerance 1e-5
+        let absoluteTolerance = defaultArg absoluteTolerance 1e-8
+        t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
     override t.GetHashCode() = hash t.primalRaw
     interface System.IComparable with
         override t.CompareTo(other) =

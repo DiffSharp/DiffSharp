@@ -688,10 +688,10 @@ type TestTensor () =
         let t4 = 5. / dsharp.tensor([1.; 2.])
         let t4Correct = dsharp.tensor([5.; 2.5])
 
-        Assert.True(t1.ApproximatelyEqual(t1Correct))
-        Assert.True(t2.ApproximatelyEqual(t2Correct))
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
-        Assert.True(t4.ApproximatelyEqual(t4Correct))
+        Assert.True(t1.allclose(t1Correct, 0.01))
+        Assert.True(t2.allclose(t2Correct, 0.01))
+        Assert.True(t3.allclose(t3Correct, 0.01))
+        Assert.True(t4.allclose(t4Correct, 0.01))
 
     [<Test>]
     member this.TestTensorPowTT () =
@@ -724,7 +724,7 @@ type TestTensor () =
                                         [190.5926; 90.8155];
                                         [134.3925; 64.1030]])
 
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
     member this.TestTensorConv1D () =
@@ -857,18 +857,18 @@ type TestTensor () =
         let t3b1s2 = t1.[0].unsqueeze(0).conv1d(t2, stride = 2)
         let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
-        Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
-        Assert.True(t3p2.ApproximatelyEqual(t3p2Correct))
-        Assert.True(t3s2.ApproximatelyEqual(t3s2Correct))
-        Assert.True(t3s3.ApproximatelyEqual(t3s3Correct))
-        Assert.True(t3s2p1.ApproximatelyEqual(t3s2p1Correct))
-        Assert.True(t3s3p2.ApproximatelyEqual(t3s3p2Correct))
-        Assert.True(t3d2.ApproximatelyEqual(t3d2Correct))
-        Assert.True(t3p2d3.ApproximatelyEqual(t3p2d3Correct))
-        Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
-        Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
-        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
+        Assert.True(t3p1.allclose(t3p1Correct, 0.01))
+        Assert.True(t3p2.allclose(t3p2Correct, 0.01))
+        Assert.True(t3s2.allclose(t3s2Correct, 0.01))
+        Assert.True(t3s3.allclose(t3s3Correct, 0.01))
+        Assert.True(t3s2p1.allclose(t3s2p1Correct, 0.01))
+        Assert.True(t3s3p2.allclose(t3s3p2Correct, 0.01))
+        Assert.True(t3d2.allclose(t3d2Correct, 0.01))
+        Assert.True(t3p2d3.allclose(t3p2d3Correct, 0.01))
+        Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01))
+        Assert.True(t3b1.allclose(t3b1Correct, 0.01))
+        Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
 
     [<Test>]
     member this.TestTensorConv2D () =
@@ -1178,18 +1178,18 @@ type TestTensor () =
         let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
 
         // Assert.True(false)
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
-        Assert.True(t3p1.ApproximatelyEqual(t3p1Correct))
-        Assert.True(t3p12.ApproximatelyEqual(t3p12Correct))
-        Assert.True(t3s2.ApproximatelyEqual(t3s2Correct))
-        Assert.True(t3s13.ApproximatelyEqual(t3s13Correct))
-        Assert.True(t3s2p1.ApproximatelyEqual(t3s2p1Correct))
-        Assert.True(t3s23p32.ApproximatelyEqual(t3s23p32Correct))
-        Assert.True(t3p1d2.ApproximatelyEqual(t3p1d2Correct))
-        Assert.True(t3p22d23.ApproximatelyEqual(t3p22d23Correct))
-        Assert.True(t3s3p6d3.ApproximatelyEqual(t3s3p6d3Correct))
-        Assert.True(t3b1.ApproximatelyEqual(t3b1Correct))
-        Assert.True(t3b1s2.ApproximatelyEqual(t3b1s2Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
+        Assert.True(t3p1.allclose(t3p1Correct, 0.01))
+        Assert.True(t3p12.allclose(t3p12Correct, 0.01))
+        Assert.True(t3s2.allclose(t3s2Correct, 0.01))
+        Assert.True(t3s13.allclose(t3s13Correct, 0.01))
+        Assert.True(t3s2p1.allclose(t3s2p1Correct, 0.01))
+        Assert.True(t3s23p32.allclose(t3s23p32Correct, 0.01))
+        Assert.True(t3p1d2.allclose(t3p1d2Correct, 0.01))
+        Assert.True(t3p22d23.allclose(t3p22d23Correct, 0.01))
+        Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01))
+        Assert.True(t3b1.allclose(t3b1Correct, 0.01))
+        Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
 
     [<Test>]
     member this.TestTensorNegT () =
@@ -1391,7 +1391,7 @@ type TestTensor () =
         let tStddev = t.stddev()
         let tStddevCorrect = dsharp.tensor(0.2398)
 
-        Assert.True(tStddev.ApproximatelyEqual(tStddevCorrect))
+        Assert.True(tStddev.allclose(tStddevCorrect, 0.01))
 
         // stddev, dim={0,1,2,3}, keepDim=true
         let tStddev0 = t.stddev(0)
@@ -1405,9 +1405,9 @@ type TestTensor () =
         let tStddev2Correct = dsharp.tensor([[0.2277; 0.2918; 0.2495];
          [0.1996; 0.2328; 0.2753]])
 
-        Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
-        Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
-        Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
+        Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
+        Assert.True(tStddev1.allclose(tStddev1Correct, 0.01))
+        Assert.True(tStddev2.allclose(tStddev2Correct, 0.01))
 
         // stddev, dim={0,1,2,3}, keepDim=true
         (* Python:
@@ -1427,9 +1427,9 @@ type TestTensor () =
         let tStddev2 = t.stddev(2, keepDim=true)
         let tStddev2Correct = dsharp.tensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
 
-        Assert.True(tStddev0.ApproximatelyEqual(tStddev0Correct))
-        Assert.True(tStddev1.ApproximatelyEqual(tStddev1Correct))
-        Assert.True(tStddev2.ApproximatelyEqual(tStddev2Correct))
+        Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
+        Assert.True(tStddev1.allclose(tStddev1Correct, 0.01))
+        Assert.True(tStddev2.allclose(tStddev2Correct, 0.01))
 
     [<Test>]
     member this.TestTensorVariance () =
@@ -1442,7 +1442,7 @@ type TestTensor () =
         let tVariance = t.variance()
         let tVarianceCorrect = dsharp.tensor(0.0575)
 
-        Assert.True(tVariance.ApproximatelyEqual(tVarianceCorrect))
+        Assert.True(tVariance.allclose(tVarianceCorrect, 0.01))
 
         // Variance, dim={0,1,2,3}
         (* Python:
@@ -1460,9 +1460,9 @@ type TestTensor () =
         let tVariance2 = t.variance(2)
         let tVariance2Correct = dsharp.tensor([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
 
-        Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
-        Assert.True(tVariance1.ApproximatelyEqual(tVariance1Correct))
-        Assert.True(tVariance2.ApproximatelyEqual(tVariance2Correct))
+        Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
+        Assert.True(tVariance1.allclose(tVariance1Correct, 0.01, 0.01))
+        Assert.True(tVariance2.allclose(tVariance2Correct, 0.01, 0.01))
 
         // Variance, dim={0,1,2,3}, keepDim=true
         (* Python:
@@ -1482,9 +1482,9 @@ type TestTensor () =
         let tVariance2 = t.variance(2, keepDim=true)
         let tVariance2Correct = dsharp.tensor([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
 
-        Assert.True(tVariance0.ApproximatelyEqual(tVariance0Correct))
-        Assert.True(tVariance1.ApproximatelyEqual(tVariance1Correct))
-        Assert.True(tVariance2.ApproximatelyEqual(tVariance2Correct))
+        Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
+        Assert.True(tVariance1.allclose(tVariance1Correct, 0.01, 0.01))
+        Assert.True(tVariance2.allclose(tVariance2Correct, 0.01, 0.01))
 
     [<Test>]
     member this.TestTensorTransposeT2 () =
@@ -1513,7 +1513,7 @@ type TestTensor () =
         let t1Floor = t1.floor()
         let t1FloorCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
 
-        Assert.True(t1Floor.ApproximatelyEqual(t1FloorCorrect))
+        Assert.True(t1Floor.allclose(t1FloorCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorCeilT () =
@@ -1521,7 +1521,7 @@ type TestTensor () =
         let t1Ceil = t1.ceil()
         let t1CeilCorrect = dsharp.tensor([1.; 1.; 1.; 1.; 1.])
 
-        Assert.True(t1Ceil.ApproximatelyEqual(t1CeilCorrect))
+        Assert.True(t1Ceil.allclose(t1CeilCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorRoundT () =
@@ -1529,7 +1529,7 @@ type TestTensor () =
         let t1Round = t1.round()
         let t1RoundCorrect = dsharp.tensor([1.; 0.; 0.; 1.; 1.])
 
-        Assert.True(t1Round.ApproximatelyEqual(t1RoundCorrect))
+        Assert.True(t1Round.allclose(t1RoundCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorAbsT () =
@@ -1561,7 +1561,7 @@ type TestTensor () =
         let t1Sigmoid = t1.sigmoid()
         let t1SigmoidCorrect = dsharp.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
 
-        Assert.True(t1Sigmoid.ApproximatelyEqual(t1SigmoidCorrect))
+        Assert.True(t1Sigmoid.allclose(t1SigmoidCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorExpT () =
@@ -1569,7 +1569,7 @@ type TestTensor () =
         let t1Exp = t1.exp()
         let t1ExpCorrect = dsharp.tensor([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
 
-        Assert.True(t1Exp.ApproximatelyEqual(t1ExpCorrect))
+        Assert.True(t1Exp.allclose(t1ExpCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorLogT () =
@@ -1577,7 +1577,7 @@ type TestTensor () =
         let t1Log = t1.log()
         let t1LogCorrect = dsharp.tensor([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
 
-        Assert.True(t1Log.ApproximatelyEqual(t1LogCorrect))
+        Assert.True(t1Log.allclose(t1LogCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorLog10T () =
@@ -1585,7 +1585,7 @@ type TestTensor () =
         let t1Log10 = t1.log10()
         let t1Log10Correct = dsharp.tensor([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
 
-        Assert.True(t1Log10.ApproximatelyEqual(t1Log10Correct))
+        Assert.True(t1Log10.allclose(t1Log10Correct, 0.01))
 
     [<Test>]
     member this.TestTensorSqrtT () =
@@ -1593,7 +1593,7 @@ type TestTensor () =
         let t1Sqrt = t1.sqrt()
         let t1SqrtCorrect = dsharp.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
 
-        Assert.True(t1Sqrt.ApproximatelyEqual(t1SqrtCorrect))
+        Assert.True(t1Sqrt.allclose(t1SqrtCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorSinT () =
@@ -1601,7 +1601,7 @@ type TestTensor () =
         let t1Sin = t1.sin()
         let t1SinCorrect = dsharp.tensor([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
 
-        Assert.True(t1Sin.ApproximatelyEqual(t1SinCorrect))
+        Assert.True(t1Sin.allclose(t1SinCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorCosT () =
@@ -1609,7 +1609,7 @@ type TestTensor () =
         let t1Cos = t1.cos()
         let t1CosCorrect = dsharp.tensor([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
 
-        Assert.True(t1Cos.ApproximatelyEqual(t1CosCorrect))
+        Assert.True(t1Cos.allclose(t1CosCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorTanT () =
@@ -1617,7 +1617,7 @@ type TestTensor () =
         let t1Tan = t1.tan()
         let t1TanCorrect = dsharp.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
 
-        Assert.True(t1Tan.ApproximatelyEqual(t1TanCorrect))
+        Assert.True(t1Tan.allclose(t1TanCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorSinhT () =
@@ -1625,7 +1625,7 @@ type TestTensor () =
         let t1Sinh = t1.sinh()
         let t1SinhCorrect = dsharp.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
 
-        Assert.True(t1Sinh.ApproximatelyEqual(t1SinhCorrect))
+        Assert.True(t1Sinh.allclose(t1SinhCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorCoshT () =
@@ -1633,7 +1633,7 @@ type TestTensor () =
         let t1Cosh = t1.cosh()
         let t1CoshCorrect = dsharp.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
 
-        Assert.True(t1Cosh.ApproximatelyEqual(t1CoshCorrect))
+        Assert.True(t1Cosh.allclose(t1CoshCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorTanhT () =
@@ -1641,7 +1641,7 @@ type TestTensor () =
         let t1Tanh = t1.tanh()
         let t1TanhCorrect = dsharp.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
 
-        Assert.True(t1Tanh.ApproximatelyEqual(t1TanhCorrect))
+        Assert.True(t1Tanh.allclose(t1TanhCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorAsinT () =
@@ -1649,7 +1649,7 @@ type TestTensor () =
         let t1Asin = t1.asin()
         let t1AsinCorrect = dsharp.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
 
-        Assert.True(t1Asin.ApproximatelyEqual(t1AsinCorrect))
+        Assert.True(t1Asin.allclose(t1AsinCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorAcosT () =
@@ -1657,7 +1657,7 @@ type TestTensor () =
         let t1Acos = t1.acos()
         let t1AcosCorrect = dsharp.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
 
-        Assert.True(t1Acos.ApproximatelyEqual(t1AcosCorrect))
+        Assert.True(t1Acos.allclose(t1AcosCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorAtanT () =
@@ -1665,7 +1665,7 @@ type TestTensor () =
         let t1Atan = t1.atan()
         let t1AtanCorrect = dsharp.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
 
-        Assert.True(t1Atan.ApproximatelyEqual(t1AtanCorrect))
+        Assert.True(t1Atan.allclose(t1AtanCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorSlice () =
@@ -1783,7 +1783,7 @@ type TestTensor () =
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
 
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
     member this.TestTensorExpandT () =
@@ -1822,7 +1822,7 @@ type TestTensor () =
         let t1Squeeze = t1.squeeze()
         let t1SqueezeCorrect = dsharp.tensor([[1.;2.];[3.;4.]])
 
-        Assert.True(t1Squeeze.ApproximatelyEqual(t1SqueezeCorrect))
+        Assert.True(t1Squeeze.allclose(t1SqueezeCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorUnsqueezeT () =
@@ -1830,7 +1830,7 @@ type TestTensor () =
         let t1Unsqueeze = t1.unsqueeze(1)
         let t1UnsqueezeCorrect = dsharp.tensor([[[1.;2.]]; [[3.;4.]]])
 
-        Assert.True(t1Unsqueeze.ApproximatelyEqual(t1UnsqueezeCorrect))
+        Assert.True(t1Unsqueeze.allclose(t1UnsqueezeCorrect, 0.01))
 
     [<Test>]
     member this.TestTensorFlipT () =
@@ -2038,7 +2038,7 @@ type TestTensor () =
             [ 3.6887; 17.6992;  3.3767];
             [ 0.1203;  8.0772; 13.5639]])
 
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
     member this.TestTensorMinBinary () =
@@ -2053,7 +2053,7 @@ type TestTensor () =
             [ -2.9624;   4.3355;   2.2506];
             [ -2.3536;  -5.4088;   1.5658]])
 
-        Assert.True(t3.ApproximatelyEqual(t3Correct))
+        Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
     member this.TestTensorSoftmax () =
@@ -2134,12 +2134,12 @@ type TestTensor () =
              [1.8468e-04; 9.9982e-01];
              [9.9984e-01; 1.6463e-04]]])
 
-        Assert.True(t1Softmax0.ApproximatelyEqual(t1Softmax0Correct, 0.001))
-        Assert.True(t2Softmax0.ApproximatelyEqual(t2Softmax0Correct, 0.001))
-        Assert.True(t2Softmax1.ApproximatelyEqual(t2Softmax1Correct, 0.001))
-        Assert.True(t3Softmax0.ApproximatelyEqual(t3Softmax0Correct, 0.001))
-        Assert.True(t3Softmax1.ApproximatelyEqual(t3Softmax1Correct, 0.001))
-        Assert.True(t3Softmax2.ApproximatelyEqual(t3Softmax2Correct, 0.001))
+        Assert.True(t1Softmax0.allclose(t1Softmax0Correct, 0.001))
+        Assert.True(t2Softmax0.allclose(t2Softmax0Correct, 0.001))
+        Assert.True(t2Softmax1.allclose(t2Softmax1Correct, 0.001))
+        Assert.True(t3Softmax0.allclose(t3Softmax0Correct, 0.001))
+        Assert.True(t3Softmax1.allclose(t3Softmax1Correct, 0.001))
+        Assert.True(t3Softmax2.allclose(t3Softmax2Correct, 0.001))
 
     [<Test>]
     member this.TestTensorDepth () =

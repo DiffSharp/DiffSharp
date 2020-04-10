@@ -171,10 +171,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
         | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override t1.ApproximatelyEquals(t2:RawTensor, tolerance) =
-        let tolerance = float32 <| tolerance
+    override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) =
+        let relativeTolerance = float32 <| relativeTolerance
+        let absoluteTolerance = float32 <| absoluteTolerance
         match t2 with
-        | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
+        | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
         | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
     override __.StackTs(tensors, dim) =

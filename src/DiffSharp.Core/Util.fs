@@ -90,11 +90,11 @@ let duplicates l =
 let hasDuplicates l =
     (duplicates l) |> List.isEmpty |> not
         
-let inline arraysApproximatelyEqual (tolerance:'T) (array1:'T[]) (array2:'T[]) =
+let inline arraysAllClose (relativeTolerance:'T) (absoluteTolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
     if dim1 <> dim2 then false
-    else seq {for i in 0..dim1-1 do yield (abs(array1.[i] - array2.[i]) <= tolerance) } |> Seq.forall id
+    else Array.map2 (fun a b -> abs(a-b) <= absoluteTolerance + relativeTolerance*abs(b)) array1 array2 |> Array.forall id
 
 let allEqual (items:seq<'a>) =
     let item0 = items |> Seq.head
