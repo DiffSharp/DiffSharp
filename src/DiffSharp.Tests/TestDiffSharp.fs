@@ -6,8 +6,8 @@ open DiffSharp
 [<TestFixture>]
 type TestDiffSharp () =
 
-    let rosenBrock (x:Tensor) = (1. - x.[0])**2 + 100. * (x.[1] - x.[0]**2)**2
-    let rosenBrockGrad (x:Tensor) = dsharp.stack([-2*(1-x.[0])-400*x.[0]*(-(x.[0]**2) + x.[1]); 200*(-(x.[0]**2) + x.[1])])
+    let rosenbrock (x:Tensor) = (1. - x.[0])**2 + 100. * (x.[1] - x.[0]**2)**2
+    let rosenbrockGrad (x:Tensor) = dsharp.stack([-2*(1-x.[0])-400*x.[0]*(-(x.[0]**2) + x.[1]); 200*(-(x.[0]**2) + x.[1])])
 
     [<SetUp>]
     member this.Setup () =
@@ -58,7 +58,7 @@ type TestDiffSharp () =
     [<Test>]
     member this.TestGrad () =
         let x = dsharp.tensor([1.5;2.5])
-        let g = dsharp.grad rosenBrock x
-        let gCorrect = rosenBrockGrad x
+        let g = dsharp.grad rosenbrock x
+        let gCorrect = rosenbrockGrad x
         printfn "%A %A" g gCorrect
         Assert.AreEqual(gCorrect, g)
