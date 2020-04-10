@@ -84,6 +84,7 @@ type DiffSharp =
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
 
+
 // Functional differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
@@ -92,26 +93,31 @@ type DiffSharp with
     static member nestNext() = GlobalNestingLevel.Next() |> ignore
     static member primal (tensor:Tensor) = tensor.primal
     static member derivative (tensor:Tensor) = tensor.derivative
-    static member primalDerivative tensor = tensor |> DiffSharp.primal, tensor |> DiffSharp.derivative
+    static member primalDerivative (tensor:Tensor) = tensor.primal, tensor.derivative
     static member forwardDiff (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
     static member reverseDiff (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverse (value:Tensor) (tensor:Tensor) = tensor.reverse(value)
-    static member jacobianv' f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
-    static member jacobianv f x v = DiffSharp.jacobianv' f x v |> snd
-    static member jacobianTv'' f x =
-        let xa = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
-        let z = f xa
-        let r = fun v -> z |> DiffSharp.reverse v; xa.derivative
+    static member jacobianvPrimal f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
+    static member jacobianv f x v = DiffSharp.jacobianvPrimal f x v |> snd
+    static member gradv = DiffSharp.jacobianv
+    static member gradvPrimal = DiffSharp.jacobianvPrimal
+    static member jacobianTvPrimalRev f x =
+        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
+        let z = f x
+        let r = fun v -> z |> DiffSharp.reverse v; x.derivative
         z.primal, r
-    static member jacobianTv' f x v = let zp, r = DiffSharp.jacobianTv'' f x in zp, r v
-    static member jacobianTv f x v = DiffSharp.jacobianTv' f x v |> snd
-    static member gradv f x v = DiffSharp.jacobianv f x v
-    static member gradv' f x v = DiffSharp.jacobianv' f x v
-    static member diff' f x = DiffSharp.jacobianv' f x (x |> DiffSharp.onesLike)
-    static member diff f x = DiffSharp.diff' f x |> snd
-    static member grad' f x = let zp, r = DiffSharp.jacobianTv'' f x in zp, r (zp |> DiffSharp.onesLike)
-    static member grad f x = DiffSharp.grad' f x |> snd
+    static member jacobianTvPrimal f x v =
+        let zp, r = DiffSharp.jacobianTvPrimalRev f x in zp, r v
+    static member jacobianTv f x v = DiffSharp.jacobianTvPrimal f x v |> snd
+    static member gradTv = DiffSharp.jacobianTv
+    static member gradTvPrimal = DiffSharp.jacobianTvPrimal
+    static member gradPrimal f x = 
+        let zp, r = DiffSharp.jacobianTvPrimalRev f x
+        // if x.dim <> 1 then printf "Warning: expecting function f to have a vector argument x. Encountered x with shape %A" x.shape
+        if zp.dim > 0 then failwithf "Expecting a scalar-valued function f. Encountered f output with shape %A" zp.shape
+        zp, r (zp.onesLike())
+    static member grad f x = DiffSharp.gradPrimal f x |> snd
 
 type dsharp = DiffSharp
