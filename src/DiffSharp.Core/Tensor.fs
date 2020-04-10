@@ -421,7 +421,7 @@ type Tensor =
     static member Pow (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.PowTT(b)
-            let inline fTensor(a,b) = a ** b
+            let inline fTensor(a:Tensor,b:Tensor) = a ** b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
@@ -431,7 +431,7 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif a.dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowT0T(b)
-            let inline fTensor(a,b) = a ** b
+            let inline fTensor(a:Tensor,b:Tensor) = a ** b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
@@ -441,7 +441,7 @@ type Tensor =
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         elif b.dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowTT0(b)
-            let inline fTensor(a,b) = a ** b
+            let inline fTensor(a:Tensor,b:Tensor) = a ** b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
@@ -455,7 +455,11 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
+    static member Pow (a:Tensor, b:float) = a ** a.like(b)
+    static member Pow (a:Tensor, b:int) = a ** a.like(b)
     static member Pow (a:Tensor, b) = a ** a.like(b)
+    static member Pow (a:float, b:Tensor) = b.like(a) ** b
+    static member Pow (a:int, b:Tensor) = b.like(a) ** b
     static member Pow (a, b:Tensor) = b.like(a) ** b
     member t1.pow(t2:Tensor) = t1 ** t2
     member t1.pow(t2) = t1 ** t1.like(t2)
