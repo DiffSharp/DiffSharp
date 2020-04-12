@@ -16,6 +16,12 @@ type Tensor =
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
+    member t.primalDeep =
+        match t with
+        | Tensor(_) -> t
+        | TensorF(tp,_,_) -> tp.primalDeep
+        | TensorR(tp,_,_,_,_) -> tp.primalDeep
+
     member t.primalRaw =
         match t with
         | Tensor(tp) -> tp
@@ -41,6 +47,18 @@ type Tensor =
             | Tensor(_) -> failwith "Cannot set derivative of constant Tensor"
             | TensorF(_) -> failwith "Cannot set derivative of TensorF"
             | TensorR(_,td,_,_,_) -> td := value
+
+    member t.derivativeDeep =
+        match t with
+        | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+        | TensorF(_,td,_) -> 
+            match td with
+            | Tensor(_) -> td
+            | _ -> td.derivativeDeep
+        | TensorR(_,td,_,_,_) -> 
+            match !td with
+            | Tensor(_) -> !td
+            | _ -> (!td).derivativeDeep
 
     member t.fanout
         with get() =

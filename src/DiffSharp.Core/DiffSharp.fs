@@ -88,9 +88,10 @@ type DiffSharp =
 // Functional differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
+    static member nest() = GlobalNestingLevel.Next() |> ignore
     static member nest(level) = GlobalNestingLevel.Set(level)
+    static member nestLevel() = GlobalNestingLevel.Current
     static member nestReset() = GlobalNestingLevel.Reset()
-    static member nestNext() = GlobalNestingLevel.Next() |> ignore
     static member primal (tensor:Tensor) = tensor.primal
     static member derivative (tensor:Tensor) = tensor.derivative
     static member primalDerivative (tensor:Tensor) = tensor.primal, tensor.derivative
@@ -99,25 +100,58 @@ type DiffSharp with
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverse (value:Tensor) (tensor:Tensor) = tensor.reverse(value)
-    static member jacobianvPrimal f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
-    static member jacobianv f x v = DiffSharp.jacobianvPrimal f x v |> snd
-    static member gradv = DiffSharp.jacobianv
-    static member gradvPrimal = DiffSharp.jacobianvPrimal
-    static member jacobianTvPrimalRev f x =
+    static member evalForwardDiff f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
+    static member evalForwardDiffs (f:Tensor->Tensor) x (v:Tensor[]) =
+        let n = v.Length
+        if n = 0 then [|f x|]
+        else
+            let mutable x = x
+            for i in 0..n-1 do
+                x <- x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
+            let mutable z = f x
+            [|for _ in 0..n-1 do
+                let d = z.derivativeDeep
+                z <- z.primal
+                d
+                |] |> Array.rev |> Array.append [|z|]
+    static member evalReverseDiff f x =
         let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
         let z = f x
         let r = fun v -> z |> DiffSharp.reverse v; x.derivative
         z.primal, r
-    static member jacobianTvPrimal f x v =
-        let zp, r = DiffSharp.jacobianTvPrimalRev f x in zp, r v
-    static member jacobianTv f x v = DiffSharp.jacobianTvPrimal f x v |> snd
-    static member gradTv = DiffSharp.jacobianTv
-    static member gradTvPrimal = DiffSharp.jacobianTvPrimal
-    static member gradPrimal f x = 
-        let zp, r = DiffSharp.jacobianTvPrimalRev f x
-        // if x.dim <> 1 then printf "Warning: expecting function f to have a vector argument x. Encountered x with shape %A" x.shape
-        if zp.dim > 0 then failwithf "Expecting a scalar-valued function f. Encountered f output with shape %A" zp.shape
-        zp, r (zp.onesLike())
-    static member grad f x = DiffSharp.gradPrimal f x |> snd
+    static member pjacobianv f (x:Tensor) v = 
+        let fx, d = DiffSharp.evalForwardDiff f x v
+        if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        fx, d
+    static member jacobianv f x v = DiffSharp.pjacobianv f x v |> snd
+    static member pgradv f (x:Tensor) v =
+        let fx, d = DiffSharp.evalForwardDiff f x v
+        if x.dim > 1 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        fx, d
+    static member gradv f x v = DiffSharp.pgradv f x v |> snd
+    static member pdiff f (x:Tensor) =
+        let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
+        if x.dim > 0 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar, encountered f:%A->%A" x.shape fx.shape
+        fx, d
+    static member diff f x = DiffSharp.pdiff f x |> snd
+    static member ppdiffn (n:int) (f:Tensor->Tensor) (x:Tensor) =
+        if n < 0 then failwith "Differentiation order n must be >= 0"
+        if x.dim > 0 then failwithf "f must be a function of a scalar"
+        DiffSharp.evalForwardDiffs f x (Array.create n (x.onesLike()))
+    static member pdiffn n f x = let a = DiffSharp.ppdiffn n f x in a |> Array.head, a |> Array.last
+    static member diffn n f x = DiffSharp.pdiffn n f x |> snd
+    static member pdiff2 f x = DiffSharp.pdiffn 2 f x
+    static member diff2 f x = DiffSharp.diffn 2 f x
+    static member pjacobianTv f x v =
+        let fx, r = DiffSharp.evalReverseDiff f x
+        if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        fx, r v
+    static member jacobianTv f x v = DiffSharp.pjacobianTv f x v |> snd
+    static member pgrad f x =
+        let fx, r = DiffSharp.evalReverseDiff f x
+        if x.dim > 1 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        fx, r (fx.onesLike())
+    static member grad f x = DiffSharp.pgrad f x |> snd
+
 
 type dsharp = DiffSharp
