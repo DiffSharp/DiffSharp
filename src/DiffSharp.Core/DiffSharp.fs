@@ -49,6 +49,7 @@ type DiffSharp =
     static member div(a:Tensor, b:Tensor) = a.div(b)
     static member pow(a:Tensor, b:Tensor) = a.pow(b)
     static member matmul(a:Tensor, b:Tensor) = a.matmul(b)
+    static member dot(a:Tensor, b:Tensor) = a.dot(b)
     static member neg(a:Tensor) = a.neg()
     static member sum(a:Tensor) = a.sum()
     static member sum(a:Tensor, dim:int, ?keepDim:bool) = a.sum(dim, ?keepDim=keepDim)

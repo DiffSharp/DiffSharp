@@ -138,6 +138,9 @@ let checkCanMatmul (shape1:int[]) (shape2:int[]) =
     if shape1.Length <> 2 || shape2.Length <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
     if shape1.[1] <> shape2.[0] then failwithf "Cannot multiply Tensors with shapes %A, %A" shape1 shape2
 
+let checkCanDot (shape1:int[]) (shape2:int[]) =
+    if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two 1d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+
 let checkCanConv1d (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
     if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
     if padding < 0 then failwithf "Expecting padding >= 0, received %A" padding

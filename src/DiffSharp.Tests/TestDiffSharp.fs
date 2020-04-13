@@ -100,6 +100,18 @@ type TestDiffSharp () =
         Assert.AreEqual(gCorrect, g2)
 
     [<Test>]
+    member this.TestGradv () =
+        let x = dsharp.tensor([1.5;2.5])
+        let v = dsharp.tensor([2.75;-3.5])
+        let fx, gv = dsharp.pgradv rosenbrock x v
+        let gv2 = dsharp.gradv rosenbrock x v
+        let fxCorrect = rosenbrock x
+        let gvCorrect = dsharp.dot(rosenbrockGrad x,  v)
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(gvCorrect, gv)
+        Assert.AreEqual(gvCorrect, gv2)
+
+    [<Test>]
     member this.TestJacobian () =
         let x = dsharp.arange(2.)
         let fx, j = dsharp.pjacobian fvect2vect2 x

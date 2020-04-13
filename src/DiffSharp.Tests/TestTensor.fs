@@ -739,6 +739,14 @@ type TestTensor () =
         Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
+    member this.TestTensorDot () =
+        let t1 = dsharp.tensor([8.0766, 3.3030, -2.1732, 8.9448, 1.1028])
+        let t2 = dsharp.tensor([5.1067, -0.0681, 7.4633, -3.6027, 9.0070])
+        let t3 = dsharp.dot(t1, t2)
+        let t3Correct = dsharp.tensor(2.5081)
+        Assert.True(t3.allclose(t3Correct, 0.01))
+
+    [<Test>]
     member this.TestTensorConv1D () =
         let t1 = dsharp.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                  [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];

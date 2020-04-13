@@ -318,8 +318,8 @@ type Tensor =
             aExpanded + bExpanded
     static member (+) (a:Tensor, b) = a + a.like(b)
     static member (+) (a, b:Tensor) = b.like(a) + b
-    member t1.add(t2:Tensor) = t1 + t2
-    member t1.add(t2) = t1 + t1.like(t2)
+    member a.add(b:Tensor) = a + b
+    member a.add(b) = a + a.like(b)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -359,8 +359,8 @@ type Tensor =
             aExpanded - bExpanded
     static member (-) (a:Tensor, b) = a - a.like(b)
     static member (-) (a, b:Tensor) = b.like(a) - b
-    member t1.sub(t2:Tensor) = t1 - t2
-    member t1.sub(t2) = t1 - t1.like(t2)
+    member a.sub(b:Tensor) = a - b
+    member a.sub(b) = a - a.like(b)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -400,8 +400,8 @@ type Tensor =
             aExpanded * bExpanded
     static member (*) (a:Tensor, b) = a * a.like(b)
     static member (*) (a, b:Tensor) = b.like(a) * b
-    member t1.mul(t2:Tensor) = t1 * t2
-    member t1.mul(t2) = t1 * t1.like(t2)
+    member a.mul(b:Tensor) = a * b
+    member a.mul(b) = a * a.like(b)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -441,8 +441,8 @@ type Tensor =
             aExpanded / bExpanded
     static member (/) (a:Tensor, b) = a / a.like(b)
     static member (/) (a, b:Tensor) = b.like(a) / b
-    member t1.div(t2:Tensor) = t1 / t2
-    member t1.div(t2) = t1 / t1.like(t2)
+    member a.div(b:Tensor) = a / b
+    member a.div(b) = a / a.like(b)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.shape = b.shape then
@@ -487,8 +487,8 @@ type Tensor =
     static member Pow (a:float, b:Tensor) = b.like(a) ** b
     static member Pow (a:int, b:Tensor) = b.like(a) ** b
     static member Pow (a, b:Tensor) = b.like(a) ** b
-    member t1.pow(t2:Tensor) = t1 ** t2
-    member t1.pow(t2) = t1 ** t1.like(t2)
+    member a.pow(b:Tensor) = a ** b
+    member a.pow(b) = a ** a.like(b)
 
     member a.matmul (b:Tensor) =
         checkCanMatmul a.shape b.shape
@@ -502,13 +502,19 @@ type Tensor =
         let inline dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    member a.dot(b:Tensor) =
+        checkCanDot a.shape b.shape
+        let a:Tensor = a.view([1;a.nelement])
+        let b:Tensor = b.view([b.nelement;1])
+        a.matmul(b).view([])
+
     static member (~-) (a:Tensor) =
         let inline fRaw(a:RawTensor) = a.NegT()
         let inline fTensor(a) = -a
         let inline dfTensorFwd(cp,ap,ad) = -ad
         let inline dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    member t.neg() = -t
+    member a.neg() = -a
 
     member a.sum() =
         let inline fRaw(a:RawTensor) = a.SumT()
