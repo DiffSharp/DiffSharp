@@ -6,11 +6,20 @@ open DiffSharp
 [<TestFixture>]
 type TestDiffSharp () =
 
-    let rosenbrock (x:Tensor) = (1. - x.[0])**2 + 100. * (x.[1] - x.[0]**2)**2
-    let rosenbrockGrad (x:Tensor) = dsharp.stack([-2*(1-x.[0])-400*x.[0]*(-(x.[0]**2) + x.[1]); 200*(-(x.[0]**2) + x.[1])])
+    let rosenbrock (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        (1. - x)**2 + 100. * (y - x**2)**2
+    let rosenbrockGrad (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        dsharp.tensor([-2*(1-x)-400*x*(-(x**2) + y); 200*(-(x**2) + y)])
+    let rosenbrockHessian (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.*dsharp.one()]])
 
     let fscalarvect3 (x:Tensor) = dsharp.stack([sin x; exp x; cos x])
     let fscalarvect3Diff (x:Tensor) = dsharp.stack([cos x; exp x; -sin x])
+    let fscalarvect3Diff2 (x:Tensor) = dsharp.stack([-sin x; exp x; -cos x])
+    let fscalarvect3Diff3 (x:Tensor) = dsharp.stack([-cos x; exp x; sin x])
 
     let fvect2vect2 (x:Tensor) = 
         let x, y = x.[0], x.[1]
@@ -103,6 +112,28 @@ type TestDiffSharp () =
         Assert.AreEqual(dCorrect, d2)
 
     [<Test>]
+    member this.TestDiff2 () =
+        let x = dsharp.tensor(1.5)
+        let fx, d = dsharp.pdiff2 fscalarvect3 x
+        let d2 = dsharp.diff2 fscalarvect3 x
+        let fxCorrect = fscalarvect3 x
+        let dCorrect = fscalarvect3Diff2 x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(dCorrect, d)
+        Assert.AreEqual(dCorrect, d2)
+
+    [<Test>]
+    member this.TestDiffn () =
+        let x = dsharp.tensor(1.5)
+        let fx, d = dsharp.pdiffn 3 fscalarvect3 x
+        let d2 = dsharp.diffn 3 fscalarvect3 x
+        let fxCorrect = fscalarvect3 x
+        let dCorrect = fscalarvect3Diff3 x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(dCorrect, d)
+        Assert.AreEqual(dCorrect, d2)
+
+    [<Test>]
     member this.TestGrad () =
         let x = dsharp.tensor([1.5;2.5])
         let fx, g = dsharp.pgrad rosenbrock x
@@ -177,3 +208,41 @@ type TestDiffSharp () =
         Assert.AreEqual(fxCorrect, fx)
         Assert.AreEqual(jCorrect, j)
         Assert.AreEqual(jCorrect, j2)
+
+    [<Test>]
+    member this.TestGradhessianv () =
+        let x = dsharp.tensor([1.5, 2.5])
+        let v = dsharp.tensor([0.5, -2.])
+        let fx, gv, hv = dsharp.pgradhessianv rosenbrock x v
+        let gv2, hv2 = dsharp.gradhessianv rosenbrock x v
+        let fxCorrect = rosenbrock x
+        let gvCorrect = dsharp.dot(rosenbrockGrad x,  v)        
+        let hvCorrect = dsharp.matmul(rosenbrockHessian x,  v.view([-1;1])).view(-1)
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(gvCorrect, gv)
+        Assert.AreEqual(gvCorrect, gv2)
+        Assert.AreEqual(hvCorrect, hv)
+        Assert.AreEqual(hvCorrect, hv2)
+
+    [<Test>]
+    member this.TestHessianv () =
+        let x = dsharp.tensor([1.5, 2.5])
+        let v = dsharp.tensor([0.5, -2.])
+        let fx, hv = dsharp.phessianv rosenbrock x v
+        let hv2 = dsharp.hessianv rosenbrock x v
+        let fxCorrect = rosenbrock x
+        let hvCorrect = dsharp.matmul(rosenbrockHessian x,  v.view([-1;1])).view(-1)
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(hvCorrect, hv)
+        Assert.AreEqual(hvCorrect, hv2)
+
+    [<Test>]
+    member this.TestHessian () =
+        let x = dsharp.arange(2.)
+        let fx, h = dsharp.phessian rosenbrock x
+        let h2 = dsharp.hessian rosenbrock x
+        let fxCorrect = rosenbrock x
+        let hCorrect = rosenbrockHessian x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(hCorrect, h)
+        Assert.AreEqual(hCorrect, h2)        

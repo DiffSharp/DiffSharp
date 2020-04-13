@@ -133,12 +133,12 @@ type DiffSharp with
                 |] |> Array.rev |> Array.append [|fx|]
     static member pjacobianv f (x:Tensor) v = 
         let fx, d = DiffSharp.evalForwardDiff f x v
-        if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member jacobianv f x v = DiffSharp.pjacobianv f x v |> snd
     static member pgradv f (x:Tensor) v =
         let fx, d = DiffSharp.evalForwardDiff f x v
-        if x.dim > 1 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member gradv f x v = DiffSharp.pgradv f x v |> snd
     static member pdiff f (x:Tensor) =
@@ -156,7 +156,7 @@ type DiffSharp with
     static member diff2 f x = DiffSharp.diffn 2 f x
     static member pjacobianTv f x v =
         let fx, r = DiffSharp.evalReverseDiff f x
-        if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, r v
     static member jacobianTv f x v = DiffSharp.pjacobianTv f x v |> snd
     static member pjacobian (f:Tensor->Tensor) x =
@@ -169,9 +169,23 @@ type DiffSharp with
     static member jacobian f x = DiffSharp.pjacobian f x |> snd
     static member pgrad f x =
         let fx, r = DiffSharp.evalReverseDiff f x
-        if x.dim > 1 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, r (fx.onesLike())
     static member grad f x = DiffSharp.pgrad f x |> snd
+    static member pgradhessianv f x v =
+        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
+        let fx, gv = DiffSharp.pgradv f x v
+        gv.reverse()
+        fx.primal, gv.primal, x.derivative
+    static member gradhessianv f x v = let _, gv, hv = DiffSharp.pgradhessianv f x v in gv, hv
+    static member phessianv f x v = let fx, _, hv = DiffSharp.pgradhessianv f x v in fx, hv
+    static member hessianv f x v = DiffSharp.phessianv f x v |> snd
+    static member phessian (f:Tensor->Tensor) (x:Tensor) =
+        let mutable fx = DiffSharp.zero()
+        let h = DiffSharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = DiffSharp.phessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; hv), 1)
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        fx, h
+    static member hessian f x = DiffSharp.phessian f x |> snd
 
 
 type dsharp = DiffSharp
