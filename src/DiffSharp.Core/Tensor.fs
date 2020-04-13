@@ -152,6 +152,38 @@ type Tensor =
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
 
+    member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
+        if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
+        let offset = defaultArg offset 0
+        let dim1 = defaultArg dim1 0
+        let dim2 = defaultArg dim2 1
+        let mutable finished = false
+        let mutable d = []
+        let mutable i = 0
+        let mutable j = offset
+        while not finished do
+            if i >= a.shape.[dim1] || j >= a.shape.[dim2] then 
+                finished <- true
+            elif j >= 0 then
+                // let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
+                let bounds = Array2D.init (a.dim) 3 (fun ii jj -> 
+                                                        if ii = dim1 then
+                                                            if jj < 2 then i else 1
+                                                        elif ii = dim2 then
+                                                            if jj < 2 then j else 1
+                                                        else
+                                                            if jj = 0 then 0
+                                                            elif jj = 1 then a.shape.[ii]-1
+                                                            else 0
+                                                        )
+                d <- [a.GetSlice(bounds)] |> List.append d
+            i <- i + 1
+            j <- j + 1
+        if d |> List.isEmpty then failwithf "Empty diagonal"
+        Tensor.stack(d)
+
+    member a.trace() = let d:Tensor = a.diagonal() in d.sum()
+
     member a.expand(newShape:seq<int>) =
         let newShape = newShape|>Seq.toArray
         if a.shape = newShape then a else
@@ -188,6 +220,7 @@ type Tensor =
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
+        if tensors.Length = 0 then failwithf "Expecting a non-empty sequence of Tensors"
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
         let shapes = tensors |> Seq.map (fun t -> t.shape)
         checkCanStack shapes

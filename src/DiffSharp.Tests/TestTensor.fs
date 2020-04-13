@@ -747,6 +747,37 @@ type TestTensor () =
         Assert.True(t3.allclose(t3Correct, 0.01))
 
     [<Test>]
+    member this.TestTensorDiagonal () =
+        let t1 = dsharp.arange(6.).view([2; 3])
+        let t1a = dsharp.diagonal(t1)
+        let t1b = dsharp.diagonal(t1, offset=1)
+        let t1c = dsharp.diagonal(t1, offset=2)
+        let t1d = dsharp.diagonal(t1, offset= -1)
+        let t1aCorrect = dsharp.tensor([0.,4.])
+        let t1bCorrect = dsharp.tensor([1.,5.])
+        let t1cCorrect = dsharp.tensor([2.])
+        let t1dCorrect = dsharp.tensor([3.])
+        let t2 = dsharp.arange(9.).view([3;3])
+        let t2a = dsharp.diagonal(t2)
+        let t2aCorrect = dsharp.tensor([0.,4.,8.])
+        Assert.AreEqual(t1aCorrect, t1a)
+        Assert.AreEqual(t1bCorrect, t1b)
+        Assert.AreEqual(t1cCorrect, t1c)
+        Assert.AreEqual(t1dCorrect, t1d)
+        Assert.AreEqual(t2aCorrect, t2a)
+
+    [<Test>]
+    member this.TestTensorTrace () =
+        let t1 = dsharp.arange(6.).view([2; 3])
+        let t1a = dsharp.trace(t1)
+        let t1aCorrect = dsharp.tensor(4.)
+        let t2 = dsharp.arange(9.).view([3;3])
+        let t2a = dsharp.trace(t2)
+        let t2aCorrect = dsharp.tensor(12.)
+        Assert.AreEqual(t1aCorrect, t1a)
+        Assert.AreEqual(t2aCorrect, t2a)
+
+    [<Test>]
     member this.TestTensorConv1D () =
         let t1 = dsharp.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                  [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];

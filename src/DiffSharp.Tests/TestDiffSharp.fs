@@ -225,6 +225,20 @@ type TestDiffSharp () =
         Assert.AreEqual(hvCorrect, hv2)
 
     [<Test>]
+    member this.TestGradhessian () =
+        let x = dsharp.tensor([1.5, 2.5])
+        let fx, g, h = dsharp.pgradhessian rosenbrock x
+        let g2, h2 = dsharp.gradhessian rosenbrock x
+        let fxCorrect = rosenbrock x
+        let gCorrect = rosenbrockGrad x
+        let hCorrect = rosenbrockHessian x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(gCorrect, g)
+        Assert.AreEqual(gCorrect, g2)
+        Assert.AreEqual(hCorrect, h)
+        Assert.AreEqual(hCorrect, h2)
+
+    [<Test>]
     member this.TestHessianv () =
         let x = dsharp.tensor([1.5, 2.5])
         let v = dsharp.tensor([0.5, -2.])
@@ -238,7 +252,7 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestHessian () =
-        let x = dsharp.arange(2.)
+        let x = dsharp.tensor([1.5, 2.5])
         let fx, h = dsharp.phessian rosenbrock x
         let h2 = dsharp.hessian rosenbrock x
         let fxCorrect = rosenbrock x

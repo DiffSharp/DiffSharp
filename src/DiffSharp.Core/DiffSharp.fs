@@ -38,6 +38,8 @@ type DiffSharp =
     static member min(a:Tensor) = a.min()
     static member max(a:Tensor, b:Tensor) = a.max(b)
     static member min(a:Tensor, b:Tensor) = a.min(b)
+    static member diagonal(a:Tensor, ?offset:int, ?dim1:int, ?dim2:int) = a.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
+    static member trace(a:Tensor) = a.trace()
     static member expand(a:Tensor, shape:seq<int>) = a.expand(shape)
     static member stack(tensors:seq<Tensor>, ?dim:int) = Tensor.stack(tensors, ?dim=dim)
     static member unstack(a:Tensor, ?dim:int) = a.unstack(?dim=dim)
@@ -180,6 +182,14 @@ type DiffSharp with
     static member gradhessianv f x v = let _, gv, hv = DiffSharp.pgradhessianv f x v in gv, hv
     static member phessianv f x v = let fx, _, hv = DiffSharp.pgradhessianv f x v in fx, hv
     static member hessianv f x v = DiffSharp.phessianv f x v |> snd
+    static member pgradhessian (f:Tensor->Tensor) (x:Tensor) =
+        let mutable fx = DiffSharp.zero()
+        let gvs, hvs = Array.init x.nelement (fun j -> let ffxx, gv, hv = DiffSharp.pgradhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; gv, hv) |> Array.unzip
+        let h = DiffSharp.stack(hvs, 1)
+        let g = DiffSharp.stack(gvs)
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        fx, g, h
+    static member gradhessian f x = let _, g, h = DiffSharp.pgradhessian f x in g, h
     static member phessian (f:Tensor->Tensor) (x:Tensor) =
         let mutable fx = DiffSharp.zero()
         let h = DiffSharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = DiffSharp.phessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; hv), 1)
