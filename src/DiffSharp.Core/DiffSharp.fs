@@ -196,6 +196,9 @@ type DiffSharp with
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, h
     static member hessian f x = DiffSharp.phessian f x |> snd
-
+    static member plaplacian f x =
+        let fx, h = DiffSharp.phessian f x
+        fx, h.trace()
+    static member laplacian f x = DiffSharp.plaplacian f x |> snd
 
 type dsharp = DiffSharp

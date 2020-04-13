@@ -259,4 +259,15 @@ type TestDiffSharp () =
         let hCorrect = rosenbrockHessian x
         Assert.AreEqual(fxCorrect, fx)
         Assert.AreEqual(hCorrect, h)
-        Assert.AreEqual(hCorrect, h2)        
+        Assert.AreEqual(hCorrect, h2)
+
+    [<Test>]
+    member this.TestLaplacian () =
+        let x = dsharp.tensor([1.5, 2.5])
+        let fx, l = dsharp.plaplacian rosenbrock x
+        let l2 = dsharp.laplacian rosenbrock x
+        let fxCorrect = rosenbrock x
+        let lCorrect = (rosenbrockHessian x).trace()
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(lCorrect, l)
+        Assert.AreEqual(lCorrect, l2)
