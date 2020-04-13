@@ -17,37 +17,4 @@ let main _argv =
 
     dsharp.seed(12)
 
-    // let rosenbrock (x:Tensor) = 
-    //     let x, y = x.[0], x.[1]
-    //     (1. - x)**2 + 100. * (y - x**2)**2
-    // let rosenbrockGrad (x:Tensor) = 
-    //     let x, y = x.[0], x.[1]
-    //     dsharp.tensor([-2*(1-x)-400*x*(-(x**2) + y); 200*(-(x**2) + y)])
-    // let rosenbrockHessian (x:Tensor) = 
-    //     let x, y = x.[0], x.[1]
-    //     dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.]])
-
-    // let x = dsharp.tensor([1.5, 2.5])
-    // let v = dsharp.tensor([0.5, -2.])
-    // printfn "%A" x
-    // printfn "%A" v
-    // let fx, gv, hv = dsharp.pgradhessianv rosenbrock x v
-    // printfn "\n\nfx\n%A" fx
-    // printfn "\n\ngv\n%A" gv
-    // printfn "\n\nhv\n%A" hv
-
-    // let fx, h = dsharp.phessian rosenbrock x
-    // printfn "\n\nfx\n%A" fx
-    // printfn "\n\nh\n%A" h
-
-    // let fx, g, h = dsharp.pgradhessian rosenbrock x
-    // printfn "\n\nfx\n%A" fx
-    // printfn "\n\ng\n%A" g
-    // printfn "\n\nh\n%A" h
-
-    let a = dsharp.arange(9.).view([3;3])
-    let b = a.diagonal()
-    printfn "%A" a
-    printfn "%A" b
-
     0 // return an integer exit code

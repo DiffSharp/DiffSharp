@@ -200,5 +200,21 @@ type DiffSharp with
         let fx, h = DiffSharp.phessian f x
         fx, h.trace()
     static member laplacian f x = DiffSharp.plaplacian f x |> snd
+    static member pcurl f x =
+        let fx, j = DiffSharp.pjacobian f x
+        if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
+        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+    static member curl f x = DiffSharp.pcurl f x |> snd
+    static member pdivergence f x =
+        let fx, j = DiffSharp.pjacobian f x
+        if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
+        fx, j.trace()
+    static member divergence f x = DiffSharp.pdivergence f x |> snd
+    static member pcurldivergence f x =
+        let fx, j = DiffSharp.pjacobian f x
+        if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
+        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+    static member curldivergence f x = let _, c, d = DiffSharp.pcurldivergence f x in c, d
+
 
 type dsharp = DiffSharp

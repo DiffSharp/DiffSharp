@@ -35,6 +35,13 @@ type TestDiffSharp () =
         let x, y, z = x.[0], x.[1], x.[2]
         dsharp.tensor([[y;x+2*z;2*y];[2*y*y*z;4*x*y*z;2*x*y*y]])
 
+    let fvect3vect3 (x:Tensor) = 
+        let r, theta, phi = x.[0], x.[1], x.[2]
+        dsharp.stack([r*(sin phi)*(cos theta); r*(sin phi)*(sin theta); r*cos phi])
+    let fvect3vect3Jacobian (x:Tensor) = 
+        let r, theta, phi = x.[0], x.[1], x.[2]
+        dsharp.tensor([[(sin phi)*(cos theta); -r*(sin phi)*(sin theta); r*(cos phi)*(cos theta)];[(sin phi)*(sin theta); r*(sin phi)*(cos theta); r*(cos phi)*(sin theta)];[cos phi; dsharp.zero(); -r*sin phi]])
+
     let fvect3vect4 (x:Tensor) =
         let y1, y2, y3, y4 = x.[0], 5*x.[2], 4*x.[1]*x.[1]-2*x.[2],x.[2]*sin x.[0]
         dsharp.stack([y1;y2;y3;y4])
@@ -201,6 +208,15 @@ type TestDiffSharp () =
         Assert.AreEqual(jCorrect, j2)
 
         let x = dsharp.arange(3.)
+        let fx, j = dsharp.pjacobian fvect3vect3 x
+        let j2 = dsharp.jacobian fvect3vect3 x
+        let fxCorrect = fvect3vect3 x
+        let jCorrect = fvect3vect3Jacobian x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(jCorrect, j)
+        Assert.AreEqual(jCorrect, j2)
+
+        let x = dsharp.arange(3.)
         let fx, j = dsharp.pjacobian fvect3vect4 x
         let j2 = dsharp.jacobian fvect3vect4 x
         let fxCorrect = fvect3vect4 x
@@ -271,3 +287,39 @@ type TestDiffSharp () =
         Assert.AreEqual(fxCorrect, fx)
         Assert.AreEqual(lCorrect, l)
         Assert.AreEqual(lCorrect, l2)
+
+    [<Test>]
+    member this.TestCurl () =
+        let x = dsharp.tensor([1.5, 2.5, 0.2])
+        let fx, c = dsharp.pcurl fvect3vect3 x
+        let c2 = dsharp.curl fvect3vect3 x
+        let fxCorrect = fvect3vect3 x
+        let cCorrect = dsharp.tensor([-0.879814, -2.157828, 0.297245])
+        Assert.True(fxCorrect.allclose(fx))
+        Assert.True(cCorrect.allclose(c))
+        Assert.True(cCorrect.allclose(c2))
+
+    [<Test>]
+    member this.TestDivergence () =
+        let x = dsharp.tensor([1.5, 2.5, 0.2])
+        let fx, d = dsharp.pdivergence fvect3vect3 x
+        let d2 = dsharp.divergence fvect3vect3 x
+        let fxCorrect = fvect3vect3 x
+        let dCorrect = dsharp.tensor(-0.695911)
+        Assert.True(fxCorrect.allclose(fx))
+        Assert.True(dCorrect.allclose(d))
+        Assert.True(dCorrect.allclose(d2))
+
+    [<Test>]
+    member this.TestCurlDivergence () =
+        let x = dsharp.tensor([1.5, 2.5, 0.2])
+        let fx, c, d = dsharp.pcurldivergence fvect3vect3 x
+        let c2, d2 = dsharp.curldivergence fvect3vect3 x
+        let fxCorrect = fvect3vect3 x
+        let cCorrect = dsharp.tensor([-0.879814, -2.157828, 0.297245])
+        let dCorrect = dsharp.tensor(-0.695911)
+        Assert.True(fxCorrect.allclose(fx))
+        Assert.True(cCorrect.allclose(c))
+        Assert.True(cCorrect.allclose(c2))
+        Assert.True(dCorrect.allclose(d))
+        Assert.True(dCorrect.allclose(d2))        
