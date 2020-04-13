@@ -41,29 +41,37 @@ let main _argv =
     // let z = sin x
     // printfn "%A" z
 
-    dsharp.nestReset()
-    let x = dsharp.tensor(2.)
-    printfn "\n###1\n%A" x
-    let z = dsharp.ppdiffn 1 sin x
-    printfn "%A" z
+    // dsharp.nestReset()
+    // let x = dsharp.tensor(2.)
+    // printfn "\n###1\n%A" x
+    // let z = dsharp.ppdiffn 1 sin x
+    // printfn "%A" z
 
-    dsharp.nestReset()
-    let x = dsharp.tensor(2.)
-    printfn "\n###2\n%A" x
-    let z = dsharp.ppdiffn 2 sin x
-    printfn "%A" z
+    // dsharp.nestReset()
+    // let x = dsharp.tensor(2.)
+    // printfn "\n###2\n%A" x
+    // let z = dsharp.ppdiffn 2 sin x
+    // printfn "%A" z
 
-    dsharp.nestReset()
-    let x = dsharp.tensor(2.)
-    printfn "\n###3\n%A" x
-    let z = dsharp.ppdiffn 3 sin x
-    printfn "%A" z
+    // dsharp.nestReset()
+    // let x = dsharp.tensor(2.)
+    // printfn "\n###3\n%A" x
+    // let z = dsharp.ppdiffn 3 sin x
+    // printfn "%A" z
 
-    dsharp.nestReset()
-    let x = dsharp.tensor(2.)
-    printfn "\n###4\n%A" x
-    let z = dsharp.ppdiffn 4 sin x
-    printfn "%A" z
+    // dsharp.nestReset()
+    // let x = dsharp.tensor(2.)
+    // printfn "\n###4\n%A" x
+    // let z = dsharp.ppdiffn 4 sin x
+    // printfn "%A" z
 
+
+    let f (x:Tensor) =
+        sin (dsharp.stack([x.[2]*x.[1]; x.[1]*x.[0]; x.[0]*x.[2]]))
+
+    let x = dsharp.tensor([1,2,3])
+    printfn "%A" x
+    let j = dsharp.jacobian f x
+    printfn "%A" j
 
     0 // return an integer exit code

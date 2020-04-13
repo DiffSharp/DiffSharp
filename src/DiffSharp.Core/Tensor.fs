@@ -132,7 +132,9 @@ type Tensor =
     member a.oneLike() = Tensor(a.primalRaw.One())
     member a.like(value) = Tensor(a.primalRaw.Create(value))
     member a.clone() = Tensor(a.primalRaw.Clone())
-
+    member a.onehotLike(length:int, hot:int) =
+        if hot < 0 || hot >= length then failwithf "Expecting 0 < hot < length"
+        a.zerosLike([|length|]).addSlice([|hot|], a.onesLike([|1|]))
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
     member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))

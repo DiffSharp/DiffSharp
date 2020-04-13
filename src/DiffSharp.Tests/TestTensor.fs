@@ -167,6 +167,18 @@ type TestTensor () =
         Assert.AreEqual(a, b)
 
     [<Test>]
+    member this.TestTensorOnehot () =
+        let t0 = dsharp.onehot(3, 0)
+        let t1 = dsharp.onehot(3, 1)
+        let t2 = dsharp.onehot(3, 2)
+        let t0Correct = dsharp.tensor([1,0,0])
+        let t1Correct = dsharp.tensor([0,1,0])
+        let t2Correct = dsharp.tensor([0,0,1])
+        Assert.AreEqual(t0Correct, t0)
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t2Correct, t2)
+
+    [<Test>]
     member this.TestTensorToString () =
         let t0 = dsharp.tensor(2.)
         let t1 = dsharp.tensor([[2.]; [2.]])

@@ -7,6 +7,7 @@ type DiffSharp =
     static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member onehot(length:int, hot:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([||], ?dtype=dtype, ?device=device, ?backend=backend)).onehotLike(length, hot)
     static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member randn(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
@@ -101,6 +102,11 @@ type DiffSharp with
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverse (value:Tensor) (tensor:Tensor) = tensor.reverse(value)
     static member evalForwardDiff f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
+    static member evalReverseDiff f x =
+        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
+        let fx = f x
+        let r = fun v -> fx |> DiffSharp.reverse v; x.derivative
+        fx.primal, r
     static member evalForwardDiffs (f:Tensor->Tensor) x (v:Tensor[]) =
         let n = v.Length
         if n = 0 then [|f x|]
@@ -108,17 +114,12 @@ type DiffSharp with
             let mutable x = x
             for i in 0..n-1 do
                 x <- x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
-            let mutable z = f x
+            let mutable fx = f x
             [|for _ in 0..n-1 do
-                let d = z.derivativeDeep
-                z <- z.primal
+                let d = fx.derivativeDeep
+                fx <- fx.primal
                 d
-                |] |> Array.rev |> Array.append [|z|]
-    static member evalReverseDiff f x =
-        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
-        let z = f x
-        let r = fun v -> z |> DiffSharp.reverse v; x.derivative
-        z.primal, r
+                |] |> Array.rev |> Array.append [|fx|]
     static member pjacobianv f (x:Tensor) v = 
         let fx, d = DiffSharp.evalForwardDiff f x v
         if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
@@ -147,6 +148,14 @@ type DiffSharp with
         if x.dim > 1 || fx.dim > 1 then failwithf "f must be a scalar- or vector-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
         fx, r v
     static member jacobianTv f x v = DiffSharp.pjacobianTv f x v |> snd
+    static member pjacobian (f:Tensor->Tensor) x =
+        let fx, r = DiffSharp.evalReverseDiff f x
+        if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        if x.nelement > fx.nelement then
+            fx, DiffSharp.stack(Array.init x.nelement (fun i -> r (x.onehotLike(x.nelement, i))), 0)
+        else
+            fx, DiffSharp.stack(Array.init x.nelement (fun j -> DiffSharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
+    static member jacobian f x = DiffSharp.pjacobian f x |> snd
     static member pgrad f x =
         let fx, r = DiffSharp.evalReverseDiff f x
         if x.dim > 1 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar or vector, encountered f:%A->%A" x.shape fx.shape
