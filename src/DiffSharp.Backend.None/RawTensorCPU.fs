@@ -9,21 +9,10 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     member __.Values = values
 
     member private t.IndexToFlatIndex(index:int[]) =
-        let mutable flatIndex = 0
-        for i=0 to index.Length - 1 do
-            let v = if i = index.Length - 1 then 1 else (Array.reduce (*) t.Shape.[i+1..])
-            flatIndex <- flatIndex + index.[i] * v
-        flatIndex
+        indexToFlatIndex t.Shape index
     
     member private t.FlatIndexToIndex(flatIndex:int) =
-        let index = Array.create t.Dim 0
-        let mutable mul = t.Nelement
-        let mutable fi = flatIndex
-        for i=t.Dim downto 1 do
-            mul <- mul / t.Shape.[t.Dim-i]
-            index.[i-1] <- fi / mul
-            fi <- fi - index.[i-1] * mul
-        index |> Array.rev
+        flatIndexToIndex t.Shape flatIndex
 
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =

@@ -66,12 +66,24 @@ let main _argv =
     // printfn "%A" z
 
 
-    let f (x:Tensor) =
-        sin (dsharp.stack([x.[2]*x.[1]; x.[1]*x.[0]; x.[0]*x.[2]]))
+    // let f (x:Tensor) =
+    //     sin (dsharp.stack([x.[2]*x.[1]; x.[1]*x.[0]; x.[0]*x.[2]]))
 
-    let x = dsharp.tensor([1,2,3])
+    // let x = dsharp.tensor([1,2,3])
+    // printfn "%A" x
+    // let j = dsharp.jacobian f x
+    // printfn "%A" j
+
+    let vectvect1 (x:Tensor) = dsharp.stack([x.[0]*x.[0]*x.[1]; 5*x.[0]+sin x.[1]])
+    let vectvect1Jacobian (x:Tensor) = dsharp.tensor([[2*x.[0]*x.[1]; x.[0]*x.[0]];[dsharp.tensor(5.); cos x.[1]]])
+
+    let x = dsharp.tensor([1.,2.])
+    let fx = vectvect1 x
+    let j = dsharp.jacobian vectvect1 x
+    let jtrue = vectvect1Jacobian x
     printfn "%A" x
-    let j = dsharp.jacobian f x
+    printfn "%A" fx
     printfn "%A" j
+    printfn "%A" jtrue
 
     0 // return an integer exit code

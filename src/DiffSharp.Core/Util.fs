@@ -218,6 +218,25 @@ let undilatedShape (shape:int[]) (dilations:int[]) =
 let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
     Array.map2 (*) coordinates dilations
 
+let indexToFlatIndex (shape:int[]) (index:int[]) =
+    let mutable flatIndex = 0
+    for i=0 to index.Length - 1 do
+        let v = if i = index.Length - 1 then 1 else (Array.reduce (*) shape.[i+1..])
+        flatIndex <- flatIndex + index.[i] * v
+    flatIndex
+
+let flatIndexToIndex (shape:int[]) (flatIndex:int) =
+    let dim = shape.Length
+    let nelement = shapeLength shape
+    let index = Array.create dim 0
+    let mutable mul = nelement
+    let mutable fi = flatIndex
+    for i=dim downto 1 do
+        mul <- mul / shape.[dim-i]
+        index.[i-1] <- fi / mul
+        fi <- fi - index.[i-1] * mul
+    index |> Array.rev
+    
 /// Create a non-jagged 3D array from jagged data
 let array3D data = 
     let data = data |> Array.ofSeq |> Array.map array2D

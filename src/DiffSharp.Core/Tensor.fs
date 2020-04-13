@@ -114,7 +114,7 @@ type Tensor =
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
-    static member op_Explicit(tensor:Tensor):'a = downcast tensor.primalRaw.ToValue()
+    static member op_Explicit(tensor:Tensor):'a = downcast tensor.toScalar()
 
     member a.zerosLike(?shape:seq<int>) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
