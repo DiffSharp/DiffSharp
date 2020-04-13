@@ -130,6 +130,12 @@ type Tensor =
         Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
     member a.zeroLike() = Tensor(a.primalRaw.Zero())
     member a.oneLike() = Tensor(a.primalRaw.One())
+    member a.arangeLike(endVal:float, ?startVal:float, ?step:float) =
+        let startVal = defaultArg startVal 0.
+        let step = defaultArg step 1.
+        let length = (endVal - startVal) / step |> ceil |> int
+        let v = Array.init length (fun i -> startVal + float(i) * step)
+        a.like(box v)
     member a.like(value) = Tensor(a.primalRaw.Create(value))
     member a.clone() = Tensor(a.primalRaw.Clone())
     member a.onehotLike(length:int, hot:int) =

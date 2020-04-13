@@ -74,13 +74,50 @@ let main _argv =
     // let j = dsharp.jacobian f x
     // printfn "%A" j
 
-    let vectvect1 (x:Tensor) = dsharp.stack([x.[0]*x.[0]*x.[1]; 5*x.[0]+sin x.[1]])
-    let vectvect1Jacobian (x:Tensor) = dsharp.tensor([[2*x.[0]*x.[1]; x.[0]*x.[0]];[dsharp.tensor(5.); cos x.[1]]])
+    let fvect2vect2 (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        dsharp.stack([x*x*y; 5*x+sin y])
+    let fvect2vect2Jacobian (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        dsharp.tensor([[2*x*y; x*x];[dsharp.tensor(5.); cos y]])
+
+    let fvect3vect2 (x:Tensor) = 
+        let x, y, z = x.[0], x.[1], x.[2]
+        dsharp.stack([x*y+2*y*z;2*x*y*y*z])
+    let fvect3vect2Jacobian (x:Tensor) = 
+        let x, y, z = x.[0], x.[1], x.[2]
+        dsharp.tensor([[y;x+2*z;2*y];[2*y*y*z;4*x*y*z;2*x*y*y]])
+
+    let fvect3vect4 (x:Tensor) =
+        let y1, y2, y3, y4 = x.[0], 5*x.[2], 4*x.[1]*x.[1]-2*x.[2],x.[2]*sin x.[0]
+        dsharp.stack([y1;y2;y3;y4])
+
+    let fvect3vect4Jacobian (x:Tensor) =
+        let z, o = dsharp.zero(), dsharp.one()
+        dsharp.tensor([[o,z,z],[z,z,5*o],[z,8*x.[1],-2*o],[x.[2]*cos x.[0],z,sin x.[0]]])
 
     let x = dsharp.tensor([1.,2.])
-    let fx = vectvect1 x
-    let j = dsharp.jacobian vectvect1 x
-    let jtrue = vectvect1Jacobian x
+    let fx = fvect2vect2 x
+    let j = dsharp.jacobian fvect2vect2 x
+    let jtrue = fvect2vect2Jacobian x
+    printfn "%A" x
+    printfn "%A" fx
+    printfn "%A" j
+    printfn "%A" jtrue
+
+    let x = dsharp.tensor([1.2,2.,3.])
+    let fx = fvect3vect2 x
+    let j = dsharp.jacobian fvect3vect2 x
+    let jtrue = fvect3vect2Jacobian x
+    printfn "%A" x
+    printfn "%A" fx
+    printfn "%A" j
+    printfn "%A" jtrue
+
+    let x = dsharp.tensor([1.2,2.,3.])
+    let fx = fvect3vect4 x
+    let j = dsharp.jacobian fvect3vect4 x
+    let jtrue = fvect3vect4Jacobian x
     printfn "%A" x
     printfn "%A" fx
     printfn "%A" j

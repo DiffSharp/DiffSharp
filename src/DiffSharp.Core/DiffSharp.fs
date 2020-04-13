@@ -12,7 +12,9 @@ type DiffSharp =
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         else
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zero(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member one(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member onehot(length:int, hot:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([||], ?dtype=dtype, ?device=device, ?backend=backend)).onehotLike(length, hot)
     static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
@@ -23,6 +25,7 @@ type DiffSharp =
     static member randnLike(a:Tensor, ?shape:seq<int>) = a.randnLike(?shape=shape)
     static member zeroLike(a:Tensor) = a.zeroLike()
     static member oneLike(a:Tensor) = a.oneLike()
+    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
     static member like(a:Tensor, value:obj) = a.like(value)
     static member clone(a:Tensor) = a.clone()
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
@@ -159,7 +162,7 @@ type DiffSharp with
         let fx, r = DiffSharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         if x.nelement > fx.nelement then
-            fx, DiffSharp.stack(Array.init x.nelement (fun i -> r (x.onehotLike(x.nelement, i))), 0)
+            fx, DiffSharp.stack(Array.init fx.nelement (fun i -> r (x.onehotLike(fx.nelement, i))), 0)
         else
             fx, DiffSharp.stack(Array.init x.nelement (fun j -> DiffSharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
     static member jacobian f x = DiffSharp.pjacobian f x |> snd
