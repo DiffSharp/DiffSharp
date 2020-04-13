@@ -143,7 +143,7 @@ type DiffSharp with
     static member gradv f x v = DiffSharp.pgradv f x v |> snd
     static member pdiff f (x:Tensor) =
         let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
-        if x.dim > 0 || fx.dim > 0 then failwithf "f must be a scalar-valued function of a scalar, encountered f:%A->%A" x.shape fx.shape
+        if x.dim > 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member diff f x = DiffSharp.pdiff f x |> snd
     static member ppdiffn (n:int) (f:Tensor->Tensor) (x:Tensor) =

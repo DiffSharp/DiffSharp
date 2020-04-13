@@ -9,6 +9,9 @@ type TestDiffSharp () =
     let rosenbrock (x:Tensor) = (1. - x.[0])**2 + 100. * (x.[1] - x.[0]**2)**2
     let rosenbrockGrad (x:Tensor) = dsharp.stack([-2*(1-x.[0])-400*x.[0]*(-(x.[0]**2) + x.[1]); 200*(-(x.[0]**2) + x.[1])])
 
+    let fscalarvect3 (x:Tensor) = dsharp.stack([sin x; exp x; cos x])
+    let fscalarvect3Diff (x:Tensor) = dsharp.stack([cos x; exp x; -sin x])
+
     let fvect2vect2 (x:Tensor) = 
         let x, y = x.[0], x.[1]
         dsharp.stack([x*x*y; 5*x+sin y])
@@ -89,6 +92,17 @@ type TestDiffSharp () =
         Assert.AreEqual(t, t2)
 
     [<Test>]
+    member this.TestDiff () =
+        let x = dsharp.tensor(1.5)
+        let fx, d = dsharp.pdiff fscalarvect3 x
+        let d2 = dsharp.diff fscalarvect3 x
+        let fxCorrect = fscalarvect3 x
+        let dCorrect = fscalarvect3Diff x
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(dCorrect, d)
+        Assert.AreEqual(dCorrect, d2)
+
+    [<Test>]
     member this.TestGrad () =
         let x = dsharp.tensor([1.5;2.5])
         let fx, g = dsharp.pgrad rosenbrock x
@@ -110,6 +124,30 @@ type TestDiffSharp () =
         Assert.AreEqual(fxCorrect, fx)
         Assert.AreEqual(gvCorrect, gv)
         Assert.AreEqual(gvCorrect, gv2)
+
+    [<Test>]
+    member this.TestJacobianv () =
+        let x = dsharp.tensor([1.5, 2.5, 3.])
+        let v = dsharp.tensor([2.75, -3.5, 4.])
+        let fx, jv = dsharp.pjacobianv fvect3vect2 x v
+        let jv2 = dsharp.jacobianv fvect3vect2 x v
+        let fxCorrect = fvect3vect2 x
+        let jvCorrect = dsharp.matmul(fvect3vect2Jacobian x,  v.view([-1;1])).view(-1)
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(jvCorrect, jv)
+        Assert.AreEqual(jvCorrect, jv2)
+
+    [<Test>]
+    member this.TestJacobianTv () =
+        let x = dsharp.tensor([1.5, 2.5, 3.])
+        let v = dsharp.tensor([2.75, -3.5])
+        let fx, jTv = dsharp.pjacobianTv fvect3vect2 x v
+        let jTv2 = dsharp.jacobianTv fvect3vect2 x v
+        let fxCorrect = fvect3vect2 x
+        let jTvCorrect = dsharp.matmul(v.view([1;-1]), fvect3vect2Jacobian x).view(-1)
+        Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(jTvCorrect, jTv)
+        Assert.AreEqual(jTvCorrect, jTv2)
 
     [<Test>]
     member this.TestJacobian () =
