@@ -12,16 +12,18 @@ type DiffSharp =
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         else
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member isTensor(value:obj) = value :? Tensor
     static member zero(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member one(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(shape, value)
     static member onehot(length:int, hot:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([||], ?dtype=dtype, ?device=device, ?backend=backend)).onehotLike(length, hot)
     static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member randn(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
     static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)
+    static member fullLike(a:Tensor, shape:seq<int>, value:obj) = a.fullLike(shape, value)
     static member randLike(a:Tensor, ?shape:seq<int>) = a.randLike(?shape=shape)
     static member randnLike(a:Tensor, ?shape:seq<int>) = a.randnLike(?shape=shape)
     static member zeroLike(a:Tensor) = a.zeroLike()
@@ -234,15 +236,13 @@ type DiffSharp with
     static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let veps = v * epsilon
-        let fxa = f (x + veps)
-        let fxb = f (x - veps)
+        let fxa, fxb = f (x + veps), f (x - veps)
         if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
         (fxa - fxb) / (2.*epsilon)
     static member numpgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
     static member numpgrad (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
         let fx = f x
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
-        // let g = fx.expand([x.nelement])
         let gg = DiffSharp.stack(Array.init x.nelement (fun i -> let h = DiffSharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
         fx, gg/(2.*epsilon)
     static member numgrad epsilon f x = DiffSharp.numpgrad epsilon f x |> snd

@@ -172,8 +172,18 @@ type TestTensor () =
         let t1b = dsharp.ones([2;3]) * 2.5
         let t2a = dsharp.full([], 2.5)
         let t2b = dsharp.ones([]) * 2.5
+        let t3a = dsharp.full([5], dsharp.tensor(2.5))
+        let t3b = dsharp.ones([5]) * 2.5
         Assert.AreEqual(t1a, t1b)
         Assert.AreEqual(t2a, t2b)
+        Assert.AreEqual(t3a, t3b)
+
+    [<Test>]
+    member this.TestTensorIsTensor () =
+        let a = 2.
+        let b = dsharp.tensor(2.)
+        Assert.True(not (dsharp.isTensor(a)))
+        Assert.True(dsharp.isTensor(b))    
 
     [<Test>]
     member this.TestTensorOnehot () =

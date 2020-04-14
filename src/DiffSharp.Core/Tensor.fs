@@ -123,6 +123,7 @@ type Tensor =
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.Ones(shape |> Array.ofSeq))
     member a.fullLike(shape:seq<int>, value:obj) = 
+        let value = if value :? Tensor then (value:?>Tensor).toScalar() else value    
         Tensor(a.primalRaw.Full(shape |> Array.ofSeq, value))
     member a.randLike(?shape:seq<int>) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
