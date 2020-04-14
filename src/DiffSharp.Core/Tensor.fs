@@ -220,6 +220,15 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
+    static member create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
+        let array, shape = value |> flatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        if notNull array then 
+            let array = array |> Array.map float32
+            let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
+            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+        else
+            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray

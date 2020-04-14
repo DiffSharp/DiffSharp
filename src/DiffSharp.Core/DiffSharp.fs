@@ -4,14 +4,8 @@ open DiffSharp.Util
 
 // Tensor operations
 type DiffSharp =
-    static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = 
-        let array, shape = value |> flatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
-        if notNull array then 
-            let array = array |> Array.map float32
-            let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
-        else
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member seed(seed) = Random.Seed(seed)
     static member isTensor(value:obj) = value :? Tensor
     static member zero(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
@@ -103,7 +97,6 @@ type DiffSharp =
 
 // Functional automatic differentiation API
 type DiffSharp with
-    static member seed(seed) = Random.Seed(seed)
     static member nest() = GlobalNestingLevel.Next() |> ignore
     static member nest(level) = GlobalNestingLevel.Set(level)
     static member nestLevel() = GlobalNestingLevel.Current
