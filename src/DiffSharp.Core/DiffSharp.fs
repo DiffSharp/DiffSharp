@@ -98,7 +98,7 @@ type DiffSharp =
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
 
-// Functional differentiation API
+// Functional automatic differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
     static member nest() = GlobalNestingLevel.Next() |> ignore
@@ -144,23 +144,11 @@ type DiffSharp with
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member gradv f x v = DiffSharp.pgradv f x v |> snd
-    static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
-        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
-        let veps = v * epsilon
-        let fxa = f (x + veps)
-        let fxb = f (x - veps)
-        if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
-        (fxa - fxb) / (2.*epsilon)
-    static member numpgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
     static member pdiff f (x:Tensor) =
         let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
         if x.dim <> 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member diff f x = DiffSharp.pdiff f x |> snd
-    static member numdiff (epsilon:float) (f:Tensor->Tensor) (x:Tensor) = 
-        if x.dim <> 0 then failwithf "f must be a function of a scalar"
-        ((f (x + epsilon)) - (f (x - epsilon))) / (2.*epsilon)
-    static member numpdiff epsilon f x = f x, DiffSharp.numdiff epsilon f x
     static member ppdiffn (n:int) (f:Tensor->Tensor) (x:Tensor) =
         if n < 0 then failwith "Differentiation order n must be >= 0"
         if x.dim <> 0 then failwithf "f must be a function of a scalar"
@@ -230,6 +218,26 @@ type DiffSharp with
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
         fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
     static member curldivergence f x = let _, c, d = DiffSharp.pcurldivergence f x in c, d
+
+// Functional numerical differentiation API
+type DiffSharp with
+    static member numdiff (epsilon:float) (f:Tensor->Tensor) (x:Tensor) = 
+        if x.dim <> 0 then failwithf "f must be a function of a scalar"
+        ((f (x + epsilon)) - (f (x - epsilon))) / (2.*epsilon)
+    static member numpdiff epsilon f x = f x, DiffSharp.numdiff epsilon f x
+    static member numpdiff2 (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
+        if x.dim <> 0 then failwithf "f must be a function of a scalar"
+        let fx = f x
+        fx, ((f (x + epsilon)) - 2. * fx + (f (x - epsilon))) / (epsilon * epsilon)
+    static member numdiff2 epsilon f x = DiffSharp.numpdiff2 epsilon f x |> snd
+    static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        let veps = v * epsilon
+        let fxa = f (x + veps)
+        let fxb = f (x - veps)
+        if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
+        (fxa - fxb) / (2.*epsilon)
+    static member numpgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
 
 
 type dsharp = DiffSharp
