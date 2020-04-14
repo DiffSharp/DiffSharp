@@ -155,11 +155,19 @@ type TestDiffSharp () =
         let x = dsharp.tensor([1.5;2.5])
         let fx, g = dsharp.pgrad rosenbrock x
         let g2 = dsharp.grad rosenbrock x
+        let nfx, ng = dsharp.numpgrad 1e-6 rosenbrock x
+        let ng2 = dsharp.numgrad 1e-6 rosenbrock x
         let fxCorrect = rosenbrock x
         let gCorrect = rosenbrockGrad x
+        printfn "%A" ng
+        printfn "%A" g
+        printfn "%A" gCorrect
         Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(fxCorrect, nfx)
         Assert.AreEqual(gCorrect, g)
         Assert.AreEqual(gCorrect, g2)
+        Assert.True(gCorrect.allclose(ng, 0.1))
+        Assert.True(gCorrect.allclose(ng2, 0.1))
 
     [<Test>]
     member this.TestGradv () =

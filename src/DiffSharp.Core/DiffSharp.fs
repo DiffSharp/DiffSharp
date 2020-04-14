@@ -239,6 +239,13 @@ type DiffSharp with
         if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
         (fxa - fxb) / (2.*epsilon)
     static member numpgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
+    static member numpgrad (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
+        let fx = f x
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        // let g = fx.expand([x.nelement])
+        let gg = DiffSharp.stack(Array.init x.nelement (fun i -> let h = DiffSharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
+        fx, gg/(2.*epsilon)
+    static member numgrad epsilon f x = DiffSharp.numpgrad epsilon f x |> snd
 
 
 type dsharp = DiffSharp
