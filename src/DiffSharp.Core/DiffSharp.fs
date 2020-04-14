@@ -98,7 +98,6 @@ type DiffSharp =
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
 
-
 // Functional differentiation API
 type DiffSharp with
     static member seed(seed) = Random.Seed(seed)
@@ -145,12 +144,16 @@ type DiffSharp with
     static member gradv f x v = DiffSharp.pgradv f x v |> snd
     static member pdiff f (x:Tensor) =
         let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
-        if x.dim > 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
+        if x.dim <> 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member diff f x = DiffSharp.pdiff f x |> snd
+    static member numdiff (epsilon:float) (f:Tensor->Tensor) (x:Tensor) = 
+        if x.dim <> 0 then failwithf "f must be a function of a scalar"
+        ((f (x + epsilon)) - (f (x - epsilon))) / (2.*epsilon)
+    static member numpdiff epsilon f x = f x, DiffSharp.numdiff epsilon f x
     static member ppdiffn (n:int) (f:Tensor->Tensor) (x:Tensor) =
         if n < 0 then failwith "Differentiation order n must be >= 0"
-        if x.dim > 0 then failwithf "f must be a function of a scalar"
+        if x.dim <> 0 then failwithf "f must be a function of a scalar"
         DiffSharp.evalForwardDiffs f x (Array.create n (x.onesLike()))
     static member pdiffn n f x = let a = DiffSharp.ppdiffn n f x in a |> Array.head, a |> Array.last
     static member diffn n f x = DiffSharp.pdiffn n f x |> snd

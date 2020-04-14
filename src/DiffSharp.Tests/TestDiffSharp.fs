@@ -112,11 +112,16 @@ type TestDiffSharp () =
         let x = dsharp.tensor(1.5)
         let fx, d = dsharp.pdiff fscalarvect3 x
         let d2 = dsharp.diff fscalarvect3 x
+        let nfx, nd = dsharp.numpdiff 1e-5 fscalarvect3 x
+        let nd2 = dsharp.numdiff 1e-5 fscalarvect3 x
         let fxCorrect = fscalarvect3 x
         let dCorrect = fscalarvect3Diff x
         Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(fxCorrect, nfx)
         Assert.AreEqual(dCorrect, d)
         Assert.AreEqual(dCorrect, d2)
+        Assert.True(dCorrect.allclose(nd, 0.1))
+        Assert.True(dCorrect.allclose(nd2, 0.1))
 
     [<Test>]
     member this.TestDiff2 () =
@@ -322,4 +327,4 @@ type TestDiffSharp () =
         Assert.True(cCorrect.allclose(c))
         Assert.True(cCorrect.allclose(c2))
         Assert.True(dCorrect.allclose(d))
-        Assert.True(dCorrect.allclose(d2))        
+        Assert.True(dCorrect.allclose(d2))
