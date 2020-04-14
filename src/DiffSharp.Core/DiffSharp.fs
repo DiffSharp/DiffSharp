@@ -226,6 +226,20 @@ type DiffSharp with
         let fx = f x
         fx, ((f (x + epsilon)) - 2. * fx + (f (x - epsilon))) / (epsilon * epsilon)
     static member numdiff2 epsilon f x = DiffSharp.numpdiff2 epsilon f x |> snd
+    static member numjacobianv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        let veps = v * epsilon
+        let fxa, fxb = f (x+veps), f (x-veps)
+        if x.dim <> 1 || fxa.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
+        (fxa - fxb) / (2.*epsilon)
+    static member numpjacobianv epsilon f x v = f x, DiffSharp.numjacobianv epsilon f x v
+    static member numpjacobian (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
+        let fx = f x
+        if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        let j = fx.expand([x.nelement; fx.nelement])
+        let jj = DiffSharp.stack(Array.init x.nelement (fun i -> f (x + DiffSharp.onehot(x.nelement, i)*epsilon)))
+        fx, (jj - j).transpose() / epsilon
+    static member numjacobian epsilon f x = DiffSharp.numpjacobian epsilon f x |> snd
     static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let veps = v * epsilon
@@ -244,8 +258,37 @@ type DiffSharp with
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         let h = g.expand([x.nelement; x.nelement])
         let hh = DiffSharp.stack(Array.init x.nelement (fun i -> DiffSharp.numgrad epsilon f (x + DiffSharp.onehot(x.nelement, i)*epsilon)))
-        fx, g, (hh - h)/epsilon
+        fx, g, (hh - h) / epsilon
     static member numgradhessian epsilon f x = let _, g, h = DiffSharp.numpgradhessian epsilon f x in g, h
+    static member numphessian epsilon f x = let fx, _, h = DiffSharp.numpgradhessian epsilon f x in fx, h
+    static member numhessian epsilon f x = DiffSharp.numphessian epsilon f x |> snd
+    static member numphessianv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        let veps = v*epsilon
+        let fx, g = DiffSharp.numpgrad epsilon f x
+        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        let gg = DiffSharp.numgrad epsilon f (x + veps)
+        fx, (gg-g)/epsilon
+    static member numhessianv epsilon f x v = DiffSharp.numphessianv epsilon f x v |> snd
+    static member numplaplacian epsilon f x =
+        let fx, h = DiffSharp.numphessian epsilon f x
+        fx, h.trace()
+    static member numlaplacian epsilon f x = DiffSharp.numplaplacian epsilon f x |> snd
+    static member numpcurl epsilon f x =
+        let fx, j = DiffSharp.numpjacobian epsilon f x
+        if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
+        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+    static member numcurl epsilon f x = DiffSharp.numpcurl epsilon f x |> snd
+    static member numpdivergence epsilon f x =
+        let fx, j = DiffSharp.numpjacobian epsilon f x
+        if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
+        fx, j.trace()
+    static member numdivergence epsilon f x = DiffSharp.numpdivergence epsilon f x |> snd
+    static member numpcurldivergence epsilon f x =
+        let fx, j = DiffSharp.numpjacobian epsilon f x
+        if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
+        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+    static member numcurldivergence epsilon f x = let _, c, d = DiffSharp.numpcurldivergence epsilon f x in c, d
 
 
 type dsharp = DiffSharp
