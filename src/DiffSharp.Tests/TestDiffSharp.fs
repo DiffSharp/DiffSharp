@@ -162,11 +162,16 @@ type TestDiffSharp () =
         let v = dsharp.tensor([2.75;-3.5])
         let fx, gv = dsharp.pgradv rosenbrock x v
         let gv2 = dsharp.gradv rosenbrock x v
+        let nfx, ngv = dsharp.numpgradv 1e-5 rosenbrock x v
+        let ngv2 = dsharp.numgradv 1e-5 rosenbrock x v
         let fxCorrect = rosenbrock x
         let gvCorrect = dsharp.dot(rosenbrockGrad x,  v)
         Assert.AreEqual(fxCorrect, fx)
+        Assert.AreEqual(fxCorrect, nfx)
         Assert.AreEqual(gvCorrect, gv)
         Assert.AreEqual(gvCorrect, gv2)
+        Assert.True(gvCorrect.allclose(ngv, 0.1))
+        Assert.True(gvCorrect.allclose(ngv2, 0.1))
 
     [<Test>]
     member this.TestJacobianv () =

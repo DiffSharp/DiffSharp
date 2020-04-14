@@ -132,16 +132,26 @@ type DiffSharp with
                 fx <- fx.primal
                 d
                 |] |> Array.rev |> Array.append [|fx|]
-    static member pjacobianv f (x:Tensor) v = 
+    static member pjacobianv f (x:Tensor) (v:Tensor) = 
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = DiffSharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member jacobianv f x v = DiffSharp.pjacobianv f x v |> snd
-    static member pgradv f (x:Tensor) v =
+    static member pgradv f (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = DiffSharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
     static member gradv f x v = DiffSharp.pgradv f x v |> snd
+    static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        let veps = v * epsilon
+        let fxa = f (x + veps)
+        let fxb = f (x - veps)
+        if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
+        (fxa - fxb) / (2.*epsilon)
+    static member numpgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
     static member pdiff f (x:Tensor) =
         let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
         if x.dim <> 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
@@ -159,9 +169,10 @@ type DiffSharp with
     static member diffn n f x = DiffSharp.pdiffn n f x |> snd
     static member pdiff2 f x = DiffSharp.pdiffn 2 f x
     static member diff2 f x = DiffSharp.diffn 2 f x
-    static member pjacobianTv f x v =
+    static member pjacobianTv f x (v:Tensor) =
         let fx, r = DiffSharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        if fx.nelement <> v.nelement then failwithf "(f x) and v must have the same number of elements"
         fx, r v
     static member jacobianTv f x v = DiffSharp.pjacobianTv f x v |> snd
     static member pjacobian (f:Tensor->Tensor) x =
@@ -177,7 +188,8 @@ type DiffSharp with
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, r (fx.onesLike())
     static member grad f x = DiffSharp.pgrad f x |> snd
-    static member pgradhessianv f x v =
+    static member pgradhessianv f (x:Tensor) (v:Tensor) =
+        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
         let fx, gv = DiffSharp.pgradv f x v
         gv.reverse()
