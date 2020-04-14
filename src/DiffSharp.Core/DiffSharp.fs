@@ -16,6 +16,7 @@ type DiffSharp =
     static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member one(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
     static member onehot(length:int, hot:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([||], ?dtype=dtype, ?device=device, ?backend=backend)).onehotLike(length, hot)
     static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member randn(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))

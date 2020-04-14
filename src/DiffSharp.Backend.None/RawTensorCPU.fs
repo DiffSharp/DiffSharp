@@ -63,8 +63,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.Create(values) = upcast RawTensorFloat32CPU.Create(values)
     override t.Zero() = upcast RawTensorFloat32CPU.Zero()
     override t.Zeros(shape) = upcast RawTensorFloat32CPU.Zeros(shape)
-    override t.One() = upcast RawTensorFloat32CPU([|1.f|], [||])
+    override t.One() = upcast RawTensorFloat32CPU.One()
     override t.Ones(shape) = upcast RawTensorFloat32CPU.Ones(shape)
+    override t.Full(shape, value) = upcast RawTensorFloat32CPU.Full(shape, value)
     override t.Random(shape) = upcast RawTensorFloat32CPU.Random(shape)
     override t.RandomNormal(shape) = upcast RawTensorFloat32CPU.RandomNormal(shape)
 
@@ -342,6 +343,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     static member Ones(shape:int[]) =
         let values = Array.create (shapeLength shape) 1.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Full(shape:int[], value:obj) =
+        let value = System.Convert.ToSingle(value)
+        let values = Array.create (shapeLength shape) value
         RawTensorFloat32CPU(values, shape)
 
     static member Random(shape:int[])  =
@@ -705,6 +711,7 @@ and RawTensorFloat32CPUStatics() =
     override __.One = upcast RawTensorFloat32CPU.One()
     override __.Zeros(shape:int[]) = upcast RawTensorFloat32CPU.Zeros(shape)
     override __.Ones(shape:int[]) = upcast RawTensorFloat32CPU.Ones(shape)
+    override __.Full(shape:int[], value:obj) = upcast RawTensorFloat32CPU.Full(shape, value)
     override __.Random(shape:int[]) = upcast RawTensorFloat32CPU.Random(shape)
     override __.RandomNormal(shape:int[]) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override __.Create(values:obj) : RawTensor = upcast RawTensorFloat32CPU.Create(values)

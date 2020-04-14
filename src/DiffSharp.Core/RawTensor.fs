@@ -59,6 +59,7 @@ type [<AbstractClass>]
     abstract Zeros : shape:int[] -> RawTensor
     abstract One : RawTensor
     abstract Ones : shape:int[] -> RawTensor
+    abstract Full : shape:int[] * obj -> RawTensor
     abstract Random : shape:int[] -> RawTensor
     abstract RandomNormal : shape:int[]-> RawTensor
     abstract Create : obj -> RawTensor
@@ -111,6 +112,10 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Ones(shape|>Seq.toArray)
 
+    static member Full(shape, value, ?dtype, ?device, ?backend) =
+        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
+        statics.Full(shape|>Seq.toArray, value)
+
     static member Random(shape, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Random(shape|>Seq.toArray)
@@ -136,6 +141,7 @@ and [<AbstractClass>]
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor
     abstract member Ones : int[] -> RawTensor
+    abstract member Full : int[] * obj -> RawTensor
     abstract member Random : int[] -> RawTensor
     abstract member RandomNormal : int[] -> RawTensor
     abstract member RandomMultinomial: int -> RawTensor
