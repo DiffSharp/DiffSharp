@@ -65,6 +65,4 @@ type MNIST(path:string, ?train:bool) =
             |> dsharp.view([n; -1])
         | _ -> failwith "Given file is not in the MNIST format."
     override d.length() = data.shape.[0]
-    override d.item(i) =
-        printfn "%A %A" data.shape labels.shape
-        data.[i], labels.[i]
+    override d.item(i) = data.[i], labels.[i]
