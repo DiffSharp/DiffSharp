@@ -112,7 +112,7 @@ type Tensor =
             let t = formatter.Deserialize(fs) :?> Tensor
             t
         with
-        | :? SerializationException as e -> failwithf "Cannot save Tensor. %A" e.Message
+        | :? SerializationException as e -> failwithf "Cannot load Tensor. %A" e.Message
 
 
     override t.Equals(other) =
