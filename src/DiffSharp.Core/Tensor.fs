@@ -1,6 +1,9 @@
 ﻿namespace DiffSharp
 open DiffSharp.Backend
 open DiffSharp.Util
+open System.IO
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Formatters.Binary
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
@@ -95,6 +98,22 @@ type Tensor =
         | TensorR(_), Tensor(_)  -> false
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
+    member t.save(fileName:string) =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Create)
+        try
+            formatter.Serialize(fs, t)
+        with
+        | :? SerializationException as e -> failwithf "Cannot save Tensor. %A" e.Message
+    static member load(fileName:string) =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Open)
+        try
+            let t = formatter.Deserialize(fs) :?> Tensor
+            t
+        with
+        | :? SerializationException as e -> failwithf "Cannot save Tensor. %A" e.Message
+
 
     override t.Equals(other) =
         match other with

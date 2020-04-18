@@ -8,6 +8,7 @@
     <Compile Include="Tensor.fs" />
     <Compile Include="DiffSharp.fs" />
     <Compile Include="Distributions.fs" />
+    <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Optim.fs" />
   </ItemGroup>

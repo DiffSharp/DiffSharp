@@ -1,5 +1,6 @@
 module DiffSharp.Util
 open System
+open System.Net
 open System.Collections
 open System.Collections.Generic
 open FSharp.Reflection
@@ -456,3 +457,8 @@ let getKeys (dictionary:Dictionary<string, 'a>) =
     let keys = Array.create dictionary.Count ""
     dictionary.Keys.CopyTo(keys, 0)
     keys
+
+let download (url:string) (localFileName:string) =
+    let wc = new WebClient()
+    printfn "Downloading %A to %A" url localFileName
+    wc.DownloadFile(url, localFileName)

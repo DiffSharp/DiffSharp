@@ -7,7 +7,7 @@ open System.Collections.Generic
 type Optimizer(model:Model) =
     member val Model = model
     abstract member ParameterUpdate: string -> Tensor -> Tensor
-    member o.Step() = o.Model.UpdateParameters(o.Model.Parameters.Map(o.ParameterUpdate))
+    member o.Step() = o.Model.UpdateParameters(o.Model.Parameters.map(o.ParameterUpdate))
 
 
 // type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool) =

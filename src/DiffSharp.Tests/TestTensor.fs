@@ -161,6 +161,14 @@ type TestTensor () =
         Assert.AreEqual(a, v)
 
     [<Test>]
+    member this.TestTensorSaveLoad () =
+        let a = dsharp.tensor([[1,2],[3,4]])
+        let fileName = System.IO.Path.GetTempFileName()
+        a.save(fileName)
+        let b = Tensor.load(fileName)
+        Assert.AreEqual(a, b)
+
+    [<Test>]
     member this.TestTensorClone () =
         let a = dsharp.randn([2;3])
         let b = a.clone()
