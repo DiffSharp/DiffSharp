@@ -43,6 +43,17 @@ type Random() =
     static member Choice(array:_[], probs:float[]) = 
         if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
         array.[Random.ChoiceIndex(probs)]
+    static member Shuffle(array:_[]) =
+        // Durstenfeld/Knuth shuffle
+        let a = array |> Array.copy
+        let mutable n = array.Length
+        while n > 1 do
+            n <- n - 1
+            let i = rnd.Next(n+1)
+            let temp = a.[i]
+            a.[i] <- a.[n]
+            a.[n] <- temp
+        a
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
@@ -462,3 +473,8 @@ let download (url:string) (localFileName:string) =
     let wc = new WebClient()
     printfn "Downloading %A to %A" url localFileName
     wc.DownloadFile(url, localFileName)
+
+let shuffledIndices (length:int) =
+    let indices = Array.init length id
+    let indicesShuffled = Random.Shuffle(indices)
+    fun (i:int) -> indicesShuffled.[i]

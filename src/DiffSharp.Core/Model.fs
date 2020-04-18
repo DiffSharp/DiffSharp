@@ -32,7 +32,7 @@ type Model() =
                 // printfn "adding submodel %A" model
                 m.SubModels.[n] <- model
                 for KeyValue(nn, tt) in model.Parameters.Tensors do
-                    printfn "adding Tensor %A %A" (n + "__" + nn) tt
+                    // printfn "adding Tensor %A %A" (n + "__" + nn) tt
                     m.Parameters.add(n + "__" + nn, tt)
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Tensor or Model"
     member m.UpdateParameters(parameters:TensorDict) =
