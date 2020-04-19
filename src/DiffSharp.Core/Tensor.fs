@@ -923,6 +923,13 @@ type Tensor =
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
+    member a.logsumexp(dim:int, ?keepDim:bool) =
+        let keepDim = defaultArg keepDim false
+        let amax = a.max().noDiff()
+        let e = (a - amax).exp()
+        let res = amax + e.sum(dim).log()
+        if keepDim then res.unsqueeze(dim) else res
+
     member a.mseLoss(b:Tensor) = let z = a - b in (z * z).mean()
 
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =

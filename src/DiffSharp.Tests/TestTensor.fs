@@ -2220,6 +2220,95 @@ type TestTensor () =
         Assert.True(t3Softmax2.allclose(t3Softmax2Correct, 0.001))
 
     [<Test>]
+    member this.TestTensorLogsumexp () =
+        let t1 = dsharp.tensor([2.7291, 0.0607, 0.8290])
+        let t1Logsumexp0 = t1.logsumexp(0)
+        let t1Logsumexp0Correct = dsharp.tensor(2.9271)
+        let t1Logsumexp0keepdim = t1.logsumexp(0, keepDim=true)
+        let t1Logsumexp0keepdimCorrect = dsharp.tensor([2.9271])
+
+        let t2 = dsharp.tensor([[1.3335, 1.6616, 2.4874, 6.1722],
+                                [3.3478, 9.3019, 1.0844, 8.9874],
+                                [8.6300, 1.8842, 9.1387, 9.1321]])
+        let t2Logsumexp0 = t2.logsumexp(0)
+        let t2Logsumexp0Correct = dsharp.tensor([8.6357, 9.3030, 9.1403, 9.7829])
+        let t2Logsumexp0keepdim = t2.logsumexp(0, keepDim=true)
+        let t2Logsumexp0keepdimCorrect = dsharp.tensor([[8.6357, 9.3030, 9.1403, 9.7829]])
+        let t2Logsumexp1 = t2.logsumexp(1)
+        let t2Logsumexp1Correct = dsharp.tensor([ 6.2153,  9.8518, 10.0924])
+        let t2Logsumexp1keepdim = t2.logsumexp(1, keepDim=true)
+        let t2Logsumexp1keepdimCorrect = dsharp.tensor([[ 6.2153],
+                                                        [ 9.8518],
+                                                        [10.0924]])
+
+        let t3 = dsharp.tensor([[[3.0897, 2.0902],
+                                 [2.4055, 1.2437],
+                                 [2.1253, 8.7802],
+                                 [4.3856, 3.4456]],
+
+                                [[8.6233, 6.9789],
+                                 [4.9583, 9.9497],
+                                 [2.6964, 1.6048],
+                                 [2.1182, 2.1071]],
+
+                                [[8.1097, 6.9804],
+                                 [8.1223, 6.3030],
+                                 [0.1873, 8.7840],
+                                 [9.3609, 0.6493]]])
+             
+        let t3Logsumexp0 = t3.logsumexp(0)
+        let t3Logsumexp0Correct = dsharp.tensor([[9.0947, 7.6766],
+                                                    [8.1668, 9.9756],
+                                                    [3.1949, 9.4756],
+                                                    [9.3685, 3.7257]])
+        let t3Logsumexp0keepdim = t3.logsumexp(0, keepDim=true)
+        let t3Logsumexp0keepdimCorrect = dsharp.tensor([[[9.0947, 7.6766],
+                                                         [8.1668, 9.9756],
+                                                         [3.1949, 9.4756],
+                                                         [9.3685, 3.7257]]])                                                    
+        let t3Logsumexp1 = t3.logsumexp(1)
+        let t3Logsumexp1Correct = dsharp.tensor([[ 4.8017,  8.7868],
+                                                    [ 8.6526, 10.0003],
+                                                    [ 9.8158,  9.0061]])
+        let t3Logsumexp1keepdim = t3.logsumexp(1, keepDim=true)
+        let t3Logsumexp1keepdimCorrect = dsharp.tensor([[[ 4.8017,  8.7868]],
+
+                                                        [[ 8.6526, 10.0003]],
+
+                                                        [[ 9.8158,  9.0061]]])
+        let t3Logsumexp2 = t3.logsumexp(2)
+        let t3Logsumexp2Correct = dsharp.tensor([[3.4031, 2.6778, 8.7815, 4.7154],
+                                                    [8.7999, 9.9565, 2.9858, 2.8058],
+                                                    [8.3898, 8.2726, 8.7842, 9.3611]])
+        let t3Logsumexp2keepdim = t3.logsumexp(2, keepDim=true)
+        let t3Logsumexp2keepdimCorrect = dsharp.tensor([[[3.4031],
+                                                         [2.6778],
+                                                         [8.7815],
+                                                         [4.7154]],
+
+                                                        [[8.7999],
+                                                         [9.9565],
+                                                         [2.9858],
+                                                         [2.8058]],
+
+                                                        [[8.3898],
+                                                         [8.2726],
+                                                         [8.7842],
+                                                         [9.3611]]])
+        Assert.True(t1Logsumexp0.allclose(t1Logsumexp0Correct, 0.001))
+        Assert.True(t2Logsumexp0.allclose(t2Logsumexp0Correct, 0.001))
+        Assert.True(t2Logsumexp1.allclose(t2Logsumexp1Correct, 0.001))
+        Assert.True(t3Logsumexp0.allclose(t3Logsumexp0Correct, 0.001))
+        Assert.True(t3Logsumexp1.allclose(t3Logsumexp1Correct, 0.001))
+        Assert.True(t3Logsumexp2.allclose(t3Logsumexp2Correct, 0.001))
+        Assert.True(t1Logsumexp0keepdim.allclose(t1Logsumexp0keepdimCorrect, 0.001))
+        Assert.True(t2Logsumexp0keepdim.allclose(t2Logsumexp0keepdimCorrect, 0.001))
+        Assert.True(t2Logsumexp1keepdim.allclose(t2Logsumexp1keepdimCorrect, 0.001))
+        Assert.True(t3Logsumexp0keepdim.allclose(t3Logsumexp0keepdimCorrect, 0.001))
+        Assert.True(t3Logsumexp1keepdim.allclose(t3Logsumexp1keepdimCorrect, 0.001))
+        Assert.True(t3Logsumexp2keepdim.allclose(t3Logsumexp2keepdimCorrect, 0.001))
+
+    [<Test>]
     member this.TestTensorDepth () =
         let t0 = dsharp.tensor([1.;2.])
         let t0Depth = t0.depth
