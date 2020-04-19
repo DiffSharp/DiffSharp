@@ -105,11 +105,13 @@ type Tensor =
             formatter.Serialize(fs, t)
         with
         | :? SerializationException as e -> failwithf "Cannot save Tensor. %A" e.Message
+        fs.Close()
     static member load(fileName:string) =
         let formatter = BinaryFormatter()
         let fs = new FileStream(fileName, FileMode.Open)
         try
             let t = formatter.Deserialize(fs) :?> Tensor
+            fs.Close()
             t
         with
         | :? SerializationException as e -> failwithf "Cannot load Tensor. %A" e.Message
