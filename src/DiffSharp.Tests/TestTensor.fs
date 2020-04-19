@@ -2219,6 +2219,92 @@ type TestTensor () =
         Assert.True(t3Softmax1.allclose(t3Softmax1Correct, 0.001))
         Assert.True(t3Softmax2.allclose(t3Softmax2Correct, 0.001))
 
+
+    [<Test>]
+    member this.TestTensorLogsoftmax () =
+        let t1 = dsharp.tensor([2.7291, 0.0607, 0.8290])
+        let t1Logsoftmax0 = t1.logsoftmax(0)
+        let t1Logsoftmax0Correct = dsharp.tensor([-0.1980, -2.8664, -2.0981])
+
+        let t2 = dsharp.tensor([[1.3335, 1.6616, 2.4874, 6.1722],
+                                [3.3478, 9.3019, 1.0844, 8.9874],
+                                [8.6300, 1.8842, 9.1387, 9.1321]])
+        let t2Logsoftmax0 = t2.logsoftmax(0)
+        let t2Logsoftmax0Correct = dsharp.tensor([[-7.3022e+00, -7.6414e+00, -6.6529e+00, -3.6107e+00],
+                                                    [-5.2879e+00, -1.0806e-03, -8.0559e+00, -7.9552e-01],
+                                                    [-5.7426e-03, -7.4188e+00, -1.6088e-03, -6.5082e-01]])
+        let t2Logsoftmax1 = t2.logsoftmax(1)
+        let t2Logsoftmax1Correct = dsharp.tensor([[-4.8818, -4.5537, -3.7279, -0.0431],
+                                                    [-6.5040, -0.5499, -8.7674, -0.8644],
+                                                    [-1.4624, -8.2082, -0.9537, -0.9603]])
+
+        let t3 = dsharp.tensor([[[3.0897, 2.0902],
+                                 [2.4055, 1.2437],
+                                 [2.1253, 8.7802],
+                                 [4.3856, 3.4456]],
+
+                                [[8.6233, 6.9789],
+                                 [4.9583, 9.9497],
+                                 [2.6964, 1.6048],
+                                 [2.1182, 2.1071]],
+
+                                [[8.1097, 6.9804],
+                                 [8.1223, 6.3030],
+                                 [0.1873, 8.7840],
+                                 [9.3609, 0.6493]]])
+             
+        let t3Logsoftmax0 = t3.logsoftmax(0)
+        let t3Logsoftmax0Correct = dsharp.tensor([[[-6.0050e+00, -5.5864e+00],
+                                                     [-5.7613e+00, -8.7319e+00],
+                                                     [-1.0696e+00, -6.9543e-01],
+                                                     [-4.9829e+00, -2.8011e-01]],
+
+                                                    [[-4.7143e-01, -6.9765e-01],
+                                                     [-3.2085e+00, -2.5904e-02],
+                                                     [-4.9850e-01, -7.8708e+00],
+                                                     [-7.2503e+00, -1.6186e+00]],
+
+                                                    [[-9.8503e-01, -6.9615e-01],
+                                                     [-4.4540e-02, -3.6726e+00],
+                                                     [-3.0076e+00, -6.9163e-01],
+                                                     [-7.5929e-03, -3.0764e+00]]])
+        let t3Logsoftmax1 = t3.logsoftmax(1)
+        let t3Logsoftmax1Correct = dsharp.tensor([[[-1.7120e+00, -6.6966e+00],
+                                                     [-2.3962e+00, -7.5431e+00],
+                                                     [-2.6764e+00, -6.5767e-03],
+                                                     [-4.1609e-01, -5.3412e+00]],
+
+                                                    [[-2.9332e-02, -3.0214e+00],
+                                                     [-3.6943e+00, -5.0591e-02],
+                                                     [-5.9562e+00, -8.3955e+00],
+                                                     [-6.5344e+00, -7.8932e+00]],
+
+                                                    [[-1.7061e+00, -2.0257e+00],
+                                                     [-1.6935e+00, -2.7031e+00],
+                                                     [-9.6285e+00, -2.2207e-01],
+                                                     [-4.5492e-01, -8.3568e+00]]])
+        let t3Logsoftmax2 = t3.logsoftmax(2)
+        let t3Logsoftmax2Correct = dsharp.tensor([[[-3.1340e-01, -1.3129e+00],
+                                                     [-2.7226e-01, -1.4341e+00],
+                                                     [-6.6562e+00, -1.2869e-03],
+                                                     [-3.2976e-01, -1.2698e+00]],
+
+                                                    [[-1.7658e-01, -1.8210e+00],
+                                                     [-4.9982e+00, -6.7731e-03],
+                                                     [-2.8944e-01, -1.3810e+00],
+                                                     [-6.8761e-01, -6.9871e-01]],
+
+                                                    [[-2.8010e-01, -1.4094e+00],
+                                                     [-1.5026e-01, -1.9696e+00],
+                                                     [-8.5969e+00, -1.8464e-04],
+                                                     [-1.6461e-04, -8.7118e+00]]])
+        Assert.True(t1Logsoftmax0.allclose(t1Logsoftmax0Correct, 0.01))
+        Assert.True(t2Logsoftmax0.allclose(t2Logsoftmax0Correct, 0.01))
+        Assert.True(t2Logsoftmax1.allclose(t2Logsoftmax1Correct, 0.01))
+        Assert.True(t3Logsoftmax0.allclose(t3Logsoftmax0Correct, 0.01))
+        Assert.True(t3Logsoftmax1.allclose(t3Logsoftmax1Correct, 0.01))
+        Assert.True(t3Logsoftmax2.allclose(t3Logsoftmax2Correct, 0.01))
+
     [<Test>]
     member this.TestTensorLogsumexp () =
         let t1 = dsharp.tensor([2.7291, 0.0607, 0.8290])

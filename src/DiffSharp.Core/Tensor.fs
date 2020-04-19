@@ -923,7 +923,12 @@ type Tensor =
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
+    member a.logsoftmax(dim:int) =
+        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim < a.dim, received %A, %A" dim a.dim
+        a - a.logsumexp(dim, keepDim=true)
+
     member a.logsumexp(dim:int, ?keepDim:bool) =
+        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim < a.dim, received %A, %A" dim a.dim
         let keepDim = defaultArg keepDim false
         let amax = a.max().noDiff()
         let e = (a - amax).exp()
