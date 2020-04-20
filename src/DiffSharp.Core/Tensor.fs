@@ -935,9 +935,18 @@ type Tensor =
         let res = amax + e.sum(dim).log()
         if keepDim then res.unsqueeze(dim) else res
 
-    member a.mseLoss(b:Tensor) = 
+    member a.mseLoss(b:Tensor, ?reduction:string) = 
         if a.shape <> b.shape then failwithf "Expecting a.shape (%A) and b.shape (%A) to be the same" a.shape b.shape
-        let z = a - b in (z * z).mean()
+        let reduction = defaultArg reduction "mean"
+        if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        let z = a - b
+        let l = z * z
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            l.mean()
+        else // reduction = "sum"
+            l.sum()
 
     member a.crossEntropyLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
         a.logsoftmax(dim=1).nllLoss(b, ?weights=weights, ?reduction=reduction)

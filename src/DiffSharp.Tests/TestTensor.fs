@@ -2523,6 +2523,39 @@ type TestTensor () =
         Assert.True(l6Correct.allclose(l6, 0.001))
 
     [<Test>]
+    member this.TestTensorMseLoss () =
+        let t1a = dsharp.tensor([-0.2425,  0.2643,  0.7070,  1.2049,  1.6245])
+        let t1b = dsharp.tensor([-1.0742,  1.5874,  0.6509,  0.8715,  0.0692])
+        let l1 = dsharp.mseLoss(t1a, t1b)
+        let l1Correct = dsharp.tensor(0.9951)
+        let l2 = dsharp.mseLoss(t1a, t1b, reduction="none")
+        let l2Correct = dsharp.tensor([0.6917, 1.7507, 0.0031, 0.1112, 2.4190])
+        let l3 = dsharp.mseLoss(t1a, t1b, reduction="sum")
+        let l3Correct = dsharp.tensor(4.9756)
+
+        let t2a = dsharp.tensor([[ 0.6650,  0.5049, -0.7356,  0.5312, -0.6574],
+                                 [ 1.0133,  0.9106,  0.1523,  0.2662,  1.1438],
+                                 [ 0.3641, -1.8525, -0.0822, -1.0361,  0.2723]])
+        let t2b = dsharp.tensor([[-1.0001, -1.4867, -0.3340, -0.2590,  0.1395],
+                                 [-2.0158,  0.8281,  1.1726, -0.2359,  0.5007],
+                                 [ 1.3242,  0.5215,  1.4293, -1.4235,  0.2473]])
+        let l4 = dsharp.mseLoss(t2a, t2b)
+        let l4Correct = dsharp.tensor(1.8694)
+        let l5 = dsharp.mseLoss(t2a, t2b, reduction="none")
+        let l5Correct = dsharp.tensor([[2.7726e+00, 3.9663e+00, 1.6130e-01, 6.2438e-01, 6.3511e-01],
+                                        [9.1753e+00, 6.8075e-03, 1.0409e+00, 2.5207e-01, 4.1352e-01],
+                                        [9.2194e-01, 5.6358e+00, 2.2848e+00, 1.5011e-01, 6.2556e-04]])
+        let l6 = dsharp.mseLoss(t2a, t2b, reduction="sum")
+        let l6Correct = dsharp.tensor(28.0416)
+
+        Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
+        Assert.True(l2Correct.allclose(l2, 0.01, 0.01))
+        Assert.True(l3Correct.allclose(l3, 0.01, 0.01))
+        Assert.True(l4Correct.allclose(l4, 0.01, 0.01))
+        Assert.True(l5Correct.allclose(l5, 0.01, 0.01))
+        Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
+
+    [<Test>]
     member this.TestTensorDepth () =
         let t0 = dsharp.tensor([1.;2.])
         let t0Depth = t0.depth
