@@ -86,7 +86,7 @@ type Tensor =
     member t.dim = t.primalRaw.Dim
     member t.nelement = t.primalRaw.Nelement
     member t.toArray() = t.primalRaw.ToArray()
-    member t.toScalar() = t.primalRaw.ToValue()
+    member t.toScalar() = t.primalRaw.ToScalar()
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
         | Tensor(_),  Tensor(_)  -> true
@@ -918,24 +918,78 @@ type Tensor =
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     member a.softmax(dim:int) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim < a.dim, received %A, %A" dim a.dim
+        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
         let e = (a - a.max().noDiff()).exp()
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
     member a.logsoftmax(dim:int) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim < a.dim, received %A, %A" dim a.dim
+        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
         a - a.logsumexp(dim, keepDim=true)
 
     member a.logsumexp(dim:int, ?keepDim:bool) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim < a.dim, received %A, %A" dim a.dim
+        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
         let keepDim = defaultArg keepDim false
         let amax = a.max().noDiff()
         let e = (a - amax).exp()
         let res = amax + e.sum(dim).log()
         if keepDim then res.unsqueeze(dim) else res
 
-    member a.mseLoss(b:Tensor) = let z = a - b in (z * z).mean()
+    member a.mseLoss(b:Tensor) = 
+        if a.shape <> b.shape then failwithf "Expecting a.shape (%A) and b.shape (%A) to be the same" a.shape b.shape
+        let z = a - b in (z * z).mean()
+
+    member a.nllLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
+        let n, classes, d = 
+            if a.dim < 2 
+                then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+            elif a.dim = 2 then
+                let n, c = a.shape.[0], a.shape.[1]
+                if b.shape <> [|n|] then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+                n, c, [||]
+            else
+                let n, c, d = a.shape.[0], a.shape.[1], a.shape.[2..]
+                if b.shape.[0] <> n then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+                if d <> b.shape.[1..] then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+                n, c, d
+        let mutable weightsSpecified = false
+        let mutable ww = a.zeroLike()
+        match weights with
+        | Some w -> ww <- w; weightsSpecified <- true
+        | None -> ww <- a.onesLike([classes]); weightsSpecified <- false
+        let weights = ww
+        let reduction = defaultArg reduction "mean"
+        if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        if a.dim = 2 then
+            let mutable wacc = a.zeroLike()
+            let l = Array.init n (fun i -> 
+                                    let target = b.[i].toScalar() |> System.Convert.ToInt32
+                                    let w = weights.[target]
+                                    wacc <- wacc + w
+                                    -w*a.[i, target]) |> Tensor.stack
+            if reduction = "none" then
+                l
+            elif reduction = "mean" then
+                if weightsSpecified then l.sum()/wacc else l.mean()
+            else // reduction = "sum"
+                l.sum()
+        else
+            let mutable wacc = a.zeroLike()
+            let l = Array.init n (fun i ->
+                                    let aa = a.[i].view([classes; -1])
+                                    let bb = b.[i].view(-1)
+                                    let l = Array.init bb.nelement (fun j ->
+                                                                    let target = bb.[j].toScalar() |> System.Convert.ToInt32
+                                                                    let w = weights.[target]
+                                                                    wacc <- wacc + w
+                                                                    -w*aa.[target, j]) |> Tensor.stack
+                                    l.view(d)) |> Tensor.stack
+            if reduction = "none" then
+                l
+            elif reduction = "mean" then
+                if weightsSpecified then l.sum()/wacc else l.mean()
+            else // reduction = "sum"
+                l.sum()
 
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
@@ -1072,7 +1126,7 @@ type Tensor =
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
-        if value.shape <> t.shape then failwithf "Expecting an adjoint value of shape %A, but received of shape %A" t.shape value.shape
+        if value.shape <> t.shape then failwithf "Expecting value.shape (%A) and t.shape (%A) to be the same" value.shape t.shape
         t.reverseReset(zeroDerivatives)
         t.reversePush(value)
 

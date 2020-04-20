@@ -148,7 +148,7 @@ and [<AbstractClass>]
     abstract member GetString : unit -> string
     abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
-    abstract member ToValue: unit -> obj
+    abstract member ToScalar: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
     abstract member ComputeHash: unit -> int

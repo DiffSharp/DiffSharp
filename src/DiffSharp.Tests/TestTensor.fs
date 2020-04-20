@@ -2395,6 +2395,106 @@ type TestTensor () =
         Assert.True(t3Logsumexp2keepdim.allclose(t3Logsumexp2keepdimCorrect, 0.001))
 
     [<Test>]
+    member this.TestTensorNllLoss () =
+        let t1a = dsharp.tensor([[0.15,0.85],[0.5,0.5],[0.8,0.2]]).log()
+        let t1b = dsharp.tensor([0,1,1])
+        let t1w = dsharp.tensor([-1.2,0.6])
+        let l1 = dsharp.nllLoss(t1a, t1b)
+        let l1Correct = dsharp.tensor(1.3999)
+        let l2 = dsharp.nllLoss(t1a, t1b, weights=t1w)
+        let l2Correct = dsharp.tensor(-0.8950)
+        let l3 = dsharp.nllLoss(t1a, t1b, reduction="none")
+        let l3Correct = dsharp.tensor([1.8971, 0.6931, 1.6094])
+        let l4 = dsharp.nllLoss(t1a, t1b, reduction="none", weights=t1w)
+        let l4Correct = dsharp.tensor([-2.2765,  0.4159,  0.9657])
+        let l5 = dsharp.nllLoss(t1a, t1b, reduction="sum")
+        let l5Correct = dsharp.tensor(4.1997)
+        let l6 = dsharp.nllLoss(t1a, t1b, reduction="sum", weights=t1w)
+        let l6Correct = dsharp.tensor(-0.8950)
+
+        let t2a = dsharp.tensor([[[[-1.9318, -1.9386, -0.9488, -0.8787],
+                                      [-1.1891, -2.4614, -1.0514, -1.1577],
+                                      [-1.1977, -1.2468, -0.8123, -1.2226],
+                                      [-0.9584, -2.1857, -0.9079, -1.5362]],
+
+                                     [[-0.5465, -0.3825, -1.2375, -0.8330],
+                                      [-2.4107, -0.8157, -0.9717, -1.0601],
+                                      [-0.9040, -1.3655, -1.6613, -1.0334],
+                                      [-0.8829, -1.4097, -1.5420, -1.9021]],
+
+                                     [[-1.2868, -1.7491, -1.1311, -1.8975],
+                                      [-0.5013, -0.7500, -1.3016, -1.0807],
+                                      [-1.2271, -0.7824, -1.0044, -1.0505],
+                                      [-1.5950, -0.4410, -0.9606, -0.4533]]],
+
+
+                                    [[[-1.9389, -2.4012, -1.0333, -1.4381],
+                                      [-1.5336, -1.6488, -2.1201, -1.5972],
+                                      [-1.2268, -1.2666, -0.7287, -1.1079],
+                                      [-1.3558, -1.0362, -1.2035, -1.0245]],
+
+                                     [[-0.5721, -0.3562, -1.0314, -0.8208],
+                                      [-0.4922, -0.5392, -0.9215, -0.5276],
+                                      [-1.3011, -0.6734, -0.9661, -0.5593],
+                                      [-0.6594, -0.9271, -1.0346, -0.7122]],
+
+                                     [[-1.2316, -1.5651, -1.2460, -1.1315],
+                                      [-1.7548, -1.4939, -0.7297, -1.5724],
+                                      [-0.8335, -1.5690, -1.9886, -2.3212],
+                                      [-1.4912, -1.3883, -1.0658, -1.8940]]]])
+        let t2b = dsharp.tensor([[[2, 0, 1, 2],
+                                     [2, 0, 1, 0],
+                                     [2, 1, 0, 1],
+                                     [1, 2, 1, 1]],
+
+                                    [[2, 0, 2, 0],
+                                     [0, 1, 0, 2],
+                                     [2, 0, 2, 1],
+                                     [1, 1, 1, 2]]])
+        let t2w = dsharp.tensor([ 1.1983, -0.2633, -0.3064])
+        let l7 = dsharp.nllLoss(t2a, t2b)
+        let l7Correct = dsharp.tensor(1.3095)
+        let l8 = dsharp.nllLoss(t2a, t2b, weights=t2w)
+        let l8Correct = dsharp.tensor(2.4610)
+        let l9 = dsharp.nllLoss(t2a, t2b, reduction="none")
+        let l9Correct = dsharp.tensor([[[1.2868, 1.9386, 1.2375, 1.8975],
+                                         [0.5013, 2.4614, 0.9717, 1.1577],
+                                         [1.2271, 1.3655, 0.8123, 1.0334],
+                                         [0.8829, 0.4410, 1.5420, 1.9021]],
+
+                                        [[1.2316, 2.4012, 1.2460, 1.4381],
+                                         [1.5336, 0.5392, 2.1201, 1.5724],
+                                         [0.8335, 1.2666, 1.9886, 0.5593],
+                                         [0.6594, 0.9271, 1.0346, 1.8940]]])
+        let l10 = dsharp.nllLoss(t2a, t2b, reduction="none", weights=t2w)
+        let l10Correct = dsharp.tensor([[[-0.3943,  2.3231, -0.3258, -0.5814],
+                                         [-0.1536,  2.9496, -0.2558,  1.3872],
+                                         [-0.3760, -0.3595,  0.9734, -0.2721],
+                                         [-0.2324, -0.1351, -0.4059, -0.5007]],
+
+                                        [[-0.3774,  2.8775, -0.3818,  1.7233],
+                                         [ 1.8378, -0.1419,  2.5406, -0.4818],
+                                         [-0.2554,  1.5179, -0.6093, -0.1472],
+                                         [-0.1736, -0.2440, -0.2724, -0.5804]]])
+        let l11 = dsharp.nllLoss(t2a, t2b, reduction="sum")
+        let l11Correct = dsharp.tensor(41.9042)
+        let l12 = dsharp.nllLoss(t2a, t2b, reduction="sum", weights=t2w)
+        let l12Correct = dsharp.tensor(10.4726)
+
+        Assert.True(l1Correct.allclose(l1, 0.001))
+        Assert.True(l2Correct.allclose(l2, 0.001))
+        Assert.True(l3Correct.allclose(l3, 0.001))
+        Assert.True(l4Correct.allclose(l4, 0.001))
+        Assert.True(l5Correct.allclose(l5, 0.001))
+        Assert.True(l6Correct.allclose(l6, 0.001))
+        Assert.True(l7Correct.allclose(l7, 0.001))
+        Assert.True(l8Correct.allclose(l8, 0.001))
+        Assert.True(l9Correct.allclose(l9, 0.001))
+        Assert.True(l10Correct.allclose(l10, 0.001))
+        Assert.True(l11Correct.allclose(l11, 0.001))
+        Assert.True(l12Correct.allclose(l12, 0.001))
+
+    [<Test>]
     member this.TestTensorDepth () =
         let t0 = dsharp.tensor([1.;2.])
         let t0Depth = t0.depth

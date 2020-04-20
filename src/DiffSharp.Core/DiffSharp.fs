@@ -98,9 +98,22 @@ type DiffSharp =
     static member logsoftmax (dim:int) = fun (a:Tensor) -> a.logsoftmax(dim)
     static member logsumexp(a:Tensor, dim:int, ?keepDim:bool) = a.logsumexp(dim, ?keepDim=keepDim)
     static member mseLoss(a:Tensor, b:Tensor) = a.mseLoss(b)
+    static member nllLoss(a:Tensor, b:Tensor, ?weights:Tensor, ?reduction:string) = a.nllLoss(b, ?weights=weights, ?reduction=reduction)
     static member conv1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+
+
+// Methods mirroring F# array modules
+// TODO: update to support non-float types once we have backing DTypes implemented
+type DiffSharp with
+    static member init (count:int) (initializer:int->float) = Array.init count initializer |> DiffSharp.tensor
+    static member init2d (length1:int) (length2:int) (initializer:int->int->float) = Array2D.init length1 length2 initializer |> DiffSharp.tensor
+    static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->float) = Array3D.init length1 length2 length3 initializer |> DiffSharp.tensor
+    static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->float) = Array4D.init length1 length2 length3 length4 initializer |> DiffSharp.tensor
+    static member create (count:int) (value:float) = Array.create count value |> DiffSharp.tensor
+    static member zeroCreate (count:int) = Array.zeroCreate count |> DiffSharp.tensor
+
 
 // Functional automatic differentiation API
 type DiffSharp with
@@ -221,6 +234,7 @@ type DiffSharp with
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
         fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
     static member curldivergence f x = let _, c, d = DiffSharp.pcurldivergence f x in c, d
+
 
 // Functional numerical differentiation API
 type DiffSharp with

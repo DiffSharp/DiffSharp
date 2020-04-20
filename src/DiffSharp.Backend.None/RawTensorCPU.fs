@@ -51,7 +51,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(array, shape)
 
     override t1.CompareTo(t2) =
-        compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
+        compare (t1.ToScalar():?>float32) (t2.ToScalar():?>float32)
     
     override t.Clone() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
     override t.CreateFromScalar(value, shape) =
@@ -110,7 +110,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override x.ComputeHash() = hash shape + hash values
 
-    override t.ToValue() =
+    override t.ToScalar() =
         match t.Dim with
         | 0 -> upcast t.Values.[0]
         | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
