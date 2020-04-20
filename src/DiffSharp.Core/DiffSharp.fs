@@ -99,6 +99,7 @@ type DiffSharp =
     static member logsumexp(a:Tensor, dim:int, ?keepDim:bool) = a.logsumexp(dim, ?keepDim=keepDim)
     static member mseLoss(a:Tensor, b:Tensor) = a.mseLoss(b)
     static member nllLoss(a:Tensor, b:Tensor, ?weights:Tensor, ?reduction:string) = a.nllLoss(b, ?weights=weights, ?reduction=reduction)
+    static member crossEntropyLoss(a:Tensor, b:Tensor, ?weights:Tensor, ?reduction:string) = a.crossEntropyLoss(b, ?weights=weights, ?reduction=reduction)
     static member conv1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)

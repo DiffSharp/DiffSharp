@@ -939,6 +939,9 @@ type Tensor =
         if a.shape <> b.shape then failwithf "Expecting a.shape (%A) and b.shape (%A) to be the same" a.shape b.shape
         let z = a - b in (z * z).mean()
 
+    member a.crossEntropyLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
+        a.logsoftmax(dim=1).nllLoss(b, ?weights=weights, ?reduction=reduction)
+
     member a.nllLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
         let n, classes, d = 
             if a.dim < 2 

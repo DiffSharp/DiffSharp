@@ -2495,6 +2495,34 @@ type TestTensor () =
         Assert.True(l12Correct.allclose(l12, 0.001))
 
     [<Test>]
+    member this.TestTensorCrossEntropyLoss () =
+        let t1a = dsharp.tensor([[-0.6596,  0.3078, -0.2525, -0.2593, -0.2354],
+                                    [ 0.4708,  0.6073,  1.5621, -1.4636,  0.9769],
+                                    [ 0.5078,  0.0579,  1.0054,  0.3532,  1.1819],
+                                    [ 1.5425, -0.2887,  1.0716, -1.3946,  0.8806]])
+        let t1b = dsharp.tensor([3, 1, 0, 4])
+        let t1w = dsharp.tensor([-1.4905,  0.5929,  1.0018, -1.0858, -0.5993])
+        let l1 = dsharp.crossEntropyLoss(t1a, t1b)
+        let l1Correct = dsharp.tensor(1.7059)
+        let l2 = dsharp.crossEntropyLoss(t1a, t1b, weights=t1w)
+        let l2Correct = dsharp.tensor(1.6969)
+        let l3 = dsharp.crossEntropyLoss(t1a, t1b, reduction="none")
+        let l3Correct = dsharp.tensor([1.6983, 1.7991, 1.8085, 1.5178])
+        let l4 = dsharp.crossEntropyLoss(t1a, t1b, reduction="none", weights=t1w)
+        let l4Correct = dsharp.tensor([-1.8439,  1.0666, -2.6956, -0.9096])
+        let l5 = dsharp.crossEntropyLoss(t1a, t1b, reduction="sum")
+        let l5Correct = dsharp.tensor(6.8237)
+        let l6 = dsharp.crossEntropyLoss(t1a, t1b, reduction="sum", weights=t1w)
+        let l6Correct = dsharp.tensor(-4.3825)
+
+        Assert.True(l1Correct.allclose(l1, 0.001))
+        Assert.True(l2Correct.allclose(l2, 0.001))
+        Assert.True(l3Correct.allclose(l3, 0.001))
+        Assert.True(l4Correct.allclose(l4, 0.001))
+        Assert.True(l5Correct.allclose(l5, 0.001))
+        Assert.True(l6Correct.allclose(l6, 0.001))
+
+    [<Test>]
     member this.TestTensorDepth () =
         let t0 = dsharp.tensor([1.;2.])
         let t0Depth = t0.depth
