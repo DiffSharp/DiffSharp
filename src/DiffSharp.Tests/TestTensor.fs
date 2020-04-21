@@ -2381,6 +2381,11 @@ type TestTensor () =
                                                          [8.2726],
                                                          [8.7842],
                                                          [9.3611]]])
+
+        let t4 = dsharp.tensor([[167.385696, -146.549866, 168.850235, -41.856903, -56.691696, -78.774994, 42.035625, 97.490936, -42.763878, -2.130855], 
+                                 [-62.961613, -497.529846, 371.218231, -30.224543, 368.146393, -325.945068, -292.102631, -24.760872, 130.348282, -193.775909]])
+        let t4Logsumexp1 = t4.logsumexp(dim=1)
+        let t4Logsumexp1Correct = dsharp.tensor([169.0582, 371.2635])
         Assert.True(t1Logsumexp0.allclose(t1Logsumexp0Correct, 0.001))
         Assert.True(t2Logsumexp0.allclose(t2Logsumexp0Correct, 0.001))
         Assert.True(t2Logsumexp1.allclose(t2Logsumexp1Correct, 0.001))
@@ -2393,6 +2398,7 @@ type TestTensor () =
         Assert.True(t3Logsumexp0keepdim.allclose(t3Logsumexp0keepdimCorrect, 0.001))
         Assert.True(t3Logsumexp1keepdim.allclose(t3Logsumexp1keepdimCorrect, 0.001))
         Assert.True(t3Logsumexp2keepdim.allclose(t3Logsumexp2keepdimCorrect, 0.001))
+        Assert.True(t4Logsumexp1.allclose(t4Logsumexp1Correct, 0.75))
 
     [<Test>]
     member this.TestTensorNllLoss () =

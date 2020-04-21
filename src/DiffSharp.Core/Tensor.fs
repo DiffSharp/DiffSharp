@@ -932,7 +932,7 @@ type Tensor =
         let keepDim = defaultArg keepDim false
         let amax = a.max().noDiff()
         let e = (a - amax).exp()
-        let res = amax + e.sum(dim).log()
+        let res = amax + e.sum(dim).add(System.Single.Epsilon).log()
         if keepDim then res.unsqueeze(dim) else res
 
     member a.mseLoss(b:Tensor, ?reduction:string) = 
@@ -979,6 +979,7 @@ type Tensor =
                                     let w = weights.[target]
                                     wacc <- wacc + w
                                     -w*a.[i, target]) |> Tensor.stack
+            
             if reduction = "none" then
                 l
             elif reduction = "mean" then

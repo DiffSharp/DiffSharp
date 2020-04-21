@@ -35,7 +35,7 @@ type Model() =
                     // printfn "adding Tensor %A %A" (n + "__" + nn) tt
                     m.Parameters.add(n + "__" + nn, tt)
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Tensor or Model"
-    member m.UpdateParameters(parameters:TensorDict) =
+    member m.updateParameters(parameters:TensorDict) =
         let keys = getKeys m.Parameters.Tensors
         for n in keys do
             m.Parameters.[n] <- parameters.[n]
@@ -43,9 +43,9 @@ type Model() =
             let keys = getKeys model.Parameters.Tensors
             for nn in keys do
                 model.Parameters.Tensors.[nn] <- m.Parameters.[n + "__" + nn]
-    member m.forwardDiff(derivatives) = m.UpdateParameters(m.Parameters.forwardDiff(derivatives))
-    member m.reverseDiff() = m.UpdateParameters(m.Parameters.reverseDiff())
-    member m.noDiff() = m.UpdateParameters(m.Parameters.noDiff())
+    member m.forwardDiff(derivatives) = m.updateParameters(m.Parameters.forwardDiff(derivatives))
+    member m.reverseDiff() = m.updateParameters(m.Parameters.reverseDiff())
+    member m.noDiff() = m.updateParameters(m.Parameters.noDiff())
     abstract member forward: Tensor -> Tensor
 
 

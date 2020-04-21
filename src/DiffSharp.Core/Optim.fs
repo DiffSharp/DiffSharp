@@ -1,24 +1,23 @@
 namespace DiffSharp.Optim
 open DiffSharp
 open DiffSharp.Model
-open System.Collections.Generic
 
 [<AbstractClass>]
 type Optimizer(model:Model) =
-    member val Model = model
-    abstract member ParameterUpdate: string -> Tensor -> Tensor
-    member o.Step() = o.Model.UpdateParameters(o.Model.Parameters.map(o.ParameterUpdate))
+    member val model = model
+    abstract member parameterUpdate: string -> Tensor -> Tensor
+    member o.step() = o.model.updateParameters(o.model.Parameters.map(o.parameterUpdate))
 
 
-// type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool) =
-//     inherit Optimizer(model)
-//     let lr = defaultArg learningRate (Tensor.Create(0.001))
-//     let mom = momentum
-//     let nesterov = defaultArg nesterov true
-//     let momentumBuffer = TensorDict()
-//     override o.ParameterUpdate name t = 
-//         match mom with
-//         | Some mom -> 
-//             if nesterov then t.Primal - lr * t.Derivative
-//             else t.Primal - lr * t.Derivative
-//         | None -> t.Primal - lr * t.Derivative
+type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool) =
+    inherit Optimizer(model)
+    let lr = defaultArg learningRate (dsharp.tensor(0.0001))
+    let mom = momentum
+    let nesterov = defaultArg nesterov true
+    // let momentumBuffer = TensorDict()
+    override o.parameterUpdate _ t = 
+        match mom with
+        | Some _ -> 
+            if nesterov then failwith "not implemented"
+            else failwith "not implemented"
+        | None -> t.primal - lr * t.derivative

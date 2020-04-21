@@ -15,7 +15,7 @@ type Dataset() =
     member d.loader(batchSize:int, ?shuffle:bool) =
         let shuffle = defaultArg shuffle false
         let index = if shuffle then shuffledIndices (d.length()) else id
-        seq {for i in 0..(d.length()/batchSize) do 
+        seq {for i in 0..(d.length()/batchSize)-1 do 
                 let data, targets = [for j in 0..batchSize-1 do d.item(index(i*batchSize + j))] |> List.unzip
                 i, data |> dsharp.stack, targets |> dsharp.stack}
 
