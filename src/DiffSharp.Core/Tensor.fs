@@ -169,6 +169,10 @@ type Tensor =
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
     member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
+    member a.isinf() = Tensor(a.primalRaw.IsInfT())
+    member a.isnan() = Tensor(a.primalRaw.IsNaNT())
+    member a.hasinf() = a.isinf().sum() > a.zeroLike()
+    member a.hasnan() = a.isnan().sum() > a.zeroLike()
     member a.maxIndex() = a.primalRaw.MaxIndexT()
     member a.minIndex() = a.primalRaw.MinIndexT()
     member a.max() = a.[a.maxIndex()]
@@ -787,7 +791,7 @@ type Tensor =
     member a.relu() =
         let inline fRaw(a:RawTensor) = a.ReluT()
         let inline fTensor(a:Tensor) = a.relu()
-        let inline dfTensorFwd(cp,ap:Tensor,ad) = let sap = ap.sign() in ad * sap.abs() * (1. + sap) / 2.
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
         let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 

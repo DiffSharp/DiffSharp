@@ -317,6 +317,42 @@ type TestTensor () =
         Assert.AreEqual(t1t2GeCorrect, t1t2Ge)
 
     [<Test>]
+    member this.TestTensorIsinf () =
+        let t = dsharp.tensor([1.; infinity; 3.; -infinity])
+        let i = dsharp.isinf(t)
+        let iCorrect = dsharp.tensor([0.; 1.; 0.; 1.])
+        Assert.AreEqual(iCorrect, i)
+
+    [<Test>]
+    member this.TestTensorIsnan () =
+        let t = dsharp.tensor([1.; nan; 3.; nan])
+        let i = dsharp.isnan(t)
+        let iCorrect = dsharp.tensor([0.; 1.; 0.; 1.])
+        Assert.AreEqual(iCorrect, i)
+
+    [<Test>]
+    member this.TestTensorHasinf () =
+        let t1 = dsharp.tensor([1.; infinity; 3.; -infinity])
+        let t1i = dsharp.hasinf(t1)
+        let t1iCorrect = true
+        let t2 = dsharp.tensor([1.; 2.; 3.; 4.])
+        let t2i = dsharp.hasinf(t2)
+        let t2iCorrect = false
+        Assert.AreEqual(t1iCorrect, t1i)
+        Assert.AreEqual(t2iCorrect, t2i)
+
+    [<Test>]
+    member this.TestTensorHasnan () =
+        let t1 = dsharp.tensor([1.; nan; 3.; nan])
+        let t1i = dsharp.hasnan(t1)
+        let t1iCorrect = true
+        let t2 = dsharp.tensor([1.; 2.; 3.; 4.])
+        let t2i = dsharp.hasnan(t2)
+        let t2iCorrect = false
+        Assert.AreEqual(t1iCorrect, t1i)
+        Assert.AreEqual(t2iCorrect, t2i)
+
+    [<Test>]
     member this.TestTensorAddTT () =
         let t1 = dsharp.tensor([1.; 2.]) + dsharp.tensor([3.; 4.])
         let t1Correct = dsharp.tensor([4.; 6.])

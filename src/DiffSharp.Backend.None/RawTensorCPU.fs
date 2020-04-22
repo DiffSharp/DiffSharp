@@ -397,6 +397,16 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then 1.f else 0.f) t1value t2value
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
+    override t1.IsInfT() =
+        let t1value = t1.Values
+        let result = Array.map (fun t -> if System.Single.IsInfinity(t) then 1.f else 0.f) t1value
+        upcast RawTensorFloat32CPU(result, t1.Shape)
+
+    override t1.IsNaNT() =
+        let t1value = t1.Values
+        let result = Array.map (fun t -> if System.Single.IsNaN(t) then 1.f else 0.f) t1value
+        upcast RawTensorFloat32CPU(result, t1.Shape)
+
     override t.MaxIndexT() =
         t.FlatIndexToIndex(maxIndex t.Values)
 

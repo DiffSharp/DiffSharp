@@ -157,6 +157,8 @@ and [<AbstractClass>]
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor
     abstract member GeTT: RawTensor -> RawTensor
+    abstract member IsInfT : unit -> RawTensor
+    abstract member IsNaNT : unit -> RawTensor
     abstract member MaxIndexT : unit -> int[]
     abstract member MinIndexT : unit -> int[]
     abstract member AddTT : RawTensor -> RawTensor
