@@ -646,6 +646,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.ReluT() =
         let result = t.Values |> Array.map (max 0.f) 
         upcast RawTensorFloat32CPU(result, t.Shape)
+        // (-a.abs()).exp().add(1.).log().add(a.max(0.))
+
+    override t.SoftplusT() =
+        let result = t.Values |> Array.map (fun x -> (max 0.f x) + log(1.f + exp(-abs(x))))
+        upcast RawTensorFloat32CPU(result, t.Shape)
 
     override t.SigmoidT() =
         let result = t.Values |> Array.map (fun v -> 1.f / (1.f + exp -v))

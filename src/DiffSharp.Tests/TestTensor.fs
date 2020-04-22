@@ -1642,6 +1642,14 @@ type TestTensor () =
         Assert.True(t1Sigmoid.allclose(t1SigmoidCorrect, 0.01))
 
     [<Test>]
+    member this.TestTensorSoftplusT () =
+        let t1 = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05])
+        let t1Softplus = t1.softplus()
+        let t1SoftplusCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+
+        Assert.True(t1Softplus.allclose(t1SoftplusCorrect, 0.01))
+
+    [<Test>]
     member this.TestTensorExpT () =
         let t1 = dsharp.tensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
         let t1Exp = t1.exp()

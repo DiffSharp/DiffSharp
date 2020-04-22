@@ -2529,6 +2529,26 @@ type TestDerivatives () =
         Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
+    member this.TestDerivativeSoftplusT () =
+        let fwdx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).forwardDiff(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+        let fwdz = fwdx.softplus()
+        let fwdzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+
+        let revx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).reverseDiff()
+        let revz = revx.softplus()
+        let revzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        revz.reverse(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member this.TestDerivativeSigmoidT () =
         let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.sigmoid()

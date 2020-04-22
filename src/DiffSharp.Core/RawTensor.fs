@@ -193,6 +193,7 @@ and [<AbstractClass>]
     abstract member RoundT: unit -> RawTensor
     abstract member AbsT: unit -> RawTensor
     abstract member ReluT: unit -> RawTensor
+    abstract member SoftplusT: unit -> RawTensor
     abstract member SigmoidT: unit -> RawTensor
     abstract member ExpT: unit -> RawTensor
     abstract member LogT: unit -> RawTensor

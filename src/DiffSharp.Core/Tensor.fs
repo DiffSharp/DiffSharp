@@ -174,7 +174,9 @@ type Tensor =
     member a.max() = a.[a.maxIndex()]
     member a.min() = a.[a.minIndex()]
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
+    member a.max(b) = a.max(a.like(b))
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+    member a.min(b) = a.min(a.like(b))
 
     member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
         if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
@@ -816,6 +818,13 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
 
+    member a.softplus() =
+        let inline fRaw(a:RawTensor) = a.SoftplusT()
+        let inline fTensor(a:Tensor) = a.softplus()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
+        let inline dfTensorRev(a) = SoftplusT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     member a.log10() =
         let inline fRaw(a:RawTensor) = a.Log10T()
         let inline fTensor(a:Tensor) = a.log10()
@@ -1230,6 +1239,7 @@ type Tensor =
                         | RoundT(a) -> reset (a::tt)
                         | AbsT(a) -> reset (a::tt)
                         | ReluT(a) -> reset (a::tt)
+                        | SoftplusT(a) -> reset (a::tt)
                         | SigmoidT(a) -> reset (a::tt)
                         | ExpT(a) -> reset (a::tt)
                         | LogT(a) -> reset (a::tt)
@@ -1363,6 +1373,7 @@ type Tensor =
                         | RoundT(a) -> push ((a.zerosLike(), a) :: tt)
                         | AbsT(a) -> push ((t.derivative * a.primal.sign(), a) :: tt)
                         | ReluT(a) -> let sap = a.primal.sign() in push ((t.derivative * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
+                        | SoftplusT(a) -> push ((t.derivative / (1. + a.primal.neg().exp()), a) :: tt)
                         | SigmoidT(a) -> push ((t.derivative * t.primal * (1. - t.primal), a) :: tt)
                         | ExpT(a) -> push ((t.derivative * t.primal, a) :: tt)
                         | LogT(a) -> push ((t.derivative / a.primal, a) :: tt)
@@ -1465,6 +1476,7 @@ and TensorOp =
     | RoundT of Tensor
     | AbsT of Tensor
     | ReluT of Tensor
+    | SoftplusT of Tensor
     | SigmoidT of Tensor
     | ExpT of Tensor
     | LogT of Tensor

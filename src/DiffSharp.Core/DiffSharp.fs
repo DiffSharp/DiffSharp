@@ -79,6 +79,7 @@ type DiffSharp =
     static member relu(a:Tensor) = a.relu()
     static member leakyRelu(a:Tensor, ?negativeSlope:float) = a.leakyRelu(?negativeSlope=negativeSlope)
     static member sigmoid(a:Tensor) = a.sigmoid()
+    static member softplus(a:Tensor) = a.softplus()
     static member exp(a:Tensor) = a.exp()
     static member log(a:Tensor) = a.log()
     static member log10(a:Tensor) = a.log10()
