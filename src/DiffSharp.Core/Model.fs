@@ -48,11 +48,20 @@ type Model() =
     member m.noDiff() = m.updateParameters(m.Parameters.noDiff())
     abstract member forward: Tensor -> Tensor
 
+type Init() =
+    static member kaiming(fanIn, fanOut, ?a:float) = 
+        let a = defaultArg a (sqrt 5.)
+        let w = dsharp.randn([fanIn; fanOut])
+        let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
+        w * s
+    static member bias(fanOut) =
+        let b = 1./sqrt (float fanOut)
+        -b + dsharp.rand([fanOut]) * 2*b
 
 type Linear(inFeatures, outFeatures) =
     inherit Model()
-    let w = dsharp.randn([inFeatures; outFeatures])
-    let b = dsharp.randn([outFeatures])
+    let w = Init.kaiming(inFeatures, outFeatures)
+    let b = Init.bias(outFeatures)
     do base.addParameters(["weight", w; "bias", b])
     override l.forward(value) =
         dsharp.matmul(value, l.Parameters.["weight"])

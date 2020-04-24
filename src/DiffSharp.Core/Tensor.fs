@@ -11,7 +11,7 @@ open System.Runtime.Serialization.Formatters.Binary
 type Tensor = 
     | Tensor of primalRaw:RawTensor
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
-    | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOperation:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
+    | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
     member t.primal =
         match t with
@@ -38,6 +38,12 @@ type Tensor =
             | TensorF(tp,_,_) -> depth tp (d + 1)
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
+
+    member t.parentOp =
+        match t with
+        | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+        | TensorF(_)-> failwith "Cannot get parent operation of TensorF"
+        | TensorR(_,_,o,_,_) -> o
 
     member t.derivative
         with get() =
@@ -116,6 +122,33 @@ type Tensor =
         with
         | :? SerializationException as e -> failwithf "Cannot load Tensor. %A" e.Message
 
+    member t.parents() =
+        let mutable p = []
+        let rec parents (t:obj) d =
+            p <- p |> List.append [t]
+            match t with
+            | :? Tensor as t ->
+                match t with
+                | Tensor(_) -> sprintf "Tensor %A" t.shape
+                | TensorF(_) -> sprintf "TensorF %A" t.shape
+                | TensorR(_,_,o,_,_) -> 
+                    let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
+                    let fields = c.GetFields()
+                    let mutable ret = sprintf "TensorR %A %s" t.shape c.Name
+                    for field in fields do
+                        let fv = field.GetValue(o)
+                        ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
+                    ret
+            | :? (Tensor array) as ts ->
+                let mutable ret = ""
+                let mutable prefix = ""
+                for t in ts do
+                    ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (parents t (d+1))
+                    prefix <- "\n"
+                ret
+            | _ -> indentNewLines (sprintf "%A" t) (d-1)
+        let ps = parents t 1
+        p |> List.rev, ps
 
     override t.Equals(other) =
         match other with
@@ -992,7 +1025,6 @@ type Tensor =
                                     let w = weights.[target]
                                     wacc <- wacc + w
                                     -w*a.[i, target]) |> Tensor.stack
-            
             if reduction = "none" then
                 l
             elif reduction = "mean" then
@@ -1270,12 +1302,11 @@ type Tensor =
             | (v, t) :: tt ->
                 match t with
                 | TensorR(_,_,o,_,_) ->
+                    // if t.derivative.hasnan() || t.derivative.hasinf() then failwithf "t.derivative has nan, inf, or -inf\n%A\n%A" t.derivative t.derivative.shape
+                    // if v.hasnan() || v.hasinf() then failwithf "v has nan, inf, or -inf\n%A\n%A\n%s" v v.shape (snd (t.parents()))
                     t.derivative <- t.derivative + v
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
-                        // printfn "reversepush"
-                        // printfn "t %A" t
-                        // printfn "o %A" o
                         match o with
                         | AddTT(a,b) -> push ((t.derivative, a) :: (t.derivative, b) :: tt)
                         | AddTTConst(a) -> push ((t.derivative, a) :: tt)
@@ -1496,6 +1527,7 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
+
 
 type Tensor with
     [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]

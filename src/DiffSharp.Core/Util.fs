@@ -478,3 +478,12 @@ let shuffledIndices (length:int) =
     let indices = Array.init length id
     let indicesShuffled = Random.Shuffle(indices)
     fun (i:int) -> indicesShuffled.[i]
+
+let indentNewLines (str:String) numSpaces =
+    let mutable ret = ""
+    let spaces = String.replicate numSpaces " "
+    str |> Seq.toList |> List.iter (fun c -> 
+                        if c = '\n' then 
+                            ret <- ret + "\n" + spaces
+                        else ret <- ret + string c)
+    ret

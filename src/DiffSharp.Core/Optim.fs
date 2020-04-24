@@ -15,12 +15,10 @@ type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool) =
     let mom = momentum
     let nesterov = defaultArg nesterov true
     // let momentumBuffer = TensorDict()
-    override o.parameterUpdate name t = 
+    override o.parameterUpdate _ t = 
         match mom with
         | Some _ -> 
             if nesterov then failwith "not implemented"
             else failwith "not implemented"
         | None -> 
-            printfn "%A tp %A" name t.primal
-            printfn "%A td %A" name t.derivative
             t.primal - lr * t.derivative
