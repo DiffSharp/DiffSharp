@@ -759,7 +759,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     member a.repeat(dim:int, times:int) =
-        if a.shape.[dim] <> 1 then failwithf "Expecting Tensor's shape at dim to be 1, received Tensor with shape %A and dim %A" a.shape dim
+        checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
         newShape.[dim] <- times
         let mutable ret = a.zerosLike(newShape)
@@ -780,6 +780,12 @@ type Tensor =
     member t.view(shape:int) = t.view([|shape|])
 
     member a.viewAs(b:Tensor) = a.view(b.shape)
+
+    member a.flatten(?startDim:int, ?endDim:int) =
+        let startDim = defaultArg startDim 0
+        let endDim = defaultArg endDim (a.dim - 1)
+        checkCanFlatten a.shape startDim endDim
+        a.view(a.shape |> shapeFlatten startDim endDim)
 
     member a.sign() =
         let inline fRaw(a:RawTensor) = a.SignT()

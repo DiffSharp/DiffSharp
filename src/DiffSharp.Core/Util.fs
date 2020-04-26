@@ -92,6 +92,11 @@ let shapeContains (bigShape:int[]) (smallShape:int[]) =
 let shapeLocationToBounds (shape:int[]) (location:int[]) =
     Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
+let shapeFlatten (startDim:int) (endDim:int) (shape:int[]) =
+    let shape = [|for i in 0..shape.Length-1 do if (i < startDim) || (i > endDim) then shape.[i] else -1|]
+    let mutable emitted = false
+    [|for s in shape do if s <> -1 then s elif not emitted then emitted <- true; -1|]
+
 let duplicates l =
    l |> List.ofSeq
    |> List.groupBy id
@@ -135,12 +140,20 @@ let checkCanFlip (dim:int) (dims:int[]) =
     if hasDuplicates dims then failwithf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
     if (Array.max dims) >= dim then failwithf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims dim
 
+let checkCanRepeat (shape:int[]) (dim:int) =
+    if shape.[dim] <> 1 then failwithf "Expecting Tensor's shape (%A) at dim (%A) to be 1" shape dim
+
 let checkCanDilate (dim:int) (dilations:int[]) =
     if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
     if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
 
 let checkCanView (shape1:int[]) (shape2:int[]) =
     if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+
+let checkCanFlatten (shape:int[]) (startDim:int) (endDim:int) =
+    if startDim < 0 || startDim >= shape.Length then failwithf "Expecting 0 <= startDim (%A) < %A" startDim shape.Length
+    if endDim < 0 || endDim >= shape.Length then failwithf "Expecting 0 <= endDim (%A) < %A" endDim shape.Length
+    if endDim <= startDim then failwithf "Expecting startDim (%A) < endDim (%A)" startDim endDim
 
 let checkCanAddSlice (shape1:int[]) (location:int[]) (shape2:int[]) =
     if not (shapeContains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2

@@ -21,9 +21,9 @@ type Dataset() =
 
 type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
-    let path = Path.Combine(path, "mnist")
+    let path = Path.Combine(path, "mnist") |> Path.GetFullPath
     let train = defaultArg train true
-    let transform = defaultArg transform id
+    let transform = defaultArg transform (fun t -> ((t/255)-0.1307)/0.3081)
     let targetTransform = defaultArg targetTransform id
     let urls = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
                 "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
@@ -38,16 +38,16 @@ type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform
         if train then
             if not (File.Exists(files.[0])) then download urls.[0] files.[0]
             if not (File.Exists(files.[1])) then download urls.[1] files.[1]
-            if File.Exists(filesProcessed.[0]) then data <-   dsharp.load(filesProcessed.[0]) else data <-   MNIST.LoadMNISTImages(files.[0]); dsharp.save(data, filesProcessed.[0])
+            if File.Exists(filesProcessed.[0]) then data <-    dsharp.load(filesProcessed.[0]) else data <-    MNIST.LoadMNISTImages(files.[0]); dsharp.save(data, filesProcessed.[0])
             if File.Exists(filesProcessed.[1]) then targets <- dsharp.load(filesProcessed.[1]) else targets <- MNIST.LoadMNISTLabels(files.[1]); dsharp.save(targets, filesProcessed.[1])
         else
             if not (File.Exists(files.[2])) then download urls.[2] files.[2]
             if not (File.Exists(files.[3])) then download urls.[3] files.[3]
-            if File.Exists(filesProcessed.[2]) then data <-   dsharp.load(filesProcessed.[2]) else data <-   MNIST.LoadMNISTImages(files.[2]); dsharp.save(data, filesProcessed.[2])
+            if File.Exists(filesProcessed.[2]) then data <-    dsharp.load(filesProcessed.[2]) else data <-    MNIST.LoadMNISTImages(files.[2]); dsharp.save(data, filesProcessed.[2])
             if File.Exists(filesProcessed.[3]) then targets <- dsharp.load(filesProcessed.[3]) else targets <- MNIST.LoadMNISTLabels(files.[3]); dsharp.save(targets, filesProcessed.[3])
         data, targets
 
-    static member LoadMNISTImages(filename, ?n:int) =
+    static member internal LoadMNISTImages(filename, ?n:int) =
         let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
@@ -61,7 +61,7 @@ type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform
             |> dsharp.tensor
             |> dsharp.view ([n; 1; 28; 28])
         | _ -> failwith "Given file is not in the MNIST format."
-    static member LoadMNISTLabels(filename, ?n:int) =
+    static member internal LoadMNISTLabels(filename, ?n:int) =
         let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
@@ -71,7 +71,7 @@ type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform
             r.ReadBytes(n)
             |> Array.map int
             |> dsharp.tensor
-            |> dsharp.view ([n; -1])
+            |> dsharp.view ([n])
         | _ -> failwith "Given file is not in the MNIST format."
     override d.length() = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform targets.[i]

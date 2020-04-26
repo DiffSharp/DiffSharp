@@ -2019,6 +2019,19 @@ type TestTensor () =
         Assert.AreEqual(t3ShapeCorrect, t3Shape)
         Assert.AreEqual(t4ShapeCorrect, t4Shape)
 
+    [<Test>]
+    member this.TestTensorFlatten () =
+        let t = dsharp.rand([5;5;5;5])
+        let tf1shape = dsharp.flatten(t).shape
+        let tf1shapeCorrect = [|625|]
+        let tf2shape = dsharp.flatten(t, startDim=1).shape
+        let tf2shapeCorrect = [|5; 125|]
+        let tf3shape = dsharp.flatten(t, startDim=1, endDim=2).shape
+        let tf3shapeCorrect = [|5; 25; 5|]
+
+        Assert.AreEqual(tf1shapeCorrect, tf1shape)
+        Assert.AreEqual(tf2shapeCorrect, tf2shape)
+        Assert.AreEqual(tf3shapeCorrect, tf3shape)
 
     [<Test>]
     member this.TestTensorMax () =

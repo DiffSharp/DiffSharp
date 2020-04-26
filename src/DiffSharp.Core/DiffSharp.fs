@@ -75,6 +75,7 @@ type DiffSharp =
     static member view (shape:seq<int>) = fun (a:Tensor) -> a.view(shape)
     static member view(a:Tensor, shape:int) = a.view(shape)
     static member viewAs(a:Tensor, b:Tensor) = a.viewAs(b)
+    static member flatten(a:Tensor, ?startDim:int, ?endDim:int) = a.flatten(?startDim=startDim, ?endDim=endDim)
     static member sign(a:Tensor) = a.sign()
     static member floor(a:Tensor) = a.floor()
     static member ceil(a:Tensor) = a.ceil()
