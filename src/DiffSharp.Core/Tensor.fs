@@ -154,10 +154,6 @@ type Tensor =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
         | _ -> false
-    member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
-        let relativeTolerance = defaultArg relativeTolerance 1e-5
-        let absoluteTolerance = defaultArg absoluteTolerance 1e-8
-        t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
     override t.GetHashCode() = hash t.primalRaw
     interface System.IComparable with
         override t.CompareTo(other) =
@@ -169,6 +165,11 @@ type Tensor =
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
     static member op_Explicit(tensor:Tensor):'a = downcast tensor.toScalar()
+    
+    member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
+        let relativeTolerance = defaultArg relativeTolerance 1e-5
+        let absoluteTolerance = defaultArg absoluteTolerance 1e-8
+        t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
 
     member a.zerosLike(?shape:seq<int>) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)

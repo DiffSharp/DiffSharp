@@ -14,6 +14,7 @@ type TensorDict() =
         let ret = TensorDict()
         for KeyValue(n, t) in d.Tensors do ret.add(n, f n t)
         ret
+    member d.copy() = d.map(fun _ t -> t)
     member d.forwardDiff(derivatives:TensorDict) = d.map(fun n t -> t.forwardDiff(derivatives.[n]))
     member d.reverseDiff() = d.map(fun _ t -> t.reverseDiff())
     member d.noDiff() = d.map(fun _ t -> t.noDiff())

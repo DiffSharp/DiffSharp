@@ -9,7 +9,7 @@ open DiffSharp.Data
 open DiffSharp.Model
 open DiffSharp.Optim
 open DiffSharp.Backend.None
-#nowarn "0058"
+// #nowarn "0058"
 
 
 type Net() =
@@ -34,18 +34,25 @@ let main _argv =
 
     dsharp.seed(12)
 
-    let dataset = MNIST("./data", train=true, transform=fun t -> ((t/255)-0.1307)/0.3081)
+    let dataset = MNIST("./data", train=true)
     let dataloader = dataset.loader(32, shuffle=true)
 
     let net = Net()
-    let optimizer = SGD(net, learningRate=dsharp.tensor(0.1))
-    for i, data, targets in dataloader do
-        net.reverseDiff()
-        let o = net.forward(data)
-        // printfn "o %A" (o.primal)
-        let loss = dsharp.crossEntropyLoss(o, targets.view(-1))
-        loss.reverse()
-        optimizer.step()
-        printfn "minibatch %A, loss %A" i (loss.toScalar())
+    let optimizer = SGD(net, learningRate=dsharp.tensor(0.01), momentum=dsharp.tensor(0.9), nesterov=true)
+
+    let mutable epoch = -1
+    let mutable stop = false
+    while not stop do
+        epoch <- epoch + 1
+        for i, data, targets in dataloader.epoch() do
+            net.reverseDiff()
+            let o = net.forward(data)
+            let loss = dsharp.crossEntropyLoss(o, targets)
+            loss.reverse()
+            optimizer.step()
+            
+            let loss = loss.toScalar() :?> float32
+            printfn "epoch %A, minibatch %A, loss %A\r" epoch i loss
+
 
     0 // return an integer exit code

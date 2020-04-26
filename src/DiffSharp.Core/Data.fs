@@ -9,15 +9,20 @@ open System.IO.Compression
 
 [<AbstractClass>]
 type Dataset() =
-    abstract member length: unit -> int
+    abstract member length: int
     abstract member item: int -> Tensor * Tensor
+    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches)
 
-    member d.loader(batchSize:int, ?shuffle:bool) =
-        let shuffle = defaultArg shuffle false
-        let index = if shuffle then shuffledIndices (d.length()) else id
-        seq {for i in 0..(d.length()/batchSize)-1 do 
-                let data, targets = [for j in 0..batchSize-1 do d.item(index(i*batchSize + j))] |> List.unzip
+
+and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int) =
+    let shuffle = defaultArg shuffle false
+    member d.length = defaultArg numBatches (dataset.length/batchSize)
+    member d.epoch() =
+        seq {let index = if shuffle then shuffledIndices (dataset.length) else id
+            for i in 0..d.length-1 do 
+                let data, targets = [for j in 0..batchSize-1 do dataset.item(index(i*batchSize + j))] |> List.unzip
                 i, data |> dsharp.stack, targets |> dsharp.stack}
+
 
 type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
@@ -73,5 +78,5 @@ type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform
             |> dsharp.tensor
             |> dsharp.view ([n])
         | _ -> failwith "Given file is not in the MNIST format."
-    override d.length() = data.shape.[0]
+    override d.length = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform targets.[i]
