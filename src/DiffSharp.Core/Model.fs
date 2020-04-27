@@ -103,16 +103,13 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
 
 type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
     inherit Model()
-    let stride = defaultArg stride 1
-    let padding = defaultArg padding 0
-    let dilation = defaultArg dilation 1
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =
-        let f = dsharp.conv1d(value, w.value, stride=stride, padding=padding, dilation=dilation)
+        let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
