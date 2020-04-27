@@ -9,7 +9,7 @@ type Parameter =
     member p.forwardDiff(derivative:Tensor) = p.value <- p.value.forwardDiff(derivative)
     member p.reverseDiff() = p.value <- p.value.reverseDiff()
     member p.noDiff() = p.value <- p.value.noDiff()
-    override p.ToString() = sprintf "Parameter(shape: %A)" p.value.shape
+    override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" p.value.shape p.value
 
 type ParameterDict() =
     member val values:Dictionary<string, Parameter> = Dictionary()
@@ -20,10 +20,11 @@ type ParameterDict() =
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
     member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
     member d.copy() = d.map(fun (t:Tensor) -> t)
-    member d.map(f:string*Tensor->string*Tensor) =
+    member d.map(f:string*Parameter->string*Parameter) =
         let ret = ParameterDict()
-        for KeyValue(n, p) in d.values do ret.values.Add(let nn, pp = f(n,p.value) in nn, Parameter(pp))
+        for KeyValue(n, p) in d.values do ret.values.Add(f(n,p))
         ret
+    member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.value) in nn, Parameter(tt))
     member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
     member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
@@ -58,7 +59,7 @@ type Model() =
                 m.Parameters.add(n, p)
             | :? Model as mm ->
                 m.SubModels.Add(n, mm)
-                m.Parameters.add(mm.Parameters.map(fun (nn, pp) -> (n + "__" + nn, pp)))
+                m.Parameters.add(mm.Parameters.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Parameter or Model"
     member m.forwardDiff(derivatives:ParameterDict) = m.Parameters.forwarddiff(derivatives)
     member m.reverseDiff() = m.Parameters.reverseDiff()
@@ -83,16 +84,16 @@ type Init() =
         let w = dsharp.randn([fanIn; fanOut])
         let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
         w * s
-    static member bias(fanOut) =
-        let b = 1./sqrt (float fanOut)
-        -b + dsharp.rand([fanOut]) * 2*b
+    static member init(shape:int[], k:float) =
+        -k + dsharp.rand(shape) * 2*k
 
 
 type Linear(inFeatures, outFeatures, ?bias:bool) =
     inherit Model()
     let bias = defaultArg bias true
+    let k = 1./sqrt (float outFeatures)
     let w = Parameter(Init.kaiming(inFeatures, outFeatures))
-    let b = Parameter(if bias then Init.bias(outFeatures) else dsharp.zero())
+    let b = Parameter(if bias then Init.init([|outFeatures|], k) else dsharp.zero())
     do base.add(["weight", w; "bias", b])
     override l.forward(value) =
         let f = dsharp.matmul(value, w.value)
@@ -106,8 +107,8 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let dilation = defaultArg dilation 1
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
-    let w = Parameter <| -k + dsharp.rand([outChannels; inChannels; kernelSize]) * 2*k
-    let b = Parameter <| if bias then -k + dsharp.rand(outChannels) * 2*k else dsharp.zero()
+    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSize|], k)
+    let b = Parameter <| if bias then Init.init([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =
         let f = dsharp.conv1d(value, w.value, stride=stride, padding=padding, dilation=dilation)
@@ -119,8 +120,8 @@ type Conv2d(inChannels:int, outChannels:int, kernelSize:seq<int>, ?stride:int, ?
     let kernelSize = kernelSize |> Array.ofSeq
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize.[0]*kernelSize.[1]))
-    let w = Parameter <| -k + dsharp.rand([outChannels; inChannels; kernelSize.[0]; kernelSize.[1]]) * 2*k
-    let b = Parameter <| if bias then -k + dsharp.rand(outChannels) * 2*k else dsharp.zero()
+    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSize.[0]; kernelSize.[1]|], k)
+    let b = Parameter <| if bias then Init.init([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
