@@ -84,12 +84,62 @@ type Init() =
         let b = 1./sqrt (float fanOut)
         -b + dsharp.rand([fanOut]) * 2*b
 
-
-type Linear(inFeatures, outFeatures) =
+type Linear(inFeatures, outFeatures, ?bias:bool) =
     inherit Model()
+    let bias = defaultArg bias true
     let w = Init.kaiming(inFeatures, outFeatures)
-    let b = Init.bias(outFeatures)
+    let b = if bias then Init.bias(outFeatures) else dsharp.zero()
     do base.addParameters(["weight", w; "bias", b])
     override l.forward(value) =
-        dsharp.matmul(value, l.Parameters.["weight"])
-        + l.Parameters.["bias"]
+        let w, b = l.Parameters.["weight"], l.Parameters.["bias"]
+        let f = dsharp.matmul(value, w)
+        if bias then f + b else f
+
+
+type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
+    inherit Model()
+    let stride = defaultArg stride 1
+    let padding = defaultArg padding 0
+    let dilation = defaultArg dilation 1
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSize))
+    let w = -k + dsharp.rand([outChannels; inChannels; kernelSize]) * 2*k
+    let b = if bias then -k + dsharp.rand(outChannels) * 2*k else dsharp.zero()
+    do base.addParameters(["weight", w; "bias", b])
+    override c.forward(value) =
+        let w, b = c.Parameters.["weight"], c.Parameters.["bias"]
+        let f = dsharp.conv1d(value, w, stride=stride, padding=padding, dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+
+
+type Conv2d(inChannels:int, outChannels:int, kernelSize:seq<int>, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>, ?bias:bool) =
+    inherit Model()
+    let kernelSize = kernelSize |> Array.ofSeq
+    let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
+    let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
+    let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSize.[0]*kernelSize.[1]))
+    let w = -k + dsharp.rand([outChannels; inChannels; kernelSize.[0]; kernelSize.[1]]) * 2*k
+    let b = if bias then -k + dsharp.rand(outChannels) * 2*k else dsharp.zero()
+    do base.addParameters(["weight", w; "bias", b])
+    new(inChannels:int, outChannels:int, kernelSize:int) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [1; 1], [0; 0], [1; 1], true)
+    new(inChannels:int, outChannels:int, kernelSize:int, bias:bool) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [1; 1], [0; 0], [1; 1], bias)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [0; 0], [1; 1], true)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int, bias:bool) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [0; 0], [1; 1], bias)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int, padding:int) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [padding; padding], [1; 1], true)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int, padding:int, bias:bool) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [padding; padding], [1; 1], bias)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int, padding:int, dilation:int) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [padding; padding], [dilation; dilation], true)
+    new(inChannels:int, outChannels:int, kernelSize:int, stride:int, padding:int, dilation:int, bias:bool) =
+        Conv2d(inChannels, outChannels, [kernelSize; kernelSize], [stride; stride], [padding; padding], [dilation; dilation], bias)
+    override c.forward(value) =
+        let w, b = c.Parameters.["weight"], c.Parameters.["bias"]
+        let f = dsharp.conv2d(value, w, stride=stride, padding=padding, dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
