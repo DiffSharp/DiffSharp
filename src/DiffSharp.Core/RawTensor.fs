@@ -63,6 +63,17 @@ type DType =
         | Int64 -> "Int64"
         | Bool -> "Bool"
 
+module DType =
+    let ofType<'T> =
+        if istype<'T, double> then DType.Float64
+        elif istype<'T, single> then DType.Float32
+        elif istype<'T, int8> then DType.Int8
+        elif istype<'T, int16> then DType.Int16
+        elif istype<'T, int32> then DType.Int32
+        elif istype<'T, int64> then DType.Int64
+        elif istype<'T, bool> then DType.Bool
+        else failwithf "unknown DType %A" typeof<'T>
+
 type [<AbstractClass>]
      RawTensorStatics() = 
     static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, RawTensorStatics>()
@@ -241,5 +252,3 @@ module Utils =
     let opNotSupported (t: DType) =
         invalidOp (sprintf "operation not permitted on tensors of type %A" t)
 
-    let opNotSupported2 (t1: DType) (t2: DType) =
-        invalidOp (sprintf "operation not permitted on tensors of type (%A, %A)" t1 t2)

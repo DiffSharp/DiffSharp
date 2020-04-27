@@ -5,7 +5,7 @@ open DiffSharp
 open DiffSharp.Backend
 open System
 
-// This captures the expected semantis of different DTypes
+// This captures the expected semantics of different DTypes
 type DTypeInfo(dtype: DType) =
     member _.dtype = dtype
     member _.mkTensor(data: obj) = dsharp.tensor(data, dtype=dtype)

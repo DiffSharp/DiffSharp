@@ -500,3 +500,7 @@ let indentNewLines (str:String) numSpaces =
                             ret <- ret + "\n" + spaces
                         else ret <- ret + string c)
     ret
+
+let inline istype<'T1, 'T2> = LanguagePrimitives.PhysicalEquality typeof<'T1> typeof<'T2>
+
+let inline badtype<'T, 'Res> : 'Res = invalidOp (sprintf "this operation is not supported at type %A" typeof<'T>)
