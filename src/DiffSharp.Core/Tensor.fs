@@ -31,6 +31,22 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
+    member t.cast(dtype) =
+        match t with
+        | Tensor(tp) -> Tensor(tp.Cast(dtype))
+        | TensorF(_,_,_) -> failwith "cannot cast TensorF"
+        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
+
+    member t.toBool() = t.cast(DType.Bool)
+    member t.toInt8() = t.cast(DType.Int8)
+    member t.toInt16() = t.cast(DType.Int16)
+    member t.toInt32() = t.cast(DType.Int32)
+    member t.toInt64() = t.cast(DType.Int64)
+    member t.toFloat32() = t.cast(DType.Float32)
+    member t.toFloat64() = t.cast(DType.Float64)
+
+    member t.dtype = t.primalRaw.DType
+
     member t.depth =
         let rec depth x d =
             match x with

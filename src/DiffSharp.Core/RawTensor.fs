@@ -35,21 +35,33 @@ type Backend =
         | Torch -> "Torch"
 
 type DType =
-    | Float16
     | Float32
     | Float64
+    | Int8
+    | Int16
+    | Int32
+    | Int64
+    | Bool
 
     member internal x.Code =
         match x with
-        | Float16 -> 0x000
         | Float32  -> 0x100
         | Float64 -> 0x200
+        | Int8 -> 0x300
+        | Int16 -> 0x400
+        | Int32 -> 0x500
+        | Int64 -> 0x600
+        | Bool -> 0x700
 
     member internal x.Name =
         match x with
-        | Float16 -> "Float16"
         | Float32 -> "Float32"
         | Float64 -> "Float64"
+        | Int8 -> "Int8"
+        | Int16 -> "Int16"
+        | Int32 -> "Int32"
+        | Int64 -> "Int64"
+        | Bool -> "Bool"
 
 type [<AbstractClass>]
      RawTensorStatics() = 
@@ -124,13 +136,12 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.RandomNormal(shape|>Seq.toArray)
 
-    static member Create(obj: obj, ?dtype, ?device, ?backend) =
+    static member Create(values: obj, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Create(obj)
+        statics.Create(values)
 
     abstract member CompareTo: RawTensor -> int
-    abstract member Create : obj -> RawTensor
-    abstract member CreateFromScalar : obj * int[] -> RawTensor
+    abstract member Create : values: obj -> RawTensor
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
@@ -151,6 +162,7 @@ and [<AbstractClass>]
     abstract member ToScalar: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
+    abstract member Cast : DType -> RawTensor
     abstract member ComputeHash: unit -> int
     abstract member AllClose: RawTensor * float * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
@@ -210,7 +222,7 @@ and [<AbstractClass>]
     abstract member AsinT: unit -> RawTensor
     abstract member AcosT: unit -> RawTensor
     abstract member AtanT: unit -> RawTensor
-    
+
     override x.Equals(yobj: obj) = 
         match yobj with
         | :? RawTensor as y -> x.Equals(y)
@@ -223,3 +235,11 @@ and [<AbstractClass>]
             match yobj with
             | :? RawTensor as y -> x.CompareTo(y)
             | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
+
+[<AutoOpen>]
+module Utils =
+    let opNotSupported (t: DType) =
+        invalidOp (sprintf "operation not permitted on tensors of type %A" t)
+
+    let opNotSupported2 (t1: DType) (t2: DType) =
+        invalidOp (sprintf "operation not permitted on tensors of type (%A, %A)" t1 t2)
