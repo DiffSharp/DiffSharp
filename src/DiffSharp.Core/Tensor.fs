@@ -1120,36 +1120,43 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
         aderivative, bderivative
 
-    member a.conv2d(b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) =
-        let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
-        let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
-        let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
-        checkCanConv2d a.shape b.shape stride padding dilation
+    member a.conv2d(b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+        let strides = 
+            match stride, strides with
+            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> s |> Array.ofSeq
+            | _ -> [|1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> p |> Array.ofSeq
+            | _ -> [|0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d|]
+            | None, Some d -> d |> Array.ofSeq
+            | _ -> [|1; 1|]
+        checkCanConv2d a.shape b.shape strides paddings dilations
         let mutable b = b
-        if dilation.[0] > 1 || dilation.[1] > 1 then
-            b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
-        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
-        let inline fTensor(a:Tensor,b) = a.conv2d(b, stride, padding)
-        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, stride, padding) + ap.conv2d(bd, stride, padding)
-        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, stride, padding)
-        let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, stride, padding)
-        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, stride, padding)
-        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, stride, padding)
-        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, stride, padding)
+        if dilations.[0] > 1 || dilations.[1] > 1 then
+            b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
+        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, strides, paddings)
+        let inline fTensor(a:Tensor,b) = a.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, strides=strides, paddings=paddings) + ap.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, strides, paddings)
+        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, strides, paddings)
+        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-
-    member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
-        let stride = defaultArg stride 1
-        let padding = defaultArg padding 0
-        let dilation = defaultArg dilation 1
-        a.conv2d(b, [|stride; stride|], [|padding; padding|], [|dilation; dilation|])
-
-    member a.conv2d(b:Tensor) = a.conv2d(b, [1; 1], [0; 0], [1; 1])
 
     // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
     // b: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
     // t: output, NxKxLxM (batchSize x outputChannels x outputHeight x outputLength)
-    member internal t.conv2dReverseDiff(a: Tensor, b:Tensor, aConst:bool, bConst:bool, stride:int[], padding:int[]) =
+    member internal t.conv2dReverseDiff(a: Tensor, b:Tensor, aConst:bool, bConst:bool, strides:int[], paddings:int[]) =
         let a = if aConst then a else a.primal
         let b = if bConst then b else b.primal
         let batchSize = t.shape.[0]
@@ -1162,8 +1169,8 @@ type Tensor =
         let kernelHeight = b.shape.[2]
         let kernelWidth = b.shape.[3]
         let mutable tderivative = t.derivative
-        if stride.[0] > 1 || stride.[1] > 1 then
-            tderivative <- tderivative.dilate([|1;1;stride.[0];stride.[1]|])
+        if strides.[0] > 1 || strides.[1] > 1 then
+            tderivative <- tderivative.dilate([|1;1;strides.[0];strides.[1]|])
         let mutable aderivative = a.zeroLike()
         let mutable bderivative = b.zeroLike()
         if not aConst then
@@ -1174,10 +1181,10 @@ type Tensor =
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
                 let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]; [0; tderivative.shape.[3]-1; 1]]
                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.shape.[2]; tderivative.shape.[3]|])
-                let mutable c : Tensor = d.conv2d(b, padding=[|kernelHeight-1; kernelWidth-1|])
-                if padding.[0] > 0 || padding.[1] > 0 then
-                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding.[0]; c.shape.[2]-1-padding.[0]; 1]; [padding.[1]; c.shape.[3]-1-padding.[1]; 1]]
-                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.shape.[2]-2*padding.[0]; c.shape.[3]-2*padding.[1]|])
+                let mutable c : Tensor = d.conv2d(b, paddings=[|kernelHeight-1; kernelWidth-1|])
+                if paddings.[0] > 0 || paddings.[1] > 0 then
+                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [paddings.[0]; c.shape.[2]-1-paddings.[0]; 1]; [paddings.[1]; c.shape.[3]-1-paddings.[1]; 1]]
+                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.shape.[2]-2*paddings.[0]; c.shape.[3]-2*paddings.[1]|])
                 aderivative <- aderivative + c
         if not bConst then
             // propagate to b
@@ -1187,7 +1194,7 @@ type Tensor =
                 let d = tderivative.[n]
                 for k=0 to outputChannels-1 do
                     let dd = d.[k].view([|1; 1; tderivative.shape.[2]; tderivative.shape.[3]|])
-                    let c = aa.conv2d(dd, padding=padding).view([|1; inputChannels; kernelHeight; kernelWidth|])
+                    let c = aa.conv2d(dd, paddings=paddings).view([|1; inputChannels; kernelHeight; kernelWidth|])
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
         aderivative, bderivative
 

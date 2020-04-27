@@ -1084,7 +1084,7 @@ type TestTensor () =
                                           [ -44.8701;  -78.6259;  136.6283;   89.6921];
                                           [  60.9218;   14.3467;  -86.6495;   49.3313]]]])
 
-        let t3p12 = t1.conv2d(t2, padding=[|1; 2|])
+        let t3p12 = t1.conv2d(t2, paddings=[|1; 2|])
         let t3p12Correct = dsharp.tensor([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
                                           [ 210.3501; -154.2592;   10.6089;   -1.4459; -126.2889;   24.8066];
                                           [ -42.1367; -176.1860; -132.3437; -165.9882;  -23.2585;  -44.1093];
@@ -1130,7 +1130,7 @@ type TestTensor () =
 
                                          [[-106.0468]]]])
 
-        let t3s13 = t1.conv2d(t2, stride=[|1; 3|])
+        let t3s13 = t1.conv2d(t2, strides=[|1; 3|])
         let t3s13Correct = dsharp.tensor([[[[  10.6089];
                                           [-132.3437]];
 
@@ -1170,7 +1170,7 @@ type TestTensor () =
                                              [[  96.3737;  -68.9841];
                                               [ -44.8701;  136.6283]]]])
 
-        let t3s23p32 = t1.conv2d(t2, stride=[2; 3], padding=[3; 2])
+        let t3s23p32 = t1.conv2d(t2, strides=[2; 3], paddings=[3; 2])
         let t3s23p32Correct = dsharp.tensor([[[[   0.0000,    0.0000],
                                                   [   7.5866,  -85.8172],
                                                   [ -42.1364, -165.9885],
@@ -1222,7 +1222,7 @@ type TestTensor () =
                                              [[ -25.4452,   -9.8843],
                                               [  35.7940,   27.9557]]]])
 
-        let t3p22d23 = t1.conv2d(t2, padding=[2;2], dilation=[2;3])
+        let t3p22d23 = t1.conv2d(t2, paddings=[2;2], dilations=[2;3])
         let t3p22d23Correct = dsharp.tensor([[[[-3.2693e+01, -4.3192e+01],
                                                   [ 4.7954e+01,  9.6877e+00],
                                                   [ 1.7971e+01, -7.0747e+01],
