@@ -78,22 +78,23 @@ type Model() =
     abstract member forward: Tensor -> Tensor
 
 
-type Init() =
+type Weight() =
     static member kaiming(fanIn, fanOut, ?a:float) = 
+        // He et al. 2015. https://arxiv.org/abs/1502.01852
         let a = defaultArg a (sqrt 5.)
         let w = dsharp.randn([fanIn; fanOut])
         let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
         w * s
-    static member init(shape:int[], k:float) =
+    static member standard(shape:int[], k:float) =
         -k + dsharp.rand(shape) * 2*k
 
 
 type Linear(inFeatures, outFeatures, ?bias:bool) =
     inherit Model()
     let bias = defaultArg bias true
+    let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
-    let w = Parameter(Init.kaiming(inFeatures, outFeatures))
-    let b = Parameter(if bias then Init.init([|outFeatures|], k) else dsharp.zero())
+    let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
     do base.add(["weight", w; "bias", b])
     override l.forward(value) =
         let f = dsharp.matmul(value, w.value)
@@ -107,8 +108,8 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let dilation = defaultArg dilation 1
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
-    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSize|], k)
-    let b = Parameter <| if bias then Init.init([|outChannels|], k) else dsharp.zero()
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =
         let f = dsharp.conv1d(value, w.value, stride=stride, padding=padding, dilation=dilation)
@@ -125,8 +126,8 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
         | _ -> [|1; 1|]
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
-    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
-    let b = Parameter <| if bias then Init.init([|outChannels|], k) else dsharp.zero()
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
