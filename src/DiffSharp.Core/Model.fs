@@ -115,12 +115,17 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
-type Conv2d(inChannels:int, outChannels:int, kernelSize:seq<int>, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>, ?bias:bool) =
+type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
-    let kernelSize = kernelSize |> Array.ofSeq
+    let kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k|]
+        | None, Some k -> k |> Array.ofSeq
+        | _ -> [|1; 1|]
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSize.[0]*kernelSize.[1]))
-    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSize.[0]; kernelSize.[1]|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
+    let w = Parameter <| Init.init([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Init.init([|outChannels|], k) else dsharp.zero()
     do base.add(["weight", w; "bias", b])
     override c.forward(value) =

@@ -1120,7 +1120,7 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
         aderivative, bderivative
 
-    member a.conv2d(b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+    member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let strides = 
             match stride, strides with
             | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
