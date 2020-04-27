@@ -4,6 +4,7 @@ open System
 open System.Text
 open DiffSharp.Backend
 open DiffSharp.Util
+open System.Diagnostics.CodeAnalysis
 
 #nowarn "60" // override in augmentation
 #nowarn "77" // use of op_Explicit
@@ -322,6 +323,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 //
 // Most of the functions produce (value, shape) pairs for use in constructing an instance
 // of the final implementing type.
+[<ExcludeFromCodeCoverage>]
 module internal RawTensorCPU = 
 
     /// Access the natural "0" value for the element of a CPU tensor type
