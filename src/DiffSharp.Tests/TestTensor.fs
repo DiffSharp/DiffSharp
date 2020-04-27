@@ -294,11 +294,41 @@ type TestTensor () =
         let t1b = dsharp.ones([2;3], dtype=dtype) * 2.5
         let t2a = dsharp.full([], 2.5, dtype=dtype)
         let t2b = dsharp.ones([], dtype=dtype) * 2.5
-        let t3a = dsharp.full([5], dsharp.tensor(2.5), dtype=dtype)
-        let t3b = dsharp.ones([5], dtype=dtype) * 2.5
         Assert.AreEqual(t1a, t1b)
         Assert.AreEqual(t2a, t2b)
-        Assert.AreEqual(t3a, t3b)
+
+      for dtype in dtypes do 
+        let t1 = dsharp.full([2], 1, dtype=dtype)
+        let t1Expected = dsharp.tensor([1,1], dtype=dtype)
+        Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member this.TestTensorZero () =
+      for dtype in dtypes do 
+        let t1 = dsharp.zero(dtype=dtype)
+        let t1Expected = dsharp.tensor(0, dtype=dtype)
+        Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member this.TestTensorZeros () =
+      for dtype in dtypes do 
+        let t1 = dsharp.zeros([2], dtype=dtype)
+        let t1Expected = dsharp.tensor([0,0], dtype=dtype)
+        Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member this.TestTensorOne () =
+      for dtype in dtypes do 
+        let t1 = dsharp.one(dtype=dtype)
+        let t1Expected = dsharp.tensor(1, dtype=dtype)
+        Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member this.TestTensorOnes () =
+      for dtype in dtypes do 
+        let t1 = dsharp.ones([2], dtype=dtype)
+        let t1Expected = dsharp.tensor([1,1], dtype=dtype)
+        Assert.AreEqual(t1, t1Expected)
 
     [<Test>]
     member this.TestTensorIsTensor () =
