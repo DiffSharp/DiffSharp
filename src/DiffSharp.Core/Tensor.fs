@@ -783,10 +783,13 @@ type Tensor =
     member a.viewAs(b:Tensor) = a.view(b.shape)
 
     member a.flatten(?startDim:int, ?endDim:int) =
-        let startDim = defaultArg startDim 0
-        let endDim = defaultArg endDim (a.dim - 1)
-        checkCanFlatten a.shape startDim endDim
-        a.view(a.shape |> shapeFlatten startDim endDim)
+        if a.dim < 2 then 
+            a
+        else
+            let startDim = defaultArg startDim 0
+            let endDim = defaultArg endDim (a.dim - 1)
+            checkCanFlatten a.shape startDim endDim
+            a.view(a.shape |> shapeFlatten startDim endDim)
 
     member a.sign() =
         let inline fRaw(a:RawTensor) = a.SignT()
@@ -988,11 +991,11 @@ type Tensor =
         let res = amax + e.sum(dim).add(System.Single.Epsilon).log()
         if keepDim then res.unsqueeze(dim) else res
 
-    member a.mseLoss(b:Tensor, ?reduction:string) = 
-        if a.shape <> b.shape then failwithf "Expecting a.shape (%A) and b.shape (%A) to be the same" a.shape b.shape
+    member input.mseLoss(target:Tensor, ?reduction:string) = 
+        if input.shape <> target.shape then failwithf "Expecting input.shape (%A) and target.shape (%A) to be the same" input.shape target.shape
         let reduction = defaultArg reduction "mean"
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
-        let z = a - b
+        let z = input - target
         let l = z * z
         if reduction = "none" then
             l
@@ -1001,58 +1004,58 @@ type Tensor =
         else // reduction = "sum"
             l.sum()
 
-    member a.crossEntropyLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
-        a.logsoftmax(dim=1).nllLoss(b, ?weights=weights, ?reduction=reduction)
+    member input.crossEntropyLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
+        input.logsoftmax(dim=1).nllLoss(target, ?weight=weight, ?reduction=reduction)
 
-    member a.nllLoss(b:Tensor, ?weights:Tensor, ?reduction:string) =
+    member input.nllLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         let n, classes, d = 
-            if a.dim < 2 
-                then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
-            elif a.dim = 2 then
-                let n, c = a.shape.[0], a.shape.[1]
-                if b.shape <> [|n|] then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+            if input.dim < 2 
+                then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
+            elif input.dim = 2 then
+                let n, c = input.shape.[0], input.shape.[1]
+                if target.shape <> [|n|] then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 n, c, [||]
             else
-                let n, c, d = a.shape.[0], a.shape.[1], a.shape.[2..]
-                if b.shape.[0] <> n then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
-                if d <> b.shape.[1..] then failwithf "Expecting either: a with shape (N,C) and b with shape (N); or a with shape (N,C,d1,d2,...,dk) and b with shape (N,d1,d2,...,dk). Received a.shape %A and b.shape %A" a.shape b.shape
+                let n, c, d = input.shape.[0], input.shape.[1], input.shape.[2..]
+                if target.shape.[0] <> n then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
+                if d <> target.shape.[1..] then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 n, c, d
-        let mutable weightsSpecified = false
-        let mutable ww = a.zeroLike()
-        match weights with
-        | Some w -> ww <- w; weightsSpecified <- true
-        | None -> ww <- a.onesLike([classes]); weightsSpecified <- false
-        let weights = ww
+        let mutable weightSpecified = false
+        let mutable ww = input.zeroLike()
+        match weight with
+        | Some w -> ww <- w; weightSpecified <- true
+        | None -> ww <- input.onesLike([classes]); weightSpecified <- false
+        let weight = ww
         let reduction = defaultArg reduction "mean"
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
-        if a.dim = 2 then
-            let mutable wacc = a.zeroLike()
+        if input.dim = 2 then
+            let mutable wacc = input.zeroLike()
             let l = Array.init n (fun i -> 
-                                    let target = b.[i].toScalar() |> System.Convert.ToInt32
-                                    let w = weights.[target]
+                                    let target = target.[i].toScalar() |> System.Convert.ToInt32
+                                    let w = weight.[target]
                                     wacc <- wacc + w
-                                    -w*a.[i, target]) |> Tensor.stack
+                                    -w*input.[i, target]) |> Tensor.stack
             if reduction = "none" then
                 l
             elif reduction = "mean" then
-                if weightsSpecified then l.sum()/wacc else l.mean()
+                if weightSpecified then l.sum()/wacc else l.mean()
             else // reduction = "sum"
                 l.sum()
         else
-            let mutable wacc = a.zeroLike()
+            let mutable wacc = input.zeroLike()
             let l = Array.init n (fun i ->
-                                    let aa = a.[i].view([classes; -1])
-                                    let bb = b.[i].view(-1)
+                                    let aa = input.[i].view([classes; -1])
+                                    let bb = target.[i].view(-1)
                                     let l = Array.init bb.nelement (fun j ->
                                                                     let target = bb.[j].toScalar() |> System.Convert.ToInt32
-                                                                    let w = weights.[target]
+                                                                    let w = weight.[target]
                                                                     wacc <- wacc + w
                                                                     -w*aa.[target, j]) |> Tensor.stack
                                     l.view(d)) |> Tensor.stack
             if reduction = "none" then
                 l
             elif reduction = "mean" then
-                if weightsSpecified then l.sum()/wacc else l.mean()
+                if weightSpecified then l.sum()/wacc else l.mean()
             else // reduction = "sum"
                 l.sum()
 

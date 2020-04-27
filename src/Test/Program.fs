@@ -35,24 +35,33 @@ let main _argv =
     dsharp.seed(12)
 
     let dataset = MNIST("./data", train=true)
-    let dataloader = dataset.loader(32, shuffle=true)
+    let dataloader = dataset.loader(32, shuffle=true, numBatches=80)
 
     let net = Net()
+    printfn "params: %A" (net.nparameters())
     let optimizer = SGD(net, learningRate=dsharp.tensor(0.01), momentum=dsharp.tensor(0.9), nesterov=true)
 
-    let mutable epoch = -1
-    let mutable stop = false
-    while not stop do
-        epoch <- epoch + 1
-        for i, data, targets in dataloader.epoch() do
-            net.reverseDiff()
-            let o = net.forward(data)
-            let loss = dsharp.crossEntropyLoss(o, targets)
-            loss.reverse()
-            optimizer.step()
+    // let mutable epoch = -1
+    // let mutable stop = false
+    // while not stop do
+    //     epoch <- epoch + 1
+    //     for i, data, targets in dataloader.epoch() do
+    //         net.reverseDiff()
+    //         let o = net.forward(data)
+    //         let loss = dsharp.crossEntropyLoss(o, targets)
+    //         loss.reverse()
+    //         optimizer.step()
             
-            let loss = loss.toScalar() :?> float32
-            printfn "epoch %A, minibatch %A, loss %A\r" epoch i loss
+    //         let loss = loss.toScalar() :?> float32
+    //         printfn "epoch %A, minibatch %A, loss %A\r" epoch i loss
+
+    // let loss data target p = net.forwardCompose (dsharp.crossEntropyLoss(target=target)) data p
+    let loss = net.forwardLoss dsharp.crossEntropyLoss
+    let mutable p = net.getParameters()
+    for i, data, target in dataloader.epoch() do
+        let loss, g = dsharp.pgrad (loss data target) p
+        p <- p - 0.1 * g
+        printfn "%A %A" i loss
 
 
     0 // return an integer exit code

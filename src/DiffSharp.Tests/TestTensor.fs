@@ -2021,17 +2021,27 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorFlatten () =
-        let t = dsharp.rand([5;5;5;5])
-        let tf1shape = dsharp.flatten(t).shape
-        let tf1shapeCorrect = [|625|]
-        let tf2shape = dsharp.flatten(t, startDim=1).shape
-        let tf2shapeCorrect = [|5; 125|]
-        let tf3shape = dsharp.flatten(t, startDim=1, endDim=2).shape
-        let tf3shapeCorrect = [|5; 25; 5|]
+        let t1 = dsharp.rand([5;5;5;5])
+        let t1f1shape = dsharp.flatten(t1).shape
+        let t1f1shapeCorrect = [|625|]
+        let t1f2shape = dsharp.flatten(t1, startDim=1).shape
+        let t1f2shapeCorrect = [|5; 125|]
+        let t1f3shape = dsharp.flatten(t1, startDim=1, endDim=2).shape
+        let t1f3shapeCorrect = [|5; 25; 5|]
 
-        Assert.AreEqual(tf1shapeCorrect, tf1shape)
-        Assert.AreEqual(tf2shapeCorrect, tf2shape)
-        Assert.AreEqual(tf3shapeCorrect, tf3shape)
+        let t2 = dsharp.rand(5)
+        let t2fshape = dsharp.flatten(t2).shape
+        let t2fshapeCorrect = [|5|]
+
+        let t3 = dsharp.tensor(2.5)
+        let t3fshape = dsharp.flatten(t3).shape
+        let t3fshapeCorrect = [||]
+
+        Assert.AreEqual(t1f1shapeCorrect, t1f1shape)
+        Assert.AreEqual(t1f2shapeCorrect, t1f2shape)
+        Assert.AreEqual(t1f3shapeCorrect, t1f3shape)
+        Assert.AreEqual(t2fshapeCorrect, t2fshape)
+        Assert.AreEqual(t3fshapeCorrect, t3fshape)
 
     [<Test>]
     member this.TestTensorMax () =
@@ -2464,15 +2474,15 @@ type TestTensor () =
         let t1w = dsharp.tensor([-1.2,0.6])
         let l1 = dsharp.nllLoss(t1a, t1b)
         let l1Correct = dsharp.tensor(1.3999)
-        let l2 = dsharp.nllLoss(t1a, t1b, weights=t1w)
+        let l2 = dsharp.nllLoss(t1a, t1b, weight=t1w)
         let l2Correct = dsharp.tensor(-0.8950)
         let l3 = dsharp.nllLoss(t1a, t1b, reduction="none")
         let l3Correct = dsharp.tensor([1.8971, 0.6931, 1.6094])
-        let l4 = dsharp.nllLoss(t1a, t1b, reduction="none", weights=t1w)
+        let l4 = dsharp.nllLoss(t1a, t1b, reduction="none", weight=t1w)
         let l4Correct = dsharp.tensor([-2.2765,  0.4159,  0.9657])
         let l5 = dsharp.nllLoss(t1a, t1b, reduction="sum")
         let l5Correct = dsharp.tensor(4.1997)
-        let l6 = dsharp.nllLoss(t1a, t1b, reduction="sum", weights=t1w)
+        let l6 = dsharp.nllLoss(t1a, t1b, reduction="sum", weight=t1w)
         let l6Correct = dsharp.tensor(-0.8950)
 
         let t2a = dsharp.tensor([[[[-1.9318, -1.9386, -0.9488, -0.8787],
@@ -2517,7 +2527,7 @@ type TestTensor () =
         let t2w = dsharp.tensor([ 1.1983, -0.2633, -0.3064])
         let l7 = dsharp.nllLoss(t2a, t2b)
         let l7Correct = dsharp.tensor(1.3095)
-        let l8 = dsharp.nllLoss(t2a, t2b, weights=t2w)
+        let l8 = dsharp.nllLoss(t2a, t2b, weight=t2w)
         let l8Correct = dsharp.tensor(2.4610)
         let l9 = dsharp.nllLoss(t2a, t2b, reduction="none")
         let l9Correct = dsharp.tensor([[[1.2868, 1.9386, 1.2375, 1.8975],
@@ -2529,7 +2539,7 @@ type TestTensor () =
                                          [1.5336, 0.5392, 2.1201, 1.5724],
                                          [0.8335, 1.2666, 1.9886, 0.5593],
                                          [0.6594, 0.9271, 1.0346, 1.8940]]])
-        let l10 = dsharp.nllLoss(t2a, t2b, reduction="none", weights=t2w)
+        let l10 = dsharp.nllLoss(t2a, t2b, reduction="none", weight=t2w)
         let l10Correct = dsharp.tensor([[[-0.3943,  2.3231, -0.3258, -0.5814],
                                          [-0.1536,  2.9496, -0.2558,  1.3872],
                                          [-0.3760, -0.3595,  0.9734, -0.2721],
@@ -2541,7 +2551,7 @@ type TestTensor () =
                                          [-0.1736, -0.2440, -0.2724, -0.5804]]])
         let l11 = dsharp.nllLoss(t2a, t2b, reduction="sum")
         let l11Correct = dsharp.tensor(41.9042)
-        let l12 = dsharp.nllLoss(t2a, t2b, reduction="sum", weights=t2w)
+        let l12 = dsharp.nllLoss(t2a, t2b, reduction="sum", weight=t2w)
         let l12Correct = dsharp.tensor(10.4726)
 
         Assert.True(l1Correct.allclose(l1, 0.001))
@@ -2567,15 +2577,15 @@ type TestTensor () =
         let t1w = dsharp.tensor([-1.4905,  0.5929,  1.0018, -1.0858, -0.5993])
         let l1 = dsharp.crossEntropyLoss(t1a, t1b)
         let l1Correct = dsharp.tensor(1.7059)
-        let l2 = dsharp.crossEntropyLoss(t1a, t1b, weights=t1w)
+        let l2 = dsharp.crossEntropyLoss(t1a, t1b, weight=t1w)
         let l2Correct = dsharp.tensor(1.6969)
         let l3 = dsharp.crossEntropyLoss(t1a, t1b, reduction="none")
         let l3Correct = dsharp.tensor([1.6983, 1.7991, 1.8085, 1.5178])
-        let l4 = dsharp.crossEntropyLoss(t1a, t1b, reduction="none", weights=t1w)
+        let l4 = dsharp.crossEntropyLoss(t1a, t1b, reduction="none", weight=t1w)
         let l4Correct = dsharp.tensor([-1.8439,  1.0666, -2.6956, -0.9096])
         let l5 = dsharp.crossEntropyLoss(t1a, t1b, reduction="sum")
         let l5Correct = dsharp.tensor(6.8237)
-        let l6 = dsharp.crossEntropyLoss(t1a, t1b, reduction="sum", weights=t1w)
+        let l6 = dsharp.crossEntropyLoss(t1a, t1b, reduction="sum", weight=t1w)
         let l6Correct = dsharp.tensor(-4.3825)
 
         Assert.True(l1Correct.allclose(l1, 0.001))

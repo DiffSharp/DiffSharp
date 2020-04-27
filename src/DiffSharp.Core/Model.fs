@@ -18,6 +18,20 @@ type TensorDict() =
     member d.forwardDiff(derivatives:TensorDict) = d.map(fun n t -> t.forwardDiff(derivatives.[n]))
     member d.reverseDiff() = d.map(fun _ t -> t.reverseDiff())
     member d.noDiff() = d.map(fun _ t -> t.noDiff())
+    member d.flatten() =
+        let ts = [for t in d.Tensors.Values do t.view(-1)]
+        dsharp.cat(ts)
+    member d.unflatten(tensors:Tensor) =
+        let ret = TensorDict()
+        let shapes = [|for t in d.Tensors.Values do t.shape|]
+        let sizes = [|for s in shapes do shapeLength s|]
+        let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
+        let mutable i = 0
+        let keys = getKeys d.Tensors
+        for n in keys do
+            ret.add(n, ts.[i])
+            i <- i+1
+        ret
 
 [<AbstractClass>]
 type Model() =
@@ -36,7 +50,7 @@ type Model() =
                     // printfn "adding Tensor %A %A" (n + "__" + nn) tt
                     m.Parameters.add(n + "__" + nn, tt)
             | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Tensor or Model"
-    member m.updateParameters(parameters:TensorDict) =
+    member m.setParameters(parameters:TensorDict) =
         let keys = getKeys m.Parameters.Tensors
         for n in keys do
             m.Parameters.[n] <- parameters.[n]
@@ -44,10 +58,21 @@ type Model() =
             let keys = getKeys model.Parameters.Tensors
             for nn in keys do
                 model.Parameters.Tensors.[nn] <- m.Parameters.[n + "__" + nn]
-    member m.forwardDiff(derivatives) = m.updateParameters(m.Parameters.forwardDiff(derivatives))
-    member m.reverseDiff() = m.updateParameters(m.Parameters.reverseDiff())
-    member m.noDiff() = m.updateParameters(m.Parameters.noDiff())
+    member m.setParameters(parameters:Tensor) = m.setParameters(m.Parameters.unflatten(parameters))
+    member m.getParameters() = m.Parameters.flatten()
+    member m.forwardDiff(derivatives) = m.setParameters(m.Parameters.forwardDiff(derivatives))
+    member m.reverseDiff() = m.setParameters(m.Parameters.reverseDiff())
+    member m.noDiff() = m.setParameters(m.Parameters.noDiff())
+    member m.nparameters() = m.Parameters.flatten().nelement
+    member m.forwardParams (input:Tensor) (parameters:Tensor) =
+        m.setParameters(parameters)
+        m.forward(input)
+    member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
+        m.forwardParams input parameters |> f
+    member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
+        m.forwardCompose (f target) input parameters
     abstract member forward: Tensor -> Tensor
+
 
 type Init() =
     static member kaiming(fanIn, fanOut, ?a:float) = 
@@ -58,6 +83,7 @@ type Init() =
     static member bias(fanOut) =
         let b = 1./sqrt (float fanOut)
         -b + dsharp.rand([fanOut]) * 2*b
+
 
 type Linear(inFeatures, outFeatures) =
     inherit Model()

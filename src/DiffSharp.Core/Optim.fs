@@ -5,8 +5,8 @@ open DiffSharp.Model
 [<AbstractClass>]
 type Optimizer(model:Model) =
     member val model = model
-    abstract member parameterUpdate: string -> Tensor -> Tensor
-    member o.step() = model.updateParameters(model.Parameters.map(o.parameterUpdate))
+    abstract member updateRule: string -> Tensor -> Tensor
+    member o.step() = model.setParameters(model.Parameters.map(o.updateRule))
 
 
 type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
@@ -17,7 +17,7 @@ type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?neste
     let dampening = defaultArg dampening (lr.zeroLike())
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
-    override o.parameterUpdate name t = 
+    override o.updateRule name t = 
         let mutable d = t.derivative
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)

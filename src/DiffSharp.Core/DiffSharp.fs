@@ -146,12 +146,18 @@ type DiffSharp =
     static member logsoftmax(dim:int) = fun (a:Tensor) -> a.logsoftmax(dim)
     static member logsumexp(a:Tensor, dim:int, ?keepDim:bool) = a.logsumexp(dim, ?keepDim=keepDim)
     static member logsumexp(dim:int, ?keepDim:bool) = fun (a:Tensor) -> a.logsumexp(dim, ?keepDim=keepDim)
-    static member mseLoss(a:Tensor, b:Tensor, ?reduction:string) = a.mseLoss(b, ?reduction=reduction)
-    static member nllLoss(a:Tensor, b:Tensor, ?weights:Tensor, ?reduction:string) = a.nllLoss(b, ?weights=weights, ?reduction=reduction)
-    static member crossEntropyLoss(a:Tensor, b:Tensor, ?weights:Tensor, ?reduction:string) = a.crossEntropyLoss(b, ?weights=weights, ?reduction=reduction)
+    static member mseLoss(input:Tensor, target:Tensor, ?reduction:string) = input.mseLoss(target, ?reduction=reduction)
+    static member mseLoss(target:Tensor) = fun (input:Tensor) -> input.mseLoss(target)
+    static member nllLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.nllLoss(target, ?weight=weight, ?reduction=reduction)
+    static member nllLoss(target:Tensor) = fun (input:Tensor) -> input.nllLoss(target)
+    static member crossEntropyLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.crossEntropyLoss(target, ?weight=weight, ?reduction=reduction)
+    static member crossEntropyLoss(target:Tensor) = fun (input:Tensor) -> input.crossEntropyLoss(target)
     static member conv1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = fun (a:Tensor) -> a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv2d(b:Tensor, ?stride:seq<int>, ?padding:seq<int>, ?dilation:seq<int>) = fun (a:Tensor) -> a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
     static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = fun (a:Tensor) -> a.conv2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
 
 // Methods mirroring F# array modules
 // TODO: update to support non-float types once we have backing DTypes implemented
