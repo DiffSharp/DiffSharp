@@ -4,6 +4,7 @@ open DiffSharp.Util
 open System.IO
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
+open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
