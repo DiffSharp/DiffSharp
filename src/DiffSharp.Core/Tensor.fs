@@ -190,28 +190,28 @@ type Tensor =
 
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Zeros(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Ones(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.fullLike(shape:seq<int>, value:obj, ?dtype, ?device, ?backend) = 
         let value = if value :? Tensor then (value:?>Tensor).toScalar() else value    
-        Tensor(a.primalRaw.Full(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Random((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
-    member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.Zero(?dtype=dtype, ?device=device, ?backend=backend))
-    member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.One(?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
     member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
         let startVal = defaultArg startVal 0.
         let step = defaultArg step 1.
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
         a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
-    member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
     member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
@@ -384,7 +384,12 @@ type Tensor =
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     static member (+) (a:Tensor, b:Tensor) =
-        if a.shape = b.shape then
+        if a.dtype <> b.dtype then
+            let tnew = DType.Widen(a.dtype, b.dtype)
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast + bCast
+        elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.AddTT(b)
             let inline fTensor(a,b) = a + b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
@@ -445,7 +450,12 @@ type Tensor =
     member a.add(b) = a + a.like(b)
 
     static member (-) (a:Tensor, b:Tensor) =
-        if a.shape = b.shape then
+        if a.dtype <> b.dtype then
+            let tnew = DType.Widen(a.dtype, b.dtype)
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast - bCast
+        elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.SubTT(b)
             let inline fTensor(a,b) = a - b
             let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
@@ -486,7 +496,12 @@ type Tensor =
     member a.sub(b) = a - a.like(b)
 
     static member (*) (a:Tensor, b:Tensor) =
-        if a.shape = b.shape then
+        if a.dtype <> b.dtype then
+            let tnew = DType.Widen(a.dtype, b.dtype)
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.MulTT(b)
             let inline fTensor(a,b) = a * b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
@@ -527,7 +542,12 @@ type Tensor =
     member a.mul(b) = a * a.like(b)
 
     static member (/) (a:Tensor, b:Tensor) =
-        if a.shape = b.shape then
+        if a.dtype <> b.dtype then
+            let tnew = DType.Widen(a.dtype, b.dtype)
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.DivTT(b)
             let inline fTensor(a,b) = a / b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
@@ -568,7 +588,12 @@ type Tensor =
     member a.div(b) = a / a.like(b)
 
     static member Pow (a:Tensor, b:Tensor) =
-        if a.shape = b.shape then
+        if a.dtype <> b.dtype then
+            let tnew = DType.Widen(a.dtype, b.dtype)
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.Pow (aCast, bCast)
+        elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.PowTT(b)
             let inline fTensor(a:Tensor,b:Tensor) = a ** b
             let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
