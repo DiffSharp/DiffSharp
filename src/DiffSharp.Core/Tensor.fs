@@ -188,42 +188,42 @@ type Tensor =
         let absoluteTolerance = defaultArg absoluteTolerance 1e-8
         t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
 
-    member a.zerosLike(?shape:seq<int>) = 
+    member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Zeros(shape |> Array.ofSeq))
-    member a.onesLike(?shape:seq<int>) = 
+        Tensor(a.primalRaw.Zeros(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Ones(shape |> Array.ofSeq))
-    member a.fullLike(shape:seq<int>, value:obj) = 
+        Tensor(a.primalRaw.Ones(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.fullLike(shape:seq<int>, value:obj, ?dtype, ?device, ?backend) = 
         let value = if value :? Tensor then (value:?>Tensor).toScalar() else value    
-        Tensor(a.primalRaw.Full(shape |> Array.ofSeq, value))
-    member a.randLike(?shape:seq<int>) = 
+        Tensor(a.primalRaw.Full(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.Random(shape |> Array.ofSeq))
-    member a.randnLike(?shape:seq<int>) = 
+        Tensor(a.primalRaw.Random((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq))
-    member a.zeroLike() = Tensor(a.primalRaw.Zero())
-    member a.oneLike() = Tensor(a.primalRaw.One())
-    member a.arangeLike(endVal:float, ?startVal:float, ?step:float) =
+        Tensor(a.primalRaw.RandomNormal(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.Zero(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.One(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
         let startVal = defaultArg startVal 0.
         let step = defaultArg step 1.
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
-        a.like(box v)
-    member a.like(value) = Tensor(a.primalRaw.Create(value))
+        a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
-    member a.onehotLike(length:int, hot:int) =
+    member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
-        a.zerosLike([|length|]).addSlice([|hot|], a.onesLike([|1|]))
+        a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
     member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
     member a.isinf() = Tensor(a.primalRaw.IsInfT())
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
-    member a.hasinf() = a.isinf().sum() > a.zeroLike()
-    member a.hasnan() = a.isnan().sum() > a.zeroLike()
+    member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=DType.Int64)
+    member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=DType.Int64)
     member a.maxIndex() = a.primalRaw.MaxIndexT()
     member a.minIndex() = a.primalRaw.MinIndexT()
     member a.max() = a.[a.maxIndex()]

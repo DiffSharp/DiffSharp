@@ -1,4 +1,4 @@
-namespace DiffSharp.Backend.None
+namespace rec DiffSharp.Backend.None
 
 open DiffSharp.Backend
 open DiffSharp.Util
@@ -321,7 +321,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 //
 // Most of the functions produce (value, shape) pairs for use in constructing an instance
 // of the final implementing type.
-[<ExcludeFromCodeCoverage>]
+[<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
 module internal RawTensorCPU = 
 
     /// Access the natural "0" value for the element of a CPU tensor type
@@ -373,12 +373,12 @@ module internal RawTensorCPU =
         if t.Dim < 1 || t.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" t.Shape
         if t.Dim = 1 then
             let p = t.Values |> Array.map float
-            let result = Array.init numSamples (fun _ -> ofInt (Random.ChoiceIndex(p)))
+            let result = Array.init numSamples (fun _ -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p)))
             (result, [|numSamples|])
         else
             let p = t.ToArray() :?> float32[,] |> Array2D.map float
             let d1 = p.GetLength(0)
-            let result = Array.init (d1 * numSamples - 1) (fun i -> ofInt (Random.ChoiceIndex(p.[(i%numSamples),*])))
+            let result = Array.init (d1 * numSamples - 1) (fun i -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p.[(i%numSamples),*])))
             (result, [| d1; numSamples |]) 
 
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
@@ -395,38 +395,38 @@ module internal RawTensorCPU =
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
         | _ -> failwith <| sprintf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
+    let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
-        let result = Array.map2 (fun t1 t2 -> if t1 < t2 then one else zero) t1value t2value
+        let result = Array.map2 (<) t1value t2value
         (result, t1.Shape)
 
-    let inline GtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
+    let inline GtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
-        let result = Array.map2 (fun t1 t2 -> if t1 > t2 then one else zero) t1value t2value
+        let result = Array.map2 (>) t1value t2value
         (result, t1.Shape)
 
-    let inline LeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
+    let inline LeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
-        let result = Array.map2 (fun t1 t2 -> if t1 <= t2 then one else zero) t1value t2value
+        let result = Array.map2 (<=) t1value t2value
         (result, t1.Shape)
 
-    let inline GeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
+    let inline GeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values
-        let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then one else zero) t1value t2value
+        let result = Array.map2 (>=) t1value t2value
         (result, t1.Shape)
 
-    let inline IsInfT(isinf, t1: RawTensorCPU< ^T >) =
+    let inline IsInfT(isinf: ^T -> bool, t1: RawTensorCPU< ^T >) =
         let t1value = t1.Values
-        let result = Array.map (fun t -> if isinf t then one else zero) t1value
+        let result = Array.map isinf t1value
         (result, t1.Shape)
 
-    let inline IsNaNT(isnan, t1: RawTensorCPU< ^T >) =
+    let inline IsNaNT(isnan : ^T -> bool, t1: RawTensorCPU< ^T >) =
         let t1value = t1.Values
-        let result = Array.map (fun t -> if isnan t then one else zero) t1value
+        let result = Array.map isnan t1value
         (result, t1.Shape)
 
     let inline MaxIndexT(t: RawTensorCPU< ^T >) =
@@ -746,7 +746,7 @@ module internal RawTensorCPU =
         (result, t.Shape)
 
     let inline Random ofDouble (shape:int[]) : (^T[] * int[]) =
-        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (Random.Uniform()))
+        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Uniform()))
         (values, shape)
 
     let inline RandomNormal ofDouble (shape:int[]) : (^T[] * int[]) =
@@ -757,6 +757,7 @@ module internal RawTensorCPU =
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
     static let create(values, shape) : RawTensor = upcast RawTensorFloat32CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorFloat32CPU
     static member One() = RawTensorCPU.One() |> RawTensorFloat32CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorFloat32CPU
@@ -768,24 +769,16 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorFloat32CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorFloat32CPU(values, shape)
-    override t.Create(values) = upcast RawTensorFloat32CPU.Create(values)
-    override t.Zero() = upcast RawTensorFloat32CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorFloat32CPU.Zeros(shape)
-    override t.One() = upcast RawTensorFloat32CPU.One() 
-    override t.Ones(shape) = upcast RawTensorFloat32CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorFloat32CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToSingle value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT(System.Single.IsInfinity, t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT(System.Single.IsNaN, t) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT(System.Single.IsInfinity, t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT(System.Single.IsNaN, t) |> createBool
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -848,6 +841,7 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
     inherit RawTensorCPU<double>(values, shape, Float64)
 
     static let create(values, shape) : RawTensor = upcast RawTensorFloat64CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorFloat64CPU
     static member One() = RawTensorCPU.One() |> RawTensorFloat64CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorFloat64CPU
@@ -859,24 +853,16 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorFloat64CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorFloat64CPU(values, shape)
-    override t.Create(values) = upcast RawTensorFloat64CPU.Create(values)
-    override t.Zero() = upcast RawTensorFloat64CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorFloat64CPU.Zeros(shape)
-    override t.One() = upcast RawTensorFloat64CPU.One()
-    override t.Ones(shape) = upcast RawTensorFloat64CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorFloat64CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorFloat64CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToDouble value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT(System.Double.IsInfinity, t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT(System.Double.IsNaN, t) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT(System.Double.IsInfinity, t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT(System.Double.IsNaN, t) |> createBool
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -938,6 +924,7 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
     inherit RawTensorCPU<int8>(values, shape, Int8)
 
     static let create(values, shape) : RawTensor = upcast RawTensorInt8CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorInt8CPU
     static member One() = RawTensorCPU.One() |> RawTensorInt8CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorInt8CPU
@@ -949,23 +936,15 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt8CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt8CPU(values, shape)
-    override t.Create(values) = upcast RawTensorInt8CPU.Create(values)
-    override t.Zero() = upcast RawTensorInt8CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorInt8CPU.Zeros(shape)
-    override t.One() = upcast RawTensorInt8CPU.One()
-    override t.Ones(shape) = upcast RawTensorInt8CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorInt8CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorInt8CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int8 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToSByte value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> createBool
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -1029,6 +1008,7 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
     inherit RawTensorCPU<int16>(values, shape, Int16)
 
     static let create(values, shape) : RawTensor = upcast RawTensorInt16CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorInt16CPU
     static member One() = RawTensorCPU.One() |> RawTensorInt16CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorInt16CPU
@@ -1040,23 +1020,15 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt16CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt16CPU(values, shape)
-    override t.Create(values) = upcast RawTensorInt16CPU.Create(values)
-    override t.Zero() = upcast RawTensorInt16CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorInt16CPU.Zeros(shape)
-    override t.One() = upcast RawTensorInt16CPU.One()
-    override t.Ones(shape) = upcast RawTensorInt16CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorInt16CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorInt16CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int16 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToInt16 value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> createBool
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -1120,6 +1092,7 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     inherit RawTensorCPU<int32>(values, shape, Int32)
 
     static let create(values, shape) : RawTensor = upcast RawTensorInt32CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorInt32CPU
     static member One() = RawTensorCPU.One() |> RawTensorInt32CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorInt32CPU
@@ -1131,23 +1104,15 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt32CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt32CPU(values, shape)
-    override t.Create(values) = upcast RawTensorInt32CPU.Create(values)
-    override t.Zero() = upcast RawTensorInt32CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorInt32CPU.Zeros(shape)
-    override t.One() = upcast RawTensorInt32CPU.One()
-    override t.Ones(shape) = upcast RawTensorInt32CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorInt32CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorInt32CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToInt32 value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> createBool
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -1211,6 +1176,7 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
     inherit RawTensorCPU<int64>(values, shape, Int64)
 
     static let create(values, shape) : RawTensor = upcast RawTensorInt64CPU(values, shape)
+    static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static member Zero() = RawTensorCPU.Zero() |> RawTensorInt64CPU
     static member One() = RawTensorCPU.One() |> RawTensorInt64CPU
     static member Zeros(shape:int[]) = RawTensorCPU.Zeros(shape) |> RawTensorInt64CPU
@@ -1222,23 +1188,15 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt64CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt64CPU(values, shape)
-    override t.Create(values) = upcast RawTensorInt64CPU.Create(values)
-    override t.Zero() = upcast RawTensorInt64CPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorInt64CPU.Zeros(shape)
-    override t.One() = upcast RawTensorInt64CPU.One()
-    override t.Ones(shape) = upcast RawTensorInt64CPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorInt64CPU.Random(shape)
-    override t.RandomNormal(shape) = upcast RawTensorInt64CPU.RandomNormal(shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int64 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t.Full(shape, value) = RawTensorCPU.Full(shape, System.Convert.ToInt64 value) |> create
-    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
-    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> create
-    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> create
-    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> create
-    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> create
-    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> create
+    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
+    override t.IsNaNT() = RawTensorCPU.IsNaNT((fun _ -> false), t) |> createBool
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
     override t1.AddTT(t2) = RawTensorCPU.AddTT(t1, t2) |> create
@@ -1301,6 +1259,7 @@ and RawTensorInt64CPUStatics() =
 type RawTensorBoolCPU(values: bool[], shape:int[]) =
     inherit RawTensorCPU<bool>(values, shape, Bool)
 
+    static let create(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
     static let create64(values, shape) : RawTensor = upcast RawTensorInt64CPU(values, shape)
     static member Zero() = RawTensorBoolCPU([| false |], [||])
     static member One() = RawTensorBoolCPU([| true |], [||])
@@ -1313,47 +1272,39 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
        
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorBoolCPU))
     override t.CreateShaped(values, shape) = upcast RawTensorBoolCPU(values, shape)
-    override t.Create(values) = upcast RawTensorBoolCPU.Create(values)
-    override t.Zero() = upcast RawTensorBoolCPU.Zero()
-    override t.Zeros(shape) = upcast RawTensorBoolCPU.Zeros(shape)
-    override t.One() = upcast RawTensorBoolCPU.One()
-    override t.Ones(shape) = upcast RawTensorBoolCPU.Ones(shape)
-    override t.Random(shape) = upcast RawTensorBoolCPU.Random(shape)
-    override t.RandomNormal(_shape) = opNotSupported t.DType
     override t.RandomMultinomial(_numSamples) = opNotSupported t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t.Full(shape, value) = RawTensorBoolCPU(RawTensorCPU.Full(shape, System.Convert.ToBoolean value)) :> _
     override t1.LtTT(t2) = RawTensorBoolCPU(Array.map2 (<) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
     override t1.GtTT(t2) = RawTensorBoolCPU(Array.map2 (>) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
     override t1.LeTT(t2) = RawTensorBoolCPU(Array.map2 (<=) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
     override t1.GeTT(t2) = RawTensorBoolCPU(Array.map2 (>=) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
-    override t1.AddTT(t2) = RawTensorCPU.AddTT((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.AddTT0(t2) = RawTensorCPU.AddTT0((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.AddT2T1(t2) = RawTensorCPU.AddT2T1((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
+    override t1.AddTT(t2) = RawTensorBoolCPU(Array.map2 (||) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
+    override t1.AddTT0(t2) = t1.AddTT(t2.Expand(t1.Shape))
+    override t1.AddT2T1(t2) = t1.AddTT(t2.Expand(t1.Shape))
     override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice((t1.Cast(Int64) :?> RawTensorCPU<int64>), location, t2) |> create64
-    override t1.SubTT(t2) = RawTensorCPU.SubTT((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.SubT0T(t2) = RawTensorCPU.SubT0T((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.SubTT0(t2) = RawTensorCPU.SubTT0((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.MulTT(t2) = RawTensorCPU.MulTT((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.MulTT0(t2) = RawTensorCPU.MulTT0((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.DivTT(t2) = RawTensorCPU.DivTT((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.DivT0T(t2) = RawTensorCPU.DivT0T((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.DivTT0(t2) = RawTensorCPU.DivTT0((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2((t1.Cast(Int64) :?> RawTensorCPU<int64>), t2.Cast(Int64)) |> create64
+    override t1.SubTT(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.SubT0T(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.SubTT0(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.MulTT(t2) = RawTensorBoolCPU(Array.map2 (&&) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
+    override t1.MulTT0(t2) = t1.MulTT(t2.Expand(t1.Shape))
+    override t1.DivTT(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.DivT0T(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.DivTT0(t2) = opNotSupported2 t1.DType t2.DType
+    override t1.MatMulT2T2(t2) = opNotSupported2 t1.DType t2.DType
     override t1.Conv1D(t2, _stride, _padding) = opNotSupported2 t1.DType t2.DType
     override t1.Conv2D(t2, _stride, _padding) = opNotSupported2 t1.DType t2.DType
-    override t.NegT() = RawTensorCPU.NegT(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
+    override t.NegT() = opNotSupported t.DType
     override t.SumT() = RawTensorCPU.SumT(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
     override t.SignT() = t :> _
     override t.AbsT() = opNotSupported t.DType
     override t.ReluT() = RawTensorCPU.ReluT(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
 
-    override t.IsInfT() = opNotSupported t.DType
-    override t.IsNaNT() = opNotSupported t.DType
+    override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
+    override t.IsNaNT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> create
     override t.SoftplusT() = opNotSupported t.DType
     override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
     override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType

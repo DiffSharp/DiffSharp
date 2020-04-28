@@ -1,6 +1,7 @@
 namespace DiffSharp.Distributions
 open DiffSharp
 open DiffSharp.Util
+open DiffSharp.Backend
 
 [<AbstractClass>]
 type Distribution() =
@@ -35,7 +36,9 @@ type Uniform(low:Tensor, high:Tensor) =
         if value.shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.shape
         let lb = d.Low.le(value)
         let ub = d.High.gt(value)
-        log (lb * ub) - log d.Range
+        let lub = lb * ub 
+        // TODO: @gbaydin to check this
+        log (lub.cast(DType.Float64)) - log d.Range
     override d.GetString() = sprintf "Uniform(low:%A, high:%A)" d.Low d.High
 
 type Normal(mean:Tensor, stddev:Tensor) =

@@ -73,7 +73,7 @@ type [<AbstractClass>]
     abstract Ones : shape:int[] -> RawTensor
     abstract Full : shape:int[] * obj -> RawTensor
     abstract Random : shape:int[] -> RawTensor
-    abstract RandomNormal : shape:int[]-> RawTensor
+    abstract RandomNormal : shape:int[] -> RawTensor
     abstract Create : obj -> RawTensor
 
     static member Get(?dtype: DType, ?device:Device, ?backend:Backend) =
@@ -140,23 +140,38 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Create(values)
 
+    member t.Create(values: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Create(values, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.Zero(?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Zero(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.Zeros(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Zeros(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.One(?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.One(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.Ones(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Ones(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.Full(shape: int[], value: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Full(shape, value, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.Random(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Random(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.RandomNormal(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
     abstract member CompareTo: RawTensor -> int
-    abstract member Create : values: obj -> RawTensor
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
     abstract member UnstackT: dim:int -> RawTensor[]
     abstract member CatTs: RawTensor[] * dim: int -> RawTensor
     abstract member SplitT: int[] * dim: int -> RawTensor[]
-    abstract member Zero : unit -> RawTensor
-    abstract member Zeros : int[] -> RawTensor
-    abstract member One : unit -> RawTensor
-    abstract member Ones : int[] -> RawTensor
-    abstract member Full : int[] * obj -> RawTensor
-    abstract member Random : int[] -> RawTensor
-    abstract member RandomNormal : int[] -> RawTensor
-    abstract member RandomMultinomial: int -> RawTensor
-    abstract member GetString : unit -> string
+    abstract member GetString: unit -> string
     abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
     abstract member ToScalar: unit -> obj
@@ -164,6 +179,7 @@ and [<AbstractClass>]
     abstract member Equals: RawTensor -> bool
     abstract member Cast : DType -> RawTensor
     abstract member ComputeHash: unit -> int
+    abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor

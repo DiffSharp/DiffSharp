@@ -36,16 +36,17 @@ type TestTensor () =
     let dtypesIntegral = [DType.Int8; DType.Int16; DType.Int32; DType.Int64]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
-    let dtypesNonBool = [DType.Float32; DType.Float64; DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
+    let dtypesIntegralAndFloatingPoint = [DType.Float32; DType.Float64; DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
 
     // We run tests specific to floating point at these tensor types
     let dtypesFloatingPoint = [DType.Float32; DType.Float64]
-    let dtypesNonFloatingPoint = [DType.Int8; DType.Int16; DType.Int32; DType.Int64; DType.Bool]
+    let dtypesIntegralAndBool = [DType.Int8; DType.Int16; DType.Int32; DType.Int64; DType.Bool]
 
-    let infos = [ for dtype in dtypes -> DTypeInfo(dtype)]
+    let infosAll = [ for dtype in dtypes -> DTypeInfo(dtype)]
     let infosIntegral = [ for dtype in dtypesIntegral -> DTypeInfo(dtype)]
-    let infosNonBool = [ for dtype in dtypesNonBool -> DTypeInfo(dtype)]
+    let infosIntegralAndFloatingPoint = [ for dtype in dtypesIntegralAndFloatingPoint -> DTypeInfo(dtype)]
     let infosFloatingPoint = [ for dtype in dtypesFloatingPoint -> DTypeInfo(dtype) ]
+    let infosIntegralAndBool = [ for dtype in dtypesIntegralAndBool -> DTypeInfo(dtype) ]
 
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
 
@@ -55,7 +56,7 @@ type TestTensor () =
 
     member this.TestTensorCreateAllTensorTypesGeneric (conv: double -> 'T) =
       // Test creating these types of tensors
-      for info in infos do 
+      for info in infosAll do 
         let t0 = info.mkTensor(conv 1.)
         let t0ShapeCorrect = [||]
         let t0DimCorrect = 0
@@ -267,7 +268,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorToArray () =
-      for info in infos do 
+      for info in infosAll do 
         let a = array2D [[1.; 2.]; [3.; 4.]]
         let t = info.mkTensor(a)
         let tToArrayCorrect = info.arrayCreator2D a
@@ -289,7 +290,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorFull () =
-      for dtype in dtypesNonBool do 
+      for dtype in dtypesIntegralAndFloatingPoint do 
         let t1a = dsharp.full([2;3], 2.5, dtype=dtype)
         let t1b = dsharp.ones([2;3], dtype=dtype) * 2.5
         let t2a = dsharp.full([], 2.5, dtype=dtype)
@@ -339,7 +340,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorOnehot () =
-      for dtype in dtypesNonBool do 
+      for dtype in dtypesIntegralAndFloatingPoint do 
         let t0 = dsharp.onehot(3, 0, dtype=dtype)
         let t1 = dsharp.onehot(3, 1, dtype=dtype)
         let t2 = dsharp.onehot(3, 2, dtype=dtype)
@@ -352,7 +353,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorToString () =
-      for dtype in dtypesNonBool do 
+      for dtype in dtypesIntegralAndFloatingPoint do 
         let t0 = dsharp.tensor(2., dtype=dtype)
         let t1 = dsharp.tensor([[2.]; [2.]], dtype=dtype)
         let t2 = dsharp.tensor([[[2.; 2.]]], dtype=dtype)
@@ -395,7 +396,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCompare () =
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1A = info.mkTensor(-1.)
         let t1B = info.mkTensor(1.)
         let t1C = info.mkTensor(1.)
@@ -448,8 +449,8 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCast () =
-        for dtype1 in dtypesNonBool do 
-            for dtype2 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
+            for dtype2 in dtypesIntegralAndFloatingPoint do 
                 let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
                 let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype2)
                 let t1Cast = t1.cast(dtype2)
@@ -460,7 +461,7 @@ type TestTensor () =
                 Assert.AreEqual(t1Cast, t2)
                 Assert.AreEqual(t1, t2Cast)
 
-        for dtype in dtypesNonBool do 
+        for dtype in dtypesIntegralAndFloatingPoint do 
             let t1Bool = dsharp.tensor([true; false], dtype=DType.Bool)
             let t2Bool = dsharp.tensor([1.; 0.], dtype=dtype)
             let t1BoolCast = t1Bool.cast(dtype)
@@ -471,7 +472,7 @@ type TestTensor () =
             Assert.AreEqual(t1BoolCast, t2Bool)
             Assert.AreEqual(t1Bool, t2BoolCast)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Int8)
             let t1Cast = t1.toInt8()
@@ -479,7 +480,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Int8)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Int16)
             let t1Cast = t1.toInt16()
@@ -487,7 +488,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Int16)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Int32)
             let t1Cast = t1.toInt32()
@@ -495,7 +496,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Int32)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Int64)
             let t1Cast = t1.toInt64()
@@ -503,7 +504,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Int64)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Float32)
             let t1Cast = t1.toFloat32()
@@ -511,7 +512,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Float32)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
             let t1Cast = t1.toFloat64()
@@ -519,7 +520,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast.dtype, DType.Float64)
             Assert.AreEqual(t1Cast, t2)
 
-        for dtype1 in dtypesNonBool do 
+        for dtype1 in dtypesIntegralAndFloatingPoint do 
             let t1 = dsharp.tensor([1.; 0.], dtype=dtype1)
             let t2 = dsharp.tensor([1.; 0.], dtype=DType.Bool)
             let t1Cast = t1.toBool()
@@ -541,14 +542,14 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorLtTT () =
         // Test all non-bool types
-        for info in infosNonBool do 
+        for info in infosIntegralAndFloatingPoint do 
             let t1 = info.mkTensor([1.; 2.; 3.; 5.])
             let t2 = info.mkTensor([1.; 3.; 5.; 4.])
             let t1t2Lt = t1.lt(t2)
-            let t1t2LtCorrect = info.mkTensor([0.; 1.; 1.; 0.])
+            let t1t2LtCorrect = dsharp.tensor([0.; 1.; 1.; 0.], dtype=DType.Bool)
 
             Assert.AreEqual(t1t2LtCorrect, t1t2Lt)
-            Assert.AreEqual(info.dtype, t1t2Lt.dtype)
+            Assert.AreEqual(DType.Bool, t1t2Lt.dtype)
 
         // Test bool type separately
         let t1Bool = dsharp.tensor([true; true; false; false ], dtype=DType.Bool)
@@ -561,14 +562,14 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorLeTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
           let t1 = info.mkTensor([1.; 2.; 3.; 5.])
           let t2 = info.mkTensor([1.; 3.; 5.; 4.])
           let t1t2Le = t1.le(t2)
-          let t1t2LeCorrect = info.mkTensor([1.; 1.; 1.; 0.])
+          let t1t2LeCorrect = dsharp.tensor([1.; 1.; 1.; 0.], dtype=DType.Bool)
 
           Assert.AreEqual(t1t2LeCorrect, t1t2Le)
-          Assert.AreEqual(info.dtype, t1t2Le.dtype)
+          Assert.AreEqual(DType.Bool, t1t2Le.dtype)
 
       // Test bool type separately
       let t1Bool = dsharp.tensor([true; true; false; false ], dtype=DType.Bool)
@@ -581,14 +582,14 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorGtTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
           let t1 = info.mkTensor([1.; 2.; 3.; 5.])
           let t2 = info.mkTensor([1.; 3.; 5.; 4.])
           let t1t2Gt = t1.gt(t2)
-          let t1t2GtCorrect = info.mkTensor([0.; 0.; 0.; 1.])
+          let t1t2GtCorrect = dsharp.tensor([0.; 0.; 0.; 1.], dtype=DType.Bool)
 
           Assert.AreEqual(t1t2GtCorrect, t1t2Gt)
-          Assert.AreEqual(info.dtype, t1t2Gt.dtype)
+          Assert.AreEqual(DType.Bool, t1t2Gt.dtype)
 
       // Test bool type separately
       let t1Bool = dsharp.tensor([true; true; false; false ], dtype=DType.Bool)
@@ -601,14 +602,14 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorGeTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
           let t1 = info.mkTensor([1.; 2.; 3.; 5.])
           let t2 = info.mkTensor([1.; 3.; 5.; 4.])
           let t1t2Ge = t1.ge(t2)
-          let t1t2GeCorrect = info.mkTensor([1.; 0.; 0.; 1.])
+          let t1t2GeCorrect = dsharp.tensor([1.; 0.; 0.; 1.], dtype=DType.Bool)
 
           Assert.AreEqual(t1t2GeCorrect, t1t2Ge)
-          Assert.AreEqual(info.dtype, t1t2Ge.dtype)
+          Assert.AreEqual(DType.Bool, t1t2Ge.dtype)
 
       // Test bool type separately
       let t1Bool = dsharp.tensor([true; true; false; false ], dtype=DType.Bool)
@@ -620,27 +621,39 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorIsinf () =
-      for info in infosFloatingPoint do 
-        let t = info.mkTensor([1.; infinity; 3.; -infinity])
-        let i = dsharp.isinf(t)
-        let iCorrect = dsharp.tensor([0.; 1.; 0.; 1.], dtype=info.dtype)
-        Assert.AreEqual(iCorrect, i)
+        // isinf always returns bool tensor
+        for info in infosFloatingPoint do 
+            let t = info.mkTensor([1.; infinity; 3.; -infinity])
+            let i = dsharp.isinf(t)
+            let iCorrect = dsharp.tensor([0.; 1.; 0.; 1.], dtype=DType.Bool)
+            Assert.AreEqual(iCorrect, i)
+
+        // Integer tensors always return 0 for isinf
+        for info in infosIntegralAndBool do 
+            let t = info.mkTensor([1.; 0.; 1.])
+            let i = dsharp.isinf(t)
+            let iCorrect = dsharp.tensor([0.; 0.; 0.], dtype=DType.Bool)
+            Assert.AreEqual(iCorrect, i)
 
     [<Test>]
     member this.TestTensorIsnan () =
+        // isnan always returns bool tensor
         for info in infosFloatingPoint do 
             let t = info.mkTensor([1.; nan; 3.; nan])
             let i = dsharp.isnan(t)
-            let iCorrect = dsharp.tensor([0.; 1.; 0.; 1.], dtype=info.dtype)
+            let iCorrect = dsharp.tensor([false; true; false; true], dtype=DType.Bool)
             Assert.AreEqual(iCorrect, i)
 
-        // Bool tensors don't support isnan
-        let t2 = dsharp.tensor([true; false], dtype=DType.Bool)
-        isInvalidOp(fun () -> t2.isnan())
+        // Integer and bool tensors always return false for isnan
+        for info in infosIntegralAndBool do 
+            let t = info.mkTensor([1.; 0.; 1.])
+            let i = dsharp.isnan(t)
+            let iCorrect = dsharp.tensor([0.; 0.; 0.], dtype=DType.Bool)
+            Assert.AreEqual(iCorrect, i)
 
     [<Test>]
     member this.TestTensor_onesLike () =
-        for info in infos do 
+        for info in infosAll do 
             let t = info.mkTensor([1.; 2.; 3.; 4.])
             let i = t.onesLike([2])
             let iCorrect = dsharp.tensor([1.; 1.], dtype=info.dtype)
@@ -648,7 +661,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_zerosLike () =
-        for info in infos do 
+        for info in infosAll do 
             let t = info.mkTensor([1.; 2.; 3.; 4.])
             let i = t.zerosLike([2])
             let iCorrect = dsharp.tensor([0.; 0.], dtype=info.dtype)
@@ -656,7 +669,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_fullLike () =
-        for info in infos do 
+        for info in infosAll do 
             let t = info.mkTensor([1.; 2.; 3.; 4.])
             let i = t.fullLike([2], 4.0)
             let iCorrect = dsharp.tensor([4.; 4.], dtype=info.dtype)
@@ -664,7 +677,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_zeroLike () =
-        for info in infos do 
+        for info in infosAll do 
             let t = info.mkTensor([1.; 2.; 3.; 4.])
             let i = t.zeroLike()
             let iCorrect = dsharp.tensor(0., dtype=info.dtype)
@@ -672,7 +685,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_oneLike () =
-        for info in infos do 
+        for info in infosAll do 
             let t = info.mkTensor([1.; 2.; 3.; 4.])
             let i = t.oneLike()
             let iCorrect = dsharp.tensor(1., dtype=info.dtype)
@@ -680,7 +693,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_randLike() =
-        for info in infos do 
+        for info in infosAll do 
             let t = dsharp.tensor([1.; 2.; 3.; 4.], dtype=info.dtype)
             let i = t.randLike([2])
             Assert.AreEqual(i.shape, [|2|])
@@ -689,7 +702,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensor_randnLike() =
-        for info in infos do 
+        for info in infosAll do 
             let t = dsharp.tensor([1.; 2.; 3.; 4.], dtype=info.dtype)
             let i = t.randLike([2])
             Assert.AreEqual(i.shape, [|2|])
@@ -698,6 +711,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorHasinf () =
+        // TODO: test all types
         let t1 = dsharp.tensor([1.; infinity; 3.; -infinity])
         let t1i = dsharp.hasinf(t1)
         let t1iCorrect = true
@@ -709,6 +723,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorHasnan () =
+        // TODO: test all types
         let t1 = dsharp.tensor([1.; nan; 3.; nan])
         let t1i = dsharp.hasnan(t1)
         let t1iCorrect = true
@@ -721,7 +736,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAddTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([1.; 2.]) + info.mkTensor([3.; 4.])
         let t1Correct = info.mkTensor([4.; 6.])
 
@@ -812,9 +827,36 @@ type TestTensor () =
         Assert.AreEqual(t7Expected, t7Results)
         Assert.AreEqual(t7Expected, t7CommuteResults)
 
+      // Bool tensors support addition returning bool
+      //
+      //   t = torch.tensor([[True]], dtype=torch.bool)
+      //   t + t
+      //
+      //   tensor([[True]])
+
+      let t5a = dsharp.tensor([true; false], dtype=DType.Bool)
+      let t5b = dsharp.tensor([true; true], dtype=DType.Bool)
+      let t5 = t5a + t5b
+      let t5Correct = dsharp.tensor([true; true], dtype=DType.Bool)
+      Assert.AreEqual(t5, t5Correct)
+
+      // check broadcast for bool tensor 0 --> [2]
+      let t6a = dsharp.tensor([true; false], dtype=DType.Bool)
+      let t6b = dsharp.tensor(true, dtype=DType.Bool)
+      let t6 = t6a + t6b
+      let t6Correct = dsharp.tensor([true; true], dtype=DType.Bool)
+      Assert.AreEqual(t6, t6Correct)
+
+      // check broadcast for bool tensor [1] --> [2]
+      let t7a = dsharp.tensor([true; false], dtype=DType.Bool)
+      let t7b = dsharp.tensor([true], dtype=DType.Bool)
+      let t7 = t7a + t7b
+      let t7Correct = dsharp.tensor([true; true], dtype=DType.Bool)
+      Assert.AreEqual(t7, t7Correct)
+
     [<Test>]
     member this.TestTensorStackTs () =
-      for info in infos do 
+      for info in infosAll do 
         let t0a = info.mkTensor(1.)
         let t0b = info.mkTensor(3.)
         let t0c = info.mkTensor(5.)
@@ -849,7 +891,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorUnstackT () =
-      for info in infos do 
+      for info in infosAll do 
         let t0a = info.mkTensor(1.)
         let t0b = info.mkTensor(3.)
         let t0c = info.mkTensor(5.)
@@ -884,7 +926,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCatTs () =
-      for info in infos do 
+      for info in infosAll do 
 
         let t0a = info.mkTensor([1.; 2.])
         let t0 = Tensor.cat([t0a])
@@ -936,7 +978,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSplitT () =
         
-      for info in infos do 
+      for info in infosAll do 
         //6 --> 2;2;2
         let t1in = info.mkTensor([1.;2.;3.;4.;5.;6.]) // 6
         let t1 = t1in.split([2;2;2]) |> Seq.toList // 3 of 2
@@ -1013,7 +1055,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAddT2T1 () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([[1.; 2.]; [3.; 4.]]) + info.mkTensor([5.; 6.])
         let t1Correct = info.mkTensor([[6.; 8.]; [8.; 10.]])
 
@@ -1023,7 +1065,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSubTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([1.; 2.]) - info.mkTensor([3.; 4.])
         let t1Correct = info.mkTensor([-2.; -2.])
 
@@ -1045,10 +1087,20 @@ type TestTensor () =
         Assert.AreEqual(t3.dtype, info.dtype)
         Assert.AreEqual(t4.dtype, info.dtype)
 
+      // Bool tensors do not support subtraction
+      //
+      //   torch.tensor([[True]], dtype=torch.bool) - torch.tensor([[True]], dtype=torch.bool)
+      //
+      // RuntimeError: Subtraction, the `-` operator, with two bool tensors is not supported. Use the `^` or `logical_xor()` operator instead.
+
+      let t5a = dsharp.tensor([true; false], dtype=DType.Bool)
+      let t5b = dsharp.tensor([true; true], dtype=DType.Bool)
+      isInvalidOp(fun () -> t5a - t5b)
+
     [<Test>]
     member this.TestTensorMulTT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([1.; 2.]) * info.mkTensor([3.; 4.])
         let t1Correct = info.mkTensor([3.; 8.])
 
@@ -1137,6 +1189,26 @@ type TestTensor () =
         Assert.AreEqual(t6Expected, t6Results)
         Assert.AreEqual(t6Expected, t6CommuteResults)
 
+      // Integer tensors support integer multiplication
+      for info in infosIntegral do 
+        let t1 = info.mkTensor([2; 3; 4])
+        let t2 = info.mkTensor([1; 2; 3])
+        let i = t1 * t2
+        let iCorrect = dsharp.tensor([2; 6; 12], dtype=info.dtype)
+        Assert.AreEqual(iCorrect, i)
+
+      // Bool tensors support multiplication giving bool tensor
+      //
+      //    torch.ones(10, dtype=torch.bool) * torch.ones(10, dtype=torch.bool)
+      //
+      //    tensor([True, True, True, True, True, True, True, True, True, True])
+
+      let t1 = dsharp.tensor([true; true], dtype=DType.Bool)
+      let t2 = dsharp.tensor([true; false], dtype=DType.Bool)
+      let i = t1 * t2
+      let iCorrect = dsharp.tensor([true; false], dtype=DType.Bool)
+      Assert.AreEqual(iCorrect, i)
+
     [<Test>]
     member this.TestTensorDivTT () =
       for info in infosFloatingPoint do 
@@ -1161,6 +1233,23 @@ type TestTensor () =
         Assert.AreEqual(t3.dtype, info.dtype)
         Assert.AreEqual(t4.dtype, info.dtype)
 
+      // Integer tensors support integer division
+      for info in infosIntegral do 
+        let t1 = info.mkTensor([2; 3; 4])
+        let t2 = info.mkTensor([1; 2; 3])
+        let i = t1 / t2
+        let iCorrect = dsharp.tensor([2; 1; 1], dtype=info.dtype)
+        Assert.AreEqual(iCorrect, i)
+
+      // Bool tensors don't support /
+      //
+      //    torch.ones(10, dtype=torch.bool) / torch.ones(10, dtype=torch.bool)
+      //
+      //    RuntimeError: "div_cpu" not implemented for 'Bool'
+
+      let t2 = dsharp.tensor([true; false], dtype=DType.Bool)
+      isInvalidOp(fun () -> t2 / t2)
+
     [<Test>]
     member this.TestTensorPowTT () =
       for info in infosFloatingPoint do 
@@ -1180,7 +1269,7 @@ type TestTensor () =
         Assert.AreEqual(t2.dtype, info.dtype)
         Assert.AreEqual(t3.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           let t = dsharp.tensor([1.0], dtype=dtype)
           isInvalidOp(fun () -> t ** t)
 
@@ -1213,6 +1302,17 @@ type TestTensor () =
 
         Assert.True(t3.allclose(t3Correct, 0.0))
         Assert.AreEqual(t3.dtype, info.dtype)
+
+      // Matmul of Bool tensor not allowed
+      //
+      //    t = torch.tensor([[True]], dtype=torch.bool)
+      //    t.matmul(t)
+      //
+      // RuntimeError: _th_mm not supported on CPUType for Bool
+
+      let t3a = dsharp.tensor([[true]], dtype=DType.Bool)
+      isInvalidOp(fun () -> t3a.matmul(t3a))
+
 
     [<Test>]
     member this.TestTensorDot () =
@@ -1400,7 +1500,7 @@ type TestTensor () =
         Assert.True(t3b1.allclose(t3b1Correct, 0.01))
         Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
 
-      //for dtype in dtypesNonFloatingPoint do
+      //for dtype in dtypesIntegralAndBool do
       //    let t1 = dsharp.tensor([1.0], dtype=dtype)
       //    let t2 = dsharp.tensor([1.0], dtype=dtype)
       //    isInvalidOp(fun () -> t1.conv1d(t2))
@@ -1730,7 +1830,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorNegT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([1.; 2.; 3.])
         let t1Neg = -t1
         let t1NegCorrect = info.mkTensor([-1.; -2.; -3.])
@@ -1738,10 +1838,18 @@ type TestTensor () =
         Assert.AreEqual(t1NegCorrect, t1Neg)
         Assert.AreEqual(t1Neg.dtype, info.dtype)
 
+      // Neg of Bool tensor not allowed
+      //
+      //    -torch.ones(10, dtype=torch.bool) 
+      //
+      // RuntimeError: Negation, the `-` operator, on a bool tensor is not supported. 
+
+      isInvalidOp(fun () -> -dsharp.tensor([1.0], dtype=DType.Bool))
+
     [<Test>]
     member this.TestTensorSumT () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([1.; 2.; 3.])
         let t1Sum = t1.sum()
         let t1SumCorrect = info.mkTensor(6.)
@@ -1754,6 +1862,12 @@ type TestTensor () =
         Assert.AreEqual(t2SumCorrect, t2Sum)
         Assert.AreEqual(t1Sum.dtype, info.dtype)
         Assert.AreEqual(t2Sum.dtype, info.dtype)
+
+      // Sum of Bool tensor is Int64 tensor
+      let t3a = dsharp.tensor([true; true; false], DType.Bool)
+      let t3 = t3a.sum()
+      let t3Correct = dsharp.tensor(2, DType.Int64)
+      Assert.AreEqual(t3, t3Correct)
 
     [<Test>]
     member this.TestTensorSumCollapseT () =
@@ -1821,7 +1935,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumT2Dim0 () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t1 = info.mkTensor([[1.; 2.]; [3.; 4.]])
         let t1Sum = t1.sumT2Dim0()
         let t1SumCorrect = info.mkTensor([4.; 6.])
@@ -1832,7 +1946,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumDim () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t = info.mkTensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
         let tSum0 = t.sum(0)
         let tSum0Correct = info.mkTensor([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
@@ -1851,7 +1965,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumDimKeepDim () =
       // Test all non-bool types
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
         let t = info.mkTensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
         let tSum0 = t.sum(0, keepDim=true)
         let tSum0Correct = info.mkTensor([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
@@ -2043,7 +2157,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorTransposeT2 () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
         let t1Transpose = t1.transpose()
         let t1TransposeCorrect = info.mkTensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
@@ -2060,7 +2174,7 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSignT () =
         // Test all non-bool types
-        for info in infosNonBool do 
+        for info in infosIntegralAndFloatingPoint do 
             let t1 = info.mkTensor([-1.; -2.; 0.; 3.])
             let t1Sign = t1.sign()
             let t1SignCorrect = info.mkTensor([-1.; -1.; 0.; 1.])
@@ -2085,7 +2199,7 @@ type TestTensor () =
         Assert.True(t1Floor.allclose(t1FloorCorrect, 0.01))
         Assert.AreEqual(t1Floor.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).floor())
 
     [<Test>]
@@ -2098,7 +2212,7 @@ type TestTensor () =
         Assert.True(t1Ceil.allclose(t1CeilCorrect, 0.01))
         Assert.AreEqual(t1Ceil.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).ceil())
 
     [<Test>]
@@ -2111,14 +2225,14 @@ type TestTensor () =
         Assert.True(t1Round.allclose(t1RoundCorrect, 0.01))
         Assert.AreEqual(t1Round.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).round())
 
     [<Test>]
     member this.TestTensorAbsT () =
       // Test all non-bool types
       // Note: PyTorch fails on 'torch.tensor([True, False]).abs()'
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
           let t1 = info.mkTensor([-1.; -2.; 0.; 3.])
           let t1Abs = t1.abs()
           let t1AbsCorrect = info.mkTensor([1.; 2.; 0.; 3.])
@@ -2130,7 +2244,7 @@ type TestTensor () =
     member this.TestTensorReluT () =
       // Test all non-bool types
       // Note: PyTorch fails on 'torch.tensor([True, False]).relu()'
-      for info in infosNonBool do 
+      for info in infosIntegralAndFloatingPoint do 
           let t1 = info.mkTensor([-1.; -2.; 0.; 3.; 10.])
           let t1Relu = t1.relu()
           let t1ReluCorrect = info.mkTensor([0.; 0.; 0.; 3.; 10.])
@@ -2177,7 +2291,7 @@ type TestTensor () =
         Assert.True(t1Exp.allclose(t1ExpCorrect, 0.01))
         Assert.AreEqual(t1Exp.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).exp())
 
     [<Test>]
@@ -2190,7 +2304,7 @@ type TestTensor () =
         Assert.True(t1Log.allclose(t1LogCorrect, 0.01))
         Assert.AreEqual(t1Log.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).log())
 
     [<Test>]
@@ -2203,7 +2317,7 @@ type TestTensor () =
         Assert.True(t1Log10.allclose(t1Log10Correct, 0.01))
         Assert.AreEqual(t1Log10.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).log10())
 
     [<Test>]
@@ -2216,7 +2330,7 @@ type TestTensor () =
         Assert.True(t1Sqrt.allclose(t1SqrtCorrect, 0.01))
         Assert.AreEqual(t1Sqrt.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sqrt())
 
     [<Test>]
@@ -2229,7 +2343,7 @@ type TestTensor () =
         Assert.True(t1Sin.allclose(t1SinCorrect, 0.01))
         Assert.AreEqual(t1Sin.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sin())
 
     [<Test>]
@@ -2242,7 +2356,7 @@ type TestTensor () =
         Assert.True(t1Cos.allclose(t1CosCorrect, 0.01))
         Assert.AreEqual(t1Cos.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).cos())
 
     [<Test>]
@@ -2255,7 +2369,7 @@ type TestTensor () =
         Assert.True(t1Tan.allclose(t1TanCorrect, 0.01))
         Assert.AreEqual(t1Tan.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).tan())
 
     [<Test>]
@@ -2268,7 +2382,7 @@ type TestTensor () =
         Assert.True(t1Sinh.allclose(t1SinhCorrect, 0.01))
         Assert.AreEqual(t1Sinh.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sinh())
 
     [<Test>]
@@ -2281,7 +2395,7 @@ type TestTensor () =
         Assert.True(t1Cosh.allclose(t1CoshCorrect, 0.01))
         Assert.AreEqual(t1Cosh.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).cosh())
 
     [<Test>]
@@ -2294,7 +2408,7 @@ type TestTensor () =
         Assert.True(t1Tanh.allclose(t1TanhCorrect, 0.01))
         Assert.AreEqual(t1Tanh.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).tanh())
 
     [<Test>]
@@ -2307,7 +2421,7 @@ type TestTensor () =
         Assert.True(t1Asin.allclose(t1AsinCorrect, 0.01))
         Assert.AreEqual(t1Asin.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).asin())
 
     [<Test>]
@@ -2320,7 +2434,7 @@ type TestTensor () =
         Assert.True(t1Acos.allclose(t1AcosCorrect, 0.01))
         Assert.AreEqual(t1Acos.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).acos())
 
     [<Test>]
@@ -2333,12 +2447,12 @@ type TestTensor () =
         Assert.True(t1Atan.allclose(t1AtanCorrect, 0.01))
         Assert.AreEqual(t1Atan.dtype, info.dtype)
 
-      for dtype in dtypesNonFloatingPoint do
+      for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).atan())
 
     [<Test>]
     member this.TestTensorSlice () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([1.;2.])
         let t1s1 = t1.[0]
         let t1s2 = t1.[*]
@@ -2518,7 +2632,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorSqueezeT () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[[1.; 2.]]; [[3.;4.]]])
         let t1Squeeze = t1.squeeze()
         let t1SqueezeCorrect = info.mkTensor([[1.;2.];[3.;4.]])
@@ -2528,7 +2642,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorUnsqueezeT () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[1.;2.];[3.;4.]])
         let t1Unsqueeze = t1.unsqueeze(1)
         let t1UnsqueezeCorrect = info.mkTensor([[[1.; 2.]]; [[3.;4.]]])
@@ -2538,7 +2652,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorFlipT () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[1.;2.];[3.;4.]])
         let t2 = t1.flip([|0|])
         let t2Correct = info.mkTensor([[3.;4.]; [1.;2.]])
@@ -2556,7 +2670,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDilateT () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[1.;2.]; [3.;4.]])
         let t2 = t1.dilate([|1; 2|])
         let t2Correct = info.mkTensor([[1.;0.;2.];[3.;0.;4.]])
@@ -2575,7 +2689,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorUndilateT () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([[1.;0.;2.];[3.;0.;4.]])
         let t2 = t1.undilate([|1; 2|])
         let t2Correct = info.mkTensor([[1.;2.]; [3.;4.]])
@@ -2595,7 +2709,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorView () =
-      for info in infos do 
+      for info in infosAll do 
         let t = dsharp.rand([10;10], dtype=info.dtype)
         let t1 = t.view(-1)
         let t1Shape = t1.shape
@@ -2639,7 +2753,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMax () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([4.;1.;20.;3.])
         let t1Max = t1.max()
         let t1MaxCorrect = info.mkTensor(20.)
@@ -2708,7 +2822,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMin () =
-      for info in infos do 
+      for info in infosAll do 
         let t1 = info.mkTensor([4.;1.;20.;3.])
         let t1Min = t1.min()
         let t1MinCorrect = info.mkTensor(1.)
@@ -3245,7 +3359,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDepth () =
-      for info in infos do 
+      for info in infosAll do 
         let t0 = info.mkTensor([1.;2.])
         let t0Depth = t0.depth
         let t0DepthCorrect = 0
