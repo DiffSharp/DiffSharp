@@ -2367,6 +2367,9 @@ type TestTensor () =
         Assert.True(t1Sigmoid.allclose(t1SigmoidCorrect, 0.01))
         Assert.AreEqual(t1Sigmoid.dtype, dtype)
 
+      for dtype in dtypesIntegralAndBool do
+          isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sigmoid())
+
     [<Test>]
     member this.TestTensorSoftplusT () =
       for dtype in dtypesFloatingPoint do 
@@ -2376,6 +2379,9 @@ type TestTensor () =
 
         Assert.True(t1Softplus.allclose(t1SoftplusCorrect, 0.01))
         Assert.AreEqual(t1Softplus.dtype, dtype)
+
+      for dtype in dtypesIntegralAndBool do
+          isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).softplus())
 
     [<Test>]
     member this.TestTensorExpT () =

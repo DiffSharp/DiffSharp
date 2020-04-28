@@ -1,12 +1,15 @@
 ﻿namespace DiffSharp
 open DiffSharp.Backend
 open DiffSharp.Util
+open System
 open System.IO
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
 open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
+
+type scalar = IConvertible
 
 [<CustomEquality; CustomComparison>]
 type Tensor = 
@@ -194,9 +197,10 @@ type Tensor =
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
-    member a.fullLike(shape:seq<int>, value:obj, ?dtype, ?device, ?backend) = 
-        let value = if value :? Tensor then (value:?>Tensor).toScalar() else value    
+    member a.fullLike(shape:seq<int>, value:scalar, ?dtype, ?device, ?backend) = 
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
+        a.fullLike([], scalar, ?dtype=dtype, ?device=device, ?backend=backend)
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
@@ -392,7 +396,7 @@ type Tensor =
         elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.AddTT(b)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT(a,b)
@@ -402,7 +406,7 @@ type Tensor =
         elif a.dim = 0 then
             let inline fRaw(a,b:RawTensor) = b.AddTT0(a)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.expand(b.shape)
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddTT0(b,a)
@@ -412,7 +416,7 @@ type Tensor =
         elif b.dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.AddTT0(b)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
             let inline dfTensorFwdCT(cp,bp,bd:Tensor) = bd.expand(a.shape)
             let inline dfTensorRevTT(a,b) = AddTT0(a,b)
@@ -422,9 +426,9 @@ type Tensor =
         elif a.dim = 2 && b.dim = 1 && a.shape.[1] = b.shape.[0] then
             let inline fRaw(a:RawTensor,b) = a.AddT2T1(b)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
             let inline dfTensorFwdTC(cp,ap,ad) = ad
-            let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike() + bd
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = cp.zerosLike() + bd
             let inline dfTensorRevTT(a,b) = AddT2T1(a,b)
             let inline dfTensorRevTC(a,b) = AddT2T1Const(a)
             let inline dfTensorRevCT(a,b) = AddT2ConstT1(b)
@@ -432,7 +436,7 @@ type Tensor =
         elif a.dim = 1 && b.dim = 2 && a.shape.[0] = b.shape.[1] then
             let inline fRaw(a,b:RawTensor) = b.AddT2T1(a)
             let inline fTensor(a,b) = a + b
-            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad + bd
+            let inline dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
             let inline dfTensorFwdTC(cp:Tensor,ap,ad) = ad + cp.zerosLike()
             let inline dfTensorFwdCT(cp,bp,bd) = bd
             let inline dfTensorRevTT(a,b) = AddT2T1(b,a)
@@ -444,10 +448,10 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded + bExpanded
-    static member (+) (a:Tensor, b) = a + a.like(b)
-    static member (+) (a, b:Tensor) = b.like(a) + b
+    static member (+) (a:Tensor, b) = a + a.scalarLike(b)
+    static member (+) (a, b:Tensor) = b.scalarLike(a) + b
     member a.add(b:Tensor) = a + b
-    member a.add(b) = a + a.like(b)
+    member a.add(b) = a + a.scalarLike(b)
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
@@ -490,10 +494,10 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded - bExpanded
-    static member (-) (a:Tensor, b) = a - a.like(b)
-    static member (-) (a, b:Tensor) = b.like(a) - b
+    static member (-) (a:Tensor, b) = a - a.scalarLike(b)
+    static member (-) (a, b:Tensor) = b.scalarLike(a) - b
     member a.sub(b:Tensor) = a - b
-    member a.sub(b) = a - a.like(b)
+    member a.sub(b) = a - a.scalarLike(b)
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
@@ -536,10 +540,10 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded * bExpanded
-    static member (*) (a:Tensor, b) = a * a.like(b)
-    static member (*) (a, b:Tensor) = b.like(a) * b
+    static member (*) (a:Tensor, b) = a * a.scalarLike(b)
+    static member (*) (a, b:Tensor) = b.scalarLike(a) * b
     member a.mul(b:Tensor) = a * b
-    member a.mul(b) = a * a.like(b)
+    member a.mul(b) = a * a.scalarLike(b)
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
@@ -582,10 +586,10 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded / bExpanded
-    static member (/) (a:Tensor, b) = a / a.like(b)
-    static member (/) (a, b:Tensor) = b.like(a) / b
+    static member (/) (a:Tensor, b) = a / a.scalarLike(b)
+    static member (/) (a, b:Tensor) = b.scalarLike(a) / b
     member a.div(b:Tensor) = a / b
-    member a.div(b) = a / a.like(b)
+    member a.div(b) = a / a.scalarLike(b)
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
@@ -596,7 +600,7 @@ type Tensor =
         elif a.shape = b.shape then
             let inline fRaw(a:RawTensor,b) = a.PowTT(b)
             let inline fTensor(a:Tensor,b:Tensor) = a ** b
-            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowTT(a,b)
@@ -606,7 +610,7 @@ type Tensor =
         elif a.dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowT0T(b)
             let inline fTensor(a:Tensor,b:Tensor) = a ** b
-            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowT0T(a,b)
@@ -616,7 +620,7 @@ type Tensor =
         elif b.dim = 0 then
             let inline fRaw(a:RawTensor,b) = a.PowTT0(b)
             let inline fTensor(a:Tensor,b:Tensor) = a ** b
-            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp,bd) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
             let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
             let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
             let inline dfTensorRevTT(a,b) = PowTT0(a,b)
@@ -629,20 +633,20 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
-    static member Pow (a:Tensor, b:float) = a ** a.like(b)
-    static member Pow (a:Tensor, b:int) = a ** a.like(b)
-    static member Pow (a:Tensor, b) = a ** a.like(b)
-    static member Pow (a:float, b:Tensor) = b.like(a) ** b
-    static member Pow (a:int, b:Tensor) = b.like(a) ** b
-    static member Pow (a, b:Tensor) = b.like(a) ** b
+    static member Pow (a:Tensor, b:float) = a ** a.scalarLike(b)
+    static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
+    static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
+    static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
+    static member Pow (a:int, b:Tensor) = b.scalarLike(a) ** b
+    static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
     member a.pow(b:Tensor) = a ** b
-    member a.pow(b) = a ** a.like(b)
+    member a.pow(b) = a ** a.scalarLike(b)
 
     member a.matmul (b:Tensor) =
         checkCanMatmul a.shape b.shape
         let inline fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
         let inline fTensor(a:Tensor,b) = a.matmul(b)
-        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.matmul(bp) + ap.matmul(bd)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
         let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
         let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
         let inline dfTensorRevTT(a,b) = MatMulT2T2(a,b)
@@ -876,7 +880,7 @@ type Tensor =
     member a.relu() =
         let inline fRaw(a:RawTensor) = a.ReluT()
         let inline fTensor(a:Tensor) = a.relu()
-        let inline dfTensorFwd(cp,ap:Tensor,ad) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
         let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
@@ -1007,7 +1011,7 @@ type Tensor =
         checkCanAddSlice a.shape location b.shape
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
-        let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp,bd) = ad.addSlice(location, bd)
+        let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
         let inline dfTensorFwdTC(cp,ap,ad) = ad
         let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
         let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
@@ -1112,7 +1116,7 @@ type Tensor =
             b <- b.dilate([|1;1;dilation|])
         let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
         let inline fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
-        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
         let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
         let inline dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
         let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
@@ -1172,7 +1176,7 @@ type Tensor =
             b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
         let inline fRaw(a:RawTensor,b) = a.Conv2D(b, stride, padding)
         let inline fTensor(a:Tensor,b) = a.conv2d(b, stride, padding)
-        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, stride, padding) + ap.conv2d(bd, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv2d(bp, stride, padding) + ap.conv2d(bd, stride, padding)
         let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, stride, padding)
         let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, stride, padding)
         let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, stride, padding)

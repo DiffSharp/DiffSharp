@@ -41,12 +41,13 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
     override t.GetSlice(fullBounds:int[,]) =
         // if fullBounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-3 fullBounds" t.Dim
         // printfn "rfullBounds\n%A" fullBounds
-        let mutable shape = [|for i=0 to (fullBounds.GetLength(0) - 1) do
-                                let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
-                                if fullBounds.[i, 2] = 1 then
-                                    if len > 1 then yield len // if len=1 then squeeze this dimension
-                                else
-                                    yield len|]
+        let shape =
+            [|for i=0 to (fullBounds.GetLength(0) - 1) do
+                let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
+                if fullBounds.[i, 2] = 1 then
+                    if len > 1 then yield len // if len=1 then squeeze this dimension
+                else
+                    yield len|]
         // printfn "rshape\n%A" shape
         let array = Array.zeroCreate (shapeLength shape)
         let mutable arrayi = 0
