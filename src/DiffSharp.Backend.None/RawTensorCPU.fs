@@ -376,7 +376,8 @@ module internal RawTensorCPU =
             let result = Array.init numSamples (fun _ -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p)))
             (result, [|numSamples|])
         else
-            let p = t.ToArray() :?> float32[,] |> Array2D.map float
+            // TODO - this was float32 - why did this pass tests - add a test for other types which covers this branch?
+            let p = t.ToArray() :?> ^T[,] |> Array2D.map float
             let d1 = p.GetLength(0)
             let result = Array.init (d1 * numSamples - 1) (fun i -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p.[(i%numSamples),*])))
             (result, [| d1; numSamples |]) 
