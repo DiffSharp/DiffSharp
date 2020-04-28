@@ -1299,11 +1299,23 @@ type TestTensor () =
 
       // Integer tensors support integer division
       for info in infosIntegral do 
-          let t1 = info.mkTensor([2; 3; 4])
-          let t2 = info.mkTensor([1; 2; 3])
-          let i = t1 / t2
-          let iCorrect = dsharp.tensor([2; 1; 1], dtype=info.dtype)
-          Assert.AreEqual(iCorrect, i)
+          let t1a = info.mkTensor([2; 3; 4])
+          let t1b = info.mkTensor([1; 2; 3])
+          let i1 = t1a / t1b
+          let i1Correct = dsharp.tensor([2; 1; 1], dtype=info.dtype)
+          Assert.AreEqual(i1Correct, i1)
+
+          let t2a = info.mkTensor(6)
+          let t2b = info.mkTensor([1; 2; 3])
+          let i2 = t2a / t2b
+          let i2Correct = dsharp.tensor([6; 3; 2], dtype=info.dtype)
+          Assert.AreEqual(i2Correct, i2)
+
+          let t3a = info.mkTensor([6; 12; 18])
+          let t3b = info.mkTensor(3)
+          let i3 = t3a / t3b
+          let i3Correct = dsharp.tensor([2; 4; 6], dtype=info.dtype)
+          Assert.AreEqual(i3Correct, i3)
 
       // Bool tensors don't support /
       //
@@ -1320,22 +1332,31 @@ type TestTensor () =
         let t1 = info.mkTensor([1.; 2.]) ** info.mkTensor([3.; 4.])
         let t1Correct = info.mkTensor([1.; 16.])
 
+        Assert.AreEqual(t1Correct, t1)
+        Assert.AreEqual(t1.dtype, info.dtype)
         let t2 = info.mkTensor([1.; 2.]) ** info.mkTensor(5.)
         let t2Correct = info.mkTensor([1.; 32.])
+
+        Assert.AreEqual(t2Correct, t2)
+        Assert.AreEqual(t2.dtype, info.dtype)
 
         let t3 = info.mkTensor(5.) ** info.mkTensor([1.; 2.])
         let t3Correct = info.mkTensor([5.; 25.])
 
-        Assert.AreEqual(t1Correct, t1)
-        Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t3Correct, t3)
-        Assert.AreEqual(t1.dtype, info.dtype)
-        Assert.AreEqual(t2.dtype, info.dtype)
         Assert.AreEqual(t3.dtype, info.dtype)
 
       for dtype in dtypesIntegralAndBool do
-          let t = dsharp.tensor([1.0], dtype=dtype)
-          isInvalidOp(fun () -> t ** t)
+          let t1 = dsharp.tensor([1.0], dtype=dtype)
+          isInvalidOp(fun () -> t1 ** t1)
+
+          let t2a = dsharp.tensor([1.0], dtype=dtype)
+          let t2b = dsharp.tensor(1.0, dtype=dtype)
+          isInvalidOp(fun () -> t2a ** t2b)
+
+          let t3a = dsharp.tensor(1.0, dtype=dtype)
+          let t3b = dsharp.tensor([1.0], dtype=dtype)
+          isInvalidOp(fun () -> t3a ** t3b)
 
     [<Test>]
     member this.TestTensorMatMulT2T2 () =
