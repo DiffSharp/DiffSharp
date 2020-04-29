@@ -1,5 +1,6 @@
 namespace DiffSharp
-open DiffSharp.Backend
+
+open DiffSharp.Backends
 open DiffSharp.Util
 
 // Tensor operations

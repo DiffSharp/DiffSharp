@@ -1,7 +1,6 @@
 namespace DiffSharp.Distributions
 open DiffSharp
 open DiffSharp.Util
-open DiffSharp.Backend
 
 [<AbstractClass>]
 type Distribution() =

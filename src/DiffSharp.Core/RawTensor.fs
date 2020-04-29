@@ -1,108 +1,8 @@
-namespace DiffSharp.Backend
+namespace DiffSharp.Backends
 
 open System
+open DiffSharp
 open DiffSharp.Util
-
-type Device =
-    | CPU
-    | GPU
-
-    member internal x.Code =
-        match x with
-        | CPU -> 0x000
-        | GPU -> 0x001
-
-    member internal x.Name =
-        match x with
-        | CPU -> "CPU"
-        | GPU -> "GPU"
-
-[<RequireQualifiedAccess>]
-type Backend =
-    | None
-    | OpenBLAS
-    | Torch
-
-    member internal x.Code = 
-        match x with 
-        | None -> 0x000
-        | OpenBLAS  -> 0x010
-        | Torch -> 0x020
-
-    member x.Name = 
-        match x with 
-        | None -> "None"
-        | OpenBLAS -> "OpenBLAS"
-        | Torch -> "Torch"
-
-type DType =
-    | Float32
-    | Float64
-    | Int8
-    | Int16
-    | Int32
-    | Int64
-    | Bool
-
-    member internal x.Code =
-        match x with
-        | Float32  -> 0x100
-        | Float64 -> 0x200
-        | Int8 -> 0x300
-        | Int16 -> 0x400
-        | Int32 -> 0x500
-        | Int64 -> 0x600
-        | Bool -> 0x700
-
-    member internal x.Name =
-        match x with
-        | Float32 -> "Float32"
-        | Float64 -> "Float64"
-        | Int8 -> "Int8"
-        | Int16 -> "Int16"
-        | Int32 -> "Int32"
-        | Int64 -> "Int64"
-        | Bool -> "Bool"
-
-    /// Find the shape into which shape1 and shape2 can be expanded
-    static member Widen (dtype1: DType, dtype2: DType) =
-        if dtype1 = dtype2 then dtype1
-        else
-            match dtype1, dtype2 with 
-            | Float64, _ | _, Float64 -> Float64
-            | Float32, _ | _, Float32 -> Float32
-            | Int64, _ | _, Int64 -> Int64
-            | Int32, _ | _, Int32 -> Int32
-            | Int16, _ | _, Int16 -> Int16
-            | Int8, _ | _, Int8 -> Int8
-            | _ -> Bool
-
-[<AutoOpen>]
-module internal Utils =
-    let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBool (value:obj) : (^T[] * int[]) = 
-        let values, shape = value |> flatArrayAndShape<float32>
-        if notNull values then (values |> Array.map ofFloat32, shape) else 
-        let values, shape = value |> flatArrayAndShape<double>
-        if notNull values then (values |> Array.map ofFloat64, shape) else
-        let values, shape = value |> flatArrayAndShape<int32>
-        if notNull values then (values |> Array.map ofInt32, shape) else
-        let values, shape = value |> flatArrayAndShape<int64>
-        if notNull values then (values |> Array.map ofInt64, shape) else
-        let values, shape = value |> flatArrayAndShape<int8>
-        if notNull values then (values |> Array.map ofInt8, shape) else
-        let values, shape = value |> flatArrayAndShape<int16>
-        if notNull values then (values |> Array.map ofInt16, shape) else
-        let values, shape = value |> flatArrayAndShape<bool>
-        if notNull values then (values |> Array.map ofBool, shape) else
-        invalidArg "value" "Cannot convert value to RawTensorCPU"
-
-    let dataOfValuesForFloat32 (value:obj) = dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) (value) 
-    let dataOfValuesForFloat64 (value:obj) = dataOfValues double double double double double double (fun x -> if x then 1.0 else 0.0) (value) 
-    let dataOfValuesForInt8 (value:obj) = dataOfValues int8 int8 int8 int8 int8 int8 (fun x -> if x then 1y else 0y) (value) 
-    let dataOfValuesForInt16 (value:obj) = dataOfValues int16 int16 int16 int16 int16 int16 (fun x -> if x then 1s else 0s) (value) 
-    let dataOfValuesForInt32 (value:obj) = dataOfValues int32 int32 int32 int32 int32 int32 (fun x -> if x then 1 else 0) (value)
-    let dataOfValuesForInt64 (value:obj) = dataOfValues int64 int64 int64 int64 int64 int64 (fun x -> if x then 1L else 0L) (value)
-    let dataOfValuesForBool (value:obj) = dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> i <> 0y) (fun i -> i <> 0s) (fun i -> i <> 0) (fun i -> i <> 0L) id (value) 
 
 type [<AbstractClass>]
      RawTensorStatics() = 
@@ -192,20 +92,40 @@ and [<AbstractClass>]
         statics.RandomNormal(shape|>Seq.toArray)
 
     static member Create(values: obj, ?dtype, ?device, ?backend) =
-        let dtype = defaultArg dtype Float32
-        let statics = RawTensorStatics.Get(dtype=dtype, ?device=device, ?backend=backend)
-
         // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
-        let box1 (a,b) = ((a :> Array), b)
-        let data, shape =
+        let data, shape, dtype =
             match dtype with 
-            | Int64 -> dataOfValuesForInt64 values |> box1
-            | Int32 -> dataOfValuesForInt32 values |> box1
-            | Int16 -> dataOfValuesForInt16 values |> box1
-            | Int8 -> dataOfValuesForInt8 values |> box1
-            | Bool -> dataOfValuesForBool values |> box1
-            | Float64 -> dataOfValuesForFloat64 values |> box1
-            | Float32 -> dataOfValuesForFloat32 values |> box1
+            | Some DType.Int64 ->
+                let a,s = dataOfValuesForInt64 values
+                (a :> Array), s, DType.Int64
+            | Some DType.Int32 ->
+                let a,s = dataOfValuesForInt32 values
+                (a :> Array), s, DType.Int32
+            | Some DType.Int16 ->
+                let a,s = dataOfValuesForInt16 values
+                (a :> Array), s, DType.Int16
+            | Some DType.Int8 ->
+                let a,s = dataOfValuesForInt8 values
+                (a :> Array), s, DType.Int8
+            | Some DType.Bool ->
+                let a,s = dataOfValuesForBool values
+                (a :> Array), s, DType.Bool
+            | Some DType.Float64 ->
+                let a,s = dataOfValuesForFloat64 values
+                (a :> Array), s, DType.Float64
+            | Some DType.Float32 ->
+                let a,s = dataOfValuesForFloat32 values
+                (a :> Array), s, DType.Float32
+            | None ->
+                // Prefer Bool tensor if all bool
+                match values |> tryFlatArrayAndShape<bool> with
+                | Some (values, shape) -> ((values :> Array), shape, DType.Bool)
+                | _ ->
+                // Otherwise prefer float32
+                let a,s = dataOfValuesForFloat32 values 
+                (a :> Array), s, DType.Float32
+
+        let statics = RawTensorStatics.Get(dtype=dtype, ?device=device, ?backend=backend)
 
         statics.CreateFromFlatArray(data, shape)
 

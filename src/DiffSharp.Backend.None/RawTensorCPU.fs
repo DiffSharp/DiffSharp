@@ -1,7 +1,8 @@
 namespace rec DiffSharp.Backend.None
 
 open System
-open DiffSharp.Backend
+open DiffSharp
+open DiffSharp.Backends
 open DiffSharp.Util
 
 #nowarn "77" // use of op_Explicit
@@ -553,7 +554,7 @@ module internal RawTensorCPU =
     let inline Conv1D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride, padding) : RawTensorCPU< ^T > =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        checkCanConv1d t1.Shape t2.Shape stride padding 1
+        checkCanConv1d t1.DType t2.DType t1.Shape t2.Shape stride padding 1
         let t1 =
             if padding = 0 then
                 t1
@@ -594,7 +595,7 @@ module internal RawTensorCPU =
     let inline Conv2D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride: int[], padding: int[]) : RawTensorCPU< ^T > =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
-        checkCanConv2d t1.Shape t2.Shape stride padding [|1;1|]
+        checkCanConv2d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1|]
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
                 t1
@@ -809,7 +810,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
 
 /// The concrete implementation of RawTensorStatics for Float32 data.
-and RawTensorFloat32CPUStatics() = 
+type RawTensorFloat32CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -884,7 +885,7 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
 
-and RawTensorFloat64CPUStatics() = 
+type RawTensorFloat64CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -960,7 +961,7 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
     override t.AcosT() = opNotSupported t.DType
     override t.AtanT() = opNotSupported t.DType
 
-and RawTensorInt8CPUStatics() = 
+type RawTensorInt8CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -1036,7 +1037,7 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
     override t.AcosT() = opNotSupported t.DType
     override t.AtanT() = opNotSupported t.DType
 
-and RawTensorInt16CPUStatics() = 
+type RawTensorInt16CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -1112,7 +1113,7 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     override t.AcosT() = opNotSupported t.DType
     override t.AtanT() = opNotSupported t.DType
 
-and RawTensorInt32CPUStatics() = 
+type RawTensorInt32CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -1188,7 +1189,7 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
     override t.AcosT() = opNotSupported t.DType
     override t.AtanT() = opNotSupported t.DType
 
-and RawTensorInt64CPUStatics() = 
+type RawTensorInt64CPUStatics() = 
 
     inherit RawTensorStatics()
 
@@ -1264,7 +1265,7 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
     override t.AcosT() = opNotSupported t.DType
     override t.AtanT() = opNotSupported t.DType
 
-and RawTensorBoolCPUStatics() = 
+type RawTensorBoolCPUStatics() = 
 
     inherit RawTensorStatics()
 

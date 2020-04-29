@@ -2,7 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
-open DiffSharp.Backend
+open DiffSharp.Backends
 open System
 
 // This captures the expected semantis of different DTypes
@@ -48,6 +48,7 @@ type TestTensor () =
     let infosIntegralAndFloatingPoint = [ for dtype in dtypesIntegralAndFloatingPoint -> DTypeInfo(dtype)]
     let infosAll = [ for dtype in dtypesAll -> DTypeInfo(dtype)]
 
+    let isException f = Assert.Throws<Exception>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
 
     [<SetUp>]
@@ -123,6 +124,18 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorCreateAllTensorTypesFromBoolData() =
         this.TestTensorCreateAllTensorTypesGeneric (fun i -> abs i >= 1.0)
+
+        let t1 = dsharp.tensor([true, true])
+        Assert.AreEqual(DType.Bool, t1.dtype)
+
+        let t2 = dsharp.tensor([true, false])
+        Assert.AreEqual(DType.Bool, t2.dtype)
+
+        let t3 = dsharp.tensor([true; false])
+        Assert.AreEqual(DType.Bool, t3.dtype)
+
+        let t4 = dsharp.tensor([true; false], dtype=DType.Float32)
+        Assert.AreEqual(DType.Float32, t4.dtype)
 
     [<Test>]
     member this.TestTensorCreate0 () =
@@ -776,7 +789,7 @@ type TestTensor () =
         // Test all pairs of non-bool types
         for dtype1 in dtypesIntegralAndFloatingPoint do 
             for dtype2 in dtypesIntegralAndFloatingPoint do 
-                let dtypeRes = DType.Widen(dtype1, dtype2)
+                let dtypeRes = DType.widen dtype1 dtype2
                 let t1 = dsharp.tensor([1.; 2.], dtype=dtype1) + dsharp.tensor([3.; 4.], dtype=dtype2)
                 let t1Correct = dsharp.tensor([4.; 6.], dtype=dtypeRes)
 
@@ -1117,7 +1130,7 @@ type TestTensor () =
         // Test all pairs of non-bool types, for widening
         for dtype1 in dtypesIntegralAndFloatingPoint do 
             for dtype2 in dtypesIntegralAndFloatingPoint do 
-                let dtypeRes = DType.Widen(dtype1, dtype2)
+                let dtypeRes = DType.widen dtype1 dtype2
 
                 let t1 = dsharp.tensor([1.; 2.], dtype=dtype1) - dsharp.tensor([3.; 4.], dtype=dtype2)
                 let t1Correct = dsharp.tensor([-2.; -2.], dtype=dtypeRes)
@@ -1166,19 +1179,19 @@ type TestTensor () =
     member this.TestTensorMulTT () =
         // Test all pairs of non-bool types
         for dtype1 in dtypesIntegralAndFloatingPoint do 
-          for dtype2 in dtypesIntegralAndFloatingPoint do 
-            let dtypeRes = DType.Widen(dtype1, dtype2)
-            let t1 = dsharp.tensor([1.; 2.], dtype=dtype1) * dsharp.tensor([3.; 4.], dtype=dtype2)
-            let t1Correct = dsharp.tensor([3.; 8.], dtype=dtypeRes)
+            for dtype2 in dtypesIntegralAndFloatingPoint do 
+                let dtypeRes = DType.widen dtype1 dtype2
+                let t1 = dsharp.tensor([1.; 2.], dtype=dtype1) * dsharp.tensor([3.; 4.], dtype=dtype2)
+                let t1Correct = dsharp.tensor([3.; 8.], dtype=dtypeRes)
 
-            Assert.AreEqual(t1Correct, t1)
-            Assert.AreEqual(t1.dtype, dtypeRes)
+                Assert.AreEqual(t1Correct, t1)
+                Assert.AreEqual(t1.dtype, dtypeRes)
 
-            let t2 = dsharp.tensor([1.; 2.], dtype=dtype1) * dsharp.tensor(5., dtype=dtype2)
-            let t2Correct = dsharp.tensor([5.; 10.], dtype=dtypeRes)
+                let t2 = dsharp.tensor([1.; 2.], dtype=dtype1) * dsharp.tensor(5., dtype=dtype2)
+                let t2Correct = dsharp.tensor([5.; 10.], dtype=dtypeRes)
 
-            Assert.AreEqual(t2Correct, t2)
-            Assert.AreEqual(t2.dtype, dtypeRes)
+                Assert.AreEqual(t2Correct, t2)
+                Assert.AreEqual(t2.dtype, dtypeRes)
 
         // Test scalar broadcasting 
         for dtype in dtypesIntegralAndFloatingPoint do 
@@ -1606,6 +1619,27 @@ type TestTensor () =
         Assert.True(t3b1.allclose(t3b1Correct, 0.01))
         Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
 
+        // check intergral types
+        for dtype in dtypesIntegral do 
+            let x = dsharp.ones([1;4;4], dtype=dtype)
+            let y = dsharp.ones([1;4;4], dtype=dtype)
+            let z = dsharp.conv1d(x,y)
+            let zCorrect = dsharp.tensor([[[16]]], dtype=dtype)
+            Assert.AreEqual(z, zCorrect)
+
+        // check types must always match
+        for dtype1 in dtypesAll do 
+          for dtype2 in dtypesAll do 
+            if dtype1 <> dtype2 then 
+                let x = dsharp.zeros([1;4;4], dtype=dtype1)
+                let y = dsharp.zeros([1;4;4], dtype=dtype2)
+                isException(fun () -> dsharp.conv1d(x,y))
+
+        for dtype in dtypesBool do 
+            let x = dsharp.zeros([1;4;4], dtype=dtype)
+            let y = dsharp.zeros([1;4;4], dtype=dtype)
+            isInvalidOp(fun () -> dsharp.conv1d(x,y))
+
     [<Test>]
     member this.TestTensorConv2D () =
       for info in infosFloatingPoint do 
@@ -1927,6 +1961,27 @@ type TestTensor () =
         Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01))
         Assert.True(t3b1.allclose(t3b1Correct, 0.01))
         Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
+
+        // check intergral types
+        for dtype in dtypesIntegral do 
+            let x = dsharp.ones([1;1;4;4], dtype=dtype)
+            let y = dsharp.ones([1;1;4;4], dtype=dtype)
+            let z = dsharp.conv2d(x, y, stride=[1;1])
+            let zCorrect = dsharp.tensor([[[[16]]]], dtype=dtype)
+            Assert.AreEqual(z, zCorrect)
+
+        // check types must always match
+        for dtype1 in dtypesAll do 
+          for dtype2 in dtypesAll do 
+            if dtype1 <> dtype2 then 
+                let x = dsharp.zeros([1;1;4;4], dtype=dtype1)
+                let y = dsharp.zeros([1;1;4;4], dtype=dtype2)
+                isException(fun () -> dsharp.conv2d(x,y, stride=[1;1]))
+
+        for dtype in dtypesBool do 
+            let x = dsharp.zeros([1;1;4;4], dtype=dtype)
+            let y = dsharp.zeros([1;1;4;4], dtype=dtype)
+            isInvalidOp(fun () -> dsharp.conv2d(x,y, stride=[1;1]))
 
     [<Test>]
     member this.TestTensorNegT () =

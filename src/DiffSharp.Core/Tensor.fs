@@ -1,5 +1,5 @@
 ﻿namespace DiffSharp
-open DiffSharp.Backend
+open DiffSharp.Backends
 open DiffSharp.Util
 open System
 open System.IO
@@ -303,12 +303,13 @@ type Tensor =
             t.GetSlice(bounds)
 
     static member create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
-        let array, shape = value |> flatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
-        if notNull array then 
+        let res = value |> tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        match res with
+        | Some (array, shape) -> 
             let array = array |> Array.map float32
             let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
-        else
+        | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
@@ -389,7 +390,7 @@ type Tensor =
 
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.Widen(a.dtype, b.dtype)
+            let tnew = DType.widen a.dtype b.dtype
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             aCast + bCast
@@ -455,7 +456,7 @@ type Tensor =
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.Widen(a.dtype, b.dtype)
+            let tnew = DType.widen a.dtype b.dtype
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             aCast - bCast
@@ -501,7 +502,7 @@ type Tensor =
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.Widen(a.dtype, b.dtype)
+            let tnew = DType.widen a.dtype b.dtype
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             aCast * bCast
@@ -547,7 +548,7 @@ type Tensor =
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.Widen(a.dtype, b.dtype)
+            let tnew = DType.widen a.dtype b.dtype
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             aCast / bCast
@@ -593,7 +594,7 @@ type Tensor =
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.Widen(a.dtype, b.dtype)
+            let tnew = DType.widen a.dtype b.dtype
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             Tensor.Pow (aCast, bCast)
@@ -1110,7 +1111,7 @@ type Tensor =
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
-        checkCanConv1d a.shape b.shape stride padding dilation
+        checkCanConv1d a.dtype b.dtype  a.shape b.shape stride padding dilation
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
@@ -1170,7 +1171,7 @@ type Tensor =
         let stride = defaultArg stride (seq [1; 1]) |> Array.ofSeq
         let padding = defaultArg padding (seq [0; 0]) |> Array.ofSeq
         let dilation = defaultArg dilation (seq [1; 1]) |> Array.ofSeq
-        checkCanConv2d a.shape b.shape stride padding dilation
+        checkCanConv2d a.dtype b.dtype a.shape b.shape stride padding dilation
         let mutable b = b
         if dilation.[0] > 1 || dilation.[1] > 1 then
             b <- b.dilate([|1; 1; dilation.[0]; dilation.[1]|])
