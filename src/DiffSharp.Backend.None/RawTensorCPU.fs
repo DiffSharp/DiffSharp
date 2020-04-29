@@ -1,30 +1,18 @@
 namespace DiffSharp.Backend.None
 
-open DiffSharp
 open DiffSharp.Backend
 open DiffSharp.Util
 
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
-    inherit RawTensor(shape, Float32, CPU, DiffSharp.Backend.Backend.None)
+    inherit RawTensor(shape, Float32, CPU, Backend.None)
 
     member __.Values = values
 
     member private t.IndexToFlatIndex(index:int[]) =
-        let mutable flatIndex = 0
-        for i=0 to index.Length - 1 do
-            let v = if i = index.Length - 1 then 1 else (Array.reduce (*) t.Shape.[i+1..])
-            flatIndex <- flatIndex + index.[i] * v
-        flatIndex
+        indexToFlatIndex t.Shape index
     
     member private t.FlatIndexToIndex(flatIndex:int) =
-        let index = Array.create t.Dim 0
-        let mutable mul = t.Nelement
-        let mutable fi = flatIndex
-        for i=t.Dim downto 1 do
-            mul <- mul / t.Shape.[t.Dim-i]
-            index.[i-1] <- fi / mul
-            fi <- fi - index.[i-1] * mul
-        index |> Array.rev
+        flatIndexToIndex t.Shape flatIndex
 
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =
@@ -63,7 +51,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(array, shape)
 
     override t1.CompareTo(t2) =
-        compare (t1.ToValue():?>float32) (t2.ToValue():?>float32)
+        compare (t1.ToScalar():?>float32) (t2.ToScalar():?>float32)
     
     override t.Clone() = upcast RawTensorFloat32CPU(Array.copy t.Values, Array.copy t.Shape)
     override t.CreateFromScalar(value, shape) =
@@ -75,8 +63,9 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t.Create(values) = upcast RawTensorFloat32CPU.Create(values)
     override t.Zero() = upcast RawTensorFloat32CPU.Zero()
     override t.Zeros(shape) = upcast RawTensorFloat32CPU.Zeros(shape)
-    override t.One() = upcast RawTensorFloat32CPU([|1.f|], [||])
+    override t.One() = upcast RawTensorFloat32CPU.One()
     override t.Ones(shape) = upcast RawTensorFloat32CPU.Ones(shape)
+    override t.Full(shape, value) = upcast RawTensorFloat32CPU.Full(shape, value)
     override t.Random(shape) = upcast RawTensorFloat32CPU.Random(shape)
     override t.RandomNormal(shape) = upcast RawTensorFloat32CPU.RandomNormal(shape)
 
@@ -121,7 +110,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override x.ComputeHash() = hash shape + hash values
 
-    override t.ToValue() =
+    override t.ToScalar() =
         match t.Dim with
         | 0 -> upcast t.Values.[0]
         | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
@@ -172,34 +161,107 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
         | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override t1.ApproximatelyEquals(t2:RawTensor, tolerance) =
-        let tolerance = float32 <| tolerance
+    override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) =
+        let relativeTolerance = float32 <| relativeTolerance
+        let absoluteTolerance = float32 <| absoluteTolerance
         match t2 with
-        | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysApproximatelyEqual tolerance t1.Values t2.Values
+        | :? RawTensorFloat32CPU as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
         | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
 
-    override __.StackTs(tensors) =
-        let tensors = tensors |> Seq.toList
-        let values, shapes = tensors |> List.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> List.unzip
-        if not (allEqual shapes) then failwith "Expecting Tensors with same shape"
-        let n = tensors |> List.length
-        let m = shapeLength shapes.[0]
-        let result = Array.create (n * m) 0.f
-        for i=0 to n-1 do
-            for j=0 to m-1 do
-                result.[i*m+j] <-values.[i].[j]
-        upcast RawTensorFloat32CPU(result, Array.append [|n|] shapes.[0])
+    override __.StackTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
+        checkCanStack shapes
+        let shape = shapes.[0]
+        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
+        let n = tensors |> Array.length
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let m = m1 * m2
+        let result = Array.zeroCreate (n * m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            result.[i] <-values.[i2].[j2]
 
-    override t.UnstackT() =
-        if t.Dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
-        let n = t.Shape.[0]
-        let unstackedShape = if t.Dim = 1 then [||] else t.Shape |> Array.skip 1
-        let unstackedLength = shapeLength unstackedShape
-        Array.init n (fun i -> Array.init unstackedLength (fun j -> t.Values.[i*unstackedLength+j]))
-        |> Array.map (fun v -> upcast RawTensorFloat32CPU(v, unstackedShape))
+        let outShape = [| yield! shape1; yield n; yield! shape2 |]
+        upcast RawTensorFloat32CPU(result, outShape)
+
+    override t.UnstackT(dim) =
+        checkCanUnstack t.Dim
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape = t.Shape
+        let n = shape.[dim]
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m2 = shapeLength shape2
+        let unstackedShape = Array.append shape1 shape2
+        let m = m1 * m2
+        let values = t.Values
+        let results = Array.init n (fun _ -> Array.zeroCreate m)
+        for i=0 to (n*m)-1 do
+            let chunk = i/m2
+            let i2 = chunk%n
+            let j2 = (chunk/n)*m2+i%m2
+            results.[i2].[j2] <- values.[i]
+        results |> Array.map (fun rvalues -> upcast RawTensorFloat32CPU(rvalues, unstackedShape))
+
+    override __.CatTs(tensors, dim) =
+        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorFloat32CPU).Values, t.Shape) |> Array.unzip
+        let n = shapes.Length
+        if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
+        let shape = shapes.[0]
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape2) then
+            invalidArg "tensors" "Expecting Tensors with similar shapes"
+        let m1 = shapeLength shape1
+        let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
+        let m3 = shapeLength shape2
+        let m = m1 * m2 * m3
+        let result = Array.zeroCreate m
+        let outShape = [| yield! shape1; yield m2; yield! shape2 |]
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = shapes.[k].[dim]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    result.[i+j2] <-values.[k].[b+j2]
+                i <- i + d*m3
+
+        upcast RawTensorFloat32CPU(result, outShape)
+
+    override t.SplitT(sizes, dim) =
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape = t.Shape
+        if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
+        let n = sizes.Length
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let m1 = shapeLength shape1
+        let m3 = shapeLength shape2
+        let values = t.Values
+        let results = Array.init n (fun k -> Array.zeroCreate (m1 * sizes.[k] * m3))
+        let mutable i = 0
+        for j1 = 0 to m1-1 do 
+            for k = 0 to n-1 do
+                let d = sizes.[k]
+                let b = j1*m3*d
+                for j2 = 0 to d*m3-1 do
+                    results.[k].[b+j2] <-values.[i+j2]
+                i <- i + d*m3
+
+        results |> Array.mapi (fun k rvalues -> 
+            let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
+            upcast RawTensorFloat32CPU(rvalues, splitShape))
 
     override t.TransposeT() =
-        if t.Dim < 2 then failwith "Expecting at least a 2D tensor"
+        checkCanTranspose t.Dim
         let oldShape = t.Shape
         let batch = oldShape.[0..oldShape.Length-3]
         let nrows = oldShape.[oldShape.Length-2]
@@ -222,9 +284,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
-        if dims.Length > t.Dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length t.Dim
-        if hasDuplicates dims then failwithf "Expecting dims (list of dimension indices to flip) without repetition, received %A" dims
-        if (Array.max dims) >= t.Dim then failwithf "Expecting dims (list of dimension indices to flip) where all indices are less than the tensor dimension, received %A, %A" dims t.Dim
+        checkCanFlip t.Dim dims
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
@@ -241,8 +301,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             upcast result
 
     override t.DilateT(dilations:int[]) =
-        if dilations.Length <> t.Dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length t.Dim
-        if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
+        checkCanDilate t.Dim dilations
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
@@ -275,7 +334,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
             upcast result        
 
     override t.ViewT(shape:int[]) =
-        if shapeLength t.Shape <> shapeLength shape then failwithf "Cannot view Tensor of shape %A as shape %A" t.Shape shape
+        checkCanView t.Shape shape
         let result = Array.copy t.Values
         upcast RawTensorFloat32CPU(result, shape)
 
@@ -293,6 +352,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     static member Ones(shape:int[]) =
         let values = Array.create (shapeLength shape) 1.f
+        RawTensorFloat32CPU(values, shape)
+
+    static member Full(shape:int[], value:obj) =
+        let value = System.Convert.ToSingle(value)
+        let values = Array.create (shapeLength shape) value
         RawTensorFloat32CPU(values, shape)
 
     static member Random(shape:int[])  =
@@ -342,6 +406,16 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let result = Array.map2 (fun t1 t2 -> if t1 >= t2 then 1.f else 0.f) t1value t2value
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
+    override t1.IsInfT() =
+        let t1value = t1.Values
+        let result = Array.map (fun t -> if System.Single.IsInfinity(t) then 1.f else 0.f) t1value
+        upcast RawTensorFloat32CPU(result, t1.Shape)
+
+    override t1.IsNaNT() =
+        let t1value = t1.Values
+        let result = Array.map (fun t -> if System.Single.IsNaN(t) then 1.f else 0.f) t1value
+        upcast RawTensorFloat32CPU(result, t1.Shape)
+
     override t.MaxIndexT() =
         t.FlatIndexToIndex(maxIndex t.Values)
 
@@ -371,7 +445,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
     override t1.AddTTSlice(location:int[], t2) =
-        if not (shapeContains t1.Shape t2.Shape) then failwithf "Expecting t1.Shape to contain t2.Shape, received %A, %A" t1.Shape t2.Shape
+        checkCanAddSlice t1.Shape location t2.Shape
         let t1value = t1.Values
         let t2 = t2 :?> RawTensorFloat32CPU
         let result = Array.copy t1value
@@ -456,15 +530,12 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         upcast RawTensorFloat32CPU(result, t1.Shape)
 
     override t1.MatMulTT(t2) =
-        if t1.Dim < 2 || t2.Dim < 2 then failwithf "Expecting two tensors each at least 2D, received tensors with shapes %A, %A" t1.Shape t2.Shape
-
+        checkCanMatmul t1.Shape t2.Shape
         let t1BatchPart, t1MatrixPart = t1.Shape |> Array.splitAt (t1.Shape.Length-2)
         let t2BatchPart, t2MatrixPart = t2.Shape |> Array.splitAt (t2.Shape.Length-2)
-        if t1BatchPart <> t2BatchPart then failwithf "No expansion on RawTensor, should have been done on tensor with shapes %A, %A" t1.Shape t2.Shape
-
+        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
         let t1rows, t1cols = t1MatrixPart.[0], t1MatrixPart.[1]
         let t2rows, t2cols = t2MatrixPart.[0], t2MatrixPart.[1]
-        if t1cols <> t2rows then failwithf "Cannot matrix multiply tensors with shapes %A, %A" t1.Shape t2.Shape
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorFloat32CPU).Values   
         let newShape = Array.append t1BatchPart [| t1rows; t2cols |]
@@ -486,24 +557,20 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        if t1.Dim <> 3 || t2.Dim <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" t1.Shape t2.Shape
+        checkCanConv1d t1.Shape t2.Shape stride padding 1
         let t1 =
             if padding = 0 then
                 t1
-            elif padding > 0 then
+            else
                 let tshape = Array.copy t1.Shape
                 tshape.[2] <- t1.Shape.[2] + padding * 2
                 let t = RawTensorFloat32CPU.Zeros(tshape)
                 t.AddTTSlice([|0; 0; padding|], t1) :?> RawTensorFloat32CPU
-            else
-                failwithf "Expecting padding >= 0, received %A" padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
         let inputLength = t1.Shape.[2]
         let outputChannels = t2.Shape.[0]
-        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
         let kernelLength = t2.Shape.[2]
-        if kernelLength > inputLength then failwithf "Expecting kernelLength <= inputLength, received %A, %A" kernelLength inputLength
         let outputLength = inputLength - kernelLength + 1
         let outputShape = [|batchSize; outputChannels; outputLength|]
         let result = RawTensorFloat32CPU.Zeros(outputShape)
@@ -518,7 +585,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                     result.[[|n; k; v|]] <- value
         if stride = 1 then
             result :> RawTensor
-        elif stride > 1 then
+        else
             let outputLength = (float outputLength) / (float stride) |> ceil |> int
             let outputShape = [|batchSize; outputChannels; outputLength|]
             let mutable sresult = RawTensorFloat32CPU.Zeros(outputShape)
@@ -527,36 +594,27 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                 let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1|])
                 sresult <- sresult.AddTTSlice([|0; 0; v|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
-        else
-            failwithf "Expecting stride >= 1, received %A" stride
 
     override t1.Conv2D(t2, stride, padding) =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
-        if t1.Dim <> 4 || t2.Dim <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" t1.Shape t2.Shape
-        if stride.Length <> 2 then failwithf "Expecting stride to be a length-two array, received %A" stride
-        if padding.Length <> 2 then failwithf "Expecting padding to be a length-two array, received %A" padding
+        checkCanConv2d t1.Shape t2.Shape stride padding [|1;1|]
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
                 t1
-            elif padding.[0] >= 0 && padding.[1] >= 0 then
+            else
                 let tshape = Array.copy t1.Shape
                 tshape.[2] <- t1.Shape.[2] + padding.[0] * 2
                 tshape.[3] <- t1.Shape.[3] + padding.[1] * 2
                 let t = RawTensorFloat32CPU.Zeros(tshape)
                 t.AddTTSlice([|0; 0; padding.[0]; padding.[1]|], t1) :?> RawTensorFloat32CPU
-            else
-                failwithf "Expecting all paddings >= 0, received %A" padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
         let inputHeight = t1.Shape.[2]
         let inputWidth = t1.Shape.[3]
         let outputChannels = t2.Shape.[0]
-        if t2.Shape.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels t2.Shape.[1]
         let kernelHeight = t2.Shape.[2]
         let kernelWidth = t2.Shape.[3]
-        if kernelHeight > inputHeight then failwithf "Expecting kernelHeight <= inputHeight, received %A, %A" kernelHeight inputHeight
-        if kernelWidth > inputWidth then failwithf "Expecting kernelWidth <= inputWidth, received %A, %A" kernelWidth inputWidth
         let outputHeight = inputHeight - kernelHeight + 1
         let outputWidth = inputWidth - kernelWidth + 1
         let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
@@ -574,7 +632,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                         result.[[|n; k; v0; v1|]] <- value
         if stride.[0] = 1 && stride.[1] = 1 then
             result :> RawTensor
-        elif stride.[0] >= 1 && stride.[1] >= 1 then
+        else
             let outputHeight = (float outputHeight) / (float stride.[0]) |> ceil |> int
             let outputWidth = (float outputWidth) / (float stride.[1]) |> ceil |> int
             let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
@@ -585,9 +643,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
                     let slice = result.GetSlice(sliceBounds).ViewT([|batchSize; outputChannels; 1; 1|])
                     sresult <- sresult.AddTTSlice([|0; 0; v0; v1|], slice) :?> RawTensorFloat32CPU
             sresult :> RawTensor
-        else
-            failwithf "Expecting all strides >= 1, received %A" stride
-
 
     override t.NegT() =
         let result = Array.map (~-) t.Values
@@ -625,6 +680,11 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override t.ReluT() =
         let result = t.Values |> Array.map (max 0.f) 
+        upcast RawTensorFloat32CPU(result, t.Shape)
+        // (-a.abs()).exp().add(1.).log().add(a.max(0.))
+
+    override t.SoftplusT() =
+        let result = t.Values |> Array.map (fun x -> (max 0.f x) + log(1.f + exp(-abs(x))))
         upcast RawTensorFloat32CPU(result, t.Shape)
 
     override t.SigmoidT() =
@@ -691,6 +751,7 @@ and RawTensorFloat32CPUStatics() =
     override __.One = upcast RawTensorFloat32CPU.One()
     override __.Zeros(shape:int[]) = upcast RawTensorFloat32CPU.Zeros(shape)
     override __.Ones(shape:int[]) = upcast RawTensorFloat32CPU.Ones(shape)
+    override __.Full(shape:int[], value:obj) = upcast RawTensorFloat32CPU.Full(shape, value)
     override __.Random(shape:int[]) = upcast RawTensorFloat32CPU.Random(shape)
     override __.RandomNormal(shape:int[]) = upcast RawTensorFloat32CPU.RandomNormal(shape)
     override __.Create(values:obj) : RawTensor = upcast RawTensorFloat32CPU.Create(values)

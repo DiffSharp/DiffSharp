@@ -72,10 +72,9 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeExpand () =
-
-        let t1 = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
-        let t1Expand = t1.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
-        let fwdz = t1Expand
+        let fwdx = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
+        let fwdz = fwdx.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
+        let fwdzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
 
@@ -87,19 +86,21 @@ type TestDerivatives () =
         t1.grad
         --> tensor([[12.],[24.]])
         *)
-        let revy = dsharp.tensor([[1.]; [2.]]).reverseDiff()
-        let revz = revy.expand([2;2;2])
-        let revz_grad = dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]])
-        revz.reverse(revz_grad)
-        let revyd = revy.derivative
+        let revx = dsharp.tensor([[1.]; [2.]]).reverseDiff()
+        let revz = revx.expand([2;2;2])
+        let revzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        revz.reverse(dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]]))
+        let revxd = revx.derivative
         // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
-        let revydCorrect = dsharp.tensor [[12.], [24.]]
+        let revxdCorrect = dsharp.tensor [[12.], [24.]]
+
+        Assert.AreEqual(fwdz, fwdzCorrect)
         Assert.AreEqual(fwdzd,fwdzdCorrect)
-        Assert.AreEqual(revyd,revydCorrect)
+        Assert.AreEqual(revz, revzCorrect)
+        Assert.AreEqual(revxd,revxdCorrect)
 
     [<Test>]
     member this.TestAddWithBroadcastSystematic () =
-
         // This is a somewhat adhoc extra test to do a whole range of additiosn
         // with broadcast, mainly to check that not problems occur in taking the
         // derivatives.
@@ -246,11 +247,11 @@ type TestDerivatives () =
         let revyd = revy.derivative
         let revydCorrect = dsharp.tensor([-0.2; -0.277778; -0.306122])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
     
     // TODO: add test for DivTTConst
     // TODO: add test for DivTConstT
@@ -280,11 +281,11 @@ type TestDerivatives () =
         let revyd = revy.derivative
         let revydCorrect = dsharp.tensor([0.; 665.421; 60066.6])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect,0.1))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect,0.1))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect,0.1))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect,0.1))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect,0.1))
+        Assert.True(fwdz.allclose(fwdzCorrect,0.1))
+        Assert.True(fwdzd.allclose(fwdzdCorrect,0.1))
+        Assert.True(revz.allclose(revzCorrect,0.1))
+        Assert.True(revxd.allclose(revxdCorrect,0.1))
+        Assert.True(revyd.allclose(revydCorrect,0.1))
     
     // TODO: add test for PowTTConst
     // TODO: add test for PowTConstT
@@ -382,11 +383,11 @@ type TestDerivatives () =
                                          [ -5.6351;  11.3910];
                                          [-44.3729;  70.9775]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeConv1Dp1 () =
@@ -475,11 +476,11 @@ type TestDerivatives () =
                                          [ 50.1777;   5.6146];
                                          [ -7.2318;  28.6983]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeConv1Ds2p2 () =
@@ -568,11 +569,11 @@ type TestDerivatives () =
                                          [-21.3696;   2.1173];
                                          [-24.8156; -60.5938]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeConv1Ds2p2d3 () =
@@ -661,11 +662,11 @@ type TestDerivatives () =
                                          [-10.3015;   8.3273];
                                          [ 59.8580; 201.2624]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     //TODO: add test for Conv1DTTConst
     //TODO: add test for Conv1DTConstT
@@ -937,11 +938,11 @@ type TestDerivatives () =
          [[ -80.6018,  -10.6333],
           [  66.0623,  -79.7451]]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05))
+        Assert.True(revz.allclose(revzCorrect, 0.05))
+        Assert.True(revxd.allclose(revxdCorrect, 0.05))
+        Assert.True(revyd.allclose(revydCorrect, 0.05))
 
     [<Test>]
     member this.TestDerivativeConv2Dp1 () =
@@ -1242,11 +1243,11 @@ type TestDerivatives () =
          [[-120.5291,   79.5252],
           [ 102.1578,   65.0787]]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeConv2Ds2p2 () =
@@ -1531,11 +1532,11 @@ type TestDerivatives () =
          [[  39.3125,   32.0967],
           [ -47.9975,   34.2678]]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeConv2Ds2p2d3 () =
@@ -1804,11 +1805,11 @@ type TestDerivatives () =
          [[-7.5394e+00,  1.7613e+01],
           [ 3.7940e+01,  8.9327e-02]]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     // [<Test>]
     // member this.TestDerivativeConv2Ds23p32d23 () =
@@ -2093,11 +2094,11 @@ type TestDerivatives () =
     //      [[-4.5804e+01, -5.3832e+01],
     //       [ 5.4477e+01, -8.4577e+01]]]])
 
-    //     Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-    //     Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-    //     Assert.True(revz.ApproximatelyEqual(revzCorrect))
-    //     Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-    //     Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+    //     Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+    //     Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+    //     Assert.True(revz.allclose(revzCorrect, 0.01))
+    //     Assert.True(revxd.allclose(revxdCorrect, 0.01))
+    //     Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeMatMulT2T2 () =
@@ -2152,11 +2153,11 @@ type TestDerivatives () =
             [ 66.0888; 88.6534];
             [ 74.6154; 41.4950]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     //TODO: add test for MatMulT2T2Const
     //TODO: add test for MatMulT2ConstT2
@@ -2190,8 +2191,6 @@ type TestDerivatives () =
         Assert.AreEqual(revxdaCorrect, revxda)
         Assert.AreEqual(revxdbCorrect, revxdb)
         Assert.AreEqual(revxdcCorrect, revxdc)
-
-    // TODO: add test for UnstackT
 
     [<Test>]
     member this.TestDerivativeNeg () =
@@ -2446,10 +2445,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeCeilT () =
@@ -2466,10 +2465,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeRoundT () =
@@ -2486,10 +2485,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeAbsT () =
@@ -2550,10 +2549,30 @@ type TestDerivatives () =
         // let revxdCorrect = dsharp.tensor([0.0500; 0.0500; 0.0500; 5.; -5.])
         let revxdCorrect = dsharp.tensor([0.0500; 0.0500; 2.52; 5.; -5.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeSoftplusT () =
+        let fwdx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).forwardDiff(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+        let fwdz = fwdx.softplus()
+        let fwdzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+
+        let revx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).reverseDiff()
+        let revz = revx.softplus()
+        let revzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        revz.reverse(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeSigmoidT () =
@@ -2570,10 +2589,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([1.0067;  1.1781;  1.2374;  1.1499; -1.0514])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeExpT () =
@@ -2590,10 +2609,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([6.6526; 1.7435; 13.8140; 7.6152; -17.9474])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeLogT () =
@@ -2610,10 +2629,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([5.2780; 3.3576; 24.8177; 8.5945; -5.9248])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeLog10T () =
@@ -2630,10 +2649,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([2.2923;  1.4582; 10.7765;  3.7323; -2.5731])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
         
     [<Test>]
     member this.TestDerivativeSqrtT () =
@@ -2650,10 +2669,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([0.4761; 0.1219; 0.2286; 0.0010; 0.5166])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05))
+        Assert.True(revz.allclose(revzCorrect, 0.05))
+        Assert.True(revxd.allclose(revxdCorrect, 0.05))
 
     [<Test>]
     member this.TestDerivativeSinT () =
@@ -2670,10 +2689,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeCosT () =
@@ -2690,10 +2709,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([-4.0592; -4.9833; -1.0007; -2.7476;  3.7362])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeTanT () =
@@ -2710,10 +2729,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([14.6665; 750.8119;   5.2086;   7.1631; -11.3217])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
     
     [<Test>]
     member this.TestDerivativeSinhT () =
@@ -2730,10 +2749,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([7.4163; 11.6467;  5.1018;  5.8704; -6.8886])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeCoshT () =
@@ -2750,10 +2769,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([5.4774; 10.5188;  1.0143;  3.0759; -4.7385])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeTanhT () =
@@ -2770,10 +2789,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([2.2727;  0.9215;  4.8024;  3.6273; -2.6342])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
     
     [<Test>]
     member this.TestDerivativeAsinT () =
@@ -2790,10 +2809,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([15.6080;  5.7324;  5.1047;  6.1476; -9.3197])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeAcosT () =
@@ -2810,10 +2829,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([-15.6080;  -5.7324;  -5.1047;  -6.1476;   9.3197])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeAtanT () =
@@ -2830,10 +2849,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([2.6352;  4.0348;  4.8049;  3.7355; -2.9203])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeStackTs () =
@@ -2858,12 +2877,12 @@ type TestDerivatives () =
         let revxdbCorrect = dsharp.tensor([30.; 40.])
         let revxdcCorrect = dsharp.tensor([50.; 60.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxda.ApproximatelyEqual(revxdaCorrect))
-        Assert.True(revxdb.ApproximatelyEqual(revxdbCorrect))
-        Assert.True(revxdc.ApproximatelyEqual(revxdcCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxda.allclose(revxdaCorrect, 0.01))
+        Assert.True(revxdb.allclose(revxdbCorrect, 0.01))
+        Assert.True(revxdc.allclose(revxdcCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeUnstackT () =
@@ -2896,16 +2915,120 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
-        Assert.True(fwdza.ApproximatelyEqual(fwdzaCorrect))
-        Assert.True(fwdzb.ApproximatelyEqual(fwdzbCorrect))
-        Assert.True(fwdzc.ApproximatelyEqual(fwdzcCorrect))
-        Assert.True(fwdzda.ApproximatelyEqual(fwdzdaCorrect))
-        Assert.True(fwdzdb.ApproximatelyEqual(fwdzdbCorrect))
-        Assert.True(fwdzdc.ApproximatelyEqual(fwdzdcCorrect))
-        Assert.True(revza.ApproximatelyEqual(revzaCorrect))
-        Assert.True(revzb.ApproximatelyEqual(revzbCorrect))
-        Assert.True(revzc.ApproximatelyEqual(revzcCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
+        Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
+        Assert.True(fwdzc.allclose(fwdzcCorrect, 0.01))
+        Assert.True(fwdzda.allclose(fwdzdaCorrect, 0.01))
+        Assert.True(fwdzdb.allclose(fwdzdbCorrect, 0.01))
+        Assert.True(fwdzdc.allclose(fwdzdcCorrect, 0.01))
+        Assert.True(revza.allclose(revzaCorrect, 0.01))
+        Assert.True(revzb.allclose(revzbCorrect, 0.01))
+        Assert.True(revzc.allclose(revzcCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeUnstackT_Dim1 () =
+        let fwdx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+        let fwdz = fwdx.unstack(dim=1) |> Seq.toArray
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzda = fwdza.derivative
+        let fwdzdb = fwdzb.derivative
+        let fwdzaCorrect = dsharp.tensor([1.; 3.; 5.])
+        let fwdzbCorrect = dsharp.tensor([2.; 4.; 6.])
+        let fwdzdaCorrect = dsharp.tensor([10.; 30.; 50.])
+        let fwdzdbCorrect = dsharp.tensor([20.; 40.; 60.])
+
+        let revx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
+        let revz = revx.unstack(dim=1) |> Seq.toArray
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzaCorrect = dsharp.tensor([1.; 3.; 5.])
+        let revzbCorrect = dsharp.tensor([2.; 4.; 6.])
+        revza.reverse(dsharp.tensor([10.; 30.; 50.]))
+        revzb.reverse(dsharp.tensor([20.; 40.; 60.]), zeroDerivatives=false)
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+
+        Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
+        Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
+        Assert.True(fwdzda.allclose(fwdzdaCorrect, 0.01))
+        Assert.True(fwdzdb.allclose(fwdzdbCorrect, 0.01))
+        Assert.True(revza.allclose(revzaCorrect, 0.01))
+        Assert.True(revzb.allclose(revzbCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeCatTs () =
+        let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.;20.]))
+        let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.;40.]))
+        let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.;60.]))
+        let fwdz = Tensor.cat([fwdxa;fwdxb;fwdxc])
+        let fwdzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
+
+        let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
+        let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
+        let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revz = Tensor.cat([revxa;revxb;revxc])
+        let revzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
+        revz.reverse(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+        let revxda = revxa.derivative
+        let revxdb = revxb.derivative
+        let revxdc = revxc.derivative
+        let revxdaCorrect = dsharp.tensor([10.; 20.])
+        let revxdbCorrect = dsharp.tensor([30.; 40.])
+        let revxdcCorrect = dsharp.tensor([50.; 60.])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxda.allclose(revxdaCorrect, 0.01))
+        Assert.True(revxdb.allclose(revxdbCorrect, 0.01))
+        Assert.True(revxdc.allclose(revxdcCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeSplitT () =
+        let fwdx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+        let fwdz = fwdx.split([| 1;3;2 |])
+        let fwdza = fwdz.[0]
+        let fwdzb = fwdz.[1]
+        let fwdzc = fwdz.[2]
+        let fwdzda = fwdza.derivative
+        let fwdzdb = fwdzb.derivative
+        let fwdzdc = fwdzc.derivative
+        let fwdzaCorrect = dsharp.tensor([1.])
+        let fwdzbCorrect = dsharp.tensor([2.; 3.; 4.])
+        let fwdzcCorrect = dsharp.tensor([5.; 6.])
+        let fwdzdaCorrect = dsharp.tensor([10.])
+        let fwdzdbCorrect = dsharp.tensor([20.;30.; 40.])
+        let fwdzdcCorrect = dsharp.tensor([50.; 60.])
+
+        let revx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).reverseDiff()
+        let revz = revx.split([| 1;3;2 |])
+        let revza = revz.[0]
+        let revzb = revz.[1]
+        let revzc = revz.[2]
+        let revzaCorrect = dsharp.tensor([1.])
+        let revzbCorrect = dsharp.tensor([2.;3.; 4.])
+        let revzcCorrect = dsharp.tensor([5.; 6.])
+        revza.reverse(dsharp.tensor([10.]))
+        revzb.reverse(dsharp.tensor([20.;30.; 40.]), zeroDerivatives=false)
+        revzc.reverse(dsharp.tensor([50.; 60.]), zeroDerivatives=false)
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
+
+        Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
+        Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
+        Assert.True(fwdzc.allclose(fwdzcCorrect, 0.01))
+        Assert.True(fwdzda.allclose(fwdzdaCorrect, 0.01))
+        Assert.True(fwdzdb.allclose(fwdzdbCorrect, 0.01))
+        Assert.True(fwdzdc.allclose(fwdzdcCorrect, 0.01))
+        Assert.True(revza.allclose(revzaCorrect, 0.01))
+        Assert.True(revzb.allclose(revzbCorrect, 0.01))
+        Assert.True(revzc.allclose(revzcCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeSliceT () =
@@ -2922,10 +3045,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([0.; 0.; 0.9360; 0.8748; 0.4353])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeAddTTSlice () =
@@ -2975,11 +3098,11 @@ type TestDerivatives () =
         let revyd = revy.derivative
         let revydCorrect = dsharp.tensor([[1.2199; -0.5281]; [-0.8378; -0.3876]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeSqueezeT () =
@@ -2996,10 +3119,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[[10.; 20.]]; [[30.;40.]]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeUnsqueezeT () =
@@ -3016,10 +3139,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeFlipT () =
@@ -3036,10 +3159,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeDilateT () =
@@ -3056,10 +3179,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeUndilateT () =
@@ -3076,10 +3199,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeSoftmax () =
@@ -3102,10 +3225,10 @@ type TestDerivatives () =
         let revxd = revx.derivative
         let revxdCorrect = dsharp.tensor([[-0.0649; 0.2988; -0.2329]; [-0.5713; 0.1291; 0.4426]])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeMaxBinary () =
@@ -3126,11 +3249,11 @@ type TestDerivatives () =
         let revyd = revy.derivative
         let revydCorrect = dsharp.tensor([0.; 0.; -13.7527; 0.; -1.6439])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member this.TestDerivativeMinBinary () =
@@ -3151,8 +3274,8 @@ type TestDerivatives () =
         let revyd = revy.derivative
         let revydCorrect = dsharp.tensor([9.7293; -10.2704; 0.; -3.9050; 0.])
 
-        Assert.True(fwdz.ApproximatelyEqual(fwdzCorrect))
-        Assert.True(fwdzd.ApproximatelyEqual(fwdzdCorrect))
-        Assert.True(revz.ApproximatelyEqual(revzCorrect))
-        Assert.True(revxd.ApproximatelyEqual(revxdCorrect))
-        Assert.True(revyd.ApproximatelyEqual(revydCorrect))
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+        Assert.True(revyd.allclose(revydCorrect, 0.01))

@@ -59,6 +59,7 @@ type [<AbstractClass>]
     abstract Zeros : shape:int[] -> RawTensor
     abstract One : RawTensor
     abstract Ones : shape:int[] -> RawTensor
+    abstract Full : shape:int[] * obj -> RawTensor
     abstract Random : shape:int[] -> RawTensor
     abstract RandomNormal : shape:int[]-> RawTensor
     abstract Create : obj -> RawTensor
@@ -111,6 +112,10 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Ones(shape|>Seq.toArray)
 
+    static member Full(shape, value, ?dtype, ?device, ?backend) =
+        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
+        statics.Full(shape|>Seq.toArray, value)
+
     static member Random(shape, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.Random(shape|>Seq.toArray)
@@ -128,27 +133,32 @@ and [<AbstractClass>]
     abstract member CreateFromScalar : obj * int[] -> RawTensor
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
-    abstract member StackTs: RawTensor[] -> RawTensor
-    abstract member UnstackT: unit -> RawTensor[]
+    abstract member StackTs: RawTensor[] * dim:int -> RawTensor
+    abstract member UnstackT: dim:int -> RawTensor[]
+    abstract member CatTs: RawTensor[] * dim: int -> RawTensor
+    abstract member SplitT: int[] * dim: int -> RawTensor[]
     abstract member Zero : unit -> RawTensor
     abstract member Zeros : int[] -> RawTensor
     abstract member One : unit -> RawTensor
     abstract member Ones : int[] -> RawTensor
+    abstract member Full : int[] * obj -> RawTensor
     abstract member Random : int[] -> RawTensor
     abstract member RandomNormal : int[] -> RawTensor
     abstract member RandomMultinomial: int -> RawTensor
     abstract member GetString : unit -> string
     abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
-    abstract member ToValue: unit -> obj
+    abstract member ToScalar: unit -> obj
     abstract member ToArray: unit -> System.Array
     abstract member Equals: RawTensor -> bool
     abstract member ComputeHash: unit -> int
-    abstract member ApproximatelyEquals: RawTensor * float -> bool
+    abstract member AllClose: RawTensor * float * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor
     abstract member GeTT: RawTensor -> RawTensor
+    abstract member IsInfT : unit -> RawTensor
+    abstract member IsNaNT : unit -> RawTensor
     abstract member MaxIndexT : unit -> int[]
     abstract member MinIndexT : unit -> int[]
     abstract member AddTT : RawTensor -> RawTensor
@@ -185,6 +195,7 @@ and [<AbstractClass>]
     abstract member RoundT: unit -> RawTensor
     abstract member AbsT: unit -> RawTensor
     abstract member ReluT: unit -> RawTensor
+    abstract member SoftplusT: unit -> RawTensor
     abstract member SigmoidT: unit -> RawTensor
     abstract member ExpT: unit -> RawTensor
     abstract member LogT: unit -> RawTensor
