@@ -618,7 +618,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
         let outputWidth = int (floor (float (inputWidth + 2*padding.[2] - kernelWidth)/(float stride.[2]))) + 1
         let outputShape = [|batchSize; outputChannels; outputDepth; outputHeight; outputWidth|]
         let result = RawTensorFloat32CPU.Zeros(outputShape)
-        printfn "outputshape %A" result.Shape
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 && padding.[2] = 0 then
                 t1

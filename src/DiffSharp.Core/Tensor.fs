@@ -1086,7 +1086,7 @@ type Tensor =
         let b = if bConst then b else b.primal
         let batchSize = t.shape.[0]
         let outputChannels = t.shape.[1]
-        let outputLength = t.shape.[2]
+        // let outputLength = t.shape.[2]
         let inputChannels = a.shape.[1]
         let inputLength = a.shape.[2]
         let kernelLength = b.shape.[2]
@@ -1105,8 +1105,9 @@ type Tensor =
                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
                 let mutable c = d.conv1d(b, padding=kernelLength-1)
                 if padding > 0 then
-                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.shape.[2]-1-padding; 1]]
-                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
+                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; padding + inputLength - 1; 1]]
+                    c <- c.GetSlice(cBounds)
+                    c <- c.view([|batchSize; inputChannels; inputLength|])
                 aderivative <- aderivative + c
         if not bConst then
             // propagate to b
@@ -1116,7 +1117,11 @@ type Tensor =
                 let d = tderivative.[n]
                 for k=0 to outputChannels-1 do
                     let dd = d.[k].view([|1; 1; tderivative.shape.[2]|])
-                    let c = aa.conv1d(dd, padding=padding).view([|1; inputChannels; kernelLength|])
+                    let mutable c = aa.conv1d(dd, padding=padding)
+                    c <- c.view([|1; inputChannels; c.shape.[2]|])
+                    let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelLength-1;1]]
+                    c <- c.GetSlice(cBounds)                 
+                    c <- c.view([|1; inputChannels; kernelLength|])
                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
         aderivative, bderivative
 
@@ -1155,7 +1160,7 @@ type Tensor =
 
     // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
     // b: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
-    // t: output, NxKxLxM (batchSize x outputChannels x outputHeight x outputLength)
+    // t: output, NxKxLxM (batchSize x outputChannels x outputHeight x outputWidth)
     member internal t.conv2dReverseDiff(a: Tensor, b:Tensor, aConst:bool, bConst:bool, strides:int[], paddings:int[]) =
         let a = if aConst then a else a.primal
         let b = if bConst then b else b.primal
@@ -1183,18 +1188,27 @@ type Tensor =
                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.shape.[2]; tderivative.shape.[3]|])
                 let mutable c : Tensor = d.conv2d(b, paddings=[|kernelHeight-1; kernelWidth-1|])
                 if paddings.[0] > 0 || paddings.[1] > 0 then
-                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [paddings.[0]; c.shape.[2]-1-paddings.[0]; 1]; [paddings.[1]; c.shape.[3]-1-paddings.[1]; 1]]
-                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.shape.[2]-2*paddings.[0]; c.shape.[3]-2*paddings.[1]|])
-                aderivative <- aderivative + c
+                    let cBounds = array2D [[0; batchSize-1; 1]; 
+                                           [0; inputChannels-1; 1]; 
+                                           [paddings.[0]; paddings.[0] + inputHeight - 1; 1]; 
+                                           [paddings.[1]; paddings.[1] + inputWidth - 1; 1]]
+                    c <- c.GetSlice(cBounds)
+                    c <- c.view([|batchSize; inputChannels; inputHeight; inputWidth|])
+                aderivative <- aderivative  + c
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
             for n=0 to batchSize-1 do
-                let aa = a.primal.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                let aa = a.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                 let d = tderivative.[n]
                 for k=0 to outputChannels-1 do
                     let dd = d.[k].view([|1; 1; tderivative.shape.[2]; tderivative.shape.[3]|])
-                    let c = aa.conv2d(dd, paddings=paddings).view([|1; inputChannels; kernelHeight; kernelWidth|])
+                    let mutable c = aa.conv2d(dd, paddings=paddings)
+                    // c <- c.view([|1; inputChannels; kernelHeight; kernelWidth|])
+                    c <- c.view([|1; inputChannels; c.shape.[2]; c.shape.[3]|])
+                    let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
+                    c <- c.GetSlice(cBounds)                 
+                    c <- c.view([|1; inputChannels; kernelHeight; kernelWidth|])
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
         aderivative, bderivative
 
@@ -1233,7 +1247,7 @@ type Tensor =
 
     // a: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
     // b: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
-    // t: output, NxKxLxMxN (batchSize x outputChannels x outputDepth x outputHeight x outputLength)
+    // t: output, NxKxLxMxN (batchSize x outputChannels x outputDepth x outputHeight x outputWidth)
     member internal t.conv3dReverseDiff(a: Tensor, b:Tensor, aConst:bool, bConst:bool, strides:int[], paddings:int[]) =
         let a = if aConst then a else a.primal
         let b = if bConst then b else b.primal
@@ -1257,7 +1271,6 @@ type Tensor =
         if not aConst then
             // propagate to a
             aderivative <- a.zerosLike()
-            printfn "\naderivative %A" aderivative.shape
             let bFlipped = b.flip([|2;3;4|])
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelDepth; kernelHeight; kernelWidth|])
@@ -1265,25 +1278,28 @@ type Tensor =
                 let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; tderivative.shape.[2]; tderivative.shape.[3]; tderivative.shape.[4]|])
                 let mutable c : Tensor = d.conv3d(b, paddings=[|kernelDepth-1; kernelHeight-1; kernelWidth-1|])
                 if paddings.[0] > 0 || paddings.[1] > 0 || paddings.[2] > 0 then
-                    let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [paddings.[0]; c.shape.[2]-1-paddings.[0]; 1]; [paddings.[1]; c.shape.[3]-1-paddings.[1]; 1]; [paddings.[2]; c.shape.[4]-1-paddings.[2]; 1]]
-                    printfn "c before slice %A" c.shape
-                    c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; c.shape.[2]-2*paddings.[0]; c.shape.[3]-2*paddings.[1]; c.shape.[4]-2*paddings.[2]|])
-                    printfn "c after slice %A" c.shape
-                aderivative <- aderivative + c
-                // aderivative <- aderivative.addSlice([|0; 0; 0; 0; 0|], c)
+                    let cBounds = array2D [[0; batchSize-1; 1]; 
+                                           [0; inputChannels-1; 1]; 
+                                           [paddings.[0]; paddings.[0] + inputDepth - 1; 1]; 
+                                           [paddings.[1]; paddings.[1] + inputHeight - 1; 1];
+                                           [paddings.[2]; paddings.[2] + inputWidth - 1; 1]]
+                    c <- c.GetSlice(cBounds)
+                    c <- c.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
+                aderivative <- aderivative  + c
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
-            printfn "\nbderivative %A" bderivative.shape
             for n=0 to batchSize-1 do
-                let aa = a.primal.[n].view([|inputChannels; 1; inputDepth; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
+                let aa = a.[n].view([|inputChannels; 1; inputDepth; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                 let d = tderivative.[n]
                 for k=0 to outputChannels-1 do
                     let dd = d.[k].view([|1; 1; tderivative.shape.[2]; tderivative.shape.[3]; tderivative.shape.[4]|])
                     let mutable c = aa.conv3d(dd, paddings=paddings)
-                    printfn "c before view %A" c.shape
+                    // c <- c.view([|1; inputChannels; kernelHeight; kernelWidth|])
+                    c <- c.view([|1; inputChannels; c.shape.[2]; c.shape.[3]; c.shape.[4]|])
+                    let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelDepth-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
+                    c <- c.GetSlice(cBounds)
                     c <- c.view([|1; inputChannels; kernelDepth; kernelHeight; kernelWidth|])
-                    printfn "c after view %A" c.shape                    
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], c)
         aderivative, bderivative
 
