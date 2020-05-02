@@ -34,3 +34,8 @@ type TestModel () =
         let d3flat = d3.flatten()
         Assert.AreEqual(d1flatCorrect, d3flat)
 
+    // [<Test>]
+    // member this.TestLinear () =
+    //     let n, dIn, h, dOut = 64, 1000, 100, 10
+    //     let x = dsharp.randn(n, dIn)
+    //     let y = dsharp.randn(n, dOut)

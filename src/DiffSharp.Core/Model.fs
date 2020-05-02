@@ -47,20 +47,28 @@ type ParameterDict() =
         let dd = d.copy()
         dd.unflatten(tensors)
         dd
+    override d.ToString() =
+        let sb = System.Text.StringBuilder()
+        for KeyValue(n, p) in d.values do sb.AppendLine(sprintf "%A, %A" n p) |> ignore
+        sb.ToString()
+        
 
 [<AbstractClass>]
 type Model() =
     member val Parameters:ParameterDict = ParameterDict()
     member val SubModels:Dictionary<string, Model> = Dictionary()
-    member inline m.add(parameters:list<string * 'a>) =
-        for n, p in parameters do
+    member m.add(parameters:seq<obj>, ?names:seq<string>) =
+        let parameters = parameters |> Seq.toArray
+        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "p__%d" i)) |> Seq.toArray
+        if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
+        for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p -> 
                 m.Parameters.add(n, p)
             | :? Model as mm ->
                 m.SubModels.Add(n, mm)
                 m.Parameters.add(mm.Parameters.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
-            | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Parameter or Model"
+            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
     member m.forwardDiff(derivatives:ParameterDict) = m.Parameters.forwarddiff(derivatives)
     member m.reverseDiff() = m.Parameters.reverseDiff()
     member m.noDiff() = m.Parameters.noDiff()
@@ -76,6 +84,12 @@ type Model() =
     member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
         m.forwardCompose (f target) input parameters
     abstract member forward: Tensor -> Tensor
+    static member create ps f =
+        let model = { new Model() with override __.forward(x) = f x}
+        model.add(ps)
+        model
+    static member compose (model1:Model) (model2:Model) =
+        Model.create [model1; model2] (model1.forward >> model2.forward)
 
 
 type Weight() =
@@ -95,7 +109,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
-    do base.add(["weight", w; "bias", b])
+    do base.add([w;b],["Linear__weight";"Linear__bias"])
     override l.forward(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f
@@ -107,7 +121,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
-    do base.add(["weight", w; "bias", b])
+    do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
     override c.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
@@ -119,13 +133,31 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
         match kernelSize, kernelSizes with
         | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
         | Some k, None -> [|k; k|]
-        | None, Some k -> k |> Array.ofSeq
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
         | _ -> [|1; 1|]
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
-    do base.add(["weight", w; "bias", b])
+    do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
     override c.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+
+
+type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+    inherit Model()
+    let kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
+        | _ -> [|1; 1; 1|]
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
+    do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+    override c.forward(value) =
+        let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f

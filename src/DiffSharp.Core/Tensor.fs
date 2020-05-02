@@ -1130,19 +1130,19 @@ type Tensor =
             match stride, strides with
             | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s|]
-            | None, Some s -> s |> Array.ofSeq
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to have length two" else s
             | _ -> [|1; 1|]
         let paddings = 
             match padding, paddings with
             | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p|]
-            | None, Some p -> p |> Array.ofSeq
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to have length two" else p
             | _ -> [|0; 0|]
         let dilations = 
             match dilation, dilations with
             | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
             | Some d, None -> [|d; d|]
-            | None, Some d -> d |> Array.ofSeq
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to have length two" else d
             | _ -> [|1; 1|]
         checkCanConv2d a.shape b.shape strides paddings dilations
         let mutable b = b
@@ -1217,19 +1217,19 @@ type Tensor =
             match stride, strides with
             | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s; s|]
-            | None, Some s -> s |> Array.ofSeq
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to have length three" else s
             | _ -> [|1; 1; 1|]
         let paddings = 
             match padding, paddings with
             | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p; p|]
-            | None, Some p -> p |> Array.ofSeq
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to have length three" else p
             | _ -> [|0; 0; 0|]
         let dilations = 
             match dilation, dilations with
             | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
             | Some d, None -> [|d; d; d|]
-            | None, Some d -> d |> Array.ofSeq
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to have length three" else d
             | _ -> [|1; 1; 1|]
         checkCanConv3d a.shape b.shape strides paddings dilations
         let mutable b = b
