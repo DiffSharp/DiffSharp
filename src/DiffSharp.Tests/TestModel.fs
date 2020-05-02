@@ -4,6 +4,31 @@ open NUnit.Framework
 open DiffSharp
 open DiffSharp.Model
 
+
+type ModelStyle1a() =
+    inherit Model()
+    let fc1 = Linear(10, 32)
+    let fc2 = Linear(32, 10)
+    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    override __.forward(x) =
+        x
+        |> fc1.forward
+        |> dsharp.relu
+        |> fc2.forward
+
+type ModelStyle1b() =
+    inherit Model()
+    let fc1 = Linear(10, 32)
+    let fc2 = Linear(32, 20)
+    let p = Parameter(dsharp.randn([]))
+    do base.add([fc1; fc2; p], ["fc1"; "fc2"; "p"])
+    override __.forward(x) =
+        x
+        |> fc1.forward
+        |> dsharp.relu
+        |> fc2.forward
+        |> dsharp.mul p.value
+
 [<TestFixture>]
 type TestModel () =
 
@@ -34,8 +59,43 @@ type TestModel () =
         let d3flat = d3.flatten()
         Assert.AreEqual(d1flatCorrect, d3flat)
 
-    // [<Test>]
-    // member this.TestLinear () =
-    //     let n, dIn, h, dOut = 64, 1000, 100, 10
-    //     let x = dsharp.randn(n, dIn)
-    //     let y = dsharp.randn(n, dOut)
+    [<Test>]
+    member this.TestModelCreationStyle1 () =
+        let net = ModelStyle1a()
+        Assert.AreEqual(682, net.nparameters())
+
+        let net2 = ModelStyle1b()
+        Assert.AreEqual(1013, net2.nparameters())
+
+    [<Test>]
+    member this.TestModelCreationStyle2 () =
+        let fc1 = Linear(10, 32)
+        let fc2 = Linear(32, 10)
+        let net = Model.create [fc1; fc2] 
+                    (dsharp.view [-1; 10]
+                    >> fc1.forward
+                    >> dsharp.relu
+                    >> fc2.forward)
+        Assert.AreEqual(682, net.nparameters())
+
+        let fc1 = Linear(10, 32)
+        let fc2 = Linear(32, 10)
+        let p = Parameter(dsharp.randn([]))
+        let net2 = Model.create [fc1; fc2; p] 
+                    (dsharp.view [-1; 28*28]
+                    >> fc1.forward
+                    >> dsharp.relu
+                    >> fc2.forward
+                    >> dsharp.mul p.value)
+        Assert.AreEqual(683, net2.nparameters())
+
+    [<Test>]
+    member this.TestModelCompose () =
+        let net1 = ModelStyle1a()
+        let net2 = ModelStyle1b()
+        let net3 = Model.compose net1 net2
+        Assert.AreEqual(682 + 1013, net3.nparameters())
+
+        let x = dsharp.randn([5;10])
+        let y = net3.forward(x)
+        Assert.AreEqual([5;20], y.shape)
