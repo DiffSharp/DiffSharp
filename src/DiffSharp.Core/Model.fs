@@ -76,14 +76,14 @@ type Model() =
     member m.setParameters(parameters:Tensor) = m.Parameters.unflatten(parameters)
     member m.getParameters() = m.Parameters.flatten()
     member m.nparameters() = m.Parameters.flatten().nelement
+    abstract member forward: Tensor -> Tensor
     member m.forwardParams (input:Tensor) (parameters:Tensor) =
         m.setParameters(parameters)
-        m.forward(input)
+        let f = m.forward(input) in m.noDiff(); f
     member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
         m.forwardParams input parameters |> f
     member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
         m.forwardCompose (f target) input parameters
-    abstract member forward: Tensor -> Tensor
     static member create ps f =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)

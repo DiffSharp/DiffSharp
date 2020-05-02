@@ -88,6 +88,18 @@ type Tensor =
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
     member t.noDiff() = Tensor(t.primalRaw)
+    member t.isForwardDiff() =
+        match t with
+        | TensorF(_) -> true
+        | _ -> false
+    member t.isReverseDiff() =
+        match t with
+        | TensorR(_) -> true
+        | _ -> false
+    member t.isNoDiff() =
+        match t with
+        | Tensor(_) -> true
+        | _ -> false
     member t.shape = t.primalRaw.Shape
     member t.dim = t.primalRaw.Dim
     member t.nelement = t.primalRaw.Nelement
