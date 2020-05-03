@@ -1,93 +1,60 @@
-namespace DiffSharp.Backend
+namespace DiffSharp.Backends
 
+open System
+open DiffSharp
 open DiffSharp.Util
-
-type Device =
-    | CPU
-    | GPU
-
-    member internal x.Code =
-        match x with
-        | CPU -> 0x000
-        | GPU -> 0x001
-
-    member internal x.Name =
-        match x with
-        | CPU -> "CPU"
-        | GPU -> "GPU"
-
-[<RequireQualifiedAccess>]
-type Backend =
-    | None
-    | OpenBLAS
-    | Torch
-
-    member internal x.Code = 
-        match x with 
-        | None -> 0x000
-        | OpenBLAS  -> 0x010
-        | Torch -> 0x020
-
-    member x.Name = 
-        match x with 
-        | None -> "None"
-        | OpenBLAS -> "OpenBLAS"
-        | Torch -> "Torch"
-
-type DType =
-    | Float16
-    | Float32
-    | Float64
-
-    member internal x.Code =
-        match x with
-        | Float16 -> 0x000
-        | Float32  -> 0x100
-        | Float64 -> 0x200
-
-    member internal x.Name =
-        match x with
-        | Float16 -> "Float16"
-        | Float32 -> "Float32"
-        | Float64 -> "Float64"
 
 type [<AbstractClass>]
      RawTensorStatics() = 
+    // cache for most recently accessed backend
+    static let mutable last = None
     static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, RawTensorStatics>()
 
-    abstract Zero : RawTensor
-    abstract Zeros : shape:int[] -> RawTensor
-    abstract One : RawTensor
-    abstract Ones : shape:int[] -> RawTensor
-    abstract Full : shape:int[] * obj -> RawTensor
-    abstract Random : shape:int[] -> RawTensor
-    abstract RandomNormal : shape:int[]-> RawTensor
-    abstract Create : obj -> RawTensor
+    abstract Zero: RawTensor
+    abstract Zeros: shape:int[] -> RawTensor
+    abstract One: RawTensor
+    abstract Ones: shape:int[] -> RawTensor
+    abstract Full: shape:int[] * obj -> RawTensor
+    abstract Random: shape:int[] -> RawTensor
+    abstract RandomNormal: shape:int[] -> RawTensor
+    
+    /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
+    /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
+    abstract CreateFromFlatArray: data: System.Array * shape: int[] -> RawTensor
 
     static member Get(?dtype: DType, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Float32
         let device = defaultArg device CPU
         let backend = defaultArg backend Backend.None
         let code = dtype.Code + device.Code + backend.Code
+        match last with 
+        | Some (code2, v) when code = code2 -> v
+        | _ ->
         match backends.TryGetValue(code) with 
         | true, v -> v
         | false, _ -> 
-            backends.GetOrAdd(code, fun _ -> 
-                let name = "DiffSharp.Backend." + backend.Name
-                let fullName = System.Reflection.Assembly.GetExecutingAssembly().FullName.Replace("DiffSharp.Core", name)
-                let asm = 
-                    try System.Reflection.Assembly.Load(fullName)
-                    with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                let typeName = sprintf "DiffSharp.Backend.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
-                let theType = asm.GetType(typeName)
-                if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
-                match System.Activator.CreateInstance(theType) with
-                | :? RawTensorStatics as obj -> obj
-                | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement RawTensorStatics" typeName fullName
-                ) 
+            let res =
+                backends.GetOrAdd(code, fun _ -> 
+                    let name = "DiffSharp.Backend." + backend.Name
+                    let fullName = System.Reflection.Assembly.GetExecutingAssembly().FullName.Replace("DiffSharp.Core", name)
+                    let asm = 
+                        try System.Reflection.Assembly.Load(fullName)
+                        with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
+                    let typeName = sprintf "DiffSharp.Backend.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
+                    let theType = asm.GetType(typeName)
+                    if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
+                    let obj = 
+                        match System.Activator.CreateInstance(theType) with
+                        | :? RawTensorStatics as obj -> obj
+                        | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement RawTensorStatics" typeName fullName
+                    obj
+                    ) 
+            last <- Some (code, res)
+            res
 
 and [<AbstractClass>]
     RawTensor(shape:int[], dtype:DType, device:Device, backend:Backend) =
+
     member t.Shape = shape
     member t.Dim = shape.Length
     member t.Nelement = shapeLength shape
@@ -124,34 +91,83 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.RandomNormal(shape|>Seq.toArray)
 
-    static member Create(obj: obj, ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Create(obj)
+    static member Create(values: obj, ?dtype, ?device, ?backend) =
+        // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
+        let data, shape, dtype =
+            match dtype with 
+            | Some DType.Int64 ->
+                let a,s = dataOfValuesForInt64 values
+                (a :> Array), s, DType.Int64
+            | Some DType.Int32 ->
+                let a,s = dataOfValuesForInt32 values
+                (a :> Array), s, DType.Int32
+            | Some DType.Int16 ->
+                let a,s = dataOfValuesForInt16 values
+                (a :> Array), s, DType.Int16
+            | Some DType.Int8 ->
+                let a,s = dataOfValuesForInt8 values
+                (a :> Array), s, DType.Int8
+            | Some DType.Bool ->
+                let a,s = dataOfValuesForBool values
+                (a :> Array), s, DType.Bool
+            | Some DType.Float64 ->
+                let a,s = dataOfValuesForFloat64 values
+                (a :> Array), s, DType.Float64
+            | Some DType.Float32 ->
+                let a,s = dataOfValuesForFloat32 values
+                (a :> Array), s, DType.Float32
+            | None ->
+                // Prefer Bool tensor if all bool
+                match values |> tryFlatArrayAndShape<bool> with
+                | Some (values, shape) -> ((values :> Array), shape, DType.Bool)
+                | _ ->
+                // Otherwise prefer float32
+                let a,s = dataOfValuesForFloat32 values 
+                (a :> Array), s, DType.Float32
+
+        let statics = RawTensorStatics.Get(dtype=dtype, ?device=device, ?backend=backend)
+
+        statics.CreateFromFlatArray(data, shape)
+
+    member t.CreateLike(values: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Create(values, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.ZeroLike(?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Zero(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.ZerosLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Zeros(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.OneLike(?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.One(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.OnesLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Ones(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.FullLike(shape: int[], value: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Full(shape, value, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.RandomLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.Random(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    member t.RandomNormalLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     abstract member CompareTo: RawTensor -> int
-    abstract member Create : obj -> RawTensor
-    abstract member CreateFromScalar : obj * int[] -> RawTensor
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
     abstract member UnstackT: dim:int -> RawTensor[]
     abstract member CatTs: RawTensor[] * dim: int -> RawTensor
     abstract member SplitT: int[] * dim: int -> RawTensor[]
-    abstract member Zero : unit -> RawTensor
-    abstract member Zeros : int[] -> RawTensor
-    abstract member One : unit -> RawTensor
-    abstract member Ones : int[] -> RawTensor
-    abstract member Full : int[] * obj -> RawTensor
-    abstract member Random : int[] -> RawTensor
-    abstract member RandomNormal : int[] -> RawTensor
-    abstract member RandomMultinomial: int -> RawTensor
-    abstract member GetString : unit -> string
+    abstract member GetString: unit -> string
     abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
-    abstract member ToScalar: unit -> obj
-    abstract member ToArray: unit -> System.Array
+    abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool
+    abstract member Cast : DType -> RawTensor
     abstract member ComputeHash: unit -> int
+    abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
@@ -211,7 +227,7 @@ and [<AbstractClass>]
     abstract member AsinT: unit -> RawTensor
     abstract member AcosT: unit -> RawTensor
     abstract member AtanT: unit -> RawTensor
-    
+
     override x.Equals(yobj: obj) = 
         match yobj with
         | :? RawTensor as y -> x.Equals(y)
@@ -224,3 +240,17 @@ and [<AbstractClass>]
             match yobj with
             | :? RawTensor as y -> x.CompareTo(y)
             | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
+
+    member t.ToScalar() =
+        match t.Dim with
+        | 0 -> t.ToValues()
+        | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
+
+    member t.ToArray() =
+        match t.Dim with
+        | 0 -> failwithf "Cannot convert scalar Tensor to array"
+        | _ ->
+            match t.ToValues()with 
+            | :? System.Array as a -> a
+            | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
+
