@@ -3,93 +3,161 @@ open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
 
+type Parameter =
+    val mutable value:Tensor
+    new(value) = {value=value}
+    member p.forwardDiff(derivative:Tensor) = p.value <- p.value.forwardDiff(derivative)
+    member p.reverseDiff() = p.value <- p.value.reverseDiff()
+    member p.noDiff() = p.value <- p.value.noDiff()
+    override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" p.value.shape p.value
 
-type TensorDict() =
-    member val Tensors:Dictionary<string, Tensor> = Dictionary()
+type ParameterDict() =
+    member val values:Dictionary<string, Parameter> = Dictionary()
     member d.Item
-        with get key = d.Tensors.[key]
-        and set key value = d.Tensors.[key] <- value
-    member d.add(name, tensor) = d.Tensors.Add(name, tensor)
-    member d.map(f) =
-        let ret = TensorDict()
-        for KeyValue(n, t) in d.Tensors do ret.add(n, f n t)
+        with get key = d.values.[key].value
+        and set key v = d.values.[key].value <- v
+    member d.add(name, parameter) = d.values.Add(name, parameter)
+    member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
+    member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
+    member d.copy() = d.map(fun (t:Tensor) -> t)
+    member d.map(f:string*Parameter->string*Parameter) =
+        let ret = ParameterDict()
+        for KeyValue(n, p) in d.values do ret.values.Add(f(n,p))
         ret
-    member d.copy() = d.map(fun _ t -> t)
-    member d.forwardDiff(derivatives:TensorDict) = d.map(fun n t -> t.forwardDiff(derivatives.[n]))
-    member d.reverseDiff() = d.map(fun _ t -> t.reverseDiff())
-    member d.noDiff() = d.map(fun _ t -> t.noDiff())
+    member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.value) in nn, Parameter(tt))
+    member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
+    member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
+    member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
+    member d.forwarddiff(derivatives:ParameterDict) = d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n]))
+    member d.reverseDiff() = d.iter(fun (_, p) -> p.reverseDiff())
+    member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
     member d.flatten() =
-        let ts = [for t in d.Tensors.Values do t.view(-1)]
+        let ts = [for t in d.values.Values do t.value.view(-1)]
         dsharp.cat(ts)
     member d.unflatten(tensors:Tensor) =
-        let ret = TensorDict()
-        let shapes = [|for t in d.Tensors.Values do t.shape|]
+        let shapes = [|for t in d.values.Values do t.value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = getKeys d.Tensors
+        let keys = getKeys d.values
         for n in keys do
-            ret.add(n, ts.[i])
+            d.[n] <- ts.[i]
             i <- i+1
-        ret
+    member d.unflattenToNew(tensors:Tensor) = 
+        let dd = d.copy()
+        dd.unflatten(tensors)
+        dd
+    override d.ToString() =
+        let sb = System.Text.StringBuilder()
+        for KeyValue(n, p) in d.values do sb.AppendLine(sprintf "%A, %A" n p) |> ignore
+        sb.ToString()
+        
 
 [<AbstractClass>]
 type Model() =
-    member val Parameters = TensorDict()
+    member val Parameters:ParameterDict = ParameterDict()
     member val SubModels:Dictionary<string, Model> = Dictionary()
-    member inline m.addParameters(parameters:list<string * 'a>) =
-        for n, p in parameters do
+    member m.add(parameters:seq<obj>, ?names:seq<string>) =
+        let parameters = parameters |> Seq.toArray
+        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "p__%d" i)) |> Seq.toArray
+        if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
+        for p, n in Array.zip parameters names do
             match (box p) with
-            | :? Tensor as t -> 
-                // printfn "adding Tensor %A %A" n t
-                m.Parameters.add(n, t)
-            | :? Model as model ->
-                // printfn "adding submodel %A" model
-                m.SubModels.[n] <- model
-                for KeyValue(nn, tt) in model.Parameters.Tensors do
-                    // printfn "adding Tensor %A %A" (n + "__" + nn) tt
-                    m.Parameters.add(n + "__" + nn, tt)
-            | _ -> failwithf "Unsupported type. Expecting a list<string * 'a> where 'a is Tensor or Model"
-    member m.setParameters(parameters:TensorDict) =
-        let keys = getKeys m.Parameters.Tensors
-        for n in keys do
-            m.Parameters.[n] <- parameters.[n]
-        for KeyValue(n, model) in m.SubModels do
-            let keys = getKeys model.Parameters.Tensors
-            for nn in keys do
-                model.Parameters.Tensors.[nn] <- m.Parameters.[n + "__" + nn]
-    member m.setParameters(parameters:Tensor) = m.setParameters(m.Parameters.unflatten(parameters))
+            | :? Parameter as p -> 
+                m.Parameters.add(n, p)
+            | :? Model as mm ->
+                m.SubModels.Add(n, mm)
+                m.Parameters.add(mm.Parameters.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+    member m.forwardDiff(derivatives:ParameterDict) = m.Parameters.forwarddiff(derivatives)
+    member m.reverseDiff() = m.Parameters.reverseDiff()
+    member m.noDiff() = m.Parameters.noDiff()
+    member m.setParameters(parameters:ParameterDict) = m.Parameters.set(parameters)
+    member m.setParameters(parameters:Tensor) = m.Parameters.unflatten(parameters)
     member m.getParameters() = m.Parameters.flatten()
-    member m.forwardDiff(derivatives) = m.setParameters(m.Parameters.forwardDiff(derivatives))
-    member m.reverseDiff() = m.setParameters(m.Parameters.reverseDiff())
-    member m.noDiff() = m.setParameters(m.Parameters.noDiff())
     member m.nparameters() = m.Parameters.flatten().nelement
+    abstract member forward: Tensor -> Tensor
     member m.forwardParams (input:Tensor) (parameters:Tensor) =
         m.setParameters(parameters)
-        m.forward(input)
+        let f = m.forward(input) in m.noDiff(); f
     member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
         m.forwardParams input parameters |> f
     member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
         m.forwardCompose (f target) input parameters
-    abstract member forward: Tensor -> Tensor
+    static member create ps f =
+        let model = { new Model() with override __.forward(x) = f x}
+        model.add(ps)
+        model
+    static member compose (model1:Model) (model2:Model) =
+        Model.create [model1; model2] (model1.forward >> model2.forward)
 
 
-type Init() =
+type Weight() =
     static member kaiming(fanIn, fanOut, ?a:float) = 
+        // He et al. 2015. https://arxiv.org/abs/1502.01852
         let a = defaultArg a (sqrt 5.)
         let w = dsharp.randn([fanIn; fanOut])
         let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
         w * s
-    static member bias(fanOut) =
-        let b = 1./sqrt (float fanOut)
-        -b + dsharp.rand([fanOut]) * 2*b
+    static member standard(shape:int[], k:float) =
+        -k + dsharp.rand(shape) * 2*k
 
 
-type Linear(inFeatures, outFeatures) =
+type Linear(inFeatures, outFeatures, ?bias:bool) =
     inherit Model()
-    let w = Init.kaiming(inFeatures, outFeatures)
-    let b = Init.bias(outFeatures)
-    do base.addParameters(["weight", w; "bias", b])
+    let bias = defaultArg bias true
+    let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
+    let k = 1./sqrt (float outFeatures)
+    let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
+    do base.add([w;b],["Linear__weight";"Linear__bias"])
     override l.forward(value) =
-        dsharp.matmul(value, l.Parameters.["weight"])
-        + l.Parameters.["bias"]
+        let f = dsharp.matmul(value, w.value)
+        if bias then f + b.value else f
+
+
+type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
+    inherit Model()
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSize))
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
+    do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
+    override c.forward(value) =
+        let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
+        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+
+
+type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+    inherit Model()
+    let kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
+        | _ -> [|1; 1|]
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
+    do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
+    override c.forward(value) =
+        let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+
+
+type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+    inherit Model()
+    let kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
+        | _ -> [|1; 1; 1|]
+    let bias = defaultArg bias true
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
+    let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
+    let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
+    do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+    override c.forward(value) =
+        let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f

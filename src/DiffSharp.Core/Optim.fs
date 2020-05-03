@@ -6,13 +6,13 @@ open DiffSharp.Model
 type Optimizer(model:Model) =
     member val model = model
     abstract member updateRule: string -> Tensor -> Tensor
-    member o.step() = model.setParameters(model.Parameters.map(o.updateRule))
+    member o.step() = model.Parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
 
 type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
     let lr = learningRate
-    let mutable momBuffer = TensorDict()
+    let mutable momBuffer = ParameterDict()
     let mutable momInit = false
     let dampening = defaultArg dampening (lr.zeroLike())
     let nesterov = defaultArg nesterov true
@@ -25,7 +25,7 @@ type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?neste
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.Parameters.map(fun _ t -> t.derivative)
+                momBuffer <- model.Parameters.map(fun (t:Tensor) -> t.derivative)
                 momInit <- true
             let mb = momBuffer.[name] 
             let mb = mb.mul(mom).add(d*(1.-dampening))

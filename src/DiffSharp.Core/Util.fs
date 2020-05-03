@@ -181,10 +181,10 @@ let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[])
     if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
     if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
     let inputChannels = shape1.[1]
-    let inputLength = shape1.[2] + 2*padding
+    let inputLengthAfterPadding = shape1.[2] + 2*padding
     let kernelLength = shape2.[2]
     if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
-    if kernelLength > inputLength then failwithf "Expecting kernelLength (%A) <= inputLength (%A)" kernelLength inputLength
+    if kernelLength > inputLengthAfterPadding then failwithf "Expecting kernelLength (%A) <= inputLengthAfterPadding (%A)" kernelLength inputLengthAfterPadding
 
 let checkCanConv2d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
     if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
@@ -196,13 +196,34 @@ let checkCanConv2d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[])
     if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
     if dilation.[0] < 1 || dilation.[1] < 1 then failwithf "Expecting all dilations (%A) >= 1" dilation
     let inputChannels = shape1.[1]
-    let inputHeight = shape1.[2] + 2*padding.[0]
-    let inputWidth = shape1.[3] + 2*padding.[1]
+    let inputHeightAfterPadding = shape1.[2] + 2*padding.[0]
+    let inputWidthAfterPadding = shape1.[3] + 2*padding.[1]
     let kernelHeight = shape2.[2]
     let kernelWidth = shape2.[3]
     if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
-    if kernelHeight > inputHeight then failwithf "Expecting kernelHeight (%A) <= inputHeight (%A)" kernelHeight inputHeight
-    if kernelWidth > inputWidth then failwithf "Expecting kernelWidth (%A) <= inputWidth (%A)" kernelWidth inputWidth
+    if kernelHeight > inputHeightAfterPadding then failwithf "Expecting kernelHeight (%A) <= inputHeightAfterPadding (%A)" kernelHeight inputHeightAfterPadding
+    if kernelWidth > inputWidthAfterPadding then failwithf "Expecting kernelWidth (%A) <= inputWidthAfterPadding (%A)" kernelWidth inputWidthAfterPadding
+
+let checkCanConv3d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
+    if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+    if stride.Length <> 3 then failwithf "Expecting stride (%A) to be a length-three array" stride
+    if padding.Length <> 3 then failwithf "Expecting padding (%A) to be a length-three array" padding
+    if dilation.Length <> 3 then failwithf "Expecting dilation (%A) to be a length-three array" dilation
+    if padding.[0] < 0 || padding.[1] < 0 || padding.[2] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if stride.[0] < 1 || stride.[1] < 1 || stride.[2] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    if dilation.[0] < 1 || dilation.[1] < 1 || dilation.[2] < 1 then failwithf "Expecting all dilations (%A) >= 1" dilation
+    let inputChannels = shape1.[1]
+    let inputDepthAfterPadding = shape1.[2] + 2*padding.[0]
+    let inputHeightAfterPadding = shape1.[3] + 2*padding.[1]
+    let inputWidthAfterPadding = shape1.[4] + 2*padding.[2]
+    let kernelDepth = shape2.[2]
+    let kernelHeight = shape2.[3]
+    let kernelWidth = shape2.[4]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelDepth > inputDepthAfterPadding then failwithf "Expecting kernelDepth (%A) <= inputDepthAfterPadding (%A)" kernelDepth inputDepthAfterPadding
+    if kernelHeight > inputHeightAfterPadding then failwithf "Expecting kernelHeight (%A) <= inputHeightAfterPadding (%A)" kernelHeight inputHeightAfterPadding
+    if kernelWidth > inputWidthAfterPadding then failwithf "Expecting kernelWidth (%A) <= inputWidthAfterPadding (%A)" kernelWidth inputWidthAfterPadding
 
 /// Find the shape into which shape1 and shape2 can be expanded
 let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
@@ -256,7 +277,13 @@ let undilatedShape (shape:int[]) (dilations:int[]) =
 let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
     Array.map2 (*) coordinates dilations
 
+let checkValidIndex (shape:int[]) (index:int[]) =
+    if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
+    let valid = Array.map2 (fun s i -> i < s) shape index |> Array.reduce (&&)
+    if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
+
 let indexToFlatIndex (shape:int[]) (index:int[]) =
+    checkValidIndex shape index
     let mutable flatIndex = 0
     for i=0 to index.Length - 1 do
         let v = if i = index.Length - 1 then 1 else (Array.reduce (*) shape.[i+1..])
