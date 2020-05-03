@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiffSharp.Backend.None\DiffSharp.Backend.None.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Backends.None\DiffSharp.Backends.None.fsproj" />
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
   </ItemGroup>
 

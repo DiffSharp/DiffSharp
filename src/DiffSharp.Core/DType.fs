@@ -63,7 +63,7 @@ type DType =
         | Bool -> "Bool"
 
 module DType =
-    /// Find the shape into which shape1 and shape2 can be expanded
+    /// Find the DType into which dtype1 and dtype2 can be widened
     let widen (dtype1: DType) (dtype2: DType) =
         if dtype1 = dtype2 then dtype1
         else
@@ -76,7 +76,7 @@ module DType =
             | Int8, _ | _, Int8 -> Int8
             | _ -> Bool
 
-    /// Find the shape into which shape1 and shape2 can be expanded
+    /// Convert System.Type to DType
     let ofType (ty: System.Type) =
         if ty.Equals(typeof<int32>) then DType.Int32
         elif ty.Equals(typeof<double>) then DType.Float64
