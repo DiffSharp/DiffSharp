@@ -1,8 +1,10 @@
 module DiffSharp.Util
+
 open System
 open System.Net
 open System.Collections
 open System.Collections.Generic
+open System.Diagnostics.CodeAnalysis
 open FSharp.Reflection
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
@@ -20,6 +22,7 @@ type GlobalNestingLevel() =
     static member Reset() = tagger.Current <- 0u
     static member Set(level) = tagger.Current <- level
 
+[<ExcludeFromCodeCoverage>]
 let inline cumulativeSum (a:_[]) = (Array.scan (+) LanguagePrimitives.GenericZero a).[1..]
 
 type Random() =
@@ -54,6 +57,9 @@ type Random() =
             a.[i] <- a.[n]
             a.[n] <- temp
         a
+
+[<ExcludeFromCodeCoverage>]
+let inline notNull value = not (obj.ReferenceEquals(value, null))
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
@@ -107,6 +113,7 @@ let duplicates l =
 let hasDuplicates l =
     (duplicates l) |> List.isEmpty |> not
         
+[<ExcludeFromCodeCoverage>]
 let inline arraysAllClose (relativeTolerance:'T) (absoluteTolerance:'T) (array1:'T[]) (array2:'T[]) =
     let dim1 = array1.Length
     let dim2 = array2.Length
@@ -169,33 +176,56 @@ let checkCanDot (shape1:int[]) (shape2:int[]) =
     if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two vectors (1d Tensors), received Tensors with shapes %A, %A" shape1 shape2
     if shape1.[0] <> shape2.[0] then failwithf "Cannot multiply vectors with different lengths %A, %A" shape1.[0] shape2.[0]
 
-let checkCanConv1d (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
-    if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d Tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
+let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
+    if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
     if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
     if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
     if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
     let inputChannels = shape1.[1]
-    let inputLength = shape1.[2] + 2*padding
+    let inputLengthAfterPadding = shape1.[2] + 2*padding
     let kernelLength = shape2.[2]
     if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
-    if kernelLength > inputLength then failwithf "Expecting kernelLength (%A) <= inputLength (%A)" kernelLength inputLength
+    if kernelLength > inputLengthAfterPadding then failwithf "Expecting kernelLength (%A) <= inputLengthAfterPadding (%A)" kernelLength inputLengthAfterPadding
 
-let checkCanConv2d (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
-    if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
-    if stride.Length <> 2 then failwithf "Expecting stride (%A) to be a length-two array" stride
-    if padding.Length <> 2 then failwithf "Expecting padding (%A) to be a length-two array" padding
-    if dilation.Length <> 2 then failwithf "Expecting dilation (%A) to be a length-two array" dilation
+let checkCanConv2d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
+    if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+    if stride.Length <> 2 then failwithf "Expecting stride (%A) to be a two-dimensional array" stride
+    if padding.Length <> 2 then failwithf "Expecting padding (%A) to be a two-dimensional array" padding
+    if dilation.Length <> 2 then failwithf "Expecting dilation (%A) to be a two-dimensional array" dilation
     if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
     if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
     if dilation.[0] < 1 || dilation.[1] < 1 then failwithf "Expecting all dilations (%A) >= 1" dilation
     let inputChannels = shape1.[1]
-    let inputHeight = shape1.[2] + 2*padding.[0]
-    let inputWidth = shape1.[3] + 2*padding.[1]
+    let inputHeightAfterPadding = shape1.[2] + 2*padding.[0]
+    let inputWidthAfterPadding = shape1.[3] + 2*padding.[1]
     let kernelHeight = shape2.[2]
     let kernelWidth = shape2.[3]
     if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
-    if kernelHeight > inputHeight then failwithf "Expecting kernelHeight (%A) <= inputHeight (%A)" kernelHeight inputHeight
-    if kernelWidth > inputWidth then failwithf "Expecting kernelWidth (%A) <= inputWidth (%A)" kernelWidth inputWidth
+    if kernelHeight > inputHeightAfterPadding then failwithf "Expecting kernelHeight (%A) <= inputHeightAfterPadding (%A)" kernelHeight inputHeightAfterPadding
+    if kernelWidth > inputWidthAfterPadding then failwithf "Expecting kernelWidth (%A) <= inputWidthAfterPadding (%A)" kernelWidth inputWidthAfterPadding
+
+let checkCanConv3d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int[]) (padding:int[]) (dilation:int[]) =
+    if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+    if stride.Length <> 3 then failwithf "Expecting stride (%A) to be a length-three array" stride
+    if padding.Length <> 3 then failwithf "Expecting padding (%A) to be a length-three array" padding
+    if dilation.Length <> 3 then failwithf "Expecting dilation (%A) to be a length-three array" dilation
+    if padding.[0] < 0 || padding.[1] < 0 || padding.[2] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if stride.[0] < 1 || stride.[1] < 1 || stride.[2] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    if dilation.[0] < 1 || dilation.[1] < 1 || dilation.[2] < 1 then failwithf "Expecting all dilations (%A) >= 1" dilation
+    let inputChannels = shape1.[1]
+    let inputDepthAfterPadding = shape1.[2] + 2*padding.[0]
+    let inputHeightAfterPadding = shape1.[3] + 2*padding.[1]
+    let inputWidthAfterPadding = shape1.[4] + 2*padding.[2]
+    let kernelDepth = shape2.[2]
+    let kernelHeight = shape2.[3]
+    let kernelWidth = shape2.[4]
+    if shape2.[1] <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels shape2.[1]
+    if kernelDepth > inputDepthAfterPadding then failwithf "Expecting kernelDepth (%A) <= inputDepthAfterPadding (%A)" kernelDepth inputDepthAfterPadding
+    if kernelHeight > inputHeightAfterPadding then failwithf "Expecting kernelHeight (%A) <= inputHeightAfterPadding (%A)" kernelHeight inputHeightAfterPadding
+    if kernelWidth > inputWidthAfterPadding then failwithf "Expecting kernelWidth (%A) <= inputWidthAfterPadding (%A)" kernelWidth inputWidthAfterPadding
 
 /// Find the shape into which shape1 and shape2 can be expanded
 let broadcastShapes2 (shape1:int[]) (shape2:int[]) =
@@ -249,7 +279,13 @@ let undilatedShape (shape:int[]) (dilations:int[]) =
 let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
     Array.map2 (*) coordinates dilations
 
+let checkValidIndex (shape:int[]) (index:int[]) =
+    if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
+    let valid = Array.map2 (fun s i -> i < s) shape index |> Array.reduce (&&)
+    if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
+
 let indexToFlatIndex (shape:int[]) (index:int[]) =
+    checkValidIndex shape index
     let mutable flatIndex = 0
     for i=0 to index.Length - 1 do
         let v = if i = index.Length - 1 then 1 else (Array.reduce (*) shape.[i+1..])
@@ -436,21 +472,102 @@ let private (|SeqOrSeqTupleLeafTy|_|) tgt ty =
     | SeqTy ety when ety = tgt -> Some (seqElements)
     | _ -> None
 
-let rec flatArrayAndShape<'T> (value:obj) =
+let rec tryFlatArrayAndShape<'T> (value:obj) : ('T[] * int[]) option =
 
     match value with
-    | :? 'T as v -> [|v|], [||]
-    | :? ('T[]) as v -> flatArrayAndShape1D v
-    | :? ('T[,]) as v -> flatArrayAndShape2D<'T> v
-    | :? ('T[,,]) as v -> flatArrayAndShape3D<'T> v
-    | :? ('T[,,,]) as v -> flatArrayAndShape4D<'T> v
-    | :? seq<'T> as v -> flatArrayAndShape1D (Seq.toArray v)
-    | :? seq<seq<'T>> as v -> flatArrayAndShape2D (array2D v)
-    | :? seq<seq<seq<'T>>> as v -> flatArrayAndShape3D (array3D v)
-    | :? seq<seq<seq<seq<'T>>>> as v -> flatArrayAndShape4D (array4D v)
+    | :? 'T as v -> Some ([|v|], [||])
+    | :? ('T[]) as v -> Some (flatArrayAndShape1D v)
+    | :? ('T[,]) as v -> Some (flatArrayAndShape2D<'T> v)
+    | :? ('T[,,]) as v -> Some (flatArrayAndShape3D<'T> v)
+    | :? ('T[,,,]) as v -> Some (flatArrayAndShape4D<'T> v)
+    | :? seq<'T> as v -> Some (flatArrayAndShape1D (Seq.toArray v))
+    | :? seq<seq<'T>> as v -> Some (flatArrayAndShape2D (array2D v))
+    | :? seq<seq<seq<'T>>> as v -> Some (flatArrayAndShape3D (array3D v))
+    | :? seq<seq<seq<seq<'T>>>> as v -> Some (flatArrayAndShape4D (array4D v))
     | _ -> 
     let vty = value.GetType()
     let tgt = (typeof<'T>)
+    match vty with
+    // list<int * int> -> dim 1
+    | SeqTupleLeafTy tgt -> 
+        let arr = value |> seqTupleElements |> arrayCast<'T>
+        Some (arr, [| arr.Length |])
+    // list<list<int * int>> etc. -> dim 2
+    | SeqOrSeqTupleTy (fetcher, (SeqOrSeqTupleLeafTy tgt fetcher2)) -> 
+        let els = value |> fetcher |> Array.map (fetcher2 >> arrayCast<'T>) |> array2D
+        Some (flatArrayAndShape2D<'T> els)
+    // ... -> dim 3
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleLeafTy tgt fetcher3)) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> arrayCast<'T>)) |> array3D
+        Some (flatArrayAndShape3D<'T> els)
+    // ... -> dim 4
+    | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleLeafTy tgt fetcher4))) -> 
+        let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
+        Some (flatArrayAndShape4D<'T> els)
+    | _ -> None
+
+[<ExcludeFromCodeCoverage>]
+let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBool (value:obj) : (^T[] * int[]) = 
+    match value |> tryFlatArrayAndShape<float32> with
+    | Some (values, shape) -> (values |> Array.map ofFloat32, shape)
+    | None -> 
+    match value |> tryFlatArrayAndShape<double> with
+    | Some (values, shape) -> (values |> Array.map ofFloat64, shape) 
+    | None -> 
+    match value |> tryFlatArrayAndShape<int32> with
+    | Some (values, shape) -> (values |> Array.map ofInt32, shape) 
+    | None -> 
+    match value |> tryFlatArrayAndShape<int64> with
+    | Some (values, shape) -> (values |> Array.map ofInt64, shape)
+    | None -> 
+    match value |> tryFlatArrayAndShape<int8>  with
+    | Some (values, shape) -> (values |> Array.map ofInt8, shape)
+    | None -> 
+    match value |> tryFlatArrayAndShape<int16>  with
+    | Some (values, shape) -> (values |> Array.map ofInt16, shape)
+    | None -> 
+    match value |> tryFlatArrayAndShape<bool> with
+    | Some (values, shape) ->(values |> Array.map ofBool, shape) 
+    | _ -> invalidArg "value" "Cannot convert value to RawTensorCPU"
+
+let dataOfValuesForFloat32 (value:obj) =
+    dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) value 
+
+let dataOfValuesForFloat64 (value:obj) =
+    dataOfValues double double double double double double (fun x -> if x then 1.0 else 0.0) value 
+
+let dataOfValuesForInt8 (value:obj) =
+    dataOfValues int8 int8 int8 int8 int8 int8 (fun x -> if x then 1y else 0y) value 
+
+let dataOfValuesForInt16 (value:obj) =
+    dataOfValues int16 int16 int16 int16 int16 int16 (fun x -> if x then 1s else 0s) value 
+
+let dataOfValuesForInt32 (value:obj) =
+    dataOfValues int32 int32 int32 int32 int32 int32 (fun x -> if x then 1 else 0) value
+
+let dataOfValuesForInt64 (value:obj) =
+    dataOfValues int64 int64 int64 int64 int64 int64 (fun x -> if x then 1L else 0L) value
+
+let dataOfValuesForBool (value:obj) =
+    dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id value 
+
+let toInt a =
+    match box a with
+    | :? float as a -> a |> int
+    | :? float32 as a -> a |> int
+    | :? int as a -> a
+    | _ -> failwith "Cannot convert to int"
+
+(*
+let inferTypeOfValues (value:obj) = 
+    match value with
+    | :? Array as a -> DType.ofType(a.GetType().GetElementType())
+    | :? IEnumerable -> 
+    | :? seq<seq<'T>> 
+    | :? seq<seq<seq<'T>>> 
+    | :? seq<seq<seq<seq<'T>>>> -> DType.ofType(typeof<'T>)
+    | _ -> 
+    let vty = value.GetType()
     match vty with
     // list<int * int> -> dim 1
     | SeqTupleLeafTy tgt -> 
@@ -469,27 +586,21 @@ let rec flatArrayAndShape<'T> (value:obj) =
         let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
         flatArrayAndShape4D<'T> els
     | _ -> null, null
-
-let toInt a =
-    match box a with
-    | :? float as a -> a |> int
-    | :? float32 as a -> a |> int
-    | :? int as a -> a
-    | _ -> failwith "Cannot convert to int"
-
-let inline notNull value = not (obj.ReferenceEquals(value, null))
+*)
 
 let maxIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.maxBy snd |> fst
+
 let minIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.minBy snd |> fst
 
 let memoize fn =
-  let cache = new Dictionary<_,_>()
-  (fun x ->
-    match cache.TryGetValue x with
-    | true, v -> v
-    | false, _ -> let v = fn (x)
-                  cache.Add(x,v)
-                  v)
+    let cache = new Dictionary<_,_>()
+    fun x ->
+        match cache.TryGetValue x with
+        | true, v -> v
+        | false, _ ->
+            let v = fn x
+            cache.Add(x,v)
+            v
 
 let getKeys (dictionary:Dictionary<string, 'a>) =
     let keys = Array.create dictionary.Count ""
@@ -514,3 +625,4 @@ let indentNewLines (str:String) numSpaces =
                             ret <- ret + "\n" + spaces
                         else ret <- ret + string c)
     ret
+

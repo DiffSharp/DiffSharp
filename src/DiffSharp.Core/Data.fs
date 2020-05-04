@@ -24,6 +24,13 @@ and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int) =
                 i, data |> dsharp.stack, target |> dsharp.stack}
 
 
+type TensorDataset(data:Tensor, target:Tensor) =
+    inherit Dataset()
+    do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
+    override d.length = data.shape.[0]
+    override d.item(i) = data.[i], target.[i]
+
+
 type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath

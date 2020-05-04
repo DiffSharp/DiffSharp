@@ -24,6 +24,7 @@
     <Compile Include="TestDerivatives.fs" />
     <Compile Include="TestDistributions.fs" />
     <Compile Include="TestModel.fs" />
+    <Compile Include="TestOptim.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
