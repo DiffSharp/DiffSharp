@@ -35,12 +35,12 @@ type [<AbstractClass>]
         | false, _ -> 
             let res =
                 backends.GetOrAdd(code, fun _ -> 
-                    let name = "DiffSharp.Backend." + backend.Name
+                    let name = "DiffSharp.Backends." + backend.Name
                     let fullName = System.Reflection.Assembly.GetExecutingAssembly().FullName.Replace("DiffSharp.Core", name)
                     let asm = 
                         try System.Reflection.Assembly.Load(fullName)
                         with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                    let typeName = sprintf "DiffSharp.Backend.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
+                    let typeName = sprintf "DiffSharp.Backends.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
                     let theType = asm.GetType(typeName)
                     if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
                     let obj = 

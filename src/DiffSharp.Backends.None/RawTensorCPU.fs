@@ -1,4 +1,4 @@
-namespace rec DiffSharp.Backend.None
+namespace rec DiffSharp.Backends.None
 
 open System
 open DiffSharp

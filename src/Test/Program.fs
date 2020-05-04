@@ -8,7 +8,7 @@ open DiffSharp.Distributions
 open DiffSharp.Data
 open DiffSharp.Model
 open DiffSharp.Optim
-open DiffSharp.Backend.None
+open DiffSharp.Backends.None
 // #nowarn "0058"
 
 

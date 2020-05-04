@@ -10,7 +10,7 @@ open System
 // This captures the expected semantis of different DTypes
 type DTypeInfo(dtype: DType) =
     member _.dtype = dtype
-    member _.mkTensor(data: obj) = dsharp.tensor(data, dtype=dtype)
+    member _.tensor(data: obj) = dsharp.tensor(data, dtype=dtype)
     member _.arrayCreator1D(arr: double[]) =
         match dtype with 
         | DType.Float32 -> arr |> Array.map float32 :> Array
@@ -45,59 +45,59 @@ type TestTensor () =
     
     // We run tests specific to floating point at these tensor types
 
-    let infosIntegral = [ for dtype in dtypesIntegral -> DTypeInfo(dtype)]
-    let infosFloatingPoint = [ for dtype in dtypesFloatingPoint -> DTypeInfo(dtype) ]
-    let infosIntegralAndFloatingPoint = [ for dtype in dtypesIntegralAndFloatingPoint -> DTypeInfo(dtype)]
-    let infosAll = [ for dtype in dtypesAll -> DTypeInfo(dtype)]
+    let dtypeInfosIntegral = [ for dtype in dtypesIntegral -> DTypeInfo(dtype)]
+    let dtypeInfosFloatingPoint = [ for dtype in dtypesFloatingPoint -> DTypeInfo(dtype) ]
+    let dtypeInfosIntegralAndFloatingPoint = [ for dtype in dtypesIntegralAndFloatingPoint -> DTypeInfo(dtype)]
+    let dtypeInfosAll = [ for dtype in dtypesAll -> DTypeInfo(dtype)]
 
     let isException f = Assert.Throws<Exception>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
-
+  
     [<SetUp>]
     member this.Setup () =
         ()
 
     member this.TestTensorCreateAllTensorTypesGeneric (conv: double -> 'T) =
       // Test creating these types of tensors
-      for info in infosAll do 
-        let t0 = info.mkTensor(conv 1.)
+      for ty in dtypeInfosAll do 
+        let t0 = ty.tensor(conv 1.)
         let t0ShapeCorrect = [||]
         let t0DimCorrect = 0
 
         Assert.AreEqual(t0ShapeCorrect, t0.shape)
         Assert.AreEqual(t0DimCorrect, t0.dim)
-        Assert.AreEqual(info.dtype, t0.dtype)
+        Assert.AreEqual(ty.dtype, t0.dtype)
 
-        let t1 = info.mkTensor([conv 1.; conv 2.; conv 3.])
+        let t1 = ty.tensor([conv 1.; conv 2.; conv 3.])
         let t1ShapeCorrect = [|3|]
         let t1DimCorrect = 1
 
         Assert.AreEqual(t1ShapeCorrect, t1.shape)
         Assert.AreEqual(t1DimCorrect, t1.dim)
-        Assert.AreEqual(info.dtype, t1.dtype)
+        Assert.AreEqual(ty.dtype, t1.dtype)
 
-        let t2 = info.mkTensor([[conv 1.; conv 2.; conv 3.]; [conv 4.; conv 5.; conv 6.]])
+        let t2 = ty.tensor([[conv 1.; conv 2.; conv 3.]; [conv 4.; conv 5.; conv 6.]])
         let t2ShapeCorrect = [|2; 3|]
         let t2DimCorrect = 2
         Assert.AreEqual(t2ShapeCorrect, t2.shape)
         Assert.AreEqual(t2DimCorrect, t2.dim)
-        Assert.AreEqual(info.dtype, t2.dtype)
+        Assert.AreEqual(ty.dtype, t2.dtype)
 
-        let t3 = info.mkTensor([[[conv 1.; conv 2.; conv 3.]; [conv 4.; conv 5.; conv 6.]]])
+        let t3 = ty.tensor([[[conv 1.; conv 2.; conv 3.]; [conv 4.; conv 5.; conv 6.]]])
         let t3ShapeCorrect = [|1; 2; 3|]
         let t3DimCorrect = 3
 
         Assert.AreEqual(t3ShapeCorrect, t3.shape)
         Assert.AreEqual(t3DimCorrect, t3.dim)
-        Assert.AreEqual(info.dtype, t3.dtype)
+        Assert.AreEqual(ty.dtype, t3.dtype)
 
-        let t4 = info.mkTensor([[[[conv 1.; conv 2.]]]])
+        let t4 = ty.tensor([[[[conv 1.; conv 2.]]]])
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
 
         Assert.AreEqual(t4ShapeCorrect, t4.shape)
         Assert.AreEqual(t4DimCorrect, t4.dim)
-        Assert.AreEqual(info.dtype, t4.dtype)
+        Assert.AreEqual(ty.dtype, t4.dtype)
 
     [<Test>]
     member this.TestTensorCreateAllTensorTypesFromFloat64Data() =
@@ -283,25 +283,25 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorToArray () =
-      for info in infosAll do 
+      for ty in dtypeInfosAll do 
         let a = array2D [[1.; 2.]; [3.; 4.]]
-        let t = info.mkTensor(a)
-        let tToArrayCorrect = info.arrayCreator2D a
+        let t = ty.tensor(a)
+        let tToArrayCorrect = ty.arrayCreator2D a
         Assert.AreEqual(tToArrayCorrect, t.toArray())
 
     [<Test>]
     member this.TestTensorSaveLoad () =
       let fileName = System.IO.Path.GetTempFileName()
-      for info in infosAll do 
-        let a = dsharp.tensor([[1,2],[3,4]], dtype=info.dtype)
+      for ty in dtypeInfosAll do 
+        let a = dsharp.tensor([[1,2],[3,4]], dtype=ty.dtype)
         a.save(fileName)
         let b = Tensor.load(fileName)
         Assert.AreEqual(a, b)
 
     [<Test>]
     member this.TestTensorClone () =
-      for info in infosAll do 
-        let a = dsharp.randn([2;3], dtype=info.dtype)
+      for ty in dtypeInfosAll do 
+        let a = dsharp.randn([2;3], dtype=ty.dtype)
         let b = a.clone()
         Assert.AreEqual(a, b)
         Assert.AreEqual(a.dtype, b.dtype)
@@ -415,10 +415,10 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorCompare () =
-      for info in infosIntegralAndFloatingPoint do 
-        let t1A = info.mkTensor(-1.)
-        let t1B = info.mkTensor(1.)
-        let t1C = info.mkTensor(1.)
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+        let t1A = ty.tensor(-1.)
+        let t1B = ty.tensor(1.)
+        let t1C = ty.tensor(1.)
         let t1At1BLess = t1A < t1B
         let t1At1BLessCorrect = true
         let t1At1BEqual = t1A = t1B
@@ -432,14 +432,14 @@ type TestTensor () =
 
         // Systematic testing. The tensors below are listed in expected order of comparison
         let t2S =
-            [ info.mkTensor( 0. )
-              info.mkTensor( 1. )
-              info.mkTensor([ 1.] )
-              info.mkTensor([ 2.] )
-              info.mkTensor([ 1.; 1.] )
-              info.mkTensor([ 1.; 2. ] )
-              info.mkTensor([ 2.; 1. ] ) 
-              info.mkTensor([ [ 1.; 1.] ]) ]
+            [ ty.tensor( 0. )
+              ty.tensor( 1. )
+              ty.tensor([ 1.] )
+              ty.tensor([ 2.] )
+              ty.tensor([ 1.; 1.] )
+              ty.tensor([ 1.; 2. ] )
+              ty.tensor([ 2.; 1. ] ) 
+              ty.tensor([ [ 1.; 1.] ]) ]
 
         // Check the F# generic '=' gives expected results
         let equalsResults = [| for a in t2S -> [| for b in t2S -> a = b |] |]
@@ -454,13 +454,13 @@ type TestTensor () =
         Assert.AreEqual(hashSameResults, hashSameCorrect)
 
         // Check reallocating an identical tensor doesn't change the hash
-        let t2a = info.mkTensor([ 1.] )
-        let t2b = info.mkTensor([ 1.] )
+        let t2a = ty.tensor([ 1.] )
+        let t2b = ty.tensor([ 1.] )
         Assert.AreEqual(t2a.GetHashCode(), t2b.GetHashCode())
 
         // Check adding `ForwardDiff` doesn't change the hash or equality
-        Assert.AreEqual(t2a.forwardDiff(info.mkTensor([1.])).GetHashCode(), t2a.GetHashCode())
-        Assert.AreEqual(true, (t2a.forwardDiff(info.mkTensor([1.]))) = t2a)
+        Assert.AreEqual(t2a.forwardDiff(ty.tensor([1.])).GetHashCode(), t2a.GetHashCode())
+        Assert.AreEqual(true, (t2a.forwardDiff(ty.tensor([1.]))) = t2a)
 
         // Check adding `ReverseDiff` doesn't change the hash or equality
         Assert.AreEqual(t2a.reverseDiff().GetHashCode(), t2a.GetHashCode())
@@ -940,129 +940,129 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorUnstackT () =
-      for info in infosAll do 
-        let t0a = info.mkTensor(1.)
-        let t0b = info.mkTensor(3.)
-        let t0c = info.mkTensor(5.)
+      for ty in dtypeInfosAll do 
+        let t0a = ty.tensor(1.)
+        let t0b = ty.tensor(3.)
+        let t0c = ty.tensor(5.)
         let t0Correct = [t0a;t0b;t0c]
         let t0 = Tensor.stack(t0Correct).unstack()
 
-        let t1a = info.mkTensor([1.; 2.])
-        let t1b = info.mkTensor([3.; 4.])
-        let t1c = info.mkTensor([5.; 6.])
+        let t1a = ty.tensor([1.; 2.])
+        let t1b = ty.tensor([3.; 4.])
+        let t1c = ty.tensor([5.; 6.])
         let t1Correct = [t1a;t1b;t1c]
         let t1 = Tensor.stack(t1Correct).unstack()
 
         // 3x1x2
-        let t2a = info.mkTensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t2a = ty.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
         let t2 = t2a.unstack()
         let t2_dim1 = t2a.unstack(dim=1)
         let t2_dim2 = t2a.unstack(dim=2)
         // 3 of 1x2
-        let t2Correct = [info.mkTensor [[1.;2.]]; info.mkTensor [[3.;4.]]; info.mkTensor [[5.;6.]]]
+        let t2Correct = [ty.tensor [[1.;2.]]; ty.tensor [[3.;4.]]; ty.tensor [[5.;6.]]]
         // 1 of 3x2
-        let t2Correct_dim1 = [info.mkTensor [[1.;2.];[3.;4.];[5.;6.]]]
+        let t2Correct_dim1 = [ty.tensor [[1.;2.];[3.;4.];[5.;6.]]]
         // 2 of 3x1
-        let t2Correct_dim2 = [info.mkTensor [[1.];[3.];[5.]]; info.mkTensor [[2.];[4.];[6.]]]
+        let t2Correct_dim2 = [ty.tensor [[1.];[3.];[5.]]; ty.tensor [[2.];[4.];[6.]]]
 
         Assert.AreEqual(t0Correct, Seq.toList t0)
         Assert.AreEqual(t1Correct, Seq.toList t1)
         for t in t1 do 
-            Assert.AreEqual(t.dtype, info.dtype)
+            Assert.AreEqual(t.dtype, ty.dtype)
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t2Correct_dim1, t2_dim1)
         Assert.AreEqual(t2Correct_dim2, t2_dim2)
 
     [<Test>]
     member this.TestTensorCatTs () =
-      for info in infosAll do 
+      for ty in dtypeInfosAll do 
 
-        let t0a = info.mkTensor([1.; 2.])
+        let t0a = ty.tensor([1.; 2.])
         let t0 = Tensor.cat([t0a])
-        let t0Correct = info.mkTensor([1.;2.])
+        let t0Correct = ty.tensor([1.;2.])
 
         Assert.AreEqual(t0Correct, t0)
 
-        let t1a = info.mkTensor([1.; 2.]) // 2
-        let t1b = info.mkTensor([3.; 4.]) // 2
-        let t1c = info.mkTensor([5.; 6.]) // 2
+        let t1a = ty.tensor([1.; 2.]) // 2
+        let t1b = ty.tensor([3.; 4.]) // 2
+        let t1c = ty.tensor([5.; 6.]) // 2
         let t1 = Tensor.cat([t1a;t1b;t1c]) // 6
         let t1_dim0 = Tensor.cat([t1a;t1b;t1c],dim=0) // 6
-        let t1Correct = info.mkTensor([1.;2.;3.;4.;5.;6.])
+        let t1Correct = ty.tensor([1.;2.;3.;4.;5.;6.])
 
         Assert.AreEqual(t1Correct, t1)
         Assert.AreEqual(t1Correct, t1_dim0)
 
-        let t2a = info.mkTensor([ [1.; 2.] ]) // 1x2
-        let t2b = info.mkTensor([ [3.; 4.] ]) // 1x2
-        let t2c = info.mkTensor([ [5.; 6.] ]) // 1x2
+        let t2a = ty.tensor([ [1.; 2.] ]) // 1x2
+        let t2b = ty.tensor([ [3.; 4.] ]) // 1x2
+        let t2c = ty.tensor([ [5.; 6.] ]) // 1x2
         let t2 = Tensor.cat([t2a;t2b;t2c]) // 3x2
         let t2_dim0 = Tensor.cat([t2a;t2b;t2c], dim=0) // 3x2
         let t2_dim1 = Tensor.cat([t2a;t2b;t2c], dim=1) // 1x6
-        let t2Correct_dim0 = info.mkTensor([[1.;2.];[3.;4.];[5.;6.]]) // 3x2
-        let t2Correct_dim1 = info.mkTensor([[1.;2.;3.;4.;5.;6.]]) // 1x6
+        let t2Correct_dim0 = ty.tensor([[1.;2.];[3.;4.];[5.;6.]]) // 3x2
+        let t2Correct_dim1 = ty.tensor([[1.;2.;3.;4.;5.;6.]]) // 1x6
 
         Assert.AreEqual(t2Correct_dim0, t2)
         Assert.AreEqual(t2Correct_dim0, t2_dim0)
         Assert.AreEqual(t2Correct_dim1, t2_dim1)
 
         // irregular sizes dim0
-        let t3a = info.mkTensor([ [1.; 2.] ]) // 1x2
-        let t3b = info.mkTensor([ [3.; 4.];[5.; 6.] ]) // 2x2
-        let t3c = info.mkTensor([ [7.; 8.] ]) // 1x2
+        let t3a = ty.tensor([ [1.; 2.] ]) // 1x2
+        let t3b = ty.tensor([ [3.; 4.];[5.; 6.] ]) // 2x2
+        let t3c = ty.tensor([ [7.; 8.] ]) // 1x2
         let t3 = Tensor.cat([t3a;t3b;t3c]) // 4x2
-        let t3Correct = info.mkTensor([[1.;2.];[3.;4.];[5.;6.];[7.;8.]]) // 4x2
+        let t3Correct = ty.tensor([[1.;2.];[3.;4.];[5.;6.];[7.;8.]]) // 4x2
 
         Assert.AreEqual(t3Correct, t3)
 
         // irregular sizes dim1
-        let t4a = info.mkTensor([ [1.]; [2.] ]) // 2x1
-        let t4b = info.mkTensor([ [3.; 4.];[5.; 6.] ]) // 2x2
-        let t4c = info.mkTensor([ [7.]; [8.] ]) // 2x1
+        let t4a = ty.tensor([ [1.]; [2.] ]) // 2x1
+        let t4b = ty.tensor([ [3.; 4.];[5.; 6.] ]) // 2x2
+        let t4c = ty.tensor([ [7.]; [8.] ]) // 2x1
         let t4_dim1 = Tensor.cat([t4a;t4b;t4c],dim=1) // 2x4
-        let t4Correct_dim1 = info.mkTensor([[1.;3.;4.;7.];[2.;5.;6.;8.]]) // 2x4
+        let t4Correct_dim1 = ty.tensor([[1.;3.;4.;7.];[2.;5.;6.;8.]]) // 2x4
 
         Assert.AreEqual(t4Correct_dim1, t4_dim1)
 
     [<Test>]
     member this.TestTensorSplitT () =
         
-      for info in infosAll do 
+      for ty in dtypeInfosAll do 
         //6 --> 2;2;2
-        let t1in = info.mkTensor([1.;2.;3.;4.;5.;6.]) // 6
+        let t1in = ty.tensor([1.;2.;3.;4.;5.;6.]) // 6
         let t1 = t1in.split([2;2;2]) |> Seq.toList // 3 of 2
-        let t1Correct = [info.mkTensor([1.; 2.]);info.mkTensor([3.; 4.]);info.mkTensor([5.; 6.])]
+        let t1Correct = [ty.tensor([1.; 2.]);ty.tensor([3.; 4.]);ty.tensor([5.; 6.])]
 
         Assert.AreEqual(t1Correct, t1)
 
         // 3x1x2
-        let t2in = info.mkTensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t2in = ty.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
         let t2 = t2in.split(sizes=[1;1;1], dim=0)  |> Seq.toList // 3 of 1x1x2
-        let t2Correct = [info.mkTensor [[[1.;2.]]]; info.mkTensor [[[3.;4.]]]; info.mkTensor [[[5.;6.]]]]
+        let t2Correct = [ty.tensor [[[1.;2.]]]; ty.tensor [[[3.;4.]]]; ty.tensor [[[5.;6.]]]]
 
         Assert.AreEqual(t2Correct, t2)
 
-        let t3in = info.mkTensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t3in = ty.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
         let t3 = t3in.split(sizes=[1;2], dim=0)  |> Seq.toList // 2 of 1x1x2 and 2x1x2
-        let t3Correct = [info.mkTensor [[[1.;2.]]]; info.mkTensor [[[3.;4.]];[[5.;6.]]]]
+        let t3Correct = [ty.tensor [[[1.;2.]]]; ty.tensor [[[3.;4.]];[[5.;6.]]]]
 
         Assert.AreEqual(t3Correct, t3)
 
-        let t4in = info.mkTensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t4in = ty.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
         let t4 = t4in.split(sizes=[1], dim=1)  |> Seq.toList // 1 of 3x1x2
-        let t4Correct = [info.mkTensor [[[1.;2.]];[[3.;4.]];[[5.;6.]]]] // 1 of 3x1x2
+        let t4Correct = [ty.tensor [[[1.;2.]];[[3.;4.]];[[5.;6.]]]] // 1 of 3x1x2
 
         Assert.AreEqual(t4Correct, t4)
 
-        let t5in = info.mkTensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
+        let t5in = ty.tensor([[[1.;2.]];[[3.;4.]];[[5.;6.]]])
         let t5 = t5in.split(sizes=[1;1], dim=2)  |> Seq.toList // 2 of 3x1x1
-        let t5Correct = [info.mkTensor [[[1.]];[[3.]];[[5.]]]; info.mkTensor [[[2.]];[[4.]];[[6.]]]] // 2 of 3x1x1
+        let t5Correct = [ty.tensor [[[1.]];[[3.]];[[5.]]]; ty.tensor [[[2.]];[[4.]];[[6.]]]] // 2 of 3x1x1
 
         Assert.AreEqual(t5Correct, t5)
 
         //systematic split of 6 
         let t6vs = [1..6]
-        let t6in = info.mkTensor(t6vs) // 6
+        let t6in = ty.tensor(t6vs) // 6
         for p1 in 0..6 do
           for p2 in 0..6 do
             for p3 in 0..6 do
@@ -1073,9 +1073,9 @@ type TestTensor () =
                                   if p3 > 0 then p3])
                       |> Seq.toList 
                   let t6Correct = 
-                      [if p1 > 0 then info.mkTensor(t6vs.[0..p1-1]);
-                       if p2 > 0 then info.mkTensor(t6vs.[p1..p1+p2-1]);
-                       if p3 > 0 then info.mkTensor(t6vs.[p1+p2..])]
+                      [if p1 > 0 then ty.tensor(t6vs.[0..p1-1]);
+                       if p2 > 0 then ty.tensor(t6vs.[p1..p1+p2-1]);
+                       if p3 > 0 then ty.tensor(t6vs.[p1+p2..])]
 
                   Assert.AreEqual(t6Correct, t6)
 
@@ -1083,7 +1083,7 @@ type TestTensor () =
         //systematic split of 2x6 along dim1
         let t7vs1 = [1..6]
         let t7vs2 = [7..12]
-        let t7in = info.mkTensor([ t7vs1; t7vs2] ) // 2x6
+        let t7in = ty.tensor([ t7vs1; t7vs2] ) // 2x6
         for p1 in 0..6 do
           for p2 in 0..6 do
             for p3 in 0..6 do
@@ -1094,9 +1094,9 @@ type TestTensor () =
                        if p3 > 0 then p3]
                   let t7 = t7in.split(sizes,dim=1) |> Seq.toList 
                   let t7Correct = 
-                      [if p1 > 0 then info.mkTensor([ t7vs1.[0..p1-1];     t7vs2.[0..p1-1] ]);
-                       if p2 > 0 then info.mkTensor([ t7vs1.[p1..p1+p2-1]; t7vs2.[p1..p1+p2-1] ]);
-                       if p3 > 0 then info.mkTensor([ t7vs1.[p1+p2..];     t7vs2.[p1+p2..] ])]
+                      [if p1 > 0 then ty.tensor([ t7vs1.[0..p1-1];     t7vs2.[0..p1-1] ]);
+                       if p2 > 0 then ty.tensor([ t7vs1.[p1..p1+p2-1]; t7vs2.[p1..p1+p2-1] ]);
+                       if p3 > 0 then ty.tensor([ t7vs1.[p1+p2..];     t7vs2.[p1+p2..] ])]
 
                   Assert.AreEqual(t7Correct, t7)
 
@@ -1104,12 +1104,12 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorAddT2T1 () =
       // Test all non-bool types
-      for info in infosIntegralAndFloatingPoint do 
-          let t1 = info.mkTensor([[1.; 2.]; [3.; 4.]]) + info.mkTensor([5.; 6.])
-          let t1Correct = info.mkTensor([[6.; 8.]; [8.; 10.]])
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+          let t1 = ty.tensor([[1.; 2.]; [3.; 4.]]) + ty.tensor([5.; 6.])
+          let t1Correct = ty.tensor([[6.; 8.]; [8.; 10.]])
 
           Assert.AreEqual(t1Correct, t1)
-          Assert.AreEqual(t1.dtype, info.dtype)
+          Assert.AreEqual(t1.dtype, ty.dtype)
 
       for dtype in dtypesBool do 
           // check broadcast for bool tensor 0 --> [2]
@@ -1290,46 +1290,46 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDivTT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([1.; 2.]) / info.mkTensor([3.; 4.])
-        let t1Correct = info.mkTensor([0.333333; 0.5])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([1.; 2.]) / ty.tensor([3.; 4.])
+        let t1Correct = ty.tensor([0.333333; 0.5])
 
-        let t2 = info.mkTensor([1.; 2.]) / info.mkTensor(5.)
-        let t2Correct = info.mkTensor([0.2; 0.4])
+        let t2 = ty.tensor([1.; 2.]) / ty.tensor(5.)
+        let t2Correct = ty.tensor([0.2; 0.4])
 
-        let t3 = info.mkTensor([1.; 2.]) / 5.
-        let t3Correct = info.mkTensor([0.2; 0.4])
+        let t3 = ty.tensor([1.; 2.]) / 5.
+        let t3Correct = ty.tensor([0.2; 0.4])
 
-        let t4 = 5. / info.mkTensor([1.; 2.])
-        let t4Correct = info.mkTensor([5.; 2.5])
+        let t4 = 5. / ty.tensor([1.; 2.])
+        let t4Correct = ty.tensor([5.; 2.5])
 
         Assert.True(t1.allclose(t1Correct, 0.01))
         Assert.True(t2.allclose(t2Correct, 0.01))
         Assert.True(t3.allclose(t3Correct, 0.01))
         Assert.True(t4.allclose(t4Correct, 0.01))
-        Assert.AreEqual(t1.dtype, info.dtype)
-        Assert.AreEqual(t2.dtype, info.dtype)
-        Assert.AreEqual(t3.dtype, info.dtype)
-        Assert.AreEqual(t4.dtype, info.dtype)
+        Assert.AreEqual(t1.dtype, ty.dtype)
+        Assert.AreEqual(t2.dtype, ty.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
+        Assert.AreEqual(t4.dtype, ty.dtype)
 
       // Integer tensors support integer division
-      for info in infosIntegral do 
-          let t1a = info.mkTensor([2; 3; 4])
-          let t1b = info.mkTensor([1; 2; 3])
+      for ty in dtypeInfosIntegral do 
+          let t1a = ty.tensor([2; 3; 4])
+          let t1b = ty.tensor([1; 2; 3])
           let i1 = t1a / t1b
-          let i1Correct = dsharp.tensor([2; 1; 1], dtype=info.dtype)
+          let i1Correct = dsharp.tensor([2; 1; 1], dtype=ty.dtype)
           Assert.AreEqual(i1Correct, i1)
 
-          let t2a = info.mkTensor(6)
-          let t2b = info.mkTensor([1; 2; 3])
+          let t2a = ty.tensor(6)
+          let t2b = ty.tensor([1; 2; 3])
           let i2 = t2a / t2b
-          let i2Correct = dsharp.tensor([6; 3; 2], dtype=info.dtype)
+          let i2Correct = dsharp.tensor([6; 3; 2], dtype=ty.dtype)
           Assert.AreEqual(i2Correct, i2)
 
-          let t3a = info.mkTensor([6; 12; 18])
-          let t3b = info.mkTensor(3)
+          let t3a = ty.tensor([6; 12; 18])
+          let t3b = ty.tensor(3)
           let i3 = t3a / t3b
-          let i3Correct = dsharp.tensor([2; 4; 6], dtype=info.dtype)
+          let i3Correct = dsharp.tensor([2; 4; 6], dtype=ty.dtype)
           Assert.AreEqual(i3Correct, i3)
 
       // Bool tensors don't support /
@@ -1343,23 +1343,23 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorPowTT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([1.; 2.]) ** info.mkTensor([3.; 4.])
-        let t1Correct = info.mkTensor([1.; 16.])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([1.; 2.]) ** ty.tensor([3.; 4.])
+        let t1Correct = ty.tensor([1.; 16.])
 
         Assert.AreEqual(t1Correct, t1)
-        Assert.AreEqual(t1.dtype, info.dtype)
-        let t2 = info.mkTensor([1.; 2.]) ** info.mkTensor(5.)
-        let t2Correct = info.mkTensor([1.; 32.])
+        Assert.AreEqual(t1.dtype, ty.dtype)
+        let t2 = ty.tensor([1.; 2.]) ** ty.tensor(5.)
+        let t2Correct = ty.tensor([1.; 32.])
 
         Assert.AreEqual(t2Correct, t2)
-        Assert.AreEqual(t2.dtype, info.dtype)
+        Assert.AreEqual(t2.dtype, ty.dtype)
 
-        let t3 = info.mkTensor(5.) ** info.mkTensor([1.; 2.])
-        let t3Correct = info.mkTensor([5.; 25.])
+        let t3 = ty.tensor(5.) ** ty.tensor([1.; 2.])
+        let t3Correct = ty.tensor([5.; 25.])
 
         Assert.AreEqual(t3Correct, t3)
-        Assert.AreEqual(t3.dtype, info.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           let t1 = dsharp.tensor([1.0], dtype=dtype)
@@ -1375,33 +1375,33 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMatMulT2T2 () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                 [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                 [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
-        let t2 = info.mkTensor([[5.1067; 0.0681];
+        let t2 = ty.tensor([[5.1067; 0.0681];
                                 [7.4633; 3.6027];
                                 [9.0070; 7.3012];
                                 [2.6639; 2.8728];
                                 [7.9229; 2.3695]])
 
         let t3 = t1.matmul(t2)
-        let t3Correct = info.mkTensor([[118.0367; 56.6266];
+        let t3Correct = ty.tensor([[118.0367; 56.6266];
                                        [190.5926; 90.8155];
                                        [134.3925; 64.1030]])
 
         Assert.True(t3.allclose(t3Correct, 0.01))
-        Assert.AreEqual(t3.dtype, info.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
 
-      for info in infosIntegral do 
-          let t1 = info.mkTensor([[1; 2]])
-          let t2 = info.mkTensor([[3]; [4]])
+      for ty in dtypeInfosIntegral do 
+          let t1 = ty.tensor([[1; 2]])
+          let t2 = ty.tensor([[3]; [4]])
 
           let t3 = t1.matmul(t2)
-          let t3Correct = info.mkTensor([[11]])
+          let t3Correct = ty.tensor([[11]])
 
           Assert.True(t3.allclose(t3Correct, 0.0))
-          Assert.AreEqual(t3.dtype, info.dtype)
+          Assert.AreEqual(t3.dtype, ty.dtype)
 
       // Matmul of Bool tensor not allowed
       //
@@ -1416,23 +1416,23 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDot () =
-        for info in infosFloatingPoint do 
-            let t1 = info.mkTensor([8.0766, 3.3030, -2.1732, 8.9448, 1.1028])
-            let t2 = info.mkTensor([5.1067, -0.0681, 7.4633, -3.6027, 9.0070])
+        for ty in dtypeInfosFloatingPoint do 
+            let t1 = ty.tensor([8.0766, 3.3030, -2.1732, 8.9448, 1.1028])
+            let t2 = ty.tensor([5.1067, -0.0681, 7.4633, -3.6027, 9.0070])
             let t3 = dsharp.dot(t1, t2)
-            let t3Correct = info.mkTensor(2.5081)
+            let t3Correct = ty.tensor(2.5081)
             Assert.True(t3.allclose(t3Correct, 0.01))
-            Assert.AreEqual(t3.dtype, info.dtype)
+            Assert.AreEqual(t3.dtype, ty.dtype)
 
-        for info in infosIntegral do 
-            let t1 = info.mkTensor([1; 2])
-            let t2 = info.mkTensor([3; 4])
+        for ty in dtypeInfosIntegral do 
+            let t1 = ty.tensor([1; 2])
+            let t2 = ty.tensor([3; 4])
 
             let t3 = dsharp.dot(t1, t2)
-            let t3Correct = info.mkTensor(11)
+            let t3Correct = ty.tensor(11)
 
             Assert.True(t3.allclose(t3Correct, 0.0))
-            Assert.AreEqual(t3.dtype, info.dtype)
+            Assert.AreEqual(t3.dtype, ty.dtype)
 
         for dtype in dtypesBool do 
             let t3a = dsharp.tensor([true], dtype=dtype)
@@ -1554,8 +1554,8 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorConv1D () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                  [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];
                                  [0.3373; 0.0863; 0.8137; 0.2649; 0.7125];
                                  [0.7144; 0.1020; 0.0437; 0.5316; 0.7366]];
@@ -1569,7 +1569,7 @@ type TestTensor () =
                                  [0.0823; 0.7887; 0.8918; 0.9243; 0.1068];
                                  [0.0337; 0.2771; 0.9744; 0.0459; 0.4082];
                                  [0.9154; 0.2569; 0.9235; 0.9234; 0.3148]]])
-        let t2 = info.mkTensor([[[0.4941; 0.8710; 0.0606];
+        let t2 = ty.tensor([[[0.4941; 0.8710; 0.0606];
                                  [0.2831; 0.7930; 0.5602];
                                  [0.0024; 0.1236; 0.4394];
                                  [0.9086; 0.1277; 0.2450]];
@@ -1580,7 +1580,7 @@ type TestTensor () =
                                  [0.6023; 0.6546; 0.3439]]])
 
         let t3 = t1.conv1d(t2)
-        let t3Correct = info.mkTensor([[[2.8516; 2.0732; 2.6420];
+        let t3Correct = ty.tensor([[[2.8516; 2.0732; 2.6420];
                                          [2.3239; 1.7078; 2.7450]];
 
                                         [[3.0127; 2.9651; 2.5219];
@@ -1590,7 +1590,7 @@ type TestTensor () =
                                          [2.7692; 2.9444; 3.2554]]])
 
         let t3p1 = t1.conv1d(t2, padding=1)
-        let t3p1Correct = info.mkTensor([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
+        let t3p1Correct = ty.tensor([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
                                          [1.4345; 2.3239; 1.7078; 2.7450; 2.1474]];
 
                                         [[2.4208; 3.0127; 2.9651; 2.5219; 1.2960];
@@ -1600,7 +1600,7 @@ type TestTensor () =
                                          [1.3549; 2.7692; 2.9444; 3.2554; 1.2120]]])
 
         let t3p2 = t1.conv1d(t2, padding=2)
-        let t3p2Correct = info.mkTensor([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
+        let t3p2Correct = ty.tensor([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
                                          [0.6539; 1.4345; 2.3239; 1.7078; 2.7450; 2.1474; 1.2585]];
 
                                         [[0.5982; 2.4208; 3.0127; 2.9651; 2.5219; 1.2960; 1.0620];
@@ -1610,7 +1610,7 @@ type TestTensor () =
                                          [0.3861; 1.3549; 2.7692; 2.9444; 3.2554; 1.2120; 0.7428]]])
 
         let t3s2 = t1.conv1d(t2, stride=2)
-        let t3s2Correct = info.mkTensor([[[2.8516; 2.6420];
+        let t3s2Correct = ty.tensor([[[2.8516; 2.6420];
                                          [2.3239; 2.7450]];
 
                                         [[3.0127; 2.5219];
@@ -1620,7 +1620,7 @@ type TestTensor () =
                                          [2.7692; 3.2554]]])
 
         let t3s3 = t1.conv1d(t2, stride=3)
-        let t3s3Correct = info.mkTensor([[[2.8516];
+        let t3s3Correct = ty.tensor([[[2.8516];
                                          [2.3239]];
 
                                         [[3.0127];
@@ -1630,7 +1630,7 @@ type TestTensor () =
                                          [2.7692]]])
 
         let t3s2p1 = t1.conv1d(t2, stride=2, padding=1)
-        let t3s2p1Correct = info.mkTensor([[[1.4392; 2.0732; 2.1177];
+        let t3s2p1Correct = ty.tensor([[[1.4392; 2.0732; 2.1177];
                                              [1.4345; 1.7078; 2.1474]];
 
                                             [[2.4208; 2.9651; 1.2960];
@@ -1640,7 +1640,7 @@ type TestTensor () =
                                              [1.3549; 2.9444; 1.2120]]])
 
         let t3s3p2 = t1.conv1d(t2, stride=3, padding=2)
-        let t3s3p2Correct = info.mkTensor([[[0.6333; 2.0732; 1.0258];
+        let t3s3p2Correct = ty.tensor([[[0.6333; 2.0732; 1.0258];
                                              [0.6539; 1.7078; 1.2585]];
 
                                             [[0.5982; 2.9651; 1.0620];
@@ -1650,7 +1650,7 @@ type TestTensor () =
                                              [0.3861; 2.9444; 0.7428]]])
         
         let t3d2 = t1.conv1d(t2, dilation=2)
-        let t3d2Correct = info.mkTensor([[[2.8030];
+        let t3d2Correct = ty.tensor([[[2.8030];
                                          [2.4735]];
 
                                         [[2.9226];
@@ -1660,7 +1660,7 @@ type TestTensor () =
                                          [2.4790]]])
 
         let t3p2d3 = t1.conv1d(t2, padding=2, dilation=3)
-        let t3p2d3Correct = info.mkTensor([[[2.1121; 0.8484; 2.2709];
+        let t3p2d3Correct = ty.tensor([[[2.1121; 0.8484; 2.2709];
                                              [1.6692; 0.5406; 1.8381]];
 
                                             [[2.5078; 1.2137; 0.9173];
@@ -1670,7 +1670,7 @@ type TestTensor () =
                                              [1.0732; 1.3014; 2.0696]]])
 
         let t3s3p6d3 = t1.conv1d(t2, stride=3, padding=6, dilation=3)
-        let t3s3p6d3Correct = info.mkTensor([[[0.6333; 1.5018; 2.2709; 1.0580];
+        let t3s3p6d3Correct = ty.tensor([[[0.6333; 1.5018; 2.2709; 1.0580];
                                              [0.6539; 1.5130; 1.8381; 1.0479]];
 
                                             [[0.5982; 1.7459; 0.9173; 0.2709];
@@ -1720,8 +1720,8 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorConv2D () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
                                   [ -6.4356,   0.6351,  -2.3156,  -1.3384],
                                   [ -5.1846,   0.6805, -14.1961,   0.8657],
                                   [ -8.8655,  -7.1694,  -3.4903,  -2.9479]],
@@ -1741,7 +1741,7 @@ type TestTensor () =
                                   [  4.6748,   7.9756,  -6.0065,   2.0826],
                                   [  5.1038,  -5.5801,  -4.4420,  -2.9498],
                                   [  0.1037,   4.6578,   3.0760,  -4.9566]]]])
-        let t2 = info.mkTensor([[[[-5.6745, -1.9422,  4.1369],
+        let t2 = ty.tensor([[[[-5.6745, -1.9422,  4.1369],
                                   [ 4.4623,  4.8385,  0.8345],
                                   [ 1.3015,  0.0708,  3.8132]],
 
@@ -1768,7 +1768,7 @@ type TestTensor () =
                                   [15.1009,  4.9045,  5.1197]]]])
 
         let t3 = t1.conv2d(t2)
-        let t3Correct = info.mkTensor([[[[  10.6089;   -1.4459];
+        let t3Correct = ty.tensor([[[[  10.6089;   -1.4459];
                                           [-132.3437; -165.9882]];
 
                                          [[  97.8425;   81.2322];
@@ -1788,7 +1788,7 @@ type TestTensor () =
                                           [ -78.6259;  136.6283]]]])
 
         let t3p1 = t1.conv2d(t2, padding=1)
-        let t3p1Correct = info.mkTensor([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
+        let t3p1Correct = ty.tensor([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
                                           [-154.2592;   10.6089;   -1.4459; -126.2889];
                                           [-176.1860; -132.3437; -165.9882;  -23.2585];
                                           [ -62.8550; -180.0650;  -52.4599;   55.0733]];
@@ -1820,7 +1820,7 @@ type TestTensor () =
                                           [  60.9218;   14.3467;  -86.6495;   49.3313]]]])
 
         let t3p12 = t1.conv2d(t2, paddings=[|1; 2|])
-        let t3p12Correct = info.mkTensor([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
+        let t3p12Correct = ty.tensor([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
                                           [ 210.3501; -154.2592;   10.6089;   -1.4459; -126.2889;   24.8066];
                                           [ -42.1367; -176.1860; -132.3437; -165.9882;  -23.2585;  -44.1093];
                                           [-151.4929;  -62.8550; -180.0650;  -52.4599;   55.0733;   30.0922]];
@@ -1852,7 +1852,7 @@ type TestTensor () =
                                           [ -30.5091;   60.9218;   14.3467;  -86.6495;   49.3313;   22.9582]]]])
 
         let t3s2 = t1.conv2d(t2, stride=2)
-        let t3s2Correct = info.mkTensor([[[[  10.6089]];
+        let t3s2Correct = ty.tensor([[[[  10.6089]];
 
                                          [[  97.8425]];
 
@@ -1866,7 +1866,7 @@ type TestTensor () =
                                          [[-106.0468]]]])
 
         let t3s13 = t1.conv2d(t2, strides=[|1; 3|])
-        let t3s13Correct = info.mkTensor([[[[  10.6089];
+        let t3s13Correct = ty.tensor([[[[  10.6089];
                                           [-132.3437]];
 
                                          [[  97.8425];
@@ -1886,7 +1886,7 @@ type TestTensor () =
                                           [ -78.6259]]]])
 
         let t3s2p1 = t1.conv2d(t2, stride=2, padding=1)
-        let t3s2p1Correct = info.mkTensor([[[[  86.6988;  -85.8172];
+        let t3s2p1Correct = ty.tensor([[[[  86.6988;  -85.8172];
                                               [-176.1860; -165.9882]];
 
                                              [[   3.9697;   16.3075];
@@ -1906,7 +1906,7 @@ type TestTensor () =
                                               [ -44.8701;  136.6283]]]])
 
         let t3s23p32 = t1.conv2d(t2, strides=[2; 3], paddings=[3; 2])
-        let t3s23p32Correct = info.mkTensor([[[[   0.0000,    0.0000],
+        let t3s23p32Correct = ty.tensor([[[[   0.0000,    0.0000],
                                                   [   7.5866,  -85.8172],
                                                   [ -42.1364, -165.9885],
                                                   [ -67.0271,   97.8170]],
@@ -1938,7 +1938,7 @@ type TestTensor () =
                                                   [  11.1650,   48.6844]]]])
         
         let t3p1d2 = t1.conv2d(t2, padding=1, dilation=2)
-        let t3p1d2Correct = info.mkTensor([[[[ -72.7697,  -34.7305],
+        let t3p1d2Correct = ty.tensor([[[[ -72.7697,  -34.7305],
                                               [ -35.3463, -230.5320]],
 
                                              [[ -42.2859,   24.9292],
@@ -1958,7 +1958,7 @@ type TestTensor () =
                                               [  35.7940,   27.9557]]]])
 
         let t3p22d23 = t1.conv2d(t2, paddings=[2;2], dilations=[2;3])
-        let t3p22d23Correct = info.mkTensor([[[[-3.2693e+01, -4.3192e+01],
+        let t3p22d23Correct = ty.tensor([[[[-3.2693e+01, -4.3192e+01],
                                                   [ 4.7954e+01,  9.6877e+00],
                                                   [ 1.7971e+01, -7.0747e+01],
                                                   [-4.4577e+01, -1.7964e+01]],
@@ -1990,7 +1990,7 @@ type TestTensor () =
                                                   [-8.1167e+01,  3.2597e+01]]]])
 
         let t3s3p6d3 = t1.conv2d(t2, stride=3, padding=6, dilation=3)
-        let t3s3p6d3Correct = info.mkTensor([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
+        let t3s3p6d3Correct = ty.tensor([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
                                                   [  27.0241, -107.5002,   98.7433,  -41.9933],
                                                   [  11.7470, -105.7288, -152.6583,   23.1514],
                                                   [ -67.0271,   60.8134,   74.5546,    9.3066]],
@@ -2291,13 +2291,13 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorNegT () =
       // Test all non-bool types
-      for info in infosIntegralAndFloatingPoint do 
-        let t1 = info.mkTensor([1.; 2.; 3.])
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+        let t1 = ty.tensor([1.; 2.; 3.])
         let t1Neg = -t1
-        let t1NegCorrect = info.mkTensor([-1.; -2.; -3.])
+        let t1NegCorrect = ty.tensor([-1.; -2.; -3.])
 
         Assert.AreEqual(t1NegCorrect, t1Neg)
-        Assert.AreEqual(t1Neg.dtype, info.dtype)
+        Assert.AreEqual(t1Neg.dtype, ty.dtype)
 
       // Neg of Bool tensor not allowed
       //
@@ -2401,61 +2401,61 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSumT2Dim0 () =
       // Test all non-bool types
-      for info in infosIntegralAndFloatingPoint do 
-        let t1 = info.mkTensor([[1.; 2.]; [3.; 4.]])
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+        let t1 = ty.tensor([[1.; 2.]; [3.; 4.]])
         let t1Sum = t1.sumT2Dim0()
-        let t1SumCorrect = info.mkTensor([4.; 6.])
+        let t1SumCorrect = ty.tensor([4.; 6.])
 
         Assert.AreEqual(t1SumCorrect, t1Sum)
-        Assert.AreEqual(t1Sum.dtype, info.dtype)
+        Assert.AreEqual(t1Sum.dtype, ty.dtype)
     
     [<Test>]
     member this.TestTensorSumDim () =
       // Test all non-bool types
-      for info in infosIntegralAndFloatingPoint do 
-        let t = info.mkTensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+        let t = ty.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
         let tSum0 = t.sum(0)
-        let tSum0Correct = info.mkTensor([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
+        let tSum0Correct = ty.tensor([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
         let tSum1 = t.sum(1)
-        let tSum1Correct = info.mkTensor([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
+        let tSum1Correct = ty.tensor([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
         let tSum2 = t.sum(2)
-        let tSum2Correct = info.mkTensor([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
+        let tSum2Correct = ty.tensor([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
         Assert.AreEqual(tSum1Correct, tSum1)
         Assert.AreEqual(tSum2Correct, tSum2)
-        Assert.AreEqual(tSum0.dtype, info.dtype)
-        Assert.AreEqual(tSum1.dtype, info.dtype)
-        Assert.AreEqual(tSum2.dtype, info.dtype)
+        Assert.AreEqual(tSum0.dtype, ty.dtype)
+        Assert.AreEqual(tSum1.dtype, ty.dtype)
+        Assert.AreEqual(tSum2.dtype, ty.dtype)
     
     [<Test>]
     member this.TestTensorSumDimKeepDim () =
       // Test all non-bool types
-      for info in infosIntegralAndFloatingPoint do 
-        let t = info.mkTensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+      for ty in dtypeInfosIntegralAndFloatingPoint do 
+        let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
         let tSum0 = t.sum(0, keepDim=true)
-        let tSum0Correct = info.mkTensor([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
+        let tSum0Correct = ty.tensor([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
         let tSum1 = t.sum(1, keepDim=true)
-        let tSum1Correct = info.mkTensor([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
+        let tSum1Correct = ty.tensor([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
         let tSum2 = t.sum(2, keepDim=true)
-        let tSum2Correct = info.mkTensor([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
+        let tSum2Correct = ty.tensor([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
 
         Assert.AreEqual(tSum0Correct, tSum0)
         Assert.AreEqual(tSum1Correct, tSum1)
         Assert.AreEqual(tSum2Correct, tSum2)
-        Assert.AreEqual(tSum0.dtype, info.dtype)
-        Assert.AreEqual(tSum1.dtype, info.dtype)
-        Assert.AreEqual(tSum2.dtype, info.dtype)
+        Assert.AreEqual(tSum0.dtype, ty.dtype)
+        Assert.AreEqual(tSum1.dtype, ty.dtype)
+        Assert.AreEqual(tSum2.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorMean () =
-      for info in infosFloatingPoint do 
-        let t = info.mkTensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+      for ty in dtypeInfosFloatingPoint do 
+        let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
         let tMean = t.mean()
-        let tMeanCorrect = info.mkTensor(12.5)
+        let tMeanCorrect = ty.tensor(12.5)
 
         Assert.AreEqual(tMeanCorrect, tMean)
-        Assert.AreEqual(tMean.dtype, info.dtype)
+        Assert.AreEqual(tMean.dtype, ty.dtype)
 
         // mean, dim={0,1,2}
         (* Python:
@@ -2467,11 +2467,11 @@ type TestTensor () =
         --> array([[10., 26., 42.],[58., 74., 90.]])
         *)
         let tMean0 = t.mean(0)
-        let tMean0Correct = info.mkTensor([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
+        let tMean0Correct = ty.tensor([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
         let tMean1 = t.mean(1)
-        let tMean1Correct = info.mkTensor([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
+        let tMean1Correct = ty.tensor([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
         let tMean2 = t.mean(2)
-        let tMean2Correct = info.mkTensor([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
+        let tMean2Correct = ty.tensor([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
 
         Assert.AreEqual(tMean0Correct, tMean0)
         Assert.AreEqual(tMean1Correct, tMean1)
@@ -2489,11 +2489,11 @@ type TestTensor () =
         # --> tensor([[[ 2.5000],[ 6.5000],[10.5000]],[[14.5000],[18.5000],[22.5000]]])
         *)
         let tMeanKeepDim0 = t.mean(0, keepDim=true)
-        let tMeanKeepDim0Correct = info.mkTensor([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
+        let tMeanKeepDim0Correct = ty.tensor([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
         let tMeanKeepDim1 = t.mean(1, keepDim=true)
-        let tMeanKeepDim1Correct = info.mkTensor([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
+        let tMeanKeepDim1Correct = ty.tensor([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
         let tMeanKeepDim2 = t.mean(2, keepDim=true)
-        let tMeanKeepDim2Correct = info.mkTensor([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
+        let tMeanKeepDim2Correct = ty.tensor([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
 
         Assert.AreEqual(tMeanKeepDim0, tMeanKeepDim0Correct)
         Assert.AreEqual(tMeanKeepDim1, tMeanKeepDim1Correct)
@@ -2501,8 +2501,8 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorStddev () =
-      for info in infosFloatingPoint do 
-        let t = info.mkTensor([[[0.3787;0.7515;0.2252;0.3416];
+      for ty in dtypeInfosFloatingPoint do 
+        let t = ty.tensor([[[0.3787;0.7515;0.2252;0.3416];
             [0.6078;0.4742;0.7844;0.0967];
             [0.1416;0.1559;0.6452;0.1417]];
  
@@ -2510,28 +2510,28 @@ type TestTensor () =
             [0.5187;0.0520;0.4763;0.1509];
             [0.4767;0.8096;0.1729;0.6671]]])
         let tStddev = t.stddev()
-        let tStddevCorrect = info.mkTensor(0.2398)
+        let tStddevCorrect = ty.tensor(0.2398)
 
         Assert.True(tStddev.allclose(tStddevCorrect, 0.01))
-        Assert.AreEqual(tStddev.dtype, info.dtype)
+        Assert.AreEqual(tStddev.dtype, ty.dtype)
 
         // stddev, dim={0,1,2,3}, keepDim=true
         let tStddev0 = t.stddev(0)
-        let tStddev0Correct = info.mkTensor([[0.2078; 0.2375; 0.2326; 0.0530];
+        let tStddev0Correct = ty.tensor([[0.2078; 0.2375; 0.2326; 0.0530];
             [0.0630; 0.2985; 0.2179; 0.0383];
             [0.2370; 0.4623; 0.3339; 0.3715]])
         let tStddev1 = t.stddev(1)
-        let tStddev1Correct = info.mkTensor([[0.2331; 0.2981; 0.2911; 0.1304];
+        let tStddev1Correct = ty.tensor([[0.2331; 0.2981; 0.2911; 0.1304];
             [0.2393; 0.3789; 0.2014; 0.2581]])
         let tStddev2 = t.stddev(2)
-        let tStddev2Correct = info.mkTensor([[0.2277; 0.2918; 0.2495];[0.1996; 0.2328; 0.2753]])
+        let tStddev2Correct = ty.tensor([[0.2277; 0.2918; 0.2495];[0.1996; 0.2328; 0.2753]])
 
         Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
         Assert.True(tStddev1.allclose(tStddev1Correct, 0.01))
         Assert.True(tStddev2.allclose(tStddev2Correct, 0.01))
-        Assert.AreEqual(tStddev0.dtype, info.dtype)
-        Assert.AreEqual(tStddev1.dtype, info.dtype)
-        Assert.AreEqual(tStddev2.dtype, info.dtype)
+        Assert.AreEqual(tStddev0.dtype, ty.dtype)
+        Assert.AreEqual(tStddev1.dtype, ty.dtype)
+        Assert.AreEqual(tStddev2.dtype, ty.dtype)
 
         // stddev, dim={0,1,2,3}, keepDim=true
         (* Python:
@@ -2545,11 +2545,11 @@ type TestTensor () =
         # --> tensor([[[0.2278],[0.2918],[0.2495]],[[0.1996],[0.2328],[0.2753]]]) 
         *)
         let tStddev0 = t.stddev(0, keepDim=true)
-        let tStddev0Correct = info.mkTensor([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
+        let tStddev0Correct = ty.tensor([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
         let tStddev1 = t.stddev(1, keepDim=true)
-        let tStddev1Correct = info.mkTensor([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
+        let tStddev1Correct = ty.tensor([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
         let tStddev2 = t.stddev(2, keepDim=true)
-        let tStddev2Correct = info.mkTensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
+        let tStddev2Correct = ty.tensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
 
         Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
         Assert.True(tStddev1.allclose(tStddev1Correct, 0.01))
@@ -2557,15 +2557,15 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorVariance () =
-      for info in infosFloatingPoint do 
+      for ty in dtypeInfosFloatingPoint do 
         (* Python:
         import torch
         input = torch.tensor([[[0.3787,0.7515,0.2252,0.3416],[0.6078,0.4742,0.7844,0.0967],[0.1416,0.1559,0.6452,0.1417]],[[0.0848,0.4156,0.5542,0.4166],[0.5187,0.0520,0.4763,0.1509],[0.4767,0.8096,0.1729,0.6671]]])
         input.var()
         *)
-        let t = info.mkTensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
+        let t = ty.tensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
         let tVariance = t.variance()
-        let tVarianceCorrect = info.mkTensor(0.0575)
+        let tVarianceCorrect = ty.tensor(0.0575)
 
         Assert.True(tVariance.allclose(tVarianceCorrect, 0.01))
 
@@ -2579,22 +2579,22 @@ type TestTensor () =
         # --> tensor([[0.0519, 0.0852, 0.0622],[0.0398, 0.0542, 0.0758]])
         *)
         let tVariance0 = t.variance(0)
-        let tVariance0Correct = info.mkTensor([[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]])
+        let tVariance0Correct = ty.tensor([[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]])
         let tVariance1 = t.variance(1)
-        let tVariance1Correct = info.mkTensor([[0.0543; 0.0888; 0.0847; 0.0170];[0.0573; 0.1436; 0.0406; 0.0666]])
+        let tVariance1Correct = ty.tensor([[0.0543; 0.0888; 0.0847; 0.0170];[0.0573; 0.1436; 0.0406; 0.0666]])
         let tVariance2 = t.variance(2)
-        let tVariance2Correct = info.mkTensor([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
+        let tVariance2Correct = ty.tensor([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
 
         Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
         Assert.True(tVariance1.allclose(tVariance1Correct, 0.01, 0.01))
         Assert.True(tVariance2.allclose(tVariance2Correct, 0.01, 0.01))
-        Assert.AreEqual(tVariance0.dtype, info.dtype)
-        Assert.AreEqual(tVariance1.dtype, info.dtype)
-        Assert.AreEqual(tVariance2.dtype, info.dtype)
+        Assert.AreEqual(tVariance0.dtype, ty.dtype)
+        Assert.AreEqual(tVariance1.dtype, ty.dtype)
+        Assert.AreEqual(tVariance2.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorVarianceKeepDim () =
-      for info in infosFloatingPoint do 
+      for ty in dtypeInfosFloatingPoint do 
         // Variance, dim={0,1,2,3}, keepDim=true
         (* Python:
         import torch
@@ -2606,36 +2606,36 @@ type TestTensor () =
         input.var(2,keepdim=True)
         # --> tensor([[[0.0519],[0.0852],[0.0622]],[[0.0398],[0.0542],[0.0758]]])
         *)
-        let t = info.mkTensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
+        let t = ty.tensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
         let tVariance0 = t.variance(0, keepDim=true)
-        let tVariance0Correct = info.mkTensor([[[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]]])
+        let tVariance0Correct = ty.tensor([[[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]]])
         let tVariance1 = t.variance(1, keepDim=true)
-        let tVariance1Correct = info.mkTensor([[[0.0543; 0.0888; 0.0847; 0.0170]];[[0.0573; 0.1436; 0.0406; 0.0666]]])
+        let tVariance1Correct = ty.tensor([[[0.0543; 0.0888; 0.0847; 0.0170]];[[0.0573; 0.1436; 0.0406; 0.0666]]])
         let tVariance2 = t.variance(2, keepDim=true)
-        let tVariance2Correct = info.mkTensor([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
+        let tVariance2Correct = ty.tensor([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
 
         Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
         Assert.True(tVariance1.allclose(tVariance1Correct, 0.01, 0.01))
         Assert.True(tVariance2.allclose(tVariance2Correct, 0.01, 0.01))
-        Assert.AreEqual(tVariance0.dtype, info.dtype)
-        Assert.AreEqual(tVariance1.dtype, info.dtype)
-        Assert.AreEqual(tVariance2.dtype, info.dtype)
+        Assert.AreEqual(tVariance0.dtype, ty.dtype)
+        Assert.AreEqual(tVariance1.dtype, ty.dtype)
+        Assert.AreEqual(tVariance2.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorTransposeT2 () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
         let t1Transpose = t1.transpose()
-        let t1TransposeCorrect = info.mkTensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        let t1TransposeCorrect = ty.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
 
-        let t2 = info.mkTensor([[1.; 2.]; [3.; 4.]])
+        let t2 = ty.tensor([[1.; 2.]; [3.; 4.]])
         let t2TransposeTranspose = t2.transpose().transpose()
         let t2TransposeTransposeCorrect = t2
 
         Assert.AreEqual(t1TransposeCorrect, t1Transpose)
         Assert.AreEqual(t2TransposeTransposeCorrect, t2TransposeTranspose)
-        Assert.AreEqual(t1Transpose.dtype, info.dtype)
-        Assert.AreEqual(t2TransposeTranspose.dtype, info.dtype)
+        Assert.AreEqual(t1Transpose.dtype, ty.dtype)
+        Assert.AreEqual(t2TransposeTranspose.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorTransposeBatch () =
@@ -2653,13 +2653,13 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorSignT () =
         // Test all non-bool types
-        for info in infosIntegralAndFloatingPoint do 
-            let t1 = info.mkTensor([-1.; -2.; 0.; 3.])
+        for ty in dtypeInfosIntegralAndFloatingPoint do 
+            let t1 = ty.tensor([-1.; -2.; 0.; 3.])
             let t1Sign = t1.sign()
-            let t1SignCorrect = info.mkTensor([-1.; -1.; 0.; 1.])
+            let t1SignCorrect = ty.tensor([-1.; -1.; 0.; 1.])
 
             Assert.AreEqual(t1SignCorrect, t1Sign)
-            Assert.AreEqual(t1Sign.dtype, info.dtype)
+            Assert.AreEqual(t1Sign.dtype, ty.dtype)
 
         // Test bool type separately
         // Note, PyTorch 'torch.tensor([True, False]).sign()' gives 'tensor([ True, False])'
@@ -2670,39 +2670,39 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorFloorT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Floor = t1.floor()
-        let t1FloorCorrect = info.mkTensor([0.; 0.; 0.; 0.; 0.])
+        let t1FloorCorrect = ty.tensor([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(t1Floor.allclose(t1FloorCorrect, 0.01))
-        Assert.AreEqual(t1Floor.dtype, info.dtype)
+        Assert.AreEqual(t1Floor.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).floor())
 
     [<Test>]
     member this.TestTensorCeilT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Ceil = t1.ceil()
-        let t1CeilCorrect = info.mkTensor([1.; 1.; 1.; 1.; 1.])
+        let t1CeilCorrect = ty.tensor([1.; 1.; 1.; 1.; 1.])
 
         Assert.True(t1Ceil.allclose(t1CeilCorrect, 0.01))
-        Assert.AreEqual(t1Ceil.dtype, info.dtype)
+        Assert.AreEqual(t1Ceil.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).ceil())
 
     [<Test>]
     member this.TestTensorRoundT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Round = t1.round()
-        let t1RoundCorrect = info.mkTensor([1.; 0.; 0.; 1.; 1.])
+        let t1RoundCorrect = ty.tensor([1.; 0.; 0.; 1.; 1.])
 
         Assert.True(t1Round.allclose(t1RoundCorrect, 0.01))
-        Assert.AreEqual(t1Round.dtype, info.dtype)
+        Assert.AreEqual(t1Round.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).round())
@@ -2742,14 +2742,14 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorLeakyRelu () =
-        for info in infosFloatingPoint do 
-          let t1 = info.mkTensor([-1.; -2.; 0.; 3.; 10.])
+        for ty in dtypeInfosFloatingPoint do 
+          let t1 = ty.tensor([-1.; -2.; 0.; 3.; 10.])
           let t1LeakyRelu = t1.leakyRelu()
-          let t1LeakyReluCorrect = info.mkTensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+          let t1LeakyReluCorrect = ty.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
 
           Assert.AreEqual(t1LeakyReluCorrect, t1LeakyRelu)
-          Assert.AreEqual(t1LeakyRelu.dtype, info.dtype)
-          Assert.AreEqual(t1LeakyRelu.dtype, info.dtype)
+          Assert.AreEqual(t1LeakyRelu.dtype, ty.dtype)
+          Assert.AreEqual(t1LeakyRelu.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorSigmoidT () =
@@ -2779,203 +2779,203 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorExpT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
         let t1Exp = t1.exp()
-        let t1ExpCorrect = info.mkTensor([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
+        let t1ExpCorrect = ty.tensor([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
 
         Assert.True(t1Exp.allclose(t1ExpCorrect, 0.01))
-        Assert.AreEqual(t1Exp.dtype, info.dtype)
+        Assert.AreEqual(t1Exp.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).exp())
 
     [<Test>]
     member this.TestTensorLogT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
         let t1Log = t1.log()
-        let t1LogCorrect = info.mkTensor([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
+        let t1LogCorrect = ty.tensor([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
 
         Assert.True(t1Log.allclose(t1LogCorrect, 0.01))
-        Assert.AreEqual(t1Log.dtype, info.dtype)
+        Assert.AreEqual(t1Log.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).log())
 
     [<Test>]
     member this.TestTensorLog10T () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
         let t1Log10 = t1.log10()
-        let t1Log10Correct = info.mkTensor([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
+        let t1Log10Correct = ty.tensor([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
 
         Assert.True(t1Log10.allclose(t1Log10Correct, 0.01))
-        Assert.AreEqual(t1Log10.dtype, info.dtype)
+        Assert.AreEqual(t1Log10.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).log10())
 
     [<Test>]
     member this.TestTensorSqrtT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
         let t1Sqrt = t1.sqrt()
-        let t1SqrtCorrect = info.mkTensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        let t1SqrtCorrect = ty.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
 
         Assert.True(t1Sqrt.allclose(t1SqrtCorrect, 0.01))
-        Assert.AreEqual(t1Sqrt.dtype, info.dtype)
+        Assert.AreEqual(t1Sqrt.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sqrt())
 
     [<Test>]
     member this.TestTensorSinT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
         let t1Sin = t1.sin()
-        let t1SinCorrect = info.mkTensor([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
+        let t1SinCorrect = ty.tensor([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
 
         Assert.True(t1Sin.allclose(t1SinCorrect, 0.01))
-        Assert.AreEqual(t1Sin.dtype, info.dtype)
+        Assert.AreEqual(t1Sin.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sin())
 
     [<Test>]
     member this.TestTensorCosT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
         let t1Cos = t1.cos()
-        let t1CosCorrect = info.mkTensor([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
+        let t1CosCorrect = ty.tensor([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
 
         Assert.True(t1Cos.allclose(t1CosCorrect, 0.01))
-        Assert.AreEqual(t1Cos.dtype, info.dtype)
+        Assert.AreEqual(t1Cos.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).cos())
 
     [<Test>]
     member this.TestTensorTanT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
         let t1Tan = t1.tan()
-        let t1TanCorrect = info.mkTensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
+        let t1TanCorrect = ty.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
 
         Assert.True(t1Tan.allclose(t1TanCorrect, 0.01))
-        Assert.AreEqual(t1Tan.dtype, info.dtype)
+        Assert.AreEqual(t1Tan.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).tan())
 
     [<Test>]
     member this.TestTensorSinhT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
         let t1Sinh = t1.sinh()
-        let t1SinhCorrect = info.mkTensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
+        let t1SinhCorrect = ty.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
 
         Assert.True(t1Sinh.allclose(t1SinhCorrect, 0.01))
-        Assert.AreEqual(t1Sinh.dtype, info.dtype)
+        Assert.AreEqual(t1Sinh.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).sinh())
 
     [<Test>]
     member this.TestTensorCoshT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
         let t1Cosh = t1.cosh()
-        let t1CoshCorrect = info.mkTensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
+        let t1CoshCorrect = ty.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
 
         Assert.True(t1Cosh.allclose(t1CoshCorrect, 0.01))
-        Assert.AreEqual(t1Cosh.dtype, info.dtype)
+        Assert.AreEqual(t1Cosh.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).cosh())
 
     [<Test>]
     member this.TestTensorTanhT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
         let t1Tanh = t1.tanh()
-        let t1TanhCorrect = info.mkTensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
+        let t1TanhCorrect = ty.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
 
         Assert.True(t1Tanh.allclose(t1TanhCorrect, 0.01))
-        Assert.AreEqual(t1Tanh.dtype, info.dtype)
+        Assert.AreEqual(t1Tanh.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).tanh())
 
     [<Test>]
     member this.TestTensorAsinT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Asin = t1.asin()
-        let t1AsinCorrect = info.mkTensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
+        let t1AsinCorrect = ty.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
 
         Assert.True(t1Asin.allclose(t1AsinCorrect, 0.01))
-        Assert.AreEqual(t1Asin.dtype, info.dtype)
+        Assert.AreEqual(t1Asin.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).asin())
 
     [<Test>]
     member this.TestTensorAcosT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Acos = t1.acos()
-        let t1AcosCorrect = info.mkTensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
+        let t1AcosCorrect = ty.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
 
         Assert.True(t1Acos.allclose(t1AcosCorrect, 0.01))
-        Assert.AreEqual(t1Acos.dtype, info.dtype)
+        Assert.AreEqual(t1Acos.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).acos())
 
     [<Test>]
     member this.TestTensorAtanT () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
         let t1Atan = t1.atan()
-        let t1AtanCorrect = info.mkTensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
+        let t1AtanCorrect = ty.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
 
         Assert.True(t1Atan.allclose(t1AtanCorrect, 0.01))
-        Assert.AreEqual(t1Atan.dtype, info.dtype)
+        Assert.AreEqual(t1Atan.dtype, ty.dtype)
 
       for dtype in dtypesIntegralAndBool do
           isInvalidOp(fun () -> dsharp.tensor([1.0], dtype=dtype).atan())
 
     [<Test>]
     member this.TestTensorSlice () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([1.;2.])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([1.;2.])
         let t1s1 = t1.[0]
         let t1s2 = t1.[*]
-        let t1s1Correct = info.mkTensor(1.)
-        let t1s2Correct = info.mkTensor([1.;2.])
+        let t1s1Correct = ty.tensor(1.)
+        let t1s2Correct = ty.tensor([1.;2.])
 
-        let t2 = info.mkTensor([[1.;2.];[3.;4.]])
+        let t2 = ty.tensor([[1.;2.];[3.;4.]])
         let t2s1 = t2.[0]
         let t2s2 = t2.[*]
         let t2s3 = t2.[0,0]
         let t2s4 = t2.[0,*]
         let t2s5 = t2.[*,0]
         let t2s6 = t2.[*,*]
-        let t2s1Correct = info.mkTensor([1.;2.])
-        let t2s2Correct = info.mkTensor([[1.;2.];[3.;4.]])
-        let t2s3Correct = info.mkTensor(1.)
-        let t2s4Correct = info.mkTensor([1.;2.])
-        let t2s5Correct = info.mkTensor([1.;3.])
-        let t2s6Correct = info.mkTensor([[1.;2.];[3.;4.]])
+        let t2s1Correct = ty.tensor([1.;2.])
+        let t2s2Correct = ty.tensor([[1.;2.];[3.;4.]])
+        let t2s3Correct = ty.tensor(1.)
+        let t2s4Correct = ty.tensor([1.;2.])
+        let t2s5Correct = ty.tensor([1.;3.])
+        let t2s6Correct = ty.tensor([[1.;2.];[3.;4.]])
 
-        let t2b = info.mkTensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
+        let t2b = ty.tensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
         let t2bs1 = t2b.[1..,2..]
-        let t2bs1Correct = info.mkTensor([[7.;8.];[11.;12.]])
+        let t2bs1Correct = ty.tensor([[7.;8.];[11.;12.]])
         let t2bs2 = t2b.[1..2,2..3]
-        let t2bs2Correct = info.mkTensor([[7.;8.];[11.;12.]])
+        let t2bs2Correct = ty.tensor([[7.;8.];[11.;12.]])
 
-        let t3 = info.mkTensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3 = ty.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
         let t3s1  = t3.[0]
         let t3s2  = t3.[*]
         let t3s3  = t3.[0,0]
@@ -2990,22 +2990,22 @@ type TestTensor () =
         let t3s12 = t3.[*,0,*]
         let t3s13 = t3.[*,*,0]
         let t3s14 = t3.[*,*,*]
-        let t3s1Correct  = info.mkTensor([[1.;2.];[3.;4.]])
-        let t3s2Correct  = info.mkTensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-        let t3s3Correct  = info.mkTensor([1.;2.])
-        let t3s4Correct  = info.mkTensor([[1.;2.];[3.;4.]])
-        let t3s5Correct  = info.mkTensor([[1.;2.];[5.;6.]])
-        let t3s6Correct  = info.mkTensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-        let t3s7Correct  = info.mkTensor(1.)
-        let t3s8Correct  = info.mkTensor([1.;2.])
-        let t3s9Correct  = info.mkTensor([1.;3.])
-        let t3s10Correct = info.mkTensor([[1.;2.];[3.;4.]])
-        let t3s11Correct = info.mkTensor([1.;5.])
-        let t3s12Correct = info.mkTensor([[1.;2.];[5.;6.]])
-        let t3s13Correct = info.mkTensor([[1.;3.];[5.;7.]])
-        let t3s14Correct = info.mkTensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s1Correct  = ty.tensor([[1.;2.];[3.;4.]])
+        let t3s2Correct  = ty.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s3Correct  = ty.tensor([1.;2.])
+        let t3s4Correct  = ty.tensor([[1.;2.];[3.;4.]])
+        let t3s5Correct  = ty.tensor([[1.;2.];[5.;6.]])
+        let t3s6Correct  = ty.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
+        let t3s7Correct  = ty.tensor(1.)
+        let t3s8Correct  = ty.tensor([1.;2.])
+        let t3s9Correct  = ty.tensor([1.;3.])
+        let t3s10Correct = ty.tensor([[1.;2.];[3.;4.]])
+        let t3s11Correct = ty.tensor([1.;5.])
+        let t3s12Correct = ty.tensor([[1.;2.];[5.;6.]])
+        let t3s13Correct = ty.tensor([[1.;3.];[5.;7.]])
+        let t3s14Correct = ty.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
 
-        let t4 = info.mkTensor([[[[1.]]; 
+        let t4 = ty.tensor([[[[1.]]; 
                                  [[2.]]; 
                                  [[3.]]]; 
                                 [[[4.]]; 
@@ -3013,7 +3013,7 @@ type TestTensor () =
                                  [[6.]]]])
         let t4s1 = t4.[0]
         let t4s2 = t4.[0,*,*,*]
-        let t4s1Correct = info.mkTensor([[[1]];
+        let t4s1Correct = ty.tensor([[[1]];
                                          [[2]];
                                          [[3]]])
         let t4s2Correct = t4s1Correct
@@ -3049,51 +3049,51 @@ type TestTensor () =
         Assert.AreEqual(t4s1Correct, t4s1)
         Assert.AreEqual(t4s2Correct, t4s2)
 
-        Assert.AreEqual(t1s1.dtype, info.dtype)
-        Assert.AreEqual(t1s2.dtype, info.dtype)
+        Assert.AreEqual(t1s1.dtype, ty.dtype)
+        Assert.AreEqual(t1s2.dtype, ty.dtype)
 
-        Assert.AreEqual(t2s1.dtype, info.dtype)
-        Assert.AreEqual(t2s2.dtype, info.dtype)
-        Assert.AreEqual(t2s3.dtype, info.dtype)
-        Assert.AreEqual(t2s4.dtype, info.dtype)
-        Assert.AreEqual(t2s5.dtype, info.dtype)
-        Assert.AreEqual(t2s6.dtype, info.dtype)
+        Assert.AreEqual(t2s1.dtype, ty.dtype)
+        Assert.AreEqual(t2s2.dtype, ty.dtype)
+        Assert.AreEqual(t2s3.dtype, ty.dtype)
+        Assert.AreEqual(t2s4.dtype, ty.dtype)
+        Assert.AreEqual(t2s5.dtype, ty.dtype)
+        Assert.AreEqual(t2s6.dtype, ty.dtype)
 
-        Assert.AreEqual(t2bs1.dtype, info.dtype)
-        Assert.AreEqual(t2bs2.dtype, info.dtype)
+        Assert.AreEqual(t2bs1.dtype, ty.dtype)
+        Assert.AreEqual(t2bs2.dtype, ty.dtype)
 
-        Assert.AreEqual(t3s1.dtype, info.dtype)
-        Assert.AreEqual(t3s2.dtype, info.dtype)
-        Assert.AreEqual(t3s3.dtype, info.dtype)
-        Assert.AreEqual(t3s4.dtype, info.dtype)
-        Assert.AreEqual(t3s5.dtype, info.dtype)
-        Assert.AreEqual(t3s6.dtype, info.dtype)
-        Assert.AreEqual(t3s7.dtype, info.dtype)
-        Assert.AreEqual(t3s8.dtype, info.dtype)
-        Assert.AreEqual(t3s9.dtype, info.dtype)
-        Assert.AreEqual(t3s10.dtype, info.dtype)
-        Assert.AreEqual(t3s11.dtype, info.dtype)
-        Assert.AreEqual(t3s12.dtype, info.dtype)
-        Assert.AreEqual(t3s13.dtype, info.dtype)
-        Assert.AreEqual(t3s14.dtype, info.dtype)
+        Assert.AreEqual(t3s1.dtype, ty.dtype)
+        Assert.AreEqual(t3s2.dtype, ty.dtype)
+        Assert.AreEqual(t3s3.dtype, ty.dtype)
+        Assert.AreEqual(t3s4.dtype, ty.dtype)
+        Assert.AreEqual(t3s5.dtype, ty.dtype)
+        Assert.AreEqual(t3s6.dtype, ty.dtype)
+        Assert.AreEqual(t3s7.dtype, ty.dtype)
+        Assert.AreEqual(t3s8.dtype, ty.dtype)
+        Assert.AreEqual(t3s9.dtype, ty.dtype)
+        Assert.AreEqual(t3s10.dtype, ty.dtype)
+        Assert.AreEqual(t3s11.dtype, ty.dtype)
+        Assert.AreEqual(t3s12.dtype, ty.dtype)
+        Assert.AreEqual(t3s13.dtype, ty.dtype)
+        Assert.AreEqual(t3s14.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorAddTTSlice () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[-0.2754;  0.0172;  0.7105];
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[-0.2754;  0.0172;  0.7105];
             [-0.1890;  1.7664;  0.5377];
             [-0.5313; -2.2530; -0.6235];
             [ 0.6776;  1.5844; -0.5686]])
-        let t2 = info.mkTensor([[-111.8892;   -7.0328];
+        let t2 = ty.tensor([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]])
         let t3 = t1.addSlice([0;1], t2)
-        let t3Correct = info.mkTensor([[  -0.2754; -111.8720;   -6.3222];
+        let t3Correct = ty.tensor([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
 
         Assert.True(t3.allclose(t3Correct, 0.01))
-        Assert.AreEqual(t3.dtype, info.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorExpandT () =
@@ -3129,36 +3129,36 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorSqueezeT () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[[1.; 2.]]; [[3.;4.]]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[[1.; 2.]]; [[3.;4.]]])
         let t1Squeeze = t1.squeeze()
-        let t1SqueezeCorrect = info.mkTensor([[1.;2.];[3.;4.]])
+        let t1SqueezeCorrect = ty.tensor([[1.;2.];[3.;4.]])
 
         Assert.True(t1Squeeze.allclose(t1SqueezeCorrect, 0.01))
-        Assert.AreEqual(t1Squeeze.dtype, info.dtype)
+        Assert.AreEqual(t1Squeeze.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorUnsqueezeT () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[1.;2.];[3.;4.]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[1.;2.];[3.;4.]])
         let t1Unsqueeze = t1.unsqueeze(1)
-        let t1UnsqueezeCorrect = info.mkTensor([[[1.; 2.]]; [[3.;4.]]])
+        let t1UnsqueezeCorrect = ty.tensor([[[1.; 2.]]; [[3.;4.]]])
 
         Assert.True(t1Unsqueeze.allclose(t1UnsqueezeCorrect, 0.01))
-        Assert.AreEqual(t1Unsqueeze.dtype, info.dtype)
+        Assert.AreEqual(t1Unsqueeze.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorFlipT () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[1.;2.];[3.;4.]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[1.;2.];[3.;4.]])
         let t2 = t1.flip([|0|])
-        let t2Correct = info.mkTensor([[3.;4.]; [1.;2.]])
+        let t2Correct = ty.tensor([[3.;4.]; [1.;2.]])
         let t3 = t1.flip([|1|])
-        let t3Correct = info.mkTensor([[2.;1.]; [4.;3.]])
+        let t3Correct = ty.tensor([[2.;1.]; [4.;3.]])
         let t4 = t1.flip([|0; 1|])
-        let t4Correct = info.mkTensor([[4.;3.]; [2.;1.]])
+        let t4Correct = ty.tensor([[4.;3.]; [2.;1.]])
         let t5 = t1.flip([|0; 1|]).flip([|0; 1|])
-        let t5Correct = info.mkTensor([[1.;2.]; [3.;4.]])
+        let t5Correct = ty.tensor([[1.;2.]; [3.;4.]])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t3Correct, t3)
@@ -3167,47 +3167,47 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDilateT () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[1.;2.]; [3.;4.]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[1.;2.]; [3.;4.]])
         let t2 = t1.dilate([|1; 2|])
-        let t2Correct = info.mkTensor([[1.;0.;2.];[3.;0.;4.]])
+        let t2Correct = ty.tensor([[1.;0.;2.];[3.;0.;4.]])
         let t3 = t1.dilate([|2; 2|])
-        let t3Correct = info.mkTensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
-        let t4 = info.mkTensor([1.;2.;3.;4.])
+        let t3Correct = ty.tensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t4 = ty.tensor([1.;2.;3.;4.])
         let t5 = t4.dilate([|3|])
-        let t5Correct = info.mkTensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+        let t5Correct = ty.tensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t3Correct, t3)
         Assert.AreEqual(t5Correct, t5)
-        Assert.AreEqual(info.dtype, t2.dtype)
-        Assert.AreEqual(info.dtype, t3.dtype)
-        Assert.AreEqual(info.dtype, t5.dtype)
+        Assert.AreEqual(ty.dtype, t2.dtype)
+        Assert.AreEqual(ty.dtype, t3.dtype)
+        Assert.AreEqual(ty.dtype, t5.dtype)
 
     [<Test>]
     member this.TestTensorUndilateT () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([[1.;0.;2.];[3.;0.;4.]])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([[1.;0.;2.];[3.;0.;4.]])
         let t2 = t1.undilate([|1; 2|])
-        let t2Correct = info.mkTensor([[1.;2.]; [3.;4.]])
-        let t3 = info.mkTensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+        let t2Correct = ty.tensor([[1.;2.]; [3.;4.]])
+        let t3 = ty.tensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
         let t4 = t3.undilate([|2; 2|])
-        let t4Correct = info.mkTensor([[1.;2.]; [3.;4.]])
-        let t5 = info.mkTensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
+        let t4Correct = ty.tensor([[1.;2.]; [3.;4.]])
+        let t5 = ty.tensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
         let t6 = t5.undilate([|3|])
-        let t6Correct = info.mkTensor([1.;2.;3.;4.])
+        let t6Correct = ty.tensor([1.;2.;3.;4.])
 
         Assert.AreEqual(t2Correct, t2)
         Assert.AreEqual(t4Correct, t4)
         Assert.AreEqual(t6Correct, t6)
-        Assert.AreEqual(info.dtype, t2.dtype)
-        Assert.AreEqual(info.dtype, t4.dtype)
-        Assert.AreEqual(info.dtype, t6.dtype)
+        Assert.AreEqual(ty.dtype, t2.dtype)
+        Assert.AreEqual(ty.dtype, t4.dtype)
+        Assert.AreEqual(ty.dtype, t6.dtype)
 
     [<Test>]
     member this.TestTensorView () =
-      for info in infosAll do 
-        let t = dsharp.rand([10;10], dtype=info.dtype)
+      for ty in dtypeInfosAll do 
+        let t = dsharp.rand([10;10], dtype=ty.dtype)
         let t1 = t.view(-1)
         let t1Shape = t1.shape
         let t1ShapeCorrect = [|100|]
@@ -3222,7 +3222,7 @@ type TestTensor () =
         Assert.AreEqual(t2ShapeCorrect, t2Shape)
         Assert.AreEqual(t3ShapeCorrect, t3Shape)
         Assert.AreEqual(t4ShapeCorrect, t4Shape)
-        Assert.AreEqual(t1.dtype, info.dtype)
+        Assert.AreEqual(t1.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorFlatten () =
@@ -3251,16 +3251,16 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMax () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([4.;1.;20.;3.])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([4.;1.;20.;3.])
         let t1Max = t1.max()
-        let t1MaxCorrect = info.mkTensor(20.)
+        let t1MaxCorrect = ty.tensor(20.)
 
-        let t2 = info.mkTensor([[1.;4.];[2.;3.]])
+        let t2 = ty.tensor([[1.;4.];[2.;3.]])
         let t2Max = t2.max()
-        let t2MaxCorrect = info.mkTensor(4.)
+        let t2MaxCorrect = ty.tensor(4.)
 
-        let t3 = info.mkTensor([[[ 7.6884; 65.9125;  4.0114];
+        let t3 = ty.tensor([[[ 7.6884; 65.9125;  4.0114];
              [46.7944; 61.5331; 40.1627];
              [48.3240;  4.9910; 50.1571]];
 
@@ -3272,9 +3272,9 @@ type TestTensor () =
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
         let t3Max = t3.max()
-        let t3MaxCorrect = info.mkTensor(95.7660)
+        let t3MaxCorrect = ty.tensor(95.7660)
         
-        let t4 = info.mkTensor([[[[8.8978; 8.0936];
+        let t4 = ty.tensor([[[[8.8978; 8.0936];
               [4.8087; 1.0921];
               [8.5664; 3.7814]];
 
@@ -3306,30 +3306,30 @@ type TestTensor () =
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
         let t4Max = t4.max()
-        let t4MaxCorrect = info.mkTensor(9.7456)
+        let t4MaxCorrect = ty.tensor(9.7456)
 
         Assert.AreEqual(t1MaxCorrect, t1Max)
         Assert.AreEqual(t2MaxCorrect, t2Max)
         Assert.AreEqual(t3MaxCorrect, t3Max)
         Assert.AreEqual(t4MaxCorrect, t4Max)
-        Assert.AreEqual(t1Max.dtype, info.dtype)
-        Assert.AreEqual(t2Max.dtype, info.dtype)
-        Assert.AreEqual(t3Max.dtype, info.dtype)
-        Assert.AreEqual(t4Max.dtype, info.dtype)
+        Assert.AreEqual(t1Max.dtype, ty.dtype)
+        Assert.AreEqual(t2Max.dtype, ty.dtype)
+        Assert.AreEqual(t3Max.dtype, ty.dtype)
+        Assert.AreEqual(t4Max.dtype, ty.dtype)
 
 
     [<Test>]
     member this.TestTensorMin () =
-      for info in infosAll do 
-        let t1 = info.mkTensor([4.;1.;20.;3.])
+      for ty in dtypeInfosAll do 
+        let t1 = ty.tensor([4.;1.;20.;3.])
         let t1Min = t1.min()
-        let t1MinCorrect = info.mkTensor(1.)
+        let t1MinCorrect = ty.tensor(1.)
 
-        let t2 = info.mkTensor([[1.;4.];[2.;3.]])
+        let t2 = ty.tensor([[1.;4.];[2.;3.]])
         let t2Min = t2.min()
-        let t2MinCorrect = info.mkTensor(1.)
+        let t2MinCorrect = ty.tensor(1.)
 
-        let t3 = info.mkTensor([[[ 7.6884; 65.9125;  4.0114];
+        let t3 = ty.tensor([[[ 7.6884; 65.9125;  4.0114];
              [46.7944; 61.5331; 40.1627];
              [48.3240;  4.9910; 50.1571]];
 
@@ -3341,9 +3341,9 @@ type TestTensor () =
              [71.6328; 18.5912; 27.7328];
              [49.9120; 60.3023; 53.0838]]])
         let t3Min = t3.min()
-        let t3MinCorrect = info.mkTensor(4.0114)
+        let t3MinCorrect = ty.tensor(4.0114)
        
-        let t4 = info.mkTensor([[[[8.8978; 8.0936];
+        let t4 = ty.tensor([[[[8.8978; 8.0936];
               [4.8087; 1.0921];
               [8.5664; 3.7814]];
 
@@ -3375,71 +3375,71 @@ type TestTensor () =
               [6.2945; 5.9047];
               [8.0867; 3.1606]]]])
         let t4Min = t4.min()
-        let t4MinCorrect = info.mkTensor(0.5370)
+        let t4MinCorrect = ty.tensor(0.5370)
 
         Assert.AreEqual(t1MinCorrect, t1Min)
         Assert.AreEqual(t2MinCorrect, t2Min)
         Assert.AreEqual(t3MinCorrect, t3Min)
         Assert.AreEqual(t4MinCorrect, t4Min)
-        Assert.AreEqual(t1Min.dtype, info.dtype)
-        Assert.AreEqual(t2Min.dtype, info.dtype)
-        Assert.AreEqual(t3Min.dtype, info.dtype)
-        Assert.AreEqual(t4Min.dtype, info.dtype)
+        Assert.AreEqual(t1Min.dtype, ty.dtype)
+        Assert.AreEqual(t2Min.dtype, ty.dtype)
+        Assert.AreEqual(t3Min.dtype, ty.dtype)
+        Assert.AreEqual(t4Min.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorMaxBinary () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[-4.9385; 12.6206; 10.1783];
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[-4.9385; 12.6206; 10.1783];
             [-2.9624; 17.6992;  2.2506];
             [-2.3536;  8.0772; 13.5639]])
-        let t2 = info.mkTensor([[  0.7027;  22.3251; -11.4533];
+        let t2 = ty.tensor([[  0.7027;  22.3251; -11.4533];
             [  3.6887;   4.3355;   3.3767];
             [  0.1203;  -5.4088;   1.5658]])
         let t3 = t1.max(t2)
-        let t3Correct = info.mkTensor([[ 0.7027; 22.3251; 10.1783];
+        let t3Correct = ty.tensor([[ 0.7027; 22.3251; 10.1783];
             [ 3.6887; 17.6992;  3.3767];
             [ 0.1203;  8.0772; 13.5639]])
 
         Assert.True(t3.allclose(t3Correct, 0.01))
-        Assert.AreEqual(t3.dtype, info.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorMinBinary () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([[-4.9385; 12.6206; 10.1783];
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([[-4.9385; 12.6206; 10.1783];
             [-2.9624; 17.6992;  2.2506];
             [-2.3536;  8.0772; 13.5639]])
-        let t2 = info.mkTensor([[  0.7027;  22.3251; -11.4533];
+        let t2 = ty.tensor([[  0.7027;  22.3251; -11.4533];
             [  3.6887;   4.3355;   3.3767];
             [  0.1203;  -5.4088;   1.5658]])
         let t3 = t1.min(t2)
-        let t3Correct = info.mkTensor([[ -4.9385;  12.6206; -11.4533];
+        let t3Correct = ty.tensor([[ -4.9385;  12.6206; -11.4533];
             [ -2.9624;   4.3355;   2.2506];
             [ -2.3536;  -5.4088;   1.5658]])
 
         Assert.True(t3.allclose(t3Correct, 0.01))
-        Assert.AreEqual(t3.dtype, info.dtype)
+        Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorSoftmax () =
-      for info in infosFloatingPoint do 
-        let t1 = info.mkTensor([2.7291; 0.0607; 0.8290])
+      for ty in dtypeInfosFloatingPoint do 
+        let t1 = ty.tensor([2.7291; 0.0607; 0.8290])
         let t1Softmax0 = t1.softmax(0)
-        let t1Softmax0Correct = info.mkTensor([0.8204; 0.0569; 0.1227])
+        let t1Softmax0Correct = ty.tensor([0.8204; 0.0569; 0.1227])
 
-        let t2 = info.mkTensor([[1.3335; 1.6616; 2.4874; 6.1722];
+        let t2 = ty.tensor([[1.3335; 1.6616; 2.4874; 6.1722];
             [3.3478; 9.3019; 1.0844; 8.9874];
             [8.6300; 1.8842; 9.1387; 9.1321]])
         let t2Softmax0 = t2.softmax(0)
-        let t2Softmax0Correct = info.mkTensor([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
+        let t2Softmax0Correct = ty.tensor([[6.7403e-04; 4.8014e-04; 1.2904e-03; 2.7033e-02];
             [5.0519e-03; 9.9892e-01; 3.1723e-04; 4.5134e-01];
             [9.9427e-01; 5.9987e-04; 9.9839e-01; 5.2163e-01]])
         let t2Softmax1 = t2.softmax(1)
-        let t2Softmax1Correct = info.mkTensor([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
+        let t2Softmax1Correct = ty.tensor([[7.5836e-03; 1.0528e-02; 2.4044e-02; 9.5784e-01];
             [1.4974e-03; 5.7703e-01; 1.5573e-04; 4.2131e-01];
             [2.3167e-01; 2.7240e-04; 3.8528e-01; 3.8277e-01]])
 
-        let t3 = info.mkTensor([[[3.0897; 2.0902];
+        let t3 = ty.tensor([[[3.0897; 2.0902];
              [2.4055; 1.2437];
              [2.1253; 8.7802];
              [4.3856; 3.4456]];
@@ -3455,7 +3455,7 @@ type TestTensor () =
              [9.3609; 0.6493]]])
              
         let t3Softmax0 = t3.softmax(0)
-        let t3Softmax0Correct = info.mkTensor([[[2.4662e-03; 3.7486e-03];
+        let t3Softmax0Correct = ty.tensor([[[2.4662e-03; 3.7486e-03];
              [3.1467e-03; 1.6136e-04];
              [3.4316e-01; 4.9885e-01];
              [6.8542e-03; 7.5571e-01]];
@@ -3470,7 +3470,7 @@ type TestTensor () =
              [4.9412e-02; 5.0077e-01];
              [9.9244e-01; 4.6122e-02]]])
         let t3Softmax1 = t3.softmax(1)
-        let t3Softmax1Correct = info.mkTensor([[[1.8050e-01; 1.2351e-03];
+        let t3Softmax1Correct = ty.tensor([[[1.8050e-01; 1.2351e-03];
              [9.1058e-02; 5.2978e-04];
              [6.8813e-02; 9.9344e-01];
              [6.5963e-01; 4.7904e-03]];
@@ -3485,7 +3485,7 @@ type TestTensor () =
              [6.5824e-05; 8.0087e-01];
              [6.3451e-01; 2.3479e-04]]])
         let t3Softmax2 = t3.softmax(2)
-        let t3Softmax2Correct = info.mkTensor([[[7.3096e-01; 2.6904e-01];
+        let t3Softmax2Correct = ty.tensor([[[7.3096e-01; 2.6904e-01];
              [7.6165e-01; 2.3835e-01];
              [1.2861e-03; 9.9871e-01];
              [7.1910e-01; 2.8090e-01]];
@@ -3506,12 +3506,12 @@ type TestTensor () =
         Assert.True(t3Softmax0.allclose(t3Softmax0Correct, 0.001))
         Assert.True(t3Softmax1.allclose(t3Softmax1Correct, 0.001))
         Assert.True(t3Softmax2.allclose(t3Softmax2Correct, 0.001))
-        Assert.AreEqual(t1Softmax0.dtype, info.dtype)
-        Assert.AreEqual(t2Softmax0.dtype, info.dtype)
-        Assert.AreEqual(t2Softmax1.dtype, info.dtype)
-        Assert.AreEqual(t3Softmax0.dtype, info.dtype)
-        Assert.AreEqual(t3Softmax1.dtype, info.dtype)
-        Assert.AreEqual(t3Softmax2.dtype, info.dtype)
+        Assert.AreEqual(t1Softmax0.dtype, ty.dtype)
+        Assert.AreEqual(t2Softmax0.dtype, ty.dtype)
+        Assert.AreEqual(t2Softmax1.dtype, ty.dtype)
+        Assert.AreEqual(t3Softmax0.dtype, ty.dtype)
+        Assert.AreEqual(t3Softmax1.dtype, ty.dtype)
+        Assert.AreEqual(t3Softmax2.dtype, ty.dtype)
 
 
     [<Test>]
@@ -3857,17 +3857,17 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorDepth () =
-      for info in infosAll do 
-        let t0 = info.mkTensor([1.;2.])
+      for ty in dtypeInfosAll do 
+        let t0 = ty.tensor([1.;2.])
         let t0Depth = t0.depth
         let t0DepthCorrect = 0
-        let t1 = info.mkTensor([1.;2.]).reverseDiff()
+        let t1 = ty.tensor([1.;2.]).reverseDiff()
         let t1Depth = t1.depth
         let t1DepthCorrect = 1
-        let t2 = info.mkTensor([1.;2.]).reverseDiff().reverseDiff()
+        let t2 = ty.tensor([1.;2.]).reverseDiff().reverseDiff()
         let t2Depth = t2.depth
         let t2DepthCorrect = 2
-        let t3 = info.mkTensor([1.;2.]).reverseDiff().reverseDiff().forwardDiff(info.mkTensor([1.; 1.]))
+        let t3 = ty.tensor([1.;2.]).reverseDiff().reverseDiff().forwardDiff(ty.tensor([1.; 1.]))
         let t3Depth = t3.depth
         let t3DepthCorrect = 3
 
@@ -3878,8 +3878,8 @@ type TestTensor () =
 
     [<Test>]
     member this.FSharpCoreOps () =
-      for info in infosFloatingPoint do 
-        let t = info.mkTensor([0.1; 0.2; 0.3])
+      for ty in dtypeInfosFloatingPoint do 
+        let t = ty.tensor([0.1; 0.2; 0.3])
         let add = t + t
         let addCorrect = t.add(t)
         let sub = t - t
@@ -3952,27 +3952,27 @@ type TestTensor () =
         Assert.AreEqual(acosCorrect, acos)
         Assert.AreEqual(atanCorrect, atan)
 
-        Assert.AreEqual(info.dtype, add.dtype)
-        Assert.AreEqual(info.dtype, sub.dtype)
-        Assert.AreEqual(info.dtype, mul.dtype)
-        Assert.AreEqual(info.dtype, div.dtype)
-        Assert.AreEqual(info.dtype, pow.dtype)
-        Assert.AreEqual(info.dtype, neg.dtype)
-        Assert.AreEqual(info.dtype, floor.dtype)
-        Assert.AreEqual(info.dtype, ceil.dtype)
-        Assert.AreEqual(info.dtype, round.dtype)
-        Assert.AreEqual(info.dtype, abs.dtype)
-        Assert.AreEqual(info.dtype, exp.dtype)
-        Assert.AreEqual(info.dtype, log.dtype)
-        Assert.AreEqual(info.dtype, log10.dtype)
-        Assert.AreEqual(info.dtype, sqrt.dtype)
-        Assert.AreEqual(info.dtype, sin.dtype)
-        Assert.AreEqual(info.dtype, cos.dtype)
-        Assert.AreEqual(info.dtype, tan.dtype)
-        Assert.AreEqual(info.dtype, sinh.dtype)
-        Assert.AreEqual(info.dtype, cosh.dtype)
-        Assert.AreEqual(info.dtype, tanh.dtype)
-        Assert.AreEqual(info.dtype, asin.dtype)
-        Assert.AreEqual(info.dtype, acos.dtype)
-        Assert.AreEqual(info.dtype, atan.dtype)
+        Assert.AreEqual(ty.dtype, add.dtype)
+        Assert.AreEqual(ty.dtype, sub.dtype)
+        Assert.AreEqual(ty.dtype, mul.dtype)
+        Assert.AreEqual(ty.dtype, div.dtype)
+        Assert.AreEqual(ty.dtype, pow.dtype)
+        Assert.AreEqual(ty.dtype, neg.dtype)
+        Assert.AreEqual(ty.dtype, floor.dtype)
+        Assert.AreEqual(ty.dtype, ceil.dtype)
+        Assert.AreEqual(ty.dtype, round.dtype)
+        Assert.AreEqual(ty.dtype, abs.dtype)
+        Assert.AreEqual(ty.dtype, exp.dtype)
+        Assert.AreEqual(ty.dtype, log.dtype)
+        Assert.AreEqual(ty.dtype, log10.dtype)
+        Assert.AreEqual(ty.dtype, sqrt.dtype)
+        Assert.AreEqual(ty.dtype, sin.dtype)
+        Assert.AreEqual(ty.dtype, cos.dtype)
+        Assert.AreEqual(ty.dtype, tan.dtype)
+        Assert.AreEqual(ty.dtype, sinh.dtype)
+        Assert.AreEqual(ty.dtype, cosh.dtype)
+        Assert.AreEqual(ty.dtype, tanh.dtype)
+        Assert.AreEqual(ty.dtype, asin.dtype)
+        Assert.AreEqual(ty.dtype, acos.dtype)
+        Assert.AreEqual(ty.dtype, atan.dtype)
 
