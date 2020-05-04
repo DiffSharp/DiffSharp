@@ -3,7 +3,6 @@ namespace Tests
 open NUnit.Framework
 open DiffSharp
 open DiffSharp.Util
-open DiffSharp.Backend
 open DiffSharp.Backends
 open System
 
