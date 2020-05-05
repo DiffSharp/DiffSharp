@@ -661,14 +661,14 @@ type Tensor =
         let aBatchPart, aMatrixPart = Array.splitAt (a.shape.Length-2) a.shape
         let bBatchPart, bMatrixPart = Array.splitAt (b.shape.Length-2) b.shape
         if aBatchPart = bBatchPart then
-            let inline fRaw(a:RawTensor,b) = a.MatMulTT(b)
-            let inline fTensor(a:Tensor,b) = a.matmul(b)
-            let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
-            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
-            let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
-            let inline dfTensorRevTT(a,b) = MatMulTT(a,b)
-            let inline dfTensorRevTC(a,b) = MatMulTTConst(a,b)
-            let inline dfTensorRevCT(a,b) = MatMulTConstT(a,b)
+            let fRaw(a:RawTensor,b) = a.MatMulTT(b)
+            let fTensor(a:Tensor,b) = a.matmul(b)
+            let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
+            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+            let dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
+            let dfTensorRevTT(a,b) = MatMulTT(a,b)
+            let dfTensorRevTC(a,b) = MatMulTTConst(a,b)
+            let dfTensorRevCT(a,b) = MatMulTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newBatchPart = broadcastShapes2 aBatchPart bBatchPart
