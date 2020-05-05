@@ -10,6 +10,7 @@ type TestDistributions () =
 
     [<SetUp>]
     member this.Setup () =
+        dsharp.seed(123)
         ()
 
     [<Test>]
@@ -29,9 +30,9 @@ type TestDistributions () =
 
         Assert.AreEqual(batchShapeCorrect, batchShape)
         Assert.AreEqual(eventShapeCorrect, eventShape)
-        Assert.True(mean.ApproximatelyEqual(meanCorrect, 0.1))
-        Assert.True(stddev.ApproximatelyEqual(stddevCorrect, 0.1))
-        Assert.True(logprob.ApproximatelyEqual(logprobCorrect, 0.1))
+        Assert.True(mean.allclose(meanCorrect, 0.1))
+        Assert.True(stddev.allclose(stddevCorrect, 0.1))
+        Assert.True(logprob.allclose(logprobCorrect, 0.1))
 
     [<Test>]
     member this.TestDistributionsNormalBatched () =
@@ -50,9 +51,9 @@ type TestDistributions () =
 
         Assert.AreEqual(batchShapeCorrect, batchShape)
         Assert.AreEqual(eventShapeCorrect, eventShape)
-        Assert.True(mean.ApproximatelyEqual(meanCorrect, 0.1))
-        Assert.True(stddev.ApproximatelyEqual(stddevCorrect, 0.1))
-        Assert.True(logprob.ApproximatelyEqual(logprobCorrect, 0.1))
+        Assert.True(mean.allclose(meanCorrect, 0.1))
+        Assert.True(stddev.allclose(stddevCorrect, 0.1))
+        Assert.True(logprob.allclose(logprobCorrect, 0.1))
 
     [<Test>]
     member this.TestDistributionsUniform () =
@@ -71,10 +72,9 @@ type TestDistributions () =
 
         Assert.AreEqual(batchShapeCorrect, batchShape)
         Assert.AreEqual(eventShapeCorrect, eventShape)
-        Assert.True(mean.ApproximatelyEqual(meanCorrect, 0.1))
-        Assert.True(stddev.ApproximatelyEqual(stddevCorrect, 0.1))
-        Assert.True(logprob.ApproximatelyEqual(logprobCorrect, 0.1))
-
+        Assert.True(mean.allclose(meanCorrect, 0.1))
+        Assert.True(stddev.allclose(stddevCorrect, 0.1))
+        Assert.True(logprob.allclose(logprobCorrect, 0.1))
 
     [<Test>]
     member this.TestDistributionsUniformBatched () =
@@ -93,7 +93,7 @@ type TestDistributions () =
 
         Assert.AreEqual(batchShapeCorrect, batchShape)
         Assert.AreEqual(eventShapeCorrect, eventShape)
-        Assert.True(mean.ApproximatelyEqual(meanCorrect, 0.1))
-        Assert.True(stddev.ApproximatelyEqual(stddevCorrect, 0.1))
-        Assert.True(logprob.ApproximatelyEqual(logprobCorrect, 0.1))
+        Assert.True(mean.allclose(meanCorrect, 0.1, 0.1))
+        Assert.True(stddev.allclose(stddevCorrect, 0.1, 0.1))
+        Assert.True(logprob.allclose(logprobCorrect, 0.1, 0.1))
 
