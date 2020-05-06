@@ -140,7 +140,7 @@ let checkCanUnstack (dim:int) =
     if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
 
 let checkCanBatchTranspose (dim:int) =
-    if dim < 2 then failwith "Cannot transpose Tensor (dim < 2)"
+    if dim < 2 then failwith "Cannot batch-transpose Tensor (dim < 2)"
 
 let checkCanTranspose (dim:int) =
     if dim <> 2 then failwith "Cannot transpose Tensor (dim <> 2)"

@@ -3725,7 +3725,7 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
-    member this.TestDerivativeBatchInternal () =
+    member this.TestDerivativeBatchTransposeInternal () =
         // This test is the same as TestDerivativeTransposeT2 except we add a batching expansion to
         // both input and expected results
         let t = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).expand([| 3;2;3 |])
