@@ -782,8 +782,8 @@ type Tensor =
     member internal a.batchTranspose() =
         checkCanBatchTranspose a.dim
         let fRaw(a:RawTensor) = a.BatchTransposeT()
-        let fTensor(a:Tensor) = a.transpose()
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
+        let fTensor(a:Tensor) = a.batchTranspose()
+        let dfTensorFwd(cp,ap,ad:Tensor) = ad.batchTranspose()
         let dfTensorRev(a) = BatchTransposeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
@@ -1594,7 +1594,7 @@ type Tensor =
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
-                        | BatchTransposeT(a) -> push ((t.derivative.transpose(), a) :: tt)
+                        | BatchTransposeT(a) -> push ((t.derivative.batchTranspose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | FlipT(a, dims) -> push ((t.derivative.flip(dims), a) :: tt)
