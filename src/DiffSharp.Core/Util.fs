@@ -174,6 +174,19 @@ let checkCanDot (shape1:int[]) (shape2:int[]) =
     if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two vectors (1d Tensors), received Tensors with shapes %A, %A" shape1 shape2
     if shape1.[0] <> shape2.[0] then failwithf "Cannot multiply vectors with different lengths %A, %A" shape1.[0] shape2.[0]
 
+let checkCanPad (shape:int[]) (paddings:int[]) =
+    if shape.Length <> paddings.Length then failwithf "Expecting shape (%A) and paddings (%A) to have the same length" shape paddings
+    if not (paddings |> Array.forall (fun p -> p >= 0)) then failwithf "Expecting all paddings (%A) >= 0" paddings
+
+let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) (dilation:int) =
+    if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
+    if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
+    if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
+    if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
+    if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
+    let inputLengthAfterPadding = shape.[2] + 2*padding
+    if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
+
 let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
     if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
     if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2

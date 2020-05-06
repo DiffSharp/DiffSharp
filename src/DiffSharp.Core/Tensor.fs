@@ -1118,12 +1118,37 @@ type Tensor =
             else // reduction = "sum"
                 l.sum()
 
+    member a.pad(paddings:seq<int>) =
+        let paddings = paddings |> Array.ofSeq
+        checkCanPad a.shape paddings
+        if paddings |> Array.sum = 0 then
+            a
+        else
+            let shape = Array.copy a.shape
+            for i in 0..shape.Length-1 do
+                shape.[i] <- shape.[i] + paddings.[i] * 2
+            let ret = a.zerosLike(shape)
+            ret.addSlice(paddings, a)
+
+    // member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int, ?dilation:int) =
+    //     let stride = defaultArg stride kernelSize
+    //     let padding = defaultArg padding 0
+    //     let dilation = defaultArg dilation 1
+    //     checkCanMaxpool1d a.shape kernelSize stride padding dilation
+    //     let batchSize = a.shape.[0]
+    //     let channels = a.shape.[1]
+    //     let inputLength = a.shape.[2]
+    //     let mutable a = a
+    //     if padding > 0 then
+    //         a <- a.pad([padding])
+    //     a
+
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
-        checkCanConv1d a.dtype b.dtype  a.shape b.shape stride padding dilation
+        checkCanConv1d a.dtype b.dtype a.shape b.shape stride padding dilation
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
