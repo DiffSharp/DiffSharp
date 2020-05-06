@@ -779,13 +779,17 @@ type Tensor =
         let dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
-    member a.transpose() =
-        checkCanTranspose a.dim
-        let fRaw(a:RawTensor) = a.TransposeT()
+    member internal a.batchTranspose() =
+        checkCanBatchTranspose a.dim
+        let fRaw(a:RawTensor) = a.BatchTransposeT()
         let fTensor(a:Tensor) = a.transpose()
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
-        let dfTensorRev(a) = TransposeT(a)
+        let dfTensorRev(a) = BatchTransposeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    member a.transpose() =
+        checkCanTranspose a.dim
+        a.batchTranspose()
 
     member a.squeeze(?dim:int) =
         let dim = defaultArg dim -1
@@ -1452,7 +1456,7 @@ type Tensor =
                         | UnstackT(a,_,_) -> reset (a::tt)
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
-                        | TransposeT(a) -> reset (a::tt)
+                        | BatchTransposeT(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
                         | FlipT(a,_) -> reset (a::tt)
@@ -1542,9 +1546,9 @@ type Tensor =
                         | PowTT0(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: ((t.derivative * (a.primal ** b.primal) * log a.primal).sum(), b) :: tt)
                         | PowTT0Const(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT0(a,b) -> push (((t.derivative * (a ** b.primal) * log a).sum(), b) :: tt)
-                        | MatMulTT(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
-                        | MatMulTTConst(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
-                        | MatMulTConstT(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
+                        | MatMulTT(a,b) -> push ((t.derivative.matmul(b.primal.batchTranspose()), a) :: (a.primal.batchTranspose().matmul(t.derivative), b) :: tt)
+                        | MatMulTTConst(a,b) -> push ((t.derivative.matmul(b.batchTranspose()), a) :: tt)
+                        | MatMulTConstT(a,b) -> push ((a.batchTranspose().matmul(t.derivative), b) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1590,7 +1594,7 @@ type Tensor =
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
-                        | TransposeT(a) -> push ((t.derivative.transpose(), a) :: tt)
+                        | BatchTransposeT(a) -> push ((t.derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | FlipT(a, dims) -> push ((t.derivative.flip(dims), a) :: tt)
@@ -1705,7 +1709,7 @@ and TensorOp =
     | AddTTSlice of Tensor * int[] * Tensor
     | AddTTConstSlice of Tensor
     | AddTConstTSlice of int[] * Tensor
-    | TransposeT of Tensor
+    | BatchTransposeT of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor
     | FlipT of Tensor * int[]

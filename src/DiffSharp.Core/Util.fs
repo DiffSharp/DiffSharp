@@ -139,8 +139,11 @@ let checkCanStack (shapes:seq<int[]>) =
 let checkCanUnstack (dim:int) =
     if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
 
-let checkCanTranspose (dim:int) =
+let checkCanBatchTranspose (dim:int) =
     if dim < 2 then failwith "Cannot transpose Tensor (dim < 2)"
+
+let checkCanTranspose (dim:int) =
+    if dim <> 2 then failwith "Cannot transpose Tensor (dim <> 2)"
 
 let checkCanFlip (dim:int) (dims:int[]) =
     if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim

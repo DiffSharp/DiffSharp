@@ -199,7 +199,7 @@ and [<AbstractClass>]
     abstract member NegT : unit -> RawTensor
     abstract member SumT : unit -> RawTensor
     abstract member SumT2Dim0 : unit -> RawTensor
-    abstract member TransposeT: unit -> RawTensor
+    abstract member BatchTransposeT: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
     abstract member UnsqueezeT: int -> RawTensor
     abstract member FlipT: int[] -> RawTensor

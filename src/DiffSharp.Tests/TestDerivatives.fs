@@ -3725,12 +3725,12 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
-    member this.TestDerivativeTransposeBatch () =
+    member this.TestDerivativeBatchInternal () =
         // This test is the same as TestDerivativeTransposeT2 except we add a batching expansion to
         // both input and expected results
         let t = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).expand([| 3;2;3 |])
         let fwdx = t.forwardDiff(dsharp.tensor([[2.; 3.; 4.]; [10.; 20.; 30.]]).expand([| 3;2;3 |]))
-        let fwdz = fwdx.transpose()
+        let fwdz = fwdx.batchTranspose()
         let fwdzCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]]).expand([| 3;3;2 |])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor([[2.; 10.]; [3.; 20.]; [4.; 30.]]).expand([| 3;3;2 |])
@@ -3739,7 +3739,7 @@ type TestDerivatives () =
         Assert.AreEqual(fwdzdCorrect, fwdzd)
 
         let revx = t.reverseDiff()
-        let revz = revx.transpose()
+        let revz = revx.batchTranspose()
         let revzCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]]).expand([| 3;3;2 |])
         revz.reverse(dsharp.tensor([[5.; 5.]; [2.; 5.]; [3.; 7.]]).expand([| 3;3;2 |]))
         let revxd = revx.derivative

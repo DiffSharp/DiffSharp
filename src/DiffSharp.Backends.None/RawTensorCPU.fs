@@ -246,8 +246,8 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
             t.CreateShaped(rvalues, splitShape))
 
-    override t.TransposeT() =
-        checkCanTranspose t.Dim
+    override t.BatchTransposeT() =
+        checkCanBatchTranspose t.Dim
         let oldShape = t.Shape
         let batch = oldShape.[0..oldShape.Length-3]
         let nrows = oldShape.[oldShape.Length-2]

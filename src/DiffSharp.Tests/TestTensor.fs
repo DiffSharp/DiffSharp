@@ -2649,13 +2649,13 @@ type TestTensor () =
         Assert.AreEqual(t2TransposeTranspose.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorTransposeBatch () =
+    member this.TestTensorBatchTransposeInternal () =
         let t1 = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).expand([|3;2;3|])
-        let t1Transpose = t1.transpose()
+        let t1Transpose = t1.batchTranspose()
         let t1TransposeCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]]).expand([|3;3;2|])
 
         let t2 = dsharp.tensor([[1.; 2.]; [3.; 4.]]).expand([|3;2;2|])
-        let t2TransposeTranspose = t2.transpose().transpose()
+        let t2TransposeTranspose = t2.batchTranspose().batchTranspose()
         let t2TransposeTransposeCorrect = t2
 
         Assert.AreEqual(t1TransposeCorrect, t1Transpose)
