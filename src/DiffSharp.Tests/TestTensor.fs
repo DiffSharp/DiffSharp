@@ -281,6 +281,18 @@ type TestTensor () =
         Assert.AreEqual(t4ValuesCorrect, t4.toArray())
 
     [<Test>]
+    member this.TestTensorCreateFromTensor4 () =
+        let t4Values = [[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]
+        let t4 = dsharp.tensor(t4Values)
+        let t4ShapeCorrect = [|1; 1; 1; 2|]
+        let t4DimCorrect = 4
+        let t4ValuesCorrect = Util.array4D (List.map (List.map (List.map (List.map float32))) t4Values)
+
+        Assert.AreEqual(t4ShapeCorrect, t4.shape)
+        Assert.AreEqual(t4DimCorrect, t4.dim)
+        Assert.AreEqual(t4ValuesCorrect, t4.toArray())
+
+    [<Test>]
     member this.TestTensorToArray () =
       for ty in dtypeInfosAll do 
         let a = array2D [[1.; 2.]; [3.; 4.]]
