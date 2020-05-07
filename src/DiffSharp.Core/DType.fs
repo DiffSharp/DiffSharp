@@ -9,7 +9,7 @@ type Device =
         match x with
         | CPU -> 0x0000
         | GPU -> 0x0001
-        | Other (_, code) -> code
+        | Other (_name, code) -> (code + 2)
 
     member internal x.Name =
         match x with
@@ -17,7 +17,7 @@ type Device =
         | GPU -> "GPU"
         | Other (name, _code) -> name
 
-    static member Default = CPU
+    static member Default = Device.CPU
 
 module Device = 
     let internal count = ref 0
@@ -38,7 +38,7 @@ type Backend =
         | None -> 0x000
         | OpenBLAS -> 0x0100
         | Torch -> 0x0200
-        | Other (_name, code) -> code
+        | Other (_name, code) -> (code + 3) <<< 8
 
     member x.Name = 
         match x with 
@@ -71,7 +71,7 @@ type DType =
         | Int32 -> 0x50000
         | Int64 -> 0x60000
         | Bool -> 0x70000
-        | Other (_name, code) -> code
+        | Other (_name, code) -> (code + 8) <<< 16
 
     member internal x.Name =
         match x with
@@ -84,7 +84,7 @@ type DType =
         | Bool -> "Bool"
         | Other (name, _) -> name
 
-    static member Default = Float32
+    static member Default = DType.Float32
 
 module DType =
     /// Find the DType into which dtype1 and dtype2 can be widened
