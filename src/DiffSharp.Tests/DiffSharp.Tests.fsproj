@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\tests\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
     <ProjectReference Include="..\DiffSharp.Backends.None\DiffSharp.Backends.None.fsproj" />
     <ProjectReference Include="..\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
