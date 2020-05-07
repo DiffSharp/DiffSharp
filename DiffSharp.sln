@@ -1,19 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Core", "src\DiffSharp.Core\DiffSharp.Core.fsproj", "{0910EA3D-6153-4BEE-80B5-B9C9868B5879}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Core", "src\DiffSharp.Core\DiffSharp.Core.fsproj", "{0910EA3D-6153-4BEE-80B5-B9C9868B5879}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Backends.None", "src\DiffSharp.Backends.None\DiffSharp.Backends.None.fsproj", "{6C11230A-E9D7-44FE-8852-13450827A344}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backends.None", "src\DiffSharp.Backends.None\DiffSharp.Backends.None.fsproj", "{6C11230A-E9D7-44FE-8852-13450827A344}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{6649A8F8-BCDD-4E0A-844D-24E1BF98B51A}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{6649A8F8-BCDD-4E0A-844D-24E1BF98B51A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Tests", "src\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{42D94642-6B4F-4710-AAC3-F3671C20971D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Tests", "src\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{42D94642-6B4F-4710-AAC3-F3671C20971D}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Test", "src\Test\Test.fsproj", "{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Test", "src\Test\Test.fsproj", "{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backends.Torch", "src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj", "{3D8C2346-3B7A-4596-A531-8B3F181EB862}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,9 +25,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0910EA3D-6153-4BEE-80B5-B9C9868B5879}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -88,6 +87,21 @@ Global
 		{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}.Release|x64.Build.0 = Release|Any CPU
 		{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}.Release|x86.Build.0 = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|x64.Build.0 = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Debug|x86.Build.0 = Debug|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|x64.ActiveCfg = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|x64.Build.0 = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0910EA3D-6153-4BEE-80B5-B9C9868B5879} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
@@ -95,5 +109,9 @@ Global
 		{6649A8F8-BCDD-4E0A-844D-24E1BF98B51A} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
 		{42D94642-6B4F-4710-AAC3-F3671C20971D} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
 		{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
+		{3D8C2346-3B7A-4596-A531-8B3F181EB862} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {89C67BAA-8BDB-467F-AF4D-D4C32E614CBB}
 	EndGlobalSection
 EndGlobal

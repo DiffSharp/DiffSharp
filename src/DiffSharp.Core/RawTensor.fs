@@ -161,7 +161,6 @@ and [<AbstractClass>]
     abstract member CatTs: RawTensor[] * dim: int -> RawTensor
     abstract member SplitT: int[] * dim: int -> RawTensor[]
     abstract member GetString: unit -> string
-    abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
     abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool

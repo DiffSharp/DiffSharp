@@ -61,6 +61,9 @@ type Random() =
 [<ExcludeFromCodeCoverage>]
 let inline notNull value = not (obj.ReferenceEquals(value, null))
 
+module Shape =
+    let scalar : int[] = [| |]
+
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
     else Array.init a.Rank (fun i -> a.GetLength(i))

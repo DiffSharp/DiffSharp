@@ -1,6 +1,7 @@
 <Project>
 
   <PropertyGroup>
+    <RestoreSources>$(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages;https://api.nuget.org/v3/index.json</RestoreSources>
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
   </PropertyGroup>
 

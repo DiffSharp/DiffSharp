@@ -39,8 +39,6 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             if index.Length <> t.Dim then failwithf "Expecting a %id index" t.Dim
             t.Values.[t.IndexToFlatIndex(index)] <- v
 
-    override t.GetItem(index:int[]) = t.CreateLike(t.[index])
-    
     override t.GetSlice(fullBounds:int[,]) =
         // if fullBounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-3 fullBounds" t.Dim
         // printfn "rfullBounds\n%A" fullBounds
