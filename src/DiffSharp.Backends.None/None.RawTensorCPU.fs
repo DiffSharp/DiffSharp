@@ -1,4 +1,8 @@
+#if TEST_DUPLICATE_BACKEND
+namespace rec DiffSharp.Backends.TestDuplicate
+#else
 namespace rec DiffSharp.Backends.None
+#endif
 
 open System
 open DiffSharp
@@ -19,7 +23,11 @@ module internal Utils =
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DType) =
+#if TEST_DUPLICATE_BACKEND
+    inherit RawTensor(shape, dtype, CPU, Backend.Register "TestDuplicate")
+#else
     inherit RawTensor(shape, dtype, CPU, Backend.None)
+#endif
 
     member _.Values = values
 

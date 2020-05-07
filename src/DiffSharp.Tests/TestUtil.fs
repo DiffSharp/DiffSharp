@@ -7,13 +7,63 @@ open DiffSharp.Util
 open NUnit.Framework
 
 // This captures the expected semantics of different DTypes
-type ComboInfo(backend: Backend, device: Device, dtype: DType) =
-    member _.backend = backend
-    member _.device = device
-    member _.dtype = dtype
-    member _.tensor(data: obj) = dsharp.tensor(data, device=device, backend=backend, dtype=dtype)
-    member _.arrayCreator1D(arr: double[]) =
-        match dtype with 
+type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: DType) =
+
+    let dflt x y = match x with Some x -> Some x | None -> y
+
+    member _.backend = defaultArg defaultBackend Backend.Default
+
+    member _.device = defaultArg defaultDevice Device.Default
+
+    member _.dtype = defaultArg defaultDType DType.Default
+
+    member _.tensor(data: obj, ?device, ?backend, ?dtype) =
+        dsharp.tensor(data, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randn(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.randn(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randn(length:int, ?device, ?backend, ?dtype) =
+        dsharp.randn(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.rand(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.rand(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.rand(length:int, ?device, ?backend, ?dtype) =
+        dsharp.rand(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.full(shape:seq<int>, value, ?device, ?backend, ?dtype) =
+        dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.full(length:int, value, ?device, ?backend, ?dtype) =
+        dsharp.full(length, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.ones(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.ones(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.ones(length:int, ?device, ?backend, ?dtype) =
+        dsharp.ones(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.zeros(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.zeros(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.zeros(length:int, ?device, ?backend, ?dtype) =
+        dsharp.zeros(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.one(?device, ?backend, ?dtype) =
+        dsharp.one(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.zero(?device, ?backend, ?dtype) =
+        dsharp.zero(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.onehot(length, hot, ?device, ?backend, ?dtype) =
+        dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.arange(endVal, ?device, ?backend, ?dtype) =
+        dsharp.arange(endVal, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member c.arrayCreator1D(arr: double[]) =
+        match c.dtype with 
         | DType.Float32 -> arr |> Array.map float32 :> Array
         | DType.Float64 -> arr |> Array.map double :> Array
         | DType.Int8 -> arr |> Array.map int8 :> Array
@@ -21,9 +71,10 @@ type ComboInfo(backend: Backend, device: Device, dtype: DType) =
         | DType.Int32 -> arr |> Array.map int32 :> Array
         | DType.Int64  -> arr |> Array.map int64 :> Array
         | DType.Bool -> arr |> Array.map (fun x -> abs x >= 1.0) :> Array
+        | DType.Other _ -> failwith "unexpected user-defined type"
 
-    member _.arrayCreator2D(arr: double[,]) : Array =
-        match dtype with 
+    member c.arrayCreator2D(arr: double[,]) : Array =
+        match c.dtype with 
         | DType.Float32 -> arr |> Array2D.map float32 :> Array
         | DType.Float64 -> arr |> Array2D.map double :> Array
         | DType.Int8 -> arr |> Array2D.map int8 :> Array
@@ -31,6 +82,7 @@ type ComboInfo(backend: Backend, device: Device, dtype: DType) =
         | DType.Int32 -> arr |> Array2D.map int32 :> Array
         | DType.Int64  -> arr |> Array2D.map int64 :> Array
         | DType.Bool -> arr |> Array2D.map (fun x -> abs x >= 1.0) :> Array
+        | DType.Other _ -> failwith "unexpected user-defined type"
 
 module DTypes =
 
@@ -45,7 +97,9 @@ module DTypes =
     let All = FloatingPoint @ Integral @ Bool
 
 module Combos =
-    let backends = [ (* Backend.None; *) Backend.Torch ]
+    //let backends = [ Backend.None ]
+    let backends = [ Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Torch ]
     let devices = [ (* Backend.None; *) Device.CPU ]
 
     // We run tests specific to floating point at these tensor types
@@ -56,12 +110,19 @@ module Combos =
           for dtype in dtypes do
           yield ComboInfo(backend, device, dtype) ]
 
+    /// These runs though all devices, backends and DType
     let Integral = makeCombos DTypes.Integral
     let FloatingPoint = makeCombos DTypes.FloatingPoint
     let IntegralAndFloatingPoint = makeCombos DTypes.IntegralAndFloatingPoint
     let Bool = makeCombos DTypes.Bool
     let IntegralAndBool = makeCombos DTypes.IntegralAndBool
     let All = makeCombos DTypes.All
+
+    /// This runs though all devices and backends but leaves the default DType
+    let AllDevicesAndBackends = 
+        [ for backend in backends do
+          for device in devices do
+          yield ComboInfo(defaultBackend=backend, defaultDevice=device) ]
 
 [<AutoOpen>]
 module TestUtils =

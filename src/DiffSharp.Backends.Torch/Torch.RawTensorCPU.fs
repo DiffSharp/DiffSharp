@@ -21,6 +21,7 @@ module internal Utils =
 /// All type-independent operations are implemented directly on this class. 
 type RawTensorSingle(aten: FloatTensor, shape: int[]) =
     inherit RawTensor(shape, DType.Float32, CPU, Backend.Torch)
+    do failwith "tbd"
 
     static let create(aten, shape) : RawTensor = upcast RawTensorSingle(aten, shape)
     //static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
