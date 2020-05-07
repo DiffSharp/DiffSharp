@@ -1,37 +1,56 @@
-﻿namespace DiffSharp
-
+﻿namespace rec DiffSharp
 
 type Device =
     | CPU
     | GPU
+    | Other of name:string * code:int
 
     member internal x.Code =
         match x with
-        | CPU -> 0x000
-        | GPU -> 0x001
+        | CPU -> 0x0000
+        | GPU -> 0x0001
+        | Other (_, code) -> code
 
     member internal x.Name =
         match x with
         | CPU -> "CPU"
         | GPU -> "GPU"
+        | Other (name, _code) -> name
+
+    static member Default = CPU
+
+module Device = 
+    let internal count = ref 0
+    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Device>()
+    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Device.Other(name, count.Value)))
 
 [<RequireQualifiedAccess>]
 type Backend =
     | None
-    | OpenBLAS
     | Torch
+    | OpenBLAS
+    | Other of name: string * code: int
+
+    static member Default = Backend.None
 
     member internal x.Code = 
         match x with 
         | None -> 0x000
-        | OpenBLAS  -> 0x010
-        | Torch -> 0x020
+        | OpenBLAS -> 0x0100
+        | Torch -> 0x0200
+        | Other (_name, code) -> code
 
     member x.Name = 
         match x with 
         | None -> "None"
         | OpenBLAS -> "OpenBLAS"
         | Torch -> "Torch"
+        | Other (name, _) -> name
+
+module Backend = 
+    let internal count = ref 0
+    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Backend>()
+    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
 
 type DType =
     | Float32
@@ -41,16 +60,18 @@ type DType =
     | Int32
     | Int64
     | Bool
+    | Other of name:string * code:int
 
     member internal x.Code =
         match x with
-        | Float32  -> 0x100
-        | Float64 -> 0x200
-        | Int8 -> 0x300
-        | Int16 -> 0x400
-        | Int32 -> 0x500
-        | Int64 -> 0x600
-        | Bool -> 0x700
+        | Float32 -> 0x10000
+        | Float64 -> 0x20000
+        | Int8 -> 0x30000
+        | Int16 -> 0x40000
+        | Int32 -> 0x50000
+        | Int64 -> 0x60000
+        | Bool -> 0x70000
+        | Other (_name, code) -> code
 
     member internal x.Name =
         match x with
@@ -61,6 +82,9 @@ type DType =
         | Int32 -> "Int32"
         | Int64 -> "Int64"
         | Bool -> "Bool"
+        | Other (name, _) -> name
+
+    static member Default = Float32
 
 module DType =
     /// Find the DType into which dtype1 and dtype2 can be widened
@@ -68,6 +92,7 @@ module DType =
         if dtype1 = dtype2 then dtype1
         else
             match dtype1, dtype2 with 
+            | Other _,_ | _, Other _ ->  failwith "cannot widen user-defined tensor types, must cast explicitly"
             | Float64, _ | _, Float64 -> Float64
             | Float32, _ | _, Float32 -> Float32
             | Int64, _ | _, Int64 -> Int64
@@ -87,3 +112,6 @@ module DType =
         elif ty.Equals(typeof<bool>) then DType.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
 
+    let internal count = ref 0
+    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
+    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value)))

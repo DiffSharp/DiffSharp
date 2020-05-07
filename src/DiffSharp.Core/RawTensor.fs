@@ -23,9 +23,9 @@ type [<AbstractClass>]
     abstract CreateFromFlatArray: data: System.Array * shape: int[] -> RawTensor
 
     static member Get(?dtype: DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Float32
-        let device = defaultArg device CPU
-        let backend = defaultArg backend Backend.None
+        let dtype = defaultArg dtype DType.Default
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
         let code = dtype.Code + device.Code + backend.Code
         match last with 
         | Some (code2, v) when code = code2 -> v
@@ -116,6 +116,8 @@ and [<AbstractClass>]
             | Some DType.Float32 ->
                 let a,s = dataOfValuesForFloat32 values
                 (a :> Array), s, DType.Float32
+            | Some (DType.Other (name, _)) ->
+                failwithf "can't directly create tensors of user-defined type %s" name
             | None ->
                 // Prefer Bool tensor if all bool
                 match values |> tryFlatArrayAndShape<bool> with
@@ -161,7 +163,6 @@ and [<AbstractClass>]
     abstract member CatTs: RawTensor[] * dim: int -> RawTensor
     abstract member SplitT: int[] * dim: int -> RawTensor[]
     abstract member GetString: unit -> string
-    abstract member GetItem: int[] -> RawTensor
     abstract member GetSlice: int[,] -> RawTensor
     abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool
