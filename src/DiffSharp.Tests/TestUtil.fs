@@ -100,16 +100,13 @@ module Combos =
 
     let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
 
-    //let backends = [ Backend.Torch ]
-    let devices = [ (* Backend.None; *) Device.CPU ]
-
-    // We run tests specific to floating point at these tensor types
+    let devices = [ Device.CPU ]
 
     let makeCombos dtypes =
         [ for backend in backends do
-          for device in devices do
-          for dtype in dtypes do
-          yield ComboInfo(backend, device, dtype) ]
+            for device in devices do
+              for dtype in dtypes do
+                yield ComboInfo(backend, device, dtype) ]
 
     /// These runs though all devices, backends and DType
     let Integral = makeCombos DTypes.Integral
