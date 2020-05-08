@@ -193,6 +193,7 @@ and [<AbstractClass>]
     abstract member PowT0T: RawTensor -> RawTensor
     abstract member PowTT0 : RawTensor -> RawTensor
     abstract member MatMulT2T2: RawTensor -> RawTensor
+    abstract member MaxPool1D: int * int * int -> RawTensor * RawTensor
     abstract member Conv1D: RawTensor * int * int -> RawTensor
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member Conv3D: RawTensor * int[] * int[] -> RawTensor

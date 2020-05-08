@@ -1130,18 +1130,21 @@ type Tensor =
             let ret = a.zerosLike(shape)
             ret.addSlice(paddings, a)
 
-    // member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int, ?dilation:int) =
-    //     let stride = defaultArg stride kernelSize
-    //     let padding = defaultArg padding 0
-    //     let dilation = defaultArg dilation 1
-    //     checkCanMaxpool1d a.shape kernelSize stride padding dilation
-    //     let batchSize = a.shape.[0]
-    //     let channels = a.shape.[1]
-    //     let inputLength = a.shape.[2]
-    //     let mutable a = a
-    //     if padding > 0 then
-    //         a <- a.pad([padding])
-    //     a
+    member a.maxpool1di(kernelSize:int, ?stride:int, ?padding:int) =
+        let stride = defaultArg stride kernelSize
+        let padding = defaultArg padding 0
+        checkCanMaxpool1d a.shape kernelSize stride padding
+        // let fRaw(a:RawTensor) = let result, _ = a.MaxPool1D(kernelSize, stride, padding) in result
+        // let fTensor(a:Tensor) = a.maxpool1d(kernelSize, stride, padding)
+        // let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxpool1d(kernelSize, stride, padding)
+        // let dfTensorRev(a) = AtanT(a)
+        // Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        match a with
+        | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
+        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, fst (ad.maxpool1di(kernelSize, stride, padding)), at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices), ref 0u, at), indices
+
+    member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
@@ -1450,6 +1453,7 @@ type Tensor =
                         | MatMulT2T2(a,b) -> reset (a::b::tt)
                         | MatMulT2T2Const(a,_) -> reset (a::tt)
                         | MatMulT2ConstT2(_,b) -> reset (b::tt)
+                        | MaxPool1DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
@@ -1560,6 +1564,7 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
+                        | MaxPool1DT(a, indices) -> failwith "not implemented"
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1695,6 +1700,8 @@ and TensorOp =
     | MatMulT2T2 of Tensor * Tensor
     | MatMulT2T2Const of Tensor * Tensor
     | MatMulT2ConstT2 of Tensor * Tensor
+
+    | MaxPool1DT of Tensor * Tensor
 
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int

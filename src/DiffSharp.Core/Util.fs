@@ -178,12 +178,11 @@ let checkCanPad (shape:int[]) (paddings:int[]) =
     if shape.Length <> paddings.Length then failwithf "Expecting shape (%A) and paddings (%A) to have the same length" shape paddings
     if not (paddings |> Array.forall (fun p -> p >= 0)) then failwithf "Expecting all paddings (%A) >= 0" paddings
 
-let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) (dilation:int) =
+let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) =
     if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
     if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
     if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
     if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
-    if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
     let inputLengthAfterPadding = shape.[2] + 2*padding
     if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
 
