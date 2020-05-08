@@ -89,7 +89,7 @@ module DTypes =
     // We run most tests at all these tensor types
     let Bool = [ DType.Bool ]
     let Integral = [DType.Int8; DType.Int16; DType.Int32; DType.Int64]
-    let FloatingPoint = [DType.Float32; DType.Float64]
+    let FloatingPoint = [DType.Float32]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
     let IntegralAndFloatingPoint = FloatingPoint @ Integral
@@ -98,7 +98,8 @@ module DTypes =
 
 module Combos =
 
-    let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
 
     let devices = [ Device.CPU ]
 

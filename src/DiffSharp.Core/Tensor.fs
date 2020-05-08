@@ -327,10 +327,9 @@ type Tensor =
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        if tensors.Length = 0 then failwithf "Expecting a non-empty sequence of Tensors"
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
-        let shapes = tensors |> Seq.map (fun t -> t.shape)
-        checkCanStack shapes
+        let shapes = tensors |> Array.map (fun t -> t.shape)
+        checkCanStack shapes dim
         match Seq.head tensors with
         | Tensor(ap) -> Tensor(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->

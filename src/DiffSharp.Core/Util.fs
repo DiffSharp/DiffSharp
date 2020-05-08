@@ -61,8 +61,19 @@ type Random() =
 [<ExcludeFromCodeCoverage>]
 let inline notNull value = not (obj.ReferenceEquals(value, null))
 
+type Shape = int[]
+
 module Shape =
-    let scalar : int[] = [| |]
+    let scalar : Shape = [| |]
+
+    let computeStackOp (shapes: Shape[]) (dim: int) =
+        let n = shapes.Length
+        let shape = shapes.[0]
+        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim..]
+        let newShape = [| yield! shape1; yield n; yield! shape2 |]
+        n, shape1, shape2, newShape
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
@@ -136,8 +147,10 @@ let checkCanExpandShape (oldShape: int[]) (newShape: int[]) =
     let isOK = canExpandShape oldShape newShape
     if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
 
-let checkCanStack (shapes:seq<int[]>) =
+let checkCanStack (shapes:int[][]) (dim: int) =
     if not (allEqual shapes) then failwith "Cannot stack Tensors with different shapes"
+    if shapes.Length = 0 then failwithf "Expecting a non-empty sequence of Tensors"
+    if dim < 0 || dim > shapes.[0].Length then invalidArg "dim" "invalid dimension"
 
 let checkCanUnstack (dim:int) =
     if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"

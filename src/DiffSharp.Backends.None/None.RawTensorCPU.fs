@@ -162,12 +162,8 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override _.StackTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorCPU<'T>).Values, t.Shape) |> Array.unzip
-        checkCanStack shapes
-        let shape = shapes.[0]
-        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
-        let n = tensors |> Array.length
-        let shape1 = shape.[0..dim-1]
-        let shape2 = shape.[dim..]
+        checkCanStack shapes dim
+        let n, shape1, shape2, newShape = Shape.computeStackOp shapes dim
         let m1 = shapeLength shape1
         let m2 = shapeLength shape2
         let m = m1 * m2
@@ -178,8 +174,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let j2 = (chunk/n)*m2+i%m2
             result.[i] <-values.[i2].[j2]
 
-        let outShape = [| yield! shape1; yield n; yield! shape2 |]
-        (tensors.[0] :?> RawTensorCPU<'T>).CreateShaped(result, outShape)
+        (tensors.[0] :?> RawTensorCPU<'T>).CreateShaped(result, newShape)
 
     override t.UnstackT(dim) =
         checkCanUnstack t.Dim

@@ -19,14 +19,14 @@ module internal Utils =
 
 /// This is the base class for all RawTensorXyzCPU tuypes.
 /// All type-independent operations are implemented directly on this class. 
-type RawTensorSingle(aten: FloatTensor, shape: int[]) =
+type RawTensorSingle(tt: FloatTensor, shape: int[]) =
     inherit RawTensor(shape, DType.Float32, CPU, Backend.Torch)
-    do failwith "tbd"
 
-    static let create(aten, shape) : RawTensor = upcast RawTensorSingle(aten, shape)
-    //static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
+    static let create(tt, shape) : RawTensor = upcast RawTensorSingle(tt, shape)
+    //static let createBool(tt, shape) : RawTensor = upcast RawTensorBoolCPU(tt, shape)
 
-    override t.GetSlice(fullBounds:int[,]) = failwith "tbd"
+    member x.TorchTensor = tt
+    override t.GetSlice(fullBounds:int[,]) = failwith "tbd - GetSlice"
     //    let shape =
     //        [|for i=0 to (fullBounds.GetLength(0) - 1) do
     //            let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
@@ -51,11 +51,11 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
     //    slice fullBounds [||]
     //    t.CreateShaped(array, shape)
 
-    override t.Clone() = failwith "tbd" //t.CreateShaped(Array.copy t.Values, Array.copy t.Shape)
+    override t.Clone() = RawTensorSingle(tt.Clone(), shape) :>_ 
 
     //abstract member CreateShaped: values: 'T[] * shape: int[] -> RawTensor
 
-    override t.GetString() = ""
+    override t.GetString() = failwith "TBD - GetString"
         //// sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         //let printVal (x:obj) = 
         //   match x with 
@@ -96,7 +96,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
 
     override x.ComputeHash() = hash shape //+ hash values
     
-    override t.Expand(newShape) = failwith "TBD"
+    override t.Expand(newShape) = failwith "TBD - Expand"
         //if shape = newShape then t :> _ else
         //checkCanExpandShape shape newShape
         //let trim = newShape.Length - shape.Length
@@ -137,26 +137,14 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //| 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.[i, j, k, l])
         //| _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
 
-    override _.StackTs(tensors, dim) = failwith "TBD"
-        //let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorCPU<'T>).Values, t.Shape) |> Array.unzip
-        //checkCanStack shapes
-        //let shape = shapes.[0]
-        //if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
-        //let n = tensors |> Array.length
-        //let shape1 = shape.[0..dim-1]
-        //let shape2 = shape.[dim..]
-        //let m1 = shapeLength shape1
-        //let m2 = shapeLength shape2
-        //let m = m1 * m2
-        //let result = Array.zeroCreate (n * m)
-        //for i=0 to (n*m)-1 do
-        //    let chunk = i/m2
-        //    let i2 = chunk%n
-        //    let j2 = (chunk/n)*m2+i%m2
-        //    result.[i] <-values.[i2].[j2]
+    member _.CreateShaped(tt, shape) : RawTensor = upcast RawTensorSingle(tt, shape)
 
-        //let outShape = [| yield! shape1; yield n; yield! shape2 |]
-        //(tensors.[0] :?> RawTensorCPU<'T>).CreateShaped(result, outShape)
+    override _.StackTs(tensors, dim) =
+        let _tts, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorSingle).TorchTensor, t.Shape) |> Array.unzip
+        checkCanStack shapes dim
+        let _n, _shape1, _shape2, newShape = Shape.computeStackOp shapes dim
+        let result = failwith "tbd" //tts.[0].
+        (tensors.[0] :?> RawTensorSingle).CreateShaped(result, newShape)
 
     override t.UnstackT(dim) = failwith "TBD"
         //checkCanUnstack t.Dim
@@ -178,7 +166,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    results.[i2].[j2] <- values.[i]
         //results |> Array.map (fun rvalues -> t.CreateShaped(rvalues, unstackedShape))
 
-    override t.CatTs(tensors, dim) = failwith "TBD"
+    override t.CatTs(tensors, dim) = failwith "TBD - CatTs"
         //let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorCPU<'T>).Values, t.Shape) |> Array.unzip
         //let n = shapes.Length
         //if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
@@ -205,7 +193,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
 
         //t.CreateShaped(result, outShape)
 
-    override t.SplitT(sizes, dim) = failwith "TBD"
+    override t.SplitT(sizes, dim) = failwith "TBD - SplitT"
         //if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         //let shape = t.Shape
         //if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
@@ -229,7 +217,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
         //    t.CreateShaped(rvalues, splitShape))
 
-    override t.TransposeT2() = failwith "TBD"
+    override t.TransposeT2() = failwith "TBD - TransposeT2"
         //checkCanBatchTranspose t.Dim
         //let oldShape = t.Shape
         //let batch = oldShape.[0..oldShape.Length-3]
@@ -244,15 +232,15 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    result.[j] <- values.[i]
         //t.CreateShaped(result, newShape)
 
-    override t.SqueezeT(dim) = failwith "TBD"
+    override t.SqueezeT(dim) = failwith "TBD - SqueezeT"
         //let result = Array.copy t.Values
         //t.CreateShaped(result, shapeSqueeze dim t.Shape)
 
-    override t.UnsqueezeT(dim) = failwith "TBD"
+    override t.UnsqueezeT(dim) = failwith "TBD - UnsqueezeT"
         //let result = Array.copy t.Values
         //t.CreateShaped(result, shapeUnsqueeze dim t.Shape)
 
-    override t.FlipT(dims:int[]) = failwith "TBD"
+    override t.FlipT(dims:int[]) = failwith "TBD - FlipT"
         //checkCanFlip t.Dim dims
         //match t.Dim with
         //| 0 -> t.Clone()
@@ -269,7 +257,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    flip t.Shape [||]        
         //    upcast result
 
-    override t.DilateT(dilations:int[]) = failwith "TBD"
+    override t.DilateT(dilations:int[]) = failwith "TBD - DilateT"
         //checkCanDilate t.Dim dilations
         //match t.Dim with
         //| 0 -> t.Clone()
@@ -286,7 +274,7 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    dilate t.Shape [||]        
         //    upcast result        
 
-    override t.UndilateT(dilations:int[]) = failwith "TBD"
+    override t.UndilateT(dilations:int[]) = failwith "TBD - UndilateT"
         //match t.Dim with
         //| 0 -> t.Clone()
         //| _ ->
@@ -302,73 +290,127 @@ type RawTensorSingle(aten: FloatTensor, shape: int[]) =
         //    dilate result.Shape [||]        
         //    upcast result        
 
-    override t.ViewT(shape:int[]) = failwith "TBD"
+    override t.ViewT(shape:int[]) = failwith "TBD - ViewT"
         //checkCanView t.Shape shape
         //let result = Array.copy t.Values
         //t.CreateShaped(result, shape)
 
-    override t.Cast(dtype: DType) = failwith "TBD"
+    override t.Cast(dtype: DType) = failwith "TBD - Cast"
         //if dtype = t.DType then 
         //    upcast t
         //else 
         //    RawTensor.Create(t.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device)
 
     override t1.CompareTo(t2) = failwith "tbd" //RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorSingle))
+
     //override t.CreateShaped(values, shape) = upcast RawTensorSingle(values, shape)
     override t.RandomMultinomial(numSamples) = failwith "tbd" //RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
+
     override t1.Equals(t2:RawTensor) : bool = failwith "tbd" //RawTensorCPU.Equals(t1, t2)
+
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = failwith "tbd" //RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
+
     override t.IsInfT() = failwith "tbd" //RawTensorCPU.IsInfT(System.Single.IsInfinity, t) |> createBool
+
     override t.IsNaNT() = failwith "tbd" //RawTensorCPU.IsNaNT(System.Single.IsNaN, t) |> createBool
+
     override t.SoftplusT() = failwith "tbd" //RawTensorCPU.SoftplusT(t) |> create
+
     override t1.LtTT(t2) = failwith "tbd" //RawTensorCPU.LtTT(t1, t2) |> createBool
+
     override t1.GtTT(t2) = failwith "tbd" //RawTensorCPU.GtTT(t1, t2) |> createBool
+
     override t1.LeTT(t2) = failwith "tbd" //RawTensorCPU.LeTT(t1, t2) |> createBool
+
     override t1.GeTT(t2) = failwith "tbd" //RawTensorCPU.GeTT(t1, t2) |> createBool
+
     override t.MaxIndexT() = failwith "tbd" //RawTensorCPU.MaxIndexT(t)
+
     override t.MinIndexT() = failwith "tbd" //RawTensorCPU.MinIndexT(t)
+
     override t1.AddTT(t2) = failwith "tbd" //RawTensorCPU.AddTT(t1, t2) |> create
+
     override t1.AddTT0(t2) = failwith "tbd" //RawTensorCPU.AddTT0(t1, t2) |> create
+
     override t1.AddT2T1(t2) = failwith "tbd" //RawTensorCPU.AddT2T1(t1, t2) |> create
+
     override t1.AddTTSlice(location:int[], t2) = failwith "tbd" //RawTensorCPU.AddTTSlice((+), t1, location, t2) |> create
+
     override t1.SubTT(t2) = failwith "tbd" //RawTensorCPU.SubTT(t1, t2) |> create
+
     override t1.SubT0T(t2) = failwith "tbd" //RawTensorCPU.SubT0T(t1, t2) |> create
+
     override t1.SubTT0(t2) = failwith "tbd" //RawTensorCPU.SubTT0(t1, t2) |> create
+
     override t1.MulTT(t2) = failwith "tbd" //RawTensorCPU.MulTT(t1, t2) |> create
+
     override t1.MulTT0(t2) = failwith "tbd" //RawTensorCPU.MulTT0(t1, t2) |> create
+
     override t1.DivTT(t2) = failwith "tbd" //RawTensorCPU.DivTT(t1, t2) |> create
+
     override t1.DivT0T(t2) = failwith "tbd" //RawTensorCPU.DivT0T(t1, t2) |> create
+
     override t1.DivTT0(t2) = failwith "tbd" //RawTensorCPU.DivTT0(t1, t2) |> create
+
     override t1.PowTT(t2) = failwith "tbd" //RawTensorCPU.PowTT(t1, t2) |> create
+
     override t1.PowT0T(t2) = failwith "tbd" //RawTensorCPU.PowT0T(t1, t2) |> create
+
     override t1.PowTT0(t2) = failwith "tbd" //RawTensorCPU.PowTT0(t1, t2) |> create
+
     override t1.MatMulT2T2(t2) = failwith "tbd" //RawTensorCPU.MatMulTT(t1, t2) |> create
+
     override t1.Conv1D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
+
     override t1.Conv2D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
+
     override t1.Conv3D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = failwith "tbd" //RawTensorCPU.NegT(t) |> create
-    override t.SumT() = failwith "tbd" //RawTensorCPU.SumT(t) |> create
-    override t.SumT2Dim0() = failwith "tbd" //RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = failwith "tbd" //RawTensorCPU.SignT float32 t |> create
-    override t.FloorT() = failwith "tbd" //RawTensorCPU.FloorT(t) |> create
-    override t.CeilT() = failwith "tbd" //RawTensorCPU.CeilT(t) |> create
-    override t.RoundT() = failwith "tbd" //RawTensorCPU.RoundT(t) |> create
-    override t.AbsT() = failwith "tbd" //RawTensorCPU.AbsT(t) |> create
-    override t.ReluT() = failwith "tbd" //RawTensorCPU.ReluT(t) |> create
-    override t.SigmoidT() = failwith "tbd" //RawTensorCPU.SigmoidT(t) |> create
-    override t.ExpT() = failwith "tbd" //RawTensorCPU.ExpT(t) |> create
-    override t.LogT() = failwith "tbd" //RawTensorCPU.LogT(t) |> create
-    override t.Log10T() = failwith "tbd" //RawTensorCPU.Log10T(t) |> create
-    override t.SqrtT() = failwith "tbd" //RawTensorCPU.SqrtT(t) |> create
-    override t.SinT() = failwith "tbd" //RawTensorCPU.SinT(t) |> create
-    override t.CosT() = failwith "tbd" //RawTensorCPU.CosT(t) |> create
-    override t.TanT() = failwith "tbd" //RawTensorCPU.TanT(t) |> create
-    override t.SinhT() = failwith "tbd" //RawTensorCPU.SinhT(t) |> create
-    override t.CoshT() = failwith "tbd" //RawTensorCPU.CoshT(t) |> create
-    override t.TanhT() = failwith "tbd" //RawTensorCPU.TanhT(t) |> create
-    override t.AsinT() = failwith "tbd" //RawTensorCPU.AsinT(t) |> create
-    override t.AcosT() = failwith "tbd" //RawTensorCPU.AcosT(t) |> create
-    override t.AtanT() = failwith "tbd" //RawTensorCPU.AtanT(t) |> create
+
+    override t.NegT() = (tt.NegT, t.Shape) |> create
+
+    override t.SumT() = (tt.SumT, t.Shape) |> create
+
+    override t.SumT2Dim0() = (tt.SumT2Dim0, t.Shape) |> create
+
+    override t.SignT() = (tt.Sign(), t.Shape) |> create
+
+    override t.FloorT() = (tt.Floor(), t.Shape) |> create
+
+    override t.CeilT() = (tt.Ceil(), t.Shape) |> create
+
+    override t.RoundT() = (tt.Round(), t.Shape) |> create
+
+    override t.AbsT() = (tt.Abs(), t.Shape) |> create
+
+    override t.ReluT() = failwith "TBD Relu" //(tt.Re(), t.Shape) |> create
+
+    override t.SigmoidT() = (tt.Sigmoid(), t.Shape) |> create
+
+    override t.ExpT() = (tt.Exp(), t.Shape) |> create
+
+    override t.LogT() = (tt.Log(), t.Shape) |> create
+
+    override t.Log10T() = (tt.Log10(), t.Shape) |> create
+
+    override t.SqrtT() = (tt.Sqrt(), t.Shape) |> create
+
+    override t.SinT() = (tt.Sin(), t.Shape) |> create
+
+    override t.CosT() = (tt.Cos(), t.Shape) |> create
+
+    override t.TanT() = (tt.Tan(), t.Shape) |> create
+
+    override t.SinhT() = (tt.Sinh(), t.Shape) |> create
+
+    override t.CoshT() = (tt.Cosh(), t.Shape) |> create
+
+    override t.TanhT() = (tt.Tanh(), t.Shape) |> create
+
+    override t.AsinT() = (tt.Asin(), t.Shape) |> create
+
+    override t.AcosT() = (tt.Asin(), t.Shape) |> create
+
+    override t.AtanT() = (tt.Atan(), t.Shape) |> create
 
 /// The concrete implementation of RawTensorStatics for Float32 data.
 type RawTensorSingleStatics() = 
