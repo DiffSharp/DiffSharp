@@ -1134,11 +1134,6 @@ type Tensor =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
         checkCanMaxpool1d a.shape kernelSize stride padding
-        // let fRaw(a:RawTensor) = let result, _ = a.MaxPool1D(kernelSize, stride, padding) in result
-        // let fTensor(a:Tensor) = a.maxpool1d(kernelSize, stride, padding)
-        // let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxpool1d(kernelSize, stride, padding)
-        // let dfTensorRev(a) = AtanT(a)
-        // Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, fst (ad.maxpool1di(kernelSize, stride, padding)), at), indices
