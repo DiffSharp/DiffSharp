@@ -98,6 +98,17 @@ type DType =
         | Other (_name, _, typ) -> typ
 
 module DType =
+
+    let (|FloatingPoint|_|) x =
+        match x with
+        | Float32 | Float64 -> Some()
+        | _ -> None
+
+    let (|IntegralOrBool|_|) x =
+        match x with
+        | Int8 | Int16 | Int32 | Int64 | Bool -> Some()
+        | _ -> None
+
     /// Find the DType into which dtype1 and dtype2 can be widened
     let widen (dtype1: DType) (dtype2: DType) =
         if dtype1 = dtype2 then dtype1

@@ -155,7 +155,6 @@ and [<AbstractClass>]
     member t.RandomNormalLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
         RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    abstract member CompareTo: RawTensor -> int
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
@@ -236,36 +235,6 @@ and [<AbstractClass>]
     abstract member AcosT: unit -> RawTensor
     abstract member AtanT: unit -> RawTensor
 
-    default t.ToValues() =
-        match t.Dim with
-        | 0 -> t.GetItem()
-        | 1 ->
-            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
-            for i in 0 .. t.Shape.[0] - 1 do arr.SetValue(t.GetItem(i), i)
-            box arr
-        | 2 ->
-            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
-            for i0 in 0 .. t.Shape.[0] - 1 do
-                for i1 in 0 .. t.Shape.[1] - 1 do
-                    arr.SetValue(t.GetItem(i0, i1), i0, i1)
-            box arr
-        | 3 ->
-            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
-            for i0 in 0 .. t.Shape.[0] - 1 do
-                for i1 in 0 .. t.Shape.[1] - 1 do
-                    for i2 in 0 .. t.Shape.[2] - 1 do
-                        arr.SetValue(t.GetItem(i0, i1, i2), i0, i1, i2)
-            box arr
-        | 4 ->
-            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
-            for i0 in 0 .. t.Shape.[0] - 1 do
-                for i1 in 0 .. t.Shape.[1] - 1 do
-                    for i2 in 0 .. t.Shape.[2] - 1 do
-                        for i3 in 0 .. t.Shape.[3] - 1 do
-                            arr.SetValue(t.GetItem(i0, i1, i2, i3), i0, i1, i2, i3)
-            box arr
-        | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
-
     default t.IsInfT() =
         t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
 
@@ -321,7 +290,7 @@ and [<AbstractClass>]
     interface System.IComparable with 
         member x.CompareTo(yobj) =
             match yobj with
-            | :? RawTensor as y -> x.CompareTo(y)
+            | :? RawTensor as y -> Unchecked.compare (x.ToScalar()) (y.ToScalar())
             | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
 
     member t.ToScalar() =

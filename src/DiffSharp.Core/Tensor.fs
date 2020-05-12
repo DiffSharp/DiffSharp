@@ -192,7 +192,7 @@ type Tensor =
             match other with
             | :? Tensor as tensor -> 
                 if t.dim = tensor.dim && t.dim = 0 then
-                    t.primalRaw.CompareTo(tensor.primalRaw)
+                    (t.primalRaw :> System.IComparable).CompareTo(tensor.primalRaw)
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
