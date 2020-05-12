@@ -87,8 +87,8 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
 module DTypes =
 
     // We run most tests at all these tensor types
-    let Bool = [ DType.Bool ]
-    let Integral = [DType.Int8; DType.Int16; DType.Int32; DType.Int64]
+    let Bool = [ (* DType.Bool *) ]
+    let Integral = [ (* DType.Int8; DType.Int16; DType.Int32; DType.Int64 *) ]
     let FloatingPoint = [DType.Float32]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
@@ -98,6 +98,7 @@ module DTypes =
 
 module Combos =
 
+    //let backends = [ Backend.None ] //; Backend.Register("TestDuplicate") ]
     let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
 

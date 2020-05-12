@@ -11,8 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <PackageReference Include="AtenSharp" Version="0.2.0-preview-28313-0" />
-    <PackageReference Include="SNT" Version="0.2.0-preview-28313-0" />
-    <PackageReference Include="System.Numerics.Tensors" Version="0.1.0" />
+    <PackageReference Include="LibTorch.Redist" Version="0.2.0-preview-28313-0" />
   </ItemGroup>
 
 </Project>

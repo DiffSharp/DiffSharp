@@ -330,6 +330,116 @@ type TestTensor () =
         Assert.AreEqual(t2Correct, t2)
 
     [<Test>]
+    // Test the underlying GetItem on the RawPrimal, useful when testing backends
+    member this.TestTensorGetItemOnPrimal () =
+      for combo in Combos.IntegralAndFloatingPoint do 
+        let t0 = combo.tensor(2.)
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+
+        let t1 = combo.tensor([2., 3., 4., 5., 6.])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t1.primalRaw.GetItem(0)))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t1.primalRaw.GetItem(1)))
+        Assert.AreEqual(4.0, System.Convert.ToDouble (t1.primalRaw.GetItem(2)))
+        Assert.AreEqual(5.0, System.Convert.ToDouble (t1.primalRaw.GetItem(3)))
+        Assert.AreEqual(6.0, System.Convert.ToDouble (t1.primalRaw.GetItem(4)))
+
+        let t2 = combo.tensor([[2.]; [3.]])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t2.primalRaw.GetItem(0, 0)))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t2.primalRaw.GetItem(1, 0)))
+
+        let t2b = combo.tensor([[1.;2.]; [3.;4.]])
+        Assert.AreEqual(1.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(0, 0)))
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(0, 1)))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(1, 0)))
+        Assert.AreEqual(4.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(1, 1)))
+
+        let t3 = combo.tensor([[[2.; 3.]]])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t3.primalRaw.GetItem(0, 0, 0)))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t3.primalRaw.GetItem(0, 0, 1)))
+
+        let t4 = combo.tensor([[[[1.]]]])
+        Assert.AreEqual(1.0, System.Convert.ToDouble (t4.primalRaw.GetItem(0, 0, 0, 0)))
+
+    [<Test>]
+    // Test the underlying GetItem on the RawPrimal, useful when testing backends
+    member this.TestTensorGetSliceOnPrimal () =
+      for combo in Combos.IntegralAndFloatingPoint do 
+        let t0 = combo.tensor(2.)
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+
+        let t1 = combo.tensor([ 0 .. 10 ])
+        let t1slice1 = t1.primalRaw.GetSlice(array2D [ [ 3; 4; 0 ] ])
+        let t1slice2 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 0 ] ])
+
+        Assert.AreEqual(3, t1slice1.GetItem(0))
+        Assert.AreEqual(4, t1slice1.GetItem(1))
+        Assert.AreEqual(1, t1slice1.Dim)
+        Assert.AreEqual(2, t1slice1.Shape.[0])
+
+        Assert.AreEqual(3, t1slice2.GetItem(0))
+        Assert.AreEqual(1, t1slice2.Dim)
+        Assert.AreEqual(1, t1slice2.Shape.[0])
+
+        // TODO: slicing reducing down to scalar
+        //let t1slice3 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ] ])
+        //Assert.AreEqual(3, t1slice3.GetItem(0))
+        //Assert.AreEqual(0, t1slice3.Dim)
+
+        let t2 = combo.tensor([ for i in 0 .. 10 -> [ i*10 .. i*10+10 ] ])
+        let t2slice1 = t2.primalRaw.GetSlice(array2D [ [ 3; 5; 0 ]; [ 3; 5; 0 ] ])
+
+        Assert.AreEqual(33, t2slice1.GetItem(0, 0))
+        Assert.AreEqual(34, t2slice1.GetItem(0, 1))
+        Assert.AreEqual(35, t2slice1.GetItem(0, 2))
+        Assert.AreEqual(43, t2slice1.GetItem(1, 0))
+        Assert.AreEqual(44, t2slice1.GetItem(1, 1))
+        Assert.AreEqual(45, t2slice1.GetItem(1, 2))
+        Assert.AreEqual(53, t2slice1.GetItem(2, 0))
+        Assert.AreEqual(54, t2slice1.GetItem(2, 1))
+        Assert.AreEqual(55, t2slice1.GetItem(2, 2))
+
+        let t2slice2 = t2.primalRaw.GetSlice(array2D [ [ 3; 5; 0 ]; [ 3; 3; 1 ] ])
+        Assert.AreEqual(33, t2slice2.GetItem(0))
+        Assert.AreEqual(43, t2slice2.GetItem(1))
+        Assert.AreEqual(53, t2slice2.GetItem(2))
+
+        let t2slice3 = t2.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ]; [ 3; 5; 0 ] ])
+        Assert.AreEqual(33, t2slice3.GetItem(0))
+        Assert.AreEqual(34, t2slice3.GetItem(1))
+        Assert.AreEqual(35, t2slice3.GetItem(2))
+
+
+    [<Test>]
+    // Test cases of indexing where indexing returns a scalar
+    member this.TestTensorIndexItemAsScalarTensor () =
+      for combo in Combos.IntegralAndFloatingPoint do 
+        let t0 = combo.tensor(2.)
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+
+        let t1 = combo.tensor([2., 3., 4., 5., 6.])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t1.[0].toScalar()))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t1.[1].toScalar()))
+        Assert.AreEqual(4.0, System.Convert.ToDouble (t1.[2].toScalar()))
+        Assert.AreEqual(5.0, System.Convert.ToDouble (t1.[3].toScalar()))
+
+        let t2 = combo.tensor([[2.]; [3.]])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t2.[0,0].toScalar()))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t2.[1,0].toScalar()))
+
+        let t2b = combo.tensor([[1.;2.]; [3.;4.]])
+        Assert.AreEqual(1.0, System.Convert.ToDouble (t2b.[0,0].toScalar()))
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t2b.[0,1].toScalar()))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t2b.[1,0].toScalar()))
+        Assert.AreEqual(4.0, System.Convert.ToDouble (t2b.[1,1].toScalar()))
+
+        let t3 = combo.tensor([[[2.; 3.]]])
+        Assert.AreEqual(2.0, System.Convert.ToDouble (t3.[0,0,0].toScalar()))
+        Assert.AreEqual(3.0, System.Convert.ToDouble (t3.[0,0,1].toScalar()))
+
+        let t4 = combo.tensor([[[[1.]]]])
+        Assert.AreEqual(1.0, System.Convert.ToDouble (t4.[0,0,0,0].toScalar()))
+
+    [<Test>]
     member this.TestTensorToString () =
       for combo in Combos.IntegralAndFloatingPoint do 
         let t0 = combo.tensor(2.)

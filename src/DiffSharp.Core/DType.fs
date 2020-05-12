@@ -60,7 +60,7 @@ type DType =
     | Int32
     | Int64
     | Bool
-    | Other of name:string * code:int
+    | Other of name:string * code:int * inOutType: System.Type
 
     member internal x.Code =
         match x with
@@ -71,7 +71,7 @@ type DType =
         | Int32 -> 0x50000
         | Int64 -> 0x60000
         | Bool -> 0x70000
-        | Other (_name, code) -> (code + 8) <<< 16
+        | Other (_name, code, _) -> (code + 8) <<< 16
 
     member internal x.Name =
         match x with
@@ -82,9 +82,20 @@ type DType =
         | Int32 -> "Int32"
         | Int64 -> "Int64"
         | Bool -> "Bool"
-        | Other (name, _) -> name
+        | Other (name, _, _) -> name
 
     static member Default = DType.Float32
+
+    member x.AsType () =
+        match x with
+        | Float32 -> typeof<single>
+        | Float64 -> typeof<double>
+        | Int8 -> typeof<int8>
+        | Int16 -> typeof<int16>
+        | Int32 -> typeof<int32>
+        | Int64 -> typeof<int64>
+        | Bool -> typeof<bool>
+        | Other (_name, _, typ) -> typ
 
 module DType =
     /// Find the DType into which dtype1 and dtype2 can be widened
@@ -114,4 +125,5 @@ module DType =
 
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
-    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value)))
+
+    let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value, inOutType)))

@@ -75,6 +75,14 @@ module Shape =
         let newShape = [| yield! shape1; yield n; yield! shape2 |]
         n, shape1, shape2, newShape
 
+    let computeGetSlice (fullBounds: int[,]) =
+        [|for i=0 to (fullBounds.GetLength(0) - 1) do
+            let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
+            if fullBounds.[i, 2] = 1 then
+                if len > 1 then yield len // if len=1 then squeeze this dimension
+            else
+                yield len|]
+
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
     else Array.init a.Rank (fun i -> a.GetLength(i))
@@ -295,7 +303,7 @@ let dilatedCoordinates (coordinates:int[]) (dilations:int[]) =
 
 let checkValidIndex (shape:int[]) (index:int[]) =
     if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
-    let valid = Array.map2 (fun s i -> i < s) shape index |> Array.reduce (&&)
+    let valid = Array.forall2 (fun s i -> i < s) shape index
     if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
 
 let indexToFlatIndex (shape:int[]) (index:int[]) =
@@ -530,7 +538,7 @@ let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBoo
     | None -> 
     match value |> tryFlatArrayAndShape<bool> with
     | Some (values, shape) ->(values |> Array.map ofBool, shape) 
-    | _ -> invalidArg "value" "Cannot convert value to RawTensorCPU"
+    | _ -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
 
 let dataOfValuesForFloat32 (value:obj) =
     dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) value 

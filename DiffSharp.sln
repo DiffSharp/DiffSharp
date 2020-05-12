@@ -19,8 +19,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backends.Torch", 
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backends.TestDuplicate", "tests\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj", "{9F1EACD4-44D9-4C5C-BC2A-63A6B0514467}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Backends.TestDuplicate", "src\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj", "{4A8DA053-9A9B-453D-9609-76EA709DCAFA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,18 +113,6 @@ Global
 		{9F1EACD4-44D9-4C5C-BC2A-63A6B0514467}.Release|x64.Build.0 = Release|Any CPU
 		{9F1EACD4-44D9-4C5C-BC2A-63A6B0514467}.Release|x86.ActiveCfg = Release|Any CPU
 		{9F1EACD4-44D9-4C5C-BC2A-63A6B0514467}.Release|x86.Build.0 = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|x64.Build.0 = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Debug|x86.Build.0 = Debug|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|x64.ActiveCfg = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|x64.Build.0 = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|x86.ActiveCfg = Release|Any CPU
-		{4A8DA053-9A9B-453D-9609-76EA709DCAFA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

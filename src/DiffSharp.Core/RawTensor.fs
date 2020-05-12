@@ -116,7 +116,7 @@ and [<AbstractClass>]
             | Some DType.Float32 ->
                 let a,s = dataOfValuesForFloat32 values
                 (a :> Array), s, DType.Float32
-            | Some (DType.Other (name, _)) ->
+            | Some (DType.Other (name, _, _)) ->
                 failwithf "can't directly create tensors of user-defined type %s" name
             | None ->
                 // Prefer Bool tensor if all bool
@@ -163,7 +163,11 @@ and [<AbstractClass>]
     abstract member CatTs: RawTensor[] * dim: int -> RawTensor
     abstract member SplitT: int[] * dim: int -> RawTensor[]
     abstract member GetString: unit -> string
+    
+    /// The indexes are an Nx3 array.   The first row is the start bounds, the second row is
+    /// the end bounds, the third is 1/0 indicating dimension removal.
     abstract member GetSlice: int[,] -> RawTensor
+
     abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool
     abstract member Cast : DType -> RawTensor
@@ -174,8 +178,11 @@ and [<AbstractClass>]
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor
     abstract member GeTT: RawTensor -> RawTensor
+    abstract member EqTT: RawTensor -> RawTensor
+    abstract member NeqTT: RawTensor -> RawTensor
     abstract member IsInfT : unit -> RawTensor
     abstract member IsNaNT : unit -> RawTensor
+    abstract member GetItem : [<System.ParamArray>] indexes: int[] -> obj 
     abstract member MaxIndexT : unit -> int[]
     abstract member MinIndexT : unit -> int[]
     abstract member AddTT : RawTensor -> RawTensor
@@ -228,6 +235,81 @@ and [<AbstractClass>]
     abstract member AsinT: unit -> RawTensor
     abstract member AcosT: unit -> RawTensor
     abstract member AtanT: unit -> RawTensor
+
+    default t.ToValues() =
+        match t.Dim with
+        | 0 -> t.GetItem()
+        | 1 ->
+            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
+            for i in 0 .. t.Shape.[0] - 1 do arr.SetValue(t.GetItem(i), i)
+            box arr
+        | 2 ->
+            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
+            for i0 in 0 .. t.Shape.[0] - 1 do
+                for i1 in 0 .. t.Shape.[1] - 1 do
+                    arr.SetValue(t.GetItem(i0, i1), i0, i1)
+            box arr
+        | 3 ->
+            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
+            for i0 in 0 .. t.Shape.[0] - 1 do
+                for i1 in 0 .. t.Shape.[1] - 1 do
+                    for i2 in 0 .. t.Shape.[2] - 1 do
+                        arr.SetValue(t.GetItem(i0, i1, i2), i0, i1, i2)
+            box arr
+        | 4 ->
+            let arr = Array.CreateInstance(t.DType.AsType(), t.Shape)
+            for i0 in 0 .. t.Shape.[0] - 1 do
+                for i1 in 0 .. t.Shape.[1] - 1 do
+                    for i2 in 0 .. t.Shape.[2] - 1 do
+                        for i3 in 0 .. t.Shape.[3] - 1 do
+                            arr.SetValue(t.GetItem(i0, i1, i2, i3), i0, i1, i2, i3)
+            box arr
+        | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
+
+    default t.IsInfT() =
+        t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
+
+    default t.IsNaNT() =
+        t.NeqTT(t)
+
+    default t.GetString() =
+        // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
+        let printVal (x:obj) = 
+           match x with 
+           | :? single as v -> sprintf "%f" v
+           | :? double as v -> sprintf "%f" v
+           | :? int8 as v -> sprintf "%d" v
+           | :? int16 as v -> sprintf "%d" v
+           | :? int32 as v -> sprintf "%d" v
+           | :? int64 as v -> sprintf "%d" v
+           | :? bool as v -> if v then "true" else "false"
+           | _ -> sprintf "%A" x
+
+        match t.Dim with
+        | 0 -> printVal (t.ToScalar())
+        | _ ->
+            let sb = System.Text.StringBuilder()
+            let rec print (shape:int[]) externalCoords = 
+                if shape.Length = 1 then
+                    sb.Append("[") |> ignore
+                    let mutable prefix = ""
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        sb.Append(prefix) |> ignore
+                        sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
+                        prefix <- ", "
+                    sb.Append("]") |> ignore
+                else
+                    sb.Append("[") |> ignore
+                    let mutable prefix = ""
+                    let prefix2 = sprintf ", %s%s" (String.replicate (max 1 (shape.Length-1)) "\n") (String.replicate (externalCoords.Length+1) " ")
+                    for i=0 to shape.[0]-1 do
+                        sb.Append(prefix) |> ignore
+                        print shape.[1..] (Array.append externalCoords [|i|])
+                        prefix <- prefix2
+                    sb.Append("]") |> ignore
+            print t.Shape [||]
+            sb.ToString()
 
     override x.Equals(yobj: obj) = 
         match yobj with
