@@ -562,14 +562,12 @@ module internal RawTensorCPU =
         let outputShape = [|batchSize; channels; outputSize|]
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorCPU<int>
-        let minValue = t1.[t1.MinIndexT()]
-        printfn "minvalue %A" minValue
+        let minValue = t1.[t1.MinIndexT()] - one
         for n=0 to batchSize-1 do
             for c=0 to channels-1 do
                 for v=0 to outputSize-1 do
-                    let i = v*stride - padding
                     let mutable maxvalue = minValue
-                    let mutable maxindex = i
+                    let mutable maxindex = -1
                     for u=0 to kernelSize-1 do
                         let i = (v*stride) + u - padding
                         if i >= 0 && i < inputSize then
