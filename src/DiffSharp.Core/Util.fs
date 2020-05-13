@@ -114,6 +114,12 @@ module Shape =
         let unstackedShape = Array.append shape1 shape2
         shape1, shape2, unstackedShape
 
+    let computeTranspose (shape: Shape) =
+        let nrows = shape.[0]
+        let ncols = shape.[1]
+        let newShape = [| ncols; nrows |]
+        newShape
+
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
     else Array.init a.Rank (fun i -> a.GetLength(i))

@@ -72,11 +72,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                     // printfn "outer %A" i
                     slice fullBounds.[1..,*] (Array.append externalCoords [|i|])
         slice fullBounds [||]
-        t.CreateLike(array, shape)
+        t.MakeLike(array, shape)
 
-    override t.Clone() = t.CreateLike(Array.copy t.Values, Array.copy t.Shape)
+    override t.Clone() = t.MakeLike(Array.copy t.Values, Array.copy t.Shape)
 
-    abstract member CreateLike: values: 'T[] * shape: int[] -> RawTensor
+    abstract member MakeLike: values: 'T[] * shape: int[] -> RawTensor
 
     override x.ComputeHash() = hash shape + hash values
     
@@ -110,7 +110,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                             result.[jbase+jD] <- values.[ibase+iD]
                             iD <- iD + strideD
                 loop 0 (jP*jshape.[0]) 0
-        t.CreateLike(result, newShape)
+        t.MakeLike(result, newShape)
 
     override t.ToValues() =
         match t.Dim with
@@ -135,7 +135,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let j2 = (chunk/n)*m2+i%m2
             result.[i] <-values.[i2].[j2]
 
-        (tensors.[0] :?> RawTensorCPU<'T>).CreateLike(result, newShape)
+        (tensors.[0] :?> RawTensorCPU<'T>).MakeLike(result, newShape)
 
     override t.UnstackT(dim) =
         let shape = t.Shape
@@ -151,7 +151,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let i2 = chunk%n
             let j2 = (chunk/n)*m2+i%m2
             results.[i2].[j2] <- values.[i]
-        results |> Array.map (fun rvalues -> t.CreateLike(rvalues, unstackedShape))
+        results |> Array.map (fun rvalues -> t.MakeLike(rvalues, unstackedShape))
 
     override t.CatTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
@@ -169,7 +169,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                     result.[i+j2] <-values.[k].[b+j2]
                 i <- i + d*m3
 
-        t.CreateLike(result, outShape)
+        t.MakeLike(result, outShape)
 
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
@@ -191,7 +191,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                 i <- i + d*m3
 
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
-            t.CreateLike(rvalues, outShape))
+            t.MakeLike(rvalues, outShape))
 
     override t.TransposeT2() =
         checkCanTranspose t.Dim
@@ -201,11 +201,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
-        t.CreateLike(result, shapeSqueeze dim t.Shape)
+        t.MakeLike(result, shapeSqueeze dim t.Shape)
 
     override t.UnsqueezeT(dim) =
         let result = Array.copy t.Values
-        t.CreateLike(result, shapeUnsqueeze dim t.Shape)
+        t.MakeLike(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
         checkCanFlip t.Dim dims
@@ -260,7 +260,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape
         let result = Array.copy t.Values
-        t.CreateLike(result, shape)
+        t.MakeLike(result, shape)
 
     override t.Cast(dtype: DType) =
         if dtype = t.DType then 
@@ -722,7 +722,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorFloat32CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape) 
 
-    override t.CreateLike(values, shape) = upcast RawTensorFloat32CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorFloat32CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
@@ -798,7 +798,7 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorFloat64CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateLike(values, shape) = upcast RawTensorFloat64CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorFloat64CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
@@ -873,7 +873,7 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt8CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateLike(values, shape) = upcast RawTensorInt8CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorInt8CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int8 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -949,7 +949,7 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt16CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateLike(values, shape) = upcast RawTensorInt16CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorInt16CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int16 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1025,7 +1025,7 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt32CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateLike(values, shape) = upcast RawTensorInt32CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorInt32CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1101,7 +1101,7 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt64CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateLike(values, shape) = upcast RawTensorInt64CPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorInt64CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int64 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1176,7 +1176,7 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
 
     static let create(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
        
-    override t.CreateLike(values, shape) = upcast RawTensorBoolCPU(values, shape)
+    override t.MakeLike(values, shape) = upcast RawTensorBoolCPU(values, shape)
     override t.RandomMultinomial(_numSamples) = opNotSupported t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)

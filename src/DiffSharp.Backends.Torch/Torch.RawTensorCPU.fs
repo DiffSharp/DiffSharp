@@ -29,15 +29,15 @@ module internal Utils =
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
     type RawTensor with
-        member x.TorchTensor = (x :?> TorchTensorCPU).TorchTensor
+        member x.TorchTensor = (x :?> RawTensorTorch).TorchTensor
 
 /// This is the base class for all RawTensorXyzCPU tuypes.
 /// All type-independent operations are implemented directly on this class. 
-type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
+type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
     inherit RawTensor(shape, dtype, device, Backend.Torch)
 
-    member t.CreateLike(tt, ?shape, ?dtype) : RawTensor =
-        upcast TorchTensorCPU(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, device)
+    member t.MakeLike(tt, ?shape, ?dtype) : RawTensor =
+        upcast RawTensorTorch(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, device)
 
     member x.TorchTensor = tt
 
@@ -56,10 +56,10 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
             else
                 dim <- dim + 1
-        t.CreateLike(tt=res, shape=newShape)
+        t.MakeLike(tt=res, shape=newShape)
 
     override t.Clone() =
-        t.CreateLike(tt.Clone())
+        t.MakeLike(tt.Clone())
 
    // TODO: check if torch has a C++ hashing routine
     override x.ComputeHash() = 
@@ -95,7 +95,7 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
         res
     
     override t.Expand(newShape) =
-        t.CreateLike(tt.Expand(toTorchShape newShape), shape=newShape)
+        t.MakeLike(tt.Expand(toTorchShape newShape), shape=newShape)
 
     override t.GetItem(indexes) = 
         let item = 
@@ -139,51 +139,51 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
         | DType.Other _ -> failwith "Torch GetItem TBD other type"
 
     override _.StackTs(tensors, dim) =
-        let _tts, shapes = tensors |> Array.map (fun t -> (t :?> TorchTensorCPU).TorchTensor, t.Shape) |> Array.unzip
+        let tts, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorTorch).TorchTensor, t.Shape) |> Array.unzip
         checkCanStack shapes dim
         let _n, _shape1, _shape2, newShape = Shape.computeStack shapes dim
-        let result = failwith "tbd" //tts.[0].
-        (tensors.[0] :?> TorchTensorCPU).CreateLike(result, newShape)
+        let result = tts.Stack(int64 dim)
+        (tensors.[0] :?> RawTensorTorch).MakeLike(result, newShape)
 
     override t.UnstackT(dim) = 
         let shape = t.Shape
         let _shape1, _shape2, unstackedShape = Shape.computeUnstack shape dim
         let results = tt.Unbind(dim)
-        results |> Array.map (fun rvalues -> t.CreateLike(rvalues, shape=unstackedShape))
+        results |> Array.map (fun rvalues -> t.MakeLike(rvalues, shape=unstackedShape))
 
     override t.CatTs(tensors, dim) = 
         let values, shapes = tensors |> Array.map (fun t -> t.TorchTensor, t.Shape) |> Array.unzip
         let _n, _shape1, _m2, _shape3, outShape = Shape.computeCat shapes dim
         let result = values.Cat(int64 dim)
-        t.CreateLike(result, outShape)
+        t.MakeLike(result, outShape)
 
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
         let outShapes = Shape.computeSplit shape sizes dim
-        let results = tt.SplitWithSizes(Array.map int64 sizes)
+        let results = tt.SplitWithSizes(Array.map int64 sizes, dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
-            t.CreateLike(rvalues, shape=outShape))
+            t.MakeLike(rvalues, shape=outShape))
 
-    override t.TransposeT2() = failwith "TBD - TransposeT2"
-        //checkCanBatchTranspose t.Dim
-        //let oldShape = t.Shape
-        //let batch = oldShape.[0..oldShape.Length-3]
-        //let nrows = oldShape.[oldShape.Length-2]
-        //let ncols = oldShape.[oldShape.Length-1]
-        //let newShape = Array.append batch [| ncols; nrows |]
-        //let result = Array.zeroCreate values.Length
-        //for i = 0 to values.Length-1 do
-        //    let col = i % ncols 
-        //    let row = (i / ncols ) % nrows
-        //    let j = (i / ncols / nrows)*ncols*nrows + col*nrows + row
-        //    result.[j] <- values.[i]
-        //t.CreateLike(result, newShape)
+    override t.TransposeT2() =
+        checkCanTranspose t.Dim
+        let newShape = Shape.computeTranspose t.Shape
+        let result = tt.T()
+        t.MakeLike(result, shape=newShape)
 
     override t.SqueezeT(dim) = 
-        t.CreateLike(tt.Squeeze(int64 dim), shape=shapeSqueeze dim t.Shape)
+        let shape = t.Shape
+        let newShape = shapeSqueeze dim shape
+        let mutable res = tt
+        let mutable c = 0
+        for i in 0 .. t.Dim - 1 do
+            if shape.[i] = 1 && (dim = -1 || i = dim) then 
+                res <- res.Squeeze(int64 c)
+            else   
+                c <- c + 1
+        t.MakeLike(res, shape=newShape)
 
     override t.UnsqueezeT(dim) = 
-        t.CreateLike(tt.Unsqueeze(int64 dim), shape=shapeUnsqueeze dim t.Shape)
+        t.MakeLike(tt.Unsqueeze(int64 dim), shape=shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) = failwith "TBD - FlipT"
         //checkCanFlip t.Dim dims
@@ -238,7 +238,7 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape
-        t.CreateLike(tt.View(toTorchShape shape), shape=shape)
+        t.MakeLike(tt.View(toTorchShape shape), shape=shape)
 
     override t.Cast(dtype: DType) =
         if dtype = t.DType then 
@@ -255,7 +255,7 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
                 | DType.Float64 -> ATenScalarMapping.Double
                 | DType.Other _ -> failwith "Torch GetItem TBD other type"
             let result = tt.ToType(atenType)
-            t.CreateLike(result, dtype=dtype)
+            t.MakeLike(result, dtype=dtype)
 
     override _.RandomMultinomial(numSamples) =
         failwith "tbd"
@@ -267,31 +267,31 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
         tt.AllClose(t2.TorchTensor, relativeTolerance, absoluteTolerance)
 
     override t.SoftplusT() = 
-        t.CreateLike(tt.Softplus(), dtype=DType.Bool)
+        t.MakeLike(tt.Softplus(), dtype=DType.Bool)
 
     override t1.LtTT(t2) =
         let result = tt.Lt(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t1.GtTT(t2) =
         let result = tt.Gt(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t1.LeTT(t2) = 
         let result = tt.Le(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t1.GeTT(t2) = 
         let result = tt.Ge(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t1.EqTT(t2) = 
         let result = tt.Eq(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t1.NeqTT(t2) = 
         let result = tt.Ne(t2.TorchTensor)
-        t1.CreateLike(result, dtype=DType.Bool)
+        t1.MakeLike(result, dtype=DType.Bool)
 
     override t.MaxIndexT() = 
         let res = Array.zeroCreate<int64> t.Dim
@@ -317,74 +317,85 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.AddTT(t2) =
         let result = tt.Add(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.AddTT0(t2) =
         let t2v = t2.TorchTensor.Item()
         let result = tt.Add(t2v)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.AddT2T1(t2) = 
         let result = tt.Add(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.AddTTSlice(location:int[], t2) =
-        failwith "tbd AddTTSlice" 
+        checkCanAddSlice t1.Shape location t2.Shape
+        let shape1 = t1.Shape
+        let shape2 = t2.Shape
+        let expandedShape2 = shapeUnsqueezeAs shape2 shape1
+        let t2Expanded = t2.TorchTensor.Expand(toTorchShape expandedShape2)
+        let res = tt.Clone()
+        let mutable t1Slice = res // will share memory with res
+        for d in 0 .. location.Length - 1 do 
+            let len2 = expandedShape2.[d]
+            if location.[d] <> 0 || len2 <> shape1.[d] then 
+                t1Slice <- t1Slice.Narrow(int64 d, int64 location.[d], int64 len2)
+        t1Slice.AddInPlace(t2Expanded) |> ignore
+        t1.MakeLike(res)
 
     override t1.SubTT(t2) = 
         let result = tt.Sub(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.SubT0T(t2) =
         let t1v = t1.TorchTensor.Item()
         let result = t1v - t2.TorchTensor
-        t1.CreateLike(result)
+        (t2 :?> RawTensorTorch).MakeLike(result)
 
     override t1.SubTT0(t2) = 
         let t2v = t2.TorchTensor.Item()
         let result = tt.Sub(t2v)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.MulTT(t2) = 
         let result = tt.Mul(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.MulTT0(t2) = 
         let t2v = t2.TorchTensor.Item()
         let result = tt.Mul(t2v)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.DivTT(t2) = 
         let result = tt.Div(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.DivT0T(t2) =
         let t1v = t1.TorchTensor.Item()
         let result = t1v / t2.TorchTensor
-        t1.CreateLike(result)
+        (t2 :?> RawTensorTorch).MakeLike(result)
 
     override t1.DivTT0(t2) = 
         let t2v = t2.TorchTensor.Item()
         let result = tt.Div(t2v)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.PowTT(t2) =
         let result = tt.Pow(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.PowT0T(t2) = 
         let result = t1.Expand(t2.Shape).TorchTensor.Pow(t2.TorchTensor)
-        t1.CreateLike(result)
-        //failwith "PowT0T"
+        (t2 :?> RawTensorTorch).MakeLike(result)
 
     override t1.PowTT0(t2) =
         let t2v = t2.TorchTensor.Item()
         let result = tt.Pow(t2v)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.MatMulT2T2(t2) = 
         let result = tt.Bmm(t2.TorchTensor)
-        t1.CreateLike(result)
+        t1.MakeLike(result)
 
     override t1.Conv1D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
 
@@ -397,112 +408,112 @@ type TorchTensorCPU(tt: TorchTensor, shape: int[], dtype, device) =
     override t.NegT() =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(-tt)
+        | _ ->  t.MakeLike(-tt)
 
     override t.SumT() =
         match dtype with 
         | DType.Bool -> t.Cast(Int64).SumT()
-        | _ ->  t.CreateLike(tt.Sum())
+        | _ ->  t.MakeLike(tt.Sum(), shape=Shape.scalar)
 
     override t.SignT() =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Sign())
+        | _ ->  t.MakeLike(tt.Sign())
 
     override t.FloorT() =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Floor())
+        | _ ->  t.MakeLike(tt.Floor())
 
     override t.CeilT() =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Ceil())
+        | _ ->  t.MakeLike(tt.Ceil())
 
     override t.RoundT() =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Round())
+        | _ ->  t.MakeLike(tt.Round())
 
     override t.AbsT() = 
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
-        | _ -> t.CreateLike(tt.Abs ())
+        | _ -> t.MakeLike(tt.Abs ())
 
     override t.ReluT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->   t.CreateLike(tt.Relu())
+        | _ ->   t.MakeLike(tt.Relu())
 
     override t.SigmoidT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Sigmoid())
+        | _ ->  t.MakeLike(tt.Sigmoid())
 
     override t.ExpT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Exp())
+        | _ ->  t.MakeLike(tt.Exp())
 
     override t.LogT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Log())
+        | _ ->  t.MakeLike(tt.Log())
 
     override t.Log10T() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->   t.CreateLike(tt.Log10())
+        | _ ->   t.MakeLike(tt.Log10())
 
     override t.SqrtT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Sqrt())
+        | _ ->  t.MakeLike(tt.Sqrt())
 
     override t.SinT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Sin())
+        | _ ->  t.MakeLike(tt.Sin())
 
     override t.CosT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Cos())
+        | _ ->  t.MakeLike(tt.Cos())
 
     override t.TanT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Tan())
+        | _ ->  t.MakeLike(tt.Tan())
 
     override t.SinhT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Sinh())
+        | _ ->  t.MakeLike(tt.Sinh())
 
     override t.CoshT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Cosh())
+        | _ ->  t.MakeLike(tt.Cosh())
 
     override t.TanhT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Tanh())
+        | _ ->  t.MakeLike(tt.Tanh())
 
     override t.AsinT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Asin())
+        | _ ->  t.MakeLike(tt.Asin())
 
     override t.AcosT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Acos())
+        | _ ->  t.MakeLike(tt.Acos())
 
     override t.AtanT() =
         match dtype with 
         | DType.IntegralOrBool -> opNotSupported t.DType
-        | _ ->  t.CreateLike(tt.Atan())
+        | _ ->  t.MakeLike(tt.Atan())
 
 /// The concrete implementation of RawTensorStatics for Float32 data.
 type TorchStatics<'T, 'T2>
@@ -519,17 +530,17 @@ type TorchStatics<'T, 'T2>
 
     inherit RawTensorStatics()
 
-    override _.Zero = TorchTensorCPU(from0(conv(zero)).[0L], Shape.scalar, dtype, device) :> _ 
-    override _.One =  TorchTensorCPU(from0(conv(one)).[0L], Shape.scalar, dtype, device) :> _
-    override _.Zeros(shape:int[]) = TorchTensorCPU(zeros(toTorchShape shape), shape, dtype, device) :> _
-    override _.Ones(shape:int[]) = TorchTensorCPU(ones(toTorchShape shape), shape, dtype, device) :> _
-    override _.Random(shape:int[]) = TorchTensorCPU(random(toTorchShape shape), shape, dtype, device) :> _
-    override _.RandomNormal(shape:int[]) = TorchTensorCPU(randomN(toTorchShape shape), shape, dtype, device) :> _
+    override _.Zero = RawTensorTorch(from0(conv(zero)).[0L], Shape.scalar, dtype, device) :> _ 
+    override _.One =  RawTensorTorch(from0(conv(one)).[0L], Shape.scalar, dtype, device) :> _
+    override _.Zeros(shape:int[]) = RawTensorTorch(zeros(toTorchShape shape), shape, dtype, device) :> _
+    override _.Ones(shape:int[]) = RawTensorTorch(ones(toTorchShape shape), shape, dtype, device) :> _
+    override _.Random(shape:int[]) = RawTensorTorch(random(toTorchShape shape), shape, dtype, device) :> _
+    override _.RandomNormal(shape:int[]) = RawTensorTorch(randomN(toTorchShape shape), shape, dtype, device) :> _
 
     override _.Full(shape:int[], value:obj) =
         let t = zeros(toTorchShape shape)
         t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
-        TorchTensorCPU(t, shape, dtype, device) :> _
+        RawTensorTorch(t, shape, dtype, device) :> _
 
     override ts.CreateFromFlatArray(values:Array, shape) =
         let values = values :?> 'T[] |> Array.map conv 
@@ -537,7 +548,7 @@ type TorchStatics<'T, 'T2>
             match shape with 
             | [| |] -> from0(values.[0]).[0L]
             | _ -> from (values, toTorchShape shape)
-        TorchTensorCPU(t, shape, dtype, device) :> _
+        RawTensorTorch(t, shape, dtype, device) :> _
 
 /// The concrete implementation of RawTensorStatics for Bool CPU data.
 type RawTensorFloat32CPUStatics() = 
