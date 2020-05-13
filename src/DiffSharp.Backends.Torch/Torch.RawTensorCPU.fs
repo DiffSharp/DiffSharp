@@ -185,22 +185,9 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
     override t.UnsqueezeT(dim) = 
         t.MakeLike(tt.Unsqueeze(int64 dim), shape=shapeUnsqueeze dim t.Shape)
 
-    override t.FlipT(dims:int[]) = failwith "TBD - FlipT"
-        //checkCanFlip t.Dim dims
-        //match t.Dim with
-        //| 0 -> t.Clone()
-        //| _ ->
-        //    let result = t.ZerosLike(t.Shape) :?> RawTensorCPU<'T>
-        //    let rec flip (shape:int[]) externalCoords = 
-        //        if shape.Length = 1 then
-        //            for i=0 to shape.[0]-1 do
-        //                let globalCoords = Array.append externalCoords [|i|]
-        //                result.[mirrorCoordinates globalCoords t.Shape dims] <- t.[globalCoords]
-        //        else
-        //            for i=0 to shape.[0]-1 do
-        //                flip shape.[1..] (Array.append externalCoords [|i|])
-        //    flip t.Shape [||]        
-        //    upcast result
+    override t.FlipT(dims:int[]) = 
+        let result = tt.Flip(Array.map int64 dims)
+        t.MakeLike(result)
 
     override t.DilateT(dilations:int[]) = failwith "TBD - DilateT"
         //checkCanDilate t.Dim dilations
@@ -265,9 +252,6 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
 
     override _.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) =
         tt.AllClose(t2.TorchTensor, relativeTolerance, absoluteTolerance)
-
-    override t.SoftplusT() = 
-        t.MakeLike(tt.Softplus(), dtype=DType.Bool)
 
     override t1.LtTT(t2) =
         let result = tt.Lt(t2.TorchTensor)
@@ -394,8 +378,9 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         t1.MakeLike(result)
 
     override t1.MatMulT2T2(t2) = 
-        let result = tt.Bmm(t2.TorchTensor)
-        t1.MakeLike(result)
+        checkCanMatmul t1.Shape t2.Shape
+        let result = tt.Mm(t2.TorchTensor)
+        t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
 
     override t1.Conv1D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
 
@@ -403,7 +388,10 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.Conv3D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
 
-    override t.SumT2Dim0() = failwith "tbd - SumT2Dim0" //(tt.SumT2Dim0)
+    override t.SumT2Dim0() =
+        let result = tt.Sum([| 0L |])
+        let resultShape = [|t.Shape.[1]|]
+        t.MakeLike(result, shape=resultShape)
 
     override t.NegT() =
         match dtype with 
@@ -416,9 +404,10 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         | _ ->  t.MakeLike(tt.Sum(), shape=Shape.scalar)
 
     override t.SignT() =
-        match dtype with 
-        | DType.Bool -> opNotSupported t.DType
-        | _ ->  t.MakeLike(tt.Sign())
+        //match dtype with 
+        //| DType.Bool -> opNotSupported t.DType
+        //| _ ->  
+        t.MakeLike(tt.Sign())
 
     override t.FloorT() =
         match dtype with 
@@ -439,6 +428,11 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         match dtype with 
         | DType.Bool -> opNotSupported t.DType
         | _ -> t.MakeLike(tt.Abs ())
+
+    override t.SoftplusT() = 
+        match dtype with 
+        | DType.IntegralOrBool -> opNotSupported t.DType
+        | _ -> t.MakeLike(tt.Softplus())
 
     override t.ReluT() =
         match dtype with 
