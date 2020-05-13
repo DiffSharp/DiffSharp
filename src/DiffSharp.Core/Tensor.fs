@@ -1141,6 +1141,18 @@ type Tensor =
 
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
+    member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:int) =
+        let inputSize = a.shape.[1]
+        let stride = defaultArg stride kernelSize
+        let padding = defaultArg padding 0
+        let outputSize = defaultArg outputSize ((inputSize-1) * stride - 2*padding + kernelSize)
+        checkCanMaxunpool1d indices.dtype
+        let fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
+        let fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let dfTensorRev(a) = MaxUnpool1DT(a, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)    
+
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
@@ -1449,6 +1461,7 @@ type Tensor =
                         | MatMulT2T2Const(a,_) -> reset (a::tt)
                         | MatMulT2ConstT2(_,b) -> reset (b::tt)
                         | MaxPool1DT(a,_) -> reset (a::tt)
+                        | MaxUnpool1DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
@@ -1560,6 +1573,7 @@ type Tensor =
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices) -> failwith "not implemented"
+                        | MaxUnpool1DT(a, indices) -> failwith "not implemented"
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1697,6 +1711,7 @@ and TensorOp =
     | MatMulT2ConstT2 of Tensor * Tensor
 
     | MaxPool1DT of Tensor * Tensor
+    | MaxUnpool1DT of Tensor * Tensor
 
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int

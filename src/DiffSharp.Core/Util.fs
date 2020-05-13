@@ -182,9 +182,13 @@ let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) 
     if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
     if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
     if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
+    if padding > kernelSize/2 then failwithf "Expecting padding (%A) < kernelSize (%A) / 2" padding kernelSize
     if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
     let inputLengthAfterPadding = shape.[2] + 2*padding
     if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
+
+let checkCanMaxunpool1d (indicesDtype: DType) =
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
 
 let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
     if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
