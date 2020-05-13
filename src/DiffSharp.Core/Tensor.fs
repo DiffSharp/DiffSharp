@@ -343,7 +343,7 @@ type Tensor =
 
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
-        checkCanUnstack a.dim
+        Shape.checkCanUnstack a.shape
         match a with
         | Tensor(ap) -> ap.UnstackT(dim) |> Array.map Tensor
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))

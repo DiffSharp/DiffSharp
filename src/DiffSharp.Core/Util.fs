@@ -66,7 +66,7 @@ type Shape = int[]
 module Shape =
     let scalar : Shape = [| |]
 
-    let computeStackOp (shapes: Shape[]) (dim: int) =
+    let computeStack (shapes: Shape[]) (dim: int) =
         let n = shapes.Length
         let shape = shapes.[0]
         if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
@@ -82,6 +82,37 @@ module Shape =
                 if len > 1 then yield len // if len=1 then squeeze this dimension
             else
                 yield len|]
+
+    let computeCat (shapes: Shape[]) (dim: int) =
+        let n = shapes.Length
+        if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
+        let shape = shapes.[0]
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape3 = shape.[dim+1..]
+        if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape3) then
+            invalidArg "tensors" "Expecting Tensors with similar shapes"
+        let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
+        let outShape = [| yield! shape1; yield m2; yield! shape3 |]
+        n, shape1, m2, shape3, outShape
+
+    let computeSplit (shape: Shape) (sizes: int[]) (dim: int) =
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        sizes |> Array.map (fun sz -> [| yield! shape1; yield sz; yield! shape2 |])
+
+    let checkCanUnstack (shape: Shape) =
+        if shape.Length < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
+
+    let computeUnstack (shape: Shape) (dim: int) =
+        checkCanUnstack shape
+        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
+        let shape1 = shape.[0..dim-1]
+        let shape2 = shape.[dim+1..]
+        let unstackedShape = Array.append shape1 shape2
+        shape1, shape2, unstackedShape
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
@@ -159,9 +190,6 @@ let checkCanStack (shapes:int[][]) (dim: int) =
     if not (allEqual shapes) then failwith "Cannot stack Tensors with different shapes"
     if shapes.Length = 0 then failwithf "Expecting a non-empty sequence of Tensors"
     if dim < 0 || dim > shapes.[0].Length then invalidArg "dim" "invalid dimension"
-
-let checkCanUnstack (dim:int) =
-    if dim < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
 
 let checkCanTranspose (dim:int) =
     if dim <> 2 then failwith "Cannot transpose Tensor when dim=2"

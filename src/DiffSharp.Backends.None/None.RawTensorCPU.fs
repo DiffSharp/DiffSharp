@@ -19,6 +19,9 @@ module internal Utils =
     let opNotSupported2 (t1: DType) (t2: DType) =
         invalidOp (sprintf "operation not permitted on tensors of type (%A, %A)" t1 t2)
 
+    type RawTensor with
+        member x.GetTypedValues() : 'T[] = (x :?> RawTensorCPU<'T>).Values
+
 /// This is the base class for all RawTensorXyzCPU tuypes.
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
@@ -69,11 +72,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                     // printfn "outer %A" i
                     slice fullBounds.[1..,*] (Array.append externalCoords [|i|])
         slice fullBounds [||]
-        t.CreateShaped(array, shape)
+        t.CreateLike(array, shape)
 
-    override t.Clone() = t.CreateShaped(Array.copy t.Values, Array.copy t.Shape)
+    override t.Clone() = t.CreateLike(Array.copy t.Values, Array.copy t.Shape)
 
-    abstract member CreateShaped: values: 'T[] * shape: int[] -> RawTensor
+    abstract member CreateLike: values: 'T[] * shape: int[] -> RawTensor
 
     override x.ComputeHash() = hash shape + hash values
     
@@ -107,7 +110,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                             result.[jbase+jD] <- values.[ibase+iD]
                             iD <- iD + strideD
                 loop 0 (jP*jshape.[0]) 0
-        t.CreateShaped(result, newShape)
+        t.CreateLike(result, newShape)
 
     override t.ToValues() =
         match t.Dim with
@@ -119,9 +122,9 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
         | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override _.StackTs(tensors, dim) =
-        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorCPU<'T>).Values, t.Shape) |> Array.unzip
+        let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
         checkCanStack shapes dim
-        let n, shape1, shape2, newShape = Shape.computeStackOp shapes dim
+        let n, shape1, shape2, newShape = Shape.computeStack shapes dim
         let m1 = shapeLength shape1
         let m2 = shapeLength shape2
         let m = m1 * m2
@@ -132,18 +135,14 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let j2 = (chunk/n)*m2+i%m2
             result.[i] <-values.[i2].[j2]
 
-        (tensors.[0] :?> RawTensorCPU<'T>).CreateShaped(result, newShape)
+        (tensors.[0] :?> RawTensorCPU<'T>).CreateLike(result, newShape)
 
     override t.UnstackT(dim) =
-        checkCanUnstack t.Dim
-        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         let shape = t.Shape
+        let shape1, shape2, unstackedShape = Shape.computeUnstack shape dim
         let n = shape.[dim]
-        let shape1 = shape.[0..dim-1]
-        let shape2 = shape.[dim+1..]
         let m1 = shapeLength shape1
         let m2 = shapeLength shape2
-        let unstackedShape = Array.append shape1 shape2
         let m = m1 * m2
         let values = t.Values
         let results = Array.init n (fun _ -> Array.zeroCreate m)
@@ -152,24 +151,15 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             let i2 = chunk%n
             let j2 = (chunk/n)*m2+i%m2
             results.[i2].[j2] <- values.[i]
-        results |> Array.map (fun rvalues -> t.CreateShaped(rvalues, unstackedShape))
+        results |> Array.map (fun rvalues -> t.CreateLike(rvalues, unstackedShape))
 
     override t.CatTs(tensors, dim) =
-        let values, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorCPU<'T>).Values, t.Shape) |> Array.unzip
-        let n = shapes.Length
-        if n = 0 then invalidArg "tensors" "Expecting at least one tensor"
-        let shape = shapes.[0]
-        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
-        let shape1 = shape.[0..dim-1]
-        let shape2 = shape.[dim+1..]
-        if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape2) then
-            invalidArg "tensors" "Expecting Tensors with similar shapes"
+        let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
+        let n, shape1, m2, shape3, outShape = Shape.computeCat shapes dim
         let m1 = shapeLength shape1
-        let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
-        let m3 = shapeLength shape2
+        let m3 = shapeLength shape3
         let m = m1 * m2 * m3
         let result = Array.zeroCreate m
-        let outShape = [| yield! shape1; yield m2; yield! shape2 |]
         let mutable i = 0
         for j1 = 0 to m1-1 do 
             for k = 0 to n-1 do
@@ -179,12 +169,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                     result.[i+j2] <-values.[k].[b+j2]
                 i <- i + d*m3
 
-        t.CreateShaped(result, outShape)
+        t.CreateLike(result, outShape)
 
     override t.SplitT(sizes, dim) =
-        if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         let shape = t.Shape
-        if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
+        let outShapes = Shape.computeSplit shape sizes dim
         let n = sizes.Length
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim+1..]
@@ -201,9 +190,8 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                     results.[k].[b+j2] <-values.[i+j2]
                 i <- i + d*m3
 
-        results |> Array.mapi (fun k rvalues -> 
-            let splitShape = [| yield! shape1; yield sizes.[k]; yield! shape2 |]
-            t.CreateShaped(rvalues, splitShape))
+        (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
+            t.CreateLike(rvalues, outShape))
 
     override t.TransposeT2() =
         checkCanTranspose t.Dim
@@ -213,11 +201,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
-        t.CreateShaped(result, shapeSqueeze dim t.Shape)
+        t.CreateLike(result, shapeSqueeze dim t.Shape)
 
     override t.UnsqueezeT(dim) =
         let result = Array.copy t.Values
-        t.CreateShaped(result, shapeUnsqueeze dim t.Shape)
+        t.CreateLike(result, shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) =
         checkCanFlip t.Dim dims
@@ -272,7 +260,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape
         let result = Array.copy t.Values
-        t.CreateShaped(result, shape)
+        t.CreateLike(result, shape)
 
     override t.Cast(dtype: DType) =
         if dtype = t.DType then 
@@ -348,37 +336,37 @@ module internal RawTensorCPU =
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (<) t1value t2value
         (result, t1.Shape)
 
     let inline GtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (>) t1value t2value
         (result, t1.Shape)
 
     let inline LeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (<=) t1value t2value
         (result, t1.Shape)
 
     let inline GeTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (>=) t1value t2value
         (result, t1.Shape)
 
     let inline EqTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (=) t1value t2value
         (result, t1.Shape)
 
     let inline NeqTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (<>) t1value t2value
         (result, t1.Shape)
 
@@ -390,19 +378,19 @@ module internal RawTensorCPU =
 
     let inline AddTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (+) t1value t2value
         (result, t1.Shape)
 
     let inline AddTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
+        let t2value = t2.GetTypedValues().[0]
         let result = Array.map ((+) t2value) t1value
         (result, t1.Shape)
 
     let inline AddT2T1(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.copy t1value
         for i=0 to t1.Shape.[0]-1 do
             for j=0 to t1.Shape.[1]-1 do
@@ -431,67 +419,67 @@ module internal RawTensorCPU =
 
     let inline SubTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (-) t1value t2value
         (result, t1.Shape)
 
     let inline SubT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values.[0]
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map ((-) t1value) t2value
         (result, t2.Shape)
 
     let inline SubTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
+        let t2value = t2.GetTypedValues().[0]
         let result = Array.map (fun t -> t - t2value) t1value
         (result, t1.Shape)
 
     let inline MulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (*) t1value t2value
         (result, t1.Shape)
 
     let inline MulTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
+        let t2value = t2.GetTypedValues().[0]
         let result = Array.map ((*) t2value) t1value
         (result, t1.Shape)
 
     let inline DivTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 (/) t1value t2value
         (result, t1.Shape)
 
     let inline DivT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values.[0]
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map ((/) t1value) t2value
         (result, t2.Shape)
 
     let inline DivTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
+        let t2value = t2.GetTypedValues().[0]
         let result = Array.map (fun t -> t / t2value) t1value
         (result, t1.Shape)
 
     let inline PowTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map2 ( ** ) t1value t2value
         (result, t1.Shape)
 
     let inline PowT0T(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values.[0]
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values
+        let t2value = t2.GetTypedValues()
         let result = Array.map (fun t -> t1value ** t) t2value
         (result, t2.Shape)
 
     let inline PowTT0(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values.[0]
+        let t2value = t2.GetTypedValues().[0]
         let result = Array.map (fun t -> t ** t2value) t1value
         (result, t1.Shape)
 
@@ -500,7 +488,7 @@ module internal RawTensorCPU =
         let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
         let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
         let t1value = t1.Values
-        let t2value = (t2 :?> RawTensorCPU< ^T >).Values        
+        let t2value = t2.GetTypedValues()        
         let result = Array.zeroCreate (t1rows*t2cols) 
         for i in 0 .. t1rows - 1 do
             for j in 0 .. t2cols - 1 do
@@ -734,7 +722,7 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorFloat32CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape) 
 
-    override t.CreateShaped(values, shape) = upcast RawTensorFloat32CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorFloat32CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
@@ -810,7 +798,7 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorFloat64CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateShaped(values, shape) = upcast RawTensorFloat64CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorFloat64CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
@@ -885,7 +873,7 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt8CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateShaped(values, shape) = upcast RawTensorInt8CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorInt8CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int8 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -961,7 +949,7 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt16CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateShaped(values, shape) = upcast RawTensorInt16CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorInt16CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int16 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1037,7 +1025,7 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt32CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateShaped(values, shape) = upcast RawTensorInt32CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorInt32CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1113,7 +1101,7 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorInt64CPU(values, shape)
     static let createBool(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
 
-    override t.CreateShaped(values, shape) = upcast RawTensorInt64CPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorInt64CPU(values, shape)
     override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int64 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
@@ -1187,28 +1175,27 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
     inherit RawTensorCPU<bool>(values, shape, Bool)
 
     static let create(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
-    static let create64(values, shape) : RawTensor = upcast RawTensorInt64CPU(values, shape)
        
-    override t.CreateShaped(values, shape) = upcast RawTensorBoolCPU(values, shape)
+    override t.CreateLike(values, shape) = upcast RawTensorBoolCPU(values, shape)
     override t.RandomMultinomial(_numSamples) = opNotSupported t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
-    override t1.LtTT(t2) = RawTensorBoolCPU(Array.map2 (<) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
-    override t1.GtTT(t2) = RawTensorBoolCPU(Array.map2 (>) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
-    override t1.LeTT(t2) = RawTensorBoolCPU(Array.map2 (<=) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
-    override t1.GeTT(t2) = RawTensorBoolCPU(Array.map2 (>=) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
+    override t1.LtTT(t2) = RawTensorBoolCPU(Array.map2 (<) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
+    override t1.GtTT(t2) = RawTensorBoolCPU(Array.map2 (>) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
+    override t1.LeTT(t2) = RawTensorBoolCPU(Array.map2 (<=) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
+    override t1.GeTT(t2) = RawTensorBoolCPU(Array.map2 (>=) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
     override t1.EqTT(t2) = RawTensorCPU.EqTT(t1, t2) |> create
     override t1.NeqTT(t2) = RawTensorCPU.NeqTT(t1, t2) |> create
     override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
     override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
-    override t1.AddTT(t2) = RawTensorBoolCPU(Array.map2 (||) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
+    override t1.AddTT(t2) = RawTensorBoolCPU(Array.map2 (||) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
     override t1.AddTT0(t2) = t1.AddTT(t2.Expand(t1.Shape))
     override t1.AddT2T1(t2) = t1.AddTT(t2.Expand(t1.Shape))
     override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice((||), t1, location, t2) |> create
-    override t1.MulTT(t2) = RawTensorBoolCPU(Array.map2 (&&) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
+    override t1.MulTT(t2) = RawTensorBoolCPU(Array.map2 (&&) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
     override t1.MulTT0(t2) = t1.MulTT(t2.Expand(t1.Shape))
-    override t.SumT() = RawTensorCPU.SumT(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t.Cast(Int64) :?> RawTensorCPU<int64>) |> create64
+    override t.SumT() = t.Cast(Int64).SumT()
+    override t.SumT2Dim0() = t.Cast(Int64).SumT2Dim0()
     override t.SignT() = t :> _
 
     override t1.SubTT(t2) = opNotSupported2 t1.DType t2.DType

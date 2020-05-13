@@ -286,12 +286,22 @@ type TestTensor () =
         let t1 = combo.zero()
         let t1Expected = combo.tensor(0)
         Assert.AreEqual(t1, t1Expected)
+        Assert.AreEqual(t1.shape, ([| |]: int32[]) )
+        Assert.AreEqual(t1.dtype, combo.dtype)
 
     [<Test>]
     member this.TestTensorZeros () =
       for combo in Combos.All do 
+        let t0 = combo.zeros([])
+        let t0Expected = combo.tensor(0)
+        Assert.AreEqual(t0.shape, ([| |]: int32[]) )
+        Assert.AreEqual(t0.dtype, combo.dtype)
+        Assert.AreEqual(t0, t0Expected)
+
         let t1 = combo.zeros([2])
         let t1Expected = combo.tensor([0,0])
+        Assert.AreEqual(t1.shape, ([| 2 |]: int32[]) )
+        Assert.AreEqual(t1.dtype, combo.dtype)
         Assert.AreEqual(t1, t1Expected)
 
     [<Test>]
@@ -300,10 +310,18 @@ type TestTensor () =
         let t1 = combo.one()
         let t1Expected = combo.tensor(1)
         Assert.AreEqual(t1, t1Expected)
+        Assert.AreEqual(t1.dtype, combo.dtype)
+        Assert.AreEqual(t1.shape, ([| |]: int32[]) )
 
     [<Test>]
     member this.TestTensorOnes () =
       for combo in Combos.All do 
+        let t0 = combo.ones([])
+        let t0Expected = combo.tensor(1)
+        Assert.AreEqual(t0.shape, ([| |]: int32[]) )
+        Assert.AreEqual(t0.dtype, combo.dtype)
+        Assert.AreEqual(t0, t0Expected)
+
         let t1 = combo.ones([2])
         let t1Expected = combo.tensor([1,1])
         Assert.AreEqual(t1, t1Expected)
@@ -417,8 +435,12 @@ type TestTensor () =
         Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
 
         let t1 = combo.tensor([2., 3., 4., 5., 6.])
-        Assert.AreEqual(2.0, System.Convert.ToDouble (t1.[0].toScalar()))
-        Assert.AreEqual(3.0, System.Convert.ToDouble (t1.[1].toScalar()))
+        let t1_0 = t1.[0]
+        let t1_1 = t1.[1]
+        let t1_0_s = t1_0.toScalar()
+        let t1_1_s = t1_1.toScalar()
+        Assert.AreEqual(2.0, System.Convert.ToDouble t1_0_s)
+        Assert.AreEqual(3.0, System.Convert.ToDouble t1_1_s)
         Assert.AreEqual(4.0, System.Convert.ToDouble (t1.[2].toScalar()))
         Assert.AreEqual(5.0, System.Convert.ToDouble (t1.[3].toScalar()))
 
