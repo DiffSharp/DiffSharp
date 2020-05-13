@@ -1142,7 +1142,7 @@ type Tensor =
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
     member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:int) =
-        let inputSize = a.shape.[1]
+        let inputSize = a.shape.[2]
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
         let outputSize = defaultArg outputSize ((inputSize-1) * stride - 2*padding + kernelSize)
