@@ -22,7 +22,8 @@ module internal Utils =
         invalidOp (sprintf "operation not permitted on tensors of type (%A, %A)" t1 t2)
 
     let torchScalarShape = [| |]
-    let toTorchShape (shape: int[]) = (* if shape.Length = 0 then torchScalarShape else *) Array.map int64 shape
+    let int64s (b: int[]) = Array.map int64 b
+    let toTorchShape (shape: int[]) = (* if shape.Length = 0 then torchScalarShape else *) int64s shape
     let byteOfBool b = if b then 1uy else 0uy
     let boolOfByte b = (b <> 0uy)
 
@@ -160,7 +161,7 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
         let outShapes = Shape.computeSplit shape sizes dim
-        let results = tt.SplitWithSizes(Array.map int64 sizes, dim)
+        let results = tt.SplitWithSizes(int64s sizes, dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
@@ -186,25 +187,71 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         t.MakeLike(tt.Unsqueeze(int64 dim), shape=shapeUnsqueeze dim t.Shape)
 
     override t.FlipT(dims:int[]) = 
-        let result = tt.Flip(Array.map int64 dims)
+        let result = tt.Flip(int64s dims)
         t.MakeLike(result)
 
-    override t.DilateT(dilations:int[]) = failwith "TBD - DilateT"
-        //checkCanDilate t.Dim dilations
-        //match t.Dim with
-        //| 0 -> t.Clone()
-        //| _ ->
-        //    let result = t.ZerosLike(dilatedShape t.Shape dilations) :?> RawTensorCPU<'T>
-        //    let rec dilate (shape:int[]) externalCoords = 
-        //        if shape.Length = 1 then
-        //            for i=0 to shape.[0]-1 do
-        //                let globalCoords = Array.append externalCoords [|i|]
-        //                result.[dilatedCoordinates globalCoords dilations] <- t.[globalCoords]
-        //        else
-        //            for i=0 to shape.[0]-1 do
-        //                dilate shape.[1..] (Array.append externalCoords [|i|])
-        //    dilate t.Shape [||]        
-        //    upcast result        
+    override t.DilateT(dilations:int[]) = 
+        checkCanDilate t.Dim dilations
+        let outputShape = dilatedShape t.Shape dilations
+        let shape4d = Array.append (Array.replicate (4 - t.Dim) 1) shape
+        let dilations4d = Array.append (Array.replicate (4 - dilations.Length) 1) dilations
+        let t4d = t.Expand(shape4d)
+        let mutable w = t.ZerosLike(dilations).TorchTensor
+        let one = t.OneLike().TorchTensor
+        match dilations.Length with
+        | 1 -> w.[0L] <- one
+        | 2 -> w.[0L,0L] <- one
+        | 3 -> w.[0L,0L,0L] <- one
+        | _ -> failwith "DilateT 4D"
+        let w2 = w.Expand(int64s dilations4d)
+        match t.Dim with 
+        | 1 ->
+            let stride = int64 dilations.[0]
+            let bias = Nullable(t.ZerosLike([|shape.[0]|]).TorchTensor)
+            let r = t4d.TorchTensor.ConvTranspose1D(w2, bias=bias, stride=Nullable(stride))
+            let res = r.Slice(3L,0L,stride-1L,1L).Reshape([| (int64 (shape.[0]-1))*stride+1L |])
+            t.MakeLike(res, outputShape)
+        | _ -> failwith "DilateT 4D"
+           
+
+        //let preShape = dilatedShape2 t.Shape dilations
+        //let t3 = t.StackTs([| yield t; for i in 1..dilations.[0]-1 do yield t.ZerosLike(t.Shape) |], 1).ViewT(preShape)
+        //let tt3 = t3.TorchTensor
+        //let ttres = tt3.Narrow(0L, 0L, int64 outputShape.[0])
+        //t.MakeLike(ttres, outputShape)
+
+(*
+import torch
+import torch.nn.functional as F
+def pad_within1d(x, stride):
+  x2 = x.expand(1,1,1,x.size(0))
+  w = x2.new_zeros(stride)
+  w[0] = 1
+  w2 = w.expand(1, 1, 1, stride)
+  r = F.conv_transpose1d(x2, w2, stride=stride)
+  return r[:,:,:,:-(stride-1)].reshape([(x.size(0)-1)*stride+1])
+
+def pad_within2d(x, strides):
+  x2 = x.expand(1,1,x.size(0),x.size(1))
+  w = x2.new_zeros(strides[0], strides[1])
+  w[0, 0] = 1
+  w2 = w.expand(1, 1, strides[0], strides[1])
+  r = F.conv_transpose2d(x2, w2, stride=strides)
+  return r[:,:,:-(strides[0]-1),:-(strides[1]-1)].reshape([(x.size(0)-1)*strides[0]+1, (x.size(1)-1)*strides[1]+1])
+
+def pad_within3d(x, strides):
+  x2 = x.expand(1,x.size(0),x.size(1),x.size(2))
+  w = x2.new_zeros(strides[0], strides[1], strides[2])
+  w[0, 0, 0] = 1
+  w2 = w.expand(1, strides[0], strides[1], strides[2])
+  r = F.conv_transpose3d(x2, w2, stride=strides)
+  return r[:,:-(strides[0]-1),:-(strides[1]-1),:-(strides[2]-1)].reshape([(x.size(0)-1)*strides[0]+1, (x.size(1)-1)*strides[1]+1, (x.size(2)-1)*strides[2]+1])
+
+pad_within1d(torch.tensor([6,1,2,3]),2)
+pad_within1d(torch.tensor([6,1,2,3]),3)
+pad_within2d(torch.tensor([[6,1,2,3],[7,1,2,3],[8,1,2,3]]),[2,3])
+pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])        
+*)
 
     override t.UndilateT(dilations:int[]) =
         failwith "TBD - UndilateT"
@@ -382,11 +429,23 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         let result = tt.Mm(t2.TorchTensor)
         t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
 
-    override t1.Conv1D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
+    override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
+        let outputLength, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
+        let bias = Nullable(t1.ZerosLike([|outputLength|]).TorchTensor)
+        let result = tt.Conv1D(t2.TorchTensor, bias=bias, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
+        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
 
-    override t1.Conv2D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
+    override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
+        let outputHeight, outputWidth, outputShape = Shape.computeConv2D t1.Shape t2.Shape strides paddings
+        let bias = t1.ZerosLike([|outputHeight; outputWidth|]).TorchTensor
+        let result = tt.Conv2D(t2.TorchTensor, bias=Nullable(bias), strides=int64s strides, paddings=int64s paddings)
+        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
 
-    override t1.Conv3D(t2, stride, padding) = failwith "tbd" //RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
+    override t1.Conv3D(t2, strides, paddings) = // TODO: bias, dilation and groups
+        let outputDepth, outputHeight, outputWidth, outputShape = Shape.computeConv3D t1.Shape t2.Shape strides paddings
+        let bias = t1.ZerosLike([|outputDepth; outputHeight; outputWidth|]).TorchTensor
+        let result = tt.Conv3D(t2.TorchTensor, bias=Nullable(bias), strides=int64s strides, paddings=int64s paddings)
+        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
 
     override t.SumT2Dim0() =
         let result = tt.Sum([| 0L |])

@@ -502,13 +502,11 @@ module internal RawTensorCPU =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
         checkCanConv1d t1.DType t2.DType t1.Shape t2.Shape stride padding 1
+        let outputLength, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
-        let inputLength = t1.Shape.[2]
         let outputChannels = t2.Shape.[0]
         let kernelLength = t2.Shape.[2]
-        let outputLength = int (floor (float (inputLength + 2*padding - kernelLength)/(float stride))) + 1
-        let outputShape = [|batchSize; outputChannels; outputLength|]
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let t1 =
             if padding = 0 then
@@ -533,16 +531,12 @@ module internal RawTensorCPU =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
         checkCanConv2d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1|]
+        let outputHeight, outputWidth, outputShape = Shape.computeConv2D t1.Shape t2.Shape stride padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
-        let inputHeight = t1.Shape.[2]
-        let inputWidth = t1.Shape.[3]
         let outputChannels = t2.Shape.[0]
         let kernelHeight = t2.Shape.[2]
         let kernelWidth = t2.Shape.[3]
-        let outputHeight = int (floor (float (inputHeight + 2*padding.[0] - kernelHeight)/(float stride.[0]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*padding.[1] - kernelWidth)/(float stride.[1]))) + 1
-        let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
@@ -570,19 +564,13 @@ module internal RawTensorCPU =
         // t1: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
         // t2: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
         checkCanConv3d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1;1|]
+        let outputDepth, outputHeight, outputWidth, outputShape = Shape.computeConv3D t1.Shape t2.Shape stride padding
         let batchSize = t1.Shape.[0]
         let inputChannels = t1.Shape.[1]
-        let inputDepth = t1.Shape.[2]
-        let inputHeight = t1.Shape.[3]
-        let inputWidth = t1.Shape.[4]
         let outputChannels = t2.Shape.[0]
         let kernelDepth = t2.Shape.[2]
         let kernelHeight = t2.Shape.[3]
         let kernelWidth = t2.Shape.[4]
-        let outputDepth = int (floor (float (inputDepth + 2*padding.[0] - kernelDepth)/(float stride.[0]))) + 1
-        let outputHeight = int (floor (float (inputHeight + 2*padding.[1] - kernelHeight)/(float stride.[1]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*padding.[2] - kernelWidth)/(float stride.[2]))) + 1
-        let outputShape = [|batchSize; outputChannels; outputDepth; outputHeight; outputWidth|]
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 && padding.[2] = 0 then

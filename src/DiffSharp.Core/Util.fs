@@ -72,16 +72,18 @@ module Shape =
         if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim..]
-        let newShape = [| yield! shape1; yield n; yield! shape2 |]
-        n, shape1, shape2, newShape
+        let outputShape = [| yield! shape1; yield n; yield! shape2 |]
+        n, shape1, shape2, outputShape
 
     let computeGetSlice (fullBounds: int[,]) =
-        [|for i=0 to (fullBounds.GetLength(0) - 1) do
-            let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
-            if fullBounds.[i, 2] = 1 then
-                if len > 1 then yield len // if len=1 then squeeze this dimension
-            else
-                yield len|]
+        let outputShape = 
+            [|for i=0 to (fullBounds.GetLength(0) - 1) do
+                let len = fullBounds.[i,1] - fullBounds.[i,0] + 1
+                if fullBounds.[i, 2] = 1 then
+                    if len > 1 then yield len // if len=1 then squeeze this dimension
+                else
+                    yield len|]
+        outputShape
 
     let computeCat (shapes: Shape[]) (dim: int) =
         let n = shapes.Length
@@ -93,15 +95,16 @@ module Shape =
         if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape3) then
             invalidArg "tensors" "Expecting Tensors with similar shapes"
         let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
-        let outShape = [| yield! shape1; yield m2; yield! shape3 |]
-        n, shape1, m2, shape3, outShape
+        let outputShape = [| yield! shape1; yield m2; yield! shape3 |]
+        n, shape1, m2, shape3, outputShape
 
     let computeSplit (shape: Shape) (sizes: int[]) (dim: int) =
         if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         if Array.sum sizes <> shape.[dim] then invalidArg "sizes" "the sum of sizes must equal the relevant dimension"
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim+1..]
-        sizes |> Array.map (fun sz -> [| yield! shape1; yield sz; yield! shape2 |])
+        let outputShapes = sizes |> Array.map (fun sz -> [| yield! shape1; yield sz; yield! shape2 |])
+        outputShapes
 
     let checkCanUnstack (shape: Shape) =
         if shape.Length < 1 then failwith "Cannot unstack scalar Tensor (dim < 1)"
@@ -111,14 +114,50 @@ module Shape =
         if dim < 0 || dim >= shape.Length then invalidArg "dim" "invalid dimension"
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim+1..]
-        let unstackedShape = Array.append shape1 shape2
-        shape1, shape2, unstackedShape
+        let outputShape = Array.append shape1 shape2
+        shape1, shape2, outputShape
 
     let computeTranspose (shape: Shape) =
         let nrows = shape.[0]
         let ncols = shape.[1]
-        let newShape = [| ncols; nrows |]
-        newShape
+        let outputShape = [| ncols; nrows |]
+        outputShape
+
+    let computeConv1D (shape1: Shape) (shape2: Shape) stride padding =
+        let batchSize = shape1.[0]
+        let inputLength = shape1.[2]
+        let outputChannels = shape2.[0]
+        let kernelLength = shape2.[2]
+        let outputLength = int (floor (float (inputLength + 2*padding - kernelLength)/(float stride))) + 1
+        let outputShape = [|batchSize; outputChannels; outputLength|]
+        outputLength, outputShape
+
+    let computeConv2D (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) =
+        let batchSize = shape1.[0]
+        let inputHeight = shape1.[2]
+        let inputWidth = shape1.[3]
+        let outputChannels = shape2.[0]
+        let kernelHeight = shape2.[2]
+        let kernelWidth = shape2.[3]
+        let outputHeight = int (floor (float (inputHeight + 2*padding.[0] - kernelHeight)/(float stride.[0]))) + 1
+        let outputWidth = int (floor (float (inputWidth + 2*padding.[1] - kernelWidth)/(float stride.[1]))) + 1
+        let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
+        outputHeight, outputWidth, outputShape
+
+    let computeConv3D (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) =
+        let batchSize = shape1.[0]
+        let inputDepth = shape1.[2]
+        let inputHeight = shape1.[3]
+        let inputWidth = shape1.[4]
+        let outputChannels = shape2.[0]
+        let kernelDepth = shape2.[2]
+        let kernelHeight = shape2.[3]
+        let kernelWidth = shape2.[4]
+        let outputDepth = int (floor (float (inputDepth + 2*padding.[0] - kernelDepth)/(float stride.[0]))) + 1
+        let outputHeight = int (floor (float (inputHeight + 2*padding.[1] - kernelHeight)/(float stride.[1]))) + 1
+        let outputWidth = int (floor (float (inputWidth + 2*padding.[2] - kernelWidth)/(float stride.[2]))) + 1
+        let outputShape = [|batchSize; outputChannels; outputDepth; outputHeight; outputWidth|]
+        outputDepth, outputHeight, outputWidth, outputShape
 
 let arrayShape (a:System.Array) =
     if a.Length = 0 then [||]
@@ -328,6 +367,9 @@ let mirrorCoordinates (coordinates:int[]) (shape:int[]) (mirrorDims:int[]) =
 
 let dilatedShape (shape:int[]) (dilations:int[]) =
     Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
+
+let dilatedShape2 (shape:int[]) (dilations:int[]) =
+    Array.map2 (*) shape dilations
 
 let undilatedShape (shape:int[]) (dilations:int[]) =
     Array.map2 (fun n d -> (n + d - 1) / d) shape dilations

@@ -3178,11 +3178,19 @@ type TestTensor () =
     [<Test>]
     member this.TestTensorDilateT () =
       for combo in Combos.All do 
-        let t1 = combo.tensor([[1.;2.]; [3.;4.]])
-        let t2 = t1.dilate([|1; 2|])
+        let tin1 = combo.tensor([1.;2.;3.])
+        let t1 = tin1.dilate([|2|])
+        let t1Correct = combo.tensor([1.;0.;2.;0.;3.])
+
+        Assert.AreEqual(t1Correct, t1)
+
+        let tin2 = combo.tensor([[1.;2.]; [3.;4.]])
+        let t2 = tin2.dilate([|1; 2|])
         let t2Correct = combo.tensor([[1.;0.;2.];[3.;0.;4.]])
-        let t3 = t1.dilate([|2; 2|])
+
+        let t3 = tin2.dilate([|2; 2|])
         let t3Correct = combo.tensor([[1.;0.;2.];[0.;0.;0.];[3.;0.;4.]])
+
         let t4 = combo.tensor([1.;2.;3.;4.])
         let t5 = t4.dilate([|3|])
         let t5Correct = combo.tensor([|1.;0.;0.;2.;0.;0.;3.;0.;0.;4.|])
