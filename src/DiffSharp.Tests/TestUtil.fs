@@ -16,7 +16,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.device = defaultArg defaultDevice Device.Default
 
     member _.dtype = defaultArg defaultDType DType.Default
-
+    
     member _.tensor(data: obj, ?device, ?backend, ?dtype) =
         dsharp.tensor(data, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
@@ -25,6 +25,12 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
 
     member _.randn(length:int, ?device, ?backend, ?dtype) =
         dsharp.randn(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randint(max: int64, shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.randint(max, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randint(max: int64, length:int, ?device, ?backend, ?dtype) =
+        dsharp.randint(max, length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
     member _.rand(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.rand(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
@@ -87,9 +93,9 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
 module DTypes =
 
     // We run most tests at all these tensor types
-    let Bool = [ (* DType.Bool *) ]
-    let Integral = [ (* DType.Int8; DType.Int16; DType.Int32; DType.Int64 *) ]
-    let FloatingPoint = [DType.Float32]
+    let Bool = [ DType.Bool ]
+    let Integral = [ DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
+    let FloatingPoint = [ DType.Float32; DType.Float64 ]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
     let IntegralAndFloatingPoint = FloatingPoint @ Integral
@@ -99,7 +105,8 @@ module DTypes =
 module Combos =
 
     //let backends = [ Backend.None ] //; Backend.Register("TestDuplicate") ]
-    let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.None; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
 
     let devices = [ Device.CPU ]

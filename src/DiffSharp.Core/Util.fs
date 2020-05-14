@@ -622,6 +622,9 @@ let dataOfValuesForFloat32 (value:obj) =
 let dataOfValuesForFloat64 (value:obj) =
     dataOfValues double double double double double double (fun x -> if x then 1.0 else 0.0) value 
 
+let dataOfValuesForByte (value:obj) =
+    dataOfValues byte byte byte byte byte byte (fun x -> if x then 1uy else 0uy) value 
+
 let dataOfValuesForInt8 (value:obj) =
     dataOfValues int8 int8 int8 int8 int8 int8 (fun x -> if x then 1y else 0y) value 
 

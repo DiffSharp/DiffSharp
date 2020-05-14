@@ -97,6 +97,12 @@ type DType =
         | Bool -> typeof<bool>
         | Other (_name, _, typ) -> typ
 
+    /// Gets the natural result of the Sum(), SumToSize() and Sum(dim) operation on this dtype
+    member t.SummationType =
+        match t with
+        | Bool | Int8 | Int16 | Int32 | Int64 -> DType.Int64
+        | dt -> dt
+
 module DType =
 
     let (|FloatingPoint|_|) x =
@@ -104,9 +110,14 @@ module DType =
         | Float32 | Float64 -> Some()
         | _ -> None
 
+    let (|Integral|_|) x =
+        match x with
+        | Int8 | Int16 | Int32 | Int64 -> Some()
+        | _ -> None
+
     let (|IntegralOrBool|_|) x =
         match x with
-        | Int8 | Int16 | Int32 | Int64 | Bool -> Some()
+        | Integral | Bool -> Some()
         | _ -> None
 
     /// Find the DType into which dtype1 and dtype2 can be widened
@@ -138,3 +149,12 @@ module DType =
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
 
     let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value, inOutType)))
+
+[<AutoOpen>]
+module DTypeGlobalOps =
+    let opNotSupported msg (t: DType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg t)
+
+    let opNotSupported2 msg (t1: DType) (t2: DType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg t1 t2)
+

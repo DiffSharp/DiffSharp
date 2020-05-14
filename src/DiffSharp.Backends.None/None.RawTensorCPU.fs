@@ -13,12 +13,6 @@ open DiffSharp.Util
 
 [<AutoOpen>]
 module internal Utils = 
-    let opNotSupported (t: DType) =
-        invalidOp (sprintf "operation not permitted on tensors of type %A" t)
-
-    let opNotSupported2 (t1: DType) (t2: DType) =
-        invalidOp (sprintf "operation not permitted on tensors of type (%A, %A)" t1 t2)
-
     type RawTensor with
         member x.GetTypedValues() : 'T[] = (x :?> RawTensorCPU<'T>).Values
 
@@ -323,7 +317,7 @@ module internal RawTensorCPU =
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
-        | _ -> failwithf "Cannot compare RawTensors of different types %A and %A. t1:%A, t2:%A" t1.DType t2.DType t1 t2
+        | _ -> opNotSupported "Cannot compare RawTensors of different types" t1.DType t2.DType
 
     let inline Full(shape:int[], value: ^T) =
         let result = Array.create (shapeLength shape) value
@@ -332,7 +326,7 @@ module internal RawTensorCPU =
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
-        | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+        | _ -> opNotSupported "Cannot compare RawTensors of different types" t1.DType t2.DType
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
@@ -598,8 +592,8 @@ module internal RawTensorCPU =
                             result.[[|n; k; v0; v1; v2|]] <- value
         result
 
-    let inline NegT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
-        let result = Array.map (~-) t.Values
+    let inline NegT op (t: RawTensorCPU< ^T >) : (^T[] * int[]) =
+        let result = Array.map op t.Values
         (result, t.Shape)
 
     let inline SumT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
@@ -612,8 +606,8 @@ module internal RawTensorCPU =
         let resultShape = [|t.Shape.[1]|]
         (result, resultShape)
 
-    let inline SignT ofInt (t: RawTensorCPU< ^T >) : (^T[] * int[]) =
-        let result = t.Values |> Array.map (sign >> ofInt)
+    let inline SignT op (t: RawTensorCPU< ^T >) : (^T[] * int[]) =
+        let result = t.Values |> Array.map op
         (result, t.Shape)
 
     let inline FloorT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
@@ -628,8 +622,8 @@ module internal RawTensorCPU =
         let result = t.Values |> Array.map round
         (result, t.Shape)
 
-    let inline AbsT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
-        let result = t.Values |> Array.map abs
+    let inline AbsT op (t: RawTensorCPU< ^T >) : (^T[] * int[]) =
+        let result = t.Values |> Array.map op
         (result, t.Shape)
 
     let inline ReluT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
@@ -704,6 +698,10 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         (values, shape)
 
+    let inline RandomIntegers (maxn: int64) ofDouble (shape:int[]) : (^T[] * int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (float maxn * DiffSharp.Util.Random.Normal()))
+        (values, shape)
+
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
@@ -742,14 +740,18 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) =
+        let res = RawTensorCPU.SumT(t) |> create
+        match resultType with 
+        | None -> res
+        | Some dtype -> res.Cast(dtype)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT float32 t |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
@@ -778,6 +780,7 @@ type RawTensorFloat32CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSingle value) |> RawTensorFloat32CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random float32 shape |> RawTensorFloat32CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal float32 shape |> RawTensorFloat32CPU)
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn float32 shape |> RawTensorFloat32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat32CPU)
 
 type RawTensorFloat64CPU(values: double[], shape:int[]) =
@@ -818,14 +821,18 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) =
+        let res = RawTensorCPU.SumT(t) |> create
+        match resultType with 
+        | None -> res
+        | Some dtype -> res.Cast(dtype)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT double t |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> double) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
@@ -853,6 +860,7 @@ type RawTensorFloat64CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToDouble value) |> RawTensorFloat64CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random double shape |> RawTensorFloat64CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal double shape |> RawTensorFloat64CPU)
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn double shape |> RawTensorFloat64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat64CPU)
 
 type RawTensorInt8CPU(values: int8[], shape:int[]) =
@@ -889,34 +897,34 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) = t.Cast(DType.Int64).SumT(?resultType=resultType)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT int8 t |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> int8) t |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
 
-    override t.SoftplusT() = opNotSupported t.DType
-    override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t.FloorT() = opNotSupported t.DType
-    override t.CeilT() = opNotSupported t.DType
-    override t.RoundT() = opNotSupported t.DType
-    override t.SigmoidT() = opNotSupported t.DType
-    override t.ExpT() = opNotSupported t.DType
-    override t.LogT() = opNotSupported t.DType
-    override t.Log10T() = opNotSupported t.DType
-    override t.SqrtT() = opNotSupported t.DType
-    override t.SinT() = opNotSupported t.DType
-    override t.CosT() = opNotSupported t.DType
-    override t.TanT() = opNotSupported t.DType
-    override t.SinhT() = opNotSupported t.DType
-    override t.CoshT() = opNotSupported t.DType
-    override t.TanhT() = opNotSupported t.DType
-    override t.AsinT() = opNotSupported t.DType
-    override t.AcosT() = opNotSupported t.DType
-    override t.AtanT() = opNotSupported t.DType
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
 
 type RawTensorInt8CPUStatics() = 
 
@@ -927,8 +935,9 @@ type RawTensorInt8CPUStatics() =
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt8CPU)
     override _.Ones(shape:int[]) = upcast (RawTensorCPU.Ones(shape) |> RawTensorInt8CPU)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSByte value) |> RawTensorInt8CPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int8 shape |> RawTensorInt8CPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int8 shape |> RawTensorInt8CPU)
+    override _.Random(_shape:int[]) = opNotSupported "Random" DType.Int8
+    override _.RandomNormal(_shape:int[]) = opNotSupported "RandomNormal" DType.Int8
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn int8 shape |> RawTensorInt8CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt8CPU)
 
 type RawTensorInt16CPU(values: int16[], shape:int[]) =
@@ -965,34 +974,34 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) = t.Cast(DType.Int64).SumT(?resultType=resultType)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT int16 t |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> int16) t |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
 
-    override t.SoftplusT() = opNotSupported t.DType
-    override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t.FloorT() = opNotSupported t.DType
-    override t.CeilT() = opNotSupported t.DType
-    override t.RoundT() = opNotSupported t.DType
-    override t.SigmoidT() = opNotSupported t.DType
-    override t.ExpT() = opNotSupported t.DType
-    override t.LogT() = opNotSupported t.DType
-    override t.Log10T() = opNotSupported t.DType
-    override t.SqrtT() = opNotSupported t.DType
-    override t.SinT() = opNotSupported t.DType
-    override t.CosT() = opNotSupported t.DType
-    override t.TanT() = opNotSupported t.DType
-    override t.SinhT() = opNotSupported t.DType
-    override t.CoshT() = opNotSupported t.DType
-    override t.TanhT() = opNotSupported t.DType
-    override t.AsinT() = opNotSupported t.DType
-    override t.AcosT() = opNotSupported t.DType
-    override t.AtanT() = opNotSupported t.DType
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
 
 type RawTensorInt16CPUStatics() = 
 
@@ -1003,8 +1012,9 @@ type RawTensorInt16CPUStatics() =
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt16CPU)
     override _.Ones(shape:int[]) = upcast (RawTensorCPU.Ones(shape) |> RawTensorInt16CPU)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt16 value) |> RawTensorInt16CPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int16 shape |> RawTensorInt16CPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int16 shape |> RawTensorInt16CPU)
+    override _.Random(_shape:int[]) = opNotSupported "Random" DType.Int16
+    override _.RandomNormal(_shape:int[]) = opNotSupported "RandomNormal" DType.Int16
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn int16 shape |> RawTensorInt16CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt16CPU)
 
 type RawTensorInt32CPU(values: int32[], shape:int[]) =
@@ -1041,34 +1051,34 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) = t.Cast(DType.Int64).SumT(?resultType=resultType)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT int32 t |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> int32) t |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
 
-    override t.SoftplusT() = opNotSupported t.DType
-    override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t.FloorT() = opNotSupported t.DType
-    override t.CeilT() = opNotSupported t.DType
-    override t.RoundT() = opNotSupported t.DType
-    override t.SigmoidT() = opNotSupported t.DType
-    override t.ExpT() = opNotSupported t.DType
-    override t.LogT() = opNotSupported t.DType
-    override t.Log10T() = opNotSupported t.DType
-    override t.SqrtT() = opNotSupported t.DType
-    override t.SinT() = opNotSupported t.DType
-    override t.CosT() = opNotSupported t.DType
-    override t.TanT() = opNotSupported t.DType
-    override t.SinhT() = opNotSupported t.DType
-    override t.CoshT() = opNotSupported t.DType
-    override t.TanhT() = opNotSupported t.DType
-    override t.AsinT() = opNotSupported t.DType
-    override t.AcosT() = opNotSupported t.DType
-    override t.AtanT() = opNotSupported t.DType
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
 
 type RawTensorInt32CPUStatics() = 
 
@@ -1079,8 +1089,9 @@ type RawTensorInt32CPUStatics() =
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt32CPU)
     override _.Ones(shape:int[]) = upcast (RawTensorCPU.Ones(shape) |> RawTensorInt32CPU)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt32 value) |> RawTensorInt32CPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int32 shape |> RawTensorInt32CPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int32 shape |> RawTensorInt32CPU)
+    override _.Random(_shape:int[]) = opNotSupported "Random" DType.Int32
+    override _.RandomNormal(_shape:int[]) = opNotSupported "RandomNormal" DType.Int32
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn int32 shape |> RawTensorInt32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt32CPU)
                 
 type RawTensorInt64CPU(values: int64[], shape:int[]) =
@@ -1117,34 +1128,38 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
-    override t.NegT() = RawTensorCPU.NegT(t) |> create
-    override t.SumT() = RawTensorCPU.SumT(t) |> create
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) =
+        let res = RawTensorCPU.SumT(t) |> create
+        match resultType with 
+        | None -> res
+        | Some dtype -> res.Cast(dtype)
     override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
-    override t.SignT() = RawTensorCPU.SignT int64 t |> create
-    override t.AbsT() = RawTensorCPU.AbsT(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> int64) t |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
 
-    override t.SoftplusT() = opNotSupported t.DType
-    override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t.FloorT() = opNotSupported t.DType
-    override t.CeilT() = opNotSupported t.DType
-    override t.RoundT() = opNotSupported t.DType
-    override t.SigmoidT() = opNotSupported t.DType
-    override t.ExpT() = opNotSupported t.DType
-    override t.LogT() = opNotSupported t.DType
-    override t.Log10T() = opNotSupported t.DType
-    override t.SqrtT() = opNotSupported t.DType
-    override t.SinT() = opNotSupported t.DType
-    override t.CosT() = opNotSupported t.DType
-    override t.TanT() = opNotSupported t.DType
-    override t.SinhT() = opNotSupported t.DType
-    override t.CoshT() = opNotSupported t.DType
-    override t.TanhT() = opNotSupported t.DType
-    override t.AsinT() = opNotSupported t.DType
-    override t.AcosT() = opNotSupported t.DType
-    override t.AtanT() = opNotSupported t.DType
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
 
 type RawTensorInt64CPUStatics() = 
 
@@ -1155,8 +1170,9 @@ type RawTensorInt64CPUStatics() =
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt64CPU)
     override _.Ones(shape:int[]) = upcast (RawTensorCPU.Ones(shape) |> RawTensorInt64CPU)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt64 value) |> RawTensorInt64CPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int64 shape |> RawTensorInt64CPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int64 shape |> RawTensorInt64CPU)
+    override _.Random(_shape:int[]) = opNotSupported "Random" DType.Int64
+    override _.RandomNormal(_shape:int[]) = opNotSupported "RandomNormal" DType.Int64
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers maxn int64 shape |> RawTensorInt64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt64CPU)
 
 type RawTensorBoolCPU(values: bool[], shape:int[]) =
@@ -1165,7 +1181,7 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
     static let create(values, shape) : RawTensor = upcast RawTensorBoolCPU(values, shape)
        
     override t.MakeLike(values, shape) = upcast RawTensorBoolCPU(values, shape)
-    override t.RandomMultinomial(_numSamples) = opNotSupported t.DType
+    override t.RandomMultinomial(_numSamples) = opNotSupported "RandomMultinomial" t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorBoolCPU(Array.map2 (<) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
@@ -1182,44 +1198,44 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
     override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice((||), t1, location, t2) |> create
     override t1.MulTT(t2) = RawTensorBoolCPU(Array.map2 (&&) t1.Values (t2.GetTypedValues()), t1.Shape) :> _
     override t1.MulTT0(t2) = t1.MulTT(t2.Expand(t1.Shape))
-    override t.SumT() = t.Cast(Int64).SumT()
+    override t.SumT(resultType) = t.Cast(Int64).SumT(?resultType=resultType)
     override t.SumT2Dim0() = t.Cast(Int64).SumT2Dim0()
     override t.SignT() = t :> _
 
-    override t1.SubTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.SubT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.SubTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.DivTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.DivT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.DivTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.MatMulT2T2(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.Conv1D(t2, _stride, _padding) = opNotSupported2 t1.DType t2.DType
-    override t1.Conv2D(t2, _stride, _padding) = opNotSupported2 t1.DType t2.DType
-    override t1.Conv3D(t2, _stride, _padding) = opNotSupported2 t1.DType t2.DType
-    override t.NegT() = opNotSupported t.DType
-    override t.AbsT() = opNotSupported t.DType
-    override t.ReluT() = opNotSupported t.DType
-    override t.SoftplusT() = opNotSupported t.DType
-    override t1.PowTT(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowT0T(t2) = opNotSupported2 t1.DType t2.DType
-    override t1.PowTT0(t2) = opNotSupported2 t1.DType t2.DType
-    override t.FloorT() = opNotSupported t.DType
-    override t.CeilT() = opNotSupported t.DType
-    override t.RoundT() = opNotSupported t.DType
-    override t.SigmoidT() = opNotSupported t.DType
-    override t.ExpT() = opNotSupported t.DType
-    override t.LogT() = opNotSupported t.DType
-    override t.Log10T() = opNotSupported t.DType
-    override t.SqrtT() = opNotSupported t.DType
-    override t.SinT() = opNotSupported t.DType
-    override t.CosT() = opNotSupported t.DType
-    override t.TanT() = opNotSupported t.DType
-    override t.SinhT() = opNotSupported t.DType
-    override t.CoshT() = opNotSupported t.DType
-    override t.TanhT() = opNotSupported t.DType
-    override t.AsinT() = opNotSupported t.DType
-    override t.AcosT() = opNotSupported t.DType
-    override t.AtanT() = opNotSupported t.DType
+    override t1.SubTT(t2) = opNotSupported2 "SubTT" t1.DType t2.DType
+    override t1.SubT0T(t2) = opNotSupported2 "SubT0T" t1.DType t2.DType
+    override t1.SubTT0(t2) = opNotSupported2 "SubTT0" t1.DType t2.DType
+    override t1.DivTT(t2) = opNotSupported2 "DivTT" t1.DType t2.DType
+    override t1.DivT0T(t2) = opNotSupported2 "DivT0T" t1.DType t2.DType
+    override t1.DivTT0(t2) = opNotSupported2 "DivTT0" t1.DType t2.DType
+    override t1.MatMulT2T2(t2) = opNotSupported2 "MatMulT2T2" t1.DType t2.DType
+    override t1.Conv1D(t2, _stride, _padding) = opNotSupported2 "Conv1D" t1.DType t2.DType
+    override t1.Conv2D(t2, _stride, _padding) = opNotSupported2 "Conv2D" t1.DType t2.DType
+    override t1.Conv3D(t2, _stride, _padding) = opNotSupported2 "Conv3D" t1.DType t2.DType
+    override t.NegT() = opNotSupported "NegT" t.DType
+    override t.AbsT() = opNotSupported "AbsT" t.DType
+    override t.ReluT() = opNotSupported "ReluT" t.DType
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
 
 type RawTensorBoolCPUStatics() = 
 
@@ -1230,7 +1246,8 @@ type RawTensorBoolCPUStatics() =
     override _.Zeros(shape:int[]) = upcast RawTensorBoolCPU(Array.zeroCreate (shapeLength shape), shape)
     override _.Ones(shape:int[]) = upcast RawTensorBoolCPU(Array.create (shapeLength shape) true, shape)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToBoolean value) |> RawTensorBoolCPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
+    override _.Random(_shape:int[]) = opNotSupported "Random" DType.Bool
+    override _.RandomNormal(_shape:int[]) = opNotSupported "RandomNormal" DType.Bool
+    override _.RandomIntegers(maxn, shape:int[]) = upcast (RawTensorCPU.RandomIntegers (min 2L maxn) (fun x -> x >= 1.0) shape |> RawTensorBoolCPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorBoolCPU)
 

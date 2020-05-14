@@ -35,7 +35,13 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
+    member internal t.castAfterSummation(dtype) =
+        match dtype with
+        | None -> t
+        | Some dt -> t.cast(dt)
+
     member t.cast(dtype) =
+        if t.dtype = dtype then t else
         match t with
         | Tensor(tp) -> Tensor(tp.Cast(dtype))
         | TensorF(_,_,_) -> failwith "cannot cast TensorF"
@@ -213,6 +219,9 @@ type Tensor =
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
         a.fullLike([], scalar, ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.randintLike(maxn, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.RandomIntegersLike(maxn, (shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
@@ -680,15 +689,15 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member a.neg() = -a
 
-    member a.sum() =
-        let fRaw(a:RawTensor) = a.SumT()
-        let fTensor(a:Tensor) = a.sum()
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum()
+    member a.sum(?dtype: DType) =
+        let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
+        let fTensor(a:Tensor) = a.sum(?dtype=dtype)
+        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
         let dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    member a.sum(dim:int, ?keepDim:bool) =
+    member a.sum(dim:int, ?keepDim:bool, ?dtype: DType) =
        let keepDim = defaultArg keepDim false
        let res =
         if dim = 0 && a.dim = 0 then a
@@ -697,27 +706,30 @@ type Tensor =
             let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
             sBounds.[dim, 1] <- 0
             sBounds.[dim, 2] <- 1
-            let mutable s = a.zerosLike().GetSlice(sBounds)
+            let mutable s = a.zerosLike(dtype=a.dtype.SummationType).GetSlice(sBounds)
             for i=0 to a.shape.[dim]-1 do
                 sBounds.[dim,0] <- i
                 sBounds.[dim,1] <- i
                 sBounds.[dim,2] <- 1
-                s <- s + a.GetSlice(sBounds)
+                s <- s + a.GetSlice(sBounds).cast(a.dtype.SummationType)
             s
-       if keepDim then res.unsqueeze(dim) else res
+       let res2 = if keepDim then res.unsqueeze(dim) else res
+       res2.castAfterSummation(dtype)
 
     member a.sum(dim, ?keepDim) = a.sum(dim, ?keepDim=keepDim)
 
     /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
     /// from newShape to shape must be possible.
-    member a.sumToSize(newShape:int[]) =
+    member a.sumToSize(newShape:int[], ?dtype: DType) =
         let oldShape = a.shape
-        if oldShape = newShape then a
-        elif newShape.Length = 0 then a.sum()
+        if oldShape = newShape then
+            a.cast(defaultArg dtype a.dtype.SummationType)
+        elif newShape.Length = 0 then
+            a.sum(?dtype=dtype)
         else
             checkCanExpandShape newShape oldShape
             let trim = oldShape.Length - newShape.Length
-            let mutable result = a
+            let mutable result = a.cast(a.dtype.SummationType)
             // collapse the eliminated dimensions
             for _dim in 0 .. trim-1 do 
                 result <- result.sum(0, keepDim=false)
@@ -725,13 +737,16 @@ type Tensor =
             for dim in 0 .. newShape.Length-1 do 
                 if oldShape.[trim+dim] <> newShape.[dim] then 
                     result <- result.sum(dim, keepDim=true)
-            result
+            result.castAfterSummation(dtype)
 
     member a.mean() = a.sum() / a.nelement
 
     member a.mean(dim:int, ?keepDim:bool) = 
         if dim = 0 && a.dim = 0 then a
-        else a.sum(dim, ?keepDim=keepDim) / a.shape.[dim]
+        else 
+           let sm = a.sum(dim, ?keepDim=keepDim)
+           let dv = sm / a.shape.[dim]
+           dv
 
     // This is the two-pass algorithm better than the naive algorithm
     member a.variance() = let a' = a - a.mean() in (a' * a').sum() / (a.nelement - 1)

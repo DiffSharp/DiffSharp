@@ -17,6 +17,7 @@ type [<AbstractClass>]
     abstract Full: shape:int[] * obj -> RawTensor
     abstract Random: shape:int[] -> RawTensor
     abstract RandomNormal: shape:int[] -> RawTensor
+    abstract RandomIntegers: max: int64 * shape:int[] -> RawTensor
     
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
     /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
@@ -69,7 +70,7 @@ and [<AbstractClass>]
 
     static member Zeros(shape, ?dtype, ?device, ?backend) = 
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Zeros(shape|>Seq.toArray)
+        statics.Zeros(shape)
 
     static member One(?dtype, ?device, ?backend) = 
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
@@ -77,19 +78,23 @@ and [<AbstractClass>]
 
     static member Ones(shape, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Ones(shape|>Seq.toArray)
+        statics.Ones(shape)
 
     static member Full(shape, value, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Full(shape|>Seq.toArray, value)
+        statics.Full(shape, value)
 
     static member Random(shape, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Random(shape|>Seq.toArray)
+        statics.Random(shape)
 
     static member RandomNormal(shape, ?dtype, ?device, ?backend) =
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.RandomNormal(shape|>Seq.toArray)
+        statics.RandomNormal(shape)
+
+    static member RandomIntegers(max, shape: int[], ?dtype, ?device, ?backend) =
+        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
+        statics.RandomIntegers(max, shape)
 
     static member Create(values: obj, ?dtype, ?device, ?backend) =
         // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
@@ -155,6 +160,9 @@ and [<AbstractClass>]
     member t.RandomNormalLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
         RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
+    member t.RandomIntegersLike(maxn, shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomIntegers(maxn, shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
     abstract member StackTs: RawTensor[] * dim:int -> RawTensor
@@ -204,7 +212,7 @@ and [<AbstractClass>]
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member Conv3D: RawTensor * int[] * int[] -> RawTensor
     abstract member NegT : unit -> RawTensor
-    abstract member SumT : unit -> RawTensor
+    abstract member SumT : ?resultType: DType -> RawTensor
     abstract member SumT2Dim0 : unit -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
@@ -236,10 +244,14 @@ and [<AbstractClass>]
     abstract member AtanT: unit -> RawTensor
 
     default t.IsInfT() =
-        t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
+        match dtype with 
+        | DType.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=DType.Bool)
+        | _ -> t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
 
     default t.IsNaNT() =
-        t.NeqTT(t)
+        match dtype with 
+        | DType.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=DType.Bool)
+        | _ -> t.NeqTT(t)
 
     default t.GetString() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
@@ -247,6 +259,7 @@ and [<AbstractClass>]
            match x with 
            | :? single as v -> sprintf "%f" v
            | :? double as v -> sprintf "%f" v
+           | :? byte as v -> sprintf "%d" v
            | :? int8 as v -> sprintf "%d" v
            | :? int16 as v -> sprintf "%d" v
            | :? int32 as v -> sprintf "%d" v
