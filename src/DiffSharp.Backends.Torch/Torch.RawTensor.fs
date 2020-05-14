@@ -6,10 +6,6 @@ open DiffSharp.Backends
 open DiffSharp.Util
 open TorchSharp
 open TorchSharp.Tensor
-open TorchSharp
-
-
-#nowarn "77" // use of op_Explicit
 
 type TorchShape = int64[]
 
@@ -44,11 +40,11 @@ module internal Utils =
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
     type RawTensor with
-        member x.TorchTensor = (x :?> RawTensorTorch).TorchTensor
+        member x.TorchTensor = (x :?> TorchRawTensor).TorchTensor
 
-/// This is the base class for all RawTensorXyzCPU tuypes.
+/// This is the base class for all RawTensorXyz tuypes.
 /// All type-independent operations are implemented directly on this class. 
-type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
+type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     inherit RawTensor(shape, dtype, device, Backend.Torch)
 
     do 
@@ -64,7 +60,7 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         | _ -> result
 
     member t.MakeLike(tt, ?shape, ?dtype) : RawTensor =
-        upcast RawTensorTorch(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, device)
+        upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, device)
 
     member x.TorchTensor = tt
 
@@ -187,11 +183,11 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         | DType.Other _ -> failwith "Torch GetItem TBD other type"
 
     override _.StackTs(tensors, dim) =
-        let tts, shapes = tensors |> Array.map (fun t -> (t :?> RawTensorTorch).TorchTensor, t.Shape) |> Array.unzip
+        let tts, shapes = tensors |> Array.map (fun t -> (t :?> TorchRawTensor).TorchTensor, t.Shape) |> Array.unzip
         checkCanStack shapes dim
         let _n, _shape1, _shape2, newShape = Shape.computeStack shapes dim
         let result = tts.Stack(int64 dim)
-        (tensors.[0] :?> RawTensorTorch).MakeLike(result, newShape)
+        (tensors.[0] :?> TorchRawTensor).MakeLike(result, newShape)
 
     override t.UnstackT(dim) = 
         let shape = t.Shape
@@ -324,39 +320,6 @@ type RawTensorTorch(tt: TorchTensor, shape: int[], dtype, device) =
         | _ ->
             failwith "DilateT > 3D not available in LibTorch"
 
-(*
-import torch
-import torch.nn.functional as F
-def pad_within1d(x, stride):
-  x2 = x.expand(1,1,1,x.size(0))
-  w = x2.new_zeros(stride)
-  w[0] = 1
-  w2 = w.expand(1, 1, 1, stride)
-  r = F.conv_transpose1d(x2, w2, stride=stride)
-  return r[:,:,:,:-(stride-1)].reshape([(x.size(0)-1)*stride+1])
-
-def pad_within2d(x, strides):
-  x2 = x.expand(1,1,x.size(0),x.size(1))
-  w = x2.new_zeros(strides[0], strides[1])
-  w[0, 0] = 1
-  w2 = w.expand(1, 1, strides[0], strides[1])
-  r = F.conv_transpose2d(x2, w2, stride=strides)
-  return r[:,:,:-(strides[0]-1),:-(strides[1]-1)].reshape([(x.size(0)-1)*strides[0]+1, (x.size(1)-1)*strides[1]+1])
-
-def pad_within3d(x, strides):
-  x2 = x.expand(1,x.size(0),x.size(1),x.size(2))
-  w = x2.new_zeros(strides[0], strides[1], strides[2])
-  w[0, 0, 0] = 1
-  w2 = w.expand(1, strides[0], strides[1], strides[2])
-  r = F.conv_transpose3d(x2, w2, stride=strides)
-  return r[:,:-(strides[0]-1),:-(strides[1]-1),:-(strides[2]-1)].reshape([(x.size(0)-1)*strides[0]+1, (x.size(1)-1)*strides[1]+1, (x.size(2)-1)*strides[2]+1])
-
-pad_within1d(torch.tensor([6,1,2,3]),2)
-pad_within1d(torch.tensor([6,1,2,3]),3)
-pad_within2d(torch.tensor([[6,1,2,3],[7,1,2,3],[8,1,2,3]]),[2,3])
-pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])        
-*)
-
     override t.UndilateT(dilations:int[]) =
         let outputShape = undilatedShape t.Shape dilations
         let mutable res = tt
@@ -484,7 +447,7 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
     override t1.SubT0T(t2) =
         let t1v = t1.TorchTensor.Item()
         let result = t1v - t2.TorchTensor
-        (t2 :?> RawTensorTorch).MakeLike(result)
+        (t2 :?> TorchRawTensor).MakeLike(result)
 
     override t1.SubTT0(t2) = 
         let t2v = t2.TorchTensor.Item()
@@ -513,7 +476,7 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
         | _ ->
         let t1v = t1.TorchTensor.Item()
         let result = t1v / t2.TorchTensor
-        (t2 :?> RawTensorTorch).MakeLike(result)
+        (t2 :?> TorchRawTensor).MakeLike(result)
 
     override t1.DivTT0(t2) = 
         match dtype with 
@@ -535,7 +498,7 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
         | DType.IntegralOrBool -> opNotSupported "PowT0T" dtype
         | _ -> 
         let result = t1.Expand(t2.Shape).TorchTensor.Pow(t2.TorchTensor)
-        (t2 :?> RawTensorTorch).MakeLike(result)
+        (t2 :?> TorchRawTensor).MakeLike(result)
 
     override t1.PowTT0(t2) =
         match dtype with 
@@ -555,7 +518,7 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
 
     /// Wraps a convolution operation - integer types get promoted to floats. LibTorch only appears to implement
     /// floating point convolutions (as of Torch 1.0.1)
-    static member WrapConv (t1: RawTensorTorch) (t2: RawTensor) f =
+    static member WrapConv (t1: TorchRawTensor) (t2: RawTensor) f =
         let tt1, tt2 = t1.TorchTensor, t2.TorchTensor
         let tt1, tt2 =
             match t1.DType with 
@@ -577,23 +540,23 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
         let _outputLength, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
         let result =
-            RawTensorTorch.WrapConv t1 t2 (fun (tt1, tt2) ->
+            TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv1D(tt2, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)))
-        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
+        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
 
     override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
         let _outputHeight, _outputWidth, outputShape = Shape.computeConv2D t1.Shape t2.Shape strides paddings
         let result = 
-            RawTensorTorch.WrapConv t1 t2 (fun (tt1, tt2) ->
+            TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv2D(tt2, strides=int64s strides, padding=int64s paddings))
-        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
+        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
 
     override t1.Conv3D(t2, strides, paddings) = // TODO: bias, dilation and groups
         let _outputDepth, _outputHeight, _outputWidth, outputShape = Shape.computeConv3D t1.Shape t2.Shape strides paddings
         let result = 
-            RawTensorTorch.WrapConv t1 t2 (fun (tt1, tt2) ->
+            TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv3D(tt2, strides=int64s strides, padding=int64s paddings))
-        (t2 :?> RawTensorTorch).MakeLike(result, shape=outputShape)
+        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
 
     override t.SumT2Dim0() =
         let result = tt.Sum([| 0L |], ``type``= Nullable(tt.Type))
@@ -744,7 +707,7 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
                 DoubleTensor.From (data, toTorchShape shape) 
             | DType.Other _ -> failwith "deserialize other type in torch nyi"
 
-        RawTensorTorch(tt, shape, dtype, device)
+        TorchRawTensor(tt, shape, dtype, device)
 
     interface System.Runtime.Serialization.ISerializable with
 
@@ -755,9 +718,9 @@ pad_within3d(torch.tensor([[[1,2],[3,4]],[[5,6],[7,8]]]),[2,2,2])
             info.AddValue("shape", shape)
             info.AddValue("data", t.ToRawData())
 
-/// The concrete implementation of RawTensorStatics for Float32 data.
+/// The concrete implementation of BackendStatics for Float32 data.
 type TorchStatics<'T, 'T2>
-       (dtype: DType, device: Device, conv: 'T -> 'T2,
+       (dtype: DType, conv: 'T -> 'T2,
         from0: 'T2 -> TorchTensor,
         from: 'T2[] * TorchShape -> TorchTensor,
         zero: 'T, one: 'T,
@@ -769,40 +732,35 @@ type TorchStatics<'T, 'T2>
         valueFromObj: obj -> 'T,
         scalarFromConvValue: 'T2 -> Scalar) = 
 
-    inherit RawTensorStatics()
-    let torchDevice = toTorchDevice device
+    inherit BackendStatics()
 
-    override _.Zero =
-        let tt = from0(conv(zero)).[0L]
-        RawTensorTorch(tt, Shape.scalar, dtype, device) :> _ 
-    override _.One =
-        let tt = from0(conv(one)).[0L]
-        RawTensorTorch(tt, Shape.scalar, dtype, device) :> _
-    override _.Zeros(shape:int[]) = RawTensorTorch(zeros(toTorchShape shape, torchDevice), shape, dtype, device) :> _
-    override _.Ones(shape:int[]) = RawTensorTorch(ones(toTorchShape shape, torchDevice), shape, dtype, device) :> _
-    override _.Random(shape:int[]) = RawTensorTorch(random(toTorchShape shape, torchDevice), shape, dtype, device) :> _
-    override _.RandomNormal(shape:int[]) = RawTensorTorch(randomN(toTorchShape shape, torchDevice), shape, dtype, device) :> _
-    override _.RandomIntegers(maxn, shape:int[]) = RawTensorTorch(randomIntegers(maxn, toTorchShape shape, torchDevice), shape, dtype, device) :> _
+    override _.Zero(device) = TorchRawTensor(from0(conv(zero)).[0L], Shape.scalar, dtype, device) :> _ 
+    override _.One(device) = TorchRawTensor(from0(conv(one)).[0L], Shape.scalar, dtype, device) :> _
+    override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
+    override _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
+    override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
+    override _.RandomNormal(shape:int[], device) = TorchRawTensor(randomN(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
+    override _.RandomIntegers(maxn, shape:int[], device) = TorchRawTensor(randomIntegers(maxn, toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
 
-    override _.Full(shape:int[], value:obj) =
-        let t = zeros(toTorchShape shape, torchDevice)
+    override _.Full(shape:int[], value:obj, device) =
+        let t = zeros(toTorchShape shape, toTorchDevice device)
         t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
-        RawTensorTorch(t, shape, dtype, device) :> _
+        TorchRawTensor(t, shape, dtype, device) :> _
 
-    override ts.CreateFromFlatArray(values:Array, shape) =
+    override ts.CreateFromFlatArray(values:Array, shape, device) =
         let values = values :?> 'T[] |> Array.map conv 
         let t = 
             match shape with 
             | [| |] -> from0(values.[0]).[0L]
             | _ -> from (values, toTorchShape shape)
-        RawTensorTorch(t, shape, dtype, device) :> _
+        TorchRawTensor(t, shape, dtype, device) :> _
 
-/// The concrete implementation of RawTensorStatics for Bool CPU data.
-type RawTensorFloat32CPUStatics() = 
+/// The concrete implementation of BackendStatics for Bool  data.
+type ReferenceFloat32Statics() = 
 
-    inherit TorchStatics<single, single>(DType.Float32, Device.CPU, id, 
+    inherit TorchStatics<single, single>(DType.Float32, id, 
         (fun v -> FloatTensor.From(v)), 
-        FloatTensor.From, 
+        (fun (data, shape) -> FloatTensor.From(data, shape)), 
         0.0f, 1.0f, 
         (fun (shape, device) -> FloatTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> FloatTensor.Ones(shape, device=device)), 
@@ -812,11 +770,11 @@ type RawTensorFloat32CPUStatics() =
         System.Convert.ToSingle, 
         Scalar.op_Implicit)
 
-type RawTensorFloat64CPUStatics() = 
+type ReferenceFloat64Statics() = 
 
-    inherit TorchStatics<double, double>(DType.Float64, Device.CPU, id, 
+    inherit TorchStatics<double, double>(DType.Float64, id, 
         (fun v -> DoubleTensor.From(v)), 
-        DoubleTensor.From, 
+        (fun (data, shape) -> DoubleTensor.From(data, shape)), 
         0.0, 1.0, 
         (fun (shape, device) -> DoubleTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> DoubleTensor.Ones(shape, device=device)), 
@@ -826,25 +784,11 @@ type RawTensorFloat64CPUStatics() =
         System.Convert.ToDouble, 
         Scalar.op_Implicit)
 
-type RawTensorByteCPUStatics() = 
+type ReferenceInt8Statics() = 
 
-    inherit TorchStatics<byte, byte>(DType.Int8, Device.CPU, byte,
-        (fun v -> ByteTensor.From(v)), 
-        ByteTensor.From, 
-        0uy, 1uy,
-        (fun (shape, device) -> ByteTensor.Zeros(shape, device=device)), 
-        (fun (shape, device) -> ByteTensor.Ones(shape, device=device)), 
-        (fun _ -> opNotSupported "Random" DType.Int8), 
-        (fun _ -> opNotSupported "RandomNormal" DType.Int8), 
-        (fun (max, shape, device) -> ByteTensor.RandomIntegers(max, shape, device=device)), 
-        System.Convert.ToByte, 
-        Scalar.op_Implicit)
-
-type RawTensorInt8CPUStatics() = 
-
-    inherit TorchStatics<sbyte, sbyte>(DType.Int8, Device.CPU, sbyte,
+    inherit TorchStatics<sbyte, sbyte>(DType.Int8, sbyte,
         (fun v -> SByteTensor.From(v)), 
-        SByteTensor.From, 
+        (fun (data, shape) -> SByteTensor.From(data, shape)), 
         0y, 1y,
         (fun (shape, device) -> SByteTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> SByteTensor.Ones(shape, device=device)), 
@@ -854,11 +798,11 @@ type RawTensorInt8CPUStatics() =
         System.Convert.ToSByte, 
         Scalar.op_Implicit)
 
-type RawTensorInt16CPUStatics() = 
+type ReferenceInt16Statics() = 
 
-    inherit TorchStatics<int16, int16>(DType.Int16, Device.CPU, int16, 
+    inherit TorchStatics<int16, int16>(DType.Int16, int16, 
         (fun v -> ShortTensor.From(v)), 
-        ShortTensor.From, 
+        (fun (data, shape) -> ShortTensor.From(data, shape)), 
         0s, 1s,
         (fun (shape, device) -> ShortTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> ShortTensor.Ones(shape, device=device)), 
@@ -868,9 +812,9 @@ type RawTensorInt16CPUStatics() =
         System.Convert.ToInt16, 
         Scalar.op_Implicit)
 
-type RawTensorInt32CPUStatics() = 
+type ReferenceInt32Statics() = 
 
-    inherit TorchStatics<int32, int32>(DType.Int32, Device.CPU, int32, 
+    inherit TorchStatics<int32, int32>(DType.Int32, int32, 
         (fun v -> IntTensor.From(v)), 
         IntTensor.From, 
         0, 1,
@@ -882,11 +826,11 @@ type RawTensorInt32CPUStatics() =
         System.Convert.ToInt32, 
         Scalar.op_Implicit)
 
-type RawTensorInt64CPUStatics() = 
+type ReferenceInt64Statics() = 
 
-    inherit TorchStatics<int64, int64>(DType.Int64, Device.CPU, int64, 
+    inherit TorchStatics<int64, int64>(DType.Int64, int64, 
         (fun v -> LongTensor.From(v)), 
-        LongTensor.From, 
+        (fun (data, shape) -> LongTensor.From(data, shape)), 
         0L, 1L,
         (fun (shape, device) -> LongTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> LongTensor.Ones(shape, device=device)), 
@@ -896,11 +840,11 @@ type RawTensorInt64CPUStatics() =
         System.Convert.ToInt64, 
         Scalar.op_Implicit)
 
-type RawTensorBoolCPUStatics() = 
+type ReferenceBoolStatics() = 
 
-    inherit TorchStatics<bool, byte>(DType.Bool, Device.CPU, byteOfBool, 
+    inherit TorchStatics<bool, byte>(DType.Bool, byteOfBool, 
         (fun v -> ByteTensor.From(v)), 
-        ByteTensor.From, 
+        (fun (data, shape) -> ByteTensor.From(data, shape)), 
         false, true,
         (fun (shape, device) -> ByteTensor.Zeros(shape, device=device)), 
         (fun (shape, device) -> ByteTensor.Ones(shape, device=device)), 

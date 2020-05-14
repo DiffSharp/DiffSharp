@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.None\DiffSharp.Backends.None.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Backends.None\DiffSharp.Backends.Reference.fsproj" />
   </ItemGroup>
 
 </Project>

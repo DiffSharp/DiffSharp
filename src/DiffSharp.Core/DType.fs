@@ -26,23 +26,23 @@ module Device =
 
 [<RequireQualifiedAccess>]
 type Backend =
-    | None
+    | Reference
     | Torch
     | OpenBLAS
     | Other of name: string * code: int
 
-    static member Default = Backend.None
+    static member Default = Backend.Reference
 
     member internal x.Code = 
         match x with 
-        | None -> 0x000
+        | Reference -> 0x000
         | OpenBLAS -> 0x0100
         | Torch -> 0x0200
         | Other (_name, code) -> (code + 3) <<< 8
 
     member x.Name = 
         match x with 
-        | None -> "None"
+        | Reference -> "Reference"
         | OpenBLAS -> "OpenBLAS"
         | Torch -> "Torch"
         | Other (name, _) -> name

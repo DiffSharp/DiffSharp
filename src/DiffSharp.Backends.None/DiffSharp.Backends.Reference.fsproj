@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="None.RawTensorCPU.fs" />
+    <Compile Include="Reference.RawTensor.fs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,29 +5,28 @@ open DiffSharp
 open DiffSharp.Util
 
 type [<AbstractClass>]
-     RawTensorStatics() = 
+     BackendStatics() = 
     // cache for most recently accessed backend
     static let mutable last = None
-    static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, RawTensorStatics>()
+    static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, BackendStatics>()
 
-    abstract Zero: RawTensor
-    abstract Zeros: shape:int[] -> RawTensor
-    abstract One: RawTensor
-    abstract Ones: shape:int[] -> RawTensor
-    abstract Full: shape:int[] * obj -> RawTensor
-    abstract Random: shape:int[] -> RawTensor
-    abstract RandomNormal: shape:int[] -> RawTensor
-    abstract RandomIntegers: max: int64 * shape:int[] -> RawTensor
+    abstract Zero: device: Device -> RawTensor
+    abstract Zeros: shape:int[] * device: Device -> RawTensor
+    abstract One: device: Device -> RawTensor
+    abstract Ones: shape:int[] * device: Device -> RawTensor
+    abstract Full: shape:int[] * obj * device: Device -> RawTensor
+    abstract Random: shape:int[] * device: Device -> RawTensor
+    abstract RandomNormal: shape:int[] * device: Device -> RawTensor
+    abstract RandomIntegers: max: int64 * shape:int[] * device: Device -> RawTensor
     
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
     /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
-    abstract CreateFromFlatArray: data: System.Array * shape: int[] -> RawTensor
+    abstract CreateFromFlatArray: data: System.Array * shape: int[] * device: Device -> RawTensor
 
-    static member Get(?dtype: DType, ?device:Device, ?backend:Backend) =
+    static member Get(?dtype: DType, ?backend: Backend) =
         let dtype = defaultArg dtype DType.Default
-        let device = defaultArg device Device.Default
         let backend = defaultArg backend Backend.Default
-        let code = dtype.Code + device.Code + backend.Code
+        let code = dtype.Code + backend.Code
         match last with 
         | Some (code2, v) when code = code2 -> v
         | _ ->
@@ -41,13 +40,13 @@ type [<AbstractClass>]
                     let asm = 
                         try System.Reflection.Assembly.Load(fullName)
                         with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                    let typeName = sprintf "DiffSharp.Backends.%s.RawTensor%s%sStatics" backend.Name dtype.Name device.Name
+                    let typeName = sprintf "DiffSharp.Backends.%s.%s%sStatics" backend.Name backend.Name dtype.Name
                     let theType = asm.GetType(typeName)
                     if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
                     let obj = 
                         match System.Activator.CreateInstance(theType) with
-                        | :? RawTensorStatics as obj -> obj
-                        | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement RawTensorStatics" typeName fullName
+                        | :? BackendStatics as obj -> obj
+                        | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement BackendStatics" typeName fullName
                     obj
                     ) 
             last <- Some (code, res)
@@ -65,36 +64,44 @@ and [<AbstractClass>]
     override t.ToString() = t.GetString()
     
     static member Zero(?dtype, ?device, ?backend) = 
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Zero
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Zero(device)
 
     static member Zeros(shape, ?dtype, ?device, ?backend) = 
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Zeros(shape)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Zeros(shape, device)
 
     static member One(?dtype, ?device, ?backend) = 
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.One
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.One(device)
 
     static member Ones(shape, ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Ones(shape)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Ones(shape, device)
 
     static member Full(shape, value, ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Full(shape, value)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Full(shape, value, device)
 
     static member Random(shape, ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.Random(shape)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Random(shape, device)
 
     static member RandomNormal(shape, ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.RandomNormal(shape)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.RandomNormal(shape, device)
 
     static member RandomIntegers(max, shape: int[], ?dtype, ?device, ?backend) =
-        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
-        statics.RandomIntegers(max, shape)
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.RandomIntegers(max, shape, device)
 
     static member Create(values: obj, ?dtype, ?device, ?backend) =
         // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
@@ -132,9 +139,10 @@ and [<AbstractClass>]
                 let a,s = dataOfValuesForFloat32 values 
                 (a :> Array), s, DType.Float32
 
-        let statics = RawTensorStatics.Get(dtype=dtype, ?device=device, ?backend=backend)
+        let statics = BackendStatics.Get(dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
 
-        statics.CreateFromFlatArray(data, shape)
+        statics.CreateFromFlatArray(data, shape, device)
 
     member t.CreateLike(values: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
         RawTensor.Create(values, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)

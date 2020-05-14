@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Torch.RawTensorCPU.fs" />
+    <Compile Include="Torch.RawTensor.fs" />
   </ItemGroup>
 
   <ItemGroup>
