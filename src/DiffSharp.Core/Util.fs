@@ -154,6 +154,12 @@ let checkCanDilate (dim:int) (dilations:int[]) =
     if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
     if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
 
+let checkCanGather (tensorShape:int[]) (dim:int) (indicesShape:int[]) (indicesDtype:DType) =
+    if tensorShape.Length <> indicesShape.Length then failwithf "Expecting tensorShape (%A) and indicesShape (%A) to have the same number of dimensions" tensorShape indicesShape
+    if dim < 0 || dim > tensorShape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensorShape.Length (%A)" dim tensorShape.Length
+    if indicesShape.[dim] < 1 then failwithf "Expecting indicesShape.[dim] (%A) >= 1" indicesShape.[dim]
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+
 let checkCanView (shape1:int[]) (shape2:int[]) =
     if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
 

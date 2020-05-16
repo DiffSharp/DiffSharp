@@ -98,6 +98,8 @@ type DiffSharp =
     static member stddev(a:Tensor) = a.stddev()
     static member stddev(a:Tensor, dim:int, ?keepDim:bool) = a.stddev(dim, ?keepDim=keepDim)
     static member stddev(dim:int, ?keepDim:bool) = fun (a:Tensor) -> a.stddev(dim, ?keepDim=keepDim)
+    static member gather(a:Tensor, dim:int, indices:Tensor) = a.gather(dim, indices)
+    static member gather(dim:int, indices:Tensor) = fun (a:Tensor) -> a.gather(dim, indices)
     static member transpose(a:Tensor) = a.transpose()
     static member squeeze(a:Tensor, ?dim:int) = a.squeeze(?dim=dim)
     static member squeeze(dim:int) = fun (a:Tensor) -> a.squeeze(dim=dim)

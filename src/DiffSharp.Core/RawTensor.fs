@@ -169,6 +169,7 @@ and [<AbstractClass>]
     abstract member ComputeHash: unit -> int
     abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
+    abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor

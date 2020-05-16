@@ -3550,6 +3550,62 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member this.TestDerivativeGather () =
+        let fwdx = dsharp.tensor([1,2,3,4,5]).forwardDiff(dsharp.tensor([10,20,30,40,50]))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([1,3,4])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([10,30,40])
+
+        let revx = dsharp.tensor([1,2,3,4,5]).reverseDiff()
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([1,3,4])
+        revz.reverse(dsharp.tensor([10,30,40]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([10.,  0., 30., 40.,  0.])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[40,20,60],[10,50,60]])
+
+        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
+        revz.reverse(dsharp.tensor([[40,20,60],[10,50,60]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10,20,0],[40,50,120]])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
+        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[20,10,20],[40,50,50]])
+
+        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
+        revz.reverse(dsharp.tensor([[20,10,20],[40,50,50]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10,40,0],[40,100,0]])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
     member this.TestDerivativeSum () =
         let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.sum()

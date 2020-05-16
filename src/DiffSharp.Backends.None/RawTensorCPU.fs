@@ -307,8 +307,25 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
                 else
                     for i=0 to shape.[0]-1 do
                         dilate shape.[1..] (Array.append externalCoords [|i|])
-            dilate result.Shape [||]        
-            upcast result        
+            dilate result.Shape [||]
+            upcast result
+
+    override t.GatherT(dim:int, indices) =
+        checkCanGather t.Shape dim indices.Shape indices.DType
+        let indices = indices :?> RawTensorCPU<int>
+        let result = t.ZerosLike(indices.Shape) :?> RawTensorCPU<'T>
+        let rec gather (shape:int[]) externalCoords =
+            if shape.Length = 1 then
+                for i=0 to shape.[0]-1 do
+                    let globalCoords = Array.append externalCoords [|i|]
+                    let globalCoordsIndices = Array.copy globalCoords
+                    globalCoordsIndices.[dim] <- indices.[globalCoords]
+                    result.[globalCoords] <- t.[globalCoordsIndices]
+            else
+                for i=0 to shape.[0]-1 do
+                    gather shape.[1..] (Array.append externalCoords [|i|])
+        gather result.Shape [||]
+        upcast result
 
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape

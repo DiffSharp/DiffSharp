@@ -829,6 +829,14 @@ type Tensor =
             ret <- ret.addSlice(location, a)
         ret
 
+    member a.gather(dim:int, indices:Tensor) =
+        checkCanGather a.shape dim indices.shape indices.dtype
+        let fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
+        let fTensor(a:Tensor) = a.gather(dim, indices)
+        let dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
+        let dfTensorRev(a) = GatherT(a, dim, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     member a.view(shape:seq<int>) =
         let shape = shape |> Seq.toArray |> shapeComplete a.nelement  // Handles -1 semantics
         checkCanView a.shape shape
@@ -1137,7 +1145,7 @@ type Tensor =
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, fst (ad.maxpool1di(kernelSize, stride, padding)), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
 
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
@@ -1460,7 +1468,7 @@ type Tensor =
                         | MatMulT2T2(a,b) -> reset (a::b::tt)
                         | MatMulT2T2Const(a,_) -> reset (a::tt)
                         | MatMulT2ConstT2(_,b) -> reset (b::tt)
-                        | MaxPool1DT(a,_) -> reset (a::tt)
+                        | MaxPool1DT(a,_,_) -> reset (a::tt)
                         | MaxUnpool1DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
@@ -1479,6 +1487,7 @@ type Tensor =
                         | UnstackT(a,_,_) -> reset (a::tt)
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
+                        | GatherT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
@@ -1572,7 +1581,7 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
-                        | MaxPool1DT(a, indices) -> failwith "not implemented"
+                        | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> failwith "not implemented"
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
@@ -1619,6 +1628,20 @@ type Tensor =
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
+                        | GatherT(a,dim,indices) -> 
+                            // TODO: The following is a minimal correct implementation. Faster implementations should be possible.
+                            let tflat = t.derivative.flatten()
+                            let iflat = indices.flatten()
+                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            for i=0 to tflat.nelement-1 do
+                                let mutable t = tflat.[i]
+                                for k=0 to a.dim-1 do
+                                    t <- t.unsqueeze(0)
+                                let j = iflat.[i].toScalar() :?> int
+                                let loc = flatIndexToIndex a.shape i
+                                loc.[dim] <- j
+                                a.derivative <- a.derivative.addSlice(loc, t)
+                            push ((a.zeroLike(), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
@@ -1627,7 +1650,7 @@ type Tensor =
                         | UndilateT(a, dilations) -> push ((t.derivative.dilate(dilations), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.derivative.view(aShape)), a) :: tt)
                         | SliceT(a,bounds) -> 
-                            // TODO: Tensor.ZerosLike(a) below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
+                            // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
                             push ((a.zeroLike(), a) :: tt)
@@ -1710,7 +1733,7 @@ and TensorOp =
     | MatMulT2T2Const of Tensor * Tensor
     | MatMulT2ConstT2 of Tensor * Tensor
 
-    | MaxPool1DT of Tensor * Tensor
+    | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor
 
     | Conv1DTT of Tensor * Tensor * int * int
@@ -1737,6 +1760,7 @@ and TensorOp =
     | AddTTSlice of Tensor * int[] * Tensor
     | AddTTConstSlice of Tensor
     | AddTConstTSlice of int[] * Tensor
+    | GatherT of Tensor * int * Tensor
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor

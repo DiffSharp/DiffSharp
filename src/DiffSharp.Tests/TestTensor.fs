@@ -3342,6 +3342,30 @@ type TestTensor () =
             Assert.AreEqual(t3fshapeCorrect, t3fshape)
 
     [<Test>]
+    member this.TestTensorGather () =
+        for ty in dtypeInfosAll do 
+            let t1 = ty.tensor([1,2,3,4,5])
+            let t1g = dsharp.gather(t1, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+            let t1gCorrect = ty.tensor([1, 3, 4])
+
+            let t2 = ty.tensor([[1,2],[3,4]])
+            let t2g0 = dsharp.gather(t2, 0, dsharp.tensor([[0,1],[1,0]], dtype=DType.Int32))
+            let t2g0Correct = ty.tensor([[1, 4],
+                                         [3, 2]])
+            let t2g1 = dsharp.gather(t2, 1, dsharp.tensor([[0,0,1],[1,0,0]], dtype=DType.Int32))
+            let t2g1Correct = ty.tensor([[1, 1, 2],
+                                         [4, 3, 3]])
+
+            Assert.AreEqual(t1gCorrect, t1g)
+            Assert.AreEqual(ty.dtype, t1g.dtype)
+
+            Assert.AreEqual(t2g0Correct, t2g0)
+            Assert.AreEqual(ty.dtype, t2g0.dtype)
+
+            Assert.AreEqual(t2g1Correct, t2g1)
+            Assert.AreEqual(ty.dtype, t2g1.dtype)
+
+    [<Test>]
     member this.TestTensorMax () =
         for ty in dtypeInfosAll do 
             let t1 = ty.tensor([4.;1.;20.;3.])
