@@ -1582,7 +1582,7 @@ type Tensor =
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
-                        | MaxUnpool1DT(a, indices) -> failwith "not implemented"
+                        | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1629,7 +1629,7 @@ type Tensor =
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
-                            // TODO: The following is a minimal correct implementation. Faster implementations should be possible.
+                            // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
                             let tflat = t.derivative.flatten()
                             let iflat = indices.flatten()
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
