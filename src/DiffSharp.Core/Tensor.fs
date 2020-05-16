@@ -1144,7 +1144,7 @@ type Tensor =
         checkCanMaxpool1d a.shape kernelSize stride padding
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
-        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, fst (ad.maxpool1di(kernelSize, stride, padding)), at), indices
+        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
 
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
