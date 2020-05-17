@@ -204,8 +204,15 @@ let checkCanMaxpool2d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:i
     if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
     if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
 
-let checkCanMaxunpool1d (indicesDtype: DType) =
+let checkCanMaxunpool1d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
     if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    if outputSize.Length <> 3 then failwithf "Expecting outputSize (%A) to be 3-dimensional" outputSize
+    if outputSize.[0] <> indicesShape.[0] || outputSize.[1] <> indicesShape.[1] then failwithf "Expecting the first two elements of outputSize (%A) and indicesShape (%A) to be the same" outputSize indicesShape
+
+let checkCanMaxunpool2d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    if outputSize.Length <> 4 then failwithf "Expecting outputSize (%A) to be 4-dimensional" outputSize
+    if outputSize.[0] <> indicesShape.[0] || outputSize.[1] <> indicesShape.[1] then failwithf "Expecting the first two elements of outputSize (%A) and indicesShape (%A) to be the same" outputSize indicesShape
 
 let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
     if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2

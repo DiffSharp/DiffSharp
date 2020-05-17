@@ -1149,36 +1149,40 @@ type Tensor =
 
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
-    member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:int) =
-        let inputSize = a.shape.[2]
+    member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:seq<int>) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
-        let outputSize = defaultArg outputSize ((inputSize-1) * stride - 2*padding + kernelSize)
-        checkCanMaxunpool1d indices.dtype
+        let outputSize = 
+            match outputSize with
+            | Some o -> let o = o |> Array.ofSeq in if o.Length <> 3 then failwithf "Expecting outputSize to be 3-dimensional" else o
+            | None -> 
+                let inputSize = a.shape.[2]
+                [|indices.shape.[0]; indices.shape.[1]; ((inputSize-1) * stride - 2*padding + kernelSize)|]
+        checkCanMaxunpool1d indices.dtype indices.shape outputSize
         let fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
         let fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
         let dfTensorRev(a) = MaxUnpool1DT(a, indices)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)    
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     member a.maxpool2di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
         let kernelSizes =
             match kernelSize, kernelSizes with
             | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
             | Some k, None -> [|k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
             | _ -> failwithf "Expecting either kernelSize or kernelSizes"
         let strides =
             match stride, strides with
             | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to have length two" else s
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
             | _ -> kernelSizes
         let paddings =
             match padding, paddings with
             | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <>2 then failwithf "Expecting paddings to have length two" else p
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <>2 then failwithf "Expecting paddings to be 2-dimensional" else p
             | _ -> [|0; 0|]
         checkCanMaxpool2d a.shape kernelSizes strides paddings
         match a with
@@ -1187,6 +1191,39 @@ type Tensor =
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
 
     member a.maxpool2d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
+
+    member a.maxunpool2d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
+            | _ -> kernelSizes
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <>2 then failwithf "Expecting paddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
+        let outputSize = 
+            match outputSize with
+            | Some o -> let o = o |> Array.ofSeq in if o.Length <> 4 then failwithf "Expecting outputSize to be 4-dimensional" else o
+            | None -> 
+                let inputHeight = a.shape.[2]
+                let inputWidth = a.shape.[3]
+                [|indices.shape.[0]; indices.shape.[1]; ((inputHeight-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputWidth-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1])|]
+        checkCanMaxunpool2d indices.dtype indices.shape outputSize
+        let fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
+        let fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let dfTensorRev(a) = MaxUnpool2DT(a, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
@@ -1259,19 +1296,19 @@ type Tensor =
             match stride, strides with
             | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to have length two" else s
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
             | _ -> [|1; 1|]
         let paddings = 
             match padding, paddings with
             | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to have length two" else p
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
             | _ -> [|0; 0|]
         let dilations = 
             match dilation, dilations with
             | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
             | Some d, None -> [|d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to have length two" else d
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
             | _ -> [|1; 1|]
         checkCanConv2d a.dtype b.dtype a.shape b.shape strides paddings dilations
         let mutable b = b
@@ -1346,19 +1383,19 @@ type Tensor =
             match stride, strides with
             | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to have length three" else s
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
             | _ -> [|1; 1; 1|]
         let paddings = 
             match padding, paddings with
             | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to have length three" else p
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
             | _ -> [|0; 0; 0|]
         let dilations = 
             match dilation, dilations with
             | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
             | Some d, None -> [|d; d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to have length three" else d
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
             | _ -> [|1; 1; 1|]
         checkCanConv3d a.dtype b.dtype a.shape b.shape strides paddings dilations
         let mutable b = b
@@ -1498,6 +1535,7 @@ type Tensor =
                         | MaxPool1DT(a,_,_) -> reset (a::tt)
                         | MaxPool2DT(a,_,_) -> reset (a::tt)
                         | MaxUnpool1DT(a,_) -> reset (a::tt)
+                        | MaxUnpool2DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
@@ -1609,9 +1647,10 @@ type Tensor =
                         | MatMulT2T2(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
-                        | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
-                        | MaxPool2DT(a, indices, kernelSize) -> failwith "Not implemented" // push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
+                        | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
+                        | MaxPool2DT(a, indices, kernelSizes) -> failwith "Not implemented" // push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
+                        | MaxUnpool2DT(a, indices) -> failwith "Not implemented" // push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1766,7 +1805,8 @@ and TensorOp =
     | MaxUnpool1DT of Tensor * Tensor
 
     | MaxPool2DT of Tensor * Tensor * int[]
-
+    | MaxUnpool2DT of Tensor * Tensor
+    
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int
     | Conv1DTConstT of Tensor * Tensor * int * int
