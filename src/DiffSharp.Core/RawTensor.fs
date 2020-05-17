@@ -199,6 +199,7 @@ and [<AbstractClass>]
     abstract member MaxPool3D: int[] * int[] * int[] -> RawTensor * RawTensor
     abstract member MaxUnpool1D: RawTensor * int[] -> RawTensor
     abstract member MaxUnpool2D: RawTensor * int[] -> RawTensor
+    abstract member MaxUnpool3D: RawTensor * int[] -> RawTensor
     abstract member Conv1D: RawTensor * int * int -> RawTensor
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member Conv3D: RawTensor * int[] * int[] -> RawTensor

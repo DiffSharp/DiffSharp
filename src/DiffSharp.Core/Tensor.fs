@@ -1252,6 +1252,40 @@ type Tensor =
 
     member a.maxpool3d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool3di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
 
+    member a.maxunpool3d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> kernelSizes
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        let outputSize = 
+            match outputSize with
+            | Some o -> let o = o |> Array.ofSeq in if o.Length <> 5 then failwithf "Expecting outputSize to be 5-dimensional" else o
+            | None -> 
+                let inputDepth = a.shape.[2]
+                let inputHeight = a.shape.[3]
+                let inputWidth = a.shape.[4]
+                [|indices.shape.[0]; indices.shape.[1]; ((inputDepth-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputHeight-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1]); ((inputWidth-1) * strides.[2] - 2*paddings.[2] + kernelSizes.[2])|]
+        checkCanMaxunpool3d indices.dtype indices.shape outputSize
+        let fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
+        let fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let dfTensorRev(a) = MaxUnpool3DT(a, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
@@ -1564,6 +1598,7 @@ type Tensor =
                         | MaxPool3DT(a,_,_) -> reset (a::tt)
                         | MaxUnpool1DT(a,_) -> reset (a::tt)
                         | MaxUnpool2DT(a,_) -> reset (a::tt)
+                        | MaxUnpool3DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
                         | Conv1DTConstT(_,b,_,_) -> reset (b::tt)
@@ -1680,6 +1715,7 @@ type Tensor =
                         | MaxPool3DT(a, indices, kernelSizes) -> failwith "not implemented" // push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
+                        | MaxUnpool3DT(a, indices) -> failwith "not implemented" // push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
@@ -1837,6 +1873,7 @@ and TensorOp =
     | MaxUnpool2DT of Tensor * Tensor
 
     | MaxPool3DT of Tensor * Tensor * int[]
+    | MaxUnpool3DT of Tensor * Tensor
 
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int
