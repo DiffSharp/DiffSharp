@@ -1161,6 +1161,33 @@ type Tensor =
         let dfTensorRev(a) = MaxUnpool1DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)    
 
+    member a.maxpool2di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to have length two" else s
+            | _ -> kernelSizes
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <>2 then failwithf "Expecting paddings to have length two" else p
+            | _ -> [|0; 0|]
+        checkCanMaxpool2d a.shape kernelSizes strides paddings
+        match a with
+        | Tensor(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
+        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices).viewAs(indices), at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
+
+    member a.maxpool2d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
+
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
@@ -1230,7 +1257,7 @@ type Tensor =
     member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let strides = 
             match stride, strides with
-            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
             | Some s, None -> [|s; s|]
             | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to have length two" else s
             | _ -> [|1; 1|]
@@ -1469,6 +1496,7 @@ type Tensor =
                         | MatMulT2T2Const(a,_) -> reset (a::tt)
                         | MatMulT2ConstT2(_,b) -> reset (b::tt)
                         | MaxPool1DT(a,_,_) -> reset (a::tt)
+                        | MaxPool2DT(a,_,_) -> reset (a::tt)
                         | MaxUnpool1DT(a,_) -> reset (a::tt)
                         | Conv1DTT(a,b,_,_) -> reset (a::b::tt)
                         | Conv1DTTConst(a,_,_,_) -> reset (a::tt)
@@ -1582,6 +1610,7 @@ type Tensor =
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
+                        | MaxPool2DT(a, indices, kernelSize) -> failwith "Not implemented" // push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
@@ -1735,6 +1764,8 @@ and TensorOp =
 
     | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor
+
+    | MaxPool2DT of Tensor * Tensor * int[]
 
     | Conv1DTT of Tensor * Tensor * int * int
     | Conv1DTTConst of Tensor * Tensor * int * int

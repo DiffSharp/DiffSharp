@@ -193,6 +193,17 @@ let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) 
     let inputLengthAfterPadding = shape.[2] + 2*padding
     if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
 
+let checkCanMaxpool2d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:int[]) =
+    if shape.Length <> 4 then failwithf "Expecting a 4d tensor (NxCxHxW: batchSize x inputChannels x inputHeight x inputWidth), received tensor with shape %A" shape
+    if kernelSize.[0] < 1 || kernelSize.[1] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
+    if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if padding.[0] > kernelSize.[0]/2 || padding.[1] > kernelSize.[1]/2 then failwithf "Expecting all paddings (%A) < kernelSizes (%A) / 2" padding kernelSize
+    if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    let inputHeightAfterPadding = shape.[2] + 2*padding.[0]
+    let inputWidthAfterPadding = shape.[3] + 2*padding.[1]
+    if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
+    if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
+
 let checkCanMaxunpool1d (indicesDtype: DType) =
     if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
 
