@@ -1187,7 +1187,7 @@ type Tensor =
         checkCanMaxpool2d a.shape kernelSizes strides paddings
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
-        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices).viewAs(indices), at), indices
+        | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
 
     member a.maxpool2d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
@@ -1648,7 +1648,7 @@ type Tensor =
                         | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
-                        | MaxPool2DT(a, indices, kernelSizes) -> failwith "Not implemented" // push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape.[2]), a) :: tt)
+                        | MaxPool2DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | MaxUnpool2DT(a, indices) -> failwith "Not implemented" // push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
