@@ -1650,7 +1650,7 @@ type Tensor =
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
                         | MaxPool2DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
-                        | MaxUnpool2DT(a, indices) -> failwith "Not implemented" // push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
+                        | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
