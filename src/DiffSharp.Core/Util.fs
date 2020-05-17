@@ -204,6 +204,19 @@ let checkCanMaxpool2d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:i
     if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
     if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
 
+let checkCanMaxpool3d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:int[]) =
+    if shape.Length <> 5 then failwithf "Expecting a 5d tensor (NxCxDxHxW: batchSize x inputChannels x inputDepth x inputHeight x inputWidth), received tensor with shape %A" shape
+    if kernelSize.[0] < 1 || kernelSize.[1] < 1 || kernelSize.[2] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
+    if padding.[0] < 0 || padding.[1] < 0 || padding.[2] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if padding.[0] > kernelSize.[0]/2 || padding.[1] > kernelSize.[1]/2 || padding.[2] > kernelSize.[2]/2 then failwithf "Expecting all paddings (%A) < kernelSizes (%A) / 2" padding kernelSize
+    if stride.[0] < 1 || stride.[1] < 1 || stride.[2] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    let inputDepthAfterPadding = shape.[2] + 2*padding.[0]
+    let inputHeightAfterPadding = shape.[3] + 2*padding.[1]
+    let inputWidthAfterPadding = shape.[4] + 2*padding.[2]
+    if kernelSize.[0] > inputDepthAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputDepthAfterPadding (%A)" kernelSize.[0] inputDepthAfterPadding
+    if kernelSize.[1] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[1] inputHeightAfterPadding
+    if kernelSize.[2] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
+
 let checkCanMaxunpool1d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
     if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
     if outputSize.Length <> 3 then failwithf "Expecting outputSize (%A) to be 3-dimensional" outputSize
