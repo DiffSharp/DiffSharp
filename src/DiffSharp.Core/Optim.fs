@@ -2,16 +2,52 @@ namespace DiffSharp.Optim
 open DiffSharp
 open DiffSharp.Model
 
+
 [<AbstractClass>]
 type Optimizer(model:Model) =
     member val model = model
-    abstract member updateRule: string -> Tensor -> Tensor
     member o.step() = model.Parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    abstract member updateRule: string -> Tensor -> Tensor
+    static member internal optimizeIters(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let iters = defaultArg iters 50
+        let threshold, thresholdGiven = 
+            match threshold with
+            | Some t -> t, true
+            | None -> -1., false
+        let print = defaultArg print true
+        let printEvery = defaultArg printEvery (max 1 (iters/10))
+        let printPrefix = defaultArg printPrefix ""
+        let printPostfix = defaultArg printPostfix ""
+        let mutable status = ""
+        let mutable x = x0
+        let mutable fx = dsharp.zero()
+        let mutable i = 0
+        let mutable stop = false
+        while not stop do
+            i <- i + 1
+            let nfx, nx = update x
+            fx <- nfx
+            let fxScalar = fx.toScalar() |> System.Convert.ToDouble
 
+            if fx.hasnan() || fx.hasinf() then
+                status <- "DIVERGED"
+                stop <- true
+            elif thresholdGiven && fxScalar <= threshold then
+                status <- "CONVERGED"
+                stop <- true
+            elif i=iters then
+                status <- "ITERS REACHED"
+                stop <- true
 
-type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+            if print && ((i+1) % printEvery = 0 || i = iters-1 || stop) then
+                let printDepth = String.replicate nx.depth "  "
+                printfn "%s%s%A/%A | %g %s%s" printDepth printPrefix (i+1) iters fxScalar status printPostfix
+
+            if not stop then x <- nx
+        fx, x
+
+type SGD(model, lr:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
-    let lr = learningRate
     let mutable momBuffer = ParameterDict()
     let mutable momInit = false
     let dampening = defaultArg dampening (lr.zeroLike())
@@ -37,3 +73,10 @@ type SGD(model, learningRate:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?neste
             t - lr * d
         else
             t.primal - lr * d
+
+    static member optimize(f, x0:Tensor, ?iters:int, ?lr:Tensor, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let lr = defaultArg lr (dsharp.tensor(0.001))
+        let update x =
+            let f, g = if x0.dim = 0 then dsharp.fdiff f x else dsharp.fg f x
+            f, x - lr * g
+        Optimizer.optimizeIters(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
