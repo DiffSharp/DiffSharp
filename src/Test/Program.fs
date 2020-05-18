@@ -62,14 +62,16 @@ let main _argv =
     let cnn () =
         let conv1 = Conv2d(1, 2, 3)
         let conv2 = Conv2d(2, 4, 3)
-        let k = dsharp.randn([1;1;28;28]) |> conv1.forward |> conv2.forward |> dsharp.nelement
+        let convall = conv1.forward 
+                      >> dsharp.relu 
+                      >> conv2.forward 
+                      >> dsharp.relu 
+                      >> dsharp.maxpool2d 2
+        let k = dsharp.randn([1;1;28;28]) |> convall |> dsharp.nelement
         let fc1 = Linear(k, 128)
         let fc2 = Linear(128, 10)
         Model.create [conv1; conv2; fc1; fc2] 
-                     (conv1.forward
-                        >> dsharp.relu
-                        >> conv2.forward
-                        >> dsharp.relu
+                     (convall
                         >> dsharp.flatten 1
                         >> fc1.forward
                         >> dsharp.relu
@@ -101,6 +103,5 @@ let main _argv =
         let loss, g = dsharp.pgrad (loss data target) p
         p <- p - 0.1 * g
         printfn "%A %A" i loss
-
 
     0 // return an integer exit code

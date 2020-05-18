@@ -169,6 +169,7 @@ and [<AbstractClass>]
     abstract member ComputeHash: unit -> int
     abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
+    abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
     abstract member LeTT: RawTensor -> RawTensor
@@ -193,6 +194,12 @@ and [<AbstractClass>]
     abstract member PowT0T: RawTensor -> RawTensor
     abstract member PowTT0 : RawTensor -> RawTensor
     abstract member MatMulT2T2: RawTensor -> RawTensor
+    abstract member MaxPool1D: int * int * int -> RawTensor * RawTensor
+    abstract member MaxPool2D: int[] * int[] * int[] -> RawTensor * RawTensor
+    abstract member MaxPool3D: int[] * int[] * int[] -> RawTensor * RawTensor
+    abstract member MaxUnpool1D: RawTensor * int[] -> RawTensor
+    abstract member MaxUnpool2D: RawTensor * int[] -> RawTensor
+    abstract member MaxUnpool3D: RawTensor * int[] -> RawTensor
     abstract member Conv1D: RawTensor * int * int -> RawTensor
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member Conv3D: RawTensor * int[] * int[] -> RawTensor
