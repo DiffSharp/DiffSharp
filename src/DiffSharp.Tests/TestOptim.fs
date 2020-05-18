@@ -24,7 +24,7 @@ type TestOptim () =
         let net = Linear(din, dout)
 
         let lr, mom, epochs = 1e-2, 0.9, 250
-        let optimizer = SGD(net, learningRate=dsharp.tensor(lr), momentum=dsharp.tensor(mom), nesterov=true)
+        let optimizer = SGD(net, lr=dsharp.tensor(lr), momentum=dsharp.tensor(mom), nesterov=true)
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
                 net.reverseDiff()

@@ -77,6 +77,6 @@ type SGD(model, lr:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, 
     static member optimize(f, x0:Tensor, ?iters:int, ?lr:Tensor, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let lr = defaultArg lr (dsharp.tensor(0.001))
         let update x =
-            let f, g = if x0.dim = 0 then dsharp.fdiff f x else dsharp.fg f x
+            let f, g = dsharp.fg f x
             f, x - lr * g
         Optimizer.optimizeIters(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
