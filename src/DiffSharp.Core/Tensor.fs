@@ -1269,7 +1269,7 @@ type Tensor =
             match padding, paddings with
             | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
             | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
             | _ -> [|0; 0; 0|]
         let outputSize = 
             match outputSize with
@@ -1715,7 +1715,7 @@ type Tensor =
                         | MaxPool3DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
-                        | MaxUnpool3DT(a, indices) -> failwith "not implemented" // push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
+                        | MaxUnpool3DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
