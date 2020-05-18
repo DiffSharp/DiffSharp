@@ -319,13 +319,17 @@ type DiffSharp with
     static member g f x = DiffSharp.grad f x
     static member hvp f x v = DiffSharp.hessianv f x v
     static member h f x = DiffSharp.hessian f x
+    static member gh f x = DiffSharp.gradhessian f x
+    static member ghvp f x v = DiffSharp.gradhessianv f x v
     static member jvp f x v = DiffSharp.jacobianv f x v
     static member vjp f x v = DiffSharp.jacobianTv f x v
     static member j f x = DiffSharp.jacobian f x
     static member fgvp f x v = DiffSharp.fgradv f x v
     static member fg f x = DiffSharp.fgrad f x
+    static member fgh f x = DiffSharp.fgradhessian f x
     static member fhvp f x v = DiffSharp.fhessianv f x v
     static member fh f x = DiffSharp.fhessian f x
+    static member fghvp f x v = DiffSharp.fgradhessianv f x v
     static member fjvp f x v = DiffSharp.fjacobianv f x v
     static member fvjp f x v = DiffSharp.fjacobianTv f x v
     static member fj f x = DiffSharp.fjacobian f x    
@@ -413,12 +417,14 @@ type DiffSharp with
     static member numg f x = DiffSharp.numgrad f x
     static member numhvp f x v = DiffSharp.numhessianv f x v
     static member numh f x = DiffSharp.numhessian f x
+    static member numgh f x = DiffSharp.numgradhessian f x
     static member numjvp f x v = DiffSharp.numjacobianv f x v
     static member numj f x = DiffSharp.numjacobian f x
     static member numfgvp f x v = DiffSharp.numfgradv f x v
     static member numfg f x = DiffSharp.numfgrad f x
     static member numfhvp f x v = DiffSharp.numfhessianv f x v
     static member numfh f x = DiffSharp.numfhessian f x
+    static member numfgh f x = DiffSharp.numfgradhessian f x
     static member numfjvp f x v = DiffSharp.numfjacobianv f x v
     static member numfj f x = DiffSharp.numfjacobian f x    
 
