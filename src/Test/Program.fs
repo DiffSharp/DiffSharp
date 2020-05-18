@@ -100,7 +100,7 @@ let main _argv =
     let loss = net.forwardLoss dsharp.crossEntropyLoss
     let mutable p = net.getParameters()
     for i, data, target in dataloader.epoch() do
-        let loss, g = dsharp.pgrad (loss data target) p
+        let loss, g = dsharp.fgrad (loss data target) p
         p <- p - 0.1 * g
         printfn "%A %A" i loss
 
