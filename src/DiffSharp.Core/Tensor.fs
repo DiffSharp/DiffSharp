@@ -1712,7 +1712,7 @@ type Tensor =
                         | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
                         | MaxPool2DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
-                        | MaxPool3DT(a, indices, kernelSizes) -> failwith "not implemented" // push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
+                        | MaxPool3DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
                         | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | MaxUnpool3DT(a, indices) -> failwith "not implemented" // push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
