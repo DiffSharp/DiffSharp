@@ -157,6 +157,12 @@ let checkCanDilate (dim:int) (dilations:int[]) =
     if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
     if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
 
+let checkCanGather (tensorShape:int[]) (dim:int) (indicesShape:int[]) (indicesDtype:DType) =
+    if tensorShape.Length <> indicesShape.Length then failwithf "Expecting tensorShape (%A) and indicesShape (%A) to have the same number of dimensions" tensorShape indicesShape
+    if dim < 0 || dim > tensorShape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensorShape.Length (%A)" dim tensorShape.Length
+    if indicesShape.[dim] < 1 then failwithf "Expecting indicesShape.[dim] (%A) >= 1" indicesShape.[dim]
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+
 let checkCanView (shape1:int[]) (shape2:int[]) =
     if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
 
@@ -176,6 +182,58 @@ let checkCanMatmul (shape1:int[]) (shape2:int[]) =
 let checkCanDot (shape1:int[]) (shape2:int[]) =
     if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two vectors (1d Tensors), received Tensors with shapes %A, %A" shape1 shape2
     if shape1.[0] <> shape2.[0] then failwithf "Cannot multiply vectors with different lengths %A, %A" shape1.[0] shape2.[0]
+
+let checkCanPad (shape:int[]) (paddings:int[]) =
+    if shape.Length <> paddings.Length then failwithf "Expecting shape (%A) and paddings (%A) to have the same length" shape paddings
+    if not (paddings |> Array.forall (fun p -> p >= 0)) then failwithf "Expecting all paddings (%A) >= 0" paddings
+
+let checkCanMaxpool1d (shape:int[]) (kernelSize:int) (stride:int) (padding:int) =
+    if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
+    if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
+    if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
+    if padding > kernelSize/2 then failwithf "Expecting padding (%A) < kernelSize (%A) / 2" padding kernelSize
+    if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
+    let inputLengthAfterPadding = shape.[2] + 2*padding
+    if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
+
+let checkCanMaxpool2d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:int[]) =
+    if shape.Length <> 4 then failwithf "Expecting a 4d tensor (NxCxHxW: batchSize x inputChannels x inputHeight x inputWidth), received tensor with shape %A" shape
+    if kernelSize.[0] < 1 || kernelSize.[1] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
+    if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if padding.[0] > kernelSize.[0]/2 || padding.[1] > kernelSize.[1]/2 then failwithf "Expecting all paddings (%A) < kernelSizes (%A) / 2" padding kernelSize
+    if stride.[0] < 1 || stride.[1] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    let inputHeightAfterPadding = shape.[2] + 2*padding.[0]
+    let inputWidthAfterPadding = shape.[3] + 2*padding.[1]
+    if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
+    if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
+
+let checkCanMaxpool3d (shape:int[]) (kernelSize:int[]) (stride:int[]) (padding:int[]) =
+    if shape.Length <> 5 then failwithf "Expecting a 5d tensor (NxCxDxHxW: batchSize x inputChannels x inputDepth x inputHeight x inputWidth), received tensor with shape %A" shape
+    if kernelSize.[0] < 1 || kernelSize.[1] < 1 || kernelSize.[2] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
+    if padding.[0] < 0 || padding.[1] < 0 || padding.[2] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
+    if padding.[0] > kernelSize.[0]/2 || padding.[1] > kernelSize.[1]/2 || padding.[2] > kernelSize.[2]/2 then failwithf "Expecting all paddings (%A) < kernelSizes (%A) / 2" padding kernelSize
+    if stride.[0] < 1 || stride.[1] < 1 || stride.[2] < 1 then failwithf "Expecting all strides (%A) >= 1" stride
+    let inputDepthAfterPadding = shape.[2] + 2*padding.[0]
+    let inputHeightAfterPadding = shape.[3] + 2*padding.[1]
+    let inputWidthAfterPadding = shape.[4] + 2*padding.[2]
+    if kernelSize.[0] > inputDepthAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputDepthAfterPadding (%A)" kernelSize.[0] inputDepthAfterPadding
+    if kernelSize.[1] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[1] inputHeightAfterPadding
+    if kernelSize.[2] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
+
+let checkCanMaxunpool1d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    if outputSize.Length <> 3 then failwithf "Expecting outputSize (%A) to be 3-dimensional" outputSize
+    if outputSize.[0] <> indicesShape.[0] || outputSize.[1] <> indicesShape.[1] then failwithf "Expecting the first two elements of outputSize (%A) and indicesShape (%A) to be the same" outputSize indicesShape
+
+let checkCanMaxunpool2d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    if outputSize.Length <> 4 then failwithf "Expecting outputSize (%A) to be 4-dimensional" outputSize
+    if outputSize.[0] <> indicesShape.[0] || outputSize.[1] <> indicesShape.[1] then failwithf "Expecting the first two elements of outputSize (%A) and indicesShape (%A) to be the same" outputSize indicesShape
+
+let checkCanMaxunpool3d (indicesDtype: DType) (indicesShape: int[]) (outputSize: int[]) =
+    if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    if outputSize.Length <> 5 then failwithf "Expecting outputSize (%A) to be 5-dimensional" outputSize
+    if outputSize.[0] <> indicesShape.[0] || outputSize.[1] <> indicesShape.[1] then failwithf "Expecting the first two elements of outputSize (%A) and indicesShape (%A) to be the same" outputSize indicesShape
 
 let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:int[]) (shape2:int[]) (stride:int) (padding:int) (dilation:int) =
     if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
