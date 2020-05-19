@@ -104,10 +104,11 @@ module DTypes =
 
 module Combos =
 
-    let backends = [ Backend.Reference ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
 
     let devices = [ Device.CPU ]
     //let devices = [ Device.GPU ]

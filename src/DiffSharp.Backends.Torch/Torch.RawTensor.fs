@@ -327,6 +327,12 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             res <- res.Slice(int64 d, 0L, int64 shape.[d], int64 dilations.[d])
         t.MakeLike(res, outputShape)
 
+    override t.GatherT(dim:int, indices) =
+        let indices = indices :?> TorchRawTensor
+        checkCanGather t.Shape dim indices.Shape indices.DType
+        let res = failwith "" //res.Slice(int64 d, 0L, int64 shape.[d], int64 dilations.[d])
+        t.MakeLike(res, indices.Shape)
+
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape
         t.MakeLike(tt.View(toTorchShape shape), shape=shape)
@@ -538,25 +544,120 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         result2
 
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
-        let _outputLength, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
+        let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
         let result =
             TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv1D(tt2, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)))
-        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
+        t1.MakeLike(result, shape=outputShape)
 
     override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
-        let _outputHeight, _outputWidth, outputShape = Shape.computeConv2D t1.Shape t2.Shape strides paddings
+        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape = Shape.computeConv2D t1.Shape t2.Shape strides paddings
         let result = 
             TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv2D(tt2, strides=int64s strides, padding=int64s paddings))
-        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
+        t1.MakeLike(result, shape=outputShape)
 
     override t1.Conv3D(t2, strides, paddings) = // TODO: bias, dilation and groups
-        let _outputDepth, _outputHeight, _outputWidth, outputShape = Shape.computeConv3D t1.Shape t2.Shape strides paddings
+        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape = Shape.computeConv3D t1.Shape t2.Shape strides paddings
         let result = 
             TorchRawTensor.WrapConv t1 t2 (fun (tt1, tt2) ->
                 tt1.Conv3D(tt2, strides=int64s strides, padding=int64s paddings))
-        (t2 :?> TorchRawTensor).MakeLike(result, shape=outputShape)
+        t1.MakeLike(result, shape=outputShape)
+
+    /// Wraps a convolution operation - integer types get promoted to floats. LibTorch only appears to implement
+    /// floating point convolutions (as of Torch 1.0.1)
+    static member WrapMaxPool op (t1: TorchRawTensor) f =
+        let tt1 = t1.TorchTensor
+        let tt1 =
+            match t1.DType with 
+            | DType.Bool -> opNotSupported op t1.DType 
+            | DType.Int8 | DType.Int16 -> tt1.ToType(ATenScalarMapping.Float)
+            | DType.Int32 | DType.Int64 -> tt1.ToType(ATenScalarMapping.Double)
+            | DType.Float32 | DType.Float64 -> tt1
+            | DType.Other _ -> failwithf "%s - other type" op
+        let result : TorchTensor = f tt1
+        let result2 =
+            match t1.DType with 
+            | DType.Bool -> opNotSupported op t1.DType
+            | DType.Int32 | DType.Int64
+            | DType.Int8 | DType.Int16 -> result.ToType(toTorchType t1.DType)
+            | DType.Float32 | DType.Float64 -> result
+            | DType.Other _ -> failwithf "%s - other type" op
+        result2
+
+    override t1.MaxPool1D(kernelSize, stride, padding) = 
+        let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.computeMaxPool1D t1.Shape kernelSize stride padding
+        let result =
+            TorchRawTensor.WrapMaxPool "MaxPool1D" t1 (fun tt1 ->
+                tt1.MaxPool1D(int64 kernelSize, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)))
+        
+        t1.MakeLike(result, shape=outputShape), failwith "TBD - return indices"
+
+    override t1.MaxPool2D(kernelSize, strides, paddings) = 
+        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.computeMaxPool2D t1.Shape kernelSize strides paddings
+        let result = 
+            TorchRawTensor.WrapMaxPool "MaxPool2D" t1 (fun tt1 ->
+                tt1.MaxPool2D(int64s kernelSize, strides=int64s strides, padding=int64s paddings))
+        t1.MakeLike(result, shape=outputShape), failwith "TBD - return indices"
+
+    override t1.MaxPool3D(kernelSize, strides, paddings) = 
+        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.computeMaxPool3D t1.Shape kernelSize strides paddings
+        let result = 
+            TorchRawTensor.WrapMaxPool "MaxPool3D" t1 (fun tt1 ->
+                tt1.MaxPool3D(int64s kernelSize, strides=int64s strides, padding=int64s paddings))
+        
+        t1.MakeLike(result, shape=outputShape), failwith "TBD - return indices"
+
+    /// Wraps a convolution operation - integer types get promoted to floats. LibTorch only appears to implement
+    /// floating point convolutions (as of Torch 1.0.1)
+    static member WrapMaxUnpool op (t1: TorchRawTensor) f =
+        let tt1 = t1.TorchTensor
+        let tt1 =
+            match t1.DType with 
+            | DType.Bool -> opNotSupported op t1.DType 
+            | DType.Int8 | DType.Int16 -> tt1.ToType(ATenScalarMapping.Float)
+            | DType.Int32 | DType.Int64 -> tt1.ToType(ATenScalarMapping.Double)
+            | DType.Float32 | DType.Float64 -> tt1
+            | DType.Other _ -> failwithf "%s - other type" op
+        let result : TorchTensor = f tt1
+        let result2 =
+            match t1.DType with 
+            | DType.Bool -> opNotSupported op t1.DType
+            | DType.Int32 | DType.Int64
+            | DType.Int8 | DType.Int16 -> result.ToType(toTorchType t1.DType)
+            | DType.Float32 | DType.Float64 -> result
+            | DType.Other _ -> failwithf "%s - other type" op
+        result2
+
+    override t1.MaxUnpool1D(indices, outputSize) = 
+        let _batchSize, _channels, _inputSize, outputShape = Shape.computeMaxUnpool1D t1.Shape outputSize
+        let result =
+            TorchRawTensor.WrapMaxPool "MaxUnpool1D" t1 (fun tt1 ->
+                failwith "tbd" 
+                )
+        
+        t1.MakeLike(result, shape=outputShape)
+
+    override t1.MaxUnpool2D(indices, outputSize) = 
+        let _batchSize, _channels, _inputDimensions, outputShape = Shape.computeMaxUnpool2D t1.Shape outputSize
+        let result = 
+            TorchRawTensor.WrapMaxPool "MaxUnpool2D" t1 (fun tt1 ->
+                failwith "tbd" 
+                //tt1.MaxPool2D(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
+                )
+        t1.MakeLike(result, shape=outputShape)
+
+    override t1.MaxUnpool3D(indices, outputSize) = 
+        let _batchSize, _channels, _inputDimensions, outputShape = Shape.computeMaxUnpool3D t1.Shape outputSize
+        let result = 
+            TorchRawTensor.WrapMaxPool "MaxUnpool3D" t1 (fun tt1 ->
+                failwith "tbd" 
+                //tt1.MaxUnpool3D(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
+                )
+        
+        t1.MakeLike(result, shape=outputShape)
 
     override t.SumT2Dim0() =
         let result = tt.Sum([| 0L |], ``type``= Nullable(tt.Type))

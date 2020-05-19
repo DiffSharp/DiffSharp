@@ -12,6 +12,9 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp", "src\DiffSharp\DiffSharp.fsproj", "{6649A8F8-BCDD-4E0A-844D-24E1BF98B51A}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Tests", "src\DiffSharp.Tests\DiffSharp.Tests.fsproj", "{42D94642-6B4F-4710-AAC3-F3671C20971D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9F1EACD4-44D9-4C5C-BC2A-63A6B0514467} = {9F1EACD4-44D9-4C5C-BC2A-63A6B0514467}
+	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Test", "src\Test\Test.fsproj", "{A133488F-FFFB-48EF-994F-7AB0D7D5F5F0}"
 EndProject

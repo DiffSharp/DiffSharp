@@ -248,8 +248,25 @@ type RawTensorImpl<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTy
                 else
                     for i=0 to shape.[0]-1 do
                         dilate shape.[1..] (Array.append externalCoords [|i|])
-            dilate result.Shape [||]        
-            upcast result        
+            dilate result.Shape [||]
+            upcast result
+
+    override t.GatherT(dim:int, indices) =
+        checkCanGather t.Shape dim indices.Shape indices.DType
+        let indices = indices :?> RawTensorImpl<int>
+        let result = t.ZerosLike(indices.Shape) :?> RawTensorImpl<'T>
+        let rec gather (shape:int[]) externalCoords =
+            if shape.Length = 1 then
+                for i=0 to shape.[0]-1 do
+                    let globalCoords = Array.append externalCoords [|i|]
+                    let globalCoordsIndices = Array.copy globalCoords
+                    globalCoordsIndices.[dim] <- indices.[globalCoords]
+                    result.[globalCoords] <- t.[globalCoordsIndices]
+            else
+                for i=0 to shape.[0]-1 do
+                    gather shape.[1..] (Array.append externalCoords [|i|])
+        gather result.Shape [||]
+        upcast result
 
     override t.ViewT(shape:int[]) =
         checkCanView t.Shape shape
@@ -492,15 +509,130 @@ module internal RawTensorImpl =
                 result.[i*t2cols + j] <- acc
         (result,[| t1rows; t2cols |])
     
+    let inline MaxPool1D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
+        checkCanMaxpool1d t1.Shape kernelSize stride padding
+        let batchSize, channels, inputSize, outputSize, outputShape = Shape.computeMaxPool1D t1.Shape kernelSize stride padding
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorImpl<int>
+        let minValue = t1.[t1.MinIndexT()] - one
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v=0 to outputSize-1 do
+                    let mutable maxvalue = minValue
+                    let mutable maxindex = -1
+                    for u=0 to kernelSize-1 do
+                        let i = (v*stride) + u - padding
+                        if i >= 0 && i < inputSize then
+                            let value = t1.[n, c, i]
+                            if value > maxvalue then
+                                maxvalue <- value
+                                maxindex <- i
+                    result.[[|n; c; v|]] <- maxvalue
+                    indices.[[|n; c; v|]] <- maxindex
+        result, indices
+
+    let inline MaxPool2D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
+        checkCanMaxpool2d t1.Shape kernelSize stride padding
+        let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape =
+            Shape.computeMaxPool2D t1.Shape kernelSize stride padding
+
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorImpl<int>
+        let minValue = t1.[t1.MinIndexT()] - one
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputHeight-1 do
+                    for v1=0 to outputWidth-1 do
+                        let mutable maxvalue = minValue
+                        let mutable maxindexi0 = -1
+                        let mutable maxindexi1 = -1
+                        for u0=0 to kernelHeight-1 do
+                            for u1=0 to kernelWidth-1 do
+                                let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                if i0 >= 0 && i0 < inputHeight && i1 >= 0 && i1 < inputWidth then
+                                    let value = t1.[n, c, i0, i1]
+                                    if value > maxvalue then
+                                        maxvalue <- value
+                                        maxindexi0 <- i0
+                                        maxindexi1 <- i1
+                        result.[[|n; c; v0; v1|]] <- maxvalue
+                        indices.[[|n; c; v0; v1|]] <- indexToFlatIndex [|inputHeight; inputWidth|] [|maxindexi0; maxindexi1|]
+        result, indices
+
+    let inline MaxPool3D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
+        checkCanMaxpool3d t1.Shape kernelSize stride padding
+        let (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape) =
+            Shape.computeMaxPool3D t1.Shape kernelSize stride padding
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorImpl<int>
+        let minValue = t1.[t1.MinIndexT()] - one
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputDepth-1 do
+                    for v1=0 to outputHeight-1 do
+                        for v2=0 to outputWidth-1 do
+                            let mutable maxvalue = minValue
+                            let mutable maxindexi0 = -1
+                            let mutable maxindexi1 = -1
+                            let mutable maxindexi2 = -1
+                            for u0=0 to kernelDepth-1 do
+                                for u1=0 to kernelHeight-1 do
+                                    for u2=0 to kernelWidth-1 do
+                                        let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                        let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                        let i2 = (v2*stride.[2]) + u2 - padding.[2]
+                                        if i0 >= 0 && i0 < inputDepth && i1 >= 0 && i1 < inputHeight && i2 >= 0 && i2 < inputWidth then
+                                            let value = t1.[n, c, i0, i1, i2]
+                                            if value > maxvalue then
+                                                maxvalue <- value
+                                                maxindexi0 <- i0
+                                                maxindexi1 <- i1
+                                                maxindexi2 <- i2
+                            result.[[|n; c; v0; v1; v2|]] <- maxvalue
+                            indices.[[|n; c; v0; v1; v2|]] <- indexToFlatIndex [|inputDepth; inputHeight; inputWidth|] [|maxindexi0; maxindexi1; maxindexi2|]
+        result, indices
+
+    let inline MaxUnpool1D(t1: RawTensorImpl< ^T >, indices: RawTensorImpl<int>, outputSize: int[]) : RawTensorImpl< ^T > =
+        let batchSize, channels, inputSize, outputShape = Shape.computeMaxUnpool1D t1.Shape outputSize
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for u=0 to inputSize-1 do
+                    let i = indices.[[|n; c; u|]]
+                    result.[[|n; c; i|]] <- t1.[[|n; c; u|]]
+        result
+
+    let inline MaxUnpool2D(t1: RawTensorImpl< ^T >, indices: RawTensorImpl<int>, outputSize:int[]) : RawTensorImpl< ^T > =
+        let batchSize, channels, (inputHeight, inputWidth), outputShape = Shape.computeMaxUnpool2D t1.Shape outputSize
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for u0=0 to inputHeight-1 do
+                    for u1=0 to inputWidth-1 do
+                        let iflat = indices.[[|n; c; u0; u1|]]
+                        let i = flatIndexToIndex [|outputSize.[2]; outputSize.[3]|] iflat
+                        result.[[|n; c; i.[0]; i.[1]|]] <- t1.[[|n; c; u0; u1|]]
+        result
+
+    let inline MaxUnpool3D(t1: RawTensorImpl< ^T >, indices: RawTensorImpl<int>, outputSize:int[]) : RawTensorImpl< ^T > =
+        let batchSize, channels, (inputDepth, inputHeight, inputWidth), outputShape = Shape.computeMaxUnpool3D t1.Shape outputSize
+        let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for u0=0 to inputDepth-1 do
+                    for u1=0 to inputHeight-1 do
+                        for u2=0 to inputWidth-1 do
+                            let iflat = indices.[[|n; c; u0; u1; u2|]]
+                            let i = flatIndexToIndex [|outputSize.[2]; outputSize.[3]; outputSize.[4]|] iflat
+                            result.[[|n; c; i.[0]; i.[1]; i.[2]|]] <- t1.[[|n; c; u0; u1; u2|]]
+        result
+
     let inline Conv1D(t1: RawTensorImpl< ^T >, t2: RawTensor, stride, padding) : RawTensorImpl< ^T > =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
         checkCanConv1d t1.DType t2.DType t1.Shape t2.Shape stride padding 1
-        let outputLength, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
-        let batchSize = t1.Shape.[0]
-        let inputChannels = t1.Shape.[1]
-        let outputChannels = t2.Shape.[0]
-        let kernelLength = t2.Shape.[2]
+        let batchSize, inputChannels, kernelSize, outputChannels, outputSize, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
         let t1 =
             if padding = 0 then
@@ -513,10 +645,10 @@ module internal RawTensorImpl =
         let t2 = t2 :?> RawTensorImpl< ^T >
         for n=0 to batchSize-1 do
             for k=0 to outputChannels-1 do
-                for v=0 to outputLength-1 do
+                for v=0 to outputSize-1 do
                     let mutable value = zero
                     for c=0 to inputChannels-1 do
-                        for u=0 to kernelLength-1 do
+                        for u=0 to kernelSize-1 do
                             value <- value + t2.[k, c, u] * t1.[n, c, (v*stride) + u]
                     result.[[|n; k; v|]] <- value
         result
@@ -525,12 +657,7 @@ module internal RawTensorImpl =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
         checkCanConv2d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1|]
-        let outputHeight, outputWidth, outputShape = Shape.computeConv2D t1.Shape t2.Shape stride padding
-        let batchSize = t1.Shape.[0]
-        let inputChannels = t1.Shape.[1]
-        let outputChannels = t2.Shape.[0]
-        let kernelHeight = t2.Shape.[2]
-        let kernelWidth = t2.Shape.[3]
+        let batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape = Shape.computeConv2D t1.Shape t2.Shape stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorImpl< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
@@ -558,13 +685,8 @@ module internal RawTensorImpl =
         // t1: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
         // t2: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
         checkCanConv3d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1;1|]
-        let outputDepth, outputHeight, outputWidth, outputShape = Shape.computeConv3D t1.Shape t2.Shape stride padding
-        let batchSize = t1.Shape.[0]
-        let inputChannels = t1.Shape.[1]
-        let outputChannels = t2.Shape.[0]
-        let kernelDepth = t2.Shape.[2]
-        let kernelHeight = t2.Shape.[3]
-        let kernelWidth = t2.Shape.[4]
+        let batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape = 
+            Shape.computeConv3D t1.Shape t2.Shape stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorImpl< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 && padding.[2] = 0 then
@@ -737,6 +859,12 @@ type RawTensorFloat32(values: float32[], shape:int[], device) =
     override t1.PowT0T(t2) = RawTensorImpl.PowT0T(t1, t2) |> create
     override t1.PowTT0(t2) = RawTensorImpl.PowTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -769,7 +897,11 @@ type RawTensorFloat32(values: float32[], shape:int[], device) =
     override t.AtanT() = RawTensorImpl.AtanT(t) |> create
 
 /// The concrete implementation of BackendStatics for Float32 data.
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateFloat32Statics() = 
+#else
 type ReferenceFloat32Statics() = 
+#endif
 
     inherit BackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat32(values, shape, device)
@@ -819,6 +951,12 @@ type RawTensorFloat64(values: double[], shape:int[], device) =
     override t1.PowT0T(t2) = RawTensorImpl.PowT0T(t1, t2) |> create
     override t1.PowTT0(t2) = RawTensorImpl.PowTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -850,7 +988,11 @@ type RawTensorFloat64(values: double[], shape:int[], device) =
     override t.AcosT() = RawTensorImpl.AcosT(t) |> create
     override t.AtanT() = RawTensorImpl.AtanT(t) |> create
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateFloat64Statics() = 
+#else
 type ReferenceFloat64Statics() = 
+#endif
 
     inherit BackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat64(values, shape, device)
@@ -896,6 +1038,12 @@ type RawTensorInt8(values: int8[], shape:int[], device) =
     override t1.DivT0T(t2) = RawTensorImpl.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorImpl.DivTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -928,7 +1076,11 @@ type RawTensorInt8(values: int8[], shape:int[], device) =
     override t.AcosT() = opNotSupported "AcosT" t.DType
     override t.AtanT() = opNotSupported "AtanT" t.DType
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateInt8Statics() = 
+#else
 type ReferenceInt8Statics() = 
+#endif
 
     inherit BackendStatics()
 
@@ -974,6 +1126,12 @@ type RawTensorInt16(values: int16[], shape:int[], device) =
     override t1.DivT0T(t2) = RawTensorImpl.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorImpl.DivTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -1006,7 +1164,11 @@ type RawTensorInt16(values: int16[], shape:int[], device) =
     override t.AcosT() = opNotSupported "AcosT" t.DType
     override t.AtanT() = opNotSupported "AtanT" t.DType
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateInt16Statics() = 
+#else
 type ReferenceInt16Statics() = 
+#endif
 
     inherit BackendStatics()
 
@@ -1052,6 +1214,12 @@ type RawTensorInt32(values: int32[], shape:int[], device) =
     override t1.DivT0T(t2) = RawTensorImpl.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorImpl.DivTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -1084,7 +1252,11 @@ type RawTensorInt32(values: int32[], shape:int[], device) =
     override t.AcosT() = opNotSupported "AcosT" t.DType
     override t.AtanT() = opNotSupported "AtanT" t.DType
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateInt32Statics() = 
+#else
 type ReferenceInt32Statics() = 
+#endif
 
     inherit BackendStatics()
 
@@ -1130,6 +1302,12 @@ type RawTensorInt64(values: int64[], shape:int[], device) =
     override t1.DivT0T(t2) = RawTensorImpl.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorImpl.DivTT0(t1, t2) |> create
     override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
@@ -1166,7 +1344,11 @@ type RawTensorInt64(values: int64[], shape:int[], device) =
     override t.AcosT() = opNotSupported "AcosT" t.DType
     override t.AtanT() = opNotSupported "AtanT" t.DType
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateInt64Statics() = 
+#else
 type ReferenceInt64Statics() = 
+#endif
 
     inherit BackendStatics()
 
@@ -1186,7 +1368,7 @@ type RawTensorBool(values: bool[], shape:int[], device) =
     inherit RawTensorImpl<bool>(values, shape, Bool, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
-       
+
     override t.MakeLike(values, shape) = upcast RawTensorBool(values, shape, device)
     override t.RandomMultinomial(_numSamples) = opNotSupported "RandomMultinomial" t.DType
     override t1.Equals(t2:RawTensor) = RawTensorImpl.Equals(t1, t2)
@@ -1216,6 +1398,12 @@ type RawTensorBool(values: bool[], shape:int[], device) =
     override t1.DivT0T(t2) = opNotSupported2 "DivT0T" t1.DType t2.DType
     override t1.DivTT0(t2) = opNotSupported2 "DivTT0" t1.DType t2.DType
     override t1.MatMulT2T2(t2) = opNotSupported2 "MatMulT2T2" t1.DType t2.DType
+    override t1.MaxPool1D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool1D" t1.DType
+    override t1.MaxPool2D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool2D" t1.DType
+    override t1.MaxPool3D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool3D" t1.DType
+    override t1.MaxUnpool1D(_indices, _outputSize) = opNotSupported "MaxUnpool1D" t1.DType
+    override t1.MaxUnpool2D(_indices, _outputSize) = opNotSupported "MaxUnpool2D" t1.DType
+    override t1.MaxUnpool3D(_indices, _outputSize) = opNotSupported "MaxUnpool3D" t1.DType
     override t1.Conv1D(t2, _stride, _padding) = opNotSupported2 "Conv1D" t1.DType t2.DType
     override t1.Conv2D(t2, _stride, _padding) = opNotSupported2 "Conv2D" t1.DType t2.DType
     override t1.Conv3D(t2, _stride, _padding) = opNotSupported2 "Conv3D" t1.DType t2.DType
@@ -1244,7 +1432,11 @@ type RawTensorBool(values: bool[], shape:int[], device) =
     override t.AcosT() = opNotSupported "AcosT" t.DType
     override t.AtanT() = opNotSupported "AtanT" t.DType
 
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateBoolStatics() = 
+#else
 type ReferenceBoolStatics() = 
+#endif
 
     inherit BackendStatics()
 
@@ -1259,4 +1451,3 @@ type ReferenceBoolStatics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Bool
     override _.RandomIntegers(maxn, shape:int[], device) = RawTensorImpl.RandomIntegers (min 2L maxn) (fun x -> x >= 1.0) shape |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
-
