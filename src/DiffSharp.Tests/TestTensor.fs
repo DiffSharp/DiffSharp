@@ -4155,6 +4155,39 @@ type TestTensor () =
             Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
+    member this.TestTensorPad () =
+        for ty in dtypeInfosAll do
+            let t1 = ty.tensor([1.,2.,3.])
+            let t1p0 = dsharp.pad(t1, [0])
+            let t1p0Correct = ty.tensor([1.,2.,3.])
+            let t1p1 = dsharp.pad(t1, [1])
+            let t1p1Correct = ty.tensor([0.,1.,2.,3.,0.])
+            let t1p2 = dsharp.pad(t1, [2])
+            let t1p2Correct = ty.tensor([0.,0.,1.,2.,3.,0.,0.])
+            let t2 = ty.tensor([[1.,2.,3.], [4.,5.,6.]])
+            let t2p00 = dsharp.pad(t2, [0;0])
+            let t2p00Correct = ty.tensor([[1.,2.,3.], [4.,5.,6.]])
+            let t2p12 = dsharp.pad(t2, [1;2])
+            let t2p12Correct = ty.tensor([[0, 0, 0, 0, 0, 0, 0],
+                                          [0, 0, 1, 2, 3, 0, 0],
+                                          [0, 0, 4, 5, 6, 0, 0],
+                                          [0, 0, 0, 0, 0, 0, 0]])
+            let t2p22 = dsharp.pad(t2, [2;2])
+            let t2p22Correct = ty.tensor([[0, 0, 0, 0, 0, 0, 0],
+                                            [0, 0, 0, 0, 0, 0, 0],
+                                            [0, 0, 1, 2, 3, 0, 0],
+                                            [0, 0, 4, 5, 6, 0, 0],
+                                            [0, 0, 0, 0, 0, 0, 0],
+                                            [0, 0, 0, 0, 0, 0, 0]])
+            Assert.AreEqual(t1p0Correct, t1p0)
+            Assert.AreEqual(t1p1Correct, t1p1)
+            Assert.AreEqual(t1p2Correct, t1p2)
+            Assert.AreEqual(t2p00Correct, t2p00)
+            Assert.AreEqual(t2p12Correct, t2p12)
+            Assert.AreEqual(t2p22Correct, t2p22)
+
+
+    [<Test>]
     member this.TestTensorExpandT () =
         for ty in Combos.All do 
             let t1 = ty.tensor(1.0)
