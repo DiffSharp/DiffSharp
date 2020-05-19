@@ -4156,7 +4156,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorPad () =
-        for ty in dtypeInfosAll do
+        for ty in Combos.All do
             let t1 = ty.tensor([1.,2.,3.])
             let t1p0 = dsharp.pad(t1, [0])
             let t1p0Correct = ty.tensor([1.,2.,3.])
