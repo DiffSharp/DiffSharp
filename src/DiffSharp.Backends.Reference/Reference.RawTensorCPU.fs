@@ -1,7 +1,7 @@
 #if TEST_DUPLICATE_BACKEND
 namespace rec DiffSharp.Backends.TestDuplicate
 #else
-namespace rec DiffSharp.Backends.None
+namespace rec DiffSharp.Backends.Reference
 #endif
 
 open System
@@ -26,7 +26,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 #if TEST_DUPLICATE_BACKEND
     inherit RawTensor(shape, dtype, CPU, Backend.Register "TestDuplicate")
 #else
-    inherit RawTensor(shape, dtype, CPU, Backend.None)
+    inherit RawTensor(shape, dtype, CPU, Backend.Reference)
 #endif
 
     member _.Values = values

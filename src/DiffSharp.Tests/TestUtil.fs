@@ -98,7 +98,7 @@ module DTypes =
 
 module Combos =
 
-    let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
 
     let devices = [ Device.CPU ]
 
