@@ -3482,93 +3482,93 @@ type TestTensor () =
     
     [<Test>]
     member this.TestTensorSumDim () =
-      // Test all non-bool types
-      for ty in Combos.IntegralAndFloatingPoint do 
-        let t = ty.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
-        let tSum0 = t.sum(0)
-        let tSum0Correct = ty.tensor([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
-        let tSum1 = t.sum(1)
-        let tSum1Correct = ty.tensor([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
-        let tSum2 = t.sum(2)
-        let tSum2Correct = ty.tensor([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
+        // Test all non-bool types
+        for ty in Combos.IntegralAndFloatingPoint do 
+            let t = ty.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+            let tSum0 = t.sum(0)
+            let tSum0Correct = ty.tensor([[14.0f, 16.0f, 18.0f, 20.0f], [22.0f, 24.0f, 26.0f, 28.0f], [30.0f, 32.0f, 34.0f, 36.0f]])
+            let tSum1 = t.sum(1)
+            let tSum1Correct = ty.tensor([[15.0f, 18.0f, 21.0f, 24.0f], [51.0f, 54.0f, 57.0f, 60.0f]])
+            let tSum2 = t.sum(2)
+            let tSum2Correct = ty.tensor([[10.0f, 26.0f, 42.0f], [58.0f, 74.0f, 90.0f]])
 
-        Assert.AreEqual(tSum0Correct, tSum0)
-        Assert.AreEqual(tSum1Correct, tSum1)
-        Assert.AreEqual(tSum2Correct, tSum2)
-        Assert.AreEqual(tSum0.dtype, ty.dtype)
-        Assert.AreEqual(tSum1.dtype, ty.dtype)
-        Assert.AreEqual(tSum2.dtype, ty.dtype)
+            Assert.AreEqual(tSum0Correct, tSum0)
+            Assert.AreEqual(tSum1Correct, tSum1)
+            Assert.AreEqual(tSum2Correct, tSum2)
+            Assert.AreEqual(tSum0.dtype, ty.dtype)
+            Assert.AreEqual(tSum1.dtype, ty.dtype)
+            Assert.AreEqual(tSum2.dtype, ty.dtype)
     
     [<Test>]
     member this.TestTensorSumDimKeepDim () =
-      // Test all non-bool types
-      for ty in Combos.IntegralAndFloatingPoint do 
-        let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tSum0 = t.sum(0, keepDim=true)
-        let tSum0Correct = ty.tensor([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
-        let tSum1 = t.sum(1, keepDim=true)
-        let tSum1Correct = ty.tensor([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
-        let tSum2 = t.sum(2, keepDim=true)
-        let tSum2Correct = ty.tensor([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
+        // Test all non-bool types
+        for ty in Combos.IntegralAndFloatingPoint do 
+            let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+            let tSum0 = t.sum(0, keepDim=true)
+            let tSum0Correct = ty.tensor([[[14.0f; 16.0f; 18.0f; 20.0f]; [22.0f; 24.0f; 26.0f; 28.0f]; [30.0f; 32.0f; 34.0f; 36.0f]]])
+            let tSum1 = t.sum(1, keepDim=true)
+            let tSum1Correct = ty.tensor([[[15.0f; 18.0f; 21.0f; 24.0f]]; [[51.0f; 54.0f; 57.0f; 60.0f]]])
+            let tSum2 = t.sum(2, keepDim=true)
+            let tSum2Correct = ty.tensor([[[10.0f]; [26.0f]; [42.0f]]; [[58.0f]; [74.0f]; [90.0f]]])
 
-        Assert.AreEqual(tSum0Correct, tSum0)
-        Assert.AreEqual(tSum1Correct, tSum1)
-        Assert.AreEqual(tSum2Correct, tSum2)
-        Assert.AreEqual(tSum0.dtype, ty.dtype)
-        Assert.AreEqual(tSum1.dtype, ty.dtype)
-        Assert.AreEqual(tSum2.dtype, ty.dtype)
+            Assert.AreEqual(tSum0Correct, tSum0)
+            Assert.AreEqual(tSum1Correct, tSum1)
+            Assert.AreEqual(tSum2Correct, tSum2)
+            Assert.AreEqual(tSum0.dtype, ty.dtype)
+            Assert.AreEqual(tSum1.dtype, ty.dtype)
+            Assert.AreEqual(tSum2.dtype, ty.dtype)
 
     [<Test>]
     member this.TestTensorMean () =
-      for ty in Combos.FloatingPoint do 
-        let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
-        let tMean = t.mean()
-        let tMeanCorrect = ty.tensor(12.5)
+        for ty in Combos.FloatingPoint do 
+            let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
+            let tMean = t.mean()
+            let tMeanCorrect = ty.tensor(12.5)
 
-        Assert.AreEqual(tMeanCorrect, tMean)
-        Assert.AreEqual(tMean.dtype, ty.dtype)
+            Assert.AreEqual(tMeanCorrect, tMean)
+            Assert.AreEqual(tMean.dtype, ty.dtype)
 
-        // mean, dim={0,1,2}
-        (* Python:
-        import pytorch as torch
-        input = np.[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
-        input.mean(1)
-        --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
-        input.sum(2)
-        --> array([[10., 26., 42.],[58., 74., 90.]])
-        *)
-        let tMean0 = t.mean(0)
-        let tMean0Correct = ty.tensor([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
-        let tMean1 = t.mean(1)
-        let tMean1Correct = ty.tensor([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
-        let tMean2 = t.mean(2)
-        let tMean2Correct = ty.tensor([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
+            // mean, dim={0,1,2}
+            (* Python:
+            import pytorch as torch
+            input = np.[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
+            input.mean(1)
+            --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
+            input.sum(2)
+            --> array([[10., 26., 42.],[58., 74., 90.]])
+            *)
+            let tMean0 = t.mean(0)
+            let tMean0Correct = ty.tensor([[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]])
+            let tMean1 = t.mean(1)
+            let tMean1Correct = ty.tensor([[5.; 6.; 7.; 8.]; [17.; 18.; 19.; 20.]])
+            let tMean2 = t.mean(2)
+            let tMean2Correct = ty.tensor([[2.5; 6.5; 10.5]; [14.5; 18.5; 22.5]])
 
-        Assert.AreEqual(tMean0Correct, tMean0)
-        Assert.AreEqual(tMean1Correct, tMean1)
-        Assert.AreEqual(tMean2Correct, tMean2)
+            Assert.AreEqual(tMean0Correct, tMean0)
+            Assert.AreEqual(tMean1Correct, tMean1)
+            Assert.AreEqual(tMean2Correct, tMean2)
 
-        // mean, dim={0,1,2}, keepDim=true
-        (* Python:
-        import torch
-        input = torch.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
-        input.mean(0,keepdim=True)
-        # --> tensor([[[ 7.,  8.,  9., 10.],[11., 12., 13., 14.],[15., 16., 17., 18.]]])
-        input.mean(1,keepdim=True)
-        # --> tensor([[[ 5.,  6.,  7.,  8.]],[[17., 18., 19., 20.]]])
-        input.mean(2,keepdim=True)
-        # --> tensor([[[ 2.5000],[ 6.5000],[10.5000]],[[14.5000],[18.5000],[22.5000]]])
-        *)
-        let tMeanKeepDim0 = t.mean(0, keepDim=true)
-        let tMeanKeepDim0Correct = ty.tensor([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
-        let tMeanKeepDim1 = t.mean(1, keepDim=true)
-        let tMeanKeepDim1Correct = ty.tensor([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
-        let tMeanKeepDim2 = t.mean(2, keepDim=true)
-        let tMeanKeepDim2Correct = ty.tensor([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
+            // mean, dim={0,1,2}, keepDim=true
+            (* Python:
+            import torch
+            input = torch.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
+            input.mean(0,keepdim=True)
+            # --> tensor([[[ 7.,  8.,  9., 10.],[11., 12., 13., 14.],[15., 16., 17., 18.]]])
+            input.mean(1,keepdim=True)
+            # --> tensor([[[ 5.,  6.,  7.,  8.]],[[17., 18., 19., 20.]]])
+            input.mean(2,keepdim=True)
+            # --> tensor([[[ 2.5000],[ 6.5000],[10.5000]],[[14.5000],[18.5000],[22.5000]]])
+            *)
+            let tMeanKeepDim0 = t.mean(0, keepDim=true)
+            let tMeanKeepDim0Correct = ty.tensor([[[7.; 8.; 9.; 10.]; [11.; 12.; 13.; 14.]; [15.; 16.; 17.; 18.]]])
+            let tMeanKeepDim1 = t.mean(1, keepDim=true)
+            let tMeanKeepDim1Correct = ty.tensor([[[5.; 6.; 7.; 8.]]; [[17.; 18.; 19.; 20.]]])
+            let tMeanKeepDim2 = t.mean(2, keepDim=true)
+            let tMeanKeepDim2Correct = ty.tensor([[[2.5]; [6.5]; [10.5]]; [[14.5]; [18.5]; [22.5]]])
 
-        Assert.AreEqual(tMeanKeepDim0, tMeanKeepDim0Correct)
-        Assert.AreEqual(tMeanKeepDim1, tMeanKeepDim1Correct)
-        Assert.AreEqual(tMeanKeepDim2, tMeanKeepDim2Correct)
+            Assert.AreEqual(tMeanKeepDim0, tMeanKeepDim0Correct)
+            Assert.AreEqual(tMeanKeepDim1, tMeanKeepDim1Correct)
+            Assert.AreEqual(tMeanKeepDim2, tMeanKeepDim2Correct)
 
     [<Test>]
     member this.TestTensorStddev () =
