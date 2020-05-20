@@ -1,4 +1,5 @@
 language: csharp
+dist: bionic
 mono: none
 dotnet: 3.1
 script:
