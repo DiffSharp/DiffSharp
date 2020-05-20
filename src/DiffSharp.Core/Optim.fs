@@ -15,7 +15,7 @@ type Optimizer(model:Model) =
             | Some t -> t, true
             | None -> -1., false
         let print = defaultArg print true
-        let printEvery = defaultArg printEvery (max 1 (iters/10))
+        let printEvery = defaultArg printEvery (max 1 (iters/20))
         let printPrefix = defaultArg printPrefix ""
         let printPostfix = defaultArg printPostfix ""
         let mutable status = ""
@@ -45,12 +45,30 @@ type Optimizer(model:Model) =
 
             if not stop then x <- nx
         fx, x
+    static member sgd(f, x0:Tensor, ?iters:int, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let lr = defaultArg lr (dsharp.tensor(0.001))
+        let mutable momBuffer = dsharp.zero()
+        let mutable momInit = false
+        let nesterov = defaultArg nesterov true
+        let mutable p = dsharp.zero()
+        let update x =
+            let f, g = dsharp.fg f x
+            p <- g
+            match momentum with
+            | Some mom ->
+                if not momInit then momBuffer <- g; momInit <- true
+                momBuffer <- momBuffer.mul(mom).add(g)
+                if nesterov then p <- p.add(momBuffer*mom)
+                else p <- momBuffer
+            | None -> ()
+            f, x - lr * p
+        Optimizer.optimizeIters(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
-type SGD(model, lr:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+
+type SGD(model, lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
     let mutable momBuffer = ParameterDict()
     let mutable momInit = false
-    let dampening = defaultArg dampening (lr.zeroLike())
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
     override o.updateRule name t = 
@@ -63,8 +81,8 @@ type SGD(model, lr:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, 
             if not momInit then 
                 momBuffer <- model.Parameters.map(fun (t:Tensor) -> t.derivative)
                 momInit <- true
-            let mb = momBuffer.[name] 
-            let mb = mb.mul(mom).add(d*(1.-dampening))
+            let mb = momBuffer.[name]
+            let mb = mb.mul(mom).add(d)
             momBuffer.[name] <- mb
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
@@ -73,10 +91,3 @@ type SGD(model, lr:Tensor, ?momentum:Tensor, ?dampening:Tensor, ?nesterov:bool, 
             t - lr * d
         else
             t.primal - lr * d
-
-    static member optimize(f, x0:Tensor, ?iters:int, ?lr:Tensor, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
-        let lr = defaultArg lr (dsharp.tensor(0.001))
-        let update x =
-            let f, g = dsharp.fg f x
-            f, x - lr * g
-        Optimizer.optimizeIters(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)

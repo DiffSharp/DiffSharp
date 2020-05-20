@@ -62,10 +62,10 @@ type TestModel () =
     [<Test>]
     member this.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
-        Assert.AreEqual(516, net.nparameters())
+        Assert.AreEqual(516, net.nparameters)
 
         let net2 = ModelStyle1b()
-        Assert.AreEqual(1663, net2.nparameters())
+        Assert.AreEqual(1663, net2.nparameters)
 
     [<Test>]
     member this.TestModelCreationStyle2 () =
@@ -76,7 +76,7 @@ type TestModel () =
                     >> fc1.forward
                     >> dsharp.relu
                     >> fc2.forward)
-        Assert.AreEqual(682, net.nparameters())
+        Assert.AreEqual(682, net.nparameters)
 
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
@@ -87,14 +87,14 @@ type TestModel () =
                     >> dsharp.relu
                     >> fc2.forward
                     >> dsharp.mul p.value)
-        Assert.AreEqual(683, net2.nparameters())
+        Assert.AreEqual(683, net2.nparameters)
 
     [<Test>]
     member this.TestModelCompose () =
         let net1 = ModelStyle1a()
         let net2 = ModelStyle1b()
         let net3 = Model.compose net1 net2
-        Assert.AreEqual(516 + 1663, net3.nparameters())
+        Assert.AreEqual(516 + 1663, net3.nparameters)
 
         let x = dsharp.randn([5;10])
         let y = net3.forward(x)
