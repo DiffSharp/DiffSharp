@@ -72,6 +72,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
         match c.dtype with 
         | DType.Float32 -> arr |> Array.map float32 :> Array
         | DType.Float64 -> arr |> Array.map double :> Array
+        | DType.Byte -> arr |> Array.map byte :> Array
         | DType.Int8 -> arr |> Array.map int8 :> Array
         | DType.Int16 -> arr |> Array.map int16:> Array
         | DType.Int32 -> arr |> Array.map int32 :> Array
@@ -83,6 +84,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
         match c.dtype with 
         | DType.Float32 -> arr |> Array2D.map float32 :> Array
         | DType.Float64 -> arr |> Array2D.map double :> Array
+        | DType.Byte -> arr |> Array2D.map byte :> Array
         | DType.Int8 -> arr |> Array2D.map int8 :> Array
         | DType.Int16 -> arr |> Array2D.map int16:> Array
         | DType.Int32 -> arr |> Array2D.map int32 :> Array
@@ -94,10 +96,13 @@ module DTypes =
 
     // We run most tests at all these tensor types
     let Bool = [ DType.Bool ]
-    let Integral = [ DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
+    let SignedIntegral = [ DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
+    let UnsignedIntegral = [ DType.Byte ]
+    let Integral = SignedIntegral @ UnsignedIntegral
     let FloatingPoint = [ DType.Float32; DType.Float64 ]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
+    let SignedIntegralAndFloatingPoint = FloatingPoint @ SignedIntegral
     let IntegralAndFloatingPoint = FloatingPoint @ Integral
     let IntegralAndBool = Integral @ Bool
     let All = FloatingPoint @ Integral @ Bool
@@ -105,10 +110,10 @@ module DTypes =
 module Combos =
 
     //let backends = [ Backend.Reference ] //; Backend.Register("TestDuplicate") ]
-    //let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.None; Backend.Register("TestDuplicate") ]
-    let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
 
     let devices = [ Device.CPU ]
     //let devices = [ Device.GPU ]
@@ -122,6 +127,8 @@ module Combos =
     /// These runs though all devices, backends and DType
     let Integral = makeCombos DTypes.Integral
     let FloatingPoint = makeCombos DTypes.FloatingPoint
+    let UnsignedIntegral = makeCombos DTypes.UnsignedIntegral
+    let SignedIntegralAndFloatingPoint = makeCombos DTypes.SignedIntegralAndFloatingPoint
     let IntegralAndFloatingPoint = makeCombos DTypes.IntegralAndFloatingPoint
     let Bool = makeCombos DTypes.Bool
     let IntegralAndBool = makeCombos DTypes.IntegralAndBool

@@ -119,6 +119,9 @@ and [<AbstractClass>]
             | Some DType.Int8 ->
                 let a,s = dataOfValuesForInt8 values
                 (a :> Array), s, DType.Int8
+            | Some DType.Byte ->
+                let a,s = dataOfValuesForByte values
+                (a :> Array), s, DType.Byte
             | Some DType.Bool ->
                 let a,s = dataOfValuesForBool values
                 (a :> Array), s, DType.Bool

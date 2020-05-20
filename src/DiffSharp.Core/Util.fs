@@ -713,7 +713,7 @@ let rec tryFlatArrayAndShape<'T> (value:obj) : ('T[] * int[]) option =
     | _ -> None
 
 [<ExcludeFromCodeCoverage>]
-let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBool (value:obj) : (^T[] * int[]) = 
+let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBool ofByte (value:obj) : (^T[] * int[]) = 
     match value |> tryFlatArrayAndShape<float32> with
     | Some (values, shape) -> (values |> Array.map ofFloat32, shape)
     | None -> 
@@ -729,6 +729,9 @@ let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBoo
     match value |> tryFlatArrayAndShape<int8>  with
     | Some (values, shape) -> (values |> Array.map ofInt8, shape)
     | None -> 
+    match value |> tryFlatArrayAndShape<byte>  with
+    | Some (values, shape) -> (values |> Array.map ofByte, shape)
+    | None -> 
     match value |> tryFlatArrayAndShape<int16>  with
     | Some (values, shape) -> (values |> Array.map ofInt16, shape)
     | None -> 
@@ -737,28 +740,28 @@ let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBoo
     | _ -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
 
 let dataOfValuesForFloat32 (value:obj) =
-    dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) value 
+    dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) float32 value 
 
 let dataOfValuesForFloat64 (value:obj) =
-    dataOfValues double double double double double double (fun x -> if x then 1.0 else 0.0) value 
+    dataOfValues double double double double double double (fun x -> if x then 1.0 else 0.0) double value 
 
 let dataOfValuesForByte (value:obj) =
-    dataOfValues byte byte byte byte byte byte (fun x -> if x then 1uy else 0uy) value 
+    dataOfValues byte byte byte byte byte byte (fun x -> if x then 1uy else 0uy) id value 
 
 let dataOfValuesForInt8 (value:obj) =
-    dataOfValues int8 int8 int8 int8 int8 int8 (fun x -> if x then 1y else 0y) value 
+    dataOfValues int8 int8 int8 int8 int8 int8 (fun x -> if x then 1y else 0y) int8 value 
 
 let dataOfValuesForInt16 (value:obj) =
-    dataOfValues int16 int16 int16 int16 int16 int16 (fun x -> if x then 1s else 0s) value 
+    dataOfValues int16 int16 int16 int16 int16 int16 (fun x -> if x then 1s else 0s) int16 value 
 
 let dataOfValuesForInt32 (value:obj) =
-    dataOfValues int32 int32 int32 int32 int32 int32 (fun x -> if x then 1 else 0) value
+    dataOfValues int32 int32 int32 int32 int32 int32 (fun x -> if x then 1 else 0) int32 value
 
 let dataOfValuesForInt64 (value:obj) =
-    dataOfValues int64 int64 int64 int64 int64 int64 (fun x -> if x then 1L else 0L) value
+    dataOfValues int64 int64 int64 int64 int64 int64 (fun x -> if x then 1L else 0L) int64 value
 
 let dataOfValuesForBool (value:obj) =
-    dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id value 
+    dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
 
 let toInt a =
     match box a with

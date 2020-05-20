@@ -826,7 +826,7 @@ module internal RawTensorImpl =
 
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32(values: float32[], shape:int[], device) =
-    inherit RawTensorImpl<float32>(values, shape, Float32, device)
+    inherit RawTensorImpl<float32>(values, shape, DType.Float32, device)
     let create(values, shape) : RawTensor = upcast RawTensorFloat32(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device) 
 
@@ -917,7 +917,7 @@ type ReferenceFloat32Statics() =
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorFloat64(values: double[], shape:int[], device) =
-    inherit RawTensorImpl<double>(values, shape, Float64, device)
+    inherit RawTensorImpl<double>(values, shape, DType.Float64, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorFloat64(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
@@ -1008,7 +1008,7 @@ type ReferenceFloat64Statics() =
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorInt8(values: int8[], shape:int[], device) =
-    inherit RawTensorImpl<int8>(values, shape, Int8, device)
+    inherit RawTensorImpl<int8>(values, shape, DType.Int8, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorInt8(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
@@ -1095,8 +1095,96 @@ type ReferenceInt8Statics() =
     override _.RandomIntegers(maxn, shape:int[], device) = RawTensorImpl.RandomIntegers maxn int8 shape |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
 
+type RawTensorByte(values: byte[], shape:int[], device) =
+    inherit RawTensorImpl<byte>(values, shape, DType.Byte, device)
+
+    let create(values, shape) : RawTensor = upcast RawTensorByte(values, shape, device)
+    let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
+
+    override t.MakeLike(values, shape) = upcast RawTensorByte(values, shape, device)
+    override t.RandomMultinomial(numSamples) = RawTensorImpl.RandomMultinomial byte (t, numSamples)|> create
+    override t1.Equals(t2:RawTensor) = RawTensorImpl.Equals(t1, t2)
+    override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorImpl.Equals(t1, t2)
+    override t1.LtTT(t2) = RawTensorImpl.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorImpl.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorImpl.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorImpl.GeTT(t1, t2) |> createBool
+    override t1.EqTT(t2) = RawTensorImpl.EqTT(t1, t2) |> createBool
+    override t1.NeqTT(t2) = RawTensorImpl.NeqTT(t1, t2) |> createBool
+    override t.MaxIndexT() = RawTensorImpl.MaxIndexT(t)
+    override t.MinIndexT() = RawTensorImpl.MinIndexT(t)
+    override t1.AddTT(t2) = RawTensorImpl.AddTT(t1, t2) |> create
+    override t1.AddTT0(t2) = RawTensorImpl.AddTT0(t1, t2) |> create
+    override t1.AddT2T1(t2) = RawTensorImpl.AddT2T1(t1, t2) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorImpl.AddTTSlice((+), t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorImpl.SubTT(t1, t2) |> create
+    override t1.SubT0T(t2) = RawTensorImpl.SubT0T(t1, t2) |> create
+    override t1.SubTT0(t2) = RawTensorImpl.SubTT0(t1, t2) |> create
+    override t1.MulTT(t2) = RawTensorImpl.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorImpl.MulTT0(t1, t2) |> create
+    override t1.DivTT(t2) = RawTensorImpl.DivTT(t1, t2) |> create
+    override t1.DivT0T(t2) = RawTensorImpl.DivT0T(t1, t2) |> create
+    override t1.DivTT0(t2) = RawTensorImpl.DivTT0(t1, t2) |> create
+    override t1.MatMulT2T2(t2) = RawTensorImpl.MatMulT2T2(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorImpl.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorImpl.MaxUnpool1D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorImpl.MaxUnpool2D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorImpl.MaxUnpool3D(t1, indices :?> RawTensorImpl<int>, outputSize) :> _
+    override t1.Conv1D(t2, stride, padding) = RawTensorImpl.Conv1D(t1, t2, stride, padding) :> _
+    override t1.Conv2D(t2, stride, padding) = RawTensorImpl.Conv2D (t1, t2, stride, padding) :> _
+    override t1.Conv3D(t2, stride, padding) = RawTensorImpl.Conv3D (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorImpl.NegT (sbyte >> (~-) >> byte ) (t) |> create
+    override t.SumT(resultType) = t.Cast(DType.Int64).SumT(?resultType=resultType)
+    override t.SumT2Dim0() = RawTensorImpl.SumT2Dim0(t) |> create
+    override t.SignT() = RawTensorImpl.SignT (min 1uy) t |> create
+    override t.AbsT() = RawTensorImpl.AbsT id t |> create
+    override t.ReluT() = RawTensorImpl.ReluT(t) |> create
+
+    override t.SoftplusT() = opNotSupported "SoftplusT" t.DType
+    override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.DType t2.DType
+    override t1.PowT0T(t2) = opNotSupported2 "PowT0T" t1.DType t2.DType
+    override t1.PowTT0(t2) = opNotSupported2 "PowTT0" t1.DType t2.DType
+    override t.FloorT() = opNotSupported "FloorT" t.DType
+    override t.CeilT() = opNotSupported "CeilT" t.DType
+    override t.RoundT() = opNotSupported "RoundT" t.DType
+    override t.SigmoidT() = opNotSupported "SigmoidT" t.DType
+    override t.ExpT() = opNotSupported "ExpT" t.DType
+    override t.LogT() = opNotSupported "LogT" t.DType
+    override t.Log10T() = opNotSupported "Log10T" t.DType
+    override t.SqrtT() = opNotSupported "SqrtT" t.DType
+    override t.SinT() = opNotSupported "SinT" t.DType
+    override t.CosT() = opNotSupported "CosT" t.DType
+    override t.TanT() = opNotSupported "TanT" t.DType
+    override t.SinhT() = opNotSupported "SinhT" t.DType
+    override t.CoshT() = opNotSupported "CoshT" t.DType
+    override t.TanhT() = opNotSupported "TanhT" t.DType
+    override t.AsinT() = opNotSupported "AsinT" t.DType
+    override t.AcosT() = opNotSupported "AcosT" t.DType
+    override t.AtanT() = opNotSupported "AtanT" t.DType
+
+#if TEST_DUPLICATE_BACKEND
+type TestDuplicateByteStatics() = 
+#else
+type ReferenceByteStatics() = 
+#endif
+
+    inherit BackendStatics()
+
+    let create device (values, shape) : RawTensor = upcast RawTensorByte(values, shape, device)
+    override _.Zero(device) = RawTensorImpl.Zero() |> create device
+    override _.One(device) = RawTensorImpl.One() |> create device
+    override _.Zeros(shape:int[], device) = RawTensorImpl.Zeros(shape) |> create device
+    override _.Ones(shape:int[], device) = RawTensorImpl.Ones(shape) |> create device
+    override _.Full(shape:int[], value:obj, device) = RawTensorImpl.Full (shape, System.Convert.ToByte value) |> create device
+    override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Byte
+    override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Byte
+    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorImpl.RandomIntegers maxn byte shape |> create device
+    override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
+
 type RawTensorInt16(values: int16[], shape:int[], device) =
-    inherit RawTensorImpl<int16>(values, shape, Int16, device)
+    inherit RawTensorImpl<int16>(values, shape, DType.Int16, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorInt16(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
@@ -1184,7 +1272,7 @@ type ReferenceInt16Statics() =
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorInt32(values: int32[], shape:int[], device) =
-    inherit RawTensorImpl<int32>(values, shape, Int32, device)
+    inherit RawTensorImpl<int32>(values, shape, DType.Int32, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorInt32(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
@@ -1272,7 +1360,7 @@ type ReferenceInt32Statics() =
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
                 
 type RawTensorInt64(values: int64[], shape:int[], device) =
-    inherit RawTensorImpl<int64>(values, shape, Int64, device)
+    inherit RawTensorImpl<int64>(values, shape, DType.Int64, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorInt64(values, shape, device)
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
@@ -1365,7 +1453,7 @@ type ReferenceInt64Statics() =
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorImpl.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorBool(values: bool[], shape:int[], device) =
-    inherit RawTensorImpl<bool>(values, shape, Bool, device)
+    inherit RawTensorImpl<bool>(values, shape, DType.Bool, device)
 
     let create(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 

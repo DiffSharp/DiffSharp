@@ -410,10 +410,12 @@ type Tensor =
 
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast + bCast
+            match DType.widen a.dtype b.dtype with
+            | None -> opNotSupported "+" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast + bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.AddTT(b)
             let fTensor(a,b) = a + b
@@ -476,10 +478,12 @@ type Tensor =
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast - bCast
+            match DType.widen a.dtype b.dtype with
+            | None -> opNotSupported "-" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast - bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.SubTT(b)
             let fTensor(a,b) = a - b
@@ -522,10 +526,12 @@ type Tensor =
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast * bCast
+            match DType.widen a.dtype b.dtype with
+            | None -> opNotSupported "*" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast * bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.MulTT(b)
             let fTensor(a,b) = a * b
@@ -568,10 +574,12 @@ type Tensor =
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast / bCast
+            match DType.widen a.dtype b.dtype with
+            | None -> opNotSupported "/" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast / bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.DivTT(b)
             let fTensor(a,b) = a / b
@@ -614,10 +622,12 @@ type Tensor =
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            Tensor.Pow (aCast, bCast)
+            match DType.widen a.dtype b.dtype with
+            | None -> opNotSupported "Pow" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                Tensor.Pow (aCast, bCast)
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.PowTT(b)
             let fTensor(a:Tensor,b:Tensor) = a ** b

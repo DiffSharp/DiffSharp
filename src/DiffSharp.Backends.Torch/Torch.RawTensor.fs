@@ -17,13 +17,14 @@ module internal Utils =
 
     let toTorchType dtype =
         match dtype with 
-        | DType.Bool -> ATenScalarMapping.Byte
-        | DType.Int8 -> ATenScalarMapping.SByte
-        | DType.Int16 -> ATenScalarMapping.Short
-        | DType.Int32 -> ATenScalarMapping.Int
-        | DType.Int64 -> ATenScalarMapping.Long
-        | DType.Float32 -> ATenScalarMapping.Float
-        | DType.Float64 -> ATenScalarMapping.Double
+        | DType.Bool -> ScalarType.Byte
+        | DType.Int8 -> ScalarType.SByte
+        | DType.Byte -> ScalarType.Byte
+        | DType.Int16 -> ScalarType.Short
+        | DType.Int32 -> ScalarType.Int
+        | DType.Int64 -> ScalarType.Long
+        | DType.Float32 -> ScalarType.Float
+        | DType.Float64 -> ScalarType.Double
         | DType.Other _ -> failwith "Torch GetItem TBD other type"
 
     let toTorchShape (shape: int[]) : TorchShape = int64s shape
@@ -93,6 +94,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             let data = tt.Data<sbyte>()
             for i in 0 .. n-1 do
                  res <- combineHashes res (int32 data.[i])
+        | DType.Byte ->
+            let data = tt.Data<byte>()
+            for i in 0 .. n-1 do
+                 res <- combineHashes res (int32 data.[i])
         | DType.Bool ->
             let data = tt.Data<byte>()
             for i in 0 .. n-1 do
@@ -155,7 +160,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.ToValues() =
         match dtype with 
-        | DType.Bool -> t.ToValuesTyped<bool, byte>(boolOfByte)
+        | DType.Bool -> t.ToValuesTyped<bool, bool>(id)
+        | DType.Byte -> t.ToValuesTyped<byte, byte>(id)
         | DType.Int8 -> t.ToValuesTyped<sbyte, sbyte>(sbyte)
         | DType.Int16 -> t.ToValuesTyped<int16, int16>(id)
         | DType.Int32 -> t.ToValuesTyped<int32, int32>(id)
@@ -173,7 +179,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     member t.ToRawData() =
         match dtype with 
-        | DType.Bool -> t.ToRawData<byte>() |> box
+        | DType.Bool -> t.ToRawData<bool>() |> box
+        | DType.Byte -> t.ToRawData<byte>() |> box
         | DType.Int8 -> t.ToRawData<sbyte>() |> box
         | DType.Int16 -> t.ToRawData<int16>() |> box
         | DType.Int32 -> t.ToRawData<int32>() |> box
@@ -529,16 +536,15 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         let tt1, tt2 =
             match t1.DType with 
             | DType.Bool -> opNotSupported2 "Conv1D" t1.DType t2.DType
-            | DType.Int8 | DType.Int16 -> tt1.ToType(ATenScalarMapping.Float), tt2.ToType(ATenScalarMapping.Float)
-            | DType.Int32 | DType.Int64 -> tt1.ToType(ATenScalarMapping.Double), tt2.ToType(ATenScalarMapping.Double)
+            | DType.Byte | DType.Int8 | DType.Int16 -> tt1.ToType(ScalarType.Float), tt2.ToType(ScalarType.Float)
+            | DType.Int32 | DType.Int64 -> tt1.ToType(ScalarType.Double), tt2.ToType(ScalarType.Double)
             | DType.Float32 | DType.Float64 -> tt1, tt2
             | DType.Other _ -> failwith "Conv1D - other type"
         let result : TorchTensor = f (tt1, tt2)
         let result2 =
             match t1.DType with 
             | DType.Bool -> opNotSupported2 "Conv1D" t1.DType t2.DType
-            | DType.Int32 | DType.Int64
-            | DType.Int8 | DType.Int16 -> result.ToType(toTorchType t1.DType)
+            | DType.Int8 | DType.Int16 | DType.Byte | DType.Int32 | DType.Int64-> result.ToType(toTorchType t1.DType)
             | DType.Float32 | DType.Float64 -> result
             | DType.Other _ -> failwith "Conv1D - other type"
         result2
@@ -571,16 +577,15 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         let tt1 =
             match t1.DType with 
             | DType.Bool -> opNotSupported op t1.DType 
-            | DType.Int8 | DType.Int16 -> tt1.ToType(ATenScalarMapping.Float)
-            | DType.Int32 | DType.Int64 -> tt1.ToType(ATenScalarMapping.Double)
+            | DType.Byte | DType.Int8 | DType.Int16 -> tt1.ToType(ScalarType.Float)
+            | DType.Int32 | DType.Int64 -> tt1.ToType(ScalarType.Double)
             | DType.Float32 | DType.Float64 -> tt1
             | DType.Other _ -> failwithf "%s - other type" op
         let result : TorchTensor = f tt1
         let result2 =
             match t1.DType with 
             | DType.Bool -> opNotSupported op t1.DType
-            | DType.Int32 | DType.Int64
-            | DType.Int8 | DType.Int16 -> result.ToType(toTorchType t1.DType)
+            | DType.Byte | DType.Int8 | DType.Int16 | DType.Int32 | DType.Int64 -> result.ToType(toTorchType t1.DType)
             | DType.Float32 | DType.Float64 -> result
             | DType.Other _ -> failwithf "%s - other type" op
         result2
@@ -617,16 +622,15 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         let tt1 =
             match t1.DType with 
             | DType.Bool -> opNotSupported op t1.DType 
-            | DType.Int8 | DType.Int16 -> tt1.ToType(ATenScalarMapping.Float)
-            | DType.Int32 | DType.Int64 -> tt1.ToType(ATenScalarMapping.Double)
+            | DType.Byte | DType.Int8 | DType.Int16 -> tt1.ToType(ScalarType.Float)
+            | DType.Int32 | DType.Int64 -> tt1.ToType(ScalarType.Double)
             | DType.Float32 | DType.Float64 -> tt1
             | DType.Other _ -> failwithf "%s - other type" op
         let result : TorchTensor = f tt1
         let result2 =
             match t1.DType with 
             | DType.Bool -> opNotSupported op t1.DType
-            | DType.Int32 | DType.Int64
-            | DType.Int8 | DType.Int16 -> result.ToType(toTorchType t1.DType)
+            | DType.Byte | DType.Int8 | DType.Int16 | DType.Int32 | DType.Int64 -> result.ToType(toTorchType t1.DType)
             | DType.Float32 | DType.Float64 -> result
             | DType.Other _ -> failwithf "%s - other type" op
         result2
@@ -786,8 +790,11 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         let tt =
             match dtype with 
             | DType.Bool -> 
-                let data = info.GetValue("data", typeof<byte[]>)  :?> byte[]
-                ByteTensor.From (data, toTorchShape shape) 
+                let data = info.GetValue("data", typeof<bool[]>)  :?> bool[]
+                BoolTensor.From (data, toTorchShape shape) 
+            | DType.Byte -> 
+                let data = info.GetValue("data", typeof<byte[]>)  :?> sbyte[]
+                SByteTensor.From (data, toTorchShape shape) 
             | DType.Int8 -> 
                 let data = info.GetValue("data", typeof<byte[]>)  :?> sbyte[]
                 SByteTensor.From (data, toTorchShape shape) 
@@ -835,8 +842,8 @@ type TorchStatics<'T, 'T2>
 
     inherit BackendStatics()
 
-    override _.Zero(device) = TorchRawTensor(from0(conv(zero)).[0L], Shape.scalar, dtype, device) :> _ 
-    override _.One(device) = TorchRawTensor(from0(conv(one)).[0L], Shape.scalar, dtype, device) :> _
+    override _.Zero(device) = TorchRawTensor(from0(conv(zero)), Shape.scalar, dtype, device) :> _ 
+    override _.One(device) = TorchRawTensor(from0(conv(one)), Shape.scalar, dtype, device) :> _
     override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
@@ -852,12 +859,12 @@ type TorchStatics<'T, 'T2>
         let values = values :?> 'T[] |> Array.map conv 
         let t = 
             match shape with 
-            | [| |] -> from0(values.[0]).[0L]
+            | [| |] -> from0(values.[0])
             | _ -> from (values, toTorchShape shape)
         TorchRawTensor(t, shape, dtype, device) :> _
 
 /// The concrete implementation of BackendStatics for Bool  data.
-type ReferenceFloat32Statics() = 
+type TorchFloat32Statics() = 
 
     inherit TorchStatics<single, single>(DType.Float32, id, 
         (fun v -> FloatTensor.From(v)), 
@@ -871,7 +878,7 @@ type ReferenceFloat32Statics() =
         System.Convert.ToSingle, 
         Scalar.op_Implicit)
 
-type ReferenceFloat64Statics() = 
+type TorchFloat64Statics() = 
 
     inherit TorchStatics<double, double>(DType.Float64, id, 
         (fun v -> DoubleTensor.From(v)), 
@@ -885,7 +892,7 @@ type ReferenceFloat64Statics() =
         System.Convert.ToDouble, 
         Scalar.op_Implicit)
 
-type ReferenceInt8Statics() = 
+type TorchInt8Statics() = 
 
     inherit TorchStatics<sbyte, sbyte>(DType.Int8, sbyte,
         (fun v -> SByteTensor.From(v)), 
@@ -899,7 +906,7 @@ type ReferenceInt8Statics() =
         System.Convert.ToSByte, 
         Scalar.op_Implicit)
 
-type ReferenceInt16Statics() = 
+type TorchInt16Statics() = 
 
     inherit TorchStatics<int16, int16>(DType.Int16, int16, 
         (fun v -> ShortTensor.From(v)), 
@@ -913,7 +920,7 @@ type ReferenceInt16Statics() =
         System.Convert.ToInt16, 
         Scalar.op_Implicit)
 
-type ReferenceInt32Statics() = 
+type TorchInt32Statics() = 
 
     inherit TorchStatics<int32, int32>(DType.Int32, int32, 
         (fun v -> IntTensor.From(v)), 
@@ -927,7 +934,7 @@ type ReferenceInt32Statics() =
         System.Convert.ToInt32, 
         Scalar.op_Implicit)
 
-type ReferenceInt64Statics() = 
+type TorchInt64Statics() = 
 
     inherit TorchStatics<int64, int64>(DType.Int64, int64, 
         (fun v -> LongTensor.From(v)), 
@@ -941,16 +948,30 @@ type ReferenceInt64Statics() =
         System.Convert.ToInt64, 
         Scalar.op_Implicit)
 
-type ReferenceBoolStatics() = 
+type TorchBoolStatics() = 
 
-    inherit TorchStatics<bool, byte>(DType.Bool, byteOfBool, 
-        (fun v -> ByteTensor.From(v)), 
-        (fun (data, shape) -> ByteTensor.From(data, shape)), 
+    inherit TorchStatics<bool, bool>(DType.Bool, id, 
+        (fun v -> BoolTensor.From(v)), 
+        (fun (data, shape) -> BoolTensor.From(data, shape)), 
         false, true,
-        (fun (shape, device) -> ByteTensor.Zeros(shape, device=device)), 
-        (fun (shape, device) -> ByteTensor.Ones(shape, device=device)), 
+        (fun (shape, device) -> BoolTensor.Zeros(shape, device=device)), 
+        (fun (shape, device) -> BoolTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Bool), 
         (fun _ -> opNotSupported "RandomNormal"  DType.Bool), 
-        (fun (maxn, shape, device) -> ByteTensor.RandomIntegers(min 2L maxn, shape, device=device)), 
+        (fun (maxn, shape, device) -> BoolTensor.RandomIntegers(min 2L maxn, shape, device=device)), 
         System.Convert.ToBoolean, 
+        Scalar.op_Implicit)
+
+type TorchByteStatics() = 
+
+    inherit TorchStatics<byte, byte>(DType.Byte, id, 
+        (fun v -> ByteTensor.From(v)), 
+        (fun (data, shape) -> ByteTensor.From(data, shape)), 
+        0uy, 1uy,
+        (fun (shape, device) -> ByteTensor.Zeros(shape, device=device)), 
+        (fun (shape, device) -> ByteTensor.Ones(shape, device=device)), 
+        (fun _ -> opNotSupported "Random" DType.Byte), 
+        (fun _ -> opNotSupported "RandomNormal"  DType.Byte), 
+        (fun (maxn, shape, device) -> ByteTensor.RandomIntegers(min 2L maxn, shape, device=device)), 
+        System.Convert.ToByte, 
         Scalar.op_Implicit)
