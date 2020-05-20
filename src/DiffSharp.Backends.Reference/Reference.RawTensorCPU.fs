@@ -1,4 +1,8 @@
-namespace rec DiffSharp.Backends.None
+#if TEST_DUPLICATE_BACKEND
+namespace rec DiffSharp.Backends.TestDuplicate
+#else
+namespace rec DiffSharp.Backends.Reference
+#endif
 
 open System
 open DiffSharp
@@ -19,7 +23,11 @@ module internal Utils =
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DType) =
-    inherit RawTensor(shape, dtype, CPU, Backend.None)
+#if TEST_DUPLICATE_BACKEND
+    inherit RawTensor(shape, dtype, CPU, Backend.Register "TestDuplicate")
+#else
+    inherit RawTensor(shape, dtype, CPU, Backend.Reference)
+#endif
 
     member _.Values = values
 
@@ -39,8 +47,6 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             if index.Length <> t.Dim then failwithf "Expecting a %id index" t.Dim
             t.Values.[t.IndexToFlatIndex(index)] <- v
 
-    override t.GetItem(index:int[]) = t.CreateLike(t.[index])
-    
     override t.GetSlice(fullBounds:int[,]) =
         // if fullBounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-3 fullBounds" t.Dim
         // printfn "rfullBounds\n%A" fullBounds
