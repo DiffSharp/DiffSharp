@@ -79,7 +79,7 @@ let main _argv =
     //     x <- x - 0.001 * g
 
     let x0 = dsharp.tensor([1.5, 1.5])
-    let fx, x = SGD.optimize(rosenbrock, x0, iters=25, lr=dsharp.tensor(0.001), threshold=0.1)
+    let fx, x = Optimizer.sgd(rosenbrock, x0, iters=2000, lr=dsharp.tensor(0.001), momentum=dsharp.tensor(0.9), threshold=1e-8)
     printfn "%A %A %A" fx (rosenbrock x) x
 
     // let x0 = dsharp.randn([2])
