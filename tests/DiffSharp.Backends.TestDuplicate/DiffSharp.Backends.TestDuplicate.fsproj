@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="../../src/DiffSharp.Backends.Reference/Reference.RawTensor.fs" />
+    <Compile Include="../../src/DiffSharp.Backends.Reference/Reference.RawTensorCPU.fs" />
   </ItemGroup>
 
   <ItemGroup>
