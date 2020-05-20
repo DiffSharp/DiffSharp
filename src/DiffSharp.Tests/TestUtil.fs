@@ -128,6 +128,7 @@ module Combos =
     let Integral = makeCombos DTypes.Integral
     let FloatingPoint = makeCombos DTypes.FloatingPoint
     let UnsignedIntegral = makeCombos DTypes.UnsignedIntegral
+    let SignedIntegral = makeCombos DTypes.SignedIntegral
     let SignedIntegralAndFloatingPoint = makeCombos DTypes.SignedIntegralAndFloatingPoint
     let IntegralAndFloatingPoint = makeCombos DTypes.IntegralAndFloatingPoint
     let Bool = makeCombos DTypes.Bool

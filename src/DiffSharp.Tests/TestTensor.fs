@@ -1700,6 +1700,10 @@ type TestTensor () =
             Assert.AreEqual(tk4s3p2iCorrect, tk4s3p2i)
             Assert.AreEqual(tk4s3p2Correct, tk4s3p2)
 
+        for ty in Combos.IntegralAndBool do 
+            let x = ty.zeros([1;4;4])
+            isInvalidOp(fun () -> dsharp.maxpool1d(x,3))
+
     [<Test>]
     member this.TestTensorMaxPool2D () =
         for ty in Combos.FloatingPoint do
@@ -1876,6 +1880,9 @@ type TestTensor () =
             Assert.AreEqual(tk4s3p2iCorrect, tk4s3p2i)
             Assert.AreEqual(tk4s3p2Correct, tk4s3p2)
 
+        for ty in Combos.IntegralAndBool do 
+            let x = ty.zeros([4;4;4;4])
+            isInvalidOp(fun () -> dsharp.maxpool2d(x,3))
 
     [<Test>]
     member this.TestTensorMaxPool3D () =
@@ -2076,6 +2083,10 @@ type TestTensor () =
                                                     [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
             Assert.AreEqual(tk2s3p1iCorrect, tk2s3p1i)
             Assert.AreEqual(tk2s3p1Correct, tk2s3p1)
+
+        for ty in Combos.IntegralAndBool do 
+            let x = ty.zeros([4;4;4;4;4])
+            isInvalidOp(fun () -> dsharp.maxpool3d(x,3))
 
     [<Test>]
     member this.TestTensorMaxUnpool1D () =
@@ -4704,7 +4715,7 @@ type TestTensor () =
 
     [<Test>]
     member this.TestTensorMin () =
-        for ty in Combos.All do 
+        for ty in Combos.SignedIntegralAndFloatingPoint do 
             let t1 = ty.tensor([4.;1.;20.;3.])
             let t1Min = t1.min()
             let t1MinCorrect = ty.tensor(1.)
