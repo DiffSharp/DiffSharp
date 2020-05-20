@@ -511,6 +511,9 @@ module internal RawTensorImpl =
     
     let inline MaxPool1D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
         checkCanMaxpool1d t1.Shape kernelSize stride padding
+        match t1.DType with 
+        | DType.Bool | DType.Integral -> opNotSupported "MaxPool1D" t1.DType
+        | _ ->
         let batchSize, channels, inputSize, outputSize, outputShape = Shape.computeMaxPool1D t1.Shape kernelSize stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
         let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorImpl<int>
@@ -533,6 +536,9 @@ module internal RawTensorImpl =
 
     let inline MaxPool2D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
         checkCanMaxpool2d t1.Shape kernelSize stride padding
+        match t1.DType with 
+        | DType.Bool | DType.Integral -> opNotSupported "MaxPool2D" t1.DType
+        | _ ->
         let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape =
             Shape.computeMaxPool2D t1.Shape kernelSize stride padding
 
@@ -562,6 +568,9 @@ module internal RawTensorImpl =
 
     let inline MaxPool3D(t1: RawTensorImpl< ^T >, kernelSize, stride, padding) : RawTensorImpl< ^T > * RawTensorImpl< int > =
         checkCanMaxpool3d t1.Shape kernelSize stride padding
+        match t1.DType with 
+        | DType.Bool | DType.Integral -> opNotSupported "MaxPool3D" t1.DType
+        | _ ->
         let (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape) =
             Shape.computeMaxPool3D t1.Shape kernelSize stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorImpl<'T>
