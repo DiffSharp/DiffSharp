@@ -196,7 +196,12 @@ type Tensor =
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
-    static member op_Explicit(tensor:Tensor):'a = downcast tensor.toScalar()
+    static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+    static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
     
     member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
         let relativeTolerance = defaultArg relativeTolerance 1e-5

@@ -97,6 +97,10 @@ type Model() =
         model
     static member compose (model1:Model) (model2:Model) =
         Model.create [model1; model2] (model1.forward >> model2.forward)
+    static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
+    static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
+    static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
+    static member (|->) (t:Tensor, m:Model) = m.forward t
 
 
 type Weight() =
