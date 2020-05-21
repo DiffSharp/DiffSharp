@@ -61,7 +61,7 @@ let main _argv =
     let net = feedforward()
     printfn "net params: %A" net.nparameters
 
-    Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=10000, threshold=0.1, printNewLine=false)
+    Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=10000, threshold=0.1)
 
     // Use PyTorch-style optimizer, write own optimization loop
     // let optimizer = SGD(net, lr=dsharp.tensor(0.01), momentum=dsharp.tensor(0.9))
@@ -86,15 +86,15 @@ let main _argv =
     //     p <- p - 0.1 * g
     //     printfn "%A %A" i l
 
-    // let rosenbrock (x:Tensor) = 
-    //     let x, y = x.[0], x.[1]
-    //     (1. - x)**2 + 100. * (y - x**2)**2
+    let rosenbrock (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        (1. - x)**2 + 100. * (y - x**2)**2
 
     // // Use Optimizer for generic Tensor->Tensor function
-    // let x0 = dsharp.tensor([1.5, 1.5])
+    let x0 = dsharp.tensor([1.5, 1.5])
     // let fx, x = Optimizer.sgd(rosenbrock, x0, iters=1000, lr=dsharp.tensor(0.001), momentum=dsharp.tensor(0.9), threshold=1e-4)
-    // let fx, x = Optimizer.adam(rosenbrock, x0, lr=dsharp.tensor(1.), iters=1000, threshold=1e-4)
-    // printfn "%A %A %A" fx (rosenbrock x) x
+    let fx, x = Optimizer.adam(rosenbrock, x0, lr=dsharp.tensor(1.), iters=100000, threshold=1e-4)
+    printfn "%A %A %A" fx (rosenbrock x) x
 
     // Nested optimization using Optimizer for generic Tensor->Tensor function
     // let x0 = dsharp.randn([2])

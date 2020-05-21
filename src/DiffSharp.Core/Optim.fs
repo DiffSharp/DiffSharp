@@ -2,6 +2,7 @@ namespace DiffSharp.Optim
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Data
+open DiffSharp.Util
 
 
 [<AbstractClass>]
@@ -19,8 +20,8 @@ type Optimizer(model:Model) =
         let printEvery = defaultArg printEvery 1 // (max 1 (iters/20))
         let printPrefix = defaultArg printPrefix ""
         let printPostfix = defaultArg printPostfix ""
-        let printNewLine = defaultArg printNewLine true
-        let mutable printEnd = if printNewLine then "\n" else "                    \r"
+        let printNewLine = defaultArg printNewLine false
+        let mutable printEnd = ""
         let mutable status = ""
         let mutable x = x0
         let mutable fx = dsharp.zero()
@@ -29,37 +30,45 @@ type Optimizer(model:Model) =
         let mutable fxPrev = System.Double.MinValue    
         let mutable i = -1
         let mutable stop = false
-        if print then printfn "Iters| Value"
+        let start = System.DateTime.Now
+        if print then printfn "Duration   |Iters| Value"
         while not stop do
             i <- i + 1
             let nfx, nx = update x
             fx <- nfx
             let fxScalar = float fx
 
+            printEnd <- if printNewLine then "\n" else "                    \r"
             if fx.hasnan() || fx.hasinf() then
                 status <- "Diverged"
+                printEnd <- "\n"
                 stop <- true
             elif thresholdGiven && fxScalar <= threshold then
                 status <- sprintf "Converged (value < %g)" threshold
+                printEnd <- "\n"
                 stop <- true
             elif i=iters-1 then
                 status <- sprintf "Iters=%d reached" iters
+                printEnd <- "\n"
                 stop <- true
             elif fxScalar < fxMin then
                 fxMin <- fxScalar
+                printEnd <- "\n"
                 status <- "🡾 New min"
             elif fxScalar > fxMax then
                 fxMax <- fxScalar
+                printEnd <- "\n"
                 status <- "🡽 New max"
             elif fxScalar < fxPrev then
                 status <- "🡾"
             else
                 status <- "🡽"
 
+            let duration = System.DateTime.Now - start
             if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
                 let printDepthPrefix = String.replicate nx.depth "  "
-                if stop then printEnd <- "\n"
-                printf "%s%s%4d | %e %s%s%s" printDepthPrefix printPrefix (i+1) fxScalar status printPostfix printEnd
+                let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
+                printf "%s%s%s | %3d | %e %s%s%s" printDepthPrefix printPrefix durationStr (i+1) fxScalar status printPostfix printEnd
 
             fxPrev <- fxScalar
             if not stop then x <- nx
@@ -75,7 +84,7 @@ type Optimizer(model:Model) =
         let printEvery = defaultArg printEvery 1 // (max 1 (iters/20))
         let printPrefix = defaultArg printPrefix ""
         let printPostfix = defaultArg printPostfix ""
-        let printNewLine = defaultArg printNewLine true
+        let printNewLine = defaultArg printNewLine false
         let mutable printEnd = ""
         let mutable status = ""
         let mutable epoch = -1
@@ -84,7 +93,8 @@ type Optimizer(model:Model) =
         let mutable lMax = System.Double.MinValue
         let mutable lPrev = System.Double.MinValue
         let mutable stop = false
-        if print then printfn "Iters| Ep|Minib| Loss"
+        let start = System.DateTime.Now
+        if print then printfn "Duration   |Iters| Ep|%s| Loss" (stringPadAs "Minib" (sprintf " 1/%d " dataloader.length))
         while not stop do
             epoch <- epoch + 1
             dataloader.epoch() 
@@ -101,6 +111,7 @@ type Optimizer(model:Model) =
                 printEnd <- if printNewLine then "\n" else "                    \r"
                 if l.hasnan() || l.hasinf() then
                     status <- "Diverged"
+                    printEnd <- "\n"
                     stop <- true
                 elif thresholdGiven && lScalar <= threshold then
                     status <- sprintf "Converged (loss < %g)" threshold
@@ -124,7 +135,9 @@ type Optimizer(model:Model) =
                     status <- "🡽"
 
                 if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
-                    printf "%s%4d | %d | %d/%d | %e %s%s%s" printPrefix (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix printEnd
+                    let duration = System.DateTime.Now - start
+                    let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
+                    printf "%s%s | %3d | %d | %d/%d | %e %s%s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix printEnd
                 lPrev <- lScalar
                 not stop
             ) |> Seq.iter ignore

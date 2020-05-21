@@ -673,3 +673,8 @@ let indentNewLines (str:String) numSpaces =
                         else ret <- ret + string c)
     ret
 
+let stringPad (s:string) (width:int) =
+    if s.Length > width then s
+    else String.replicate (width - s.Length) " " + s
+
+let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length    
