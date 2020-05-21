@@ -278,7 +278,7 @@ let inline arraysAllClose (relativeTolerance:'T) (absoluteTolerance:'T) (array1:
     let dim1 = array1.Length
     let dim2 = array2.Length
     if dim1 <> dim2 then false
-    else Array.map2 (fun a b -> abs(a-b) < absoluteTolerance + relativeTolerance*abs(b)) array1 array2 |> Array.forall id
+    else (array1,array2) ||> Array.forall2 (fun a b -> abs(a-b) <= absoluteTolerance + relativeTolerance*abs(b)) 
 
 let allEqual (items:seq<'a>) =
     let item0 = items |> Seq.head

@@ -11,7 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <PackageReference Include="TorchSharp" Version="$(TorchSharpVersion)" />
-    <PackageReference Include="LibTorch.Redist" Version="$(TorchSharpVersion)" />
   </ItemGroup>
 
 </Project>

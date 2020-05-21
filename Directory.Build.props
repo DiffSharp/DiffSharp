@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 
-     <TorchSharpVersion>0.3.0-local-Debug-20200520</TorchSharpVersion>
+     <TorchSharpVersion>0.3.0-local-Debug-20200521</TorchSharpVersion>
 
       <!-- TorchSharp local build Release packages -->
     <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
@@ -15,8 +15,7 @@
         <!-- TorchSharp CI build packages -->
     <RestoreSources>
         $(RestoreSources);
-        https://pkgs.dev.azure.com/migueldeicaza/TorchSharp/_packaging/packages%40Local/nuget/v3/index.json;
-        https://api.nuget.org/v3/index.json
+        https://donsyme.pkgs.visualstudio.com/TorchSharp/_packaging/packages2/nuget/v3/index.json
     </RestoreSources>
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
   </PropertyGroup>
