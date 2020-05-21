@@ -15,22 +15,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAddTT () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
-        let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+        let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
         let fwdz = fwdx + fwdy
-        let fwdzCorrect = dsharp.tensor([6.; 8.; 10.])
+        let fwdzCorrect = combo.tensor([6.; 8.; 10.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([4.; 5.; 7.])
+        let fwdzdCorrect = combo.tensor([4.; 5.; 7.])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.; 7.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+        let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
         let revz = revx + revy
-        let revzCorrect = dsharp.tensor([6.; 8.; 10.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([6.; 8.; 10.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([5.; 5.; 5.])
+        let revxdCorrect = combo.tensor([5.; 5.; 5.])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([5.; 5.; 5.])
+        let revydCorrect = combo.tensor([5.; 5.; 5.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -40,22 +41,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAddT2T1 () =
-        let fwdx = dsharp.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(dsharp.tensor([[2.; 3.]; [4.; 5.]]))
-        let fwdy = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
+        let fwdy = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([2.; 3.]))
         let fwdz = fwdx + fwdy
-        let fwdzCorrect = dsharp.tensor([[6.; 8.]; [8.; 10.]])
+        let fwdzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[4.; 6.]; [6.; 8.]])
+        let fwdzdCorrect = combo.tensor([[4.; 6.]; [6.; 8.]])
 
-        let revx = dsharp.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
+        let revy = combo.tensor([5.; 6.]).reverseDiff()
         let revz = revx + revy
-        let revzCorrect = dsharp.tensor([[6.; 8.]; [8.; 10.]])
-        revz.reverse(dsharp.tensor([[2.; 3.]; [4.; 5.]]))
+        let revzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+        revz.reverse(combo.tensor([[2.; 3.]; [4.; 5.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[2.; 3.]; [4.; 5.]])
+        let revxdCorrect = combo.tensor([[2.; 3.]; [4.; 5.]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([6.; 8.])
+        let revydCorrect = combo.tensor([6.; 8.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -72,11 +74,12 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeExpand () =
-        let fwdx = dsharp.tensor([[1.]; [2.]]).forwardDiff(dsharp.tensor([[5.]; [6.]])) // 2x1
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.]; [2.]]).forwardDiff(combo.tensor([[5.]; [6.]])) // 2x1
         let fwdz = fwdx.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
-        let fwdzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        let fwdzCorrect = combo.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
+        let fwdzdCorrect = combo.tensor ([[[5., 5.], [6., 6.]], [[5., 5.], [6., 6.]]])
 
         (* Python:
         import torch 
@@ -86,13 +89,13 @@ type TestDerivatives () =
         t1.grad
         --> tensor([[12.],[24.]])
         *)
-        let revx = dsharp.tensor([[1.]; [2.]]).reverseDiff()
+        let revx = combo.tensor([[1.]; [2.]]).reverseDiff()
         let revz = revx.expand([2;2;2])
-        let revzCorrect = dsharp.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
-        revz.reverse(dsharp.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]]))
+        let revzCorrect = combo.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
+        revz.reverse(combo.tensor([[[3.;3.]; [6.;6.]]; [[3.;3.]; [6.;6.]]]))
         let revxd = revx.derivative
         // Note: The 4x'3' accumulate to the first entry, the 4x'6' accumulate to the second entry
-        let revxdCorrect = dsharp.tensor [[12.], [24.]]
+        let revxdCorrect = combo.tensor [[12.], [24.]]
 
         Assert.AreEqual(fwdz, fwdzCorrect)
         Assert.AreEqual(fwdzd,fwdzdCorrect)
@@ -101,6 +104,7 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestAddWithBroadcastSystematic () =
+      for combo in Combos.AllDevicesAndBackends do
         // This is a somewhat adhoc extra test to do a whole range of additiosn
         // with broadcast, mainly to check that not problems occur in taking the
         // derivatives.
@@ -112,7 +116,7 @@ type TestDerivatives () =
         // 2x3x4 + 3x1  (broadcast --> 2x3x4)
         // 2x3x4 + 1x4  (broadcast --> 2x3x4)
         // etc.
-        let t1a = dsharp.tensor([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
+        let t1a = combo.tensor([ [ [1.; 2.; 3.; 4.]; [5.; 6.; 7.; 8.]; [9.; 10.; 11.; 12.] ];
                                   [ [13.; 14.; 15.; 16.]; [17.; 18.; 19.; 20.]; [21.; 22.; 23.; 24.] ]  ])
         
         // Get all the interesting shapes that expand into t1a
@@ -128,9 +132,9 @@ type TestDerivatives () =
 
         // For each shape, create a broadcasting addition and take forward and reverse derivatives
         for shape in shapes do 
-            let t1b = dsharp.tensor( ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
+            let t1b = combo.tensor( ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
             let t1a_deriv = t1a + 1.0
-            let t1b_delta = dsharp.tensor( ArrayND.init shape (fun is -> double (Array.sum is) - 2.0))
+            let t1b_delta = combo.tensor( ArrayND.init shape (fun is -> double (Array.sum is) - 2.0))
             let fwda = t1a.forwardDiff(t1a_deriv)
             let fwdb = t1b.forwardDiff(t1b_delta)
             let fwdz = fwda + fwdb
@@ -145,9 +149,9 @@ type TestDerivatives () =
             let revyd = revy.derivative
 
             // In the simple case of broadcasting a constant, check the result against the non-broadcast case
-            if t1b.sum() = dsharp.tensor(2.0) then 
-                let t1c = dsharp.tensor( ArrayND.init [| 2;3;4 |] (fun _idxs -> 2.0))
-                let t1c_deriv = dsharp.tensor( ArrayND.init [| 2;3;4 |] (fun _idxs -> -2.0))
+            if t1b.sum() = combo.tensor(2.0) then 
+                let t1c = combo.tensor( ArrayND.init [| 2;3;4 |] (fun _idxs -> 2.0))
+                let t1c_deriv = combo.tensor( ArrayND.init [| 2;3;4 |] (fun _idxs -> -2.0))
                 let fwda = t1a.forwardDiff(t1a_deriv)
                 let fwdc = t1c.forwardDiff(t1c_deriv)
                 let fwdz2 = fwda + fwdc
@@ -166,22 +170,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSubTT () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
-        let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+        let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
         let fwdz = fwdx - fwdy
-        let fwdzCorrect = dsharp.tensor([-4.; -4.; -4.])
+        let fwdzCorrect = combo.tensor([-4.; -4.; -4.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 1.; 1.])
+        let fwdzdCorrect = combo.tensor([0.; 1.; 1.])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.; 7.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+        let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
         let revz = revx - revy
-        let revzCorrect = dsharp.tensor([-4.; -4.; -4.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([-4.; -4.; -4.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([5.; 5.; 5.])
+        let revxdCorrect = combo.tensor([5.; 5.; 5.])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([-5.; -5.; -5.])
+        let revydCorrect = combo.tensor([-5.; -5.; -5.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -200,22 +205,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeMulTT () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
-        let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+        let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
         let fwdz = fwdx * fwdy
-        let fwdzCorrect = dsharp.tensor([5.; 12.; 21.])
+        let fwdzCorrect = combo.tensor([5.; 12.; 21.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([12.; 22.; 37.])
+        let fwdzdCorrect = combo.tensor([12.; 22.; 37.])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.; 7.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+        let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
         let revz = revx * revy
-        let revzCorrect = dsharp.tensor([5.; 12.; 21.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([5.; 12.; 21.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([25.; 30.; 35.])
+        let revxdCorrect = combo.tensor([25.; 30.; 35.])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([5.; 10.; 15.])
+        let revydCorrect = combo.tensor([5.; 10.; 15.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -230,22 +236,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeDivTT () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
-        let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+        let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
         let fwdz = fwdx / fwdy
-        let fwdzCorrect = dsharp.tensor([0.2; 0.333333; 0.428571])
+        let fwdzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.32; 0.388889; 0.387755])
+        let fwdzdCorrect = combo.tensor([0.32; 0.388889; 0.387755])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.; 7.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+        let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
         let revz = revx / revy
-        let revzCorrect = dsharp.tensor([0.2; 0.333333; 0.428571])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([1.; 0.833333; 0.714286])
+        let revxdCorrect = combo.tensor([1.; 0.833333; 0.714286])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([-0.2; -0.277778; -0.306122])
+        let revydCorrect = combo.tensor([-0.2; -0.277778; -0.306122])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -264,22 +271,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativePowTT () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
-        let fwdy = dsharp.tensor([5.; 6.; 7.]).forwardDiff(dsharp.tensor([2.; 2.; 3.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+        let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
         let fwdz = fwdx ** fwdy
-        let fwdzCorrect = dsharp.tensor([1.; 64.; 2187.])
+        let fwdzCorrect = combo.tensor([1.; 64.; 2187.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([10.; 664.723; 27620.])
+        let fwdzdCorrect = combo.tensor([10.; 664.723; 27620.])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
-        let revy = dsharp.tensor([5.; 6.; 7.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+        let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
         let revz = revx ** revy
-        let revzCorrect = dsharp.tensor([1.; 64.; 2187.])
-        revz.reverse(dsharp.tensor([5.; 15.; 25.]))
+        let revzCorrect = combo.tensor([1.; 64.; 2187.])
+        revz.reverse(combo.tensor([5.; 15.; 25.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([25.; 2880.; 127575.])
+        let revxdCorrect = combo.tensor([25.; 2880.; 127575.])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([0.; 665.421; 60066.6])
+        let revydCorrect = combo.tensor([0.; 665.421; 60066.6])
 
         Assert.True(fwdz.allclose(fwdzCorrect,0.1))
         Assert.True(fwdzd.allclose(fwdzdCorrect,0.1))
@@ -297,15 +305,1159 @@ type TestDerivatives () =
     // TODO: add test for PowTConstT0
 
     [<Test>]
+    member this.TestDerivativeMaxPool1D () =
+        let fwdx = dsharp.tensor([[[-2.1704, -1.1558,  2.5995,  1.3858, -1.3157, -0.3179,  0.9593,  -2.1432,  0.7169, -1.7999],
+                                 [ 0.4564, -0.2262,  0.3495,  0.4587, -0.3858,  0.2349,  0.2978,  0.6288,  1.1539,  0.2121]],
+
+                                [[ 0.6654,  0.7151,  0.9980,  0.1321, -2.0009, -1.1897,  1.0608,  -1.8059, -0.2344,  1.6387],
+                                 [ 1.1872, -2.2679, -0.0297, -0.2067, -1.5622, -0.3916,  0.6039,  -1.1469,  0.4560,  1.2069]]])
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[-0.3247,  1.0735, -1.7455,  0.8657, -0.5433,  1.7256,  0.7251, -0.3657, -0.8445,  1.6669],
+                                                     [ 0.7586, -0.1351, -1.4672, -0.7769, -1.1811,  0.2663,  0.0386,  0.7750,  1.8680,  0.8252]],
+
+                                                    [[-0.2242,  1.1212,  0.4791,  0.4936, -0.9529,  0.1540,  0.4039, -0.0324, -2.2168, -1.6637],
+                                                     [ 1.5662,  0.2435, -1.0502, -0.2772,  0.8112, -0.4306, -0.2975,  0.4397,  0.4384,  1.4232]]]))
+        let fwdz = dsharp.maxpool1d(fwdx, 3)
+        let fwdzCorrect = dsharp.tensor([[[ 2.5995,  1.3858,  0.9593],
+                                           [ 0.4564,  0.4587,  1.1539]],
+
+                                          [[ 0.9980,  0.1321,  1.0608],
+                                           [ 1.1872, -0.2067,  0.6039]]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[-1.7455,  0.8657,  0.7251],
+                                            [ 0.7586, -0.7769,  1.8680]],
+                                   
+                                           [[ 0.4791,  0.4936,  0.4039],
+                                            [ 1.5662, -0.2772, -0.2975]]])
+
+        let revx = dsharp.tensor([[[-2.1704, -1.1558,  2.5995,  1.3858, -1.3157, -0.3179,  0.9593,  -2.1432,  0.7169, -1.7999],
+                                 [ 0.4564, -0.2262,  0.3495,  0.4587, -0.3858,  0.2349,  0.2978,  0.6288,  1.1539,  0.2121]],
+
+                                [[ 0.6654,  0.7151,  0.9980,  0.1321, -2.0009, -1.1897,  1.0608,  -1.8059, -0.2344,  1.6387],
+                                 [ 1.1872, -2.2679, -0.0297, -0.2067, -1.5622, -0.3916,  0.6039,  -1.1469,  0.4560,  1.2069]]]).reverseDiff()
+        let revz = dsharp.maxpool1d(revx, 3)
+        let revzCorrect = dsharp.tensor([[[ 2.5995,  1.3858,  0.9593],
+                                           [ 0.4564,  0.4587,  1.1539]],
+
+                                          [[ 0.9980,  0.1321,  1.0608],
+                                           [ 1.1872, -0.2067,  0.6039]]])
+        revz.reverse(dsharp.tensor([[[ 0.5382,  0.0542,  1.2613],
+                                     [ 0.1226,  1.9195,  0.2829]],
+
+                                    [[-0.3677, -0.3066,  0.5523],
+                                     [-0.3306,  1.3332,  0.8371]]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[ 0.0000,  0.0000,  0.5382,  0.0542,  0.0000,  0.0000,  1.2613,  0.0000,  0.0000,  0.0000],
+                                            [ 0.1226,  0.0000,  0.0000,  1.9195,  0.0000,  0.0000,  0.0000,  0.0000,  0.2829,  0.0000]],
+                                   
+                                           [[ 0.0000,  0.0000, -0.3677, -0.3066,  0.0000,  0.0000,  0.5523,  0.0000,  0.0000,  0.0000],
+                                            [-0.3306,  0.0000,  0.0000,  1.3332,  0.0000,  0.0000,  0.8371,  0.0000,  0.0000,  0.0000]]])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeMaxUnpool1D () =
+        let indices = dsharp.tensor([[[2, 3, 6], [0, 3, 8]], [[2, 3, 6], [0, 3, 6]]], dtype=DType.Int32)
+        let fwdx = dsharp.tensor([[[ 2.5995,  1.3858,  0.9593],
+                                    [ 0.4564,  0.4587,  1.1539]],
+                           
+                                   [[ 0.9980,  0.1321,  1.0608],
+                                    [ 1.1872, -0.2067,  0.6039]]])
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[ 0.9451,  0.1785, -1.1651],
+                                                    [ 0.6300, -0.0456,  0.7958]],
+                                           
+                                                   [[-0.1445, -0.9256, -0.3704],
+                                                    [-0.7281, -0.8475, -2.2073]]]))
+        let fwdz = dsharp.maxunpool1d(fwdx, indices, 3)
+        let fwdzCorrect = dsharp.tensor([[[ 0.0000,  0.0000,  2.5995,  1.3858,  0.0000,  0.0000,  0.9593,  0.0000,  0.0000],
+                                          [ 0.4564,  0.0000,  0.0000,  0.4587,  0.0000,  0.0000,  0.0000,  0.0000,  1.1539]],
+                                 
+                                         [[ 0.0000,  0.0000,  0.9980,  0.1321,  0.0000,  0.0000,  1.0608,  0.0000,  0.0000],
+                                          [ 1.1872,  0.0000,  0.0000, -0.2067,  0.0000,  0.0000,  0.6039,  0.0000,  0.0000]]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[ 0.0000,  0.0000,  0.9451,  0.1785,  0.0000,  0.0000, -1.1651,  0.0000,  0.0000],
+                                            [ 0.6300,  0.0000,  0.0000, -0.0456,  0.0000,  0.0000,  0.0000,  0.0000,  0.7958]],
+                                   
+                                           [[ 0.0000,  0.0000, -0.1445, -0.9256,  0.0000,  0.0000, -0.3704,  0.0000,  0.0000],
+                                            [-0.7281,  0.0000,  0.0000, -0.8475,  0.0000,  0.0000, -2.2073,  0.0000,  0.0000]]])
+
+        let revx = dsharp.tensor([[[ 2.5995,  1.3858,  0.9593],
+                                    [ 0.4564,  0.4587,  1.1539]],
+                           
+                                   [[ 0.9980,  0.1321,  1.0608],
+                                    [ 1.1872, -0.2067,  0.6039]]]).reverseDiff()
+        let revz = dsharp.maxunpool1d(revx, indices, 3)
+        let revzCorrect = dsharp.tensor([[[ 0.0000,  0.0000,  2.5995,  1.3858,  0.0000,  0.0000,  0.9593,  0.0000,  0.0000],
+                                          [ 0.4564,  0.0000,  0.0000,  0.4587,  0.0000,  0.0000,  0.0000,  0.0000,  1.1539]],
+                                 
+                                         [[ 0.0000,  0.0000,  0.9980,  0.1321,  0.0000,  0.0000,  1.0608,  0.0000,  0.0000],
+                                          [ 1.1872,  0.0000,  0.0000, -0.2067,  0.0000,  0.0000,  0.6039,  0.0000,  0.0000]]])
+        revz.reverse(dsharp.tensor([[[0.9784, 0.1157, 0.5180, 0.2987, 0.7666, 0.2534, 0.8825, 0.3584, 0.9782],
+                                      [0.5410, 0.9465, 0.5629, 0.6000, 0.0979, 0.1738, 0.2395, 0.2611, 0.3394]],
+                             
+                                     [[0.0616, 0.4017, 0.6919, 0.5744, 0.3560, 0.2461, 0.6728, 0.3323, 0.8579],
+                                      [0.4799, 0.5880, 0.0471, 0.8489, 0.5679, 0.1894, 0.1387, 0.3290, 0.1449]]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[0.5180, 0.2987, 0.8825],
+                                            [0.5410, 0.6000, 0.3394]],
+                                   
+                                           [[0.6919, 0.5744, 0.6728],
+                                            [0.4799, 0.8489, 0.1387]]])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeMaxPool2D () =
+        let fwdx = dsharp.tensor([[[[ 0.7372,  0.7090,  0.9216,  0.3363,  1.0141, -0.7642,  0.3801, -0.9568],
+                                     [-0.3520, -1.2336,  1.8489,  0.9929, -0.8138,  0.0978, -1.3206, -1.5434],
+                                     [ 0.6883, -0.2346,  0.1735,  0.6695, -1.9122,  1.1338, -0.1248,  0.2164],
+                                     [-1.1349,  0.3008, -0.1635, -1.0362, -0.6487, -0.8422, -0.4334,  1.0604],
+                                     [-2.1562, -0.1079,  0.5744, -0.7275,  1.0254, -0.0508, -0.0525, -0.0746],
+                                     [-0.7494,  0.6819, -1.7327, -0.4838, -0.6120,  1.6331,  0.1797, -0.6068],
+                                     [ 0.6400,  0.1389,  0.3033,  0.3195,  0.9934,  1.2455, -1.0953,  0.9922],
+                                     [ 0.2375,  0.6003, -1.1614,  1.0146,  0.2100, -1.0145, -0.1933,  1.1415]],
+                           
+                                    [[-0.0819,  0.2091,  0.4351,  1.7527, -1.1970,  2.1048,  1.0200, -0.5153],
+                                     [ 1.0867, -1.8738, -0.2754, -0.5089,  0.8850, -0.4751, -0.7820,  1.4476],
+                                     [-0.9072,  0.9977, -0.9106, -0.3171, -1.2444,  0.7102,  0.5656,  1.2660],
+                                     [ 0.1986, -0.4967,  0.2384, -0.6551,  1.0156,  0.0520, -0.1964,  1.1367],
+                                     [ 0.8948,  2.2070,  0.9938,  0.5311, -1.0674,  0.3894,  0.4192, -0.6235],
+                                     [ 2.7646, -0.6509,  0.4669, -1.8774, -0.6341,  0.5113,  1.2398,  2.5090],
+                                     [ 1.0722,  0.8162, -2.3271,  1.3826,  1.3832,  0.6205, -0.9138, -0.8237],
+                                     [-0.0688, -1.6786,  0.1672, -0.7255, -0.1228, -0.1603, -2.1906, -2.6372]]],
+                           
+                           
+                                   [[[-1.0461,  0.4063,  0.2085, -0.7598, -1.3893, -0.8866,  1.0594, -0.6184],
+                                     [ 2.1120, -0.6475, -0.3964,  0.0378,  0.0138, -0.1672,  0.9265, -1.7734],
+                                     [-0.2313,  0.6284, -0.0508, -0.1014, -0.5059,  0.8666, -0.7010, -0.5073],
+                                     [ 0.1709,  0.2466,  0.1781, -1.6740, -0.0251, -1.4144, -2.1012,  0.3922],
+                                     [ 0.9141,  0.6582, -0.0826, -0.7104,  1.7133,  1.2406,  1.1415, -0.6222],
+                                     [-2.1525, -0.2996, -1.3787,  0.0336, -1.4643,  0.6534,  0.3996,  0.3145],
+                                     [-0.3298,  0.3855, -0.5100,  1.2770,  0.5306, -0.6604, -0.0489,  0.0609],
+                                     [-0.1552, -1.1218, -0.8435,  0.2365,  1.4428,  0.4234, -1.1083, -1.3874]],
+                           
+                                    [[ 0.0511,  0.1216, -1.0103, -1.2529,  1.7200, -0.0225,  0.7446, -0.8076],
+                                     [ 0.2543,  1.4250,  0.7869,  0.0526, -2.1598,  1.8228, -0.4628,  1.4234],
+                                     [ 0.5492,  0.8668,  0.2120,  0.6599, -1.0934, -1.3726,  0.4788, -0.1171],
+                                     [ 0.5121,  1.2607, -0.4565,  0.5448, -2.5025, -0.5503, -1.3373,  0.1711],
+                                     [-0.3939, -0.6382, -0.0899, -1.4706,  0.4580,  0.3304,  1.8958,  0.1178],
+                                     [ 0.1109,  0.2468,  0.3485, -0.0960, -0.0432, -0.3026, -1.9750,  0.4057],
+                                     [-1.1117, -0.3422,  1.2130, -1.1206,  0.9506, -0.7723,  0.3162, -0.5487],
+                                     [ 0.6304, -0.9149,  0.6075, -0.5371,  1.5875, -0.2979, -0.5832, -3.0311]]]])
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-0.7337, -1.3648,  1.0776,  0.2407,  0.4805, -2.3233, -0.5350,  0.2349],
+                                                     [ 0.5049, -1.1209, -0.5273,  0.5923,  0.2016, -0.9050, -0.1330, -0.1143],
+                                                     [ 0.1170,  0.9821, -1.5198,  0.8396,  0.9480, -1.1543,  0.5911, -0.5788],
+                                                     [-0.7547,  1.5573, -1.0888,  1.1832,  0.2259,  0.7667, -1.8830,  1.5575],
+                                                     [ 1.8945,  1.2214, -0.7537, -2.2445,  2.2856, -0.3581, -1.2650, -1.2537],
+                                                     [ 0.9016, -0.9378,  0.3730,  0.3823,  0.5864, -0.9494,  1.9570,  0.3918],
+                                                     [ 1.4439, -0.5949, -0.0530, -1.2888,  0.6724, -2.1929, -0.0656,  1.4826],
+                                                     [ 1.0679, -0.4129,  1.4264, -0.5726,  1.5709, -2.1192,  0.9934,  0.5601]],
+                                           
+                                                    [[ 0.8278,  0.3305,  0.4650,  0.0205, -0.4212,  0.2386,  0.2713, -0.1324],
+                                                     [ 0.6960,  1.3936,  0.5689, -1.1607,  0.7279, -1.0106, -1.0930, -0.0435],
+                                                     [ 0.3146,  0.2892,  0.0992,  0.4875,  0.0519,  0.8227,  2.1785,  0.1240],
+                                                     [-0.1070,  1.4169, -1.5649, -0.9627, -0.1553, -1.6912, -0.2387,  1.4843],
+                                                     [ 1.0833,  1.5409,  1.0983,  0.7896,  0.0561, -1.1853,  1.2164, -0.2477],
+                                                     [-2.4074, -0.8374,  0.7228, -0.8311, -0.1571,  0.7585, -0.0388,  1.2265],
+                                                     [ 0.8151,  0.5675, -1.2308,  0.5890, -1.0173,  0.0685, -1.4259, -0.0152],
+                                                     [-0.3683,  0.3478, -0.3144, -1.6980, -1.0717,  1.0022, -0.1882, -0.2628]]],
+                                           
+                                           
+                                                   [[[-0.1276,  0.3947,  0.0067, -0.0319,  1.2249,  0.8052, -0.0976, -0.6969],
+                                                     [-0.1721,  1.2421, -1.3382,  0.8105,  1.2408,  0.0398,  0.6267,  0.2405],
+                                                     [ 0.8025,  1.2815, -1.0382,  1.9981,  1.0302,  0.7142, -0.1895,  0.6839],
+                                                     [ 1.3058,  0.5244, -0.2134, -0.9721,  0.8622, -1.0595, -1.2676, -0.4594],
+                                                     [ 0.0034,  1.2082, -0.8065, -1.3570, -0.6702, -0.7155,  1.4782,  0.4554],
+                                                     [ 1.9114,  0.0033,  0.2951,  0.6574,  0.1122, -0.9725,  1.1244, -0.0866],
+                                                     [ 0.2964,  0.4166, -0.9363, -1.6471, -0.9568, -1.6350,  1.2974, -0.7931],
+                                                     [-2.0031,  0.6322,  0.1063,  0.6449,  0.8070, -0.6169, -0.0319,  0.4695]],
+                                           
+                                                    [[ 1.2686,  0.9119, -1.7762,  0.2893, -1.6885, -1.0427, -1.2432,  1.3702],
+                                                     [-1.9922,  0.2098, -0.3885,  0.0719, -1.7845,  1.6076, -1.1755,  0.4668],
+                                                     [-0.2193, -1.0314,  0.4875,  0.2942, -0.4408,  0.4081,  2.1808,  0.3206],
+                                                     [-0.5614,  0.4319,  2.1275, -1.0575, -1.6521,  0.2688, -0.3607, -0.1448],
+                                                     [ 1.0357,  0.0210, -0.2928,  1.1564,  0.8043, -1.0873, -1.3117, -1.6104],
+                                                     [-0.1354,  0.1832,  0.2811, -1.5012,  0.9051,  1.0796,  0.3448,  1.7928],
+                                                     [-0.2357, -1.7013, -0.2552,  0.3293, -0.6618, -1.7520, -0.2757, -0.3190],
+                                                     [-0.8181,  1.4611,  0.6737,  0.6333, -1.2758, -0.0336,  0.7365,  0.0952]]]]))
+        let fwdz = dsharp.maxpool2d(fwdx, 3)
+        let fwdzCorrect = dsharp.tensor([[[[1.8489, 1.1338],
+                                           [0.6819, 1.6331]],
+                                 
+                                          [[1.0867, 2.1048],
+                                           [2.7646, 1.0156]]],
+                                 
+                                 
+                                         [[[2.1120, 0.8666],
+                                           [0.9141, 1.7133]],
+                                 
+                                          [[1.4250, 1.8228],
+                                           [1.2607, 0.5448]]]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[[-0.5273, -1.1543],
+                                             [-0.9378, -0.9494]],
+                                   
+                                            [[ 0.6960,  0.2386],
+                                             [-2.4074, -0.1553]]],
+                                   
+                                   
+                                           [[[-0.1721,  0.7142],
+                                             [ 0.0034, -0.6702]],
+                                   
+                                            [[ 0.2098,  1.6076],
+                                             [ 0.4319, -1.0575]]]])
+
+        let revx = dsharp.tensor([[[[ 0.7372,  0.7090,  0.9216,  0.3363,  1.0141, -0.7642,  0.3801, -0.9568],
+                                     [-0.3520, -1.2336,  1.8489,  0.9929, -0.8138,  0.0978, -1.3206, -1.5434],
+                                     [ 0.6883, -0.2346,  0.1735,  0.6695, -1.9122,  1.1338, -0.1248,  0.2164],
+                                     [-1.1349,  0.3008, -0.1635, -1.0362, -0.6487, -0.8422, -0.4334,  1.0604],
+                                     [-2.1562, -0.1079,  0.5744, -0.7275,  1.0254, -0.0508, -0.0525, -0.0746],
+                                     [-0.7494,  0.6819, -1.7327, -0.4838, -0.6120,  1.6331,  0.1797, -0.6068],
+                                     [ 0.6400,  0.1389,  0.3033,  0.3195,  0.9934,  1.2455, -1.0953,  0.9922],
+                                     [ 0.2375,  0.6003, -1.1614,  1.0146,  0.2100, -1.0145, -0.1933,  1.1415]],
+                           
+                                    [[-0.0819,  0.2091,  0.4351,  1.7527, -1.1970,  2.1048,  1.0200, -0.5153],
+                                     [ 1.0867, -1.8738, -0.2754, -0.5089,  0.8850, -0.4751, -0.7820,  1.4476],
+                                     [-0.9072,  0.9977, -0.9106, -0.3171, -1.2444,  0.7102,  0.5656,  1.2660],
+                                     [ 0.1986, -0.4967,  0.2384, -0.6551,  1.0156,  0.0520, -0.1964,  1.1367],
+                                     [ 0.8948,  2.2070,  0.9938,  0.5311, -1.0674,  0.3894,  0.4192, -0.6235],
+                                     [ 2.7646, -0.6509,  0.4669, -1.8774, -0.6341,  0.5113,  1.2398,  2.5090],
+                                     [ 1.0722,  0.8162, -2.3271,  1.3826,  1.3832,  0.6205, -0.9138, -0.8237],
+                                     [-0.0688, -1.6786,  0.1672, -0.7255, -0.1228, -0.1603, -2.1906, -2.6372]]],
+                           
+                           
+                                   [[[-1.0461,  0.4063,  0.2085, -0.7598, -1.3893, -0.8866,  1.0594, -0.6184],
+                                     [ 2.1120, -0.6475, -0.3964,  0.0378,  0.0138, -0.1672,  0.9265, -1.7734],
+                                     [-0.2313,  0.6284, -0.0508, -0.1014, -0.5059,  0.8666, -0.7010, -0.5073],
+                                     [ 0.1709,  0.2466,  0.1781, -1.6740, -0.0251, -1.4144, -2.1012,  0.3922],
+                                     [ 0.9141,  0.6582, -0.0826, -0.7104,  1.7133,  1.2406,  1.1415, -0.6222],
+                                     [-2.1525, -0.2996, -1.3787,  0.0336, -1.4643,  0.6534,  0.3996,  0.3145],
+                                     [-0.3298,  0.3855, -0.5100,  1.2770,  0.5306, -0.6604, -0.0489,  0.0609],
+                                     [-0.1552, -1.1218, -0.8435,  0.2365,  1.4428,  0.4234, -1.1083, -1.3874]],
+                           
+                                    [[ 0.0511,  0.1216, -1.0103, -1.2529,  1.7200, -0.0225,  0.7446, -0.8076],
+                                     [ 0.2543,  1.4250,  0.7869,  0.0526, -2.1598,  1.8228, -0.4628,  1.4234],
+                                     [ 0.5492,  0.8668,  0.2120,  0.6599, -1.0934, -1.3726,  0.4788, -0.1171],
+                                     [ 0.5121,  1.2607, -0.4565,  0.5448, -2.5025, -0.5503, -1.3373,  0.1711],
+                                     [-0.3939, -0.6382, -0.0899, -1.4706,  0.4580,  0.3304,  1.8958,  0.1178],
+                                     [ 0.1109,  0.2468,  0.3485, -0.0960, -0.0432, -0.3026, -1.9750,  0.4057],
+                                     [-1.1117, -0.3422,  1.2130, -1.1206,  0.9506, -0.7723,  0.3162, -0.5487],
+                                     [ 0.6304, -0.9149,  0.6075, -0.5371,  1.5875, -0.2979, -0.5832, -3.0311]]]]).reverseDiff()
+        let revz = dsharp.maxpool2d(revx, 3)
+        let revzCorrect = dsharp.tensor([[[[1.8489, 1.1338],
+                                           [0.6819, 1.6331]],
+                                 
+                                          [[1.0867, 2.1048],
+                                           [2.7646, 1.0156]]],
+                                 
+                                 
+                                         [[[2.1120, 0.8666],
+                                           [0.9141, 1.7133]],
+                                 
+                                          [[1.4250, 1.8228],
+                                           [1.2607, 0.5448]]]])
+        revz.reverse(dsharp.tensor([[[[-1.0671,  0.1340],
+                                      [-0.2743, -0.3197]],
+
+                                     [[ 0.8588, -1.5268],
+                                      [ 0.5205,  0.5109]]],
+
+
+                                    [[[ 1.9620,  0.1845],
+                                      [-2.5131, -0.9616]],
+
+                                     [[ 0.7820,  0.4960],
+                                      [-0.7865, -0.1536]]]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000, -1.0671,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.1340,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000, -0.2743,  0.0000,  0.0000,  0.0000, -0.3197,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                            [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000, -1.5268,  0.0000,  0.0000],
+                                             [ 0.8588,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.5109,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.5205,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]],
+                                   
+                                   
+                                           [[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 1.9620,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.1845,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [-2.5131,  0.0000,  0.0000,  0.0000, -0.9616,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                            [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.7820,  0.0000,  0.0000,  0.0000,  0.4960,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000, -0.7865,  0.0000, -0.1536,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]]])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeMaxUnpool2D () =
+        let indices = dsharp.tensor([[[[10, 21],
+                                       [41, 45]],
+                             
+                                      [[ 8,  5],
+                                       [40, 28]]],
+                             
+                             
+                                     [[[ 8, 21],
+                                       [32, 36]],
+                             
+                                      [[ 9, 13],
+                                       [25, 27]]]], dtype=DType.Int32)
+        let fwdx = dsharp.tensor([[[[1.8489, 1.1338],
+                                     [0.6819, 1.6331]],
+                           
+                                    [[1.0867, 2.1048],
+                                     [2.7646, 1.0156]]],
+                           
+                           
+                                   [[[2.1120, 0.8666],
+                                     [0.9141, 1.7133]],
+                           
+                                    [[1.4250, 1.8228],
+                                     [1.2607, 0.5448]]]])
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[ 1.3110,  1.5369],
+                                                     [-0.4640,  0.1933]],
+                                           
+                                                    [[ 0.2313, -0.4964],
+                                                     [-0.1616, -1.2032]]],
+                                           
+                                           
+                                                   [[[ 0.0377,  2.1561],
+                                                     [-0.3110, -1.6315]],
+                                           
+                                                    [[ 0.4036,  0.7063],
+                                                     [ 0.0583,  1.8215]]]]))
+        let fwdz = dsharp.maxunpool2d(fwdx, indices, 3, outputSize=[2;2;8;8])
+        let fwdzCorrect = dsharp.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.1338, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.6819, 0.0000, 0.0000, 0.0000, 1.6331, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                          [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 2.1048, 0.0000, 0.0000],
+                                           [1.0867, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 1.0156, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [2.7646, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]],
+                                 
+                                 
+                                         [[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [2.1120, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.8666, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.9141, 0.0000, 0.0000, 0.0000, 1.7133, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                          [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 1.4250, 0.0000, 0.0000, 0.0000, 1.8228, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 1.2607, 0.0000, 0.5448, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  1.3110,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  1.5369,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000, -0.4640,  0.0000,  0.0000,  0.0000,  0.1933,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                            [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000, -0.4964,  0.0000,  0.0000],
+                                             [ 0.2313,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000, -1.2032,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [-0.1616,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]],
+                                   
+                                   
+                                           [[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0377,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  2.1561,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [-0.3110,  0.0000,  0.0000,  0.0000, -1.6315,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                            [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.4036,  0.0000,  0.0000,  0.0000,  0.7063,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0583,  0.0000,  1.8215,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                             [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]]])
+
+        let revx = dsharp.tensor([[[[1.8489, 1.1338],
+                                     [0.6819, 1.6331]],
+                           
+                                    [[1.0867, 2.1048],
+                                     [2.7646, 1.0156]]],
+                           
+                           
+                                   [[[2.1120, 0.8666],
+                                     [0.9141, 1.7133]],
+                           
+                                    [[1.4250, 1.8228],
+                                     [1.2607, 0.5448]]]]).reverseDiff()
+        let revz = dsharp.maxunpool2d(revx, indices, 3, outputSize=[2;2;8;8])
+        let revzCorrect = dsharp.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.1338, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.6819, 0.0000, 0.0000, 0.0000, 1.6331, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                          [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 2.1048, 0.0000, 0.0000],
+                                           [1.0867, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 1.0156, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [2.7646, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]],
+                                 
+                                 
+                                         [[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [2.1120, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.8666, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.9141, 0.0000, 0.0000, 0.0000, 1.7133, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                          [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 1.4250, 0.0000, 0.0000, 0.0000, 1.8228, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 1.2607, 0.0000, 0.5448, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                           [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]]])
+        revz.reverse(dsharp.tensor([[[[ 0.8984, -0.1793, -0.6322, -0.0690, -0.9264,  0.0128, -0.7905, -1.1720],
+                                      [-0.9698, -0.5440,  0.4486,  1.2180,  0.2225,  0.9609, -0.9034, -0.0780],
+                                      [-0.4951,  0.8007,  0.9854,  0.0834, -0.6088, -0.0391, -1.2598,  0.9716],
+                                      [ 0.3452, -0.8826, -0.6269,  0.2676, -0.7513, -1.2730,  1.3117, -1.0414],
+                                      [-0.6497,  0.3582, -1.9917, -0.4683, -0.7881, -1.3295, -0.2698,  0.5392],
+                                      [-0.5929,  0.5991, -0.9721,  3.0464, -0.4441, -2.0565, -1.5350, -2.4916],
+                                      [-0.6468,  0.4241,  0.1965, -0.9907,  0.1452,  0.4475, -0.1735,  0.1073],
+                                      [ 2.5096,  1.4079, -0.6148, -0.4607, -0.4818,  0.0415, -1.3375,  0.9602]],
+
+                                     [[ 0.2130,  1.5446, -0.5831,  0.1359, -1.0135, -0.6529,  2.1866,  1.2187],
+                                      [ 1.1122, -0.1649,  0.0473, -0.6117,  2.1489, -0.4845,  0.3153, -1.8326],
+                                      [-1.9014, -0.3670,  0.8990, -0.4523,  0.3366, -1.0262,  1.0180, -1.6572],
+                                      [-0.0980, -0.7111,  1.0891,  0.2800, -1.7344,  1.7927,  0.1482,  0.7804],
+                                      [-0.2373,  0.1023, -0.4915, -0.7444,  1.1870, -0.2154,  2.6652, -0.5908],
+                                      [ 0.1938,  0.7860, -0.2982,  0.3848,  0.6933,  0.0560,  0.3348, -1.7360],
+                                      [ 1.6364,  0.0241,  0.5503,  1.0353,  0.2991, -0.0626, -0.1946, -0.8325],
+                                      [ 0.2725, -1.0100, -1.0443, -0.1072, -0.7004, -1.5560,  1.2907, -0.4360]]],
+
+
+                                    [[[-0.2089,  0.7702,  0.0477,  0.4665,  0.9363, -0.1614,  2.6186, -0.7527],
+                                      [-1.1260, -1.0446, -1.1232, -1.4205, -0.5242, -0.6396,  1.2601,  0.6628],
+                                      [-0.1578, -0.9871, -0.0246,  0.9263, -0.8434,  2.0567,  0.1197, -1.4947],
+                                      [ 0.6996, -1.6738,  1.4169,  1.6045,  1.7552, -1.2681, -0.6705,  0.2275],
+                                      [-0.8477,  0.2387,  2.1242, -1.0176, -0.6977, -1.1640, -0.6400, -0.5105],
+                                      [-1.2159,  0.0419, -0.5746,  0.1896, -1.2158, -0.7044,  0.7461, -1.2746],
+                                      [ 0.0053,  1.7733, -1.2196,  1.2569,  0.8448, -0.3330,  0.5204,  1.0973],
+                                      [ 0.5777,  0.6732,  0.1366, -0.8237,  0.2497, -1.0159, -2.3620, -0.2002]],
+
+                                     [[-0.3120, -0.2487, -0.3603,  0.2290, -1.3754,  0.1596, -0.1769, -1.2327],
+                                      [-0.3505,  0.4122, -0.9472, -0.4892, -0.4146, -1.5960, -0.5563,  0.3567],
+                                      [ 0.7608,  0.6693, -1.0732, -1.6005, -0.2449, -1.2722,  0.3509, -1.3285],
+                                      [-1.1414,  0.0691,  1.0393,  1.2117, -0.1610,  0.7500,  0.3646,  0.4578],
+                                      [ 1.2932,  0.4704,  1.3387,  0.8193,  1.8205, -0.0931,  0.0629, -0.1365],
+                                      [ 0.5605,  0.6983, -1.1321, -1.4662,  2.1607,  0.1176,  0.0903,  0.7739],
+                                      [ 0.3887,  0.3413,  0.4066,  0.8743,  3.5218, -0.4829, -0.8280, -1.2032],
+                                      [ 0.8603, -0.4883,  0.0139,  0.4995,  1.0476, -2.1789,  0.1493,  1.1592]]]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[[ 0.4486, -0.0391],
+                                             [ 0.5991, -2.0565]],
+                                   
+                                            [[ 1.1122, -0.6529],
+                                             [ 0.1938, -1.7344]]],
+                                   
+                                   
+                                           [[[-1.1260,  2.0567],
+                                             [-0.8477, -0.6977]],
+                                   
+                                            [[ 0.4122, -1.5960],
+                                             [ 0.0691,  1.2117]]]])
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeMaxPool3D () =
+        let fwdx = dsharp.tensor([[[[ 0.4633,  0.9173,  0.4568, -1.7660, -0.1077],
+                                     [-2.1112,  1.5542,  0.5720, -1.0952, -1.8144],
+                                     [ 0.3505, -0.9843, -2.5655, -0.9835,  1.2303],
+                                     [ 0.8156,  1.5415,  1.3066, -1.1820,  0.2060],
+                                     [ 0.0684,  1.5936,  0.2956, -0.5176, -1.6960]],
+
+                                    [[-1.7281, -0.7697, -2.2310,  0.3580,  0.6299],
+                                     [ 0.8558, -0.6180, -1.6077, -0.6779,  1.2910],
+                                     [ 0.1885, -0.7006, -0.1863, -1.6729, -0.5761],
+                                     [ 0.1940, -0.0399,  0.9329,  1.0687,  0.0955],
+                                     [-1.0189,  0.4046,  1.1762,  0.3842,  0.6831]],
+
+                                    [[ 0.2996,  0.5738,  0.0369,  0.2835, -0.2363],
+                                     [ 0.6847, -0.4949, -0.3974,  0.6808, -1.2942],
+                                     [ 1.0910, -0.0594, -0.0037, -0.3355, -1.5056],
+                                     [-0.0965,  1.1358,  1.2851, -1.7333, -1.1705],
+                                     [ 0.0966, -1.2780,  1.2939,  1.3469, -0.2603]],
+
+                                    [[-0.5270,  1.1442,  0.1259, -1.2813,  0.3536],
+                                     [ 0.1579,  0.0828,  1.3531, -0.9110, -0.8747],
+                                     [ 0.2473, -0.1507, -0.4880,  0.4575,  1.1186],
+                                     [ 2.0900,  1.0479, -0.7209, -1.6928,  1.8761],
+                                     [ 2.2015, -0.5097,  0.7364, -1.5177,  0.9212]],
+
+                                    [[ 1.0358,  1.6584, -1.9654, -1.3971,  1.5641],
+                                     [ 0.4032,  0.7737,  0.9351, -0.5245,  0.0783],
+                                     [-1.2932, -0.9885, -1.1850, -0.7403,  0.1739],
+                                     [-0.5471,  0.5017, -1.0571,  1.7574, -0.0911],
+                                     [ 0.6944, -1.2772,  0.7473, -1.0983,  1.1462]]],
+
+
+                                   [[[-1.2563,  0.0688,  1.0405, -0.2582,  0.7333],
+                                     [ 2.0711, -0.1815,  0.8876, -0.2907,  1.1195],
+                                     [-0.3912,  0.3624,  1.0576, -0.4748, -1.4021],
+                                     [ 1.2176, -0.6160, -0.3471,  1.1689,  0.5677],
+                                     [-0.0639,  0.3765, -0.2614,  1.8267,  0.0315]],
+
+                                    [[ 1.2927,  1.0709, -0.8808,  0.8106, -0.5315],
+                                     [ 0.7614, -0.3935,  1.2451, -0.0598, -0.5887],
+                                     [-0.4089, -0.8598,  0.2478,  0.1282, -0.2745],
+                                     [-0.4139, -1.2905, -0.2625, -2.0453,  1.8941],
+                                     [-0.2400, -1.2830, -0.3503, -0.8536, -0.5927]],
+
+                                    [[ 0.8200,  1.8860, -0.5216, -0.9590, -0.9760],
+                                     [-1.5796,  2.2379, -0.5714, -1.5612,  1.4035],
+                                     [-0.6434, -1.2257,  0.1408,  0.3781, -2.2344],
+                                     [ 0.4963,  0.2431,  0.6835,  0.0047,  1.3374],
+                                     [-1.5899,  2.5382,  0.9503,  1.9080,  1.8315]],
+
+                                    [[ 0.5853,  1.9343, -0.7472,  2.1774, -2.1895],
+                                     [-0.6187, -0.2870,  1.2485,  2.4069, -0.2632],
+                                     [-1.6047, -0.3379,  0.5372,  1.7098,  1.6220],
+                                     [ 0.5255,  0.2564, -1.8615,  1.5519, -0.5655],
+                                     [-0.9452, -1.1828, -1.8192,  1.1349,  0.9806]],
+
+                                    [[-1.8198,  0.5455,  1.1761,  1.3070, -0.4654],
+                                     [ 1.2673,  0.2608,  0.8385, -1.0407, -0.6288],
+                                     [-0.3860,  1.3343,  1.3084,  0.5794,  0.4639],
+                                     [ 0.4750, -0.9006, -1.5002,  0.8689, -0.0379],
+                                     [ 0.2891,  0.0195, -0.0503, -0.3235,  1.5407]]]]).unsqueeze(0)
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[ 1.2061,  1.7293,  0.4767,  0.7229,  0.7488],
+                                                      [ 0.6760, -0.0393, -0.8397,  0.8051,  0.4581],
+                                                      [ 1.2460,  2.0884, -1.1798,  0.4861, -0.0964],
+                                                      [ 0.3063,  0.4975,  0.6513,  0.1162,  0.3748],
+                                                      [-1.2513, -0.5590,  1.5486, -0.6724,  1.1572]],
+                                           
+                                                     [[ 0.1752,  0.4672, -0.5822, -1.9512,  0.8160],
+                                                      [ 1.7688,  0.8751, -0.1430, -0.2425,  0.0821],
+                                                      [-0.2486,  0.3299,  0.5527, -2.1193,  0.4580],
+                                                      [ 1.3704, -1.0868, -1.9629, -1.4430, -0.0127],
+                                                      [ 1.7375, -1.3191, -0.5753, -1.9077, -0.3804]],
+                                           
+                                                     [[ 0.6108,  0.4258, -1.1079, -0.7524,  0.9564],
+                                                      [-1.5938,  1.2050,  0.0338,  0.5924,  0.1084],
+                                                      [ 0.8414, -0.0152, -0.4412,  1.1122, -1.9355],
+                                                      [-0.1598, -0.6622,  0.3185, -0.1600,  0.1670],
+                                                      [ 0.2093,  0.4207, -0.2291, -1.1138,  2.8360]],
+                                           
+                                                     [[ 0.6769,  1.6479, -1.2976,  0.8720,  0.8976],
+                                                      [-0.6833, -1.4484, -0.3252, -1.4125, -0.6695],
+                                                      [ 1.1028, -2.1919, -1.6716, -0.3574, -1.1171],
+                                                      [-0.4295, -1.5260,  1.3498, -1.3144,  0.1886],
+                                                      [ 2.1619,  0.8260,  0.0601, -0.7519, -1.3959]],
+                                           
+                                                     [[ 0.5264, -0.7098, -1.2012, -1.1240,  0.3372],
+                                                      [-0.1811, -0.5194,  0.4035, -0.3355, -1.6033],
+                                                      [-0.6442,  0.1703,  0.9095, -0.4948,  2.3665],
+                                                      [ 0.1669,  0.1530, -0.2943,  1.5188, -1.5053],
+                                                      [ 1.6047,  1.1917, -1.0954, -0.4808, -0.3117]]],
+                                           
+                                           
+                                                    [[[-1.1625,  0.9542,  0.1126,  1.1992, -0.2086],
+                                                      [ 1.0938, -1.4662,  0.4404,  0.0325,  0.2896],
+                                                      [ 0.4777, -1.6264,  0.9373, -0.9954,  0.1160],
+                                                      [ 1.7084, -1.0506, -0.7470,  1.6613, -0.0847],
+                                                      [-2.1556, -0.4030,  0.2127, -0.0435,  1.1515]],
+                                           
+                                                     [[-0.4482,  1.7436,  0.5124,  0.1872, -0.8369],
+                                                      [ 1.4735, -1.2213, -0.7122,  1.6542,  2.4351],
+                                                      [-0.3379, -0.4623,  0.6521,  1.4995, -0.8807],
+                                                      [-0.6245, -0.2797,  0.0155,  0.1932, -0.7321],
+                                                      [-0.6612, -0.2360,  1.6194, -0.5233,  1.3992]],
+                                           
+                                                     [[-0.5477,  0.3180,  1.0264,  0.4323, -0.3248],
+                                                      [ 0.7884,  0.4413,  1.3339,  2.2025,  1.0101],
+                                                      [ 0.5930, -1.2639, -1.0836, -0.9338, -0.2644],
+                                                      [ 0.9948, -0.9962, -1.1016,  2.2480, -1.9893],
+                                                      [-0.2152, -0.1174,  0.6922, -2.1619,  0.0580]],
+                                           
+                                                     [[-0.4531,  0.1824, -0.4269, -1.1911,  2.4893],
+                                                      [-0.8215, -1.3639, -0.1583, -0.1183, -0.1474],
+                                                      [ 1.5304,  0.7693, -0.5337, -2.7162,  0.5287],
+                                                      [-0.8808,  0.1495,  0.1766,  0.2239, -0.5056],
+                                                      [ 1.2601, -0.4200, -0.3813, -0.2944,  1.4041]],
+                                           
+                                                     [[ 0.2880, -1.0861, -0.4530,  0.5327, -0.8753],
+                                                      [ 0.5471,  0.3222,  1.7499, -0.5514,  0.7659],
+                                                      [-1.8905, -0.6201,  0.6678,  1.4364, -0.5993],
+                                                      [-0.6859, -0.3009,  0.4489, -1.1521,  0.9835],
+                                                      [ 0.1159,  2.4556, -1.5528,  0.9735,  1.7658]]]]).unsqueeze(0))
+        let fwdz = dsharp.maxpool3d(fwdx, 2)
+        let fwdzCorrect = dsharp.tensor([[[[1.5542, 0.5720],
+                                            [1.5415, 1.3066]],
+                                 
+                                           [[1.1442, 1.3531],
+                                            [2.0900, 1.2851]]],
+                                 
+                                 
+                                          [[[2.0711, 1.2451],
+                                            [1.2176, 1.1689]],
+                                 
+                                           [[2.2379, 2.4069],
+                                            [0.5255, 1.7098]]]]).unsqueeze(0)
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[[-0.0393, -0.8397],
+                                            [ 0.4975,  0.6513]],
+                                 
+                                           [[ 1.6479, -0.3252],
+                                            [-0.4295,  0.3185]]],
+                                 
+                                 
+                                          [[[ 1.0938, -0.7122],
+                                            [ 1.7084,  1.6613]],
+                                 
+                                           [[ 0.4413, -0.1183],
+                                            [-0.8808, -2.7162]]]]).unsqueeze(0)
+
+        let revx = dsharp.tensor([[[[ 0.4633,  0.9173,  0.4568, -1.7660, -0.1077],
+                                     [-2.1112,  1.5542,  0.5720, -1.0952, -1.8144],
+                                     [ 0.3505, -0.9843, -2.5655, -0.9835,  1.2303],
+                                     [ 0.8156,  1.5415,  1.3066, -1.1820,  0.2060],
+                                     [ 0.0684,  1.5936,  0.2956, -0.5176, -1.6960]],
+
+                                    [[-1.7281, -0.7697, -2.2310,  0.3580,  0.6299],
+                                     [ 0.8558, -0.6180, -1.6077, -0.6779,  1.2910],
+                                     [ 0.1885, -0.7006, -0.1863, -1.6729, -0.5761],
+                                     [ 0.1940, -0.0399,  0.9329,  1.0687,  0.0955],
+                                     [-1.0189,  0.4046,  1.1762,  0.3842,  0.6831]],
+
+                                    [[ 0.2996,  0.5738,  0.0369,  0.2835, -0.2363],
+                                     [ 0.6847, -0.4949, -0.3974,  0.6808, -1.2942],
+                                     [ 1.0910, -0.0594, -0.0037, -0.3355, -1.5056],
+                                     [-0.0965,  1.1358,  1.2851, -1.7333, -1.1705],
+                                     [ 0.0966, -1.2780,  1.2939,  1.3469, -0.2603]],
+
+                                    [[-0.5270,  1.1442,  0.1259, -1.2813,  0.3536],
+                                     [ 0.1579,  0.0828,  1.3531, -0.9110, -0.8747],
+                                     [ 0.2473, -0.1507, -0.4880,  0.4575,  1.1186],
+                                     [ 2.0900,  1.0479, -0.7209, -1.6928,  1.8761],
+                                     [ 2.2015, -0.5097,  0.7364, -1.5177,  0.9212]],
+
+                                    [[ 1.0358,  1.6584, -1.9654, -1.3971,  1.5641],
+                                     [ 0.4032,  0.7737,  0.9351, -0.5245,  0.0783],
+                                     [-1.2932, -0.9885, -1.1850, -0.7403,  0.1739],
+                                     [-0.5471,  0.5017, -1.0571,  1.7574, -0.0911],
+                                     [ 0.6944, -1.2772,  0.7473, -1.0983,  1.1462]]],
+
+
+                                   [[[-1.2563,  0.0688,  1.0405, -0.2582,  0.7333],
+                                     [ 2.0711, -0.1815,  0.8876, -0.2907,  1.1195],
+                                     [-0.3912,  0.3624,  1.0576, -0.4748, -1.4021],
+                                     [ 1.2176, -0.6160, -0.3471,  1.1689,  0.5677],
+                                     [-0.0639,  0.3765, -0.2614,  1.8267,  0.0315]],
+
+                                    [[ 1.2927,  1.0709, -0.8808,  0.8106, -0.5315],
+                                     [ 0.7614, -0.3935,  1.2451, -0.0598, -0.5887],
+                                     [-0.4089, -0.8598,  0.2478,  0.1282, -0.2745],
+                                     [-0.4139, -1.2905, -0.2625, -2.0453,  1.8941],
+                                     [-0.2400, -1.2830, -0.3503, -0.8536, -0.5927]],
+
+                                    [[ 0.8200,  1.8860, -0.5216, -0.9590, -0.9760],
+                                     [-1.5796,  2.2379, -0.5714, -1.5612,  1.4035],
+                                     [-0.6434, -1.2257,  0.1408,  0.3781, -2.2344],
+                                     [ 0.4963,  0.2431,  0.6835,  0.0047,  1.3374],
+                                     [-1.5899,  2.5382,  0.9503,  1.9080,  1.8315]],
+
+                                    [[ 0.5853,  1.9343, -0.7472,  2.1774, -2.1895],
+                                     [-0.6187, -0.2870,  1.2485,  2.4069, -0.2632],
+                                     [-1.6047, -0.3379,  0.5372,  1.7098,  1.6220],
+                                     [ 0.5255,  0.2564, -1.8615,  1.5519, -0.5655],
+                                     [-0.9452, -1.1828, -1.8192,  1.1349,  0.9806]],
+
+                                    [[-1.8198,  0.5455,  1.1761,  1.3070, -0.4654],
+                                     [ 1.2673,  0.2608,  0.8385, -1.0407, -0.6288],
+                                     [-0.3860,  1.3343,  1.3084,  0.5794,  0.4639],
+                                     [ 0.4750, -0.9006, -1.5002,  0.8689, -0.0379],
+                                     [ 0.2891,  0.0195, -0.0503, -0.3235,  1.5407]]]]).unsqueeze(0).reverseDiff()
+        let revz = dsharp.maxpool3d(revx, 2)
+        let revzCorrect = dsharp.tensor([[[[1.5542, 0.5720],
+                                            [1.5415, 1.3066]],
+                                 
+                                           [[1.1442, 1.3531],
+                                            [2.0900, 1.2851]]],
+                                 
+                                 
+                                          [[[2.0711, 1.2451],
+                                            [1.2176, 1.1689]],
+                                 
+                                           [[2.2379, 2.4069],
+                                            [0.5255, 1.7098]]]]).unsqueeze(0)
+        revz.reverse(dsharp.tensor([[[[-0.5557,  0.7782],
+                                      [ 1.2927,  0.9179]],
+                           
+                                     [[ 0.4852,  0.6701],
+                                      [ 0.7996, -0.9707]]],
+                           
+                           
+                                    [[[ 1.0630, -0.8899],
+                                      [ 0.8771,  0.0433]],
+                           
+                                     [[ 0.3975,  0.0060],
+                                      [-0.7735,  1.2806]]]]).unsqueeze(0))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000, -0.5557,  0.7782,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  1.2927,  0.9179,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000, -0.9707,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.4852,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.6701,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.7996,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]],
+                                   
+                                   
+                                            [[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 1.0630,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.8771,  0.0000,  0.0000,  0.0433,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000, -0.8899,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.3975,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0060,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  1.2806,  0.0000],
+                                              [-0.7735,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                   
+                                             [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                              [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]]]).unsqueeze(0)
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member this.TestDerivativeMaxUnpool3D () =
+        let indices = dsharp.tensor([[[[ 6,  7],
+                                        [16, 17]],
+                             
+                                       [[76, 82],
+                                        [90, 67]]],
+                             
+                             
+                                      [[[ 5, 32],
+                                        [15, 18]],
+                             
+                                       [[56, 83],
+                                        [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+        let fwdx = dsharp.tensor([[[[1.5542, 0.5720],
+                                    [1.5415, 1.3066]],
+                         
+                                   [[1.1442, 1.3531],
+                                    [2.0900, 1.2851]]],
+                         
+                         
+                                  [[[2.0711, 1.2451],
+                                    [1.2176, 1.1689]],
+                         
+                                   [[2.2379, 2.4069],
+                                    [0.5255, 1.7098]]]]).unsqueeze(0)
+        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-1.3700, -0.2430],
+                                                      [-1.2331,  1.3475]],
+                                           
+                                                     [[-0.4398, -1.9483],
+                                                      [-0.3461, -0.0961]]],
+                                           
+                                           
+                                                    [[[-0.3094, -0.8533],
+                                                      [-1.5359,  0.6974]],
+                                           
+                                                     [[ 0.0174,  0.4181],
+                                                      [-3.1010, -1.4052]]]]).unsqueeze(0))
+        let fwdz = dsharp.maxunpool3d(fwdx, indices, 2, outputSize=[1;2;5;5;5])
+        let fwdzCorrect = dsharp.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 1.5542, 0.5720, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 1.5415, 1.3066, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.2851, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 1.1442, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.3531, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [2.0900, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]],
+                                 
+                                 
+                                          [[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [2.0711, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [1.2176, 0.0000, 0.0000, 1.1689, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.2451, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 2.2379, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 2.4069, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 1.7098, 0.0000],
+                                            [0.5255, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]]]).unsqueeze(0)
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000, -1.3700, -0.2430,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000, -1.2331,  1.3475,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000, -0.0961,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000, -0.4398,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000, -1.9483,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [-0.3461,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]],
+                                 
+                                 
+                                          [[[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [-0.3094,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [-1.5359,  0.0000,  0.0000,  0.6974,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000, -0.8533,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0174,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.4181,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000, -1.4052,  0.0000],
+                                            [-3.1010,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+                                 
+                                           [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
+                                            [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]]]).unsqueeze(0)
+
+        let revx = dsharp.tensor([[[[1.5542, 0.5720],
+                                    [1.5415, 1.3066]],
+                         
+                                   [[1.1442, 1.3531],
+                                    [2.0900, 1.2851]]],
+                         
+                         
+                                  [[[2.0711, 1.2451],
+                                    [1.2176, 1.1689]],
+                         
+                                   [[2.2379, 2.4069],
+                                    [0.5255, 1.7098]]]]).unsqueeze(0).reverseDiff()
+        let revz = dsharp.maxunpool3d(revx, indices, 2, outputSize=[1;2;5;5;5])
+        let revzCorrect = dsharp.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 1.5542, 0.5720, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 1.5415, 1.3066, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.2851, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 1.1442, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.3531, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [2.0900, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]],
+                                 
+                                 
+                                          [[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [2.0711, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [1.2176, 0.0000, 0.0000, 1.1689, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 1.2451, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 2.2379, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 2.4069, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 1.7098, 0.0000],
+                                            [0.5255, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+                                 
+                                           [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                                            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]]]).unsqueeze(0)
+        revz.reverse(dsharp.tensor([[[[ 1.4996,  0.4412, -0.2222, -1.4660,  2.2101],
+                                      [ 2.1833,  0.0253, -0.4618,  0.3705,  0.9694],
+                                      [ 0.9886,  1.0174, -0.9824,  0.4999,  0.5915],
+                                      [ 0.5233, -0.0890, -0.9260,  0.6011,  0.7426],
+                                      [ 0.6975,  1.5036,  1.2356,  0.4051, -1.4870]],
+                           
+                                     [[ 0.9651, -0.4873,  0.0394,  1.6958, -0.3350],
+                                      [-0.5239, -0.6556, -0.9611, -1.9268, -0.1635],
+                                      [ 0.1487, -0.9833, -1.0552,  0.0662, -1.7744],
+                                      [ 1.0557, -0.4365,  0.9221,  0.2850, -0.0438],
+                                      [-0.5961, -0.4261,  0.7429,  0.9579,  0.1348]],
+                           
+                                     [[-0.2315, -0.3250, -2.0572,  0.4682,  0.0127],
+                                      [ 0.5999,  1.1576,  0.4091, -0.6695,  0.4514],
+                                      [-0.9583, -0.6140,  0.9052,  0.4652, -0.3354],
+                                      [ 0.1565, -0.3522,  0.0414, -0.3546, -0.7299],
+                                      [-1.1511, -1.5192,  0.6260, -0.7011,  0.4029]],
+                           
+                                     [[-0.3314,  1.1370, -0.5884,  0.5831,  0.3159],
+                                      [ 0.5567,  0.5880,  0.8035,  0.5299, -1.3401],
+                                      [-0.4984,  0.4939, -0.1194,  0.4468, -0.9184],
+                                      [ 0.7292,  0.5066, -2.0562,  0.1669,  1.4641],
+                                      [ 0.0156,  0.4129,  0.3488,  0.0692, -0.3184]],
+                           
+                                     [[ 0.8521,  0.8720,  0.4337,  0.5137,  1.2160],
+                                      [-0.2332,  1.3707,  1.7794,  1.1254, -0.5471],
+                                      [-0.9918, -0.1712,  0.8755, -0.9188,  1.1394],
+                                      [-0.8296,  0.2991,  1.0070, -0.7850, -1.8599],
+                                      [ 0.2952, -1.0716,  1.1704,  0.8802,  0.3842]]],
+                           
+                           
+                                    [[[-0.0237,  0.7531, -0.2710,  1.1729, -0.7121],
+                                      [ 0.9186,  1.2363, -0.1952, -0.0673,  1.0085],
+                                      [-0.6230, -2.0113, -0.2770,  0.3931,  2.3753],
+                                      [ 0.6668, -0.8795, -0.5598, -0.4569,  0.7753],
+                                      [ 1.3866, -0.6705,  1.5111,  0.7448, -1.2024]],
+                           
+                                     [[-1.1604, -0.6232,  0.4849,  0.6395, -0.2678],
+                                      [ 0.5002, -0.7866,  1.5850, -1.0708,  0.7870],
+                                      [ 0.9380,  0.0941, -0.5031, -1.3665, -1.4975],
+                                      [-0.0494, -0.1553, -0.7790, -0.0503,  0.1955],
+                                      [-0.2318, -0.3391, -1.2539,  0.8975, -1.3006]],
+                           
+                                     [[-0.1324,  0.6140,  1.0129,  0.4974, -0.3212],
+                                      [-1.4901,  0.8954,  0.1273,  1.4573, -1.0751],
+                                      [-1.9942, -1.0629, -0.1082, -0.4686, -0.0412],
+                                      [ 1.1362,  0.8016, -1.2716,  0.9211, -0.1257],
+                                      [ 2.4162, -0.1040,  1.0381,  0.7080, -0.5832]],
+                           
+                                     [[-1.1875, -0.7901,  0.5196,  1.7849, -0.0865],
+                                      [ 0.8591, -1.1806, -0.4879, -0.6041, -1.7609],
+                                      [-0.1374, -1.0737,  0.7090,  0.5399, -0.4486],
+                                      [ 0.0699, -0.9883, -0.7014, -0.8517, -1.0475],
+                                      [ 0.1587,  0.8068,  0.8046, -1.1768,  0.4796]],
+                           
+                                     [[ 0.3587, -0.2504, -0.2464,  0.5278,  0.4445],
+                                      [-0.6574, -1.4341,  1.0318, -1.1732,  0.8164],
+                                      [ 0.6500,  0.4821, -1.0597, -0.7089, -1.4482],
+                                      [-1.0141, -2.1376,  0.2760, -0.0456, -1.1903],
+                                      [-1.9576,  0.6360,  2.3334,  1.0151,  0.1379]]]]).unsqueeze(0))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[[[ 0.0253, -0.4618],
+                                            [-0.0890, -0.9260]],
+                                 
+                                           [[ 1.1370,  0.8035],
+                                            [ 0.7292,  0.0414]]],
+                                 
+                                 
+                                          [[[ 0.9186,  1.5850],
+                                            [ 0.6668, -0.4569]],
+                                 
+                                           [[ 0.8954, -0.6041],
+                                            [ 0.0699,  0.5399]]]]).unsqueeze(0)
+
+        Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+        Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+        Assert.True(revz.allclose(revzCorrect, 0.01))
+        Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member this.TestDerivativeConv1D () =
-        let fwdx = dsharp.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                  [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                  [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
 
                                 [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
                                  [  4.2547;   2.6049;  -9.8226;  -5.4543];
                                  [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[-4.3197; -6.5898; -6.2003;  2.1058];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[-4.3197; -6.5898; -6.2003;  2.1058];
                                  [ 7.0684; -3.7964;  4.4218;  3.9533];
                                  [-7.1559; -7.6799; -9.5234; -3.9351]];
 
@@ -313,14 +1465,14 @@ type TestDerivatives () =
                                  [-3.8272;  7.6264;  6.8205;  5.7346];
                                  [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
 
-        let fwdy = dsharp.tensor([[[ 4.0332e+00;  6.3036e+00];
+        let fwdy = combo.tensor([[[ 4.0332e+00;  6.3036e+00];
                                  [ 8.4410e+00; -5.7543e+00];
                                  [-5.6937e-03; -6.7241e+00]];
 
                                 [[-2.2619e+00;  1.2082e+00];
                                  [-1.2203e-01; -4.9373e+00];
                                  [-4.1881e+00; -3.4198e+00]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[-1.5107; -0.0610];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[-1.5107; -0.0610];
                                  [-0.2609;  5.9220];
                                  [ 2.8221; -5.7314]];
 
@@ -329,26 +1481,26 @@ type TestDerivatives () =
                                  [ 8.2204; -1.9833]]]))
 
         let fwdz = fwdx.conv1d(fwdy, stride=1)
-        let fwdzCorrect = dsharp.tensor([[[ 143.3192;  108.0332;   11.2241];
+        let fwdzCorrect = combo.tensor([[[ 143.3192;  108.0332;   11.2241];
                                          [  -5.9062;    4.6091;    6.0273]];
 
                                         [[  27.3032;   97.9855; -133.8372];
                                          [  -1.4792;   45.6659;   29.8705]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[ 111.2865;  -40.3692;   -1.8573];
+        let fwdzdCorrect = combo.tensor([[[ 111.2865;  -40.3692;   -1.8573];
                                          [   -1.9154;   43.3470;   29.3626]];
 
                                         [[ -168.6758;  -43.1578;   25.4470];
                                          [ -149.6851;   23.1963;  -50.1932]]])
 
-        let revx = dsharp.tensor([[[ 2.8564;  0.0424;  7.0984; -2.5130];
+        let revx = combo.tensor([[[ 2.8564;  0.0424;  7.0984; -2.5130];
                                  [-1.1502;  0.1410;  2.5438;  4.4798];
                                  [ 0.4381; -4.3649;  2.5502;  2.5141]];
 
                                 [[-2.8894; -7.1729; -7.1368;  1.1060];
                                  [-1.3253;  0.0257; -2.8552; -0.4933];
                                  [ 4.7305; -5.6787;  3.4658;  4.5768]]]).reverseDiff()
-        let revy = dsharp.tensor([[[ 0.6355; -5.8100];
+        let revy = combo.tensor([[[ 0.6355; -5.8100];
                                  [ 0.6244;  6.0336];
                                  [ 4.8205;  1.1716]];
 
@@ -356,18 +1508,18 @@ type TestDerivatives () =
                                  [-2.2282; -2.9084];
                                  [-0.9613;  1.0958]]]).reverseDiff()
         let revz = revx.conv1d(revy, stride=1)
-        let revzCorrect = dsharp.tensor([[[ -1.3005; -43.8321;  62.9678];
+        let revzCorrect = combo.tensor([[[ -1.3005; -43.8321;  62.9678];
                                          [-26.6931; -22.6506; -69.1848]];
 
                                         [[ 55.3161;  -3.6187;   6.3480];
                                          [ 37.6982;  98.2438;  64.8643]]])
-        revz.reverse(dsharp.tensor([[[ 4.5763;  2.7538;  2.0173];
+        revz.reverse(combo.tensor([[[ 4.5763;  2.7538;  2.0173];
                                      [-2.7543;  7.9257; -1.3670]];
 
                                     [[ 1.7997; -1.2354;  4.6313];
                                      [-4.0646;  0.0384;  4.1437]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[ 25.5806; -81.7051; -27.5597;  -7.5648];
+        let revxdCorrect = combo.tensor([[[ 25.5806; -81.7051; -27.5597;  -7.5648];
                                          [  8.9949;  19.6812;  -2.1304;  16.1472];
                                          [ 24.7076;   7.9984;  22.9497;   0.8655]];
 
@@ -375,7 +1527,7 @@ type TestDerivatives () =
                                          [ 10.1808;  21.8231; -13.9067;  15.8920];
                                          [ 12.5828;  -8.3376;  16.9365;   9.9666]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[ -1.8835;  15.7019];
+        let revydCorrect = combo.tensor([[[ -1.8835;  15.7019];
                                          [-15.3840;  17.9761];
                                          [ 26.7091;  -1.1857]];
 
@@ -391,14 +1543,15 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv1Dp1 () =
-        let fwdx = dsharp.tensor([[[ 2.0028; -8.1570;  8.1037; -6.6905];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[ 2.0028; -8.1570;  8.1037; -6.6905];
                              [ 3.6960; -3.8631; -7.0608; -1.4756];
                              [ 0.8208; -1.9973;  1.9964; -0.8280]];
 
                             [[-0.9567;  0.2317; -1.7773; -1.1823];
                              [ 5.1062;  0.2814;  6.3003;  1.3638];
                              [-4.9674;  3.9325;  3.8709; -0.6739]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[-5.6993;  4.2450; 16.2727; -6.0774];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[-5.6993;  4.2450; 16.2727; -6.0774];
                                                  [ 2.2534; -0.2354;  6.3848;  4.8030];
                                                  [-3.0135;  4.5033; -1.8186; -8.0432]];
 
@@ -406,14 +1559,14 @@ type TestDerivatives () =
                                                  [-4.0121;  5.3963; -0.1097;  9.4151];
                                                  [11.4479;  9.9700;  4.8665;  0.8840]]]))
 
-        let fwdy = dsharp.tensor([[[-1.7830; -1.9625];
+        let fwdy = combo.tensor([[[-1.7830; -1.9625];
                              [-5.0868;  3.1041];
                              [ 7.7795;  1.4873]];
 
                             [[-1.3655;  1.6386];
                              [-6.1317;  3.5536];
                              [ 5.2382;  9.9893]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[ 7.7903; -0.8083];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[ 7.7903; -0.8083];
                                                  [-4.3881; -1.4926];
                                                  [-1.7475; -7.8380]];
 
@@ -422,26 +1575,26 @@ type TestDerivatives () =
                                                  [ 0.0273; -0.1305]]]))
 
         let fwdz = fwdx.conv1d(fwdy, padding=1)
-        let fwdzCorrect = dsharp.tensor([[[  8.7631; -14.9407; -16.1941;  44.3169;  12.9940];
+        let fwdzCorrect = combo.tensor([[[  8.7631; -14.9407; -16.1941;  44.3169;  12.9940];
                                          [ 24.6148; -68.1444;  32.4942;  18.2088;  13.8465]];
 
                                         [[ 10.3392; -56.6450;  57.5502;   6.7860; -10.0721];
                                          [-33.0434; -15.3614;  76.7016; -19.7505; -10.2782]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[  0.1285; -1.1446; -40.9217;  43.9575;  -120.3672];
+        let fwdzdCorrect = combo.tensor([[[  0.1285; -1.1446; -40.9217;  43.9575;  -120.3672];
                                          [ -31.9704; 76.8472;  -15.4720;  -175.0760;  -70.0134]];
 
                                         [[ 34.6626; 77.4712;  2.6527;  28.4661; -50.6120];
                                          [115.5451; 244.3823;  82.0146; 114.9505; -39.6976]]])
 
-        let revx = dsharp.tensor([[[ 2.0028; -8.1570;  8.1037; -6.6905];
+        let revx = combo.tensor([[[ 2.0028; -8.1570;  8.1037; -6.6905];
                              [ 3.6960; -3.8631; -7.0608; -1.4756];
                              [ 0.8208; -1.9973;  1.9964; -0.8280]];
 
                             [[-0.9567;  0.2317; -1.7773; -1.1823];
                              [ 5.1062;  0.2814;  6.3003;  1.3638];
                              [-4.9674;  3.9325;  3.8709; -0.6739]]]).reverseDiff()
-        let revy = dsharp.tensor([[[-1.7830; -1.9625];
+        let revy = combo.tensor([[[-1.7830; -1.9625];
                              [-5.0868;  3.1041];
                              [ 7.7795;  1.4873]];
 
@@ -449,18 +1602,18 @@ type TestDerivatives () =
                              [-6.1317;  3.5536];
                              [ 5.2382;  9.9893]]]).reverseDiff()
         let revz = revx.conv1d(revy, padding=1)
-        let revzCorrect = dsharp.tensor([[[  8.7631; -14.9407; -16.1941;  44.3169;  12.9940];
+        let revzCorrect = combo.tensor([[[  8.7631; -14.9407; -16.1941;  44.3169;  12.9940];
                                          [ 24.6148; -68.1444;  32.4942;  18.2088;  13.8465]];
 
                                         [[ 10.3392; -56.6450;  57.5502;   6.7860; -10.0721];
                                          [-33.0434; -15.3614;  76.7016; -19.7505; -10.2782]]])
-        revz.reverse(dsharp.tensor([[[-3.7189; -0.4834;  1.2958; -6.2053;  3.5560];
+        revz.reverse(combo.tensor([[[-3.7189; -0.4834;  1.2958; -6.2053;  3.5560];
                                      [ 5.8734;  0.3692; -6.7996;  5.7922;  3.0245]];
 
                                     [[-1.5334;  1.5764; -5.1078;  3.8610;  3.4756];
                                      [-7.4071;  6.3234; -3.9537;  5.0018;  3.8255]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[ 17.2804;   8.5280; -10.5300;  11.1987];
+        let revxdCorrect = combo.tensor([[[ 17.2804;   8.5280; -10.5300;  11.1987];
                                          [  9.5227;  34.9135; -24.0920; -35.3127];
                                          [ 51.3131; -22.5681; -83.9293;  92.1382]];
 
@@ -468,7 +1621,7 @@ type TestDerivatives () =
                                          [-77.8735;  77.5891; -80.2143; -11.3768];
                                          [-30.8856;   5.0636;   9.1459; 102.7838]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[-99.2786;  54.8582];
+        let revydCorrect = combo.tensor([[[-99.2786;  54.8582];
                                          [ 67.4523; -46.1721];
                                          [-33.6315;  -2.9197]];
 
@@ -484,14 +1637,15 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv1Ds2p2 () =
-        let fwdx = dsharp.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                  [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                  [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
 
                                 [[ -2.8910;   3.9349;  -4.3892;  -2.6051];
                                  [  4.2547;   2.6049;  -9.8226;  -5.4543];
                                  [ -0.9674;   1.0070;  -4.6518;   7.1702]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[-4.3197; -6.5898; -6.2003;  2.1058];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[-4.3197; -6.5898; -6.2003;  2.1058];
                                  [ 7.0684; -3.7964;  4.4218;  3.9533];
                                  [-7.1559; -7.6799; -9.5234; -3.9351]];
 
@@ -499,14 +1653,14 @@ type TestDerivatives () =
                                  [-3.8272;  7.6264;  6.8205;  5.7346];
                                  [ 6.5570;  7.7248;  6.3494; -2.9007]]]))
 
-        let fwdy = dsharp.tensor([[[ 4.0332e+00;  6.3036e+00];
+        let fwdy = combo.tensor([[[ 4.0332e+00;  6.3036e+00];
                                  [ 8.4410e+00; -5.7543e+00];
                                  [-5.6937e-03; -6.7241e+00]];
 
                                 [[-2.2619e+00;  1.2082e+00];
                                  [-1.2203e-01; -4.9373e+00];
                                  [-4.1881e+00; -3.4198e+00]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[-1.5107; -0.0610];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[-1.5107; -0.0610];
                                  [-0.2609;  5.9220];
                                  [ 2.8221; -5.7314]];
 
@@ -515,26 +1669,26 @@ type TestDerivatives () =
                                  [ 8.2204; -1.9833]]]))
 
         let fwdz = fwdx.conv1d(fwdy, stride=2, padding=2)
-        let fwdzCorrect = dsharp.tensor([[[   0.0000;  143.3192;   11.2241;    0.0000];
+        let fwdzCorrect = combo.tensor([[[   0.0000;  143.3192;   11.2241;    0.0000];
                                           [   0.0000;   -5.9062;    6.0273;    0.0000]];
 
                                          [[   0.0000;   27.3032; -133.8372;    0.0000];
                                           [   0.0000;   -1.4792;   29.8705;    0.0000]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[   0.0000;  111.2865;   -1.8573;    0.0000];
+        let fwdzdCorrect = combo.tensor([[[   0.0000;  111.2865;   -1.8573;    0.0000];
                                           [    0.0000;   -1.9154;   29.3626;    0.0000]];
 
                                          [[   0.0000;  -168.6758;   25.4470;    0.0000];
                                           [   0.0000;  -149.6851;  -50.1932;    0.0000]]])
 
-        let revx = dsharp.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
+        let revx = combo.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
                                      [ -2.0373;  -1.6156;  -5.4200;   2.1263];
                                      [ -7.6023;  -3.8521;   4.1061; -11.9378]];
 
                                     [[ -3.6480;  -6.2680;  10.2511;   8.2932];
                                      [  6.7741;   1.4493;   0.0978;   1.8473];
                                      [  1.7488;   5.7890;  -3.9845; -10.2116]]]).reverseDiff()
-        let revy = dsharp.tensor([[[ 0.5392; -7.2312];
+        let revy = combo.tensor([[[ 0.5392; -7.2312];
                                  [-6.4932;  6.0252];
                                  [ 5.4071; -1.3692]];
 
@@ -542,18 +1696,18 @@ type TestDerivatives () =
                                  [-4.3207;  2.2916];
                                  [-2.1185;  5.0338]]]).reverseDiff()
         let revz = revx.conv1d(revy, stride=2, padding=2)
-        let revzCorrect = dsharp.tensor([[[  0.0000;  -5.9184;  66.6342;   0.0000];
+        let revzCorrect = combo.tensor([[[  0.0000;  -5.9184;  66.6342;   0.0000];
                                          [  0.0000;  22.8156; -52.4840;   0.0000]];
 
                                         [[  0.0000;   9.6349; -51.5099;   0.0000];
                                          [  0.0000;  10.4620; -40.7989;   0.0000]]])
-        revz.reverse(dsharp.tensor([[[ -3.2046;  -1.7019;   5.4695;  -1.0924];
+        revz.reverse(combo.tensor([[[ -3.2046;  -1.7019;   5.4695;  -1.0924];
                                      [  2.3244;   2.3524;   1.4251;   5.4270]];
 
                                     [[ -1.2459;   3.5582;   0.4258;  -9.7433];
                                      [-10.7600;  -1.3447;   2.6181;  -1.3003]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[  4.6644;   4.9396;   6.3311; -44.0143];
+        let revxdCorrect = combo.tensor([[[  4.6644;   4.9396;   6.3311; -44.0143];
                                          [  0.8869;  -4.8637; -41.6721;  36.2206];
                                          [-14.1861;  14.1717;  26.5551;  -0.3149]];
 
@@ -561,7 +1715,7 @@ type TestDerivatives () =
                                          [-17.2943;  18.3576; -14.0771;   8.5654];
                                          [ 22.0885; -11.6407;  -3.2439;  12.5958]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[-24.8029;   1.3047];
+        let revydCorrect = combo.tensor([[[-24.8029;   1.3047];
                                          [ -2.0322;  20.3232];
                                          [ 39.9225; -42.4877]];
 
@@ -577,14 +1731,15 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv1Ds2p2d3 () =
-        let fwdx = dsharp.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
                                  [ -2.0373;  -1.6156;  -5.4200;   2.1263];
                                  [ -7.6023;  -3.8521;   4.1061; -11.9378]];
 
                                 [[ -3.6480;  -6.2680;  10.2511;   8.2932];
                                  [  6.7741;   1.4493;   0.0978;   1.8473];
                                  [  1.7488;   5.7890;  -3.9845; -10.2116]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[ -2.4789;  -2.3435;  -1.7153;  -9.8687];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[ -2.4789;  -2.3435;  -1.7153;  -9.8687];
                                                      [  9.5786; -10.2393;   8.3291;  -8.8992];
                                                      [-10.1198;  -1.4206;   5.4935;   0.2305]];
 
@@ -592,14 +1747,14 @@ type TestDerivatives () =
                                                      [ -2.3740;  -0.1860;   1.9684;  -1.5754];
                                                      [  1.5551;  -1.1761;   7.5176;  -1.9207]]]))
 
-        let fwdy = dsharp.tensor([[[ 0.5392; -7.2312];
+        let fwdy = combo.tensor([[[ 0.5392; -7.2312];
                                  [-6.4932;  6.0252];
                                  [ 5.4071; -1.3692]];
 
                                 [[ 2.3730; -3.1319];
                                  [-4.3207;  2.2916];
                                  [-2.1185;  5.0338]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[ -7.0064;   0.3474];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[ -7.0064;   0.3474];
                                                  [  1.8052;   3.9392];
                                                  [ -6.8035;  -4.4947]];
 
@@ -608,26 +1763,26 @@ type TestDerivatives () =
                                                  [  5.1788;  -4.6292]]]))
 
         let fwdz = fwdx.conv1d(fwdy, stride=2, padding=2, dilation=3)
-        let fwdzCorrect = dsharp.tensor([[[  19.5508;  -15.3841;   56.5490];
+        let fwdzCorrect = combo.tensor([[[  19.5508;  -15.3841;   56.5490];
                                          [ -12.6935;  -27.9701;   10.9953]];
 
                                         [[  46.1316;  -71.3546;  -16.6521];
                                          [  52.0922; -114.7731;   32.3440]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[  -33.0063;  -21.1314;   -52.0266];
+        let fwdzdCorrect = combo.tensor([[[  -33.0063;  -21.1314;   -52.0266];
                                          [ -1.6565;  -64.1607;  -61.7825]];
 
                                         [[  15.8308;  96.0475;  -16.7656];
                                          [  4.1709; 119.2216;  -153.4385]]])
 
-        let revx = dsharp.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
+        let revx = combo.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
                                  [ -2.0373;  -1.6156;  -5.4200;   2.1263];
                                  [ -7.6023;  -3.8521;   4.1061; -11.9378]];
 
                                 [[ -3.6480;  -6.2680;  10.2511;   8.2932];
                                  [  6.7741;   1.4493;   0.0978;   1.8473];
                                  [  1.7488;   5.7890;  -3.9845; -10.2116]]]).reverseDiff()
-        let revy = dsharp.tensor([[[ 0.5392; -7.2312];
+        let revy = combo.tensor([[[ 0.5392; -7.2312];
                                  [-6.4932;  6.0252];
                                  [ 5.4071; -1.3692]];
 
@@ -635,18 +1790,18 @@ type TestDerivatives () =
                                  [-4.3207;  2.2916];
                                  [-2.1185;  5.0338]]]).reverseDiff()
         let revz = revx.conv1d(revy, stride=2, padding=2, dilation=3)
-        let revzCorrect = dsharp.tensor([[[  19.5508;  -15.3841;   56.5490];
+        let revzCorrect = combo.tensor([[[  19.5508;  -15.3841;   56.5490];
                                          [ -12.6935;  -27.9701;   10.9953]];
 
                                         [[  46.1316;  -71.3546;  -16.6521];
                                          [  52.0922; -114.7731;   32.3440]]])
-        revz.reverse(dsharp.tensor([[[  2.9290;  -8.6265;   2.4380];
+        revz.reverse(combo.tensor([[[  2.9290;  -8.6265;   2.4380];
                                      [-11.2377;  -8.5424;   3.5779]];
 
                                     [[ -2.1010;  -5.1271;   2.4158];
                                      [  7.3964;  -1.2906;   4.3965]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[-24.9225;  14.0146;   9.8048;  89.1337];
+        let revxdCorrect = combo.tensor([[[-24.9225;  14.0146;   9.8048;  89.1337];
                                          [ 92.9230;  -8.1042; -31.2896; -71.5521];
                                          [-28.5474; -60.5786;   5.6028; -31.1895]];
 
@@ -654,7 +1809,7 @@ type TestDerivatives () =
                                          [ 38.8675;   4.2906; -34.6827; -33.8492];
                                          [-24.9887;  40.1087;   3.7486;   0.5234]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[  1.1031; -61.8278];
+        let revydCorrect = combo.tensor([[[  1.1031; -61.8278];
                                          [-30.1347; -35.5914];
                                          [ 57.0000; 131.8920]];
 
@@ -673,7 +1828,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv2D () =
-        let fwdx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -703,7 +1859,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
           [  4.1074,  12.5312,  -3.2430,   4.4820],
           [-10.0428,   5.0817,   0.4602,  -0.9825],
           [  4.5867,   1.2517,   4.2247,   0.0669]],
@@ -734,7 +1890,7 @@ type TestDerivatives () =
           [ -2.4948,  -4.9388,  -1.7896,  -3.9585],
           [  6.3013,   2.1417,   4.0991,  -1.6199]]]]))
 
-        let fwdy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let fwdy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -752,7 +1908,7 @@ type TestDerivatives () =
 
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[-1.1954e+01,  2.6855e+00],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[-1.1954e+01,  2.6855e+00],
           [-1.4551e+00, -1.6017e+00]],
 
          [[ 1.7954e+00,  1.5183e+01],
@@ -772,7 +1928,7 @@ type TestDerivatives () =
           [ 3.1655e+00, -9.4486e+00]]]]))
 
         let fwdz = fwdx.conv2d(fwdy)
-        let fwdzCorrect = dsharp.tensor([[[[  69.4275,   57.5256,  204.7637],
+        let fwdzCorrect = combo.tensor([[[[  69.4275,   57.5256,  204.7637],
           [  72.6434,  -98.7244,   48.0571],
           [  50.4435,  -79.0234,  -50.5811]],
 
@@ -789,7 +1945,7 @@ type TestDerivatives () =
           [ -36.8064,   22.9777,  -81.6225],
           [  17.8893,   39.8201,  -28.4861]]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[-222.1388,  -38.6186,  176.5756],
+        let fwdzdCorrect = combo.tensor([[[[-222.1388,  -38.6186,  176.5756],
           [ 242.9850, -198.9088,  177.0603],
           [ 137.6601,  -48.8533,   81.2111]],
 
@@ -806,7 +1962,7 @@ type TestDerivatives () =
           [ -63.2891,  -37.7844,   -7.9095],
           [ 159.6389,   17.9089,  178.1622]]]])
 
-        let revx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+        let revx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -836,7 +1992,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]]).reverseDiff()
-        let revy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let revy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -855,7 +2011,7 @@ type TestDerivatives () =
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]]).reverseDiff()
         let revz = revx.conv2d(revy)
-        let revzCorrect = dsharp.tensor([[[[  69.4275,   57.5256,  204.7637],
+        let revzCorrect = combo.tensor([[[[  69.4275,   57.5256,  204.7637],
           [  72.6434,  -98.7244,   48.0571],
           [  50.4435,  -79.0234,  -50.5811]],
 
@@ -871,7 +2027,7 @@ type TestDerivatives () =
          [[  46.9451,  -11.9214,  -25.7160],
           [ -36.8064,   22.9777,  -81.6225],
           [  17.8893,   39.8201,  -28.4861]]]])
-        revz.reverse(dsharp.tensor([[[[  0.9103,   0.4812,   0.4156],
+        revz.reverse(combo.tensor([[[[  0.9103,   0.4812,   0.4156],
           [  5.7374,   4.1146,  -0.3798],
           [ -6.9746,   0.1408,  -0.8381]],
 
@@ -888,7 +2044,7 @@ type TestDerivatives () =
           [ -5.1601,   0.4057,  -4.7773],
           [ -4.0470,  -3.2604,   4.7280]]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 1.5744e+00,  6.2329e+00,  3.6429e+00,  6.3518e-01],
+        let revxdCorrect = combo.tensor([[[[ 1.5744e+00,  6.2329e+00,  3.6429e+00,  6.3518e-01],
           [-1.1657e+00,  9.2745e+01,  6.2671e+01, -1.2355e+00],
           [-6.6796e+01, -1.0047e+02, -6.4138e+01,  1.3308e+01],
           [-2.3897e+01,  9.3344e+01,  2.6230e+00, -6.9200e+00]],
@@ -919,7 +2075,7 @@ type TestDerivatives () =
           [-3.4615e+01, -6.0232e+01, -1.0465e+02, -5.7172e+01],
           [-1.5058e+01, -3.2852e+01,  1.3887e+01,  2.7381e+01]]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[ -45.0676,  -19.8231],
+        let revydCorrect = combo.tensor([[[[ -45.0676,  -19.8231],
           [ -23.2455, -202.1413]],
 
          [[ -37.1328,  -86.2777],
@@ -946,7 +2102,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv2Dp1 () =
-        let fwdx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -976,7 +2133,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
           [  4.1074,  12.5312,  -3.2430,   4.4820],
           [-10.0428,   5.0817,   0.4602,  -0.9825],
           [  4.5867,   1.2517,   4.2247,   0.0669]],
@@ -1007,7 +2164,7 @@ type TestDerivatives () =
           [ -2.4948,  -4.9388,  -1.7896,  -3.9585],
           [  6.3013,   2.1417,   4.0991,  -1.6199]]]]))
 
-        let fwdy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let fwdy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -1025,7 +2182,7 @@ type TestDerivatives () =
 
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[-1.1954e+01,  2.6855e+00],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[-1.1954e+01,  2.6855e+00],
           [-1.4551e+00, -1.6017e+00]],
 
          [[ 1.7954e+00,  1.5183e+01],
@@ -1045,7 +2202,7 @@ type TestDerivatives () =
           [ 3.1655e+00, -9.4486e+00]]]]))
 
         let fwdz = fwdx.conv2d(fwdy, padding=1)
-        let fwdzCorrect = dsharp.tensor([[[[   2.9885,   -4.3019,   -1.1975,  -49.4543,  -24.2013],
+        let fwdzCorrect = combo.tensor([[[[   2.9885,   -4.3019,   -1.1975,  -49.4543,  -24.2013],
           [   6.2745,   69.4275,   57.5256,  204.7637,  -14.6282],
           [ -70.7221,   72.6434,  -98.7244,   48.0571,   -0.4058],
           [  26.7088,   50.4435,  -79.0234,  -50.5811,  -37.6351],
@@ -1070,7 +2227,7 @@ type TestDerivatives () =
           [  28.2701,   17.8893,   39.8201,  -28.4861,    0.7710],
           [ -20.3688,    0.8945,  -24.6142,  -14.1374,   15.2676]]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[-1.0527e+00, -9.6677e+00,  2.0051e+01, -2.8588e+01, -2.8092e+01],
+        let fwdzdCorrect = combo.tensor([[[[-1.0527e+00, -9.6677e+00,  2.0051e+01, -2.8588e+01, -2.8092e+01],
           [ 6.6973e+01, -2.2214e+02, -3.8619e+01,  1.7658e+02, -7.2230e+01],
           [ 1.5061e+02,  2.4299e+02, -1.9891e+02,  1.7706e+02, -2.7937e+01],
           [-2.5458e+01,  1.3766e+02, -4.8853e+01,  8.1211e+01, -7.1649e+01],
@@ -1095,7 +2252,7 @@ type TestDerivatives () =
           [-5.6473e+01,  1.5964e+02,  1.7909e+01,  1.7816e+02,  3.4444e+01],
           [-7.3489e+01, -1.0654e+02, -5.6583e-02,  2.0659e+01,  6.7274e+01]]]])
 
-        let revx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+        let revx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -1125,7 +2282,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]]).reverseDiff()
-        let revy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let revy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -1144,7 +2301,7 @@ type TestDerivatives () =
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]]).reverseDiff()
         let revz = revx.conv2d(revy, padding=1)
-        let revzCorrect = dsharp.tensor([[[[   2.9885,   -4.3019,   -1.1975,  -49.4543,  -24.2013],
+        let revzCorrect = combo.tensor([[[[   2.9885,   -4.3019,   -1.1975,  -49.4543,  -24.2013],
           [   6.2745,   69.4275,   57.5256,  204.7637,  -14.6282],
           [ -70.7221,   72.6434,  -98.7244,   48.0571,   -0.4058],
           [  26.7088,   50.4435,  -79.0234,  -50.5811,  -37.6351],
@@ -1168,7 +2325,7 @@ type TestDerivatives () =
           [   3.6550,  -36.8064,   22.9777,  -81.6225,  -44.4841],
           [  28.2701,   17.8893,   39.8201,  -28.4861,    0.7710],
           [ -20.3688,    0.8945,  -24.6142,  -14.1374,   15.2676]]]])
-        revz.reverse(dsharp.tensor([[[[ -0.0818,  -1.7126,  -6.8625,  -1.1005,   6.4032],
+        revz.reverse(combo.tensor([[[[ -0.0818,  -1.7126,  -6.8625,  -1.1005,   6.4032],
           [  1.2647,   2.8299,  -7.0770,  -7.3823, -10.7036],
           [ -0.5949,  -1.6608,   0.1277,  -1.3747,   1.0839],
           [  1.3014,  -6.3608,  -5.8820,  -1.9287,  -3.7376],
@@ -1193,7 +2350,7 @@ type TestDerivatives () =
           [ -5.6635,  -2.3297,  -8.7693,   9.0650,   1.4648],
           [ -6.3961,   3.6526,   5.7533,  -5.4021,   0.1755]]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[  52.5073,   67.9158,  -72.1813, -110.0932],
+        let revxdCorrect = combo.tensor([[[[  52.5073,   67.9158,  -72.1813, -110.0932],
           [  34.5613,   -2.7875,   24.3253,   41.8013],
           [  44.8780,  -52.7584,  -50.6334,    0.6157],
           [ -54.9037, -102.6098,   -9.6011,   40.4460]],
@@ -1224,7 +2381,7 @@ type TestDerivatives () =
           [  13.1614,   32.3627,  -57.0056,    3.9335],
           [ -84.9322, -148.3569,   23.6587,   77.6059]]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[  60.9107,   -2.4922],
+        let revydCorrect = combo.tensor([[[[  60.9107,   -2.4922],
           [  44.1872,  -36.8305]],
 
          [[-102.1387,  -41.7113],
@@ -1251,7 +2408,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv2Ds2p2 () =
-        let fwdx = dsharp.tensor([[[[ 0.4834,  0.6182, -1.7554, -0.5000],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ 0.4834,  0.6182, -1.7554, -0.5000],
           [ 0.4145, -1.8404, -1.3268, -0.1491],
           [-0.5398,  0.3185,  0.6443, -0.4982],
           [-0.2872, -0.3839, -0.6973,  0.0694]],
@@ -1281,7 +2439,7 @@ type TestDerivatives () =
           [-1.3862, -0.0826,  0.3576, -0.1390],
           [-0.8496, -0.3607, -1.3422, -0.2171],
           [-1.0049, -0.2201, -0.6854,  0.1075]]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-1.5002, -0.0945, -0.0888, -0.4832],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-1.5002, -0.0945, -0.0888, -0.4832],
           [-0.4096,  0.5563,  2.7051,  0.2993],
           [ 0.0865, -0.8459,  0.0942, -0.7664],
           [-1.2281,  0.4562,  0.8160,  1.7656]],
@@ -1312,7 +2470,7 @@ type TestDerivatives () =
           [-1.1695, -1.2351, -0.7672,  0.7108],
           [-0.3632,  0.8239, -0.8944,  0.1580]]]]))
 
-        let fwdy = dsharp.tensor([[[[ 1.3889,  0.4028],
+        let fwdy = combo.tensor([[[[ 1.3889,  0.4028],
           [ 0.3151, -0.8122]],
 
          [[ 0.0136, -1.2223],
@@ -1330,7 +2488,7 @@ type TestDerivatives () =
 
          [[ 0.4992, -0.1227],
           [-0.5066, -1.0926]]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[ 5.8915e-01, -6.7759e-01],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[ 5.8915e-01, -6.7759e-01],
           [-1.4154e+00,  9.7490e-01]],
 
          [[-1.0435e-01,  2.2350e+00],
@@ -1350,7 +2508,7 @@ type TestDerivatives () =
           [-3.9840e-01,  1.2968e+00]]]]))
 
         let fwdz = fwdx.conv2d(fwdy, stride=2, padding=2)
-        let fwdzCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
+        let fwdzCorrect = combo.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
           [ 0.0000,  6.7284,  3.5657,  0.0000],
           [ 0.0000, -3.3040, -6.2900,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]],
@@ -1371,7 +2529,7 @@ type TestDerivatives () =
           [ 0.0000,  1.3242,  0.6037,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
+        let fwdzdCorrect = combo.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
           [ 0.0000, -5.6554, -0.3408,  0.0000],
           [ 0.0000,  3.7282, -1.9959,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]],
@@ -1392,7 +2550,7 @@ type TestDerivatives () =
           [ 0.0000, -4.0499, -2.1539,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]]]])
 
-        let revx = dsharp.tensor([[[[ 0.4834,  0.6182, -1.7554, -0.5000],
+        let revx = combo.tensor([[[[ 0.4834,  0.6182, -1.7554, -0.5000],
           [ 0.4145, -1.8404, -1.3268, -0.1491],
           [-0.5398,  0.3185,  0.6443, -0.4982],
           [-0.2872, -0.3839, -0.6973,  0.0694]],
@@ -1422,7 +2580,7 @@ type TestDerivatives () =
           [-1.3862, -0.0826,  0.3576, -0.1390],
           [-0.8496, -0.3607, -1.3422, -0.2171],
           [-1.0049, -0.2201, -0.6854,  0.1075]]]]).reverseDiff()
-        let revy = dsharp.tensor([[[[ 1.3889,  0.4028],
+        let revy = combo.tensor([[[[ 1.3889,  0.4028],
           [ 0.3151, -0.8122]],
 
          [[ 0.0136, -1.2223],
@@ -1441,7 +2599,7 @@ type TestDerivatives () =
          [[ 0.4992, -0.1227],
           [-0.5066, -1.0926]]]]).reverseDiff()
         let revz = revx.conv2d(revy, stride=2, padding=2)
-        let revzCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
+        let revzCorrect = combo.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
           [ 0.0000,  6.7284,  3.5657,  0.0000],
           [ 0.0000, -3.3040, -6.2900,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]],
@@ -1461,7 +2619,7 @@ type TestDerivatives () =
           [ 0.0000, -1.9204,  1.1343,  0.0000],
           [ 0.0000,  1.3242,  0.6037,  0.0000],
           [ 0.0000,  0.0000,  0.0000,  0.0000]]]])
-        revz.reverse(dsharp.tensor([[[[ 1.7740, -0.1396, -0.9889,  0.6326],
+        revz.reverse(combo.tensor([[[[ 1.7740, -0.1396, -0.9889,  0.6326],
           [ 1.1137, -0.0517, -0.4521,  1.1363],
           [-0.0234, -1.3553,  0.8126,  0.3698],
           [-0.0928, -0.7908, -1.2760,  1.9422]],
@@ -1482,7 +2640,7 @@ type TestDerivatives () =
           [-0.6419, -0.0444, -0.5832,  2.2924],
           [-0.2105, -2.6944, -0.5024, -0.6681]]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 1.4236,  0.2631,  0.1507, -0.0343],
+        let revxdCorrect = combo.tensor([[[[ 1.4236,  0.2631,  0.1507, -0.0343],
            [ 1.5983, -2.4954,  0.6983, -0.9540],
            [-1.6103, -0.4943,  1.8668,  0.4675],
            [-0.1332,  0.6390,  1.0529, -1.9124]],
@@ -1513,7 +2671,7 @@ type TestDerivatives () =
            [ 0.4089, -0.7792, -0.5366,  0.5185],
            [-0.7945,  3.5758,  0.7608, -1.3719]]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[ 2.4678, -4.5606],
+        let revydCorrect = combo.tensor([[[[ 2.4678, -4.5606],
            [-0.1756,  1.4112]],
  
           [[ 4.6288, -5.1385],
@@ -1540,7 +2698,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv2Ds2p2d3 () =
-        let fwdx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -1570,7 +2729,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[  1.2671,  -6.4862,   3.6131,   3.9654],
           [  4.1074,  12.5312,  -3.2430,   4.4820],
           [-10.0428,   5.0817,   0.4602,  -0.9825],
           [  4.5867,   1.2517,   4.2247,   0.0669]],
@@ -1601,7 +2760,7 @@ type TestDerivatives () =
           [ -2.4948,  -4.9388,  -1.7896,  -3.9585],
           [  6.3013,   2.1417,   4.0991,  -1.6199]]]]))
 
-        let fwdy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let fwdy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -1619,7 +2778,7 @@ type TestDerivatives () =
 
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[-1.1954e+01,  2.6855e+00],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[-1.1954e+01,  2.6855e+00],
           [-1.4551e+00, -1.6017e+00]],
 
          [[ 1.7954e+00,  1.5183e+01],
@@ -1639,7 +2798,7 @@ type TestDerivatives () =
           [ 3.1655e+00, -9.4486e+00]]]]))
 
         let fwdz = fwdx.conv2d(fwdy, stride=2, padding=2, dilation=3)
-        let fwdzCorrect = dsharp.tensor([[[[-14.6076,  16.4301,  21.7161],
+        let fwdzCorrect = combo.tensor([[[[-14.6076,  16.4301,  21.7161],
           [ 75.2237, 171.5346,  -5.3082],
           [  5.6034,  25.6748, -22.2133]],
 
@@ -1656,7 +2815,7 @@ type TestDerivatives () =
           [ 59.6885, -29.8678, -25.2544],
           [  4.1600, -55.7119,  22.2137]]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[-192.4834,  -40.2855,    1.3868],
+        let fwdzdCorrect = combo.tensor([[[[-192.4834,  -40.2855,    1.3868],
           [-249.6178,  258.1780,  -22.2914],
           [ 213.6440,  208.5909,   -3.8136]],
 
@@ -1673,7 +2832,7 @@ type TestDerivatives () =
           [  25.9553,  143.8179,   65.0520],
           [  64.2762,   28.9000,   69.2620]]]])
 
-        let revx = dsharp.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
+        let revx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
           [ -4.7983,   3.5090,  -6.9395,  -0.1943],
           [ -3.4793,  -4.3857,  -4.2665,   0.2690],
           [ -4.9017,   0.4501,   8.7836,   0.8665]],
@@ -1703,7 +2862,7 @@ type TestDerivatives () =
           [  7.1561,  -5.2819,   0.5426,   6.1291],
           [  3.4090,  -0.8490,  -4.4021,  -1.1141],
           [  3.1586,   1.6269,   4.5772,  -4.8104]]]]).reverseDiff()
-        let revy = dsharp.tensor([[[[-2.1628, 15.5045],
+        let revy = combo.tensor([[[[-2.1628, 15.5045],
           [-2.8062, -5.8116]],
 
          [[-1.4585, 10.9059],
@@ -1722,7 +2881,7 @@ type TestDerivatives () =
          [[-8.9989, -3.4869],
           [ 6.0547,  5.6603]]]]).reverseDiff()
         let revz = revx.conv2d(revy, stride=2, padding=2, dilation=3)
-        let revzCorrect = dsharp.tensor([[[[-14.6076,  16.4301,  21.7161],
+        let revzCorrect = combo.tensor([[[[-14.6076,  16.4301,  21.7161],
           [ 75.2237, 171.5346,  -5.3082],
           [  5.6034,  25.6748, -22.2133]],
 
@@ -1738,7 +2897,7 @@ type TestDerivatives () =
          [[ -2.1946,  38.6560,  -1.0571],
           [ 59.6885, -29.8678, -25.2544],
           [  4.1600, -55.7119,  22.2137]]]])
-        revz.reverse(dsharp.tensor([[[[-4.9500, -0.1235, -1.4549],
+        revz.reverse(combo.tensor([[[[-4.9500, -0.1235, -1.4549],
           [ 1.0173, -3.8754,  8.1473],
           [-1.1222, -2.0444, -3.8435]],
 
@@ -1755,7 +2914,7 @@ type TestDerivatives () =
           [ 3.7285, -0.2306, -0.2753],
           [ 0.1230, -4.0682, -3.4253]]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 12.0238,  33.8209, -17.2926, -69.2517],
+        let revxdCorrect = combo.tensor([[[[ 12.0238,  33.8209, -17.2926, -69.2517],
           [-62.5262,  17.3330,  14.9041,  44.0385],
           [  7.8226,   3.4009,  10.0191, -40.2569],
           [ 34.4406,  26.0614, -20.7367,   6.2848]],
@@ -1786,7 +2945,7 @@ type TestDerivatives () =
           [ 61.9495,  13.6942,  32.6135,  47.4267],
           [ -0.8477,  21.5595,  -0.1735,  -1.0164]]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[ 1.4095e+01, -5.9958e+01],
+        let revydCorrect = combo.tensor([[[[ 1.4095e+01, -5.9958e+01],
           [ 9.4394e+01, -1.1459e+01]],
 
          [[-1.2466e+01, -4.6630e+00],
@@ -1816,7 +2975,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv3D () =
-        let fwdx = dsharp.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                      [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                      [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
                                      [-1.2988e+00,  9.6719e-01, -3.3539e-01,  8.7715e-01]],
@@ -1856,7 +3016,7 @@ type TestDerivatives () =
                                      [ 3.5693e-01,  1.0187e+00,  1.1133e+00, -4.1039e-01],
                                      [-1.7768e+00, -2.2549e-01,  2.7584e-01, -1.2234e+00],
                                      [-2.9351e-01, -5.3639e-01, -1.2375e+00,  8.3979e-03]]]]).unsqueeze(0)
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-0.2972, -1.2066, -0.6269,  0.9434],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-0.2972, -1.2066, -0.6269,  0.9434],
                                                        [-0.9555,  0.3641,  0.1879,  1.2518],
                                                        [ 0.4894, -1.0205,  2.2927, -0.7572],
                                                        [ 1.1067,  0.5710, -0.0511, -1.1728]],
@@ -1897,7 +3057,7 @@ type TestDerivatives () =
                                                        [-0.2553,  1.1071,  0.2514,  0.2893],
                                                        [ 0.5300,  0.1334,  0.0045,  1.7511]]]]).unsqueeze(0))
 
-        let fwdy = dsharp.tensor([[[[-0.5868, -0.6268,  0.2067],
+        let fwdy = combo.tensor([[[[-0.5868, -0.6268,  0.2067],
                                      [ 0.0902, -0.2625,  0.4332],
                                      [-2.3743,  0.4579,  1.1151]],
 
@@ -1921,7 +3081,7 @@ type TestDerivatives () =
                                     [[-0.0875,  0.5780, -0.2825],
                                      [ 0.2239,  0.7976,  1.5523],
                                      [ 0.6226, -0.4116,  1.0639]]]]).unsqueeze(0)
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[-1.7070, -2.1382, -0.9192],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[-1.7070, -2.1382, -0.9192],
                                                        [ 0.2977, -1.4472, -0.4086],
                                                        [-1.4684, -1.4817, -1.6733]],
 
@@ -1947,19 +3107,19 @@ type TestDerivatives () =
                                                        [-1.2205,  0.0902, -2.0896]]]]).unsqueeze(0))
 
         let fwdz = fwdx.conv3d(fwdy)
-        let fwdzCorrect = dsharp.tensor([[[[ 3.1109,  6.7899],
+        let fwdzCorrect = combo.tensor([[[[ 3.1109,  6.7899],
                                               [ 4.3064,  4.1053]],
                                    
                                              [[ 5.0324, -8.8943],
                                               [-0.1298,  1.2862]]]]).unsqueeze(0)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[11.2710, 12.5367],
+        let fwdzdCorrect = combo.tensor([[[[11.2710, 12.5367],
                                                 [-1.7060, -5.5142]],
                                      
                                                [[16.1629,  7.7531],
                                                 [ 8.8851,  7.2768]]]]).unsqueeze(0)
 
-        let revx = dsharp.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
+        let revx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                      [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                      [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
                                      [-1.2988e+00,  9.6719e-01, -3.3539e-01,  8.7715e-01]],
@@ -1999,7 +3159,7 @@ type TestDerivatives () =
                                      [ 3.5693e-01,  1.0187e+00,  1.1133e+00, -4.1039e-01],
                                      [-1.7768e+00, -2.2549e-01,  2.7584e-01, -1.2234e+00],
                                      [-2.9351e-01, -5.3639e-01, -1.2375e+00,  8.3979e-03]]]]).unsqueeze(0).reverseDiff()
-        let revy = dsharp.tensor([[[[-0.5868, -0.6268,  0.2067],
+        let revy = combo.tensor([[[[-0.5868, -0.6268,  0.2067],
                                      [ 0.0902, -0.2625,  0.4332],
                                      [-2.3743,  0.4579,  1.1151]],
 
@@ -2024,18 +3184,18 @@ type TestDerivatives () =
                                      [ 0.2239,  0.7976,  1.5523],
                                      [ 0.6226, -0.4116,  1.0639]]]]).unsqueeze(0).reverseDiff()
         let revz = revx.conv3d(revy)
-        let revzCorrect = dsharp.tensor([[[[ 3.1109,  6.7899],
+        let revzCorrect = combo.tensor([[[[ 3.1109,  6.7899],
                                               [ 4.3064,  4.1053]],
                                    
                                              [[ 5.0324, -8.8943],
                                               [-0.1298,  1.2862]]]]).unsqueeze(0)
-        revz.reverse(dsharp.tensor([[[[-0.1342,  1.0524],
+        revz.reverse(combo.tensor([[[[-0.1342,  1.0524],
                                         [ 2.0821,  0.8130]],
                              
                                        [[ 0.4078, -0.4072],
                                         [ 0.6948, -2.6370]]]]).unsqueeze(0))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 0.0787, -0.5334, -0.6874,  0.2176],
+        let revxdCorrect = combo.tensor([[[[ 0.0787, -0.5334, -0.6874,  0.2176],
                                               [-1.2338, -1.6520, -0.4136,  0.6239],
                                               [ 0.5063, -3.0335,  1.0207,  1.5257],
                                               [-4.9435, -0.9768,  2.6941,  0.9066]],
@@ -2076,7 +3236,7 @@ type TestDerivatives () =
                                               [ 0.4095, -0.4576, -0.4234, -4.5267],
                                               [ 0.4325, -1.9277,  1.8246, -2.8056]]]]).unsqueeze(0)
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[-0.8636,  1.4133, -0.4328],
+        let revydCorrect = combo.tensor([[[[-0.8636,  1.4133, -0.4328],
                                               [-4.8358,  6.7805, -0.5227],
                                               [-4.2442,  0.6252, -2.4955]],
                                    
@@ -2109,7 +3269,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv3Dp1 () =
-        let fwdx = dsharp.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                      [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                      [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
                                      [-1.2988e+00,  9.6719e-01, -3.3539e-01,  8.7715e-01]],
@@ -2149,7 +3310,7 @@ type TestDerivatives () =
                                      [ 3.5693e-01,  1.0187e+00,  1.1133e+00, -4.1039e-01],
                                      [-1.7768e+00, -2.2549e-01,  2.7584e-01, -1.2234e+00],
                                      [-2.9351e-01, -5.3639e-01, -1.2375e+00,  8.3979e-03]]]]).unsqueeze(0)
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-0.2972, -1.2066, -0.6269,  0.9434],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-0.2972, -1.2066, -0.6269,  0.9434],
                                                        [-0.9555,  0.3641,  0.1879,  1.2518],
                                                        [ 0.4894, -1.0205,  2.2927, -0.7572],
                                                        [ 1.1067,  0.5710, -0.0511, -1.1728]],
@@ -2190,7 +3351,7 @@ type TestDerivatives () =
                                                        [-0.2553,  1.1071,  0.2514,  0.2893],
                                                        [ 0.5300,  0.1334,  0.0045,  1.7511]]]]).unsqueeze(0))
 
-        let fwdy = dsharp.tensor([[[[-0.5868, -0.6268,  0.2067],
+        let fwdy = combo.tensor([[[[-0.5868, -0.6268,  0.2067],
                                      [ 0.0902, -0.2625,  0.4332],
                                      [-2.3743,  0.4579,  1.1151]],
 
@@ -2214,7 +3375,7 @@ type TestDerivatives () =
                                     [[-0.0875,  0.5780, -0.2825],
                                      [ 0.2239,  0.7976,  1.5523],
                                      [ 0.6226, -0.4116,  1.0639]]]]).unsqueeze(0)
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[-1.7070, -2.1382, -0.9192],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[-1.7070, -2.1382, -0.9192],
                                                        [ 0.2977, -1.4472, -0.4086],
                                                        [-1.4684, -1.4817, -1.6733]],
 
@@ -2240,7 +3401,7 @@ type TestDerivatives () =
                                                        [-1.2205,  0.0902, -2.0896]]]]).unsqueeze(0))
 
         let fwdz = fwdx.conv3d(fwdy, padding=1)
-        let fwdzCorrect = dsharp.tensor([[[[  2.9555,  -2.2637,  -7.1829,   5.6339],
+        let fwdzCorrect = combo.tensor([[[[  2.9555,  -2.2637,  -7.1829,   5.6339],
                                             [ -3.3115,  11.7124,   2.7917,   2.6118],
                                             [  5.5319,   3.0030,   3.2099,  -2.7804],
                                             [ -1.4804,  -0.1157,  -6.4439,  -0.0716]],
@@ -2260,7 +3421,7 @@ type TestDerivatives () =
                                             [ -0.0842,   0.3416,  -3.8301,  -2.1084],
                                             [  4.0825,  -1.9845,  -1.1269,   2.3267]]]]).unsqueeze(0)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[  2.2253,  -1.9130,  -8.2497,   5.2579],
+        let fwdzdCorrect = combo.tensor([[[[  2.2253,  -1.9130,  -8.2497,   5.2579],
                                               [ -3.4888,   4.0274,   7.8024,  -2.4420],
                                               [  5.6041,   1.3396,  -0.2006,   4.3691],
                                               [  1.6976,  -1.4672,  -3.4178,  -7.1506]],
@@ -2280,7 +3441,7 @@ type TestDerivatives () =
                                               [ -6.1232,  -6.2640,  -5.8346,   5.5872],
                                               [  1.5468,   3.2443,   3.2940,   7.3158]]]]).unsqueeze(0)
 
-        let revx = dsharp.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
+        let revx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                      [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                      [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
                                      [-1.2988e+00,  9.6719e-01, -3.3539e-01,  8.7715e-01]],
@@ -2320,7 +3481,7 @@ type TestDerivatives () =
                                      [ 3.5693e-01,  1.0187e+00,  1.1133e+00, -4.1039e-01],
                                      [-1.7768e+00, -2.2549e-01,  2.7584e-01, -1.2234e+00],
                                      [-2.9351e-01, -5.3639e-01, -1.2375e+00,  8.3979e-03]]]]).unsqueeze(0).reverseDiff()
-        let revy = dsharp.tensor([[[[-0.5868, -0.6268,  0.2067],
+        let revy = combo.tensor([[[[-0.5868, -0.6268,  0.2067],
                                      [ 0.0902, -0.2625,  0.4332],
                                      [-2.3743,  0.4579,  1.1151]],
 
@@ -2345,7 +3506,7 @@ type TestDerivatives () =
                                      [ 0.2239,  0.7976,  1.5523],
                                      [ 0.6226, -0.4116,  1.0639]]]]).unsqueeze(0).reverseDiff()
         let revz = revx.conv3d(revy, padding=1)
-        let revzCorrect = dsharp.tensor([[[[  2.9555,  -2.2637,  -7.1829,   5.6339],
+        let revzCorrect = combo.tensor([[[[  2.9555,  -2.2637,  -7.1829,   5.6339],
                                             [ -3.3115,  11.7124,   2.7917,   2.6118],
                                             [  5.5319,   3.0030,   3.2099,  -2.7804],
                                             [ -1.4804,  -0.1157,  -6.4439,  -0.0716]],
@@ -2364,7 +3525,7 @@ type TestDerivatives () =
                                             [  3.2490,   2.0787,   2.2262,  -2.4861],
                                             [ -0.0842,   0.3416,  -3.8301,  -2.1084],
                                             [  4.0825,  -1.9845,  -1.1269,   2.3267]]]]).unsqueeze(0)
-        revz.reverse(dsharp.tensor([[[[ 1.0787, -0.1694,  0.8318,  0.0683],
+        revz.reverse(combo.tensor([[[[ 1.0787, -0.1694,  0.8318,  0.0683],
                                         [ 0.2137,  0.4235, -0.4706,  0.2851],
                                         [-0.0614,  0.6621,  0.0898,  0.3021],
                                         [ 0.2139,  1.1688,  0.1729,  0.1205]],
@@ -2384,7 +3545,7 @@ type TestDerivatives () =
                                         [ 0.0950,  0.9003, -0.1936, -1.7822],
                                         [ 1.0543,  0.4372,  1.5583,  0.1493]]]]).unsqueeze(0))         
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 1.3856, -1.3797,  0.3651, -1.8831],
+        let revxdCorrect = combo.tensor([[[[ 1.3856, -1.3797,  0.3651, -1.8831],
                                               [-2.6399, -6.2095,  2.1083,  1.7764],
                                               [ 0.1656, -1.7059, -2.9380,  0.2971],
                                               [-1.7876,  2.0877, -1.0662, -0.9915]],
@@ -2425,7 +3586,7 @@ type TestDerivatives () =
                                               [-0.4118, -1.2795,  1.0230, -2.9383],
                                               [ 1.7536,  0.8931, -0.3636, -1.2568]]]]).unsqueeze(0)
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[-3.8544, -7.7605, -2.6786],
+        let revydCorrect = combo.tensor([[[[-3.8544, -7.7605, -2.6786],
                                               [ 2.2065, 10.6375, -1.0804],
                                               [ 3.3410, -3.3944, -2.1287]],
                                    
@@ -2459,7 +3620,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv3Ds2p2 () =
-        let fwdx = dsharp.tensor([[[[-1.5904, -0.8058,  0.4822, -0.3421],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[-1.5904, -0.8058,  0.4822, -0.3421],
            [ 2.3982, -0.7756,  1.7063, -0.9767],
            [-0.9279, -0.1570,  0.1906, -0.4191],
            [-1.4358, -0.6180,  0.2677, -0.6742]],
@@ -2499,7 +3661,7 @@ type TestDerivatives () =
            [-0.3361,  1.1943, -0.0648,  1.2685],
            [-0.5980, -0.1370,  1.2596,  0.9503],
            [ 0.3746, -0.0476,  0.6285, -0.7984]]]]).unsqueeze(0)
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-1.3015, -0.1880,  1.3592, -1.1958],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-1.3015, -0.1880,  1.3592, -1.1958],
            [-2.7080, -0.1565,  1.2310, -0.3947],
            [ 0.6691, -0.1534, -1.1670,  0.3617],
            [-0.3833,  1.3008,  0.3536, -1.3922]],
@@ -2540,7 +3702,7 @@ type TestDerivatives () =
            [-0.7390, -0.8965,  0.1503,  1.5269],
            [ 1.2729, -0.2600, -1.7034,  0.8674]]]]).unsqueeze(0))
 
-        let fwdy = dsharp.tensor([[[[-0.4092,  0.1349,  0.6251],
+        let fwdy = combo.tensor([[[[-0.4092,  0.1349,  0.6251],
            [ 1.5807, -0.5210,  0.3522],
            [ 0.3967,  0.5225, -0.9222]],
 
@@ -2564,7 +3726,7 @@ type TestDerivatives () =
           [[ 0.0552,  2.2518, -1.4007],
            [-0.5206,  0.5875, -0.9891],
            [-0.5678, -0.2258,  1.3448]]]]).unsqueeze(0)
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[ 0.2063, -1.5832, -0.5495],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[ 0.2063, -1.5832, -0.5495],
            [-1.7204,  0.2235, -0.8021],
            [-0.0909,  0.3673,  1.2532]],
 
@@ -2590,7 +3752,7 @@ type TestDerivatives () =
            [-2.2667,  0.1669,  0.3584]]]]).unsqueeze(0))
 
         let fwdz = fwdx.conv3d(fwdy, stride=2, padding=2)
-        let fwdzCorrect = dsharp.tensor([[[[-2.8106,  3.7489, -0.2067],
+        let fwdzCorrect = combo.tensor([[[[-2.8106,  3.7489, -0.2067],
            [ 5.5005,  5.6719, -3.5636],
            [-1.0549,  3.1799, -2.1535]],
 
@@ -2604,7 +3766,7 @@ type TestDerivatives () =
 
         printfn "%A %A %A" fwdx.shape fwdy.shape fwdz.shape
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[-1.7395,  7.9394, -3.6845],
+        let fwdzdCorrect = combo.tensor([[[[-1.7395,  7.9394, -3.6845],
            [ 1.6466,  4.5153, -5.6526],
            [-3.7645, -5.3068,  6.9903]],
 
@@ -2616,7 +3778,7 @@ type TestDerivatives () =
            [-3.6221,  1.2941,  5.5802],
            [-1.9656, -2.2882,  4.4366]]]]).unsqueeze(0)
 
-        let revx = dsharp.tensor([[[[-1.5904, -0.8058,  0.4822, -0.3421],
+        let revx = combo.tensor([[[[-1.5904, -0.8058,  0.4822, -0.3421],
            [ 2.3982, -0.7756,  1.7063, -0.9767],
            [-0.9279, -0.1570,  0.1906, -0.4191],
            [-1.4358, -0.6180,  0.2677, -0.6742]],
@@ -2656,7 +3818,7 @@ type TestDerivatives () =
            [-0.3361,  1.1943, -0.0648,  1.2685],
            [-0.5980, -0.1370,  1.2596,  0.9503],
            [ 0.3746, -0.0476,  0.6285, -0.7984]]]]).unsqueeze(0).reverseDiff()
-        let revy = dsharp.tensor([[[[-0.4092,  0.1349,  0.6251],
+        let revy = combo.tensor([[[[-0.4092,  0.1349,  0.6251],
            [ 1.5807, -0.5210,  0.3522],
            [ 0.3967,  0.5225, -0.9222]],
 
@@ -2681,7 +3843,7 @@ type TestDerivatives () =
            [-0.5206,  0.5875, -0.9891],
            [-0.5678, -0.2258,  1.3448]]]]).unsqueeze(0).reverseDiff()
         let revz = revx.conv3d(revy, stride=2, padding=2)
-        let revzCorrect = dsharp.tensor([[[[-2.8106,  3.7489, -0.2067],
+        let revzCorrect = combo.tensor([[[[-2.8106,  3.7489, -0.2067],
            [ 5.5005,  5.6719, -3.5636],
            [-1.0549,  3.1799, -2.1535]],
 
@@ -2692,7 +3854,7 @@ type TestDerivatives () =
           [[-1.5348,  2.5410,  3.9453],
            [-3.1639, -2.1265, -2.0348],
            [ 1.2052,  0.3915, -0.0322]]]]).unsqueeze(0)
-        revz.reverse(dsharp.tensor([[[[-7.6066e-01,  1.5309e+00,  2.7315e+00],
+        revz.reverse(combo.tensor([[[[-7.6066e-01,  1.5309e+00,  2.7315e+00],
            [-3.6182e-01,  6.5514e-01,  8.5998e-01],
            [ 3.0530e-01,  1.5119e+00,  4.9778e-01]],
 
@@ -2704,7 +3866,7 @@ type TestDerivatives () =
            [-2.2276e-03, -4.7472e-01,  6.3146e-01],
            [ 1.5889e+00,  9.0104e-01,  8.1894e-01]]]]).unsqueeze(0))         
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[-1.9630,  0.0921, -4.0079, -1.0640],
+        let revxdCorrect = combo.tensor([[[[-1.9630,  0.0921, -4.0079, -1.0640],
             [-3.3286,  0.0127, -1.3071, -0.5779],
             [-1.1160,  1.4361, -0.1028, -0.3721],
             [-0.0489, -1.7678,  0.9736, -0.4238]],
@@ -2745,7 +3907,7 @@ type TestDerivatives () =
             [-2.1590,  1.6702, -0.3920,  2.2033],
             [-0.8716,  0.1054, -0.0843,  0.0958]]]]).unsqueeze(0)
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[ 1.7862,  4.7762,  1.4564],
+        let revydCorrect = combo.tensor([[[[ 1.7862,  4.7762,  1.4564],
             [-5.9343,  0.8328, -4.9542],
             [-1.5079, -5.4431,  0.8418]],
  
@@ -2778,7 +3940,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv3Ds2p2d3 () =
-        let fwdx = dsharp.tensor([[[[ 1.9019e-01, -6.0187e-01,  1.6493e+00,  1.7904e+00,  6.4850e-01],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ 1.9019e-01, -6.0187e-01,  1.6493e+00,  1.7904e+00,  6.4850e-01],
            [-7.6622e-01,  9.0741e-01, -2.0115e-01, -3.1550e-01, -2.8159e-01],
            [-2.9039e-01, -2.2963e-01, -2.2106e-03,  1.0760e+00,  4.7973e-01],
            [-8.2379e-01,  1.3691e+00,  8.3987e-01, -2.3692e-01, -3.7774e-03],
@@ -2838,7 +4001,7 @@ type TestDerivatives () =
            [ 6.5330e-01, -1.7003e+00,  1.7339e-03,  3.0407e-01,  5.9578e-01],
            [-2.0100e+00,  9.2629e-01,  1.1525e-01,  3.4881e-01,  2.9752e-01],
            [-1.2822e+00,  4.7037e-01, -2.6658e+00,  6.3094e-01, -2.9173e-01]]]]).unsqueeze(0)
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-1.4453e-01, -2.5193e-01, -1.6063e+00,  8.3997e-01, -4.8692e-01],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-1.4453e-01, -2.5193e-01, -1.6063e+00,  8.3997e-01, -4.8692e-01],
            [ 1.5610e+00,  8.5250e-01,  8.3792e-02,  6.0423e-01,  4.1669e-01],
            [ 1.5127e-01,  1.7195e+00, -5.6499e-01,  4.7642e-01, -9.1223e-01],
            [-2.8026e+00, -1.4448e+00,  2.9707e-01, -7.8099e-01, -5.5547e-01],
@@ -2899,7 +4062,7 @@ type TestDerivatives () =
            [-3.7067e-01,  4.5176e-01, -2.2020e+00,  1.4143e+00, -3.8839e-01],
            [ 1.6477e+00, -9.5105e-01,  8.0099e-01,  6.4814e-01, -1.1899e+00]]]]).unsqueeze(0))
 
-        let fwdy = dsharp.tensor([[[[ 0.6996, -0.3127, -0.8337],
+        let fwdy = combo.tensor([[[[ 0.6996, -0.3127, -0.8337],
            [-0.4648, -1.0491,  0.2662],
            [ 0.1741, -0.1338, -1.1185]],
 
@@ -2923,7 +4086,7 @@ type TestDerivatives () =
           [[-1.7598, -1.0454, -0.4667],
            [ 0.3086, -0.5486,  0.4746],
            [ 0.7247,  1.6422, -1.2026]]]]).unsqueeze(0)
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[ 0.9516, -1.0160, -0.3549],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[ 0.9516, -1.0160, -0.3549],
            [ 0.1355, -0.8438, -1.2124],
            [-1.1963,  0.0505,  0.2252]],
 
@@ -2949,19 +4112,19 @@ type TestDerivatives () =
            [ 0.6402, -0.1453,  0.8314]]]]).unsqueeze(0))
 
         let fwdz = fwdx.conv3d(fwdy, stride=2, padding=2, dilation=3)
-        let fwdzCorrect = dsharp.tensor([[[[ 2.3117,  3.4901],
+        let fwdzCorrect = combo.tensor([[[[ 2.3117,  3.4901],
            [-0.8979, -4.6094]],
 
           [[ 1.3561, -1.0276],
            [-1.0418,  3.9914]]]]).unsqueeze(0)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[ -3.2099,   2.7830],
+        let fwdzdCorrect = combo.tensor([[[[ -3.2099,   2.7830],
            [ -4.1220, -14.4437]],
 
           [[ -6.0255,  -2.7025],
            [  8.3708,   6.1605]]]]).unsqueeze(0)
 
-        let revx = dsharp.tensor([[[[ 1.9019e-01, -6.0187e-01,  1.6493e+00,  1.7904e+00,  6.4850e-01],
+        let revx = combo.tensor([[[[ 1.9019e-01, -6.0187e-01,  1.6493e+00,  1.7904e+00,  6.4850e-01],
            [-7.6622e-01,  9.0741e-01, -2.0115e-01, -3.1550e-01, -2.8159e-01],
            [-2.9039e-01, -2.2963e-01, -2.2106e-03,  1.0760e+00,  4.7973e-01],
            [-8.2379e-01,  1.3691e+00,  8.3987e-01, -2.3692e-01, -3.7774e-03],
@@ -3021,7 +4184,7 @@ type TestDerivatives () =
            [ 6.5330e-01, -1.7003e+00,  1.7339e-03,  3.0407e-01,  5.9578e-01],
            [-2.0100e+00,  9.2629e-01,  1.1525e-01,  3.4881e-01,  2.9752e-01],
            [-1.2822e+00,  4.7037e-01, -2.6658e+00,  6.3094e-01, -2.9173e-01]]]]).unsqueeze(0).reverseDiff()
-        let revy = dsharp.tensor([[[[ 0.6996, -0.3127, -0.8337],
+        let revy = combo.tensor([[[[ 0.6996, -0.3127, -0.8337],
            [-0.4648, -1.0491,  0.2662],
            [ 0.1741, -0.1338, -1.1185]],
 
@@ -3046,18 +4209,18 @@ type TestDerivatives () =
            [ 0.3086, -0.5486,  0.4746],
            [ 0.7247,  1.6422, -1.2026]]]]).unsqueeze(0).reverseDiff()
         let revz = revx.conv3d(revy, stride=2, padding=2, dilation=3)
-        let revzCorrect = dsharp.tensor([[[[ 2.3117,  3.4901],
+        let revzCorrect = combo.tensor([[[[ 2.3117,  3.4901],
            [-0.8979, -4.6094]],
 
           [[ 1.3561, -1.0276],
            [-1.0418,  3.9914]]]]).unsqueeze(0)
-        revz.reverse(dsharp.tensor([[[[ 3.9327e-02,  8.2953e-01],
+        revz.reverse(combo.tensor([[[[ 3.9327e-02,  8.2953e-01],
            [ 1.9582e+00,  9.1915e-01]],
 
           [[ 2.4345e-01, -9.2549e-04],
            [ 9.4359e-02, -9.3872e-01]]]]).unsqueeze(0))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[-6.5670e-01, -2.9506e-02,  0.0000e+00,  2.9354e-01, -7.8669e-02],
+        let revxdCorrect = combo.tensor([[[[-6.5670e-01, -2.9506e-02,  0.0000e+00,  2.9354e-01, -7.8669e-02],
             [ 4.3019e-04, -2.5541e-01,  0.0000e+00,  9.7095e-04,  6.4813e-02],
             [ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
             [ 4.3634e-01, -9.8994e-02,  0.0000e+00,  9.8483e-01,  2.5121e-02],
@@ -3118,7 +4281,7 @@ type TestDerivatives () =
             [ 2.8369e-01, -1.0742e+00,  0.0000e+00, -5.0424e-01,  9.2928e-01],
             [ 6.0113e-01,  6.4585e-02,  0.0000e+00,  1.3623e+00, -4.7294e-02]]]]).unsqueeze(0)
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[-1.7854e-01, -1.7375e+00,  6.1192e-02],
+        let revydCorrect = combo.tensor([[[[-1.7854e-01, -1.7375e+00,  6.1192e-02],
             [ 7.7402e-01,  5.7279e-01, -6.8908e-02],
             [ 3.2452e-04, -5.8230e-02, -2.0979e-01]],
  
@@ -3151,7 +4314,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeConv2Ds23p32d23 () =
-        let fwdx = dsharp.tensor([[[[ 0.4011, -1.2780,  1.5871, -1.7213],
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[[ 0.4011, -1.2780,  1.5871, -1.7213],
           [ 0.2381,  1.1069,  0.0987, -0.9293],
           [ 0.3164,  0.8496,  0.9187, -1.1235],
           [-1.7634, -2.0868, -0.5947,  0.6119]],
@@ -3181,7 +4345,7 @@ type TestDerivatives () =
           [ 0.2964,  0.1028,  0.9264,  0.6879],
           [ 1.1085,  0.7679, -0.4832,  1.1809],
           [-0.2029,  0.9352,  0.8924,  0.2688]]]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[[[-9.6456e-01, -7.4969e-02, -5.3567e-01, -1.5748e+00],
+        let fwdx = fwdx.forwardDiff(combo.tensor([[[[-9.6456e-01, -7.4969e-02, -5.3567e-01, -1.5748e+00],
           [-6.4667e-01, -4.5245e-01, -5.5802e-01,  1.4635e-01],
           [ 8.7809e-01,  5.8505e-01,  5.3637e-01,  4.4096e-01],
           [-2.2662e-01,  8.8711e-02, -1.8153e-01,  9.4813e-01]],
@@ -3212,7 +4376,7 @@ type TestDerivatives () =
           [ 1.0982e+00, -6.6295e-02, -4.4212e-01,  6.9732e-01],
           [ 7.3720e-01,  9.7936e-01,  5.0589e-01, -6.4268e-01]]]]))
 
-        let fwdy = dsharp.tensor([[[[ 0.4282,  1.2302],
+        let fwdy = combo.tensor([[[[ 0.4282,  1.2302],
           [ 2.2170,  1.2013]],
 
          [[ 0.6013,  0.0310],
@@ -3230,7 +4394,7 @@ type TestDerivatives () =
 
          [[-1.5099,  0.5905],
           [ 1.5490, -1.1658]]]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[[[ 0.5367, -1.9746],
+        let fwdy = fwdy.forwardDiff(combo.tensor([[[[ 0.5367, -1.9746],
           [-0.0403,  1.1286]],
 
          [[ 0.4467, -1.4777],
@@ -3250,7 +4414,7 @@ type TestDerivatives () =
           [-0.7617, -0.8730]]]]))
 
         let fwdz = fwdx.conv2d(fwdy, strides=[2;3], paddings=[3;2], dilations=[2;3])
-        let fwdzCorrect = dsharp.tensor([[[[ 0.0000,  0.0000],
+        let fwdzCorrect = combo.tensor([[[[ 0.0000,  0.0000],
           [ 2.5643,  3.6581],
           [ 0.5393, -2.0446],
           [-1.7860,  0.2936]],
@@ -3271,7 +4435,7 @@ type TestDerivatives () =
           [-0.9697,  2.1493],
           [ 0.1075, -2.1441]]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000],
+        let fwdzdCorrect = combo.tensor([[[[ 0.0000,  0.0000],
           [ 1.4837, -0.4532],
           [-7.9980, -0.4608],
           [ 2.5579, -0.8418]],
@@ -3292,7 +4456,7 @@ type TestDerivatives () =
           [-3.6029,  3.4802],
           [-0.3956, -3.4729]]]])
 
-        let revx = dsharp.tensor([[[[ 0.4011, -1.2780,  1.5871, -1.7213],
+        let revx = combo.tensor([[[[ 0.4011, -1.2780,  1.5871, -1.7213],
           [ 0.2381,  1.1069,  0.0987, -0.9293],
           [ 0.3164,  0.8496,  0.9187, -1.1235],
           [-1.7634, -2.0868, -0.5947,  0.6119]],
@@ -3322,7 +4486,7 @@ type TestDerivatives () =
           [ 0.2964,  0.1028,  0.9264,  0.6879],
           [ 1.1085,  0.7679, -0.4832,  1.1809],
           [-0.2029,  0.9352,  0.8924,  0.2688]]]]).reverseDiff()
-        let revy = dsharp.tensor([[[[ 0.4282,  1.2302],
+        let revy = combo.tensor([[[[ 0.4282,  1.2302],
           [ 2.2170,  1.2013]],
 
          [[ 0.6013,  0.0310],
@@ -3341,7 +4505,7 @@ type TestDerivatives () =
          [[-1.5099,  0.5905],
           [ 1.5490, -1.1658]]]]).reverseDiff()
         let revz = revx.conv2d(revy, strides=[2;3], paddings=[3;2], dilations=[2;3])
-        let revzCorrect = dsharp.tensor([[[[ 0.0000,  0.0000],
+        let revzCorrect = combo.tensor([[[[ 0.0000,  0.0000],
           [ 2.5643,  3.6581],
           [ 0.5393, -2.0446],
           [-1.7860,  0.2936]],
@@ -3361,7 +4525,7 @@ type TestDerivatives () =
           [-0.4210,  1.6840],
           [-0.9697,  2.1493],
           [ 0.1075, -2.1441]]]])
-        revz.reverse(dsharp.tensor([[[[-0.5596, -0.6619],
+        revz.reverse(combo.tensor([[[[-0.5596, -0.6619],
           [-0.4751,  0.5980],
           [ 1.3078, -2.0496],
           [ 1.2081,  0.2797]],
@@ -3382,7 +4546,7 @@ type TestDerivatives () =
           [-0.6983, -0.2945],
           [ 0.1820,  0.3053]]]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
+        let revxdCorrect = combo.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
            [ 0.0000,  6.5395,  0.0000,  0.0000],
            [ 0.0000,  0.0000,  0.0000,  0.0000],
            [ 0.0000,  0.2058,  0.0000,  0.0000]],
@@ -3413,7 +4577,7 @@ type TestDerivatives () =
            [ 0.0000,  0.0000,  0.0000,  0.0000],
            [ 0.0000, -0.7126,  0.0000,  0.0000]]]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[[[-3.2932,  0.4704],
+        let revydCorrect = combo.tensor([[[[-3.2932,  0.4704],
            [ 3.9386, -2.0841]],
  
           [[-1.2150,  1.6960],
@@ -3440,52 +4604,53 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeMatMulT2T2 () =
-        let fwdx = dsharp.tensor([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
             [9.8762; 3.2263; 6.2866; 4.7111; 0.0652];
             [3.5832; 7.9801; 1.9854; 4.4965; 4.1712]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[4.6453; 8.4388; 4.6549; 9.5680; 1.5756];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[4.6453; 8.4388; 4.6549; 9.5680; 1.5756];
             [3.2066; 4.2429; 2.2028; 9.1037; 3.4022];
             [4.2324; 4.5508; 3.4755; 2.7196; 5.5344]]))
-        let fwdy = dsharp.tensor([[4.4220; 3.7293];
+        let fwdy = combo.tensor([[4.4220; 3.7293];
             [6.1928; 2.1446];
             [0.0525; 1.2494];
             [7.5281; 1.4816];
             [5.0328; 2.2756]])
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[1.4749; 9.7608];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[1.4749; 9.7608];
             [3.6599; 7.9553];
             [3.5503; 1.3757];
             [8.3172; 6.6748];
             [2.2959; 0.6784]]))
         let fwdz = dsharp.matmul(fwdx, fwdy)
-        let fwdzCorrect = dsharp.tensor([[ 89.6516; 53.7260];
+        let fwdzCorrect = combo.tensor([[ 89.6516; 53.7260];
             [ 99.7751; 58.7331];
             [120.2113; 49.1116]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[239.0819; 162.3930];
+        let fwdzdCorrect = combo.tensor([[239.0819; 162.3930];
             [214.2522; 207.2430];
             [183.9220; 180.5424]])
 
-        let revx = dsharp.tensor([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
+        let revx = combo.tensor([[6.2381; 0.0393; 8.2364; 3.9906; 6.2291];
             [9.8762; 3.2263; 6.2866; 4.7111; 0.0652];
             [3.5832; 7.9801; 1.9854; 4.4965; 4.1712]]).reverseDiff()
-        let revy = dsharp.tensor([[4.4220; 3.7293];
+        let revy = combo.tensor([[4.4220; 3.7293];
             [6.1928; 2.1446];
             [0.0525; 1.2494];
             [7.5281; 1.4816];
             [5.0328; 2.2756]]).reverseDiff()
         let revz = dsharp.matmul(revx, revy)
-        let revzCorrect = dsharp.tensor([[ 89.6516; 53.7260];
+        let revzCorrect = combo.tensor([[ 89.6516; 53.7260];
             [ 99.7751; 58.7331];
             [120.2113; 49.1116]])
-        revz.reverse(dsharp.tensor([[7.3984; 0.1849];
+        revz.reverse(combo.tensor([[7.3984; 0.1849];
             [1.2520; 9.5731];
             [6.8201; 9.5221]]))            
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[33.4050; 46.2136;  0.6191; 55.9696; 37.6556];
+        let revxdCorrect = combo.tensor([[33.4050; 46.2136;  0.6191; 55.9696; 37.6556];
             [41.2370; 28.2842; 12.0266; 23.6085; 28.0854];
             [65.6689; 62.6571; 12.2551; 65.4497; 55.9926]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[ 82.9549;129.8180];
+        let revydCorrect = combo.tensor([[ 82.9549;129.8180];
             [ 58.7551;106.8801];
             [ 82.3474; 80.6097];
             [ 66.0888; 88.6534];
@@ -3502,26 +4667,27 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestTensorStackTs () =
-        let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.; 20.]))
-        let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.; 40.]))
-        let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.; 60.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.; 20.]))
+        let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.; 40.]))
+        let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.; 60.]))
         let fwdz = dsharp.stack([fwdxa;fwdxb;fwdxc])
-        let fwdzCorrect = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]])
+        let fwdzCorrect = combo.tensor([[1.;2.];[3.;4.];[5.;6.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+        let fwdzdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
-        let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
-        let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
-        let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revxa = combo.tensor([1.; 2.]).reverseDiff()
+        let revxb = combo.tensor([3.; 4.]).reverseDiff()
+        let revxc = combo.tensor([5.; 6.]).reverseDiff()
         let revz = dsharp.stack([revxa;revxb;revxc])
-        let revzCorrect = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]])
-        revz.reverse(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+        let revzCorrect = combo.tensor([[1.;2.];[3.;4.];[5.;6.]])
+        revz.reverse(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
         let revxda = revxa.derivative
-        let revxdaCorrect = dsharp.tensor([10.; 20.])
+        let revxdaCorrect = combo.tensor([10.; 20.])
         let revxdb = revxb.derivative
-        let revxdbCorrect = dsharp.tensor([30.; 40.])
+        let revxdbCorrect = combo.tensor([30.; 40.])
         let revxdc = revxc.derivative
-        let revxdcCorrect = dsharp.tensor([50.; 60.])
+        let revxdcCorrect = combo.tensor([50.; 60.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3532,18 +4698,75 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeNeg () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = -fwdx
-        let fwdzCorrect = dsharp.tensor([-1.; -2.; -3.])
+        let fwdzCorrect = combo.tensor([-1.; -2.; -3.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([-2.; -3.; -4.])
+        let fwdzdCorrect = combo.tensor([-2.; -3.; -4.])
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = -revx
-        let revzCorrect = dsharp.tensor([-1.; -2.; -3.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([-1.; -2.; -3.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-5.; -5.; -5.])
+        let revxdCorrect = combo.tensor([-5.; -5.; -5.])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member this.TestDerivativeGather () =
+        let fwdx = dsharp.tensor([1,2,3,4,5]).forwardDiff(dsharp.tensor([10,20,30,40,50]))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([1,3,4])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([10,30,40])
+
+        let revx = dsharp.tensor([1,2,3,4,5]).reverseDiff()
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([1,3,4])
+        revz.reverse(dsharp.tensor([10,30,40]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([10.,  0., 30., 40.,  0.])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[40,20,60],[10,50,60]])
+
+        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
+        revz.reverse(dsharp.tensor([[40,20,60],[10,50,60]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10,20,0],[40,50,120]])
+
+        Assert.AreEqual(fwdzCorrect, fwdz)
+        Assert.AreEqual(fwdzdCorrect, fwdzd)
+        Assert.AreEqual(revzCorrect, revz)
+        Assert.AreEqual(revxdCorrect, revxd)
+
+        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
+        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
+        let fwdzd = fwdz.derivative
+        let fwdzdCorrect = dsharp.tensor([[20,10,20],[40,50,50]])
+
+        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
+        revz.reverse(dsharp.tensor([[20,10,20],[40,50,50]]))
+        let revxd = revx.derivative
+        let revxdCorrect = dsharp.tensor([[10,40,0],[40,100,0]])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3552,18 +4775,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSum () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.sum()
-        let fwdzCorrect = dsharp.tensor(6.)
+        let fwdzCorrect = combo.tensor(6.)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor(9.)
+        let fwdzdCorrect = combo.tensor(9.)
 
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = revx.sum()
-        let revzCorrect = dsharp.tensor(6.)
-        revz.reverse(dsharp.tensor(5.))
+        let revzCorrect = combo.tensor(6.)
+        revz.reverse(combo.tensor(5.))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([5.; 5.; 5.])
+        let revxdCorrect = combo.tensor([5.; 5.; 5.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3572,18 +4796,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSumT2Dim0 () =
-        let fwdx = dsharp.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(dsharp.tensor([[2.; 3.]; [4.; 5.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
         let fwdz = fwdx.sumT2Dim0()
-        let fwdzCorrect = dsharp.tensor([4.; 6.])
+        let fwdzCorrect = combo.tensor([4.; 6.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([6.; 8.])
+        let fwdzdCorrect = combo.tensor([6.; 8.])
 
-        let revx = dsharp.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
+        let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
         let revz = revx.sumT2Dim0()
-        let revzCorrect = dsharp.tensor([4.; 6.])
-        revz.reverse(dsharp.tensor([5.; 6.]))
+        let revzCorrect = combo.tensor([4.; 6.])
+        revz.reverse(combo.tensor([5.; 6.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[5.; 6.]; [5.; 6.]])
+        let revxdCorrect = combo.tensor([[5.; 6.]; [5.; 6.]])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3592,11 +4817,12 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeMean () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.mean()
-        let fwdzCorrect = dsharp.tensor(2.)
+        let fwdzCorrect = combo.tensor(2.)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor(3.)
+        let fwdzdCorrect = combo.tensor(3.)
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3608,23 +4834,24 @@ type TestDerivatives () =
         input.grad
         --> tensor([1., 1., 1.])
         *)
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = revx.mean()
-        let revzCorrect = dsharp.tensor(2.)
-        revz.reverse(dsharp.tensor(3.))
+        let revzCorrect = combo.tensor(2.)
+        revz.reverse(combo.tensor(3.))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([1.; 1.; 1.])
+        let revxdCorrect = combo.tensor([1.; 1.; 1.])
 
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeVariance () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.variance()
-        let fwdzCorrect = dsharp.tensor(1.0)
+        let fwdzCorrect = combo.tensor(1.0)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor(2.0)
+        let fwdzdCorrect = combo.tensor(2.0)
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3636,22 +4863,22 @@ type TestDerivatives () =
         input.grad
         --> tensor([-3.,  0.,  3.])
         *)
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = revx.variance()
-        let revzCorrect = dsharp.tensor(1.)
-        revz.reverse(dsharp.tensor(3.))
+        let revzCorrect = combo.tensor(1.)
+        revz.reverse(combo.tensor(3.))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-3.; 0.; 3.])
+        let revxdCorrect = combo.tensor([-3.; 0.; 3.])
 
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
 
         // keepDim = true, forward
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.variance(0,keepDim=true)
-        let fwdzCorrect = dsharp.tensor([1.0])
+        let fwdzCorrect = combo.tensor([1.0])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([2.0])
+        let fwdzdCorrect = combo.tensor([2.0])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3664,23 +4891,24 @@ type TestDerivatives () =
         input.grad
         --> tensor([-3.,  0.,  3.])
         *)
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = revx.variance(0,keepDim=true)
-        let revzCorrect = dsharp.tensor([1.])
-        revz.reverse(dsharp.tensor([3.]))
+        let revzCorrect = combo.tensor([1.])
+        revz.reverse(combo.tensor([3.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-3.; 0.; 3.])
+        let revxdCorrect = combo.tensor([-3.; 0.; 3.])
 
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeStddev () =
-        let fwdx = dsharp.tensor([1.; 2.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.stddev()
-        let fwdzCorrect = dsharp.tensor(1.0)
+        let fwdzCorrect = combo.tensor(1.0)
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor(1.0)
+        let fwdzdCorrect = combo.tensor(1.0)
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3693,33 +4921,34 @@ type TestDerivatives () =
         input.grad
         --> tensor([-1.5000,  0.0000,  1.5000])
         *)
-        let revx = dsharp.tensor([1.; 2.; 3.]).reverseDiff()
+        let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
         let revz = revx.stddev()
-        let revzCorrect = dsharp.tensor(1.)
-        revz.reverse(dsharp.tensor(3.))
+        let revzCorrect = combo.tensor(1.)
+        revz.reverse(combo.tensor(3.))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-1.5; 0.; 1.5])
+        let revxdCorrect = combo.tensor([-1.5; 0.; 1.5])
 
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member this.TestDerivativeTransposeT2 () =
-        let fwdx = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).forwardDiff(dsharp.tensor([[2.; 3.; 4.]; [10.; 20.; 30.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).forwardDiff(combo.tensor([[2.; 3.; 4.]; [10.; 20.; 30.]]))
         let fwdz = fwdx.transpose()
-        let fwdzCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        let fwdzCorrect = combo.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[2.; 10.]; [3.; 20.]; [4.; 30.]])
+        let fwdzdCorrect = combo.tensor([[2.; 10.]; [3.; 20.]; [4.; 30.]])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
 
-        let revx = dsharp.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).reverseDiff()
+        let revx = combo.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).reverseDiff()
         let revz = revx.transpose()
-        let revzCorrect = dsharp.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
-        revz.reverse(dsharp.tensor([[5.; 5.]; [2.; 5.]; [3.; 7.]]))
+        let revzCorrect = combo.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
+        revz.reverse(combo.tensor([[5.; 5.]; [2.; 5.]; [3.; 7.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[5.; 2.; 3.]; [5.; 5.; 7.]])
+        let revxdCorrect = combo.tensor([[5.; 2.; 3.]; [5.; 5.; 7.]])
 
         Assert.AreEqual(revzCorrect, revz)
         Assert.AreEqual(revxdCorrect, revxd)
@@ -3750,18 +4979,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSignT () =
-        let fwdx = dsharp.tensor([-1.; 0.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([-1.; 0.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.sign()
-        let fwdzCorrect = dsharp.tensor([-1.; 0.; 1.])
+        let fwdzCorrect = combo.tensor([-1.; 0.; 1.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 0.; 0.])
+        let fwdzdCorrect = combo.tensor([0.; 0.; 0.])
 
-        let revx = dsharp.tensor([-1.; 0.; 3.]).reverseDiff()
+        let revx = combo.tensor([-1.; 0.; 3.]).reverseDiff()
         let revz = revx.sign()
-        let revzCorrect = dsharp.tensor([-1.; 0.; 1.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([-1.; 0.; 1.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3770,18 +5000,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeFloorT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.floor()
-        let fwdzCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let fwdzCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let fwdzdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.floor()
-        let revzCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3790,18 +5021,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeCeilT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.ceil()
-        let fwdzCorrect = dsharp.tensor([1.; 1.; 1.; 1.; 1.])
+        let fwdzCorrect = combo.tensor([1.; 1.; 1.; 1.; 1.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let fwdzdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.ceil()
-        let revzCorrect = dsharp.tensor([1.; 1.; 1.; 1.; 1.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.; 1.; 1.; 1.; 1.])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3810,18 +5042,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeRoundT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.round()
-        let fwdzCorrect = dsharp.tensor([1.; 0.; 0.; 1.; 1.])
+        let fwdzCorrect = combo.tensor([1.; 0.; 0.; 1.; 1.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let fwdzdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.round()
-        let revzCorrect = dsharp.tensor([1.; 0.; 0.; 1.; 1.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.; 0.; 0.; 1.; 1.])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 0.; 0.])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3830,18 +5063,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAbsT () =
-        let fwdx = dsharp.tensor([-1.; 0.; 3.]).forwardDiff(dsharp.tensor([2.; 3.; 4.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([-1.; 0.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
         let fwdz = fwdx.abs()
-        let fwdzCorrect = dsharp.tensor([1.; 0.; 3.])
+        let fwdzCorrect = combo.tensor([1.; 0.; 3.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([-2.; 0.; 4.])
+        let fwdzdCorrect = combo.tensor([-2.; 0.; 4.])
 
-        let revx = dsharp.tensor([-1.; 0.; 3.]).reverseDiff()
+        let revx = combo.tensor([-1.; 0.; 3.]).reverseDiff()
         let revz = revx.abs()
-        let revzCorrect = dsharp.tensor([1.; 0.; 3.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.]))
+        let revzCorrect = combo.tensor([1.; 0.; 3.])
+        revz.reverse(combo.tensor([5.; 5.; 5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-5.; 0.; 5.])
+        let revxdCorrect = combo.tensor([-5.; 0.; 5.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3850,18 +5084,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeReluT () =
-        let fwdx = dsharp.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(dsharp.tensor([2.; 3.; 4.; 5.; 6.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(combo.tensor([2.; 3.; 4.; 5.; 6.]))
         let fwdz = fwdx.relu()
-        let fwdzCorrect = dsharp.tensor([0.; 0.; 0.; 3.; 10.])
+        let fwdzCorrect = combo.tensor([0.; 0.; 0.; 3.; 10.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.; 0.; 0.; 5.; 6.])
+        let fwdzdCorrect = combo.tensor([0.; 0.; 0.; 5.; 6.])
 
-        let revx = dsharp.tensor([-1.; -2.; 0.; 3.; 10.]).reverseDiff()
+        let revx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).reverseDiff()
         let revz = revx.relu()
-        let revzCorrect = dsharp.tensor([0.; 0.; 0.; 3.; 10.])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.; 0.; 0.; 3.; 10.])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.; 5.; -5.])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.; 5.; -5.])
 
         Assert.AreEqual(fwdzCorrect, fwdz)
         Assert.AreEqual(fwdzdCorrect, fwdzd)
@@ -3870,22 +5105,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeLeakyRelu () =
-        let fwdx = dsharp.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(dsharp.tensor([2.; 3.; 4.; 5.; 6.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(combo.tensor([2.; 3.; 4.; 5.; 6.]))
         let fwdz = fwdx.leakyRelu()
-        let fwdzCorrect = dsharp.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+        let fwdzCorrect = combo.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
         let fwdzd = fwdz.derivative
         // TODO: behavior of derivative at 0 (where it is undefined) can be reconsidered
-        // let fwdzdCorrect = dsharp.tensor([0.0200; 0.0300; 0.0400; 5.; 6.])
-        let fwdzdCorrect = dsharp.tensor([0.0200; 0.0300; 2.02; 5.; 6.])
+        // let fwdzdCorrect = combo.tensor([0.0200; 0.0300; 0.0400; 5.; 6.])
+        let fwdzdCorrect = combo.tensor([0.0200; 0.0300; 2.02; 5.; 6.])
 
-        let revx = dsharp.tensor([-1.; -2.; 0.; 3.; 10.]).reverseDiff()
+        let revx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).reverseDiff()
         let revz = revx.leakyRelu()
-        let revzCorrect = dsharp.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
         // TODO: behavior of derivative at 0 (where it is undefined) can be reconsidered
-        // let revxdCorrect = dsharp.tensor([0.0500; 0.0500; 0.0500; 5.; -5.])
-        let revxdCorrect = dsharp.tensor([0.0500; 0.0500; 2.52; 5.; -5.])
+        // let revxdCorrect = combo.tensor([0.0500; 0.0500; 0.0500; 5.; -5.])
+        let revxdCorrect = combo.tensor([0.0500; 0.0500; 2.52; 5.; -5.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3894,18 +5130,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSoftplusT () =
-        let fwdx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).forwardDiff(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).forwardDiff(combo.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
         let fwdz = fwdx.softplus()
-        let fwdzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        let fwdzCorrect = combo.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+        let fwdzdCorrect = combo.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
 
-        let revx = dsharp.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).reverseDiff()
+        let revx = combo.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).reverseDiff()
         let revz = revx.softplus()
-        let revzCorrect = dsharp.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
-        revz.reverse(dsharp.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
+        let revzCorrect = combo.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
+        revz.reverse(combo.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
+        let revxdCorrect = combo.tensor([ 344587.4062, 1072155.8750, -232257.6719,  -69829.2578,       0.0000, -180674.6875,      -0.0000,       0.0000])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3914,18 +5151,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSigmoidT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.sigmoid()
-        let fwdzCorrect = dsharp.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
+        let fwdzCorrect = combo.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.3456; 0.0684; 0.3681; 0.2893; 0.1215])
+        let fwdzdCorrect = combo.tensor([0.3456; 0.0684; 0.3681; 0.2893; 0.1215])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.sigmoid()
-        let revzCorrect = dsharp.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([1.0067;  1.1781;  1.2374;  1.1499; -1.0514])
+        let revxdCorrect = combo.tensor([1.0067;  1.1781;  1.2374;  1.1499; -1.0514])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3934,18 +5172,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeExpT () =
-        let fwdx = dsharp.tensor([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).forwardDiff(dsharp.tensor([-1.9015; 0.4606; -0.1030; 0.0466; -0.2321]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).forwardDiff(combo.tensor([-1.9015; 0.4606; -0.1030; 0.0466; -0.2321]))
         let fwdz = fwdx.exp()
-        let fwdzCorrect = dsharp.tensor([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
+        let fwdzCorrect = combo.tensor([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([-2.5300; 0.1606; -0.2845; 0.0710; -0.8331])
+        let fwdzdCorrect = combo.tensor([-2.5300; 0.1606; -0.2845; 0.0710; -0.8331])
 
-        let revx = dsharp.tensor([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).reverseDiff()
+        let revx = combo.tensor([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).reverseDiff()
         let revz = revx.exp()
-        let revzCorrect = dsharp.tensor([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([6.6526; 1.7435; 13.8140; 7.6152; -17.9474])
+        let revxdCorrect = combo.tensor([6.6526; 1.7435; 13.8140; 7.6152; -17.9474])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3954,18 +5193,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeLogT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.log()
-        let fwdzCorrect = dsharp.tensor([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
+        let fwdzCorrect = combo.tensor([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([1.8118; 0.1951; 7.3820; 2.1624; 0.6847])
+        let fwdzdCorrect = combo.tensor([1.8118; 0.1951; 7.3820; 2.1624; 0.6847])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.log()
-        let revzCorrect = dsharp.tensor([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([5.2780; 3.3576; 24.8177; 8.5945; -5.9248])
+        let revxdCorrect = combo.tensor([5.2780; 3.3576; 24.8177; 8.5945; -5.9248])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3974,18 +5214,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeLog10T () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.log10()
-        let fwdzCorrect = dsharp.tensor([-0.0235;  0.1729; -0.6957; -0.2352; -0.0737])
+        let fwdzCorrect = combo.tensor([-0.0235;  0.1729; -0.6957; -0.2352; -0.0737])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.7869; 0.0847; 3.2054; 0.9391; 0.2974])
+        let fwdzdCorrect = combo.tensor([0.7869; 0.0847; 3.2054; 0.9391; 0.2974])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.log10()
-        let revzCorrect = dsharp.tensor([-0.0235;  0.1729; -0.6957; -0.2352; -0.0737])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([-0.0235;  0.1729; -0.6957; -0.2352; -0.0737])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([2.2923;  1.4582; 10.7765;  3.7323; -2.5731])
+        let revxdCorrect = combo.tensor([2.2923;  1.4582; 10.7765;  3.7323; -2.5731])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -3994,18 +5235,19 @@ type TestDerivatives () =
         
     [<Test>]
     member this.TestDerivativeSqrtT () =
-        let fwdx = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(dsharp.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
         let fwdz = fwdx.sqrt()
-        let fwdzCorrect = dsharp.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        let fwdzCorrect = combo.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.5972; 0.1617; 0.1971; 0.5093; 0.0061])
+        let fwdzdCorrect = combo.tensor([0.5972; 0.1617; 0.1971; 0.5093; 0.0061])
 
-        let revx = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).reverseDiff()
+        let revx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).reverseDiff()
         let revz = revx.sqrt()
-        let revzCorrect = dsharp.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
-        revz.reverse(dsharp.tensor([7.0478; 2.0493; 1.8341; 0.0166; 9.4089]))
+        let revzCorrect = combo.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
+        revz.reverse(combo.tensor([7.0478; 2.0493; 1.8341; 0.0166; 9.4089]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.4761; 0.1219; 0.2286; 0.0010; 0.5166])
+        let revxdCorrect = combo.tensor([0.4761; 0.1219; 0.2286; 0.0010; 0.5166])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05))
@@ -4014,18 +5256,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSinT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.sin()
-        let fwdzCorrect = dsharp.tensor([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+        let fwdzCorrect = combo.tensor([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([1.0022; 0.0237; 1.4571; 1.0510; 0.3840])
+        let fwdzdCorrect = combo.tensor([1.0022; 0.0237; 1.4571; 1.0510; 0.3840])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.sin()
-        let revzCorrect = dsharp.tensor([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
+        let revxdCorrect = combo.tensor([2.9194;  0.4080;  4.8988;  4.1774; -3.3228])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4034,18 +5277,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeCosT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.cos()
-        let fwdzCorrect = dsharp.tensor([0.5839; 0.0816; 0.9798; 0.8355; 0.6646])
+        let fwdzCorrect = combo.tensor([0.5839; 0.0816; 0.9798; 0.8355; 0.6646])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([-1.3934; -0.2895; -0.2976; -0.6913; -0.4318])
+        let fwdzdCorrect = combo.tensor([-1.3934; -0.2895; -0.2976; -0.6913; -0.4318])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.cos()
-        let revzCorrect = dsharp.tensor([0.5839; 0.0816; 0.9798; 0.8355; 0.6646])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.5839; 0.0816; 0.9798; 0.8355; 0.6646])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-4.0592; -4.9833; -1.0007; -2.7476;  3.7362])
+        let revxdCorrect = combo.tensor([-4.0592; -4.9833; -1.0007; -2.7476;  3.7362])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4054,18 +5298,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeTanT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.tan()
-        let fwdzCorrect = dsharp.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
+        let fwdzCorrect = combo.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([5.0347; 43.6222;  1.5493;  1.8022;  1.3083])
+        let fwdzdCorrect = combo.tensor([5.0347; 43.6222;  1.5493;  1.8022;  1.3083])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.tan()
-        let revzCorrect = dsharp.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([14.6665; 750.8119;   5.2086;   7.1631; -11.3217])
+        let revxdCorrect = combo.tensor([14.6665; 750.8119;   5.2086;   7.1631; -11.3217])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4074,18 +5319,19 @@ type TestDerivatives () =
     
     [<Test>]
     member this.TestDerivativeSinhT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.sinh()
-        let fwdzCorrect = dsharp.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
+        let fwdzCorrect = combo.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([2.5459; 0.6767; 1.5175; 1.4770; 0.7960])
+        let fwdzdCorrect = combo.tensor([2.5459; 0.6767; 1.5175; 1.4770; 0.7960])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.sinh()
-        let revzCorrect = dsharp.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([7.4163; 11.6467;  5.1018;  5.8704; -6.8886])
+        let revxdCorrect = combo.tensor([7.4163; 11.6467;  5.1018;  5.8704; -6.8886])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4094,18 +5340,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeCoshT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.cosh()
-        let fwdzCorrect = dsharp.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
+        let fwdzCorrect = combo.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([1.8803; 0.6111; 0.3017; 0.7739; 0.5476])
+        let fwdzdCorrect = combo.tensor([1.8803; 0.6111; 0.3017; 0.7739; 0.5476])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.cosh()
-        let revzCorrect = dsharp.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([5.4774; 10.5188;  1.0143;  3.0759; -4.7385])
+        let revxdCorrect = combo.tensor([5.4774; 10.5188;  1.0143;  3.0759; -4.7385])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4114,18 +5361,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeTanhT () =
-        let fwdx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.tanh()
-        let fwdzCorrect = dsharp.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
+        let fwdzCorrect = combo.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.7802; 0.0535; 1.4284; 0.9126; 0.3044])
+        let fwdzdCorrect = combo.tensor([0.7802; 0.0535; 1.4284; 0.9126; 0.3044])
 
-        let revx = dsharp.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.tanh()
-        let revzCorrect = dsharp.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([2.2727;  0.9215;  4.8024;  3.6273; -2.6342])
+        let revxdCorrect = combo.tensor([2.2727;  0.9215;  4.8024;  3.6273; -2.6342])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4134,18 +5382,19 @@ type TestDerivatives () =
     
     [<Test>]
     member this.TestDerivativeAsinT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.asin()
-        let fwdzCorrect = dsharp.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
+        let fwdzCorrect = combo.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([5.3579; 0.3331; 1.5183; 1.5467; 1.0770])
+        let fwdzdCorrect = combo.tensor([5.3579; 0.3331; 1.5183; 1.5467; 1.0770])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.asin()
-        let revzCorrect = dsharp.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([15.6080;  5.7324;  5.1047;  6.1476; -9.3197])
+        let revxdCorrect = combo.tensor([15.6080;  5.7324;  5.1047;  6.1476; -9.3197])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4154,18 +5403,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAcosT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.acos()
-        let fwdzCorrect = dsharp.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
+        let fwdzCorrect = combo.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([-5.3579; -0.3331; -1.5183; -1.5467; -1.0770])
+        let fwdzdCorrect = combo.tensor([-5.3579; -0.3331; -1.5183; -1.5467; -1.0770])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.acos()
-        let revzCorrect = dsharp.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([-15.6080;  -5.7324;  -5.1047;  -6.1476;   9.3197])
+        let revxdCorrect = combo.tensor([-15.6080;  -5.7324;  -5.1047;  -6.1476;   9.3197])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4174,18 +5424,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAtanT () =
-        let fwdx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(dsharp.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
         let fwdz = fwdx.atan()
-        let fwdzCorrect = dsharp.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
+        let fwdzCorrect = combo.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([0.9046; 0.2344; 1.4292; 0.9399; 0.3375])
+        let fwdzdCorrect = combo.tensor([0.9046; 0.2344; 1.4292; 0.9399; 0.3375])
 
-        let revx = dsharp.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
+        let revx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).reverseDiff()
         let revz = revx.atan()
-        let revzCorrect = dsharp.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
-        revz.reverse(dsharp.tensor([5.; 5.; 5.; 5.; -5.]))
+        let revzCorrect = combo.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
+        revz.reverse(combo.tensor([5.; 5.; 5.; 5.; -5.]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([2.6352;  4.0348;  4.8049;  3.7355; -2.9203])
+        let revxdCorrect = combo.tensor([2.6352;  4.0348;  4.8049;  3.7355; -2.9203])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4194,26 +5445,27 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeStackTs () =
-        let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.;20.]))
-        let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.;40.]))
-        let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.;60.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.;20.]))
+        let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.;40.]))
+        let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.;60.]))
         let fwdz = dsharp.stack([fwdxa;fwdxb;fwdxc])
-        let fwdzCorrect = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]])
+        let fwdzCorrect = combo.tensor([[1.;2.];[3.;4.];[5.;6.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+        let fwdzdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
-        let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
-        let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
-        let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revxa = combo.tensor([1.; 2.]).reverseDiff()
+        let revxb = combo.tensor([3.; 4.]).reverseDiff()
+        let revxc = combo.tensor([5.; 6.]).reverseDiff()
         let revz = dsharp.stack([revxa;revxb;revxc])
-        let revzCorrect = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]])
-        revz.reverse(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+        let revzCorrect = combo.tensor([[1.;2.];[3.;4.];[5.;6.]])
+        revz.reverse(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
         let revxda = revxa.derivative
         let revxdb = revxb.derivative
         let revxdc = revxc.derivative
-        let revxdaCorrect = dsharp.tensor([10.; 20.])
-        let revxdbCorrect = dsharp.tensor([30.; 40.])
-        let revxdcCorrect = dsharp.tensor([50.; 60.])
+        let revxdaCorrect = combo.tensor([10.; 20.])
+        let revxdbCorrect = combo.tensor([30.; 40.])
+        let revxdcCorrect = combo.tensor([50.; 60.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4224,7 +5476,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeUnstackT () =
-        let fwdx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
         let fwdz = dsharp.unstack(fwdx) |> Seq.toArray
         let fwdza = fwdz.[0]
         let fwdzb = fwdz.[1]
@@ -4232,26 +5485,26 @@ type TestDerivatives () =
         let fwdzda = fwdza.derivative
         let fwdzdb = fwdzb.derivative
         let fwdzdc = fwdzc.derivative
-        let fwdzaCorrect = dsharp.tensor([1.; 2.])
-        let fwdzbCorrect = dsharp.tensor([3.; 4.])
-        let fwdzcCorrect = dsharp.tensor([5.; 6.])
-        let fwdzdaCorrect = dsharp.tensor([10.; 20.])
-        let fwdzdbCorrect = dsharp.tensor([30.; 40.])
-        let fwdzdcCorrect = dsharp.tensor([50.; 60.])
+        let fwdzaCorrect = combo.tensor([1.; 2.])
+        let fwdzbCorrect = combo.tensor([3.; 4.])
+        let fwdzcCorrect = combo.tensor([5.; 6.])
+        let fwdzdaCorrect = combo.tensor([10.; 20.])
+        let fwdzdbCorrect = combo.tensor([30.; 40.])
+        let fwdzdcCorrect = combo.tensor([50.; 60.])
 
-        let revx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
+        let revx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
         let revz = dsharp.unstack(revx) |> Seq.toArray
         let revza = revz.[0]
         let revzb = revz.[1]
         let revzc = revz.[2]
-        let revzaCorrect = dsharp.tensor([1.; 2.])
-        let revzbCorrect = dsharp.tensor([3.; 4.])
-        let revzcCorrect = dsharp.tensor([5.; 6.])
-        revza.reverse(dsharp.tensor([10.; 20.]))
-        revzb.reverse(dsharp.tensor([30.; 40.]), zeroDerivatives=false)
-        revzc.reverse(dsharp.tensor([50.; 60.]), zeroDerivatives=false)
+        let revzaCorrect = combo.tensor([1.; 2.])
+        let revzbCorrect = combo.tensor([3.; 4.])
+        let revzcCorrect = combo.tensor([5.; 6.])
+        revza.reverse(combo.tensor([10.; 20.]))
+        revzb.reverse(combo.tensor([30.; 40.]), zeroDerivatives=false)
+        revzc.reverse(combo.tensor([50.; 60.]), zeroDerivatives=false)
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+        let revxdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
         Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
         Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
@@ -4266,27 +5519,28 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeUnstackT_Dim1 () =
-        let fwdx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
         let fwdz = fwdx.unstack(dim=1) |> Seq.toArray
         let fwdza = fwdz.[0]
         let fwdzb = fwdz.[1]
         let fwdzda = fwdza.derivative
         let fwdzdb = fwdzb.derivative
-        let fwdzaCorrect = dsharp.tensor([1.; 3.; 5.])
-        let fwdzbCorrect = dsharp.tensor([2.; 4.; 6.])
-        let fwdzdaCorrect = dsharp.tensor([10.; 30.; 50.])
-        let fwdzdbCorrect = dsharp.tensor([20.; 40.; 60.])
+        let fwdzaCorrect = combo.tensor([1.; 3.; 5.])
+        let fwdzbCorrect = combo.tensor([2.; 4.; 6.])
+        let fwdzdaCorrect = combo.tensor([10.; 30.; 50.])
+        let fwdzdbCorrect = combo.tensor([20.; 40.; 60.])
 
-        let revx = dsharp.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
+        let revx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
         let revz = revx.unstack(dim=1) |> Seq.toArray
         let revza = revz.[0]
         let revzb = revz.[1]
-        let revzaCorrect = dsharp.tensor([1.; 3.; 5.])
-        let revzbCorrect = dsharp.tensor([2.; 4.; 6.])
-        revza.reverse(dsharp.tensor([10.; 30.; 50.]))
-        revzb.reverse(dsharp.tensor([20.; 40.; 60.]), zeroDerivatives=false)
+        let revzaCorrect = combo.tensor([1.; 3.; 5.])
+        let revzbCorrect = combo.tensor([2.; 4.; 6.])
+        revza.reverse(combo.tensor([10.; 30.; 50.]))
+        revzb.reverse(combo.tensor([20.; 40.; 60.]), zeroDerivatives=false)
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.];[50.;60.]])
+        let revxdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
         Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
         Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
@@ -4298,26 +5552,27 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeCatTs () =
-        let fwdxa = dsharp.tensor([1.; 2.]).forwardDiff(dsharp.tensor([10.;20.]))
-        let fwdxb = dsharp.tensor([3.; 4.]).forwardDiff(dsharp.tensor([30.;40.]))
-        let fwdxc = dsharp.tensor([5.; 6.]).forwardDiff(dsharp.tensor([50.;60.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.;20.]))
+        let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.;40.]))
+        let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.;60.]))
         let fwdz = Tensor.cat([fwdxa;fwdxb;fwdxc])
-        let fwdzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
+        let fwdzCorrect = combo.tensor([1.;2.;3.;4.;5.;6.])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
+        let fwdzdCorrect = combo.tensor([10.;20.;30.;40.;50.;60.])
 
-        let revxa = dsharp.tensor([1.; 2.]).reverseDiff()
-        let revxb = dsharp.tensor([3.; 4.]).reverseDiff()
-        let revxc = dsharp.tensor([5.; 6.]).reverseDiff()
+        let revxa = combo.tensor([1.; 2.]).reverseDiff()
+        let revxb = combo.tensor([3.; 4.]).reverseDiff()
+        let revxc = combo.tensor([5.; 6.]).reverseDiff()
         let revz = Tensor.cat([revxa;revxb;revxc])
-        let revzCorrect = dsharp.tensor([1.;2.;3.;4.;5.;6.])
-        revz.reverse(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+        let revzCorrect = combo.tensor([1.;2.;3.;4.;5.;6.])
+        revz.reverse(combo.tensor([10.;20.;30.;40.;50.;60.]))
         let revxda = revxa.derivative
         let revxdb = revxb.derivative
         let revxdc = revxc.derivative
-        let revxdaCorrect = dsharp.tensor([10.; 20.])
-        let revxdbCorrect = dsharp.tensor([30.; 40.])
-        let revxdcCorrect = dsharp.tensor([50.; 60.])
+        let revxdaCorrect = combo.tensor([10.; 20.])
+        let revxdbCorrect = combo.tensor([30.; 40.])
+        let revxdcCorrect = combo.tensor([50.; 60.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4328,7 +5583,8 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSplitT () =
-        let fwdx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(dsharp.tensor([10.;20.;30.;40.;50.;60.]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(combo.tensor([10.;20.;30.;40.;50.;60.]))
         let fwdz = fwdx.split([| 1;3;2 |])
         let fwdza = fwdz.[0]
         let fwdzb = fwdz.[1]
@@ -4336,26 +5592,26 @@ type TestDerivatives () =
         let fwdzda = fwdza.derivative
         let fwdzdb = fwdzb.derivative
         let fwdzdc = fwdzc.derivative
-        let fwdzaCorrect = dsharp.tensor([1.])
-        let fwdzbCorrect = dsharp.tensor([2.; 3.; 4.])
-        let fwdzcCorrect = dsharp.tensor([5.; 6.])
-        let fwdzdaCorrect = dsharp.tensor([10.])
-        let fwdzdbCorrect = dsharp.tensor([20.;30.; 40.])
-        let fwdzdcCorrect = dsharp.tensor([50.; 60.])
+        let fwdzaCorrect = combo.tensor([1.])
+        let fwdzbCorrect = combo.tensor([2.; 3.; 4.])
+        let fwdzcCorrect = combo.tensor([5.; 6.])
+        let fwdzdaCorrect = combo.tensor([10.])
+        let fwdzdbCorrect = combo.tensor([20.;30.; 40.])
+        let fwdzdcCorrect = combo.tensor([50.; 60.])
 
-        let revx = dsharp.tensor([1.;2.;3.;4.;5.;6.]).reverseDiff()
+        let revx = combo.tensor([1.;2.;3.;4.;5.;6.]).reverseDiff()
         let revz = revx.split([| 1;3;2 |])
         let revza = revz.[0]
         let revzb = revz.[1]
         let revzc = revz.[2]
-        let revzaCorrect = dsharp.tensor([1.])
-        let revzbCorrect = dsharp.tensor([2.;3.; 4.])
-        let revzcCorrect = dsharp.tensor([5.; 6.])
-        revza.reverse(dsharp.tensor([10.]))
-        revzb.reverse(dsharp.tensor([20.;30.; 40.]), zeroDerivatives=false)
-        revzc.reverse(dsharp.tensor([50.; 60.]), zeroDerivatives=false)
+        let revzaCorrect = combo.tensor([1.])
+        let revzbCorrect = combo.tensor([2.;3.; 4.])
+        let revzcCorrect = combo.tensor([5.; 6.])
+        revza.reverse(combo.tensor([10.]))
+        revzb.reverse(combo.tensor([20.;30.; 40.]), zeroDerivatives=false)
+        revzc.reverse(combo.tensor([50.; 60.]), zeroDerivatives=false)
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([10.;20.;30.;40.;50.;60.])
+        let revxdCorrect = combo.tensor([10.;20.;30.;40.;50.;60.])
 
         Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
         Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
@@ -4370,18 +5626,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSliceT () =
-        let fwdx = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(dsharp.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
         let fwdz = fwdx.[2..]
-        let fwdzCorrect = dsharp.tensor([16.0868; 74.5486; 82.9318])
+        let fwdzCorrect = combo.tensor([16.0868; 74.5486; 82.9318])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([1.5814; 8.7951; 0.1119])
+        let fwdzdCorrect = combo.tensor([1.5814; 8.7951; 0.1119])
 
-        let revx = dsharp.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).reverseDiff()
+        let revx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).reverseDiff()
         let revz = revx.[2..]
-        let revzCorrect = dsharp.tensor([16.0868; 74.5486; 82.9318])
-        revz.reverse(dsharp.tensor([0.9360; 0.8748; 0.4353]))
+        let revzCorrect = combo.tensor([16.0868; 74.5486; 82.9318])
+        revz.reverse(combo.tensor([0.9360; 0.8748; 0.4353]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; 0.9360; 0.8748; 0.4353])
+        let revxdCorrect = combo.tensor([0.; 0.; 0.9360; 0.8748; 0.4353])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4390,51 +5647,52 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeAddTTSlice () =
-        let fwdx = dsharp.tensor([[-0.2754;  0.0172;  0.7105];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[-0.2754;  0.0172;  0.7105];
             [-0.1890;  1.7664;  0.5377];
             [-0.5313; -2.2530; -0.6235];
             [ 0.6776;  1.5844; -0.5686]])
-        let fwdx = fwdx.forwardDiff(dsharp.tensor([[-0.0552;  0.6113; -0.2341];
+        let fwdx = fwdx.forwardDiff(combo.tensor([[-0.0552;  0.6113; -0.2341];
             [ 1.4232; -1.2062;  0.3189];
             [ 0.6859; -0.3385; -0.1263];
             [-0.5159; -1.1882; -1.3437]]))
-        let fwdy = dsharp.tensor([[-111.8892;   -7.0328];
+        let fwdy = combo.tensor([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]])            
-        let fwdy = fwdy.forwardDiff(dsharp.tensor([[ 1.3431; 23.0647];
+        let fwdy = fwdy.forwardDiff(combo.tensor([[ 1.3431; 23.0647];
             [71.1838; 39.8339]]))        
         let fwdz = fwdx.addSlice([0;1], fwdy)
-        let fwdzCorrect = dsharp.tensor([[  -0.2754; -111.8720;   -6.3222];
+        let fwdzCorrect = combo.tensor([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[-5.5237e-02;  1.9544e+00;  2.2831e+01];
+        let fwdzdCorrect = combo.tensor([[-5.5237e-02;  1.9544e+00;  2.2831e+01];
             [ 1.4232e+00;  6.9978e+01;  4.0153e+01];
             [ 6.8592e-01; -3.3845e-01; -1.2635e-01];
             [-5.1592e-01; -1.1882e+00; -1.3437e+00]])
 
-        let revx = dsharp.tensor([[-0.2754;  0.0172;  0.7105];
+        let revx = combo.tensor([[-0.2754;  0.0172;  0.7105];
             [-0.1890;  1.7664;  0.5377];
             [-0.5313; -2.2530; -0.6235];
             [ 0.6776;  1.5844; -0.5686]]).reverseDiff()
-        let revy = dsharp.tensor([[-111.8892;   -7.0328];
+        let revy = combo.tensor([[-111.8892;   -7.0328];
             [  18.7557;  -86.2308]]).reverseDiff()
         let revz = revx.addSlice([0;1], revy)
-        let revzCorrect = dsharp.tensor([[  -0.2754; -111.8720;   -6.3222];
+        let revzCorrect = combo.tensor([[  -0.2754; -111.8720;   -6.3222];
             [  -0.1890;   20.5221;  -85.6932];
             [  -0.5313;   -2.2530;   -0.6235];
             [   0.6776;    1.5844;   -0.5686]])
-        revz.reverse(dsharp.tensor([[ 1.2453;  1.2199; -0.5281];
+        revz.reverse(combo.tensor([[ 1.2453;  1.2199; -0.5281];
             [ 1.2203; -0.8378; -0.3876];
             [ 0.3626; -0.1200; -0.1496];
             [-0.6304;  1.0198; -0.4969]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[ 1.2453;  1.2199; -0.5281];
+        let revxdCorrect = combo.tensor([[ 1.2453;  1.2199; -0.5281];
             [ 1.2203; -0.8378; -0.3876];
             [ 0.3626; -0.1200; -0.1496];
             [-0.6304;  1.0198; -0.4969]])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([[1.2199; -0.5281]; [-0.8378; -0.3876]])
+        let revydCorrect = combo.tensor([[1.2199; -0.5281]; [-0.8378; -0.3876]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4444,18 +5702,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSqueezeT () =
-        let fwdx = dsharp.tensor([[[1.; 2.]]; [[3.;4.]]]).forwardDiff(dsharp.tensor([[[10.; 20.]]; [[30.;40.]]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[[1.; 2.]]; [[3.;4.]]]).forwardDiff(combo.tensor([[[10.; 20.]]; [[30.;40.]]]))
         let fwdz = fwdx.squeeze()
-        let fwdzCorrect =  dsharp.tensor([[1.;2.];[3.;4.]])
+        let fwdzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect =  dsharp.tensor([[10.;20.];[30.;40.]])
+        let fwdzdCorrect =  combo.tensor([[10.;20.];[30.;40.]])
 
-        let revx = dsharp.tensor([[[1.; 2.]]; [[3.;4.]]]).reverseDiff()
+        let revx = combo.tensor([[[1.; 2.]]; [[3.;4.]]]).reverseDiff()
         let revz = revx.squeeze()
-        let revzCorrect =  dsharp.tensor([[1.;2.];[3.;4.]])
-        revz.reverse(dsharp.tensor([[10.;20.];[30.;40.]]))
+        let revzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
+        revz.reverse(combo.tensor([[10.;20.];[30.;40.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[[10.; 20.]]; [[30.;40.]]])
+        let revxdCorrect = combo.tensor([[[10.; 20.]]; [[30.;40.]]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4464,18 +5723,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeUnsqueezeT () =
-        let fwdx = dsharp.tensor([[1.;2.];[3.;4.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
         let fwdz = fwdx.unsqueeze(1)
-        let fwdzCorrect =  dsharp.tensor([[[1.; 2.]]; [[3.;4.]]])
+        let fwdzCorrect =  combo.tensor([[[1.; 2.]]; [[3.;4.]]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect =  dsharp.tensor([[[10.; 20.]]; [[30.;40.]]])
+        let fwdzdCorrect =  combo.tensor([[[10.; 20.]]; [[30.;40.]]])
 
-        let revx = dsharp.tensor([[1.;2.];[3.;4.]]).reverseDiff()
+        let revx = combo.tensor([[1.;2.];[3.;4.]]).reverseDiff()
         let revz = revx.unsqueeze(1)
-        let revzCorrect =  dsharp.tensor([[[1.; 2.]]; [[3.;4.]]])
-        revz.reverse(dsharp.tensor([[[10.; 20.]]; [[30.;40.]]]))
+        let revzCorrect =  combo.tensor([[[1.; 2.]]; [[3.;4.]]])
+        revz.reverse(combo.tensor([[[10.; 20.]]; [[30.;40.]]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
+        let revxdCorrect = combo.tensor([[10.;20.];[30.;40.]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4484,18 +5744,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeFlipT () =
-        let fwdx = dsharp.tensor([[1.;2.];[3.;4.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
         let fwdz = fwdx.flip([|0; 1|])
-        let fwdzCorrect =  dsharp.tensor([[4.; 3.]; [2.;1.]])
+        let fwdzCorrect =  combo.tensor([[4.; 3.]; [2.;1.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect =  dsharp.tensor([[40.; 30.]; [20.;10.]])
+        let fwdzdCorrect =  combo.tensor([[40.; 30.]; [20.;10.]])
 
-        let revx = dsharp.tensor([[1.;2.];[3.;4.]]).reverseDiff()
+        let revx = combo.tensor([[1.;2.];[3.;4.]]).reverseDiff()
         let revz = revx.flip([|0; 1|])
-        let revzCorrect =  dsharp.tensor([[4.; 3.]; [2.;1.]])
-        revz.reverse(dsharp.tensor([[40.; 30.]; [20.;10.]]))
+        let revzCorrect =  combo.tensor([[4.; 3.]; [2.;1.]])
+        revz.reverse(combo.tensor([[40.; 30.]; [20.;10.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
+        let revxdCorrect = combo.tensor([[10.;20.];[30.;40.]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4504,18 +5765,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeDilateT () =
-        let fwdx = dsharp.tensor([[1.;2.];[3.;4.]]).forwardDiff(dsharp.tensor([[10.;20.];[30.;40.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
         let fwdz = fwdx.dilate([|2; 2|])
-        let fwdzCorrect =  dsharp.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
+        let fwdzCorrect =  combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect =  dsharp.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
+        let fwdzdCorrect =  combo.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
 
-        let revx = dsharp.tensor([[1.;2.];[3.;4.]]).reverseDiff()
+        let revx = combo.tensor([[1.;2.];[3.;4.]]).reverseDiff()
         let revz = revx.dilate([|2; 2|])
-        let revzCorrect =  dsharp.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
-        revz.reverse(dsharp.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
+        let revzCorrect =  combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
+        revz.reverse(combo.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.;20.];[30.;40.]])
+        let revxdCorrect = combo.tensor([[10.;20.];[30.;40.]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4524,18 +5786,19 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeUndilateT () =
-        let fwdx = dsharp.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).forwardDiff(dsharp.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).forwardDiff(combo.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
         let fwdz = fwdx.undilate([|2; 2|])
-        let fwdzCorrect =  dsharp.tensor([[1.;2.];[3.;4.]])
+        let fwdzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect =  dsharp.tensor([[10.;20.];[30.;40.]])
+        let fwdzdCorrect =  combo.tensor([[10.;20.];[30.;40.]])
 
-        let revx = dsharp.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).reverseDiff()
+        let revx = combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).reverseDiff()
         let revz = revx.undilate([|2; 2|])
-        let revzCorrect =  dsharp.tensor([[1.;2.];[3.;4.]])
-        revz.reverse(dsharp.tensor([[10.;20.];[30.;40.]]))
+        let revzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
+        revz.reverse(combo.tensor([[10.;20.];[30.;40.]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
+        let revxdCorrect = combo.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4544,24 +5807,25 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeSoftmax () =
-        let fwdx = dsharp.tensor([[4.6815; 5.6441; 7.4689];
-            [9.1976; 8.1241; 7.4521]]).forwardDiff(dsharp.tensor([[8.0030; 7.0798; 6.8637];
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([[4.6815; 5.6441; 7.4689];
+            [9.1976; 8.1241; 7.4521]]).forwardDiff(combo.tensor([[8.0030; 7.0798; 6.8637];
                 [9.5760; 7.4524; 2.6404]]))
         let fwdz = fwdx.softmax(dim=1)
-        let fwdzCorrect = dsharp.tensor([[0.0504; 0.1319; 0.8178];
+        let fwdzCorrect = combo.tensor([[0.0504; 0.1319; 0.8178];
             [0.6595; 0.2254; 0.1151]])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[0.0530; 0.0172; -0.0702]; [0.8422; -0.1908; -0.6514]])
+        let fwdzdCorrect = combo.tensor([[0.0530; 0.0172; -0.0702]; [0.8422; -0.1908; -0.6514]])
 
-        let revx = dsharp.tensor([[4.6815; 5.6441; 7.4689];
+        let revx = combo.tensor([[4.6815; 5.6441; 7.4689];
             [9.1976; 8.1241; 7.4521]]).reverseDiff()
         let revz = revx.softmax(dim=1)
-        let revzCorrect = dsharp.tensor([[0.0504; 0.1319; 0.8178];
+        let revzCorrect = combo.tensor([[0.0504; 0.1319; 0.8178];
             [0.6595; 0.2254; 0.1151]])
-        revz.reverse(dsharp.tensor([[6.0933; 9.6456; 7.0996];
+        revz.reverse(combo.tensor([[6.0933; 9.6456; 7.0996];
             [0.2617; 1.7002; 4.9711]]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[-0.0649; 0.2988; -0.2329]; [-0.5713; 0.1291; 0.4426]])
+        let revxdCorrect = combo.tensor([[-0.0649; 0.2988; -0.2329]; [-0.5713; 0.1291; 0.4426]])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4570,22 +5834,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeMaxBinary () =
-        let fwdx = dsharp.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(dsharp.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
-        let fwdy = dsharp.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(dsharp.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(combo.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
+        let fwdy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(combo.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
         let fwdz = dsharp.max(fwdx, fwdy)
-        let fwdzCorrect = dsharp.tensor([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
+        let fwdzCorrect = combo.tensor([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([1.9788; 0.2861; 9.7303; 0.5602; 7.7003])
+        let fwdzdCorrect = combo.tensor([1.9788; 0.2861; 9.7303; 0.5602; 7.7003])
 
-        let revx = dsharp.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).reverseDiff()
-        let revy = dsharp.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).reverseDiff()
+        let revx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).reverseDiff()
+        let revy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).reverseDiff()
         let revz = dsharp.max(revx, revy)
-        let revzCorrect = dsharp.tensor([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
-        revz.reverse(dsharp.tensor([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
+        let revzCorrect = combo.tensor([19.3520;  8.9730;  4.2405; -3.5977; 12.2048])
+        revz.reverse(combo.tensor([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([9.7293; -10.2704; 0.; -3.9050; 0.])
+        let revxdCorrect = combo.tensor([9.7293; -10.2704; 0.; -3.9050; 0.])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([0.; 0.; -13.7527; 0.; -1.6439])
+        let revydCorrect = combo.tensor([0.; 0.; -13.7527; 0.; -1.6439])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
@@ -4595,22 +5860,23 @@ type TestDerivatives () =
 
     [<Test>]
     member this.TestDerivativeMinBinary () =
-        let fwdx = dsharp.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(dsharp.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
-        let fwdy = dsharp.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(dsharp.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
+      for combo in Combos.AllDevicesAndBackends do
+        let fwdx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(combo.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
+        let fwdy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(combo.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
         let fwdz = dsharp.min(fwdx, fwdy)
-        let fwdzCorrect = dsharp.tensor([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
+        let fwdzCorrect = combo.tensor([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
         let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([9.6600; 6.9111; 4.2025; 0.1491; 7.9510])
+        let fwdzdCorrect = combo.tensor([9.6600; 6.9111; 4.2025; 0.1491; 7.9510])
 
-        let revx = dsharp.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).reverseDiff()
-        let revy = dsharp.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).reverseDiff()
+        let revx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).reverseDiff()
+        let revy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).reverseDiff()
         let revz = dsharp.min(revx, revy)
-        let revzCorrect = dsharp.tensor([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
-        revz.reverse(dsharp.tensor([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
+        let revzCorrect = combo.tensor([-17.1885;  -4.0684; -23.6274; -21.7158; -20.3245])
+        revz.reverse(combo.tensor([  9.7293; -10.2704; -13.7527;  -3.9050;  -1.6439]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([0.; 0.; -13.7527; 0.; -1.6439])
+        let revxdCorrect = combo.tensor([0.; 0.; -13.7527; 0.; -1.6439])
         let revyd = revy.derivative
-        let revydCorrect = dsharp.tensor([9.7293; -10.2704; 0.; -3.9050; 0.])
+        let revydCorrect = combo.tensor([9.7293; -10.2704; 0.; -3.9050; 0.])
 
         Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
         Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
