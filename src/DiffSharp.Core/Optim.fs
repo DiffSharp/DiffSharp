@@ -11,7 +11,7 @@ type Optimizer(model:Model) =
     member o.step() = model.Parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
     abstract member updateRule: string -> Tensor -> Tensor
     static member internal optimizeFun(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
-        let iters = defaultArg iters 50
+        let iters = defaultArg iters -1
         let threshold, thresholdGiven = 
             match threshold with
             | Some t -> t, true
@@ -47,7 +47,7 @@ type Optimizer(model:Model) =
                 status <- sprintf "Converged (value < %g)" threshold
                 printEnd <- "\n"
                 stop <- true
-            elif i=iters-1 then
+            elif (iters <> -1) && (i=iters-1) then
                 status <- sprintf "Iters=%d reached" iters
                 printEnd <- "\n"
                 stop <- true
@@ -74,8 +74,13 @@ type Optimizer(model:Model) =
             if not stop then x <- nx
         fx, x
 
-    static member internal optimizeModel(model:Model, optimizer:Optimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
-        let iters = defaultArg iters 50
+    static member internal optimizeModel(model:Model, optimizer:Optimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+        let iters, epochs =
+            match iters, epochs with
+            | Some _, Some _ -> failwithf "Expecting only one of iters, epochs"
+            | Some i, None -> i, -1
+            | None, Some e -> -1, e
+            | None, None -> -1, -1
         let threshold, thresholdGiven = 
             match threshold with
             | Some t -> t, true
@@ -117,18 +122,22 @@ type Optimizer(model:Model) =
                     status <- sprintf "Converged (loss < %g)" threshold
                     printEnd <- "\n"
                     stop <- true
-                elif i=iters-1 then
+                elif (iters <> -1) && (i=iters-1) then
                     status <- sprintf "Iters=%d reached" iters
                     printEnd <- "\n"
                     stop <- true
                 elif lScalar < lMin then
                     lMin <- lScalar
-                    printEnd <- "\n"
                     status <- "🡾 New min"
+                    printEnd <- "\n"
                 elif lScalar > lMax then
                     lMax <- lScalar
-                    printEnd <- "\n"
                     status <- "🡽 New max"
+                    printEnd <- "\n"
+                elif (epochs <> -1) && (epoch=epochs) then
+                    status <- sprintf "Epochs=%d reached" epochs
+                    printEnd <- "\n"
+                    stop <- true
                 elif lScalar < lPrev then
                     status <- "🡾"
                 else
@@ -182,13 +191,13 @@ type Optimizer(model:Model) =
             f, x - stepSize * p
         Optimizer.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
-    static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let optimizer = SGD(model, ?lr=lr, ?momentum=momentum, ?nesterov=nesterov, ?weightDecay=weightDecay, ?reversible=reversible)
-        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
-    static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let optimizer = Adam(model, ?lr=lr, ?beta1=beta1, ?beta2=beta2, ?eps=eps, ?weightDecay=weightDecay, ?reversible=reversible)
-        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
 
 and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =

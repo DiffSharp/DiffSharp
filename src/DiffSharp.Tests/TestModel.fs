@@ -32,10 +32,6 @@ type ModelStyle1b() =
 [<TestFixture>]
 type TestModel () =
 
-    [<SetUp>]
-    member this.Setup () =
-        ()
-
     [<Test>]
     member this.TestParameterDictFlattenUnflatten () =
         let d1t1 = Parameter <| dsharp.randn([15;5])
