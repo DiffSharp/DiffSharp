@@ -378,6 +378,8 @@ type Tensor =
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
+    static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
+
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor(ap)           -> Tensor(fRaw(ap))

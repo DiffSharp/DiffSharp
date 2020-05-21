@@ -152,11 +152,11 @@ type Optimizer(model:Model) =
 
 and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
-    let mutable momBuffer = ParameterDict()
-    let mutable momInit = false
     let lr = defaultArg lr (dsharp.tensor(0.001))
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
+    let mutable momBuffer = ParameterDict()
+    let mutable momInit = false
     override o.updateRule name t = 
         let mutable d = t.derivative
         match weightDecay with
@@ -173,6 +173,31 @@ and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
+        if reversible then
+            t - lr * d
+        else
+            t.primal - lr * d
+
+
+and Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
+    inherit Optimizer(model)
+    let lr = defaultArg lr (dsharp.tensor(1e-3))
+    let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
+    let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
+    let eps = defaultArg eps (dsharp.tensor(1e-8))
+    let reversible = defaultArg reversible false    
+    let mutable stateStep = -1
+    let mutable stateExpAvg = dsharp.zero()
+    let mutable stateExpAvgSq = dsharp.zero()
+    override o.updateRule name t =
+        let mutable d = t.derivative
+        match weightDecay with
+        | Some wd -> d <- d.add(t.primal * wd)
+        | None -> ()
+        if stateStep = -1 then
+            stateExpAvg <- t.zerosLike()
+
+        stateStep <- stateStep + 1
         if reversible then
             t - lr * d
         else

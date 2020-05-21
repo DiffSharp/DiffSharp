@@ -38,24 +38,25 @@ let main _argv =
     //                     >> fc1.forward
     //                     >> dsharp.relu
     //                     >> fc2.forward)
-    let cnn() =
-        let conv1 = Conv2d(1, 1, 3)
-        let conv2 = Conv2d(1, 1, 3)
-        let convall = conv1 
-                      --> dsharp.relu 
-                      --> conv2 
-                      --> dsharp.relu 
-                      --> dsharp.maxpool2d 5
-        let k = dsharp.randn([1;1;28;28]) |-> convall |> dsharp.nelement
-        let fc1 = Linear(k, 128)
-        let fc2 = Linear(128, 10)
-        convall 
-        --> dsharp.flatten 1 
-        --> fc1 
-        --> dsharp.relu 
-        --> fc2
 
-    let feedforward() = dsharp.flatten 1 --> Linear(28*28, 10) --> Linear(10, 10)
+    let cnn() =
+        let convs = Conv2d(1, 1, 3) 
+                    --> dsharp.relu 
+                    --> Conv2d(1, 1, 3) 
+                    --> dsharp.relu 
+                    --> dsharp.maxpool2d 5
+        let k = dsharp.randn([1;1;28;28]) --> convs --> dsharp.nelement
+        convs 
+        --> dsharp.flatten 1 
+        --> Linear(k, 128) 
+        --> dsharp.relu 
+        --> Linear(128, 10)
+
+    let feedforward() = 
+        dsharp.flatten 1 
+        --> Linear(28*28, 10) 
+        --> Linear(10, 10)
+
 
     let net = feedforward()
     printfn "net params: %A" net.nparameters
