@@ -830,7 +830,7 @@ module internal RawTensorCPU =
         (values, shape)
 
     let inline RandomIntegers (maxn: int64) ofDouble (shape:int[]) : (^T[] * int[]) =
-        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (float maxn * DiffSharp.Util.Random.Normal()))
+        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (float maxn * DiffSharp.Util.Random.Uniform()))
         (values, shape)
 
 /// The concrete implementation of RawTensor for Float32 data.
