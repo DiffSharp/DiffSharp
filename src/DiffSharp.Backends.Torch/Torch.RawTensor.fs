@@ -769,7 +769,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
                 let data = info.GetValue("data", typeof<byte[]>)  :?> byte[]
                 ByteTensor.From (data, toTorchShape shape) 
             | DType.Int8 -> 
-                let data = info.GetValue("data", typeof<byte[]>)  :?> sbyte[]
+                let data = info.GetValue("data", typeof<sbyte[]>)  :?> sbyte[]
                 SByteTensor.From (data, toTorchShape shape) 
             | DType.Int16 -> 
                 let data = info.GetValue("data", typeof<int16[]>)  :?> int16[]
