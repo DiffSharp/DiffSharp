@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 
-     <TorchSharpVersion>0.3.0-local-Debug-20200521</TorchSharpVersion>
+     <TorchSharpVersion>0.3.52118</TorchSharpVersion>
 
       <!-- TorchSharp local build Release packages -->
     <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
