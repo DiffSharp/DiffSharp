@@ -264,10 +264,13 @@ type DiffSharp with
         else
             fx, DiffSharp.stack(Array.init x.nelement (fun j -> DiffSharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
     static member jacobian f x = DiffSharp.fjacobian f x |> snd
-    static member fgrad f x =
-        let fx, r = DiffSharp.evalReverseDiff f x
-        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
-        fx, r (fx.onesLike())
+    static member fgrad f (x:Tensor) =
+        if x.dim = 0 then 
+            DiffSharp.fdiff f x
+        else
+            let fx, r = DiffSharp.evalReverseDiff f x
+            if x.dim > 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector or scalar, encountered f:%A->%A" x.shape fx.shape
+            fx, r (fx.onesLike())
     static member grad f x = DiffSharp.fgrad f x |> snd
     static member fgradhessianv f (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
@@ -368,10 +371,13 @@ type DiffSharp with
         (fxa - fxb) / (2.*epsilon)
     static member numfgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
     static member numfgrad (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
-        let fx = f x
-        if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
-        let gg = DiffSharp.stack(Array.init x.nelement (fun i -> let h = DiffSharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
-        fx, gg/(2.*epsilon)
+        if x.dim = 0 then
+            DiffSharp.numfdiff epsilon f x
+        else
+            let fx = f x
+            if x.dim > 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector or scalar, encountered f:%A->%A" x.shape fx.shape
+            let gg = DiffSharp.stack(Array.init x.nelement (fun i -> let h = DiffSharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
+            fx, gg/(2.*epsilon)
     static member numgrad epsilon f x = DiffSharp.numfgrad epsilon f x |> snd
     static member numfgradhessian (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
         let fx, g = DiffSharp.numfgrad epsilon f x

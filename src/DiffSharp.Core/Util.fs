@@ -5,6 +5,10 @@ open System.Net
 open System.Collections
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
+open System.IO
+open System.IO.Compression
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Formatters.Binary
 open FSharp.Reflection
 
 let logSqrt2Pi = log(sqrt(2. * Math.PI))
@@ -659,6 +663,30 @@ let download (url:string) (localFileName:string) =
     printfn "Downloading %A to %A" url localFileName
     wc.DownloadFile(url, localFileName)
 
+let saveBinary (object:'a) (fileName:string) =
+    let formatter = BinaryFormatter()
+    let fs = new FileStream(fileName, FileMode.Create)
+    let cs = new GZipStream(fs, CompressionMode.Compress)
+    try
+        formatter.Serialize(cs, object)
+        cs.Flush()
+        cs.Close()
+        fs.Close()
+    with
+    | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
+
+let loadBinary (fileName:string):'a =
+    let formatter = BinaryFormatter()
+    let fs = new FileStream(fileName, FileMode.Open)
+    let cs = new GZipStream(fs, CompressionMode.Decompress)
+    try
+        let object = formatter.Deserialize(cs) :?> 'a
+        cs.Close()
+        fs.Close()
+        object
+    with
+    | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
+
 let shuffledIndices (length:int) =
     let indices = Array.init length id
     let indicesShuffled = Random.Shuffle(indices)
@@ -672,4 +700,10 @@ let indentNewLines (str:String) numSpaces =
                             ret <- ret + "\n" + spaces
                         else ret <- ret + string c)
     ret
+
+let stringPad (s:string) (width:int) =
+    if s.Length > width then s
+    else String.replicate (width - s.Length) " " + s
+
+let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
 
