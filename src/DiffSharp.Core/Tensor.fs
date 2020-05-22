@@ -182,13 +182,35 @@ type Tensor =
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
+
     static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
     static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
     static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
     static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
     static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
     static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
-    
+
+    interface System.IConvertible with
+        override t.GetTypeCode() = TypeCode.Object
+        override t.ToSingle(_) = Tensor.op_Explicit(t)
+        override t.ToDouble(_) = Tensor.op_Explicit(t)
+        override t.ToByte(_) = Tensor.op_Explicit(t)
+        override t.ToSByte(_) = Tensor.op_Explicit(t)
+        override t.ToInt16(_) = Tensor.op_Explicit(t)
+        override t.ToInt32(_) = Tensor.op_Explicit(t)
+        override t.ToInt64(_) = Tensor.op_Explicit(t)
+        override t.ToBoolean(_) = Tensor.op_Explicit(t)
+        override t.ToChar(_) = failwithf "Cannot convert Tensor to Char"
+        override t.ToDateTime(_) = failwithf "Cannot convert Tensor to DateTime"
+        override t.ToDecimal(_) = failwithf "Cannot convert Tensor to Decimal"
+        override t.ToString(_) = failwithf "Cannot convert Tensor to String"
+        override t.ToType(_,_) = failwithf "Cannot convert Tensor to Type"
+        override t.ToUInt16(_) = failwithf "Cannot convert Tensor to UInt16"
+        override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
+        override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
+
     member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
         let relativeTolerance = defaultArg relativeTolerance 1e-5
         let absoluteTolerance = defaultArg absoluteTolerance 1e-8
@@ -1089,7 +1111,7 @@ type Tensor =
         if input.dim = 2 then
             let mutable wacc = input.zeroLike()
             let l = Array.init n (fun i -> 
-                                    let target = target.[i].toScalar() |> System.Convert.ToInt32
+                                    let target = int target.[i]
                                     let w = weight.[target]
                                     wacc <- wacc + w
                                     -w*input.[i, target]) |> Tensor.stack
@@ -1105,7 +1127,7 @@ type Tensor =
                                     let aa = input.[i].view([classes; -1])
                                     let bb = target.[i].view(-1)
                                     let l = Array.init bb.nelement (fun j ->
-                                                                    let target = bb.[j].toScalar() |> System.Convert.ToInt32
+                                                                    let target = int bb.[j]
                                                                     let w = weight.[target]
                                                                     wacc <- wacc + w
                                                                     -w*aa.[target, j]) |> Tensor.stack
