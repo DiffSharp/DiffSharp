@@ -187,6 +187,17 @@ type TestModel () =
         Assert.AreEqual(p1, p2)
 
     [<Test>]
+    member _.TestModelSaveLoad () =
+        let net1 = ModelStyle1a()
+        let p1 = net1.parameters
+        let fileName = System.IO.Path.GetTempFileName()
+        net1.save(fileName)
+
+        let net2 = Model.load(fileName)
+        let p2 = net2.parameters
+        Assert.AreEqual(p1, p2)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10

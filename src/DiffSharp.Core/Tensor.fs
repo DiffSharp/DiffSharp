@@ -136,23 +136,9 @@ type Tensor =
         | TensorR(_), Tensor(_)  -> false
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
-    member t.save(fileName:string) =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Create)
-        try
-            formatter.Serialize(fs, t)
-        with
-        | :? SerializationException as e -> failwithf "Cannot save Tensor. %A" e.Message
-        fs.Close()
-    static member load(fileName:string) =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Open)
-        try
-            let t = formatter.Deserialize(fs) :?> Tensor
-            fs.Close()
-            t
-        with
-        | :? SerializationException as e -> failwithf "Cannot load Tensor. %A" e.Message
+
+    member t.save(fileName:string) = saveBinary t fileName
+    static member load(fileName:string):Tensor = loadBinary fileName
 
     member t.parents() =
         let mutable p = []

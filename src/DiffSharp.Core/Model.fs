@@ -107,6 +107,8 @@ type Model() =
     static member (-->) (t:Tensor, m:Model) = m.forward t
     member m.saveParameters(fileName) = m.parameters.save(fileName)
     member m.loadParameters(fileName) = m.parameters <- Tensor.load(fileName)
+    member m.save(fileName) = saveBinary m fileName
+    static member load(fileName):Model = loadBinary fileName
 
 
 type Weight() =
