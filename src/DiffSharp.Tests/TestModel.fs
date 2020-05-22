@@ -33,7 +33,7 @@ type ModelStyle1b() =
 type TestModel () =
 
     [<Test>]
-    member this.TestParameterDictFlattenUnflatten () =
+    member _.TestParameterDictFlattenUnflatten () =
         let d1t1 = Parameter <| dsharp.randn([15;5])
         let d1t2 = Parameter <| dsharp.randn(4)
         let d1 = ParameterDict()
@@ -56,7 +56,7 @@ type TestModel () =
         Assert.AreEqual(d1flatCorrect, d3flat)
 
     [<Test>]
-    member this.TestModelCreationStyle1 () =
+    member _.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
         Assert.AreEqual(516, net.nparameters)
 
@@ -64,7 +64,7 @@ type TestModel () =
         Assert.AreEqual(1663, net2.nparameters)
 
     [<Test>]
-    member this.TestModelCreationStyle2 () =
+    member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let net = Model.create [fc1; fc2] 
@@ -78,7 +78,7 @@ type TestModel () =
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
         let net2 = Model.create [fc1; fc2; p] 
-                    (dsharp.view [-1; 28*28]
+                    (dsharp.view [-1; 10]
                     >> fc1.forward
                     >> dsharp.relu
                     >> fc2.forward
@@ -86,7 +86,26 @@ type TestModel () =
         Assert.AreEqual(683, net2.nparameters)
 
     [<Test>]
-    member this.TestModelCompose () =
+    member _.TestModelCreationStyle3 () =
+        let net = dsharp.view [-1; 10] --> Linear(10, 32) --> dsharp.relu --> Linear(32, 10)
+        Assert.AreEqual(682, net.nparameters)        
+
+    [<Test>]
+    member _.TestModelUsageStyle1 () =
+        let net = ModelStyle1a()
+        let x = dsharp.randn([1; 10])
+        let y = net.forward x |> dsharp.sin
+        Assert.AreEqual([1;20], y.shape)
+
+    [<Test>]
+    member _.TestModelUsageStyle2 () =
+        let net = ModelStyle1a()
+        let x = dsharp.randn([1; 10])
+        let y = x --> net --> dsharp.sin
+        Assert.AreEqual([1;20], y.shape)
+
+    [<Test>]
+    member _.TestModelCompose () =
         let net1 = ModelStyle1a()
         let net2 = ModelStyle1b()
         let net3 = Model.compose net1 net2
@@ -97,7 +116,7 @@ type TestModel () =
         Assert.AreEqual([5;30], y.shape)
 
     [<Test>]
-    member this.TestModelParametersDiff () =
+    member _.TestModelParametersDiff () =
         let net = ModelStyle1a()
 
         Assert.True(net.getParameters().isNoDiff())
@@ -124,7 +143,35 @@ type TestModel () =
         Assert.True(net.getParameters().isNoDiff())
 
     [<Test>]
-    member this.TestModelLinear () =
+    member _.TestModelForwardParams () =
+        let net = ModelStyle1a()
+        let f = net.forwardParams
+        let p = net.getParameters()
+        let x = dsharp.randn([1;10])
+        let y = f x p
+        Assert.AreEqual([1;20], y.shape)
+
+    [<Test>]
+    member _.TestModelForwardCompose () =
+        let net = ModelStyle1a()
+        let f = net.forwardCompose dsharp.sin
+        let p = net.getParameters()
+        let x = dsharp.randn([1;10])
+        let y = f x p
+        Assert.AreEqual([1;20], y.shape)
+
+    [<Test>]
+    member _.TestModelForwardLoss () =
+        let net = ModelStyle1a()
+        let f = net.forwardLoss dsharp.mseLoss
+        let p = net.getParameters()
+        let x = dsharp.randn([1;10])
+        let t = dsharp.randn([1;20])
+        let y = f x t p
+        Assert.AreEqual([], y.shape)
+
+    [<Test>]
+    member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10
         let inputs  = dsharp.randn([n; din])
@@ -141,7 +188,7 @@ type TestModel () =
         Assert.True(targets.allclose(y, 0.01))
 
     [<Test>]
-    member this.TestModelConv1d () =
+    member _.TestModelConv1d () =
         // Trains a little binary classifier
         let cin, din = 1, 16
         let cout = 2
@@ -164,7 +211,7 @@ type TestModel () =
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
 
     [<Test>]
-    member this.TestModelConv2d () =
+    member _.TestModelConv2d () =
         // Trains a little binary classifier
         let cin, hin, win = 1, 6, 6
         let cout = 2
@@ -186,7 +233,7 @@ type TestModel () =
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
 
     [<Test>]
-    member this.TestModelConv3d () =
+    member _.TestModelConv3d () =
         // Trains a little binary classifier
         let cin, din, hin, win = 1, 6, 6, 6
         let cout = 2

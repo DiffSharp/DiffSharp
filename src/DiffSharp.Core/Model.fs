@@ -42,6 +42,8 @@ type ParameterDict() =
         let ts = [for t in d.values.Values do t.value.view(-1)]
         dsharp.cat(ts)
     member d.unflatten(tensors:Tensor) =
+        if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
+        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
         let shapes = [|for t in d.values.Values do t.value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
@@ -95,8 +97,7 @@ type Model() =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
-    static member compose (model1:Model) (model2:Model) =
-        Model.create [model1; model2] (model1.forward >> model2.forward)
+    static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
     static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
     static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
     static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
