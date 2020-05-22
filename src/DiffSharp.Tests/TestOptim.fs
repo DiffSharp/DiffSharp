@@ -15,6 +15,10 @@ type TestOptim () =
     let dataset = TensorDataset(inputs, targets)
     let dataloader = dataset.loader(8, shuffle=true)
 
+    let rosenbrock (x:Tensor) = 
+        let x, y = x.[0], x.[1]
+        (1. - x)**2 + 100. * (y - x**2)**2
+
     [<Test>]
     member _.TestOptimModelSGDStyle1 () =
         // Trains a linear regressor
@@ -78,4 +82,24 @@ type TestOptim () =
         let lr, epochs = 1e-2, 50
         Optimizer.adam(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), threshold=1e-4, epochs=epochs)
         let y = net.forward inputs
-        Assert.True(targets.allclose(y, 0.1, 0.1))        
+        Assert.True(targets.allclose(y, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestOptimFunSGD () =
+        let x0 = dsharp.tensor([1.5, 1.5])
+        let lr, momentum, iters, threshold = 1e-3, 0.5, 1000, 1e-3
+        let fx, x = Optimizer.sgd(rosenbrock, x0, lr=dsharp.tensor(lr), momentum=dsharp.tensor(momentum), nesterov=true, iters=iters, threshold=threshold)
+        let fxOpt = dsharp.tensor(0.)
+        let xOpt = dsharp.tensor([1., 1.])
+        Assert.True(fxOpt.allclose(fx, 0.1, 0.1))
+        Assert.True(xOpt.allclose(x, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestOptimFunAdam () =
+        let x0 = dsharp.tensor([1.5, 1.5])
+        let lr, iters, threshold = 1., 1000, 1e-3
+        let fx, x = Optimizer.adam(rosenbrock, x0, lr=dsharp.tensor(lr), iters=iters, threshold=threshold)
+        let fxOpt = dsharp.tensor(0.)
+        let xOpt = dsharp.tensor([1., 1.])
+        Assert.True(fxOpt.allclose(fx, 0.1, 0.1))
+        Assert.True(xOpt.allclose(x, 0.1, 0.1))        
