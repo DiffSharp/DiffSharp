@@ -48,9 +48,8 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             t.Values.[t.IndexToFlatIndex(index)] <- v
 
     override t.GetSlice(fullBounds:int[,]) =
-        // if fullBounds.GetLength(0) <> t.Dim then failwithf "Expecting %i-by-3 fullBounds" t.Dim
         // printfn "rfullBounds\n%A" fullBounds
-        let shape = Shape.computeGetSlice fullBounds
+        let shape = Shape.checkCanGetSlice t.Shape fullBounds
         // printfn "rshape\n%A" shape
         let array = Array.zeroCreate (shapeLength shape)
         let mutable arrayi = 0
@@ -76,7 +75,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
     
     override t.Expand(newShape) =
         if shape = newShape then t :> _ else
-        checkCanExpandShape shape newShape
+        Shape.checkCanExpand shape newShape
         let trim = newShape.Length - shape.Length
         let exp = shapeLength newShape.[0..trim-1]
         let jshape = newShape.[trim..]
@@ -117,8 +116,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override _.StackTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
-        checkCanStack shapes dim
-        let n, shape1, shape2, newShape = Shape.computeStack shapes dim
+        let n, shape1, shape2, newShape = Shape.checkCanStack shapes dim
         let m1 = shapeLength shape1
         let m2 = shapeLength shape2
         let m = m1 * m2
@@ -133,7 +131,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override t.UnstackT(dim) =
         let shape = t.Shape
-        let shape1, shape2, unstackedShape = Shape.computeUnstack shape dim
+        let shape1, shape2, unstackedShape = Shape.checkCanUnstack shape dim
         let n = shape.[dim]
         let m1 = shapeLength shape1
         let m2 = shapeLength shape2
@@ -149,7 +147,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override t.CatTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
-        let n, shape1, m2, shape3, outShape = Shape.computeCat shapes dim
+        let n, shape1, m2, shape3, outShape = Shape.checkCanCat shapes dim
         let m1 = shapeLength shape1
         let m3 = shapeLength shape3
         let m = m1 * m2 * m3
@@ -167,7 +165,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
 
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
-        let outShapes = Shape.computeSplit shape sizes dim
+        let outShapes = Shape.checkCanSplit shape sizes dim
         let n = sizes.Length
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim+1..]
@@ -188,21 +186,22 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             t.MakeLike(rvalues, outShape))
 
     override t.TransposeT2() =
-        checkCanTranspose t.Dim
+        Shape.checkCanTranspose t.Dim
         let tcols = t.Shape.[1]
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         t.CreateLike(result)
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
-        t.MakeLike(result, shapeSqueeze dim t.Shape)
+        t.MakeLike(result, Shape.squeeze dim t.Shape)
 
     override t.UnsqueezeT(dim) =
+        let outputShape = Shape.checkCanUnsqueeze dim t.Shape
         let result = Array.copy t.Values
-        t.MakeLike(result, shapeUnsqueeze dim t.Shape)
+        t.MakeLike(result, outputShape)
 
     override t.FlipT(dims:int[]) =
-        checkCanFlip t.Dim dims
+        Shape.checkCanFlip t.Dim dims
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
@@ -219,11 +218,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             upcast result
 
     override t.DilateT(dilations:int[]) =
-        checkCanDilate t.Dim dilations
+        Shape.checkCanDilate t.Dim dilations
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
-            let result = t.ZerosLike(dilatedShape t.Shape dilations) :?> RawTensorCPU<'T>
+            let result = t.ZerosLike(Shape.dilated t.Shape dilations) :?> RawTensorCPU<'T>
             let rec dilate (shape:int[]) externalCoords = 
                 if shape.Length = 1 then
                     for i=0 to shape.[0]-1 do
@@ -239,7 +238,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
-            let result = t.ZerosLike(undilatedShape t.Shape dilations) :?> RawTensorCPU<'T>
+            let result = t.ZerosLike(Shape.undilatedShape t.Shape dilations) :?> RawTensorCPU<'T>
             let rec dilate (shape:int[]) externalCoords = 
                 if shape.Length = 1 then
                     for i=0 to shape.[0]-1 do
@@ -252,7 +251,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
             upcast result
 
     override t.GatherT(dim:int, indices) =
-        checkCanGather t.Shape dim indices.Shape indices.DType
+        Shape.checkCanGather t.Shape dim indices.Shape indices.DType
         let indices = indices :?> RawTensorCPU<int>
         let result = t.ZerosLike(indices.Shape) :?> RawTensorCPU<'T>
         let rec gather (shape:int[]) externalCoords =
@@ -269,7 +268,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
         upcast result
 
     override t.ViewT(shape:int[]) =
-        checkCanView t.Shape shape
+        Shape.checkCanView t.Shape shape
         let result = Array.copy t.Values
         t.MakeLike(result, shape)
 
@@ -342,7 +341,7 @@ module internal RawTensorCPU =
 
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
-        | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
+        | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && Array.allClose relativeTolerance absoluteTolerance t1.Values t2.Values
         | _ -> opNotSupported "Cannot compare RawTensors of different types" t1.DType t2.DType
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
@@ -410,11 +409,11 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline internal AddTTSlice(plus, t1: RawTensorCPU< ^T >, location:int[], t2: RawTensor) : (^T[] * int[]) =
-        checkCanAddSlice t1.Shape location t2.Shape
+        Shape.checkCanAddSlice t1.Shape location t2.Shape
         let t1value = t1.Values
         let t2 = t2 :?> RawTensorCPU< ^T >
         let result = Array.copy t1value
-        let shape2 = shapeUnsqueezeAs t2.Shape t1.Shape
+        let shape2 = Shape.unsqueezeAs t2.Shape t1.Shape
         let rec add (shape2:int[]) externalCoords =
             if shape2.Length = 1 then
                 for i=0 to shape2.[0]-1 do
@@ -495,7 +494,7 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline MatMulT2T2(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
-        checkCanMatmul t1.Shape t2.Shape
+        Shape.checkCanMatmul t1.Shape t2.Shape
         let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
         let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
         let t1value = t1.Values
@@ -510,11 +509,10 @@ module internal RawTensorCPU =
         (result,[| t1rows; t2cols |])
     
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
-        checkCanMaxpool1d t1.Shape kernelSize stride padding
+        let batchSize, channels, inputSize, outputSize, outputShape = Shape.checkCanMaxpool1d t1.Shape kernelSize stride padding
         match t1.DType with 
         | DType.Bool | DType.Integral -> opNotSupported "MaxPool1D" t1.DType
         | _ ->
-        let batchSize, channels, inputSize, outputSize, outputShape = Shape.computeMaxPool1D t1.Shape kernelSize stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorCPU<int>
         let minValue = t1.[t1.MinIndexT()] - one
@@ -535,13 +533,10 @@ module internal RawTensorCPU =
         result, indices
 
     let inline MaxPool2D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
-        checkCanMaxpool2d t1.Shape kernelSize stride padding
+        let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape = Shape.checkCanMaxpool2d t1.Shape kernelSize stride padding
         match t1.DType with 
         | DType.Bool | DType.Integral -> opNotSupported "MaxPool2D" t1.DType
         | _ ->
-        let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape =
-            Shape.computeMaxPool2D t1.Shape kernelSize stride padding
-
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorCPU<int>
         let minValue = t1.[t1.MinIndexT()] - one
@@ -567,12 +562,11 @@ module internal RawTensorCPU =
         result, indices
 
     let inline MaxPool3D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
-        checkCanMaxpool3d t1.Shape kernelSize stride padding
+        let (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape) =
+            Shape.checkCanMaxpool3d t1.Shape kernelSize stride padding
         match t1.DType with 
         | DType.Bool | DType.Integral -> opNotSupported "MaxPool3D" t1.DType
         | _ ->
-        let (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape) =
-            Shape.computeMaxPool3D t1.Shape kernelSize stride padding
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let indices = t1.ZerosLike(outputShape, dtype=Int32) :?> RawTensorCPU<int>
         let minValue = t1.[t1.MinIndexT()] - one
@@ -603,7 +597,7 @@ module internal RawTensorCPU =
         result, indices
 
     let inline MaxUnpool1D(t1: RawTensorCPU< ^T >, indices: RawTensorCPU<int>, outputSize: int[]) : RawTensorCPU< ^T > =
-        let batchSize, channels, inputSize, outputShape = Shape.computeMaxUnpool1D t1.Shape outputSize
+        let batchSize, channels, inputSize, outputShape = Shape.checkCanMaxunpool1d t1.Shape indices.DType indices.Shape outputSize
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         for n=0 to batchSize-1 do
             for c=0 to channels-1 do
@@ -613,7 +607,7 @@ module internal RawTensorCPU =
         result
 
     let inline MaxUnpool2D(t1: RawTensorCPU< ^T >, indices: RawTensorCPU<int>, outputSize:int[]) : RawTensorCPU< ^T > =
-        let batchSize, channels, (inputHeight, inputWidth), outputShape = Shape.computeMaxUnpool2D t1.Shape outputSize
+        let batchSize, channels, (inputHeight, inputWidth), outputShape = Shape.checkCanMaxunpool2d t1.Shape indices.DType indices.Shape outputSize
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         for n=0 to batchSize-1 do
             for c=0 to channels-1 do
@@ -625,7 +619,7 @@ module internal RawTensorCPU =
         result
 
     let inline MaxUnpool3D(t1: RawTensorCPU< ^T >, indices: RawTensorCPU<int>, outputSize:int[]) : RawTensorCPU< ^T > =
-        let batchSize, channels, (inputDepth, inputHeight, inputWidth), outputShape = Shape.computeMaxUnpool3D t1.Shape outputSize
+        let batchSize, channels, (inputDepth, inputHeight, inputWidth), outputShape = Shape.checkCanMaxunpool3d t1.Shape indices.DType indices.Shape outputSize
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         for n=0 to batchSize-1 do
             for c=0 to channels-1 do
@@ -640,8 +634,8 @@ module internal RawTensorCPU =
     let inline Conv1D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride, padding) : RawTensorCPU< ^T > =
         // t1: input, NxCxI (batchSize x inputChannels x inputLength)
         // t2: filters, KxCxF (outputChannels x inputChannels x kernelLength)
-        checkCanConv1d t1.DType t2.DType t1.Shape t2.Shape stride padding 1
-        let batchSize, inputChannels, kernelSize, outputChannels, outputSize, outputShape = Shape.computeConv1D t1.Shape t2.Shape stride padding
+        let batchSize, inputChannels, kernelSize, outputChannels, outputSize, outputShape =
+            Shape.checkCanConv1d t1.DType t2.DType t1.Shape t2.Shape stride padding 1
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
         let t1 =
             if padding = 0 then
@@ -665,8 +659,8 @@ module internal RawTensorCPU =
     let inline Conv2D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride: int[], padding: int[]) : RawTensorCPU< ^T > =
         // t1: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
         // t2: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
-        checkCanConv2d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1|]
-        let batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape = Shape.computeConv2D t1.Shape t2.Shape stride padding
+        let batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape =
+            Shape.checkCanConv2d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1|]
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 then
@@ -693,9 +687,8 @@ module internal RawTensorCPU =
     let inline Conv3D(t1: RawTensorCPU< ^T >, t2: RawTensor, stride: int[], padding: int[]) : RawTensorCPU< ^T > =
         // t1: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
         // t2: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
-        checkCanConv3d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1;1|]
         let batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape = 
-            Shape.computeConv3D t1.Shape t2.Shape stride padding
+            Shape.checkCanConv3d t1.DType t2.DType t1.Shape t2.Shape stride padding [|1;1;1|]  
         let result = t1.ZerosLike(outputShape) :?> RawTensorCPU< ^T>
         let t1 =
             if padding.[0] = 0 && padding.[1] = 0 && padding.[2] = 0 then
