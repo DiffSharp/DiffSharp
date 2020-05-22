@@ -109,6 +109,10 @@ type Model() =
     member m.loadParameters(fileName) = m.parameters <- Tensor.load(fileName)
     member m.save(fileName) = saveBinary m fileName
     static member load(fileName):Model = loadBinary fileName
+    member m.clone() = 
+        let fileName = System.IO.Path.GetTempFileName()
+        m.save(fileName)
+        Model.load(fileName)
 
 
 type Weight() =

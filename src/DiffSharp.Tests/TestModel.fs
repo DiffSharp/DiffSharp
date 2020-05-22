@@ -208,6 +208,20 @@ type TestModel () =
         Assert.AreEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelClone () =
+        let net1 = ModelStyle1a()
+        let p1 = net1.parameters
+
+        let net2 = net1.clone()
+        let p2 = net2.parameters
+        Assert.AreEqual(p1, p2)
+
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.AreEqual(y1, y2)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10

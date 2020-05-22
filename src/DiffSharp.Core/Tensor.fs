@@ -700,8 +700,6 @@ type Tensor =
             s
        if keepDim then res.unsqueeze(dim) else res
 
-    member a.sum(dim, ?keepDim) = a.sum(dim, ?keepDim=keepDim)
-
     /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
     /// from newShape to shape must be possible.
     member a.sumToSize(newShape:int[]) =
