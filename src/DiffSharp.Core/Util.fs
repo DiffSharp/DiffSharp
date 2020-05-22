@@ -6,6 +6,7 @@ open System.Collections
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open System.IO
+open System.IO.Compression
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
 open FSharp.Reflection
@@ -662,22 +663,27 @@ let download (url:string) (localFileName:string) =
     printfn "Downloading %A to %A" url localFileName
     wc.DownloadFile(url, localFileName)
 
-let saveBinary (o:'a) (fileName:string) =
+let saveBinary (object:'a) (fileName:string) =
     let formatter = BinaryFormatter()
     let fs = new FileStream(fileName, FileMode.Create)
+    let cs = new GZipStream(fs, CompressionMode.Compress)
     try
-        formatter.Serialize(fs, o)
+        formatter.Serialize(cs, object)
+        cs.Flush()
+        cs.Close()
+        fs.Close()
     with
     | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
-    fs.Close()
 
 let loadBinary (fileName:string):'a =
     let formatter = BinaryFormatter()
     let fs = new FileStream(fileName, FileMode.Open)
+    let cs = new GZipStream(fs, CompressionMode.Decompress)
     try
-        let t = formatter.Deserialize(fs) :?> 'a
+        let object = formatter.Deserialize(cs) :?> 'a
+        cs.Close()
         fs.Close()
-        t
+        object
     with
     | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 

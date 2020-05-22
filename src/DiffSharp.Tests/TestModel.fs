@@ -186,6 +186,11 @@ type TestModel () =
         let p2 = net2.parameters
         Assert.AreEqual(p1, p2)
 
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.AreEqual(y1, y2)
+
     [<Test>]
     member _.TestModelSaveLoad () =
         let net1 = ModelStyle1a()
@@ -196,6 +201,11 @@ type TestModel () =
         let net2 = Model.load(fileName)
         let p2 = net2.parameters
         Assert.AreEqual(p1, p2)
+
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.AreEqual(y1, y2)
 
     [<Test>]
     member _.TestModelLinear () =
