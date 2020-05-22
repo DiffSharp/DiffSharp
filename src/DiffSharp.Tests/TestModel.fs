@@ -3,7 +3,8 @@ namespace Tests
 open NUnit.Framework
 open DiffSharp
 open DiffSharp.Model
-
+open DiffSharp.Data
+open DiffSharp.Optim
 
 type ModelStyle1a() =
     inherit Model()
@@ -119,34 +120,34 @@ type TestModel () =
     member _.TestModelParametersDiff () =
         let net = ModelStyle1a()
 
-        Assert.True(net.getParameters().isNoDiff())
+        Assert.True(net.parameters.isNoDiff())
 
-        let p = net.getParameters()
+        let p = net.parameters
         let p = p.forwardDiff(p.onesLike())
-        net.setParameters(p)
-        Assert.True(net.getParameters().isForwardDiff())
+        net.parameters <- p
+        Assert.True(net.parameters.isForwardDiff())
 
         net.noDiff()
-        Assert.True(net.getParameters().isNoDiff())
+        Assert.True(net.parameters.isNoDiff())
 
-        let p = net.getParameters()
+        let p = net.parameters
         let p = p.reverseDiff()
-        net.setParameters(p)
-        Assert.True(net.getParameters().isReverseDiff())
+        net.parameters <- p
+        Assert.True(net.parameters.isReverseDiff())
 
         net.noDiff()
-        Assert.True(net.getParameters().isNoDiff())
+        Assert.True(net.parameters.isNoDiff())
 
-        let p = net.getParameters()
+        let p = net.parameters
         let x = dsharp.randn([1;10])
         ignore <| dsharp.grad (net.forwardCompose dsharp.sum x) p
-        Assert.True(net.getParameters().isNoDiff())
+        Assert.True(net.parameters.isNoDiff())
 
     [<Test>]
-    member _.TestModelForwardParams () =
+    member _.TestModelForwardParameters () =
         let net = ModelStyle1a()
-        let f = net.forwardParams
-        let p = net.getParameters()
+        let f = net.forwardParameters
+        let p = net.parameters
         let x = dsharp.randn([1;10])
         let y = f x p
         Assert.AreEqual([1;20], y.shape)
@@ -155,7 +156,7 @@ type TestModel () =
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
         let f = net.forwardCompose dsharp.sin
-        let p = net.getParameters()
+        let p = net.parameters
         let x = dsharp.randn([1;10])
         let y = f x p
         Assert.AreEqual([1;20], y.shape)
@@ -164,11 +165,26 @@ type TestModel () =
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
         let f = net.forwardLoss dsharp.mseLoss
-        let p = net.getParameters()
+        let p = net.parameters
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
         let y = f x t p
         Assert.AreEqual([], y.shape)
+
+    [<Test>]
+    member _.TestModelSaveLoadParameters () =
+        let net1 = ModelStyle1a()
+        let p1 = net1.parameters
+        let fileName = System.IO.Path.GetTempFileName()
+        net1.saveParameters(fileName)
+
+        let net2 = ModelStyle1a()
+        let p2 = net2.parameters
+        Assert.AreNotEqual(p1, p2)
+
+        net2.loadParameters(fileName)
+        let p2 = net2.parameters
+        Assert.AreEqual(p1, p2)
 
     [<Test>]
     member _.TestModelLinear () =
@@ -180,7 +196,7 @@ type TestModel () =
 
         let lr, steps = 1e-2, 1000
         let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.getParameters()
+        let mutable p = net.parameters
         for _ in 0..steps do
             let g = dsharp.grad (loss inputs targets) p
             p <- p - lr * g
@@ -190,66 +206,50 @@ type TestModel () =
     [<Test>]
     member _.TestModelConv1d () =
         // Trains a little binary classifier
-        let cin, din = 1, 16
-        let cout = 2
-        let k = 3
+        let din, cin, cout, k = 16, 1, 2, 3
         let inputs  = dsharp.randn([2; cin; din])
         let conv1 = Conv1d(cin, cout, k)
-        let fcin = inputs.[0] |> dsharp.unsqueeze 0 |> conv1.forward |> dsharp.nelement
-        let fc1 = Linear(fcin, 2)
-        let net = Model.create [conv1; fc1] (conv1.forward >> dsharp.relu >> dsharp.flatten 1 >> fc1.forward)
+        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0; 1])
         let targetsp = dsharp.tensor([[1,0],[0,1]])
-        let lr, steps = 1e-2, 250
-        let loss = net.forwardLoss dsharp.crossEntropyLoss
-        let mutable p = net.getParameters()
-        for _ in 0..steps do
-            let g = dsharp.grad (loss inputs targets) p
-            p <- p - lr * g
-        let y = inputs |> net.forward |> dsharp.softmax 1
-        printfn "%A %A" targetsp y
+        let dataset = TensorDataset(inputs, targets)
+        let dataloader = dataset.loader(8, shuffle=true)        
+        let lr, iters = 1e-2, 250
+        Optimizer.sgd(net, dataloader, dsharp.crossEntropyLoss, lr=dsharp.tensor(lr), iters=iters)
+        let y = inputs --> net --> dsharp.softmax 1
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
 
     [<Test>]
     member _.TestModelConv2d () =
         // Trains a little binary classifier
-        let cin, hin, win = 1, 6, 6
-        let cout = 2
-        let k = 3
+        let cin, hin, win, cout, k = 1, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; hin; win])
         let conv1 = Conv2d(cin, cout, k)
-        let fcin = inputs.[0] |> dsharp.unsqueeze 0 |> conv1.forward |> dsharp.nelement
-        let fc1 = Linear(fcin, 2)
-        let net = Model.create [conv1; fc1] (conv1.forward >> dsharp.relu >> dsharp.flatten 1 >> fc1.forward)
+        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0; 1])
         let targetsp = dsharp.tensor([[1,0],[0,1]])
-        let lr, steps = 1e-2, 250
-        let loss = net.forwardLoss dsharp.crossEntropyLoss
-        let mutable p = net.getParameters()
-        for _ in 0..steps do
-            let g = dsharp.grad (loss inputs targets) p
-            p <- p - lr * g
-        let y = inputs |> net.forward |> dsharp.softmax 1
+        let dataset = TensorDataset(inputs, targets)
+        let dataloader = dataset.loader(8, shuffle=true)        
+        let lr, iters = 1e-2, 250
+        Optimizer.sgd(net, dataloader, dsharp.crossEntropyLoss, lr=dsharp.tensor(lr), iters=iters)
+        let y = inputs --> net --> dsharp.softmax 1
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
 
     [<Test>]
     member _.TestModelConv3d () =
         // Trains a little binary classifier
-        let cin, din, hin, win = 1, 6, 6, 6
-        let cout = 2
-        let k = 3
+        let cin, din, hin, win, cout, k = 1, 6, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; din; hin; win])
         let conv1 = Conv3d(cin, cout, k)
-        let fcin = inputs.[0] |> dsharp.unsqueeze 0 |> conv1.forward |> dsharp.nelement
-        let fc1 = Linear(fcin, 2)
-        let net = Model.create [conv1; fc1] (conv1.forward >> dsharp.relu >> dsharp.flatten 1 >> fc1.forward)
+        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0; 1])
         let targetsp = dsharp.tensor([[1,0],[0,1]])
-        let lr, steps = 1e-2, 250
-        let loss = net.forwardLoss dsharp.crossEntropyLoss
-        let mutable p = net.getParameters()
-        for _ in 0..steps do
-            let g = dsharp.grad (loss inputs targets) p
-            p <- p - lr * g
-        let y = inputs |> net.forward |> dsharp.softmax 1
-        Assert.True(targetsp.allclose(y, 0.1, 0.1))        
+        let dataset = TensorDataset(inputs, targets)
+        let dataloader = dataset.loader(8, shuffle=true)        
+        let lr, iters = 1e-2, 250
+        Optimizer.sgd(net, dataloader, dsharp.crossEntropyLoss, lr=dsharp.tensor(lr), iters=iters)
+        let y = inputs --> net --> dsharp.softmax 1
+        Assert.True(targetsp.allclose(y, 0.1, 0.1))

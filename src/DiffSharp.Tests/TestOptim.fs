@@ -42,10 +42,11 @@ type TestOptim () =
 
     [<Test>]
     member _.TestOptimModelSGDStyle3 () =
+        // Trains a linear regressor
         let net = Linear(din, dout)
         let lr, epochs = 1e-1, 250
         let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.getParameters()
+        let mutable p = net.parameters
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
                 let g = dsharp.grad (loss inputs targets) p

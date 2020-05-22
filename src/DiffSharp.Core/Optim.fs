@@ -8,7 +8,7 @@ open DiffSharp.Util
 [<AbstractClass>]
 type Optimizer(model:Model) =
     member val model = model
-    member o.step() = model.Parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member o.step() = model.parametersDict.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
     abstract member updateRule: string -> Tensor -> Tensor
     static member internal optimizeFun(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let iters = defaultArg iters -1
@@ -150,7 +150,7 @@ type Optimizer(model:Model) =
                 lPrev <- lScalar
                 not stop
             ) |> Seq.iter ignore
-        
+
     static member sgd(f, x0:Tensor, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let lr = defaultArg lr (dsharp.tensor(0.001))
         let mutable momBuffer = dsharp.zero()
@@ -216,7 +216,7 @@ and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.Parameters.map(fun (t:Tensor) -> t.derivative)
+                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
                 momInit <- true
             let mb = momBuffer.[name]
             let mb = mb.mul(mom).add(d)
@@ -244,8 +244,8 @@ and Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDe
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
         if stateStep = 0 then
-            stateExpAvg <- model.Parameters.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.Parameters.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
         stateStep <- stateStep + 1
         let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
