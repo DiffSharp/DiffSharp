@@ -16,6 +16,9 @@ type TestDiffSharp () =
         let x, y = x.[0], x.[1]
         dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.*dsharp.one()]])
 
+    let fscalarscalar (x:Tensor) = dsharp.sin x
+    let fscalarscalarDiff (x:Tensor) = dsharp.cos x
+
     let fscalarvect3 (x:Tensor) = dsharp.stack([sin x; exp x; cos x])
     let fscalarvect3Diff (x:Tensor) = dsharp.stack([cos x; exp x; -sin x])
     let fscalarvect3Diff2 (x:Tensor) = dsharp.stack([-sin x; exp x; -cos x])
@@ -175,6 +178,32 @@ type TestDiffSharp () =
         let ng4 = dsharp.numg 1e-6 rosenbrock x
         let fxCorrect = rosenbrock x
         let gCorrect = rosenbrockGrad x
+        Assert.AreEqual(fxCorrect, fx1)
+        Assert.AreEqual(fxCorrect, nfx1)
+        Assert.AreEqual(fxCorrect, fx2)
+        Assert.AreEqual(fxCorrect, nfx2)
+        Assert.AreEqual(gCorrect, g1)
+        Assert.AreEqual(gCorrect, g2)
+        Assert.AreEqual(gCorrect, g3)
+        Assert.AreEqual(gCorrect, g4)
+        Assert.True(gCorrect.allclose(ng1, 0.1))
+        Assert.True(gCorrect.allclose(ng2, 0.1))
+        Assert.True(gCorrect.allclose(ng3, 0.1))
+        Assert.True(gCorrect.allclose(ng4, 0.1))
+
+    [<Test>]
+    member this.TestGradScalarToScalar () =
+        let x = dsharp.tensor(1.5)
+        let fx1, g1 = dsharp.fgrad fscalarscalar x
+        let fx2, g2 = dsharp.fg fscalarscalar x
+        let g3 = dsharp.grad fscalarscalar x
+        let g4 = dsharp.g fscalarscalar x
+        let nfx1, ng1 = dsharp.numfgrad 1e-3 fscalarscalar x
+        let nfx2, ng2 = dsharp.numfg 1e-3 fscalarscalar x
+        let ng3 = dsharp.numgrad 1e-3 fscalarscalar x
+        let ng4 = dsharp.numg 1e-3 fscalarscalar x
+        let fxCorrect = fscalarscalar x
+        let gCorrect = fscalarscalarDiff x
         Assert.AreEqual(fxCorrect, fx1)
         Assert.AreEqual(fxCorrect, nfx1)
         Assert.AreEqual(fxCorrect, fx2)

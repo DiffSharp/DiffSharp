@@ -16,6 +16,7 @@ type Dataset() =
 
 and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int) =
     let shuffle = defaultArg shuffle false
+    let batchSize = min batchSize dataset.length
     member d.length = defaultArg numBatches (dataset.length/batchSize)
     member d.epoch() =
         seq {let index = if shuffle then shuffledIndices (dataset.length) else id

@@ -331,7 +331,54 @@ type TestTensor () =
             let a = 2.
             let b = ty.tensor(2.)
             Assert.True(not (dsharp.isTensor(a)))
-            Assert.True(dsharp.isTensor(b))    
+            Assert.True(dsharp.isTensor(b))
+
+    [<Test>]
+    member this.TestTensorConvert () =
+        for combo in Combos.IntegralAndFloatingPoint do
+            let v = 2.
+            let t = combo.tensor(v)
+            let tsingle = single t
+            let tdouble = double t
+            let tint16 = int16 t
+            let tint32 = int32 t
+            let tint64 = int64 t
+            let tsingleCorrect = single v
+            let tdoubleCorrect = double v
+            let tint16Correct = int16 v
+            let tint32Correct = int32 v
+            let tint64Correct = int64 v
+            Assert.AreEqual(tsingleCorrect, tsingle)
+            Assert.AreEqual(tdoubleCorrect, tdouble)
+            Assert.AreEqual(tint16Correct, tint16)
+            Assert.AreEqual(tint32Correct, tint32)
+            Assert.AreEqual(tint64Correct, tint64)
+
+        for combo in Combos.IntegralAndFloatingPoint do
+            let v = 2.
+            let t = combo.tensor(v)
+            let tsingle = t |> Convert.ToSingle
+            let tdouble = t |> Convert.ToDouble
+            let tint16 = t |> Convert.ToInt16
+            let tint32 = t |> Convert.ToInt32
+            let tint64 = t |> Convert.ToInt64
+            let tsingleCorrect = single v
+            let tdoubleCorrect = double v
+            let tint16Correct = int16 v
+            let tint32Correct = int32 v
+            let tint64Correct = int64 v
+            Assert.AreEqual(tsingleCorrect, tsingle)
+            Assert.AreEqual(tdoubleCorrect, tdouble)
+            Assert.AreEqual(tint16Correct, tint16)
+            Assert.AreEqual(tint32Correct, tint32)
+            Assert.AreEqual(tint64Correct, tint64)
+
+        for combo in Combos.Bool do
+            let v = true
+            let t = combo.tensor(v)
+            let tbool = t |> Convert.ToBoolean
+            let tboolCorrect = v
+            Assert.AreEqual(tboolCorrect, tbool)
 
     [<Test>]
     member this.TestTensorOnehot () =

@@ -6,8 +6,8 @@ open System.Collections.Generic
 type Parameter =
     val mutable value:Tensor
     new(value) = {value=value}
-    member p.forwardDiff(derivative:Tensor) = p.value <- p.value.forwardDiff(derivative)
-    member p.reverseDiff() = p.value <- p.value.reverseDiff()
+    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
+    member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
     member p.noDiff() = p.value <- p.value.noDiff()
     override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" p.value.shape p.value
 
@@ -28,13 +28,22 @@ type ParameterDict() =
     member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
     member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
-    member d.forwarddiff(derivatives:ParameterDict) = d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n]))
-    member d.reverseDiff() = d.iter(fun (_, p) -> p.reverseDiff())
+    member d.forwarddiff(derivatives:ParameterDict, ?tag:uint32) = 
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
+    member d.reverseDiff(?tag:uint32) = 
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (_, p) -> p.reverseDiff(tag))
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
+    member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
+    member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
+    member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
     member d.flatten() =
         let ts = [for t in d.values.Values do t.value.view(-1)]
         dsharp.cat(ts)
     member d.unflatten(tensors:Tensor) =
+        if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
+        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
         let shapes = [|for t in d.values.Values do t.value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
@@ -51,12 +60,18 @@ type ParameterDict() =
         let sb = System.Text.StringBuilder()
         for KeyValue(n, p) in d.values do sb.AppendLine(sprintf "%A, %A" n p) |> ignore
         sb.ToString()
-        
+
 
 [<AbstractClass>]
 type Model() =
-    member val Parameters:ParameterDict = ParameterDict()
+    member val ParametersDict:ParameterDict = ParameterDict()
     member val SubModels:Dictionary<string, Model> = Dictionary()
+    member m.parametersDict
+        with get () = m.ParametersDict
+        and set parameters = m.ParametersDict.set(parameters)
+    member m.parameters
+        with get () = m.parametersDict.flatten()
+        and set parameters = m.parametersDict.unflatten(parameters)
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
         let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "p__%d" i)) |> Seq.toArray
@@ -64,32 +79,40 @@ type Model() =
         for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p -> 
-                m.Parameters.add(n, p)
+                m.parametersDict.add(n, p)
             | :? Model as mm ->
                 m.SubModels.Add(n, mm)
-                m.Parameters.add(mm.Parameters.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+                m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
-    member m.forwardDiff(derivatives:ParameterDict) = m.Parameters.forwarddiff(derivatives)
-    member m.reverseDiff() = m.Parameters.reverseDiff()
-    member m.noDiff() = m.Parameters.noDiff()
-    member m.setParameters(parameters:ParameterDict) = m.Parameters.set(parameters)
-    member m.setParameters(parameters:Tensor) = m.Parameters.unflatten(parameters)
-    member m.getParameters() = m.Parameters.flatten()
-    member m.nparameters() = m.Parameters.flatten().nelement
+    member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
+    member m.reverseDiff() = m.parametersDict.reverseDiff()
+    member m.noDiff() = m.parametersDict.noDiff()
+    member m.nparameters = m.parametersDict.nelement
     abstract member forward: Tensor -> Tensor
-    member m.forwardParams (input:Tensor) (parameters:Tensor) =
-        m.setParameters(parameters)
+    member m.forwardParameters (input:Tensor) (parameters:Tensor) =
+        m.parameters <- parameters
         let f = m.forward(input) in m.noDiff(); f
     member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
-        m.forwardParams input parameters |> f
+        m.forwardParameters input parameters |> f
     member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
         m.forwardCompose (f target) input parameters
     static member create ps f =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
-    static member compose (model1:Model) (model2:Model) =
-        Model.create [model1; model2] (model1.forward >> model2.forward)
+    static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
+    static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
+    static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
+    static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
+    static member (-->) (t:Tensor, m:Model) = m.forward t
+    member m.saveParameters(fileName) = m.parameters.save(fileName)
+    member m.loadParameters(fileName) = m.parameters <- Tensor.load(fileName)
+    member m.save(fileName) = saveBinary m fileName
+    static member load(fileName):Model = loadBinary fileName
+    member m.clone() = 
+        let fileName = System.IO.Path.GetTempFileName()
+        m.save(fileName)
+        Model.load(fileName)
 
 
 type Weight() =
