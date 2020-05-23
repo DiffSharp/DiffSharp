@@ -1,5 +1,12 @@
 image: Visual Studio 2019
 
+build:
+  publish_nuget: true
+
+nuget:
+  project_feed: true
+
 build_script:
   - cmd: dotnet build
   - cmd: dotnet test
+  - cmd: dotnet pack

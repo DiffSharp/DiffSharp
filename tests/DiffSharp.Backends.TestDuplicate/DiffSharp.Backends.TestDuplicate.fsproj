@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <DefineConstants>TEST_DUPLICATE_BACKEND</DefineConstants>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
