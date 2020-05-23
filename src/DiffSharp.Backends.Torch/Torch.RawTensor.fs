@@ -51,8 +51,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
        if toTorchShape shape <> tt.Shape then 
            failwithf "mismatched Torch tensor shape, expected %A, got %A" (toTorchShape shape) tt.Shape
 
-    member t.MakeLike(tt, ?shape, ?dtype) : RawTensor =
-        upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, device)
+    member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
+        upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.DType, defaultArg device t.Device)
 
     member x.TorchTensor = tt
 
@@ -345,6 +345,13 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         else 
             let result = tt.ToType(toTorchType newDType)
             t.MakeLike(result, dtype=newDType)
+
+    override t.MoveTo(device: Device) =
+        if t.Device = device then (t :> _) else
+        match device with 
+        | Device.CPU -> t.MakeLike(t.TorchTensor.Cpu(), device=device)
+        | Device.GPU -> t.MakeLike(t.TorchTensor.Cuda(), device=device)
+        | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
 
     override _.RandomMultinomial(numSamples) =
         failwith "tbd"
@@ -826,7 +833,12 @@ type TorchStatics<'T, 'T2>
             match shape with 
             | [| |] -> from0(values.[0])
             | _ -> from (values, toTorchShape shape)
-        TorchRawTensor(t, shape, dtype, device) :> _
+        let tt = 
+           match device with 
+           | Device.CPU -> t
+           | Device.GPU -> t.Cuda()
+           | Device.Other _ -> failwith "device extensibility not available in Torch backend as yet"
+        TorchRawTensor(tt, shape, dtype, device) :> _
 
 /// The concrete implementation of BackendStatics for Bool  data.
 type TorchFloat32Statics() = 

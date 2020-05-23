@@ -40,6 +40,24 @@ type Tensor =
         | None -> t
         | Some dt -> t.cast(dt)
 
+    member t.cuda() =
+        match t.device with 
+        | Device.GPU -> t
+        | _ -> 
+        match t with
+        | Tensor(tp) -> Tensor(tp.MoveTo(Device.GPU))
+        | TensorF(tp,_,_) -> failwith "cannot move TensorF to cuda - do not move a gradient pass"
+        | TensorR(tp,_,_,_,_) -> failwith "cannot move TensorR to cuda - do not move a gradient pass"
+
+    member t.cpu() =
+        match t.device with 
+        | Device.CPU -> t
+        | _ -> 
+        match t with
+        | Tensor(tp) -> Tensor(tp.MoveTo(Device.CPU))
+        | TensorF(tp,_,_) -> failwith "cannot move TensorF to cpu - do not move a gradient pass"
+        | TensorR(tp,_,_,_,_) -> failwith "cannot move TensorR to cpu - do not move a gradient pass"
+
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
@@ -56,6 +74,7 @@ type Tensor =
     member t.toFloat64() = t.cast(DType.Float64)
 
     member t.dtype = t.primalRaw.DType
+    member t.device = t.primalRaw.Device
 
     member t.depth =
         let rec depth x d =

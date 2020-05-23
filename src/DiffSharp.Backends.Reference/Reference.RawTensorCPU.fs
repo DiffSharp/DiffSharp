@@ -278,6 +278,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: DTyp
         else 
             RawTensor.Create(t.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device)
 
+    override t.MoveTo(device: Device) =
+        match device with 
+        | Device.CPU -> (t :> _)
+        | _ -> invalidOp (sprintf "the device '%A' is not supported by the Reference backend" device)
+
 // Defines the math-dependent operations for `RawTensorCPU<T>` types
 // using generic inline code. Each implementing type (e.g. RawTensorFloat32) instantiates
 // inlines these at concrete types.

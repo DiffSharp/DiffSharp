@@ -189,6 +189,7 @@ and [<AbstractClass>]
     abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool
     abstract member Cast : DType -> RawTensor
+    abstract member MoveTo : Device -> RawTensor
     abstract member ComputeHash: unit -> int
     abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
