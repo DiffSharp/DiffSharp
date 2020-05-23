@@ -17,9 +17,12 @@
 
       <!-- TorchSharp local build packages -->
     <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
-        $(RestoreSources);
-        $(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release;
-        $(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug
+        $(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release;
+    </RestoreSources>
+
+      <!-- TorchSharp local build packages -->
+    <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug')">
+        $(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug;
     </RestoreSources>
 
         <!-- TorchSharp CI build packages -->
