@@ -1703,18 +1703,22 @@ type Tensor =
                         | MulTT0(a,b) -> push ((t.derivative * b.primal, a) :: ((t.derivative * a.primal).sum(), b) :: tt)
                         | MulTConstT0(a,b) -> push (((t.derivative * a).sum(), b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.derivative * b, a) :: tt)
+
                         | DivTT(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
                         | DivTTConst(a,b) -> push ((t.derivative / b, a) :: tt)
                         | DivTConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
+
                         | DivT0T(a,b) -> push (((t.derivative / b.primal).sum(), a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
                         | DivT0TConst(a,b) -> push (((t.derivative / b).sum(), a) :: tt)
                         | DivT0ConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
                         | DivTT0(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))).sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push ((t.derivative / b, a) :: tt)
                         | DivTConstT0(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))).sum(), b) :: tt)
+
                         | PowTT(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
                         | PowTTConst(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
+
                         | PowT0T(a,b) -> push (((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal).sum(), a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
                         | PowT0TConst(a,b) -> push (((t.derivative * (a.primal ** (b - 1.)) * b).sum(), a) :: tt)
                         | PowT0ConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
@@ -4523,22 +4527,10 @@ type BinaryOp =
     abstract Compute: a: RawTensor * b: RawTensor -> RawTensor
 
     /// Compute d(fab), for use in the forward phase
-    abstract GradForwardTT: fab: Tensor * a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
-
-    /// Compute d(fab), assuming a constant 'b', for use in the forward phase
-    abstract GradForwardTC: fab: Tensor * a: Tensor * da: Tensor * b: Tensor -> Tensor
-
-    /// Compute d(fab), assuming a constant 'a', for use in the forward phase
-    abstract GradForwardCT: fab: Tensor * a: Tensor * b: Tensor * db: Tensor  -> Tensor
+    abstract GradForward: fab: Tensor * a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
 
     /// Compute the separated gradients of function, for use in the reverse phase
-    abstract GradReverseTT: fab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
-
-    /// Compute the gradient of function assuming a constant 'b', for use in the reverse phase
-    abstract GradReverseTC: fab: Tensor * a: Tensor * b: Tensor -> Tensor
-
-    /// Compute the gradient of function assuming a constant 'a', for use in the reverse phase
-    abstract GradReverseCT: fab: Tensor * a: Tensor * b: Tensor -> Tensor
+    abstract GradReverse: fab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
 
 type Tensor with
     static member Op(ext: UnaryOp) =
@@ -4550,12 +4542,12 @@ type Tensor with
     static member Op(ext: BinaryOp) =
         (fun (a, b) -> 
             Tensor.OpBinary(a, b, ext.Compute, Tensor.Op ext, 
-                ext.GradForwardTT, 
-                (fun (fab,a,da) -> ext.GradForwardTC(fab,a,da,b)), 
-                (fun (fab,b,db) -> ext.GradForwardCT(fab,a,b,db)),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverseTT (fab,a,b) in [da; db]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da = ext.GradReverseTC (fab,a,b) in [da]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let db = ext.GradReverseCT (fab,a,b) in [db])))
+                ext.GradForward, 
+                (fun (fab, a, da) -> ext.GradForward(fab, a, da, b, b.zerosLike())), 
+                (fun (fab, b, db) -> ext.GradForward(fab, a, b.zerosLike(), b, db)),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverse (fab, a.primal, b.primal) in [da; db]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da, _db = ext.GradReverse (fab, a.primal, b) in [da]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let _da, db = ext.GradReverse (fab, a, b.primal) in [db])))
             ))
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]

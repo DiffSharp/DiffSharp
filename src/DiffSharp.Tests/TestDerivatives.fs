@@ -5867,12 +5867,8 @@ module TestOps =
             Tensor.Op
                 { new BinaryOp with 
                     member _.Compute(a,b) = a.MulTT(b)
-                    member _.GradForwardTT(fab,ap,ad,bp,bd) = (Tensor.mulx(ad, bp)) + Tensor.mulx(ap, bd)
-                    member _.GradForwardTC(fab,_a,ad,b) = Tensor.mulx(ad, b)
-                    member _.GradForwardCT(fab,a,_b,bd) = Tensor.mulx(a, bd)
-                    member _.GradReverseTT(t,a,b) = Tensor.mulx(t.derivative, b.primal), Tensor.mulx(t.derivative, a.primal)
-                    member _.GradReverseTC(t,_a,b) = Tensor.mulx(t.derivative, b)
-                    member _.GradReverseCT(t,a,_b) = Tensor.mulx(t.derivative, a) }
+                    member _.GradForward(fab, a, ad, b, bd) = Tensor.mulx(ad, b) + Tensor.mulx(a, bd)
+                    member _.GradReverse(t, a, b) = Tensor.mulx(t.derivative, b), Tensor.mulx(t.derivative, a) }
                 (a,b)
     [<Test>]
     let ``test mulx extension``() = 
@@ -5938,7 +5934,7 @@ module TestOps =
         Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     type Tensor with
-        static member conv1dx(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = 
+        static member conv1dx(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) : Tensor = 
             let stride = defaultArg stride 1
             let padding = defaultArg padding 0
             let dilation = defaultArg dilation 1
@@ -5948,10 +5944,8 @@ module TestOps =
             Tensor.Op
                 { new BinaryOp with 
                     member _.Compute(a,b) = a.Conv1D(b, stride, padding)
-                    member _.GradForwardTT(_fab,a,da,b,db) = Tensor.conv1dx(da, b, stride, padding) + Tensor.conv1dx(a, db, stride, padding)
-                    member _.GradForwardTC(_fab,_a,da,b) = Tensor.conv1dx(da, b, stride, padding)
-                    member _.GradForwardCT(_fab,a,_b,db) = Tensor.conv1dx(a, db, stride, padding)
-                    member _.GradReverseTT(fab,a,b) = 
+                    member _.GradForward(_fab,a,da,b,db) = Tensor.conv1dx(da, b, stride, padding) + Tensor.conv1dx(a, db, stride, padding)
+                    member _.GradReverse(fab,a,b) = 
                         let batchSize = fab.shape.[0]
                         let outputChannels = fab.shape.[1]
                         let inputChannels = a.shape.[1]
@@ -5960,7 +5954,7 @@ module TestOps =
                         let mutable tderivative = fab.derivative
                         if stride > 1 then
                             tderivative <- tderivative.dilate([|1;1;stride|])
-                        let bFlipped = b.primal.flip([|2|])
+                        let bFlipped = b.flip([|2|])
                         let mutable aderivative = a.zerosLike()
                         for k=0 to outputChannels-1 do
                             let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
@@ -5973,51 +5967,13 @@ module TestOps =
                             aderivative <- aderivative + c
                         let mutable bderivative = b.zerosLike()
                         for n=0 to batchSize-1 do
-                            let aa = a.primal.[n].view([|inputChannels; 1; inputLength|]) 
+                            let aa = a.[n].view([|inputChannels; 1; inputLength|]) 
                             let d = tderivative.[n]
                             for k=0 to outputChannels-1 do
                                 let dd = d.[k].view([|1; 1; tderivative.shape.[2]|])
                                 let c = Tensor.conv1dx(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                 bderivative <- bderivative.addSlice([|k; 0; 0|], c)
-                        (aderivative, bderivative)
-                    member _.GradReverseTC(t,_a,b) = 
-                        let batchSize = t.shape.[0]
-                        let outputChannels = t.shape.[1]
-                        let inputChannels = a.shape.[1]
-                        let kernelLength = b.shape.[2]
-                        let mutable tderivative = t.derivative
-                        if stride > 1 then
-                            tderivative <- tderivative.dilate([|1;1;stride|])
-                        let bFlipped = b.flip([|2|])
-                        let mutable aderivative = a.zerosLike()
-                        for k=0 to outputChannels-1 do
-                            let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
-                            let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]]
-                            let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                            let mutable c = Tensor.conv1dx(d, b, padding=kernelLength-1)
-                            if padding > 0 then
-                                let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.shape.[2]-1-padding; 1]]
-                                c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
-                            aderivative <- aderivative + c
-                        aderivative
-                    member _.GradReverseCT(t,a,_b) = 
-                        let batchSize = t.shape.[0]
-                        let outputChannels = t.shape.[1]
-                        let inputChannels = a.shape.[1]
-                        let inputLength = a.shape.[2]
-                        let kernelLength = b.shape.[2]
-                        let mutable tderivative = t.derivative
-                        if stride > 1 then
-                            tderivative <- tderivative.dilate([|1;1;stride|])
-                        let mutable bderivative = b.zerosLike()
-                        for n=0 to batchSize-1 do
-                            let aa = a.[n].view([|inputChannels; 1; inputLength|])
-                            let d = tderivative.[n]
-                            for k=0 to outputChannels-1 do
-                                let dd = d.[k].view([|1; 1; tderivative.shape.[2]|])
-                                let c = Tensor.conv1dx(aa, dd, padding=padding).view([|1; inputChannels; kernelLength|])
-                                bderivative <- bderivative.addSlice([|k; 0; 0|], c)
-                        bderivative }
+                        (aderivative, bderivative) }
                 (a,b)
 
     [<Test>]
