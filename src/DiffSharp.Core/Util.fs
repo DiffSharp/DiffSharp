@@ -41,6 +41,7 @@ type Random() =
             if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
         normal()
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
+    static member Integer(low, high) = rnd.Next(low, high)
     static member ChoiceIndex(probs:float[]) =
         let probsSum = probs |> Array.sum
         let cumulativeProbs = probs |> Array.map (fun v -> v / probsSum) |> cumulativeSum

@@ -30,6 +30,12 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.rand(length:int, ?device, ?backend, ?dtype) =
         dsharp.rand(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
+    member _.randint(low:int, high:int, shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.randint(low, high, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randint(low:int, high:int, length:int, ?device, ?backend, ?dtype) =
+        dsharp.randint(low, high, length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
     member _.full(shape:seq<int>, value, ?device, ?backend, ?dtype) =
         dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 

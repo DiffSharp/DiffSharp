@@ -945,6 +945,10 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         (values, shape)
 
+    let inline RandomInt ofInt (shape:int[]) (low:int) (high:int) : (^T[] * int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> ofInt (DiffSharp.Util.Random.Integer(low, high)))
+        (values, shape)
+
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
@@ -1027,6 +1031,7 @@ type RawTensorFloat32CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSingle value) |> RawTensorFloat32CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random float32 shape |> RawTensorFloat32CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal float32 shape |> RawTensorFloat32CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt float32 shape low high |> RawTensorFloat32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat32CPU)
 
 type RawTensorFloat64CPU(values: double[], shape:int[]) =
@@ -1110,6 +1115,7 @@ type RawTensorFloat64CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToDouble value) |> RawTensorFloat64CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random double shape |> RawTensorFloat64CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal double shape |> RawTensorFloat64CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt double shape low high |> RawTensorFloat64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat64CPU)
 
 type RawTensorInt8CPU(values: int8[], shape:int[]) =
@@ -1194,6 +1200,7 @@ type RawTensorInt8CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSByte value) |> RawTensorInt8CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int8 shape |> RawTensorInt8CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int8 shape |> RawTensorInt8CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int8 shape low high |> RawTensorInt8CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt8CPU)
 
 type RawTensorInt16CPU(values: int16[], shape:int[]) =
@@ -1278,6 +1285,7 @@ type RawTensorInt16CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt16 value) |> RawTensorInt16CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int16 shape |> RawTensorInt16CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int16 shape |> RawTensorInt16CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int16 shape low high |> RawTensorInt16CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt16CPU)
 
 type RawTensorInt32CPU(values: int32[], shape:int[]) =
@@ -1362,6 +1370,7 @@ type RawTensorInt32CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt32 value) |> RawTensorInt32CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int32 shape |> RawTensorInt32CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int32 shape |> RawTensorInt32CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int32 shape low high |> RawTensorInt32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt32CPU)
                 
 type RawTensorInt64CPU(values: int64[], shape:int[]) =
@@ -1446,6 +1455,7 @@ type RawTensorInt64CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt64 value) |> RawTensorInt64CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int64 shape |> RawTensorInt64CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int64 shape |> RawTensorInt64CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int64 shape low high |> RawTensorInt64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt64CPU)
 
 type RawTensorBoolCPU(values: bool[], shape:int[]) =
@@ -1528,7 +1538,8 @@ type RawTensorBoolCPUStatics() =
     override _.Zeros(shape:int[]) = upcast RawTensorBoolCPU(Array.zeroCreate (shapeLength shape), shape)
     override _.Ones(shape:int[]) = upcast RawTensorBoolCPU(Array.create (shapeLength shape) true, shape)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToBoolean value) |> RawTensorBoolCPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
+    override _.Random(_) = opNotSupported DType.Bool
+    override _.RandomNormal(_) = opNotSupported DType.Bool
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> RawTensorBoolCPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorBoolCPU)
 
