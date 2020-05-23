@@ -7,9 +7,9 @@
      <!-- local build uses number unique by day -->
      <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
      <!-- tagged build on CI uses number -->
-     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' == '$(VersionPrefix)'">$(Version)</PackageVersion>
+     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' == '$(Version)'">$(Version)</PackageVersion>
      <!-- untagged build on CI uses unique -->
-     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(VersionPrefix)'">$(Version)-preview-$([System.DateTime]::Now.ToString(`yyMMddHHmm`))</PackageVersion>
+     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(Version)'">$(Version)-preview-$([System.DateTime]::Now.ToString(`yyMMddHHmm`))</PackageVersion>
      <PackageOutputPath>$(MSBuildThisFileDirectory)/bin/packages</PackageOutputPath>
 
       <!-- Standard nuget.org location -->
@@ -29,5 +29,10 @@
     </RestoreSources>
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
   </PropertyGroup>
+
+  <Target Name="Check" BeforeTargets="PrepareForBuild"
+          Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(Version)'">
+      <Error Test="mismatch betwen repo tag '$(APPVEYOR_REPO_TAG_NAME)' and version '$(Version)' in msbuild, refusing to build package" />
+  </Target>
 
 </Project>

@@ -36,6 +36,10 @@ Use the following to instantiate a Docker container from the `diffsharp` image a
 docker run --rm diffsharp dotnet test
 ```
 
+## Using the CI nuget pacakge feed
+
+A nuget package feed is available from https://ci.appveyor.com/nuget/diffsharp
+
 ## Using local TorchSharp packages
 
 
