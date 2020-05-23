@@ -40,7 +40,7 @@ type Tensor =
         | None -> t
         | Some dt -> t.cast(dt)
 
-    member t.cuda() =
+    member t.gpu() =
         match t.device with 
         | Device.GPU -> t
         | _ -> 
