@@ -12,3 +12,6 @@ build_script:
   - cmd: dotnet build
   - cmd: dotnet test
   - cmd: dotnet pack
+
+  after_build:
+  - ps: Get-ChildItem .\*.nupkg | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
