@@ -2,8 +2,6 @@ namespace Tests
 
 open System
 open DiffSharp
-open DiffSharp.Backends
-open DiffSharp.Util
 open NUnit.Framework
 
 // This captures the expected semantics of different DTypes

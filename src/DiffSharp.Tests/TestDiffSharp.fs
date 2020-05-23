@@ -104,11 +104,13 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
-        dsharp.seed(123)
-        let t = dsharp.rand([10])
-        dsharp.seed(123)
-        let t2 = dsharp.rand([10])
-        Assert.AreEqual(t, t2)
+        for combo in Combos.All do
+            combo.rand(1) |> ignore // To ensure the backend assembly is loaded before dsharp.seed is called
+            dsharp.seed(123)
+            let t = combo.rand([25])
+            dsharp.seed(123)
+            let t2 = combo.rand([25])
+            Assert.AreEqual(t, t2)
 
     [<Test>]
     member this.TestDiff () =

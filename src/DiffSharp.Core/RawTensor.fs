@@ -10,6 +10,7 @@ type [<AbstractClass>]
     static let mutable last = None
     static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, RawTensorStatics>()
 
+    abstract Seed: seed:int -> unit
     abstract Zero: RawTensor
     abstract Zeros: shape:int[] -> RawTensor
     abstract One: RawTensor
@@ -18,6 +19,12 @@ type [<AbstractClass>]
     abstract Random: shape:int[] -> RawTensor
     abstract RandomNormal: shape:int[] -> RawTensor
     
+    static member Seed(?seed:int) =
+        let seed = defaultArg seed (int DateTime.Now.Ticks)
+        Random.Seed(seed) // Do not remove. util.Random seed would be set by the Reference backend if it's currently loaded. However we still need to keep this here to ensure util.Random seed is set (it may be used in code other than the Reference backend).
+        for KeyValue(_, backend) in backends do
+            backend.Seed(seed)
+
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
     /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
     abstract CreateFromFlatArray: data: System.Array * shape: int[] -> RawTensor

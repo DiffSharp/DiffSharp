@@ -2,9 +2,8 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
-open DiffSharp.Backends
 open System
- 
+
 [<TestFixture>]
 type TestTensor () =
     [<SetUp>]

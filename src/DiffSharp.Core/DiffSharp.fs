@@ -6,7 +6,7 @@ open DiffSharp.Util
 // Tensor operations
 type DiffSharp =
     static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member seed(seed) = Random.Seed(seed)
+    static member seed(?seed:int) = RawTensorStatics.Seed(?seed=seed)
     static member isTensor(value:obj) = value :? Tensor
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
     static member load(fileName) = Tensor.load(fileName)

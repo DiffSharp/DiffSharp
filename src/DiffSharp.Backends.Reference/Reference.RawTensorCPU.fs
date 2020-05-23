@@ -1019,6 +1019,7 @@ type RawTensorFloat32CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorFloat32CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorFloat32CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorFloat32CPU)
@@ -1101,6 +1102,7 @@ type RawTensorFloat64CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorFloat64CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorFloat64CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorFloat64CPU)
@@ -1184,6 +1186,7 @@ type RawTensorInt8CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt8CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt8CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt8CPU)
@@ -1267,6 +1270,7 @@ type RawTensorInt16CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt16CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt16CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt16CPU)
@@ -1350,6 +1354,7 @@ type RawTensorInt32CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt32CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt32CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt32CPU)
@@ -1433,6 +1438,7 @@ type RawTensorInt64CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt64CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt64CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt64CPU)
@@ -1516,6 +1522,7 @@ type RawTensorBoolCPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast  RawTensorBoolCPU([| false |], [||])
     override _.One = upcast RawTensorBoolCPU([| true |], [||])
     override _.Zeros(shape:int[]) = upcast RawTensorBoolCPU(Array.zeroCreate (shapeLength shape), shape)
