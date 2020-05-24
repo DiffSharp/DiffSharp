@@ -1948,7 +1948,7 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-    | OpT of (* inputs *) Tensor list * (* gradients *) ((* tangent *) Tensor -> (* input-grad *) Tensor list)
+    | OpT of inputs: Tensor list * gradients: ((* tangent *) Tensor -> (* input-grad *) Tensor list)
 
 
 type Tensor with
@@ -4516,10 +4516,7 @@ type UnaryOp =
     abstract Compute: a: RawTensor -> RawTensor
 
     /// Compute d(fa)/dx given da/dx, for use in the forward phase
-    abstract GradForward: fa: Tensor * a: Tensor * da: Tensor -> Tensor
-
-    /// Compute the gradient, for use in the reverse phase
-    abstract GradReverse: fa: Tensor * a: Tensor -> Tensor
+    abstract Grad: a: Tensor * da: Tensor -> Tensor
 
 /// Defines an extension implementing a binary function and its gradients
 type BinaryOp =
@@ -4527,27 +4524,30 @@ type BinaryOp =
     abstract Compute: a: RawTensor * b: RawTensor -> RawTensor
 
     /// Compute d(fab), for use in the forward phase
-    abstract GradForward: fab: Tensor * a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
+    abstract GradForward: a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
 
     /// Compute the separated gradients of function, for use in the reverse phase
-    abstract GradReverse: fab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
+    abstract GradReverse: dfab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
 
 type Tensor with
     static member Op(ext: UnaryOp) =
         (fun a -> 
-            Tensor.OpUnary(a, ext.Compute, Tensor.Op ext, ext.GradForward, 
-                (fun a -> OpT([a], (fun fa -> [ext.GradReverse (fa,a)])))
+            Tensor.OpUnary(a, ext.Compute, Tensor.Op ext, 
+                // Note access to `fap` is lost, a slight inefficiency in cases like 'exp'
+                (fun (fap, a, da) -> ext.Grad(a, da)), 
+                (fun a -> OpT([a], (fun fa -> [ext.Grad (a.primal, fa.derivative)])))
             ))
 
     static member Op(ext: BinaryOp) =
         (fun (a, b) -> 
             Tensor.OpBinary(a, b, ext.Compute, Tensor.Op ext, 
-                ext.GradForward, 
-                (fun (fab, a, da) -> ext.GradForward(fab, a, da, b, b.zerosLike())), 
-                (fun (fab, b, db) -> ext.GradForward(fab, a, b.zerosLike(), b, db)),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverse (fab, a.primal, b.primal) in [da; db]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da, _db = ext.GradReverse (fab, a.primal, b) in [da]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let _da, db = ext.GradReverse (fab, a, b.primal) in [db])))
+                // Note access to `_cp` is lost, a slight inefficiency in cases like 'pow'
+                (fun (_cp, ap, ad, bp, bd) -> ext.GradForward(ap, ad, bp, bd)), 
+                (fun (_cp, ap, ad) -> ext.GradForward(ap, ad, b, b.zerosLike())), 
+                (fun (_cp, bp, db) -> ext.GradForward(a, a.zerosLike(), bp, db)),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverse (fab.derivative, a.primal, b.primal) in [da; db]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let da, _db = ext.GradReverse (fab.derivative, a.primal, b) in [da]))),
+                (fun (a,b) -> OpT([a;b], (fun fab -> let _da, db = ext.GradReverse (fab.derivative, a, b.primal) in [db])))
             ))
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
