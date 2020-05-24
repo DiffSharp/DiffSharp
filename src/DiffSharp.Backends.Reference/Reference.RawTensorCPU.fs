@@ -390,7 +390,7 @@ module internal RawTensorCPU =
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
-        | _ -> failwithf "Cannot compare RawTensors of different types %A and %A. t1:%A, t2:%A" t1.DType t2.DType t1 t2
+        | _ -> failwithf "Cannot compare RawTensors t1 (Shape=%A, DType=%A, Device=%A, Backend=%A) and t2 (Shape=%A, DType=%A, Device=%A, Backend=%A)" t1.Shape t1.DType t1.Device t1.Backend t2.Shape t2.DType t2.Device t2.Backend
 
     let inline Full(shape:int[], value: ^T) =
         let result = Array.create (shapeLength shape) value
@@ -399,7 +399,7 @@ module internal RawTensorCPU =
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
-        | _ -> failwithf "Cannot compare RawTensors of different types %A and %A. t1:%A, t2:%A" t1.DType t2.DType t1 t2
+        | _ -> failwithf "Cannot compare RawTensors t1 (Shape=%A, DType=%A, Device=%A, Backend=%A) and t2 (Shape=%A, DType=%A, Device=%A, Backend=%A)" t1.Shape t1.DType t1.Device t1.Backend t2.Shape t2.DType t2.Device t2.Backend
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values

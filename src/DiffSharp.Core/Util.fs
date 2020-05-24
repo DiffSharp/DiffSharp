@@ -55,6 +55,8 @@ type Random() =
         Array.init numSamples (fun _ -> Random.ChoiceIndex(probs)) // Samples with replacement
     static member Multinomial(probs:float[,], numSamples:int) =
         Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
+    static member Bernoulli(prob:float) = if rnd.NextDouble() < prob then 1. else 0.
+    static member Bernoulli() = Random.Bernoulli(0.5)
     static member Shuffle(array:_[]) =
         // Durstenfeld/Knuth shuffle
         let a = array |> Array.copy
@@ -667,6 +669,7 @@ let download (url:string) (localFileName:string) =
     let wc = new WebClient()
     printfn "Downloading %A to %A" url localFileName
     wc.DownloadFile(url, localFileName)
+    wc.Dispose()
 
 let saveBinary (object:'a) (fileName:string) =
     let formatter = BinaryFormatter()

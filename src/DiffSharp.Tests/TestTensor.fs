@@ -394,28 +394,43 @@ type TestTensor () =
     member _.TestTensorMultinomial () =
         for combo in Combos.FloatingPoint do
             let p1 = combo.tensor([0.2,0.3,0.5])
-            let m1 = dsharp.multinomial(p1, numSamples=5000)
+            let m1 = dsharp.multinomial(p1, numSamples=2000)
             let m1dtype = m1.dtype
             let m1dtypeCorrect = DType.Int32
             let m1mean = m1.float().mean()
             let m1stddev = m1.float().stddev()
-            let m1meanCorrect = dsharp.tensor(1.3001).float()
-            let m1stddevCorrect = dsharp.tensor(0.7810).float()
+            let m1meanCorrect = combo.tensor(1.3001).float()
+            let m1stddevCorrect = combo.tensor(0.7810).float()
             Assert.AreEqual(m1dtypeCorrect, m1dtype)
             Assert.True(m1meanCorrect.allclose(m1mean, 0.1))
             Assert.True(m1stddevCorrect.allclose(m1stddev, 0.1))
 
             let p2 = combo.tensor([[0.2,0.3,0.5],[0.8,0.1,0.1]])
-            let m2 = dsharp.multinomial(p2, numSamples=5000)
+            let m2 = dsharp.multinomial(p2, numSamples=2000)
             let m2dtype = m2.dtype
             let m2dtypeCorrect = DType.Int32
             let m2mean = m2.float().mean(dim=1)
             let m2stddev = m2.float().stddev(dim=1)
-            let m2meanCorrect = dsharp.tensor([1.3001, 0.3001]).float()
-            let m2stddevCorrect = dsharp.tensor([0.7810, 0.6404]).float()
+            let m2meanCorrect = combo.tensor([1.3001, 0.3001]).float()
+            let m2stddevCorrect = combo.tensor([0.7810, 0.6404]).float()
             Assert.AreEqual(m2dtypeCorrect, m2dtype)
             Assert.True(m2meanCorrect.allclose(m2mean, 0.1))
             Assert.True(m2stddevCorrect.allclose(m2stddev, 0.1))
+
+    [<Test>]
+    member _.TestTensorBernoulli () =
+        for combo in Combos.FloatingPoint do
+            let p1 = combo.tensor([0.1,0.5,0.9])
+            let b1 = dsharp.bernoulli(p1.expand([2500;3]))
+            let b1mean = b1.mean(dim=0)
+            let b1meanCorrect = p1
+            Assert.True(b1meanCorrect.allclose(b1mean, 0.1, 0.1))
+
+            let p2 = combo.tensor([[0.2,0.4],[0.9, 0.5]])
+            let b2 = dsharp.bernoulli(p2.expand([2500;2;2]))
+            let b2mean = b2.mean(dim=0)
+            let b2meanCorrect = p2
+            Assert.True(b2meanCorrect.allclose(b2mean, 0.1, 0.1))
 
     [<Test>]
     member _.TestTensorToString () =
