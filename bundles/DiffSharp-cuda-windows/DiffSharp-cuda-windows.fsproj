@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuspecProperties>ProjectId=$(MSBuildProjectName);DiffSharpVersion=$(Version);TorchSharpVersion=$(TorchSharpVerion);LibTorchVersion=$(LibTorchVersion)</NuspecProperties>
   </PropertyGroup>
 
   <ItemGroup>
