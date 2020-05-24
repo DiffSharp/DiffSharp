@@ -63,7 +63,7 @@ with warning:
 
     warning : Packages will be incomplete and unusable on other platforms...
 
-To consume the packages into DiffSHarp adust TorchSharpVersion in DIrectory.Build.props.
+To consume the packages into DiffSharp adust TorchSharpVersion in DIrectory.Build.props.
 
 When rebuilding the TorchSHarp you will need to vlear your package cache to pick up the new nuget package with the same version id, e.g.
 

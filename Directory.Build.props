@@ -2,7 +2,8 @@
 
   <PropertyGroup>
 
-     <TorchSharpVersion>0.3.52209</TorchSharpVersion>
+     <LibTorchVersion>1.5.0</LibTorchVersion>
+     <TorchSharpVersion>0.3.52216</TorchSharpVersion>
      <Version>0.9.5</Version>
      <!-- local build uses number unique by day -->
      <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
