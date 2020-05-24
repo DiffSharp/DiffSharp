@@ -243,6 +243,12 @@ type Tensor =
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
         a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype, ?device, ?backend) =
+        let endVal = endVal |> float
+        let startVal = defaultArg startVal 0 |> float
+        let step = defaultArg step 1 |> float
+        let dtype = defaultArg dtype DType.Int32
+        a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
     member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =

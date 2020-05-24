@@ -63,8 +63,11 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.onehot(length, hot, ?device, ?backend, ?dtype) =
         dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
-    member _.arange(endVal, ?device, ?backend, ?dtype) =
-        dsharp.arange(endVal, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+    member _.arange(endVal:float, ?startVal:float, ?step:float, ?device, ?backend, ?dtype) =
+        dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.arange(endVal:int, ?startVal:int, ?step:int, ?device, ?backend, ?dtype) =
+        dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
     member c.arrayCreator1D(arr: double[]) =
         match c.dtype with 

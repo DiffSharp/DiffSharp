@@ -376,6 +376,21 @@ type TestTensor () =
             Assert.AreEqual(t2Correct, t2)
 
     [<Test>]
+    member _.TestTensorArange () =
+        for combo in Combos.All do
+            let t = combo.arange(5.)
+            let tCorrect = combo.tensor([0.,1.,2.,3.,4.])
+            Assert.AreEqual(tCorrect, t)
+
+            let t2 = combo.arange(5., 1.5, 0.5)
+            let t2Correct = combo.tensor([1.5,2.,2.5,3.,3.5,4.,4.5])
+            Assert.AreEqual(t2Correct, t2)
+
+            let t3 = combo.arange(5)
+            let t3Correct = combo.tensor([0,1,2,3,4], dtype=DType.Int32)
+            Assert.AreEqual(t3Correct, t3)
+
+    [<Test>]
     member _.TestTensorToString () =
         for combo in Combos.IntegralAndFloatingPoint do 
             let t0 = combo.tensor(2.)

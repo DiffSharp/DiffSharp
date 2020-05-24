@@ -40,6 +40,7 @@ type DiffSharp =
     static member zeroLike(a:Tensor) = a.zeroLike()
     static member oneLike(a:Tensor) = a.oneLike()
     static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
     static member nelement(a:Tensor) = a.nelement
     static member like(a:Tensor, value:obj) = a.like(value)
     static member like(value:obj) = fun (a:Tensor) -> a.like(value)
