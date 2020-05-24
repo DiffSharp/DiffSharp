@@ -1732,22 +1732,18 @@ type Tensor =
                         | MulTT0(a,b) -> push ((t.derivative * b.primal, a) :: ((t.derivative * a.primal).sum(), b) :: tt)
                         | MulTConstT0(a,b) -> push (((t.derivative * a).sum(), b) :: tt)
                         | MulTT0Const(a,b) -> push ((t.derivative * b, a) :: tt)
-
                         | DivTT(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
                         | DivTTConst(a,b) -> push ((t.derivative / b, a) :: tt)
                         | DivTConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
-
                         | DivT0T(a,b) -> push (((t.derivative / b.primal).sum(), a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
                         | DivT0TConst(a,b) -> push (((t.derivative / b).sum(), a) :: tt)
                         | DivT0ConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
                         | DivTT0(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))).sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push ((t.derivative / b, a) :: tt)
                         | DivTConstT0(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))).sum(), b) :: tt)
-
                         | PowTT(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
                         | PowTTConst(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
-
                         | PowT0T(a,b) -> push (((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal).sum(), a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
                         | PowT0TConst(a,b) -> push (((t.derivative * (a.primal ** (b - 1.)) * b).sum(), a) :: tt)
                         | PowT0ConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
