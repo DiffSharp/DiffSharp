@@ -27,6 +27,8 @@ type DiffSharp =
     static member randn(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
     static member randint(low:int, high:int, shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Seq.toArray, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
     static member randint(low:int, high:int, length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member multinomial(probs:Tensor, numSamples:int) = Tensor.multinomial(probs, numSamples)
+    static member multinomial(numSamples:int) = fun (probs:Tensor) -> Tensor.multinomial(probs, numSamples)
     static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
     static member zerosLike(shape:seq<int>) = fun (a:Tensor) -> a.zerosLike(shape=shape)
     static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)

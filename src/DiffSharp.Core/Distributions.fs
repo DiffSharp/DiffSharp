@@ -68,8 +68,7 @@ type Categorical(?probs:Tensor, ?logprobs:Tensor) =
     override d.EventShape = [||]
     override d.Mean = dsharp.onesLike(d.Probs) * System.Double.NaN
     override d.Stddev = dsharp.onesLike(d.Probs) * System.Double.NaN
-    override d.Sample(numSamples) =
-        Tensor(d.Probs.primalRaw.RandomMultinomial(numSamples))
+    override d.Sample(numSamples) = dsharp.multinomial(d.Probs, numSamples)
     override d.Sample() = d.Sample(1)
     override d.Logprob(value) =
         if value.shape <> d.BatchShape then failwithf "Expecting a value with shape %A, received %A" d.BatchShape value.shape

@@ -183,7 +183,6 @@ and [<AbstractClass>]
     abstract member Equals: RawTensor -> bool
     abstract member Cast : DType -> RawTensor
     abstract member ComputeHash: unit -> int
-    abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
     abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor

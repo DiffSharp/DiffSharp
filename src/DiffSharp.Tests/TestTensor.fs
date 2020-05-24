@@ -391,6 +391,33 @@ type TestTensor () =
             Assert.AreEqual(t3Correct, t3)
 
     [<Test>]
+    member _.TestTensorMultinomial () =
+        for combo in Combos.FloatingPoint do
+            let p1 = combo.tensor([0.2,0.3,0.5])
+            let m1 = dsharp.multinomial(p1, numSamples=5000)
+            let m1dtype = m1.dtype
+            let m1dtypeCorrect = DType.Int32
+            let m1mean = m1.float().mean()
+            let m1stddev = m1.float().stddev()
+            let m1meanCorrect = dsharp.tensor(1.3001).float()
+            let m1stddevCorrect = dsharp.tensor(0.7810).float()
+            Assert.AreEqual(m1dtypeCorrect, m1dtype)
+            Assert.True(m1meanCorrect.allclose(m1mean, 0.1))
+            Assert.True(m1stddevCorrect.allclose(m1stddev, 0.1))
+
+            let p2 = combo.tensor([[0.2,0.3,0.5],[0.8,0.1,0.1]])
+            let m2 = dsharp.multinomial(p2, numSamples=5000)
+            let m2dtype = m2.dtype
+            let m2dtypeCorrect = DType.Int32
+            let m2mean = m2.float().mean(dim=1)
+            let m2stddev = m2.float().stddev(dim=1)
+            let m2meanCorrect = dsharp.tensor([1.3001, 0.3001]).float()
+            let m2stddevCorrect = dsharp.tensor([0.7810, 0.6404]).float()
+            Assert.AreEqual(m2dtypeCorrect, m2dtype)
+            Assert.True(m2meanCorrect.allclose(m2mean, 0.1))
+            Assert.True(m2stddevCorrect.allclose(m2stddev, 0.1))
+
+    [<Test>]
     member _.TestTensorToString () =
         for combo in Combos.IntegralAndFloatingPoint do 
             let t0 = combo.tensor(2.)
@@ -531,49 +558,70 @@ type TestTensor () =
         for combo in Combos.IntegralAndFloatingPoint do 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int8)
-            let t1Cast = t1.toInt8()
+            let t1Cast = t1.int8()
 
             Assert.AreEqual(t1Cast.dtype, DType.Int8)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int16)
-            let t1Cast = t1.toInt16()
+            let t1Cast = t1.int16()
 
             Assert.AreEqual(t1Cast.dtype, DType.Int16)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int32)
-            let t1Cast = t1.toInt32()
+            let t1Cast = t1.int32()
+
+            Assert.AreEqual(t1Cast.dtype, DType.Int32)
+            Assert.AreEqual(t1Cast, t2)
+
+            let t1 = combo.tensor([1.; 2.; 3.; 5.])
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int32)
+            let t1Cast = t1.int()
 
             Assert.AreEqual(t1Cast.dtype, DType.Int32)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int64)
-            let t1Cast = t1.toInt64()
+            let t1Cast = t1.int64()
 
             Assert.AreEqual(t1Cast.dtype, DType.Int64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float32)
-            let t1Cast = t1.toFloat32()
+            let t1Cast = t1.float32()
 
             Assert.AreEqual(t1Cast.dtype, DType.Float32)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
-            let t1Cast = t1.toFloat64()
+            let t1Cast = t1.float64()
+
+            Assert.AreEqual(t1Cast.dtype, DType.Float64)
+            Assert.AreEqual(t1Cast, t2)
+
+            let t1 = combo.tensor([1.; 2.; 3.; 5.])
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
+            let t1Cast = t1.float()
+
+            Assert.AreEqual(t1Cast.dtype, DType.Float64)
+            Assert.AreEqual(t1Cast, t2)
+
+            let t1 = combo.tensor([1.; 2.; 3.; 5.])
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
+            let t1Cast = t1.double()
 
             Assert.AreEqual(t1Cast.dtype, DType.Float64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 0.])
             let t2 = combo.tensor([1.; 0.], dtype=DType.Bool)
-            let t1Cast = t1.toBool()
+            let t1Cast = t1.bool()
 
             Assert.AreEqual(t1Cast.dtype, DType.Bool)
             Assert.AreEqual(t1Cast, t2)

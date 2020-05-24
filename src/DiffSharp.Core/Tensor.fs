@@ -41,13 +41,16 @@ type Tensor =
         | TensorF(_,_,_) -> failwith "cannot cast TensorF"
         | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
 
-    member t.toBool() = t.cast(DType.Bool)
-    member t.toInt8() = t.cast(DType.Int8)
-    member t.toInt16() = t.cast(DType.Int16)
-    member t.toInt32() = t.cast(DType.Int32)
-    member t.toInt64() = t.cast(DType.Int64)
-    member t.toFloat32() = t.cast(DType.Float32)
-    member t.toFloat64() = t.cast(DType.Float64)
+    member t.bool() = t.cast(DType.Bool)
+    member t.int8() = t.cast(DType.Int8)
+    member t.int16() = t.cast(DType.Int16)
+    member t.int32() = t.cast(DType.Int32)
+    member t.int() = t.cast(DType.Int32)
+    member t.int64() = t.cast(DType.Int64)
+    member t.float32() = t.cast(DType.Float32)
+    member t.float64() = t.cast(DType.Float64)
+    member t.float() = t.cast(DType.Float64)
+    member t.double() = t.cast(DType.Float64)
 
     member t.dtype = t.primalRaw.DType
 
@@ -345,6 +348,23 @@ type Tensor =
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+
+    static member multinomial(probs:Tensor, numSamples:int) =
+        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
+        if probs.dim = 1 then
+            let p = 
+                match probs.dtype with
+                | DType.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
+                | DType.Float64 -> probs.toArray() :?> float[]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+        else
+            let p = 
+                match probs.dtype with
+                | DType.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
+                | DType.Float64 -> probs.toArray() :?> float[,]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
 
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
