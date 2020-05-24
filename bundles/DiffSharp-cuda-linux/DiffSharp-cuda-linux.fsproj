@@ -2,17 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-  
+    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
+    <NuspecProperties>ProjectId=$(MSBuildProjectName);DiffSharpVersion=$(Version);TorchSharpVersion=$(TorchSharpVerion);LibTorchVersion=$(LibTorchVersion)</NuspecProperties>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Empty.fs" />
-  </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
-    <!--  reference a libtorch runtime redist -->
-    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchVersion)" />
+    <Compile Include="Empty.fs" />
   </ItemGroup>
 
 </Project>
