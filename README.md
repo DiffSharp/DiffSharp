@@ -36,9 +36,30 @@ Use the following to instantiate a Docker container from the `diffsharp` image a
 docker run --rm diffsharp dotnet test
 ```
 
-## Using the TOrch backend
+## Getting Started
 
+After building, to use DiffSharp in this development branch you must reference an appropriate configuration.
 
+Reference one of
+
+* `DiffSharp-cpu`
+* `DiffSharp-cuda-win`
+* `DiffSharp-cuda-linux`
+
+Then use:
+
+    dsharp.config(backend=Backend.Torch)
+
+Alternatively use the reference backend via `DiffSharp-reference`.
+
+## Developing DiffSharp Libraries
+
+To develop libraries built on DiffSharp which are designed for general use (not just in your own code), do the following:
+
+1. reference `DiffSharp.Core` in your library code
+2. reference `DiffSharp.Backends.Reference` in your correctness testing code.
+3. reference `DiffSharp.Backends.Torch` and `libtorch-cpu` in your CPU performence testing code.
+4. reference `DiffSharp.Backends.Torch` and `libtorch-cuda` in your GPU performence testing code.
 
 ## Using CI build packages
 
