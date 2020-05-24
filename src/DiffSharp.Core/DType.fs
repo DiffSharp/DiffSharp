@@ -1,4 +1,4 @@
-﻿namespace rec DiffSharp
+﻿namespace DiffSharp
 
 type Device =
     | CPU
@@ -17,12 +17,11 @@ type Device =
         | GPU -> "GPU"
         | Other (name, _code) -> name
 
-    static member Default = Device.CPU
-
 module Device = 
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Device>()
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Device.Other(name, count.Value)))
+    let mutable Default = Device.CPU
 
 [<RequireQualifiedAccess>]
 type Backend =
@@ -30,8 +29,6 @@ type Backend =
     | Torch
     | OpenBLAS
     | Other of name: string * code: int
-
-    static member Default = Backend.Reference
 
     member internal x.Code = 
         match x with 
@@ -51,6 +48,7 @@ module Backend =
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Backend>()
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
+    let mutable Default = Backend.Reference
 
 type DType =
     //| Float16
@@ -89,8 +87,6 @@ type DType =
         | Int64 -> "Int64"
         | Bool -> "Bool"
         | Other (name, _, _) -> name
-
-    static member Default = DType.Float32
 
     member x.AsType () =
         match x with
@@ -162,6 +158,8 @@ module DType =
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
 
     let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value, inOutType)))
+
+    let mutable Default = DType.Float32
 
 [<AutoOpen>]
 module DTypeGlobalOps =

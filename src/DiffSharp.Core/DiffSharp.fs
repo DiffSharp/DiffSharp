@@ -191,6 +191,11 @@ type DiffSharp =
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
     static member pad(paddings:seq<int>) = fun (a:Tensor) -> a.pad(paddings)
 
+    static member config(?backend: Backend, ?device: Device, ?dtype: DType) = 
+         dtype |> Option.iter (fun d -> DType.Default <- d)
+         backend |> Option.iter (fun d -> Backend.Default <- d)
+         device |> Option.iter (fun d -> Device.Default <- d)
+
 
 // Methods mirroring F# array modules
 // TODO: update to support non-float types once we have backing DTypes implemented
