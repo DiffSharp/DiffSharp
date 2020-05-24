@@ -387,19 +387,6 @@ module internal RawTensorCPU =
     let inline CompareTo(t1: RawTensorCPU< ^T >, t2: RawTensor) =
         NonStructuralComparison.compare (t1.ToScalar() :?> ^T ) (t2.ToScalar() :?> ^T )
 
-    let inline RandomMultinomial ofInt (t: RawTensorCPU< ^T >, numSamples) : (^T[] * int[]) =
-        if t.Dim < 1 || t.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" t.Shape
-        if t.Dim = 1 then
-            let p = t.Values |> Array.map float
-            let result = Array.init numSamples (fun _ -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p)))
-            (result, [|numSamples|])
-        else
-            // TODO - this was float32 - why did this pass tests - add a test for other types which covers this branch?
-            let p = t.ToArray() :?> ^T[,] |> Array2D.map float
-            let d1 = p.GetLength(0)
-            let result = Array.init (d1 * numSamples - 1) (fun i -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p.[(i%numSamples),*])))
-            (result, [| d1; numSamples |]) 
-
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
@@ -412,7 +399,7 @@ module internal RawTensorCPU =
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && arraysAllClose relativeTolerance absoluteTolerance t1.Values t2.Values
-        | _ -> failwithf "Cannot compare RawTensors of different types. t1:%A, t2:%A" t1 t2
+        | _ -> failwithf "Cannot compare RawTensors of different types %A and %A. t1:%A, t2:%A" t1.DType t2.DType t1 t2
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
@@ -945,6 +932,10 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         (values, shape)
 
+    let inline RandomInt ofInt (shape:int[]) (low:int) (high:int) : (^T[] * int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> ofInt (DiffSharp.Util.Random.Integer(low, high)))
+        (values, shape)
+
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32CPU(values: float32[], shape:int[]) =
     inherit RawTensorCPU<float32>(values, shape, Float32)
@@ -953,7 +944,6 @@ type RawTensorFloat32CPU(values: float32[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorFloat32CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorFloat32CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
     override t.IsInfT() = RawTensorCPU.IsInfT(System.Single.IsInfinity, t) |> createBool
@@ -1019,6 +1009,7 @@ type RawTensorFloat32CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorFloat32CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorFloat32CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorFloat32CPU)
@@ -1026,6 +1017,7 @@ type RawTensorFloat32CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSingle value) |> RawTensorFloat32CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random float32 shape |> RawTensorFloat32CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal float32 shape |> RawTensorFloat32CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt float32 shape low high |> RawTensorFloat32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat32CPU)
 
 type RawTensorFloat64CPU(values: double[], shape:int[]) =
@@ -1036,7 +1028,6 @@ type RawTensorFloat64CPU(values: double[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorFloat64CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorFloat64CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
     override t.IsInfT() = RawTensorCPU.IsInfT(System.Double.IsInfinity, t) |> createBool
@@ -1101,6 +1092,7 @@ type RawTensorFloat64CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorFloat64CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorFloat64CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorFloat64CPU)
@@ -1108,6 +1100,7 @@ type RawTensorFloat64CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToDouble value) |> RawTensorFloat64CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random double shape |> RawTensorFloat64CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal double shape |> RawTensorFloat64CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt double shape low high |> RawTensorFloat64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorFloat64CPU)
 
 type RawTensorInt8CPU(values: int8[], shape:int[]) =
@@ -1118,7 +1111,6 @@ type RawTensorInt8CPU(values: int8[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt8CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt8CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int8 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
@@ -1184,6 +1176,7 @@ type RawTensorInt8CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt8CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt8CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt8CPU)
@@ -1191,6 +1184,7 @@ type RawTensorInt8CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToSByte value) |> RawTensorInt8CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int8 shape |> RawTensorInt8CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int8 shape |> RawTensorInt8CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int8 shape low high |> RawTensorInt8CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt8CPU)
 
 type RawTensorInt16CPU(values: int16[], shape:int[]) =
@@ -1201,7 +1195,6 @@ type RawTensorInt16CPU(values: int16[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt16CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt16CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int16 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
@@ -1267,6 +1260,7 @@ type RawTensorInt16CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt16CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt16CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt16CPU)
@@ -1274,6 +1268,7 @@ type RawTensorInt16CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt16 value) |> RawTensorInt16CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int16 shape |> RawTensorInt16CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int16 shape |> RawTensorInt16CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int16 shape low high |> RawTensorInt16CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt16CPU)
 
 type RawTensorInt32CPU(values: int32[], shape:int[]) =
@@ -1284,7 +1279,6 @@ type RawTensorInt32CPU(values: int32[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt32CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt32CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
@@ -1350,6 +1344,7 @@ type RawTensorInt32CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt32CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt32CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt32CPU)
@@ -1357,6 +1352,7 @@ type RawTensorInt32CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt32 value) |> RawTensorInt32CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int32 shape |> RawTensorInt32CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int32 shape |> RawTensorInt32CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int32 shape low high |> RawTensorInt32CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt32CPU)
                 
 type RawTensorInt64CPU(values: int64[], shape:int[]) =
@@ -1367,7 +1363,6 @@ type RawTensorInt64CPU(values: int64[], shape:int[]) =
 
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorInt64CPU))
     override t.CreateShaped(values, shape) = upcast RawTensorInt64CPU(values, shape)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int64 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t.IsInfT() = RawTensorCPU.IsInfT((fun _ -> false), t) |> createBool
@@ -1433,6 +1428,7 @@ type RawTensorInt64CPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast (RawTensorCPU.Zero() |> RawTensorInt64CPU)
     override _.One = upcast (RawTensorCPU.One() |> RawTensorInt64CPU)
     override _.Zeros(shape:int[]) = upcast (RawTensorCPU.Zeros(shape) |> RawTensorInt64CPU)
@@ -1440,6 +1436,7 @@ type RawTensorInt64CPUStatics() =
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToInt64 value) |> RawTensorInt64CPU)
     override _.Random(shape:int[]) = upcast (RawTensorCPU.Random int64 shape |> RawTensorInt64CPU)
     override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.RandomNormal int64 shape |> RawTensorInt64CPU)
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt int64 shape low high |> RawTensorInt64CPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorInt64CPU)
 
 type RawTensorBoolCPU(values: bool[], shape:int[]) =
@@ -1450,7 +1447,6 @@ type RawTensorBoolCPU(values: bool[], shape:int[]) =
        
     override t1.CompareTo(t2) = RawTensorCPU.CompareTo(t1, (t2 :?> RawTensorBoolCPU))
     override t.CreateShaped(values, shape) = upcast RawTensorBoolCPU(values, shape)
-    override t.RandomMultinomial(_numSamples) = opNotSupported t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorBoolCPU(Array.map2 (<) t1.Values (t2 :?> RawTensorCPU<bool>).Values, t1.Shape) :> _
@@ -1516,12 +1512,14 @@ type RawTensorBoolCPUStatics() =
 
     inherit RawTensorStatics()
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero = upcast  RawTensorBoolCPU([| false |], [||])
     override _.One = upcast RawTensorBoolCPU([| true |], [||])
     override _.Zeros(shape:int[]) = upcast RawTensorBoolCPU(Array.zeroCreate (shapeLength shape), shape)
     override _.Ones(shape:int[]) = upcast RawTensorBoolCPU(Array.create (shapeLength shape) true, shape)
     override _.Full(shape:int[], value:obj) = upcast (RawTensorCPU.Full (shape, System.Convert.ToBoolean value) |> RawTensorBoolCPU)
-    override _.Random(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
-    override _.RandomNormal(shape:int[]) = upcast (RawTensorCPU.Random (fun x -> x > 0.5) shape |> RawTensorBoolCPU)
+    override _.Random(_) = opNotSupported DType.Bool
+    override _.RandomNormal(_) = opNotSupported DType.Bool
+    override _.RandomInt(shape:int[], low:int, high:int) = upcast (RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> RawTensorBoolCPU)
     override _.CreateFromFlatArray(values:Array, shape) = upcast (RawTensorCPU.CreateFromFlatArray (values, shape) |> RawTensorBoolCPU)
 

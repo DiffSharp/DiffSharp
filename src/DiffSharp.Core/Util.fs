@@ -41,6 +41,7 @@ type Random() =
             if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
         normal()
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
+    static member Integer(low, high) = rnd.Next(low, high)
     static member ChoiceIndex(probs:float[]) =
         let probsSum = probs |> Array.sum
         let cumulativeProbs = probs |> Array.map (fun v -> v / probsSum) |> cumulativeSum
@@ -50,6 +51,10 @@ type Random() =
     static member Choice(array:_[], probs:float[]) = 
         if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
         array.[Random.ChoiceIndex(probs)]
+    static member Multinomial(probs:float[], numSamples:int) =
+        Array.init numSamples (fun _ -> Random.ChoiceIndex(probs)) // Samples with replacement
+    static member Multinomial(probs:float[,], numSamples:int) =
+        Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
     static member Shuffle(array:_[]) =
         // Durstenfeld/Knuth shuffle
         let a = array |> Array.copy

@@ -10,6 +10,7 @@ type [<AbstractClass>]
     static let mutable last = None
     static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, RawTensorStatics>()
 
+    abstract Seed: seed:int -> unit
     abstract Zero: RawTensor
     abstract Zeros: shape:int[] -> RawTensor
     abstract One: RawTensor
@@ -17,7 +18,14 @@ type [<AbstractClass>]
     abstract Full: shape:int[] * obj -> RawTensor
     abstract Random: shape:int[] -> RawTensor
     abstract RandomNormal: shape:int[] -> RawTensor
+    abstract RandomInt: shape:int[] * low:int * high:int -> RawTensor
     
+    static member Seed(?seed:int) =
+        let seed = defaultArg seed (int DateTime.Now.Ticks)
+        Random.Seed(seed) // Do not remove. util.Random seed would be set by the Reference backend if it's currently loaded. However we still need to keep this here to ensure util.Random seed is set (it may be used in code other than the Reference backend).
+        for KeyValue(_, backend) in backends do
+            backend.Seed(seed)
+
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
     /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
     abstract CreateFromFlatArray: data: System.Array * shape: int[] -> RawTensor
@@ -91,6 +99,10 @@ and [<AbstractClass>]
         let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
         statics.RandomNormal(shape|>Seq.toArray)
 
+    static member RandomInt(shape, low, high, ?dtype, ?device, ?backend) =
+        let statics = RawTensorStatics.Get(?dtype=dtype, ?device=device, ?backend=backend)
+        statics.RandomInt(shape|>Seq.toArray, low, high)
+
     static member Create(values: obj, ?dtype, ?device, ?backend) =
         // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
         let data, shape, dtype =
@@ -155,6 +167,9 @@ and [<AbstractClass>]
     member t.RandomNormalLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
         RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
+    member t.RandomIntLike(shape: int[], low:int, high:int, ?dtype: DType, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
     abstract member CompareTo: RawTensor -> int
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
@@ -168,7 +183,6 @@ and [<AbstractClass>]
     abstract member Equals: RawTensor -> bool
     abstract member Cast : DType -> RawTensor
     abstract member ComputeHash: unit -> int
-    abstract member RandomMultinomial: numSamples: int -> RawTensor
     abstract member AllClose: RawTensor * float * float -> bool
     abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor
