@@ -8,10 +8,10 @@ open System
 [<TestFixture>]
 type TestTensor () =
     [<SetUp>]
-    member this.Setup () =
+    member _.Setup () =
         ()
 
-    member this.TestTensorCreateAllTensorTypesGeneric (conv: double -> 'T) =
+    member _.TestTensorCreateAllTensorTypesGeneric (conv: double -> 'T) =
       // Test creating these types of tensors
       for ty in Combos.All do 
         let t0 = ty.tensor(conv 1.)
@@ -54,31 +54,31 @@ type TestTensor () =
         Assert.AreEqual(ty.dtype, t4.dtype)
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromFloat64Data() =
+    member _.TestTensorCreateAllTensorTypesFromFloat64Data() =
         this.TestTensorCreateAllTensorTypesGeneric id
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromFloat32Data() =
+    member _.TestTensorCreateAllTensorTypesFromFloat32Data() =
         this.TestTensorCreateAllTensorTypesGeneric float32
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromInt32Data() =
+    member _.TestTensorCreateAllTensorTypesFromInt32Data() =
         this.TestTensorCreateAllTensorTypesGeneric int32
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromInt8Data() =
+    member _.TestTensorCreateAllTensorTypesFromInt8Data() =
         this.TestTensorCreateAllTensorTypesGeneric int8
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromInt16Data() =
+    member _.TestTensorCreateAllTensorTypesFromInt16Data() =
         this.TestTensorCreateAllTensorTypesGeneric int16
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromInt64Data() =
+    member _.TestTensorCreateAllTensorTypesFromInt64Data() =
         this.TestTensorCreateAllTensorTypesGeneric int64
 
     [<Test>]
-    member this.TestTensorCreateAllTensorTypesFromBoolData() =
+    member _.TestTensorCreateAllTensorTypesFromBoolData() =
         this.TestTensorCreateAllTensorTypesGeneric (fun i -> abs i >= 1.0)
 
         let t1 = dsharp.tensor([true, true])
@@ -94,7 +94,7 @@ type TestTensor () =
         Assert.AreEqual(DType.Float32, t4.dtype)
 
     [<Test>]
-    member this.TestTensorCreate0 () =
+    member _.TestTensorCreate0 () =
       for ty in Combos.AllDevicesAndBackends do
         let t0 = ty.tensor(1.)
         let t0Shape = t0.shape
@@ -106,7 +106,7 @@ type TestTensor () =
         Assert.AreEqual(t0ShapeCorrect, t0Shape)
 
     [<Test>]
-    member this.TestTensorCreate1 () =
+    member _.TestTensorCreate1 () =
       for ty in Combos.AllDevicesAndBackends do
         // create from double list
         let t1 = ty.tensor([1.; 2.; 3.])
@@ -129,7 +129,7 @@ type TestTensor () =
         Assert.AreEqual(t1DimCorrect, t1Seq.dim)
 
     [<Test>]
-    member this.TestTensorCreate2 () =
+    member _.TestTensorCreate2 () =
       for ty in Combos.AllDevicesAndBackends do
         let t2Values = [[1.; 2.; 3.]; [4.; 5.; 6.]]
         let t2ShapeCorrect = [|2; 3|]
@@ -215,7 +215,7 @@ type TestTensor () =
         Assert.AreEqual(array2D [ [2]; [3]; [4] ], t2TupleOfList.toArray())
 
     [<Test>]
-    member this.TestTensorCreate3 () =
+    member _.TestTensorCreate3 () =
       for ty in Combos.AllDevicesAndBackends do
         let t3Values = [[[1.; 2.; 3.]; [4.; 5.; 6.]]]
         let t3 = ty.tensor(t3Values)
@@ -228,7 +228,7 @@ type TestTensor () =
         Assert.AreEqual(t3ValuesCorrect, t3.toArray())
 
     [<Test>]
-    member this.TestTensorCreate4 () =
+    member _.TestTensorCreate4 () =
       for ty in Combos.AllDevicesAndBackends do
         let t4Values = [[[[1.; 2.]]]]
         let t4 = ty.tensor(t4Values)
@@ -241,7 +241,7 @@ type TestTensor () =
         Assert.AreEqual(t4ValuesCorrect, t4.toArray())
 
     [<Test>]
-    member this.TestTensorToArray () =
+    member _.TestTensorToArray () =
         for ty in Combos.All do 
             let a = array2D [[1.; 2.]; [3.; 4.]]
             let t = ty.tensor(a)
@@ -249,7 +249,7 @@ type TestTensor () =
             Assert.AreEqual(tToArrayCorrect, t.toArray())
 
     [<Test>]
-    member this.TestTensorSaveLoad () =
+    member _.TestTensorSaveLoad () =
         let fileName = System.IO.Path.GetTempFileName()
         for ty in Combos.All do 
             let a = ty.tensor([[1,2],[3,4]])
@@ -258,7 +258,7 @@ type TestTensor () =
             Assert.AreEqual(a, b)
 
     [<Test>]
-    member this.TestTensorClone () =
+    member _.TestTensorClone () =
         for ty in Combos.All do 
             let a = ty.randint(2L, [2;3])
             let b = a.clone()
@@ -266,7 +266,7 @@ type TestTensor () =
             Assert.AreEqual(a.dtype, b.dtype)
 
     [<Test>]
-    member this.TestTensorFull () =
+    member _.TestTensorFull () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1a = ty.full([2;3], 2.5)
             let t1b = ty.ones([2;3]) * 2.5
@@ -281,7 +281,7 @@ type TestTensor () =
             Assert.AreEqual(t1, t1Expected)
 
     [<Test>]
-    member this.TestTensorZero () =
+    member _.TestTensorZero () =
         for ty in Combos.All do 
             let t1 = ty.zero()
             let t1Expected = ty.tensor(0)
@@ -290,7 +290,7 @@ type TestTensor () =
             Assert.AreEqual(t1.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorZeros () =
+    member _.TestTensorZeros () =
         for ty in Combos.All do 
             let t0 = ty.zeros([])
             let t0Expected = ty.tensor(0)
@@ -305,7 +305,7 @@ type TestTensor () =
             Assert.AreEqual(t1, t1Expected)
 
     [<Test>]
-    member this.TestTensorOne () =
+    member _.TestTensorOne () =
         for ty in Combos.All do 
             let t1 = ty.one()
             let t1Expected = ty.tensor(1)
@@ -314,7 +314,7 @@ type TestTensor () =
             Assert.AreEqual(t1.shape, ([| |]: int32[]) )
 
     [<Test>]
-    member this.TestTensorOnes () =
+    member _.TestTensorOnes () =
         for ty in Combos.All do 
             let t0 = ty.ones([])
             let t0Expected = ty.tensor(1)
@@ -326,7 +326,7 @@ type TestTensor () =
             let t1Expected = ty.tensor([1,1])
             Assert.AreEqual(t1, t1Expected)
     [<Test>]
-    member this.TestTensorIsTensor () =
+    member _.TestTensorIsTensor () =
         for ty in Combos.All do 
             let a = 2.
             let b = ty.tensor(2.)
@@ -334,7 +334,7 @@ type TestTensor () =
             Assert.True(dsharp.isTensor(b))
 
     [<Test>]
-    member this.TestTensorConvert () =
+    member _.TestTensorConvert () =
         for combo in Combos.IntegralAndFloatingPoint do
             let v = 2.
             let t = combo.tensor(v)
@@ -381,7 +381,7 @@ type TestTensor () =
             Assert.AreEqual(tboolCorrect, tbool)
 
     [<Test>]
-    member this.TestTensorOnehot () =
+    member _.TestTensorOnehot () =
         for ty in Combos.All do 
             let t0 = ty.onehot(3, 0)
             let t1 = ty.onehot(3, 1)
@@ -395,7 +395,7 @@ type TestTensor () =
 
     [<Test>]
     // Test the underlying GetItem on the RawPrimal, useful when testing backends
-    member this.TestTensorGetItemOnPrimal () =
+    member _.TestTensorGetItemOnPrimal () =
       for ty in Combos.IntegralAndFloatingPoint do 
         let t0 = ty.tensor(2.)
         Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
@@ -426,7 +426,7 @@ type TestTensor () =
 
     [<Test>]
     // Test the underlying GetItem on the RawPrimal, useful when testing backends
-    member this.TestTensorGetSliceOnPrimal () =
+    member _.TestTensorGetSliceOnPrimal () =
       for ty in Combos.IntegralAndFloatingPoint do 
         let t0 = ty.tensor(2.)
         Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
@@ -475,7 +475,7 @@ type TestTensor () =
 
     [<Test>]
     // Test cases of indexing where indexing returns a scalar
-    member this.TestTensorIndexItemAsScalarTensor () =
+    member _.TestTensorIndexItemAsScalarTensor () =
       for ty in Combos.IntegralAndFloatingPoint do 
         let t0 = ty.tensor(2.)
         Assert.AreEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
@@ -508,7 +508,7 @@ type TestTensor () =
         Assert.AreEqual(1.0, System.Convert.ToDouble (t4.[0,0,0,0].toScalar()))
 
     [<Test>]
-    member this.TestTensorToString () =
+    member _.TestTensorToString () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t0 = ty.tensor(2.)
             let t1 = ty.tensor([[2.]; [2.]])
@@ -553,7 +553,7 @@ type TestTensor () =
         Assert.AreEqual(t1BoolToString, t1BoolToStringCorrect)
 
     [<Test>]
-    member this.TestTensorEqual () =
+    member _.TestTensorEqual () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1A = ty.tensor(-1.)
             let t1B = ty.tensor(1.)
@@ -602,7 +602,7 @@ type TestTensor () =
                      isInvalidOp (fun () -> ty.tensor(1) = ty.tensor(1, dtype=dtype2))
 
     [<Test>]
-    member this.TestTensorHash () =
+    member _.TestTensorHash () =
         for ty in Combos.IntegralAndFloatingPoint do 
 
             // Systematic testing. The tensors below are listed in expected order of comparison
@@ -636,7 +636,7 @@ type TestTensor () =
             Assert.AreEqual(true, (t2a.reverseDiff()) = t2a)
 
     [<Test>]
-    member this.TestTensorCompare () =
+    member _.TestTensorCompare () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1A = ty.tensor(2.)
             let t1B = ty.tensor(3.)
@@ -655,7 +655,7 @@ type TestTensor () =
             Assert.AreEqual(t1At1BLessCorrect, t1At1BLess)
 
     [<Test>]
-    member this.TestTensorCast () =
+    member _.TestTensorCast () =
         for ty in Combos.IntegralAndFloatingPoint do 
             for dtype2 in DTypes.IntegralAndFloatingPoint do 
                 let t1 = ty.tensor([1.; 2.; 3.; 5.])
@@ -730,7 +730,7 @@ type TestTensor () =
             Assert.AreEqual(t1Cast, t2)
 
     [<Test>]
-    member this.TestTensorBool () =
+    member _.TestTensorBool () =
         for tys in Combos.Bool do
             let t1 = tys.tensor([1; 0; 1; 0], dtype=Bool)
 
@@ -743,7 +743,7 @@ type TestTensor () =
             Assert.AreEqual(Bool, t2.dtype)
 
     [<Test>]
-    member this.TestTensorLtTT () =
+    member _.TestTensorLtTT () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.; 5.])
@@ -764,7 +764,7 @@ type TestTensor () =
             Assert.AreEqual(t1Boolt2BoolLtCorrect, t1Boolt2BoolLt)
 
     [<Test>]
-    member this.TestTensorLeTT () =
+    member _.TestTensorLeTT () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.; 5.])
@@ -785,7 +785,7 @@ type TestTensor () =
             Assert.AreEqual(t1Boolt2BoolLeCorrect, t1Boolt2BoolLe)
 
     [<Test>]
-    member this.TestTensorGtTT () =
+    member _.TestTensorGtTT () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.; 5.])
@@ -806,7 +806,7 @@ type TestTensor () =
             Assert.AreEqual(t1Boolt2BoolGtCorrect, t1Boolt2BoolGt)
 
     [<Test>]
-    member this.TestTensorGeTT () =
+    member _.TestTensorGeTT () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.; 5.])
@@ -828,7 +828,7 @@ type TestTensor () =
             Assert.AreEqual(t1Boolt2BoolGeCorrect, t1Boolt2BoolGe)
 
     [<Test>]
-    member this.TestTensor_isinf () =
+    member _.TestTensor_isinf () =
         // isinf always returns bool tensor
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([1.; infinity; 3.; -infinity])
@@ -844,7 +844,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_isnan () =
+    member _.TestTensor_isnan () =
         // isnan always returns bool tensor
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([1.; nan; 3.; nan])
@@ -860,7 +860,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_onesLike () =
+    member _.TestTensor_onesLike () =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.onesLike([2])
@@ -868,7 +868,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_zerosLike () =
+    member _.TestTensor_zerosLike () =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.zerosLike([2])
@@ -876,7 +876,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_fullLike () =
+    member _.TestTensor_fullLike () =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.fullLike([2], 4.0)
@@ -884,7 +884,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_zeroLike () =
+    member _.TestTensor_zeroLike () =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.zeroLike()
@@ -892,7 +892,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_oneLike () =
+    member _.TestTensor_oneLike () =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.oneLike()
@@ -900,7 +900,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_randLike() =
+    member _.TestTensor_randLike() =
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.randLike([2])
@@ -913,7 +913,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t.randLike([2]))
 
     [<Test>]
-    member this.TestTensor_randintLike() =
+    member _.TestTensor_randintLike() =
         for ty in Combos.All do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.randintLike(10L, [2])
@@ -922,7 +922,7 @@ type TestTensor () =
             Assert.AreEqual(i.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensor_randnLike() =
+    member _.TestTensor_randnLike() =
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([1.; 2.; 3.; 4.])
             let i = t.randnLike([2])
@@ -935,7 +935,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t.randLike([2]))
 
     [<Test>]
-    member this.TestTensor_hasinf () =
+    member _.TestTensor_hasinf () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([1.; infinity; 3.; -infinity])
             let t1i = dsharp.hasinf(t1)
@@ -953,7 +953,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensor_hasnan () =
+    member _.TestTensor_hasnan () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([1.; nan; 3.; nan])
             let t1i = dsharp.hasnan(t1)
@@ -971,7 +971,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensorAddTT () =
+    member _.TestTensorAddTT () =
         // Test all pairs of non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             for dtype2 in DTypes.IntegralAndFloatingPoint do 
@@ -990,7 +990,7 @@ type TestTensor () =
                 Assert.AreEqual(t2.dtype, dtypeRes)
 
     [<Test>]
-    member this.TestTensorAddTTScalarBroadcasting () =
+    member _.TestTensorAddTTScalarBroadcasting () =
         // Test scalar broadcasting 
         for ty in Combos.IntegralAndFloatingPoint do 
             let t3 = ty.tensor([1.; 2.]) + 5.f
@@ -1024,7 +1024,7 @@ type TestTensor () =
             Assert.AreEqual(t5, t5Correct)
 
     [<Test>]
-    member this.TestTensorAddTT_BroadcastingSystematic () =
+    member _.TestTensorAddTT_BroadcastingSystematic () =
       for ty in Combos.IntegralAndFloatingPoint do 
 
         // Check all broadcasts into 2x2
@@ -1094,7 +1094,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorStackTs () =
+    member _.TestTensorStackTs () =
       for ty in Combos.All do 
         let t0a = ty.tensor(1.)
         let t0b = ty.tensor(3.)
@@ -1129,7 +1129,7 @@ type TestTensor () =
         Assert.AreEqual(t2Correct_dim2, t2_dim2)
 
     [<Test>]
-    member this.TestTensorUnstackT () =
+    member _.TestTensorUnstackT () =
         for ty in Combos.All do 
             let t0a = ty.tensor(1.)
             let t0b = ty.tensor(3.)
@@ -1164,7 +1164,7 @@ type TestTensor () =
             Assert.AreEqual(t2Correct_dim2, t2_dim2)
 
     [<Test>]
-    member this.TestTensorCatTs () =
+    member _.TestTensorCatTs () =
         for ty in Combos.All do 
 
             let t0a = ty.tensor([1.; 2.])
@@ -1215,7 +1215,7 @@ type TestTensor () =
             Assert.AreEqual(t4Correct_dim1, t4_dim1)
 
     [<Test>]
-    member this.TestTensorSplitT_Basics () =
+    member _.TestTensorSplitT_Basics () =
         
         for ty in Combos.All do 
             //6 --> 2;2;2
@@ -1293,7 +1293,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorAddT2T1 () =
+    member _.TestTensorAddT2T1 () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([[1.; 2.]; [3.; 4.]]) + ty.tensor([5.; 6.])
@@ -1319,7 +1319,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorSubTT () =
+    member _.TestTensorSubTT () =
         // Test all pairs of non-bool types, for widening
         for ty in Combos.IntegralAndFloatingPoint do 
             for dtype2 in DTypes.IntegralAndFloatingPoint do 
@@ -1371,7 +1371,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t5a - t5b)
 
     [<Test>]
-    member this.TestTensorMulTT () =
+    member _.TestTensorMulTT () =
         // Test all pairs of non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             for dtype2 in DTypes.IntegralAndFloatingPoint do 
@@ -1417,7 +1417,7 @@ type TestTensor () =
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
-    member this.TestTensorMulTT_BroadcastSystematic () =
+    member _.TestTensorMulTT_BroadcastSystematic () =
       for ty in Combos.FloatingPoint do 
         // 2x2 * 1  (broadcast --> 2x2)
         // 2x2 * 2  (broadcast --> 2x2)
@@ -1485,7 +1485,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorDivTT () =
+    member _.TestTensorDivTT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([1.; 2.]) / ty.tensor([3.; 4.])
             let t1Correct = ty.tensor([0.333333; 0.5])
@@ -1538,7 +1538,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t2 / t2)
 
     [<Test>]
-    member this.TestTensorPowTT () =
+    member _.TestTensorPowTT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([1.; 2.]) ** ty.tensor([3.; 4.])
             let t1Correct = ty.tensor([1.; 16.])
@@ -1570,7 +1570,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t3a ** t3b)
 
     [<Test>]
-    member this.TestTensorMatMulT2T2 () =
+    member _.TestTensorMatMulT2T2 () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                    [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
@@ -1611,7 +1611,7 @@ type TestTensor () =
             isInvalidOp(fun () -> t3a.matmul(t3a))
 
     [<Test>]
-    member this.TestTensorDot () =
+    member _.TestTensorDot () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([8.0766, 3.3030, -2.1732, 8.9448, 1.1028])
             let t2 = ty.tensor([5.1067, -0.0681, 7.4633, -3.6027, 9.0070])
@@ -1635,7 +1635,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.dot(t3a, t3a))
 
     [<Test>]
-    member this.TestTensorDiagonal () =
+    member _.TestTensorDiagonal () =
         for ty in Combos.All do
             let t1 = ty.arange(6.).view([2; 3])
             let t1a = dsharp.diagonal(t1)
@@ -1656,7 +1656,7 @@ type TestTensor () =
             Assert.AreEqual(t2aCorrect, t2a)
 
     [<Test>]
-    member this.TestTensorTrace () =
+    member _.TestTensorTrace () =
         for ty in Combos.FloatingPoint do
             let t1 = ty.arange(6.).view([2; 3])
             let t1a = dsharp.trace(t1)
@@ -1683,7 +1683,7 @@ type TestTensor () =
             Assert.AreEqual(t1aCorrect, t1a)
 
     [<Test>]
-    member this.TestTensorMaxPool1D () =
+    member _.TestTensorMaxPool1D () =
         for ty in Combos.FloatingPoint do
             let t = ty.tensor([[[-2.1704, -1.1558,  2.5995,  1.3858, -1.3157, -0.3179,  0.9593,  -2.1432,  0.7169, -1.7999],
                                      [ 0.4564, -0.2262,  0.3495,  0.4587, -0.3858,  0.2349,  0.2978,  0.6288,  1.1539,  0.2121]],
@@ -1752,7 +1752,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.maxpool1d(x,3))
 
     [<Test>]
-    member this.TestTensorMaxPool2D () =
+    member _.TestTensorMaxPool2D () =
         for ty in Combos.FloatingPoint do
             let t = ty.tensor([[[[ 0.7372,  0.7090,  0.9216,  0.3363,  1.0141, -0.7642,  0.3801, -0.9568],
                                       [-0.3520, -1.2336,  1.8489,  0.9929, -0.8138,  0.0978, -1.3206, -1.5434],
@@ -1932,7 +1932,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.maxpool2d(x,3))
 
     [<Test>]
-    member this.TestTensorMaxPool3D () =
+    member _.TestTensorMaxPool3D () =
         for ty in Combos.FloatingPoint do
             let t = ty.tensor([[[[ 0.4633,  0.9173,  0.4568, -1.7660, -0.1077],
                                        [-2.1112,  1.5542,  0.5720, -1.0952, -1.8144],
@@ -2136,7 +2136,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.maxpool3d(x,3))
 
     [<Test>]
-    member this.TestTensorMaxUnpool1D () =
+    member _.TestTensorMaxUnpool1D () =
         for ty in Combos.FloatingPoint do
             let tk3 = ty.tensor([[[ 2.5995,  1.3858,  0.9593],
                                       [ 0.4564,  0.4587,  1.1539]],
@@ -2223,7 +2223,7 @@ type TestTensor () =
             Assert.AreEqual(tk4s3p2uCorrect, tk4s3p2u)
 
     [<Test>]
-    member this.TestTensorMaxUnpool2D () =
+    member _.TestTensorMaxUnpool2D () =
         for ty in Combos.FloatingPoint do
             let tk3 = ty.tensor([[[[1.8489, 1.1338],
                                               [0.6819, 1.6331]],
@@ -2503,7 +2503,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorMaxUnpool3D () =
+    member _.TestTensorMaxUnpool3D () =
         for ty in Combos.FloatingPoint do
             let tk2 = ty.tensor([[[[1.5542, 0.5720],
                                         [1.5415, 1.3066]],
@@ -2878,7 +2878,7 @@ type TestTensor () =
             Assert.AreEqual(tk2s3p1uCorrect, tk2s3p1u)
 
     [<Test>]
-    member this.TestTensorConv1D () =
+    member _.TestTensorConv1D () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                     [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];
@@ -3054,7 +3054,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.conv1d(x,y))
 
     [<Test>]
-    member this.TestTensorConv2D () =
+    member _.TestTensorConv2D () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
                                      [ -6.4356,   0.6351,  -2.3156,  -1.3384],
@@ -3397,7 +3397,7 @@ type TestTensor () =
             isInvalidOp(fun () -> dsharp.conv2d(x,y, strides=[1;1]))
 
     [<Test>]
-    member this.TestTensorConv3D () =
+    member _.TestTensorConv3D () =
         for ty in Combos.FloatingPoint do 
         let t1 = ty.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                    [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
@@ -3633,7 +3633,7 @@ type TestTensor () =
             Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01, 0.01))
 
     [<Test>]
-    member this.TestTensorNegT () =
+    member _.TestTensorNegT () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.])
@@ -3653,7 +3653,7 @@ type TestTensor () =
             isInvalidOp(fun () -> -ty.tensor([1.0]))
 
     [<Test>]
-    member this.TestTensorSumT () =
+    member _.TestTensorSumT () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.])
             let t1Sum = t1.sum()
@@ -3684,7 +3684,7 @@ type TestTensor () =
             Assert.AreEqual(t3, t3Correct)
 
     [<Test>]
-    member this.TestTensorSumToSizeT () =
+    member _.TestTensorSumToSizeT () =
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([1.; 2.; 3.])
             let t1Sum = t1.sumToSize([| |])
@@ -3717,7 +3717,7 @@ type TestTensor () =
             Assert.AreEqual(t5SumCorrect, t5Sum)
 
     [<Test>]
-    member this.TestTensorSumToSizeSystematic () =
+    member _.TestTensorSumToSizeSystematic () =
         for ty in Combos.IntegralAndFloatingPoint do 
             // Systematically test all legitimate reductions of 2x2x2 to smaller sizes
             let t6 = ty.tensor([ [[1.; 2.]; [3.; 4.] ]; [[5.; 6.]; [7.; 8.] ] ])
@@ -3751,7 +3751,7 @@ type TestTensor () =
             Assert.AreEqual(systematicResults, expectedResults)
 
     [<Test>]
-    member this.TestTensorSumT2Dim0 () =
+    member _.TestTensorSumT2Dim0 () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t1 = ty.tensor([[1.; 2.]; [3.; 4.]])
@@ -3762,7 +3762,7 @@ type TestTensor () =
             Assert.AreEqual(t1Sum.dtype, ty.dtype)
     
     [<Test>]
-    member this.TestTensorSumDim () =
+    member _.TestTensorSumDim () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t = ty.tensor([[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]])
@@ -3781,7 +3781,7 @@ type TestTensor () =
             Assert.AreEqual(tSum2Correct, tSum2)
     
     [<Test>]
-    member this.TestTensorSumDimKeepDim () =
+    member _.TestTensorSumDimKeepDim () =
         // Test all non-bool types
         for ty in Combos.IntegralAndFloatingPoint do 
             let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
@@ -3800,7 +3800,7 @@ type TestTensor () =
             Assert.AreEqual(tSum2Correct, tSum2)
 
     [<Test>]
-    member this.TestTensorMean () =
+    member _.TestTensorMean () =
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
             let tMean = t.mean()
@@ -3852,7 +3852,7 @@ type TestTensor () =
             Assert.AreEqual(tMeanKeepDim2, tMeanKeepDim2Correct)
 
     [<Test>]
-    member this.TestTensorStddev () =
+    member _.TestTensorStddev () =
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([[[0.3787;0.7515;0.2252;0.3416];
                 [0.6078;0.4742;0.7844;0.0967];
@@ -3908,7 +3908,7 @@ type TestTensor () =
             Assert.True(tStddev2.allclose(tStddev2Correct, 0.01))
 
     [<Test>]
-    member this.TestTensorVariance () =
+    member _.TestTensorVariance () =
         for ty in Combos.FloatingPoint do 
             (* Python:
             import torch
@@ -3945,7 +3945,7 @@ type TestTensor () =
             Assert.AreEqual(tVariance2.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorVarianceKeepDim () =
+    member _.TestTensorVarianceKeepDim () =
         for ty in Combos.FloatingPoint do 
             // Variance, dim={0,1,2,3}, keepDim=true
             (* Python:
@@ -3974,7 +3974,7 @@ type TestTensor () =
             Assert.AreEqual(tVariance2.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorTransposeT2 () =
+    member _.TestTensorTransposeT2 () =
         for ty in Combos.All do 
             let t1 = ty.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]])
             let t1Transpose = t1.transpose()
@@ -3990,7 +3990,7 @@ type TestTensor () =
             Assert.AreEqual(t2TransposeTranspose.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorSignT () =
+    member _.TestTensorSignT () =
         // Test all signed types
         for ty in Combos.SignedIntegralAndFloatingPoint do 
             let t1 = ty.tensor([-1.; -2.; 0.; 3.])
@@ -4018,7 +4018,7 @@ type TestTensor () =
             Assert.AreEqual(t1BoolSignCorrect, t1Bool.sign())
 
     [<Test>]
-    member this.TestTensorFloorT () =
+    member _.TestTensorFloorT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Floor = t1.floor()
@@ -4031,7 +4031,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).floor())
 
     [<Test>]
-    member this.TestTensorCeilT () =
+    member _.TestTensorCeilT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Ceil = t1.ceil()
@@ -4044,7 +4044,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).ceil())
 
     [<Test>]
-    member this.TestTensorRoundT () =
+    member _.TestTensorRoundT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Round = t1.round()
@@ -4057,7 +4057,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).round())
 
     [<Test>]
-    member this.TestTensorAbsT () =
+    member _.TestTensorAbsT () =
         for ty in Combos.SignedIntegralAndFloatingPoint do 
             let t1 = ty.tensor([-1.; -2.; 0.; 3.])
             let t1Abs = t1.abs()
@@ -4081,7 +4081,7 @@ type TestTensor () =
             isInvalidOp (fun () -> t1.abs())
 
     [<Test>]
-    member this.TestTensorReluT () =
+    member _.TestTensorReluT () =
         for ty in Combos.SignedIntegralAndFloatingPoint do 
             let t1 = ty.tensor([-1.; -2.; 0.; 3.; 10.])
             let t1Relu = t1.relu()
@@ -4096,7 +4096,7 @@ type TestTensor () =
             isInvalidOp (fun () -> t1.relu())
 
     [<Test>]
-    member this.TestTensorLeakyRelu () =
+    member _.TestTensorLeakyRelu () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([-1.; -2.; 0.; 3.; 10.])
             let t1LeakyRelu = t1.leakyRelu()
@@ -4107,7 +4107,7 @@ type TestTensor () =
             Assert.AreEqual(t1LeakyRelu.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorSigmoidT () =
+    member _.TestTensorSigmoidT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Sigmoid = t1.sigmoid()
@@ -4120,7 +4120,7 @@ type TestTensor () =
           isInvalidOp(fun () -> ty.tensor([1.0]).sigmoid())
 
     [<Test>]
-    member this.TestTensorSoftplusT () =
+    member _.TestTensorSoftplusT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05])
             let t1Softplus = t1.softplus()
@@ -4133,7 +4133,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).softplus())
 
     [<Test>]
-    member this.TestTensorExpT () =
+    member _.TestTensorExpT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
             let t1Exp = t1.exp()
@@ -4146,7 +4146,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).exp())
 
     [<Test>]
-    member this.TestTensorLogT () =
+    member _.TestTensorLogT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
             let t1Log = t1.log()
@@ -4159,7 +4159,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).log())
 
     [<Test>]
-    member this.TestTensorLog10T () =
+    member _.TestTensorLog10T () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
             let t1Log10 = t1.log10()
@@ -4172,7 +4172,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).log10())
 
     [<Test>]
-    member this.TestTensorSqrtT () =
+    member _.TestTensorSqrtT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Sqrt = t1.sqrt()
@@ -4185,7 +4185,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).sqrt())
 
     [<Test>]
-    member this.TestTensorSinT () =
+    member _.TestTensorSinT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Sin = t1.sin()
@@ -4198,7 +4198,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).sin())
 
     [<Test>]
-    member this.TestTensorCosT () =
+    member _.TestTensorCosT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Cos = t1.cos()
@@ -4211,7 +4211,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).cos())
 
     [<Test>]
-    member this.TestTensorTanT () =
+    member _.TestTensorTanT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Tan = t1.tan()
@@ -4224,7 +4224,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).tan())
 
     [<Test>]
-    member this.TestTensorSinhT () =
+    member _.TestTensorSinhT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Sinh = t1.sinh()
@@ -4237,7 +4237,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).sinh())
 
     [<Test>]
-    member this.TestTensorCoshT () =
+    member _.TestTensorCoshT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Cosh = t1.cosh()
@@ -4250,7 +4250,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).cosh())
 
     [<Test>]
-    member this.TestTensorTanhT () =
+    member _.TestTensorTanhT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Tanh = t1.tanh()
@@ -4263,7 +4263,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).tanh())
 
     [<Test>]
-    member this.TestTensorAsinT () =
+    member _.TestTensorAsinT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Asin = t1.asin()
@@ -4276,7 +4276,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).asin())
 
     [<Test>]
-    member this.TestTensorAcosT () =
+    member _.TestTensorAcosT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Acos = t1.acos()
@@ -4289,7 +4289,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).acos())
 
     [<Test>]
-    member this.TestTensorAtanT () =
+    member _.TestTensorAtanT () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Atan = t1.atan()
@@ -4302,7 +4302,7 @@ type TestTensor () =
             isInvalidOp(fun () -> ty.tensor([1.0]).atan())
 
     [<Test>]
-    member this.TestTensorSlice () =
+    member _.TestTensorSlice () =
         for ty in Combos.All do 
             let t1 = ty.tensor([1.;2.])
             let t1s1 = t1.[0]
@@ -4433,7 +4433,7 @@ type TestTensor () =
             Assert.AreEqual(t3s14.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorAddTTSlice () =
+    member _.TestTensorAddTTSlice () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[-0.2754;  0.0172;  0.7105];
                 [-0.1890;  1.7664;  0.5377];
@@ -4451,7 +4451,7 @@ type TestTensor () =
             Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorPad () =
+    member _.TestTensorPad () =
         for ty in Combos.All do
             let t1 = ty.tensor([1.,2.,3.])
             let t1p0 = dsharp.pad(t1, [0])
@@ -4484,7 +4484,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorExpandT () =
+    member _.TestTensorExpandT () =
         for ty in Combos.All do 
             let t1 = ty.tensor(1.0)
             let t1Expand = t1.expand([2;3])
@@ -4516,7 +4516,7 @@ type TestTensor () =
             Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
     [<Test>]
-    member this.TestTensorSqueezeT () =
+    member _.TestTensorSqueezeT () =
         for ty in Combos.All do 
             let t1 = ty.tensor([[[1.; 2.]]; [[3.;4.]]])
             let t1Squeeze = t1.squeeze()
@@ -4526,7 +4526,7 @@ type TestTensor () =
             Assert.AreEqual(t1Squeeze.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorUnsqueezeT () =
+    member _.TestTensorUnsqueezeT () =
         for ty in Combos.All do 
             let t1 = ty.tensor([[1.;2.];[3.;4.]])
             let t1Unsqueeze = t1.unsqueeze(1)
@@ -4536,7 +4536,7 @@ type TestTensor () =
             Assert.AreEqual(t1Unsqueeze.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorFlipT () =
+    member _.TestTensorFlipT () =
         for ty in Combos.All do 
             let t1 = ty.tensor([[1.;2.];[3.;4.]])
             let t2 = t1.flip([|0|])
@@ -4554,7 +4554,7 @@ type TestTensor () =
             Assert.AreEqual(t5Correct, t5)
 
     [<Test>]
-    member this.TestTensorDilateT () =
+    member _.TestTensorDilateT () =
         for ty in Combos.FloatingPoint do 
             let tin1 = ty.tensor([1.;2.;3.])
             let t1 = tin1.dilate([|2|])
@@ -4618,7 +4618,7 @@ type TestTensor () =
                 Assert.AreEqual(ty.dtype, t9.dtype)
 
     [<Test>]
-    member this.TestTensorUndilateT () =
+    member _.TestTensorUndilateT () =
         for ty in Combos.All do 
             let t1 = ty.tensor([[1.;0.;2.];[3.;0.;4.]])
             let t2 = t1.undilate([|1; 2|])
@@ -4638,7 +4638,7 @@ type TestTensor () =
             Assert.AreEqual(ty.dtype, t6.dtype)
 
     [<Test>]
-    member this.TestTensorView () =
+    member _.TestTensorView () =
         for ty in Combos.All do 
             let t = ty.randint(2L, [10;10])
             let t1 = t.view(-1)
@@ -4658,7 +4658,7 @@ type TestTensor () =
             Assert.AreEqual(t1.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorFlatten () =
+    member _.TestTensorFlatten () =
         for ty in Combos.All do 
             let t1 = ty.randint(2L, [5;5;5;5])
             let t1f1shape = dsharp.flatten(t1).shape
@@ -4683,7 +4683,7 @@ type TestTensor () =
             Assert.AreEqual(t3fshapeCorrect, t3fshape)
 
     [<Test>]
-    member this.TestTensorGather () =
+    member _.TestTensorGather () =
         for ty in Combos.All do 
             let t1 = ty.tensor([1,2,3,4,5])
             let t1g = dsharp.gather(t1, 0, ty.tensor([0,2,3], dtype=DType.Int32))
@@ -4707,7 +4707,7 @@ type TestTensor () =
             Assert.AreEqual(ty.dtype, t2g1.dtype)
 
     [<Test>]
-    member this.TestTensorMax () =
+    member _.TestTensorMax () =
         for ty in Combos.All do 
             let t1 = ty.tensor([4.;1.;20.;3.])
             let t1Max = t1.max()
@@ -4761,7 +4761,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorMin () =
+    member _.TestTensorMin () =
         for ty in Combos.SignedIntegralAndFloatingPoint do 
             let t1 = ty.tensor([4.;1.;20.;3.])
             let t1Min = t1.min()
@@ -4829,7 +4829,7 @@ type TestTensor () =
             Assert.AreEqual(t4Min.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorMaxBinary () =
+    member _.TestTensorMaxBinary () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[-4.9385; 12.6206; 10.1783];
                 [-2.9624; 17.6992;  2.2506];
@@ -4846,7 +4846,7 @@ type TestTensor () =
             Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorMinBinary () =
+    member _.TestTensorMinBinary () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([[-4.9385; 12.6206; 10.1783];
                 [-2.9624; 17.6992;  2.2506];
@@ -4863,7 +4863,7 @@ type TestTensor () =
             Assert.AreEqual(t3.dtype, ty.dtype)
 
     [<Test>]
-    member this.TestTensorSoftmax () =
+    member _.TestTensorSoftmax () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([2.7291; 0.0607; 0.8290])
             let t1Softmax0 = t1.softmax(0)
@@ -4957,7 +4957,7 @@ type TestTensor () =
 
 
     [<Test>]
-    member this.TestTensorLogsoftmax () =
+    member _.TestTensorLogsoftmax () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([2.7291, 0.0607, 0.8290])
             let t1Logsoftmax0 = t1.logsoftmax(0)
@@ -5043,7 +5043,7 @@ type TestTensor () =
             Assert.True(t3Logsoftmax2.allclose(t3Logsoftmax2Correct, 0.01))
 
     [<Test>]
-    member this.TestTensorLogsumexp () =
+    member _.TestTensorLogsumexp () =
         for ty in Combos.FloatingPoint do 
             let t1 = ty.tensor([2.7291, 0.0607, 0.8290])
             let t1Logsumexp0 = t1.logsumexp(0)
@@ -5139,7 +5139,7 @@ type TestTensor () =
             Assert.True(t4Logsumexp1.allclose(t4Logsumexp1Correct, 0.75))
 
     [<Test>]
-    member this.TestTensorNllLoss () =
+    member _.TestTensorNllLoss () =
         for ty in Combos.FloatingPoint do 
             let t1a = ty.tensor([[0.15,0.85],[0.5,0.5],[0.8,0.2]]).log()
             let t1b = ty.tensor([0,1,1])
@@ -5242,7 +5242,7 @@ type TestTensor () =
             Assert.True(l12Correct.allclose(l12, 0.001))
 
     [<Test>]
-    member this.TestTensorCrossEntropyLoss () =
+    member _.TestTensorCrossEntropyLoss () =
         for ty in Combos.FloatingPoint do 
             let t1a = ty.tensor([[-0.6596,  0.3078, -0.2525, -0.2593, -0.2354],
                                         [ 0.4708,  0.6073,  1.5621, -1.4636,  0.9769],
@@ -5271,7 +5271,7 @@ type TestTensor () =
             Assert.True(l6Correct.allclose(l6, 0.001))
 
     [<Test>]
-    member this.TestTensorMseLoss () =
+    member _.TestTensorMseLoss () =
         for ty in Combos.FloatingPoint do 
             let t1a = ty.tensor([-0.2425,  0.2643,  0.7070,  1.2049,  1.6245])
             let t1b = ty.tensor([-1.0742,  1.5874,  0.6509,  0.8715,  0.0692])
@@ -5305,7 +5305,7 @@ type TestTensor () =
             Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
 
     [<Test>]
-    member this.TestTensorDepth () =
+    member _.TestTensorDepth () =
         for ty in Combos.All do 
             let t0 = ty.tensor([1.;2.])
             let t0Depth = t0.depth
@@ -5326,7 +5326,7 @@ type TestTensor () =
             Assert.AreEqual(t3DepthCorrect, t3Depth)
 
     [<Test>]
-    member this.FSharpCoreOps () =
+    member _.FSharpCoreOps () =
         for ty in Combos.FloatingPoint do 
             let t = ty.tensor([0.1; 0.2; 0.3])
             let add = t + t
