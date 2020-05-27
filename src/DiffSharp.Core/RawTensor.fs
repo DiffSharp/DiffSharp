@@ -18,7 +18,7 @@ type [<AbstractClass>]
     abstract Full: shape:int[] * obj * device: Device -> RawTensor
     abstract Random: shape:int[] * device: Device -> RawTensor
     abstract RandomNormal: shape:int[] * device: Device -> RawTensor
-    abstract RandomInt: shape:int[] * low:int * high:int  * device: Device -> RawTensor
+    abstract RandomInt: shape:int[] * low:int * high:int * device: Device -> RawTensor
     
     static member Seed(?seed:int) =
         let seed = defaultArg seed (int DateTime.Now.Ticks)
@@ -31,6 +31,7 @@ type [<AbstractClass>]
     abstract CreateFromFlatArray: data: System.Array * shape: int[] * device: Device -> RawTensor
 
     static member Get(?dtype: DType, ?backend: Backend) =
+        // Note we re-examing the default backends etc. each time we create a root tensor.
         let dtype = defaultArg dtype DType.Default
         let backend = defaultArg backend Backend.Default
         let code = dtype.Code + backend.Code

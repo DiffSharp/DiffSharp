@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
   </ItemGroup>
 
 </Project>

@@ -34,7 +34,6 @@
     <ProjectReference Include="..\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\DiffSharp\DiffSharp.fsproj" />
     <!-- execution projects must reference a libtorch runtime redist -->
     <PackageReference Include="libtorch-cpu" Version="$(LibTorchVersion)" />
   </ItemGroup>

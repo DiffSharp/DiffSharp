@@ -561,3 +561,21 @@ type TestDiffSharp () =
         Assert.True(dCorrect.allclose(d2))
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))        
+
+
+    [<Test>]
+    member _.TestCanConfigure () =
+        let device = Device.Default
+        dsharp.config(device=Device.GPU)
+        Assert.AreEqual(Device.GPU, Device.Default)
+        dsharp.config(device=device)
+
+        let backend = Backend.Default
+        dsharp.config(backend=Backend.Torch)
+        Assert.AreEqual(Backend.Torch, Backend.Default)
+        dsharp.config(backend=backend)
+
+        let dtype = DType.Default
+        dsharp.config(dtype=DType.Int32)
+        Assert.AreEqual(DType.Int32, DType.Default)
+        dsharp.config(dtype=dtype)
