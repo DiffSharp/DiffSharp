@@ -2,8 +2,6 @@ namespace Tests
 
 open System
 open DiffSharp
-open DiffSharp.Backends
-open DiffSharp.Util
 open NUnit.Framework
 
 // This captures the expected semantics of different DTypes
@@ -26,17 +24,17 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.randn(length:int, ?device, ?backend, ?dtype) =
         dsharp.randn(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
-    member _.randint(max: int64, shape:seq<int>, ?device, ?backend, ?dtype) =
-        dsharp.randint(max, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
-
-    member _.randint(max: int64, length:int, ?device, ?backend, ?dtype) =
-        dsharp.randint(max, length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
-
     member _.rand(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.rand(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
     member _.rand(length:int, ?device, ?backend, ?dtype) =
         dsharp.rand(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randint(low:int, high:int, shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.randint(low, high, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.randint(low:int, high:int, length:int, ?device, ?backend, ?dtype) =
+        dsharp.randint(low, high, length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
     member _.full(shape:seq<int>, value, ?device, ?backend, ?dtype) =
         dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
@@ -65,8 +63,11 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.onehot(length, hot, ?device, ?backend, ?dtype) =
         dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
-    member _.arange(endVal, ?device, ?backend, ?dtype) =
-        dsharp.arange(endVal, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+    member _.arange(endVal:float, ?startVal:float, ?step:float, ?device, ?backend, ?dtype) =
+        dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
+
+    member _.arange(endVal:int, ?startVal:int, ?step:int, ?device, ?backend, ?dtype) =
+        dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
     member c.arrayCreator1D(arr: double[]) =
         match c.dtype with 
@@ -114,7 +115,7 @@ module Combos =
     //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
     //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
-    let backends = [ (* Backend.Reference; Backend.Register("TestDuplicate"); *) Backend.Torch ]
+    let backends = [ Backend.Reference; (* Backend.Register("TestDuplicate"); *) Backend.Torch ]
 
     let devices = [ Device.CPU ]
     //let devices = [ Device.CPU; Device.GPU ]
@@ -146,11 +147,4 @@ module Combos =
 module TestUtils =
     let isException f = Assert.Throws<Exception>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
-
-[<TestFixture>]
-type TestUtil () =
-
-    [<SetUp>]
-    member this.Setup () =
-        ()
 

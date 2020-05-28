@@ -65,13 +65,16 @@ type Tensor =
         | TensorF(_,_,_) -> failwith "cannot cast TensorF"
         | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
 
-    member t.toBool() = t.cast(DType.Bool)
-    member t.toInt8() = t.cast(DType.Int8)
-    member t.toInt16() = t.cast(DType.Int16)
-    member t.toInt32() = t.cast(DType.Int32)
-    member t.toInt64() = t.cast(DType.Int64)
-    member t.toFloat32() = t.cast(DType.Float32)
-    member t.toFloat64() = t.cast(DType.Float64)
+    member t.bool() = t.cast(DType.Bool)
+    member t.int8() = t.cast(DType.Int8)
+    member t.int16() = t.cast(DType.Int16)
+    member t.int32() = t.cast(DType.Int32)
+    member t.int() = t.cast(DType.Int32)
+    member t.int64() = t.cast(DType.Int64)
+    member t.float32() = t.cast(DType.Float32)
+    member t.float64() = t.cast(DType.Float64)
+    member t.float() = t.cast(DType.Float64)
+    member t.double() = t.cast(DType.Float64)
 
     member t.dtype = t.primalRaw.DType
     member t.device = t.primalRaw.Device
@@ -251,15 +254,15 @@ type Tensor =
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
         a.fullLike([], scalar, ?dtype=dtype, ?device=device, ?backend=backend)
-    member a.randintLike(maxn, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
-        let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomIntegersLike(maxn, (shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
+        Tensor(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
     member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
     member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
@@ -268,6 +271,12 @@ type Tensor =
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
         a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype, ?device, ?backend) =
+        let endVal = endVal |> float
+        let startVal = defaultArg startVal 0 |> float
+        let step = defaultArg step 1 |> float
+        let dtype = defaultArg dtype DType.Int32
+        a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
     member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
@@ -364,6 +373,23 @@ type Tensor =
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+
+    static member multinomial(probs:Tensor, numSamples:int) =
+        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
+        if probs.dim = 1 then
+            let p = 
+                match probs.dtype with
+                | DType.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
+                | DType.Float64 -> probs.toArray() :?> float[]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+        else
+            let p = 
+                match probs.dtype with
+                | DType.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
+                | DType.Float64 -> probs.toArray() :?> float[,]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
 
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 

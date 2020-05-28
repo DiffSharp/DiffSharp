@@ -116,11 +116,13 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
-        dsharp.seed(123)
-        let t = dsharp.rand([10])
-        dsharp.seed(123)
-        let t2 = dsharp.rand([10])
-        Assert.AreEqual(t, t2)
+        for combo in Combos.All do
+            combo.randint(0,10,1) |> ignore // To ensure the backend assembly is loaded before dsharp.seed is called
+            dsharp.seed(123)
+            let t = combo.randint(0,10,[25])
+            dsharp.seed(123)
+            let t2 = combo.randint(0,10,[25])
+            Assert.AreEqual(t, t2)
 
     [<Test>]
     member this.TestDiff () =
@@ -559,3 +561,21 @@ type TestDiffSharp () =
         Assert.True(dCorrect.allclose(d2))
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))        
+
+
+    [<Test>]
+    member _.TestCanConfigure () =
+        let device = Device.Default
+        dsharp.config(device=Device.GPU)
+        Assert.AreEqual(Device.GPU, Device.Default)
+        dsharp.config(device=device)
+
+        let backend = Backend.Default
+        dsharp.config(backend=Backend.Torch)
+        Assert.AreEqual(Backend.Torch, Backend.Default)
+        dsharp.config(backend=backend)
+
+        let dtype = DType.Default
+        dsharp.config(dtype=DType.Int32)
+        Assert.AreEqual(DType.Int32, DType.Default)
+        dsharp.config(dtype=dtype)

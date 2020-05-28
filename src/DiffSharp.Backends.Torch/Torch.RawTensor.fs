@@ -353,9 +353,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Device.GPU -> t.MakeLike(t.TorchTensor.Cuda(), device=device)
         | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
 
-    override _.RandomMultinomial(numSamples) =
-        failwith "tbd"
-
     override _.Equals(t2:RawTensor) : bool = 
         if dtype = t2.DType then
             let r1 = (shape = t2.Shape)
@@ -808,19 +805,20 @@ type TorchStatics<'T, 'T2>
         ones: TorchShape  * string -> TorchTensor,
         random: TorchShape  * string -> TorchTensor,
         randomN: TorchShape  * string -> TorchTensor,
-        randomIntegers: int64 * TorchShape * string -> TorchTensor,
+        randomIntegers: TorchShape * int * int * string -> TorchTensor,
         valueFromObj: obj -> 'T,
         scalarFromConvValue: 'T2 -> Scalar) = 
 
     inherit BackendStatics()
 
+    override _.Seed(seed) = Torch.SetSeed(int64 seed)
     override _.Zero(device) = TorchRawTensor(from0(conv(zero)), Shape.scalar, dtype, device) :> _ 
     override _.One(device) = TorchRawTensor(from0(conv(one)), Shape.scalar, dtype, device) :> _
     override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.RandomNormal(shape:int[], device) = TorchRawTensor(randomN(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
-    override _.RandomIntegers(maxn, shape:int[], device) = TorchRawTensor(randomIntegers(maxn, toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
+    override _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, toTorchDevice device), shape, dtype, device) :> _
 
     override _.Full(shape:int[], value:obj, device) =
         let t = zeros(toTorchShape shape, toTorchDevice device)
@@ -851,7 +849,7 @@ type TorchFloat32Statics() =
         (fun (shape, device) -> FloatTensor.Ones(shape, device=device)), 
         (fun (shape, device) -> FloatTensor.Random(shape, device=device)), 
         (fun (shape, device) -> FloatTensor.RandomN(shape, device=device)), 
-        (fun (max, shape, device) -> FloatTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> FloatTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((float low).ToScalar())), 
         System.Convert.ToSingle, 
         Scalar.op_Implicit)
 
@@ -865,7 +863,7 @@ type TorchFloat64Statics() =
         (fun (shape, device) -> DoubleTensor.Ones(shape, device=device)), 
         (fun (shape, device) -> DoubleTensor.Random(shape, device=device)), 
         (fun (shape, device) -> DoubleTensor.RandomN(shape, device=device)), 
-        (fun (max, shape, device) -> DoubleTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> DoubleTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((double low).ToScalar())), 
         System.Convert.ToDouble, 
         Scalar.op_Implicit)
 
@@ -879,7 +877,7 @@ type TorchInt8Statics() =
         (fun (shape, device) -> SByteTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Int8), 
         (fun _ -> opNotSupported "RandomNormal" DType.Int8), 
-        (fun (max, shape, device) -> SByteTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> SByteTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((sbyte low).ToScalar())), 
         System.Convert.ToSByte, 
         Scalar.op_Implicit)
 
@@ -893,7 +891,7 @@ type TorchInt16Statics() =
         (fun (shape, device) -> ShortTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Int16), 
         (fun _ -> opNotSupported "RandomNormal" DType.Int16), 
-        (fun (max, shape, device) -> ShortTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> ShortTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((int16 low).ToScalar())), 
         System.Convert.ToInt16, 
         Scalar.op_Implicit)
 
@@ -907,7 +905,7 @@ type TorchInt32Statics() =
         (fun (shape, device) -> IntTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Int32), 
         (fun _ -> opNotSupported "RandomNormal" DType.Int32), 
-        (fun (max, shape, device) -> IntTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> IntTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((int32 low).ToScalar())), 
         System.Convert.ToInt32, 
         Scalar.op_Implicit)
 
@@ -921,7 +919,7 @@ type TorchInt64Statics() =
         (fun (shape, device) -> LongTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Int64), 
         (fun _ -> opNotSupported "RandomNormal" DType.Int64), 
-        (fun (max, shape, device) -> LongTensor.RandomIntegers(max, shape, device=device)), 
+        (fun (shape, low, high, device) -> LongTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((int64 low).ToScalar())), 
         System.Convert.ToInt64, 
         Scalar.op_Implicit)
 
@@ -935,7 +933,7 @@ type TorchBoolStatics() =
         (fun (shape, device) -> BoolTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Bool), 
         (fun _ -> opNotSupported "RandomNormal"  DType.Bool), 
-        (fun (maxn, shape, device) -> BoolTensor.RandomIntegers(min 2L maxn, shape, device=device)), 
+        (fun (shape, low, high, device) -> BoolTensor.RandomIntegers(min 2L (int64 (high-low)), shape, device=device).AddInPlace((low > 0).ToScalar())), 
         System.Convert.ToBoolean, 
         Scalar.op_Implicit)
 
@@ -949,6 +947,6 @@ type TorchByteStatics() =
         (fun (shape, device) -> ByteTensor.Ones(shape, device=device)), 
         (fun _ -> opNotSupported "Random" DType.Byte), 
         (fun _ -> opNotSupported "RandomNormal"  DType.Byte), 
-        (fun (maxn, shape, device) -> ByteTensor.RandomIntegers(min 2L maxn, shape, device=device)), 
+        (fun (shape, low, high, device) -> ByteTensor.RandomIntegers(int64 (high-low), shape, device=device).AddInPlace((byte low).ToScalar())), 
         System.Convert.ToByte, 
         Scalar.op_Implicit)

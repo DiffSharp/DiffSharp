@@ -322,19 +322,6 @@ module internal RawTensorCPU =
         | :? ( ^T[]) as arr -> arr, shape
         | _ -> invalidArg "value" (sprintf "Data unsuitable for RawTensorCPU of type %A" typeof< ^T >)
 
-    let inline RandomMultinomial ofInt (t: RawTensorCPU< ^T >, numSamples) : (^T[] * int[]) =
-        if t.Dim < 1 || t.Dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" t.Shape
-        if t.Dim = 1 then
-            let p = t.Values |> Array.map float
-            let result = Array.init numSamples (fun _ -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p)))
-            (result, [|numSamples|])
-        else
-            // TODO - this was float32 - why did this pass tests - add a test for other types which covers this branch?
-            let p = t.ToArray() :?> ^T[,] |> Array2D.map float
-            let d1 = p.GetLength(0)
-            let result = Array.init (d1 * numSamples - 1) (fun i -> ofInt (DiffSharp.Util.Random.ChoiceIndex(p.[(i%numSamples),*])))
-            (result, [| d1; numSamples |]) 
-
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
@@ -347,7 +334,7 @@ module internal RawTensorCPU =
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && Array.allClose relativeTolerance absoluteTolerance t1.Values t2.Values
-        | _ -> opNotSupported "Cannot compare RawTensors of different types" t1.DType t2.DType
+        | _ -> opNotSupported2 "Cannot compare RawTensors of different types" t1.DType t2.DType
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
@@ -827,8 +814,8 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofDouble (DiffSharp.Util.Random.Normal()))
         (values, shape)
 
-    let inline RandomIntegers (maxn: int64) ofDouble (shape:int[]) : (^T[] * int[]) =
-        let values = Array.init (shapeLength shape) (fun _ -> ofDouble (float maxn * DiffSharp.Util.Random.Uniform()))
+    let inline RandomInt ofInt (shape:int[]) (low:int) (high:int) : (^T[] * int[]) =
+        let values = Array.init (shapeLength shape) (fun _ -> ofInt (DiffSharp.Util.Random.Integer(low, high)))
         (values, shape)
 
 /// The concrete implementation of RawTensor for Float32 data.
@@ -838,7 +825,6 @@ type RawTensorFloat32(values: float32[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device) 
 
     override t.MakeLike(values, shape) = upcast RawTensorFloat32(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial float32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
@@ -913,6 +899,7 @@ type ReferenceFloat32Statics() =
     inherit BackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat32(values, shape, device)
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -920,7 +907,7 @@ type ReferenceFloat32Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToSingle value) |> create device
     override _.Random(shape:int[], device) = RawTensorCPU.Random float32 shape |> create device
     override _.RandomNormal(shape:int[], device) = RawTensorCPU.RandomNormal float32 shape |> create device
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn float32 shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt float32 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorFloat64(values: double[], shape:int[], device) =
@@ -930,7 +917,6 @@ type RawTensorFloat64(values: double[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorFloat64(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial double (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
@@ -1004,6 +990,7 @@ type ReferenceFloat64Statics() =
     inherit BackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat64(values, shape, device)
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1011,7 +998,7 @@ type ReferenceFloat64Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToDouble value) |> create device
     override _.Random(shape:int[], device) = RawTensorCPU.Random double shape |> create device
     override _.RandomNormal(shape:int[], device) = RawTensorCPU.RandomNormal double shape |> create device
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn double shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt double shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorInt8(values: int8[], shape:int[], device) =
@@ -1021,7 +1008,6 @@ type RawTensorInt8(values: int8[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorInt8(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int8 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
@@ -1092,6 +1078,7 @@ type ReferenceInt8Statics() =
     inherit BackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt8(values, shape, device)
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1099,7 +1086,7 @@ type ReferenceInt8Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToSByte value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Int8
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Int8
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn int8 shape |> create device
+    override _.RandomInt(shape, low, high, device) = RawTensorCPU.RandomInt int8 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorByte(values: byte[], shape:int[], device) =
@@ -1109,7 +1096,6 @@ type RawTensorByte(values: byte[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorByte(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial byte (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
@@ -1180,6 +1166,7 @@ type ReferenceByteStatics() =
     inherit BackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorByte(values, shape, device)
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1187,7 +1174,7 @@ type ReferenceByteStatics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToByte value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Byte
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Byte
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn byte shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt byte shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorInt16(values: int16[], shape:int[], device) =
@@ -1197,7 +1184,6 @@ type RawTensorInt16(values: int16[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorInt16(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int16 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
@@ -1268,6 +1254,7 @@ type ReferenceInt16Statics() =
     inherit BackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt16(values, shape, device)
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1275,7 +1262,7 @@ type ReferenceInt16Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToInt16 value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Int16
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Int16
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn int16 shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int16 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorInt32(values: int32[], shape:int[], device) =
@@ -1285,7 +1272,6 @@ type RawTensorInt32(values: int32[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorInt32(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int32 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
@@ -1356,6 +1342,7 @@ type ReferenceInt32Statics() =
     inherit BackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt32(values, shape, device)
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1363,7 +1350,7 @@ type ReferenceInt32Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToInt32 value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Int32
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Int32
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn int32 shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int32 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
                 
 type RawTensorInt64(values: int64[], shape:int[], device) =
@@ -1373,7 +1360,6 @@ type RawTensorInt64(values: int64[], shape:int[], device) =
     let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorInt64(values, shape, device)
-    override t.RandomMultinomial(numSamples) = RawTensorCPU.RandomMultinomial int64 (t, numSamples)|> create
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
@@ -1449,6 +1435,7 @@ type ReferenceInt64Statics() =
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt64(values, shape, device)
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = RawTensorCPU.Zero() |> create device
     override _.One(device) = RawTensorCPU.One() |> create device
     override _.Zeros(shape:int[], device) = RawTensorCPU.Zeros(shape) |> create device
@@ -1456,7 +1443,7 @@ type ReferenceInt64Statics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToInt64 value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Int64
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Int64
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers maxn int64 shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int64 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
 
 type RawTensorBool(values: bool[], shape:int[], device) =
@@ -1465,7 +1452,6 @@ type RawTensorBool(values: bool[], shape:int[], device) =
     let create(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
     override t.MakeLike(values, shape) = upcast RawTensorBool(values, shape, device)
-    override t.RandomMultinomial(_numSamples) = opNotSupported "RandomMultinomial" t.DType
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
     override t1.LtTT(t2) = t1.MakeLike(Array.map2 (<) t1.Values (t2.GetTypedValues()), t1.Shape)
@@ -1537,6 +1523,7 @@ type ReferenceBoolStatics() =
 
     let create device (values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
+    override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(device) = ([| false |], [||]) |> create device
     override _.One(device) = ([| true |], [||]) |> create device
     override _.Zeros(shape:int[], device) = (Array.zeroCreate (shapeLength shape), shape) |> create device
@@ -1544,5 +1531,5 @@ type ReferenceBoolStatics() =
     override _.Full(shape:int[], value:obj, device) = RawTensorCPU.Full (shape, System.Convert.ToBoolean value) |> create device
     override _.Random(_shape:int[], _device) = opNotSupported "Random" DType.Bool
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" DType.Bool
-    override _.RandomIntegers(maxn, shape:int[], device) = RawTensorCPU.RandomIntegers (min 2L maxn) (fun x -> x >= 1.0) shape |> create device
+    override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
