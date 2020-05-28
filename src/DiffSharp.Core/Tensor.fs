@@ -78,6 +78,7 @@ type Tensor =
 
     member t.dtype = t.primalRaw.DType
     member t.device = t.primalRaw.Device
+    member t.backend = t.primalRaw.Backend
 
     member t.depth =
         let rec depth x d =

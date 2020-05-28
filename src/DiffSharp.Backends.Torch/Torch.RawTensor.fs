@@ -127,7 +127,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | [| i0; i1 |] -> tt.[int64 i0, int64 i1]
             | [| i0; i1; i2 |] -> tt.[int64 i0, int64 i1, int64 i2]
             | [| i0; i1; i2; i3 |] -> tt.[int64 i0, int64 i1, int64 i2, int64 i3]
-            | _ -> failwith "dim > 4"
+            | _ -> tt.View(toTorchShape [|shapeLength shape|]).[int64 (indexToFlatIndex shape indexes)]
         let obj = 
             match dtype with 
             | DType.Bool -> box (item.DataItem<bool>())
