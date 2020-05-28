@@ -30,11 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\tests\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\DiffSharp\DiffSharp.fsproj" />
+    <ProjectReference Include="..\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <!-- execution projects must reference a libtorch runtime redist -->
     <PackageReference Include="libtorch-cpu" Version="$(TorchSharpVersion)" />
   </ItemGroup>
