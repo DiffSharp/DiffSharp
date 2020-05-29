@@ -3632,57 +3632,51 @@ type TestTensor () =
         Assert.True(t3s2p1.allclose(t3s2p1Correct, 0.01, 0.01))
         Assert.True(t3s231p321.allclose(t3s231p321Correct, 0.01, 0.01))
 
-        // 3D dilations not working correctly in LibTorch
-        if combo.backend <> Backend.Torch then
-            let t3p1d2 = t1.conv3d(t2, padding=1, dilation=2)
-            let t3p1d2Correct = combo.tensor([[[[-0.2568,  0.7812],
-                                                   [ 3.7157,  2.1968]],
+        let t3p1d2 = t1.conv3d(t2, padding=1, dilation=2)
+        let t3p1d2Correct = combo.tensor([[[[-0.2568,  0.7812],
+                                               [ 3.7157,  2.1968]],
 
-                                                  [[ 7.7515,  1.1481],
-                                                   [-1.2951, -2.1536]]]]).unsqueeze(0)
-            Assert.True(t3p1d2.allclose(t3p1d2Correct, 0.01, 0.01))
+                                              [[ 7.7515,  1.1481],
+                                               [-1.2951, -2.1536]]]]).unsqueeze(0)
+        Assert.True(t3p1d2.allclose(t3p1d2Correct, 0.01, 0.01))
 
-        // 3D dilations not working correctly in LibTorch
-        if combo.backend <> Backend.Torch then
-            let t3p224d234 = t1.conv3d(t2, paddings=[2;2;4], dilations=[2;3;4])
-            let t3p224d234Correct = 
-                                   combo.tensor([[[[ 0.5110,  0.8308,  0.8378,  2.1878],
-                                                   [ 0.5542,  0.8628,  0.0433,  0.7889]],
+        let t3p224d234 = t1.conv3d(t2, paddings=[2;2;4], dilations=[2;3;4])
+        let t3p224d234Correct = 
+                               combo.tensor([[[[ 0.5110,  0.8308,  0.8378,  2.1878],
+                                               [ 0.5542,  0.8628,  0.0433,  0.7889]],
 
-                                                  [[ 0.7539,  0.8638,  2.9105, -0.6111],
-                                                   [-2.2889,  2.2566, -0.4374, -1.2079]],
+                                              [[ 0.7539,  0.8638,  2.9105, -0.6111],
+                                               [-2.2889,  2.2566, -0.4374, -1.2079]],
 
-                                                  [[ 0.6620,  0.9611,  0.8799, -0.6184],
-                                                   [-1.5508, -0.7252, -0.3192,  0.4482]],
+                                              [[ 0.6620,  0.9611,  0.8799, -0.6184],
+                                               [-1.5508, -0.7252, -0.3192,  0.4482]],
 
-                                                  [[-0.0271,  0.7710,  0.0897, -0.1711],
-                                                   [-0.8259, -1.5293,  0.9234, -0.6048]]]]).unsqueeze(0)
-            Assert.True(t3p224d234.allclose(t3p224d234Correct, 0.01, 0.01))
+                                              [[-0.0271,  0.7710,  0.0897, -0.1711],
+                                               [-0.8259, -1.5293,  0.9234, -0.6048]]]]).unsqueeze(0)
+        Assert.True(t3p224d234.allclose(t3p224d234Correct, 0.01, 0.01))
 
-        // 3D dilations not working correctly in LibTorch
-        if combo.backend <> Backend.Torch then
-            let t3s3p6d3 = t1.conv3d(t2, stride=3, padding=6, dilation=3)
-            let t3s3p6d3Correct = 
-                                   combo.tensor([[[[-1.2082,  1.2172,  0.9059, -0.4916],
-                                                   [ 2.1467, -3.7502,  5.0506,  0.3885],
-                                                   [ 4.7375,  2.0637,  0.0984,  1.4406],
-                                                   [-1.3617,  0.8104, -0.4940,  0.5110]],
+        let t3s3p6d3 = t1.conv3d(t2, stride=3, padding=6, dilation=3)
+        let t3s3p6d3Correct = 
+                               combo.tensor([[[[-1.2082,  1.2172,  0.9059, -0.4916],
+                                               [ 2.1467, -3.7502,  5.0506,  0.3885],
+                                               [ 4.7375,  2.0637,  0.0984,  1.4406],
+                                               [-1.3617,  0.8104, -0.4940,  0.5110]],
 
-                                                  [[-3.4229, -2.0909,  2.7974, -1.0638],
-                                                   [-2.9979, -0.1444, -3.2004, -0.2850],
-                                                   [ 1.0353, -1.1102,  0.8409, -0.3885],
-                                                   [-1.3945,  2.0495,  1.7803, -0.3152]],
+                                              [[-3.4229, -2.0909,  2.7974, -1.0638],
+                                               [-2.9979, -0.1444, -3.2004, -0.2850],
+                                               [ 1.0353, -1.1102,  0.8409, -0.3885],
+                                               [-1.3945,  2.0495,  1.7803, -0.3152]],
 
-                                                  [[ 1.5129,  2.9412, -8.0788, -2.2397],
-                                                   [ 0.6883, -1.7963,  0.6140, -2.7854],
-                                                   [-1.1362,  1.5341, -3.5884, -1.6604],
-                                                   [ 3.4384,  1.9425, -1.4670, -0.8295]],
+                                              [[ 1.5129,  2.9412, -8.0788, -2.2397],
+                                               [ 0.6883, -1.7963,  0.6140, -2.7854],
+                                               [-1.1362,  1.5341, -3.5884, -1.6604],
+                                               [ 3.4384,  1.9425, -1.4670, -0.8295]],
 
-                                                  [[-0.0370,  0.1560, -0.6491, -0.6168],
-                                                   [ 2.4056,  0.5702, -3.0690, -0.5726],
-                                                   [ 1.9479,  0.2854, -1.4980, -0.0100],
-                                                   [-0.1114, -1.0524, -0.8736, -0.2113]]]]).unsqueeze(0)
-            Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01, 0.01))
+                                              [[-0.0370,  0.1560, -0.6491, -0.6168],
+                                               [ 2.4056,  0.5702, -3.0690, -0.5726],
+                                               [ 1.9479,  0.2854, -1.4980, -0.0100],
+                                               [-0.1114, -1.0524, -0.8736, -0.2113]]]]).unsqueeze(0)
+        Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01, 0.01))
 
     [<Test>]
     member _.TestTensorNegT () =
@@ -4651,24 +4645,22 @@ type TestTensor () =
             Assert.AreEqual(t7Correct, t7)
             Assert.AreEqual(combo.dtype, t7.dtype)
 
-            // 3D and 4D dilations not working correctly in LibTorch except when d0, d1 dilations are 1
-            if combo.backend <> Backend.Torch then
-                let tin8 = combo.tensor([[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]])
-                let t8 = tin8.dilate([|2; 1; 2|])
-                let t8Correct = combo.tensor([[[1.;0.;2.];[3.;0.;4.]]; [[0.;0.;0.];[0.;0.;0.]]; [[5.;0.;6.];[7.;0.;8.]]])
+            let tin8 = combo.tensor([[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]])
+            let t8 = tin8.dilate([|2; 1; 2|])
+            let t8Correct = combo.tensor([[[1.;0.;2.];[3.;0.;4.]]; [[0.;0.;0.];[0.;0.;0.]]; [[5.;0.;6.];[7.;0.;8.]]])
 
-                Assert.AreEqual(t8Correct, t8)
-                Assert.AreEqual(combo.dtype, t8.dtype)
+            Assert.AreEqual(t8Correct, t8)
+            Assert.AreEqual(combo.dtype, t8.dtype)
 
-                // Dilate 4D, 2; 1; 1; 2
-                let tin9 = combo.tensor([[[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]];[[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]]])
-                let t9 = tin9.dilate([|2; 1; 1; 2|])
-                let t9Correct = combo.tensor([[[[1.;0.;2.];[3.;0.;4.]]; [[5.;0.;6.];[7.;0.;8.]]]; 
-                                              [[[0.;0.;0.];[0.;0.;0.]]; [[0.;0.;0.];[0.;0.;0.]]]; 
-                                              [[[1.;0.;2.];[3.;0.;4.]]; [[5.;0.;6.];[7.;0.;8.]]]])
+            // Dilate 4D, 2; 1; 1; 2
+            let tin9 = combo.tensor([[[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]];[[[1.;2.]; [3.;4.]];[[5.;6.]; [7.;8.]]]])
+            let t9 = tin9.dilate([|2; 1; 1; 2|])
+            let t9Correct = combo.tensor([[[[1.;0.;2.];[3.;0.;4.]]; [[5.;0.;6.];[7.;0.;8.]]]; 
+                                          [[[0.;0.;0.];[0.;0.;0.]]; [[0.;0.;0.];[0.;0.;0.]]]; 
+                                          [[[1.;0.;2.];[3.;0.;4.]]; [[5.;0.;6.];[7.;0.;8.]]]])
 
-                Assert.AreEqual(t9Correct, t9)
-                Assert.AreEqual(combo.dtype, t9.dtype)
+            Assert.AreEqual(t9Correct, t9)
+            Assert.AreEqual(combo.dtype, t9.dtype)
 
     [<Test>]
     member _.TestTensorUndilateT () =

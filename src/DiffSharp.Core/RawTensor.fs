@@ -27,7 +27,7 @@ type [<AbstractClass>]
             backend.Seed(seed)
 
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
-    /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
+    /// A backend type is delivered consistent with in-memory data - a type for dtype Int32 gets int32 data etc.
     abstract CreateFromFlatArray: data: System.Array * shape: int[] * device: Device -> RawTensor
 
     static member Get(?dtype: DType, ?backend: Backend) =

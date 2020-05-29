@@ -111,11 +111,12 @@ module DTypes =
 module Combos =
 
     //let backends = [ Backend.Reference ]
+    //let backends = [ Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
     //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
-    let backends = [ Backend.Reference; (* Backend.Register("TestDuplicate"); *) Backend.Torch ]
+    let backends = [ Backend.Reference; Backend.Torch ]
 
     let devices = [ Device.CPU ]
     //let devices = [ Device.CPU; Device.GPU ]

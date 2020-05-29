@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +13,9 @@
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <!-- execution projects must reference a libtorch runtime redist -->
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchVersion)" />
+    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchVersion)" />
   </ItemGroup>
 
 </Project>

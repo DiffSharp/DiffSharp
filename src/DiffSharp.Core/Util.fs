@@ -393,7 +393,7 @@ module Shape =
             shape
 
     let checkCanUnsqueeze (dim: int) (shape: Shape) =
-        if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A]" shape.Length
+        if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A] but received %A" shape.Length dim
         [|for i=0 to shape.Length - 1 + 1 do 
             if i < dim then yield shape.[i]
             elif i = dim then yield 1
@@ -463,7 +463,6 @@ let boundsToLocation (bounds: int[,]) =
 
 let boundsToShape (bounds: int[,]) =
     [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|] 
-
 
 let mirrorCoordinates (coordinates: int[]) (shape: Shape) (mirrorDims: int[]) =
     if coordinates.Length <> shape.Length then failwithf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length

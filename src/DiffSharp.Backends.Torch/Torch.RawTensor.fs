@@ -34,6 +34,8 @@ module internal Utils =
         | Device.GPU -> "gpu"
         | _ -> failwith "unknown device for Torch"
 
+    let fromTorchShape (shape: int64[]) = shape |> Array.map int
+
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
     type RawTensor with
@@ -235,89 +237,21 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     override t.DilateT(dilations:int[]) = 
         Shape.checkCanDilate t.Dim dilations
         let outputShape = Shape.dilated t.Shape dilations
-        let shape4d = Array.append (Array.replicate (4 - t.Dim) 1) shape
-        let dilations4d = Array.append (Array.replicate (4 - dilations.Length) 1) dilations
-        let t4d = t.Expand(shape4d)
-        let one = t.OneLike().TorchTensor
-        let w2 = 
-            let mutable w = t.ZerosLike(dilations4d).TorchTensor
-            w.[0L,0L,0L,0L] <- one
-            w
-
-        match t.Dim with 
-        | 1 ->
-            let len0 = int64 shape.[0]
-            let dilation0 = int64 dilations.[0]
-            let res1 = t4d.TorchTensor.ConvTranspose1D(w2, stride=Nullable(dilation0))
-            let lenOut = (len0 - 1L)*dilation0+1L 
-            let res2 = res1.Slice(3L,0L,lenOut,1L)
-            let res3 = res2.Reshape([| lenOut |])
-            t.MakeLike(res3, outputShape)
-        | 2 ->
-            let len0 = int64 shape.[0]
-            let len1 = int64 shape.[1]
-            let dilation0 = int64 dilations.[0]
-            let dilation1 = int64 dilations.[1]
-            let res1 = t4d.TorchTensor.ConvTranspose2D(w2, strides= [| dilation0; dilation1 |])
-            let lenOut0 = (len0 - 1L)*dilation0+1L 
-            let lenOut1 = (len1 - 1L)*dilation1+1L 
-            let res2 = res1.Slice(2L,0L,lenOut0,1L)
-            let res3 = res2.Slice(3L,0L,lenOut1,1L)
-            let res4 = res3.Reshape([| lenOut0; lenOut1 |])
-            t.MakeLike(res4, outputShape)
-        | 3 ->
-            let len0 = int64 shape.[0]
-            let len1 = int64 shape.[1]
-            let len2 = int64 shape.[2]
-            let dilation0 = int64 dilations.[0]
-            let dilation1 = int64 dilations.[1]
-            let dilation2 = int64 dilations.[2]
-            if dilation0 <> 1L then 
-                failwith "DilateT 3D not functioning correctly in LibTorch - RuntimeError: expected stride to be a single integer value or a list of 2 values to match the convolution dimensions, but got stride=[2, 2, 2]"
-            // let res1 =  t4d.TorchTensor.ConvTranspose3D(w2, strides= [| dilation0; dilation1; dilation2 |])
-            let results = 
-                [| for i in 0 .. shape.[0]-1 do
-                      let slice = t4d.TorchTensor.Slice(1L,int64 i, int64 (i+1), 1L)
-                      yield slice.ConvTranspose2D(w2, strides= [| dilation1; dilation2 |]) |]
-            let res1 = results.Cat(1L)
-
-            let lenOut0 = (len0 - 1L)*dilation0+1L 
-            let lenOut1 = (len1 - 1L)*dilation1+1L 
-            let lenOut2 = (len2 - 1L)*dilation2+1L 
-            let res2 = res1.Slice(1L,0L,lenOut0,1L)
-            let res3 = res2.Slice(2L,0L,lenOut1,1L)
-            let res4 = res3.Slice(3L,0L,lenOut2,1L)
-            let res5 = res4.Reshape([| lenOut0; lenOut1; lenOut2 |])
-            t.MakeLike(res5, outputShape)
-        | 4 ->
-            let len0 = int64 shape.[0]
-            let len1 = int64 shape.[1]
-            let len2 = int64 shape.[2]
-            let len3 = int64 shape.[3]
-            let dilation0 = int64 dilations.[0]
-            let dilation1 = int64 dilations.[1]
-            let dilation2 = int64 dilations.[2]
-            let dilation3 = int64 dilations.[3]
-            if dilation0 <> 1L || dilation1 <> 1L then 
-                failwith "DilateT 4D not easy in LibTorch unles dilation0 and dilation1 both 1"
-            let res1 = 
-                [| for i in 0 .. shape.[0]-1 do
-                      [| for j in 0 .. shape.[1]-1 do
-                            let slice = t4d.TorchTensor.Slice(0L,int64 i, int64 (i+1), 1L).Slice(1L,int64 j, int64 (j+1), 1L)
-                            slice.ConvTranspose2D(w2, strides= [| dilation2; dilation3 |]) |].Cat(1L) |].Cat(0L)
-
-            let lenOut0 = (len0 - 1L)*dilation0+1L 
-            let lenOut1 = (len1 - 1L)*dilation1+1L 
-            let lenOut2 = (len2 - 1L)*dilation2+1L 
-            let lenOut3 = (len3 - 1L)*dilation3+1L 
-            let res2 = res1.Slice(0L,0L,lenOut0,1L)
-            let res3 = res2.Slice(1L,0L,lenOut1,1L)
-            let res4 = res3.Slice(2L,0L,lenOut2,1L)
-            let res5 = res4.Slice(3L,0L,lenOut3,1L)
-            let res5 = res5.Reshape([| lenOut0; lenOut1; lenOut2; lenOut3 |])
-            t.MakeLike(res5, outputShape)
-        | _ ->
-            failwith "DilateT > 3D not available in LibTorch"
+        let dims = dilations.Length
+        let mutable res = tt
+        for i=0 to dims-1 do
+            let s = res.Shape
+            s.[i] <- int64 outputShape.[i]
+            let resnew = t.ZerosLike(fromTorchShape s)
+            let indices = Array.init t.Shape.[i] id |> Array.map ((*) dilations.[i] >> int64)
+            let mutable d = TorchInt64Statics().CreateFromFlatArray(indices, shape=[|t.Shape.[i]|], device=t.Device)
+            for _=0 to i-1 do
+                d <- d.UnsqueezeT(0)
+            for _=i+1 to dims-1 do
+                d <- d.UnsqueezeT(d.Dim)
+            d <- d.Expand(fromTorchShape res.Shape)
+            res <- resnew.TorchTensor.Scatter(int64 i, d.TorchTensor, res)
+        t.MakeLike(res, outputShape)
 
     override t.UndilateT(dilations:int[]) =
         let outputShape = Shape.undilatedShape t.Shape dilations
@@ -811,7 +745,7 @@ type TorchStatics<'T, 'T2>
 
     inherit BackendStatics()
 
-    override _.Seed(seed) = Torch.SetSeed(int64 seed)
+    override _.Seed(seed) = Torch.SetSeed(int64 seed) // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch. However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
     override _.Zero(device) = TorchRawTensor(from0(conv(zero)), Shape.scalar, dtype, device) :> _ 
     override _.One(device) = TorchRawTensor(from0(conv(one)), Shape.scalar, dtype, device) :> _
     override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
@@ -825,7 +759,7 @@ type TorchStatics<'T, 'T2>
         t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
         TorchRawTensor(t, shape, dtype, device) :> _
 
-    override ts.CreateFromFlatArray(values:Array, shape, device) =
+    override _.CreateFromFlatArray(values:Array, shape, device) =
         let values = values :?> 'T[] |> Array.map conv 
         let t = 
             match shape with 
