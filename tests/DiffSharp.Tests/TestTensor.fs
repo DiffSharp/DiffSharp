@@ -81,16 +81,16 @@ type TestTensor () =
         this.TestTensorCreateAllTensorTypesGeneric (fun i -> abs i >= 1.0)
 
         let t1 = dsharp.tensor([true, true])
-        Assert.AreEqual(DType.Bool, t1.dtype)
+        Assert.AreEqual(Dtype.Bool, t1.dtype)
 
         let t2 = dsharp.tensor([true, false])
-        Assert.AreEqual(DType.Bool, t2.dtype)
+        Assert.AreEqual(Dtype.Bool, t2.dtype)
 
         let t3 = dsharp.tensor([true; false])
-        Assert.AreEqual(DType.Bool, t3.dtype)
+        Assert.AreEqual(Dtype.Bool, t3.dtype)
 
-        let t4 = dsharp.tensor([true; false], dtype=DType.Float32)
-        Assert.AreEqual(DType.Float32, t4.dtype)
+        let t4 = dsharp.tensor([true; false], dtype=Dtype.Float32)
+        Assert.AreEqual(Dtype.Float32, t4.dtype)
 
     [<Test>]
     member _.TestTensorCreate0 () =
@@ -133,7 +133,7 @@ type TestTensor () =
         let t2Values = [[1.; 2.; 3.]; [4.; 5.; 6.]]
         let t2ShapeCorrect = [|2; 3|]
         let t2DimCorrect = 2
-        // let t2DTypeCorrect = DType.Float32
+        // let t2DtypeCorrect = Dtype.Float32
         let t2ValuesCorrect = array2D (List.map (List.map float32) t2Values)
 
         // create from double list list
@@ -517,7 +517,7 @@ type TestTensor () =
             Assert.AreEqual(t2Correct, t2)
 
             let t3 = combo.arange(5)
-            let t3Correct = combo.tensor([0,1,2,3,4], dtype=DType.Int32)
+            let t3Correct = combo.tensor([0,1,2,3,4], dtype=Dtype.Int32)
             Assert.AreEqual(t3Correct, t3)
 
     [<Test>]
@@ -526,7 +526,7 @@ type TestTensor () =
             let p1 = combo.tensor([0.2,0.3,0.5])
             let m1 = dsharp.multinomial(p1, numSamples=5000)
             let m1dtype = m1.dtype
-            let m1dtypeCorrect = DType.Int32
+            let m1dtypeCorrect = Dtype.Int32
             let m1mean = m1.float().mean()
             let m1stddev = m1.float().stddev()
             let m1meanCorrect = dsharp.tensor(1.3001).float()
@@ -538,7 +538,7 @@ type TestTensor () =
             let p2 = combo.tensor([[0.2,0.3,0.5],[0.8,0.1,0.1]])
             let m2 = dsharp.multinomial(p2, numSamples=5000)
             let m2dtype = m2.dtype
-            let m2dtypeCorrect = DType.Int32
+            let m2dtypeCorrect = Dtype.Int32
             let m2mean = m2.float().mean(dim=1)
             let m2stddev = m2.float().stddev(dim=1)
             let m2meanCorrect = dsharp.tensor([1.3001, 0.3001]).float()
@@ -570,7 +570,7 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
-                | DType.Other _ -> failwith "unexpected user-defined type"
+                | Dtype.Other _ -> failwith "unexpected user-defined type"
             let t0StringCorrect = sprintf "Tensor 2%s" suffix
             let t1StringCorrect = sprintf "Tensor [[2%s], \n [2%s]]" suffix suffix
             let t2StringCorrect = sprintf "Tensor [[[2%s, 2%s]]]" suffix suffix
@@ -582,12 +582,12 @@ type TestTensor () =
             Assert.AreEqual(t3StringCorrect, t3String)
             Assert.AreEqual(t4StringCorrect, t4String)
 
-        let t0Bool = dsharp.tensor([ 0.5; 1.0 ], dtype=DType.Bool)
+        let t0Bool = dsharp.tensor([ 0.5; 1.0 ], dtype=Dtype.Bool)
         let t0BoolToString = t0Bool.ToString()
         let t0BoolToStringCorrect = sprintf "Tensor [false, true]" 
         Assert.AreEqual(t0BoolToString, t0BoolToStringCorrect)
 
-        let t1Bool = dsharp.tensor([ false; true ], dtype=DType.Bool)
+        let t1Bool = dsharp.tensor([ false; true ], dtype=Dtype.Bool)
         let t1BoolToString = t1Bool.ToString()
         let t1BoolToStringCorrect = sprintf "Tensor [false, true]" 
         Assert.AreEqual(t1BoolToString, t1BoolToStringCorrect)
@@ -637,7 +637,7 @@ type TestTensor () =
             Assert.AreEqual(t1Bt1CEqualCorrect, t1Bt1CEqual)
 
         for combo in Combos.All do 
-            for dtype2 in DTypes.All do 
+            for dtype2 in Dtypes.All do 
                  if combo.dtype <> dtype2 then 
                      isInvalidOp (fun () -> combo.tensor(1) = combo.tensor(1, dtype=dtype2))
 
@@ -705,13 +705,13 @@ type TestTensor () =
                 Assert.AreEqual(combo2.dtype, t2.dtype)
                 Assert.AreEqual(combo2.device, t2.device)
                 Assert.AreEqual(combo2.backend, t2.backend)
-                if combo2.dtype <> DType.Bool then // Conversion to bool is irreversible for tensor([0, 1, 2, 3])
+                if combo2.dtype <> Dtype.Bool then // Conversion to bool is irreversible for tensor([0, 1, 2, 3])
                     Assert.AreEqual(t1, t1b)
 
     [<Test>]
     member _.TestTensorCast () =
         for combo in Combos.IntegralAndFloatingPoint do 
-            for dtype2 in DTypes.IntegralAndFloatingPoint do 
+            for dtype2 in Dtypes.IntegralAndFloatingPoint do 
                 let t1 = combo.tensor([1.; 2.; 3.; 5.])
                 let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=dtype2)
                 let t1Cast = t1.cast(dtype2)
@@ -723,85 +723,85 @@ type TestTensor () =
                 Assert.AreEqual(t1, t2Cast)
 
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t1Bool = combo.tensor([true; false], dtype=DType.Bool)
+            let t1Bool = combo.tensor([true; false], dtype=Dtype.Bool)
             let t2Bool = combo.tensor([1.; 0.])
             let t1BoolCast = t1Bool.cast(combo.dtype)
-            let t2BoolCast = t2Bool.cast(DType.Bool)
+            let t2BoolCast = t2Bool.cast(Dtype.Bool)
 
             Assert.AreEqual(t1BoolCast.dtype, combo.dtype)
-            Assert.AreEqual(t2BoolCast.dtype, DType.Bool)
+            Assert.AreEqual(t2BoolCast.dtype, Dtype.Bool)
             Assert.AreEqual(t1BoolCast, t2Bool)
             Assert.AreEqual(t1Bool, t2BoolCast)
 
         for combo in Combos.IntegralAndFloatingPoint do 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int8)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Int8)
             let t1Cast = t1.int8()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Int8)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Int8)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int16)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Int16)
             let t1Cast = t1.int16()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Int16)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Int16)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int32)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Int32)
             let t1Cast = t1.int32()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Int32)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Int32)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int32)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Int32)
             let t1Cast = t1.int()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Int32)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Int32)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Int64)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Int64)
             let t1Cast = t1.int64()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Int64)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Int64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float32)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Float32)
             let t1Cast = t1.float32()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Float32)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Float32)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Float64)
             let t1Cast = t1.float64()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Float64)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Float64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Float64)
             let t1Cast = t1.float()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Float64)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Float64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
-            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=DType.Float64)
+            let t2 = combo.tensor([1.; 2.; 3.; 5.], dtype=Dtype.Float64)
             let t1Cast = t1.double()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Float64)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Float64)
             Assert.AreEqual(t1Cast, t2)
 
             let t1 = combo.tensor([1.; 0.])
-            let t2 = combo.tensor([1.; 0.], dtype=DType.Bool)
+            let t2 = combo.tensor([1.; 0.], dtype=Dtype.Bool)
             let t1Cast = t1.bool()
 
-            Assert.AreEqual(t1Cast.dtype, DType.Bool)
+            Assert.AreEqual(t1Cast.dtype, Dtype.Bool)
             Assert.AreEqual(t1Cast, t2)
 
     [<Test>]
@@ -824,17 +824,17 @@ type TestTensor () =
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 3.; 5.; 4.])
             let t1t2Lt = t1.lt(t2)
-            let t1t2LtCorrect = combo.tensor([0.; 1.; 1.; 0.], dtype=DType.Bool)
+            let t1t2LtCorrect = combo.tensor([0.; 1.; 1.; 0.], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1t2LtCorrect, t1t2Lt)
-            Assert.AreEqual(DType.Bool, t1t2Lt.dtype)
+            Assert.AreEqual(Dtype.Bool, t1t2Lt.dtype)
 
         for combo in Combos.Bool do 
             // Test bool type separately
             let t1Bool = combo.tensor([true; true; false; false ])
             let t2Bool = combo.tensor([true; false; true; false ])
             let t1Boolt2BoolLt = t1Bool.lt(t2Bool)
-            let t1Boolt2BoolLtCorrect = combo.tensor([false; false; true; false ], dtype=DType.Bool)
+            let t1Boolt2BoolLtCorrect = combo.tensor([false; false; true; false ], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1Boolt2BoolLtCorrect, t1Boolt2BoolLt)
 
@@ -845,17 +845,17 @@ type TestTensor () =
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 3.; 5.; 4.])
             let t1t2Le = t1.le(t2)
-            let t1t2LeCorrect = combo.tensor([1.; 1.; 1.; 0.], dtype=DType.Bool)
+            let t1t2LeCorrect = combo.tensor([1.; 1.; 1.; 0.], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1t2LeCorrect, t1t2Le)
-            Assert.AreEqual(DType.Bool, t1t2Le.dtype)
+            Assert.AreEqual(Dtype.Bool, t1t2Le.dtype)
 
         // Test bool type separately
         for combo in Combos.Bool do 
             let t1Bool = combo.tensor([true; true; false; false ])
             let t2Bool = combo.tensor([true; false; true; false ])
             let t1Boolt2BoolLe = t1Bool.le(t2Bool)
-            let t1Boolt2BoolLeCorrect = combo.tensor([true; false; true; true ], dtype=DType.Bool)
+            let t1Boolt2BoolLeCorrect = combo.tensor([true; false; true; true ], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1Boolt2BoolLeCorrect, t1Boolt2BoolLe)
 
@@ -866,17 +866,17 @@ type TestTensor () =
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 3.; 5.; 4.])
             let t1t2Gt = t1.gt(t2)
-            let t1t2GtCorrect = combo.tensor([0.; 0.; 0.; 1.], dtype=DType.Bool)
+            let t1t2GtCorrect = combo.tensor([0.; 0.; 0.; 1.], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1t2GtCorrect, t1t2Gt)
-            Assert.AreEqual(DType.Bool, t1t2Gt.dtype)
+            Assert.AreEqual(Dtype.Bool, t1t2Gt.dtype)
 
         // Test bool type separately
         for combo in Combos.Bool do 
             let t1Bool = combo.tensor([true; true; false; false ])
             let t2Bool = combo.tensor([true; false; true; false ])
             let t1Boolt2BoolGt = t1Bool.gt(t2Bool)
-            let t1Boolt2BoolGtCorrect = combo.tensor([false; true; false; false ], dtype=DType.Bool)
+            let t1Boolt2BoolGtCorrect = combo.tensor([false; true; false; false ], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1Boolt2BoolGtCorrect, t1Boolt2BoolGt)
 
@@ -887,10 +887,10 @@ type TestTensor () =
             let t1 = combo.tensor([1.; 2.; 3.; 5.])
             let t2 = combo.tensor([1.; 3.; 5.; 4.])
             let t1t2Ge = t1.ge(t2)
-            let t1t2GeCorrect = combo.tensor([1.; 0.; 0.; 1.], dtype=DType.Bool)
+            let t1t2GeCorrect = combo.tensor([1.; 0.; 0.; 1.], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1t2GeCorrect, t1t2Ge)
-            Assert.AreEqual(DType.Bool, t1t2Ge.dtype)
+            Assert.AreEqual(Dtype.Bool, t1t2Ge.dtype)
 
         // Test bool type separately
         for combo in Combos.Bool do 
@@ -898,7 +898,7 @@ type TestTensor () =
             let t1Bool = combo.tensor([true; true; false; false ])
             let t2Bool = combo.tensor([true; false; true; false ])
             let t1Boolt2BoolGe = t1Bool.ge(t2Bool)
-            let t1Boolt2BoolGeCorrect = combo.tensor([true; true; false; true ], dtype=DType.Bool)
+            let t1Boolt2BoolGeCorrect = combo.tensor([true; true; false; true ], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1Boolt2BoolGeCorrect, t1Boolt2BoolGe)
 
@@ -908,14 +908,14 @@ type TestTensor () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([1.; infinity; 3.; -infinity])
             let i = dsharp.isinf(t)
-            let iCorrect = combo.tensor([0.; 1.; 0.; 1.], dtype=DType.Bool)
+            let iCorrect = combo.tensor([0.; 1.; 0.; 1.], dtype=Dtype.Bool)
             Assert.AreEqual(iCorrect, i)
 
         // Integer tensors always return 0 for isinf
         for combo in Combos.IntegralAndBool do 
             let t = combo.tensor([1.; 0.; 1.])
             let i = dsharp.isinf(t)
-            let iCorrect = combo.tensor([0.; 0.; 0.], dtype=DType.Bool)
+            let iCorrect = combo.tensor([0.; 0.; 0.], dtype=Dtype.Bool)
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
@@ -924,14 +924,14 @@ type TestTensor () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([1.; nan; 3.; nan])
             let i = dsharp.isnan(t)
-            let iCorrect = combo.tensor([false; true; false; true], dtype=DType.Bool)
+            let iCorrect = combo.tensor([false; true; false; true], dtype=Dtype.Bool)
             Assert.AreEqual(iCorrect, i)
 
         // Integer and bool tensors always return false for isnan
         for combo in Combos.IntegralAndBool do 
             let t = combo.tensor([1.; 0.; 1.])
             let i = dsharp.isnan(t)
-            let iCorrect = combo.tensor([0.; 0.; 0.], dtype=DType.Bool)
+            let iCorrect = combo.tensor([0.; 0.; 0.], dtype=Dtype.Bool)
             Assert.AreEqual(iCorrect, i)
 
     [<Test>]
@@ -1040,8 +1040,8 @@ type TestTensor () =
     member _.TestTensorAddTT () =
         // Test all pairs of non-bool types
         for combo in Combos.IntegralAndFloatingPoint do 
-            for dtype2 in DTypes.IntegralAndFloatingPoint do 
-                match DType.widen combo.dtype dtype2 with 
+            for dtype2 in Dtypes.IntegralAndFloatingPoint do 
+                match Dtype.widen combo.dtype dtype2 with 
                 | None -> ()
                 | Some dtypeRes -> 
                 let t1 = combo.tensor([1.; 2.]) + combo.tensor([3.; 4.], dtype=dtype2)
@@ -1388,8 +1388,8 @@ type TestTensor () =
     member _.TestTensorSubTT () =
         // Test all pairs of non-bool types, for widening
         for combo in Combos.IntegralAndFloatingPoint do 
-            for dtype2 in DTypes.IntegralAndFloatingPoint do 
-                match DType.widen combo.dtype dtype2 with 
+            for dtype2 in Dtypes.IntegralAndFloatingPoint do 
+                match Dtype.widen combo.dtype dtype2 with 
                 | None -> ()
                 | Some dtypeRes -> 
 
@@ -1440,8 +1440,8 @@ type TestTensor () =
     member _.TestTensorMulTT () =
         // Test all pairs of non-bool types
         for combo in Combos.IntegralAndFloatingPoint do 
-            for dtype2 in DTypes.IntegralAndFloatingPoint do 
-                match DType.widen combo.dtype dtype2 with 
+            for dtype2 in Dtypes.IntegralAndFloatingPoint do 
+                match Dtype.widen combo.dtype dtype2 with 
                 | None -> ()
                 | Some dtypeRes -> 
                 let t1 = combo.tensor([1.; 2.]) * combo.tensor([3.; 4.], dtype=dtype2)
@@ -1736,16 +1736,16 @@ type TestTensor () =
         for combo in Combos.Integral do
             let t1 = combo.arange(6.).view([2; 3])
             let t1a = dsharp.trace(t1)
-            let t1aCorrect = combo.tensor(4., dtype=DType.Int64)
+            let t1aCorrect = combo.tensor(4., dtype=Dtype.Int64)
             let t2 = combo.arange(9.).view([3;3])
             let t2a = dsharp.trace(t2)
-            let t2aCorrect = combo.tensor(12., dtype=DType.Int64)
+            let t2aCorrect = combo.tensor(12., dtype=Dtype.Int64)
             Assert.AreEqual(t1aCorrect, t1a)
             Assert.AreEqual(t2aCorrect, t2a)
 
         for combo in Combos.Bool do
             let t1a = combo.tensor([[true]]).trace()
-            let t1aCorrect = combo.tensor(1., dtype=DType.Int64)
+            let t1aCorrect = combo.tensor(1., dtype=Dtype.Int64)
             Assert.AreEqual(t1aCorrect, t1a)
 
     [<Test>]
@@ -1767,7 +1767,7 @@ type TestTensor () =
                                               [0, 3, 8]],
                                      
                                              [[2, 3, 6],
-                                              [0, 3, 6]]], dtype=DType.Int32)
+                                              [0, 3, 6]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3Correct, tk3)
             Assert.AreEqual(tk3iCorrect, tk3i)
 
@@ -1781,7 +1781,7 @@ type TestTensor () =
                                                 [0, 3, 7, 8]],
                                        
                                                [[1, 2, 6, 9],
-                                                [0, 2, 6, 9]]], dtype=DType.Int32)
+                                                [0, 2, 6, 9]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3p1iCorrect, tk3p1i)
             Assert.AreEqual(tk3p1Correct, tk3p1)
 
@@ -1795,7 +1795,7 @@ type TestTensor () =
                                                   [0, 3, 6, 8]],
                                          
                                                  [[2, 2, 6, 6],
-                                                  [0, 2, 6, 6]]], dtype=DType.Int32)
+                                                  [0, 2, 6, 6]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3s2iCorrect, tk3s2i)
             Assert.AreEqual(tk3s2Correct, tk3s2)
 
@@ -1809,7 +1809,7 @@ type TestTensor () =
                                                   [0, 3, 7, 8]],
                                          
                                                  [[1, 2, 6, 9],
-                                                  [0, 2, 6, 9]]], dtype=DType.Int32)
+                                                  [0, 2, 6, 9]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk4s3p2iCorrect, tk4s3p2i)
             Assert.AreEqual(tk4s3p2Correct, tk4s3p2)
 
@@ -1881,7 +1881,7 @@ type TestTensor () =
                                                   [32, 36]],
 
                                                  [[ 9, 13],
-                                                  [25, 27]]]], dtype=DType.Int32)
+                                                  [25, 27]]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3Correct, tk3)
             Assert.AreEqual(tk3iCorrect, tk3i)
 
@@ -1917,7 +1917,7 @@ type TestTensor () =
 
                                                  [[ 9,  4, 13],
                                                   [25, 19, 38],
-                                                  [56, 60, 47]]]], dtype=DType.Int32)
+                                                  [56, 60, 47]]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3p1iCorrect, tk3p1i)
             Assert.AreEqual(tk3p1Correct, tk3p1)
 
@@ -1953,7 +1953,7 @@ type TestTensor () =
 
                                                  [[ 9,  4, 13],
                                                   [25, 19, 38],
-                                                  [50, 50, 38]]]], dtype=DType.Int32)
+                                                  [50, 50, 38]]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk3s2iCorrect, tk3s2i)
             Assert.AreEqual(tk3s2Correct, tk3s2)
 
@@ -1989,7 +1989,7 @@ type TestTensor () =
 
                                                      [[ 9,  4, 13],
                                                       [ 9,  9, 38],
-                                                      [56, 60, 38]]]], dtype=DType.Int32)
+                                                      [56, 60, 38]]]], dtype=Dtype.Int32)
             Assert.AreEqual(tk4s3p2iCorrect, tk4s3p2i)
             Assert.AreEqual(tk4s3p2Correct, tk4s3p2)
 
@@ -2085,7 +2085,7 @@ type TestTensor () =
                                                 [15, 18]],
                                      
                                                [[56, 83],
-                                                [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+                                                [90, 88]]]], dtype=Dtype.Int32).unsqueeze(0)
             Assert.AreEqual(tk2Correct, tk2)
             Assert.AreEqual(tk2iCorrect, tk2i)
 
@@ -2137,7 +2137,7 @@ type TestTensor () =
                                          
                                                    [[ 75,  76,  78],
                                                     [105, 111,  83],
-                                                    [ 90,  91,  93]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [ 90,  91,  93]]]], dtype=Dtype.Int32).unsqueeze(0)
             Assert.AreEqual(tk2p1iCorrect, tk2p1i)
             Assert.AreEqual(tk2p1Correct, tk2p1)
 
@@ -2165,7 +2165,7 @@ type TestTensor () =
                                                     [ 15,  44]],
                                          
                                                    [[ 76,  83],
-                                                    [ 90,  93]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [ 90,  93]]]], dtype=Dtype.Int32).unsqueeze(0)
             Assert.AreEqual(tk2s3iCorrect, tk2s3i)
             Assert.AreEqual(tk2s3Correct, tk2s3)
 
@@ -2193,7 +2193,7 @@ type TestTensor () =
                                                     [15, 18]],
                                          
                                                    [[50, 78],
-                                                    [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [90, 88]]]], dtype=Dtype.Int32).unsqueeze(0)
             Assert.AreEqual(tk2s3p1iCorrect, tk2s3p1i)
             Assert.AreEqual(tk2s3p1Correct, tk2s3p1)
 
@@ -2213,7 +2213,7 @@ type TestTensor () =
                                           [0, 3, 8]],
                                  
                                          [[2, 3, 6],
-                                          [0, 3, 6]]], dtype=DType.Int32)
+                                          [0, 3, 6]]], dtype=Dtype.Int32)
             let tk3u = dsharp.maxunpool1d(tk3, tk3i, 3)
             let tk3uCorrect = combo.tensor([[[ 0.0000,  0.0000,  2.5995,  1.3858,  0.0000,  0.0000,  0.9593,  0.0000,  0.0000],
                                              [ 0.4564,  0.0000,  0.0000,  0.4587,  0.0000,  0.0000,  0.0000,  0.0000,  1.1539]],
@@ -2231,7 +2231,7 @@ type TestTensor () =
                                                 [0, 3, 7, 8]],
                                        
                                                [[1, 2, 6, 9],
-                                                [0, 2, 6, 9]]], dtype=DType.Int32)
+                                                [0, 2, 6, 9]]], dtype=Dtype.Int32)
             let tk3p1u = dsharp.maxunpool1d(tk3p1, tk3p1i, 3, padding=1)
             let tk3p1uCorrect = combo.tensor([[[ 0.0000, -1.1558,  2.5995,  0.0000,  0.0000,  0.0000,  0.9593,
                                                    0.0000,  0.7169,  0.0000],
@@ -2253,7 +2253,7 @@ type TestTensor () =
                                                   [0, 3, 6, 8]],
                                          
                                                  [[2, 2, 6, 6],
-                                                  [0, 2, 6, 6]]], dtype=DType.Int32)
+                                                  [0, 2, 6, 6]]], dtype=Dtype.Int32)
             let tk3s2u = dsharp.maxunpool1d(tk3s2, tk3s2i, 3, stride=2)
             let tk3s2uCorrect = combo.tensor([[[ 0.0000,  0.0000,  2.5995,  0.0000,  0.0000,  0.0000,  0.9593,
                                                    0.0000,  0.0000],
@@ -2275,7 +2275,7 @@ type TestTensor () =
                                                   [0, 3, 7, 8]],
                                          
                                                  [[1, 2, 6, 9],
-                                                  [0, 2, 6, 9]]], dtype=DType.Int32)
+                                                  [0, 2, 6, 9]]], dtype=Dtype.Int32)
             let tk4s3p2u = dsharp.maxunpool1d(tk4s3p2, tk4s3p2i, 4, stride=3, padding=2, outputSize=[2;2;10])
             let tk4s3p2uCorrect = combo.tensor([[[ 0.0000, -1.1558,  2.5995,  0.0000,  0.0000,  0.0000,  0.9593,
                                                    0.0000,  0.7169,  0.0000],
@@ -2314,7 +2314,7 @@ type TestTensor () =
                                                   [32, 36]],
 
                                                  [[ 9, 13],
-                                                  [25, 27]]]], dtype=DType.Int32)
+                                                  [25, 27]]]], dtype=Dtype.Int32)
             let tk3u = dsharp.maxunpool2d(tk3, tk3i, 3, outputSize=[2;2;8;8])
             let tk3uCorrect = combo.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                                               [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -2385,7 +2385,7 @@ type TestTensor () =
 
                                                  [[ 9,  4, 13],
                                                   [25, 19, 38],
-                                                  [56, 60, 47]]]], dtype=DType.Int32)
+                                                  [56, 60, 47]]]], dtype=Dtype.Int32)
             let tk3p1u = dsharp.maxunpool2d(tk3p1, tk3p1i, 3, padding=1, outputSize=[2;2;8;8])
             let tk3p1uCorrect = combo.tensor([[[[0.7372, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.3801, 0.0000],
                                                   [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -2456,7 +2456,7 @@ type TestTensor () =
 
                                                  [[ 9,  4, 13],
                                                   [25, 19, 38],
-                                                  [50, 50, 38]]]], dtype=DType.Int32)
+                                                  [50, 50, 38]]]], dtype=Dtype.Int32)
             let tk3s2u = dsharp.maxunpool2d(tk3s2, tk3s2i, 3, stride=2, outputSize=[2;2;8;8])
             let tk3s2uCorrect = combo.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                                                   [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -2527,7 +2527,7 @@ type TestTensor () =
 
                                                      [[ 9,  4, 13],
                                                       [ 9,  9, 38],
-                                                      [56, 60, 38]]]], dtype=DType.Int32)
+                                                      [56, 60, 38]]]], dtype=Dtype.Int32)
             let tk4s3p2u = dsharp.maxunpool2d(tk4s3p2, tk4s3p2i, 4, stride=3, padding=2, outputSize=[2;2;8;8])
             let tk4s3p2uCorrect = combo.tensor([[[[0.7372, 0.0000, 0.0000, 0.0000, 1.0141, 0.0000, 0.0000, 0.0000],
                                                   [0.0000, 0.0000, 1.8489, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -2594,7 +2594,7 @@ type TestTensor () =
                                         [15, 18]],
                              
                                        [[56, 83],
-                                        [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+                                        [90, 88]]]], dtype=Dtype.Int32).unsqueeze(0)
             let tk2u = dsharp.maxunpool3d(tk2, tk2i, 2, outputSize=[1;2;5;5;5])
             let tk2uCorrect = combo.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                                                [0.0000, 1.5542, 0.5720, 0.0000, 0.0000],
@@ -2705,7 +2705,7 @@ type TestTensor () =
                                          
                                                    [[ 75,  76,  78],
                                                     [105, 111,  83],
-                                                    [ 90,  91,  93]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [ 90,  91,  93]]]], dtype=Dtype.Int32).unsqueeze(0)
             let tk2p1u = dsharp.maxunpool3d(tk2p1, tk2p1i, 2, padding=1, outputSize=[1;2;5;5;5])
             let tk2p1uCorrect = combo.tensor([[[[ 0.4633,  0.9173,  0.0000,  0.0000, -0.1077],
                                                    [ 0.0000,  1.5542,  0.0000,  0.0000,  0.0000],
@@ -2792,7 +2792,7 @@ type TestTensor () =
                                                     [ 15,  44]],
                                          
                                                    [[ 76,  83],
-                                                    [ 90,  93]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [ 90,  93]]]], dtype=Dtype.Int32).unsqueeze(0)
             let tk2s3u = dsharp.maxunpool3d(tk2s3, tk2s3i, 2, stride=3, outputSize=[1;2;5;5;5])
             let tk2s3uCorrect = combo.tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                                                    [0.0000, 1.5542, 0.0000, 0.0000, 0.0000],
@@ -2879,7 +2879,7 @@ type TestTensor () =
                                                     [15, 18]],
                                          
                                                    [[50, 78],
-                                                    [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+                                                    [90, 88]]]], dtype=Dtype.Int32).unsqueeze(0)
             let tk2s3p1u = dsharp.maxunpool3d(tk2s3p1, tk2s3p1i, 2, stride=3, padding=1, outputSize=[1;2;5;5;5])
             let tk2s3p1uCorrect = combo.tensor([[[[ 0.4633,  0.0000,  0.4568,  0.0000,  0.0000],
                                                    [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
@@ -3107,8 +3107,8 @@ type TestTensor () =
             Assert.AreEqual(z, zCorrect)
 
         // check types must always match
-        for dtype1 in DTypes.All do 
-            for dtype2 in DTypes.All do 
+        for dtype1 in Dtypes.All do 
+            for dtype2 in Dtypes.All do 
                 if dtype1 <> dtype2 then 
                     let x = dsharp.zeros([1;4;4], dtype=dtype1)
                     let y = dsharp.zeros([1;4;4], dtype=dtype2)
@@ -3450,8 +3450,8 @@ type TestTensor () =
             Assert.AreEqual(z, zCorrect)
 
         // check types must always match
-        for dtype1 in DTypes.All do 
-            for dtype2 in DTypes.All do 
+        for dtype1 in Dtypes.All do 
+            for dtype2 in Dtypes.All do 
                 if dtype1 <> dtype2 then 
                     let x = dsharp.zeros([1;1;4;4], dtype=dtype1)
                     let y = dsharp.zeros([1;1;4;4], dtype=dtype2)
@@ -3724,7 +3724,7 @@ type TestTensor () =
             Assert.AreEqual(t1SumCorrect, t1Sum)
 
             // Now test cases where result type is set explicitly
-            for dtype2 in DTypes.IntegralAndFloatingPoint do
+            for dtype2 in Dtypes.IntegralAndFloatingPoint do
                 let t1SumTyped = t1.sum(dtype=dtype2)
                 let t1SumTypedCorrect = combo.tensor(6., dtype=dtype2)
                 Assert.AreEqual(t1SumTyped.dtype, dtype2)
@@ -3741,7 +3741,7 @@ type TestTensor () =
             // Sum of Bool tensor is Int64 tensor in pytorch
             let t3a = combo.tensor([true; true; false])
             let t3 = t3a.sum()
-            let t3Correct = combo.tensor(2, dtype=DType.Int64)
+            let t3Correct = combo.tensor(2, dtype=Dtype.Int64)
             Assert.AreEqual(t3, t3Correct)
 
     [<Test>]
@@ -4073,8 +4073,8 @@ type TestTensor () =
         // Test bool type separately
         // Note, PyTorch 'torch.tensor([True, False]).sign()' gives 'tensor([ True, False])'
         for combo in Combos.AllDevicesAndBackends do
-            let t1Bool = combo.tensor([true;false], dtype=DType.Bool)
-            let t1BoolSignCorrect = combo.tensor([true; false], dtype=DType.Bool)
+            let t1Bool = combo.tensor([true;false], dtype=Dtype.Bool)
+            let t1BoolSignCorrect = combo.tensor([true; false], dtype=Dtype.Bool)
 
             Assert.AreEqual(t1BoolSignCorrect, t1Bool.sign())
 
@@ -4138,7 +4138,7 @@ type TestTensor () =
         // Test bool separately
         // Note: PyTorch fails on 'torch.tensor([True, False]).abs()'
         for combo in Combos.AllDevicesAndBackends do
-            let t1 = combo.tensor([true; false], dtype=DType.Bool)
+            let t1 = combo.tensor([true; false], dtype=Dtype.Bool)
             isInvalidOp (fun () -> t1.abs())
 
     [<Test>]
@@ -4153,7 +4153,7 @@ type TestTensor () =
 
         // Test bool separately
         for combo in Combos.AllDevicesAndBackends do
-            let t1 = combo.tensor([true; false], dtype=DType.Bool)
+            let t1 = combo.tensor([true; false], dtype=Dtype.Bool)
             isInvalidOp (fun () -> t1.relu())
 
     [<Test>]
@@ -4745,14 +4745,14 @@ type TestTensor () =
     member _.TestTensorGather () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3,4,5])
-            let t1g = dsharp.gather(t1, 0, combo.tensor([0,2,3], dtype=DType.Int32))
+            let t1g = dsharp.gather(t1, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
             let t1gCorrect = combo.tensor([1, 3, 4])
 
             let t2 = combo.tensor([[1,2],[3,4]])
-            let t2g0 = dsharp.gather(t2, 0, combo.tensor([[0,1],[1,0]], dtype=DType.Int32))
+            let t2g0 = dsharp.gather(t2, 0, combo.tensor([[0,1],[1,0]], dtype=Dtype.Int32))
             let t2g0Correct = combo.tensor([[1, 4],
                                              [3, 2]])
-            let t2g1 = dsharp.gather(t2, 1, combo.tensor([[0,0,1],[1,0,0]], dtype=DType.Int32))
+            let t2g1 = dsharp.gather(t2, 1, combo.tensor([[0,0,1],[1,0,0]], dtype=Dtype.Int32))
             let t2g1Correct = combo.tensor([[1, 1, 2],
                                              [4, 3, 3]])
 

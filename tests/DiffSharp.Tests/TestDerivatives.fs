@@ -358,7 +358,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMaxUnpool1D () =
-        let indices = dsharp.tensor([[[2, 3, 6], [0, 3, 8]], [[2, 3, 6], [0, 3, 6]]], dtype=DType.Int32)
+        let indices = dsharp.tensor([[[2, 3, 6], [0, 3, 8]], [[2, 3, 6], [0, 3, 6]]], dtype=Dtype.Int32)
         let fwdx = dsharp.tensor([[[ 2.5995,  1.3858,  0.9593],
                                     [ 0.4564,  0.4587,  1.1539]],
                            
@@ -628,7 +628,7 @@ type TestDerivatives () =
                                        [32, 36]],
                              
                                       [[ 9, 13],
-                                       [25, 27]]]], dtype=DType.Int32)
+                                       [25, 27]]]], dtype=Dtype.Int32)
         let fwdx = dsharp.tensor([[[[1.8489, 1.1338],
                                      [0.6819, 1.6331]],
                            
@@ -1146,7 +1146,7 @@ type TestDerivatives () =
                                         [15, 18]],
                              
                                        [[56, 83],
-                                        [90, 88]]]], dtype=DType.Int32).unsqueeze(0)
+                                        [90, 88]]]], dtype=Dtype.Int32).unsqueeze(0)
         let fwdx = dsharp.tensor([[[[1.5542, 0.5720],
                                     [1.5415, 1.3066]],
                          
@@ -4716,13 +4716,13 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeGather () =
         let fwdx = dsharp.tensor([1,2,3,4,5]).forwardDiff(dsharp.tensor([10,20,30,40,50]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
         let fwdzCorrect = dsharp.tensor([1,3,4])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor([10,30,40])
 
         let revx = dsharp.tensor([1,2,3,4,5]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=DType.Int32))
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
         let revzCorrect = dsharp.tensor([1,3,4])
         revz.reverse(dsharp.tensor([10,30,40]))
         let revxd = revx.derivative
@@ -4734,13 +4734,13 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
         let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
         let fwdzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor([[40,20,60],[10,50,60]])
 
         let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
         let revzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
         revz.reverse(dsharp.tensor([[40,20,60],[10,50,60]]))
         let revxd = revx.derivative
@@ -4752,13 +4752,13 @@ type TestDerivatives () =
         Assert.AreEqual(revxdCorrect, revxd)
 
         let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
         let fwdzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
         let fwdzd = fwdz.derivative
         let fwdzdCorrect = dsharp.tensor([[20,10,20],[40,50,50]])
 
         let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=DType.Int32))
+        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
         let revzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
         revz.reverse(dsharp.tensor([[20,10,20],[40,50,50]]))
         let revxd = revx.derivative

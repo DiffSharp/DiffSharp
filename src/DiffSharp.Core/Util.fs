@@ -155,7 +155,7 @@ module Shape =
         let outputShape = [| ncols; nrows |]
         outputShape
 
-    let checkCanConv1d (dtype1: DType) (dtype2: DType) (shape1:Shape) (shape2:Shape) (stride: int) (padding: int) (dilation: int) =
+    let checkCanConv1d (dtype1: Dtype) (dtype2: Dtype) (shape1:Shape) (shape2:Shape) (stride: int) (padding: int) (dilation: int) =
         if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
         if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
         if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
@@ -174,7 +174,7 @@ module Shape =
         let outputShape = [|batchSize; outputChannels; outputSize|]
         batchSize, inputChannels, kernelLength, outputChannels, outputSize, outputShape
 
-    let checkCanConv2d (dtype1: DType) (dtype2: DType) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
+    let checkCanConv2d (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
         if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
         if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
         if stride.Length <> 2 then failwithf "Expecting stride (%A) to be a two-dimensional array" stride
@@ -201,7 +201,7 @@ module Shape =
         let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
         batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape
 
-    let checkCanConv3d (dtype1: DType) (dtype2: DType) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
+    let checkCanConv3d (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
         if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
         if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
         if stride.Length <> 3 then failwithf "Expecting stride (%A) to be a length-three array" stride
@@ -295,8 +295,8 @@ module Shape =
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
 
-    let checkCanMaxunpool1d (shape: Shape) (indicesDtype: DType) (indicesShape: Shape) (outputSize: int[]) =
-        if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    let checkCanMaxunpool1d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 3 then failwithf "Expecting outputSize (%A) to be 3-dimensional" outputSize
         let batchSize = shape.[0]
         let channels = shape.[1]
@@ -305,8 +305,8 @@ module Shape =
         let outputShape = [|batchSize; channels; outputSize.[2]|]
         batchSize, channels, inputSize, outputShape
 
-    let checkCanMaxunpool2d (shape: Shape) (indicesDtype: DType) (indicesShape: Shape) (outputSize: int[]) =
-        if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    let checkCanMaxunpool2d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 4 then failwithf "Expecting outputSize (%A) to be 4-dimensional" outputSize
         let batchSize = shape.[0]
         let channels = shape.[1]
@@ -316,8 +316,8 @@ module Shape =
         let outputShape = [|batchSize; channels; outputSize.[2]; outputSize.[3]|]
         batchSize, channels, (inputHeight, inputWidth), outputShape
 
-    let checkCanMaxunpool3d (shape: Shape) (indicesDtype: DType) (indicesShape: Shape) (outputSize: int[]) =
-        if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+    let checkCanMaxunpool3d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 5 then failwithf "Expecting outputSize (%A) to be 5-dimensional" outputSize
         let batchSize = shape.[0]
         let channels = shape.[1]
@@ -352,11 +352,11 @@ module Shape =
         if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
         if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
 
-    let checkCanGather (shape: Shape) (dim: int) (indicesShape: Shape) (indicesDtype:DType) =
+    let checkCanGather (shape: Shape) (dim: int) (indicesShape: Shape) (indicesDtype:Dtype) =
         if shape.Length <> indicesShape.Length then failwithf "Expecting tensorShape (%A) and indicesShape (%A) to have the same number of dimensions" shape indicesShape
         if dim < 0 || dim > shape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensorShape.Length (%A)" dim shape.Length
         if indicesShape.[dim] < 1 then failwithf "Expecting indicesShape.[dim] (%A) >= 1" indicesShape.[dim]
-        if indicesDtype <> DType.Int32 then failwithf "Expecting indices to have type %A" DType.Int32
+        if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
 
     let checkCanView (shape1: Shape) (shape2: Shape) =
         if shapeLength shape1 <> shapeLength shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2

@@ -575,7 +575,7 @@ type TestDiffSharp () =
         Assert.AreEqual(Backend.Torch, Backend.Default)
         dsharp.config(backend=backend)
 
-        let dtype = DType.Default
-        dsharp.config(dtype=DType.Int32)
-        Assert.AreEqual(DType.Int32, DType.Default)
+        let dtype = Dtype.Default
+        dsharp.config(dtype=Dtype.Int32)
+        Assert.AreEqual(Dtype.Int32, Dtype.Default)
         dsharp.config(dtype=dtype)

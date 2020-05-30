@@ -11,13 +11,13 @@ open System.IO.Compression
 type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
-    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:DType, ?device:Device, ?backend:Backend, ?targetDtype:DType, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
+    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
 
 
-and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:DType, ?device:Device, ?backend:Backend, ?targetDtype:DType, ?targetDevice:Device, ?targetBackend:Backend) =
+and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
     let batchSize = min batchSize dataset.length
-    let dtype = defaultArg dtype DType.Default
+    let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
     let backend = defaultArg backend Backend.Default
     let targetDtype = defaultArg targetDtype dtype

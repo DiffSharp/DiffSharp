@@ -59,13 +59,13 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
-    member t.move(?dtype:DType, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype DType.Default
+    member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         let backend = defaultArg backend Backend.Default
         t.cast(dtype).move(device).move(backend)
 
-    member internal t.castAfterSummation(?dtype:DType) =
+    member internal t.castAfterSummation(?dtype:Dtype) =
         match dtype with
         | None -> t
         | Some dt -> t.cast(dt)
@@ -73,18 +73,18 @@ type Tensor =
     member t.cpu() = t.move(Device.CPU)
     member t.gpu() = t.move(Device.GPU)
 
-    member t.bool() = t.cast(DType.Bool)
-    member t.int8() = t.cast(DType.Int8)
-    member t.int16() = t.cast(DType.Int16)
-    member t.int32() = t.cast(DType.Int32)
-    member t.int() = t.cast(DType.Int32)
-    member t.int64() = t.cast(DType.Int64)
-    member t.float32() = t.cast(DType.Float32)
-    member t.float64() = t.cast(DType.Float64)
-    member t.float() = t.cast(DType.Float64)
-    member t.double() = t.cast(DType.Float64)
+    member t.bool() = t.cast(Dtype.Bool)
+    member t.int8() = t.cast(Dtype.Int8)
+    member t.int16() = t.cast(Dtype.Int16)
+    member t.int32() = t.cast(Dtype.Int32)
+    member t.int() = t.cast(Dtype.Int32)
+    member t.int64() = t.cast(Dtype.Int64)
+    member t.float32() = t.cast(Dtype.Float32)
+    member t.float64() = t.cast(Dtype.Float64)
+    member t.float() = t.cast(Dtype.Float64)
+    member t.double() = t.cast(Dtype.Float64)
 
-    member t.dtype = t.primalRaw.DType
+    member t.dtype = t.primalRaw.Dtype
     member t.device = t.primalRaw.Device
     member t.backend = t.primalRaw.Backend
 
@@ -284,7 +284,7 @@ type Tensor =
         let endVal = endVal |> float
         let startVal = defaultArg startVal 0 |> float
         let step = defaultArg step 1 |> float
-        let dtype = defaultArg dtype DType.Int32
+        let dtype = defaultArg dtype Dtype.Int32
         a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
@@ -297,8 +297,8 @@ type Tensor =
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
     member a.isinf() = Tensor(a.primalRaw.IsInfT())
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
-    member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=DType.Int64)
-    member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=DType.Int64)
+    member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
+    member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
     member a.maxIndex() = a.primalRaw.MaxIndexT()
     member a.minIndex() = a.primalRaw.MinIndexT()
     member a.max() = a.[a.maxIndex()]
@@ -373,7 +373,7 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    static member create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let res = value |> tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
         | Some (array, shape) -> 
@@ -388,17 +388,17 @@ type Tensor =
         if probs.dim = 1 then
             let p = 
                 match probs.dtype with
-                | DType.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
-                | DType.Float64 -> probs.toArray() :?> float[]
+                | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=Dtype.Int32)
         else
             let p = 
                 match probs.dtype with
-                | DType.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
-                | DType.Float64 -> probs.toArray() :?> float[,]
+                | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[,]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=Dtype.Int32)
 
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
@@ -479,7 +479,7 @@ type Tensor =
 
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            match DType.widen a.dtype b.dtype with
+            match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "+" a.dtype b.dtype 
             | Some tnew ->
                 let aCast = a.cast(tnew)
@@ -547,7 +547,7 @@ type Tensor =
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            match DType.widen a.dtype b.dtype with
+            match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "-" a.dtype b.dtype 
             | Some tnew ->
                 let aCast = a.cast(tnew)
@@ -595,7 +595,7 @@ type Tensor =
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            match DType.widen a.dtype b.dtype with
+            match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "*" a.dtype b.dtype 
             | Some tnew ->
                 let aCast = a.cast(tnew)
@@ -643,7 +643,7 @@ type Tensor =
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            match DType.widen a.dtype b.dtype with
+            match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "/" a.dtype b.dtype 
             | Some tnew ->
                 let aCast = a.cast(tnew)
@@ -691,7 +691,7 @@ type Tensor =
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            match DType.widen a.dtype b.dtype with
+            match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "Pow" a.dtype b.dtype 
             | Some tnew ->
                 let aCast = a.cast(tnew)
@@ -768,7 +768,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member a.neg() = -a
 
-    member a.sum(?dtype: DType) =
+    member a.sum(?dtype: Dtype) =
         let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
         let fTensor(a:Tensor) = a.sum(?dtype=dtype)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
@@ -776,7 +776,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    member a.sum(dim:int, ?keepDim:bool, ?dtype: DType) =
+    member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
        let keepDim = defaultArg keepDim false
        let res =
         if dim = 0 && a.dim = 0 then a
@@ -797,7 +797,7 @@ type Tensor =
 
     /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
     /// from newShape to shape must be possible.
-    member a.sumToSize(newShape:int[], ?dtype: DType) =
+    member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
         if oldShape = newShape then
             a.cast(defaultArg dtype a.dtype.SummationType)
