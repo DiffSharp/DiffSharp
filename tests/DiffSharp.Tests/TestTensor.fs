@@ -702,9 +702,9 @@ type TestTensor () =
                 let t1 = combo1.tensor([0, 1, 2, 3])
                 let t2 = t1.move(combo2.dtype, combo2.device, combo2.backend)
                 let t1b = t2.move(combo1.dtype, combo1.device, combo1.backend)
-                Assert.AreEqual(t2.dtype, combo2.dtype)
-                Assert.AreEqual(t2.device, combo2.device)
-                Assert.AreEqual(t2.backend, combo2.backend)
+                Assert.AreEqual(combo2.dtype, t2.dtype)
+                Assert.AreEqual(combo2.device, t2.device)
+                Assert.AreEqual(combo2.backend, t2.backend)
                 if combo2.dtype <> DType.Bool then // Conversion to bool is irreversible for tensor([0, 1, 2, 3])
                     Assert.AreEqual(t1, t1b)
 

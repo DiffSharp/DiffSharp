@@ -208,6 +208,21 @@ type TestModel () =
         Assert.AreEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelMove () =
+        for combo1 in Combos.FloatingPoint do
+            for combo2 in Combos.FloatingPoint do
+                // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
+                dsharp.config(combo1.dtype, combo1.device, combo1.backend)
+                let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
+                Assert.AreEqual(combo1.dtype, net.parameters.dtype)
+                Assert.AreEqual(combo1.device, net.parameters.device)
+                Assert.AreEqual(combo1.backend, net.parameters.backend)
+                net.move(combo2.dtype, combo2.device, combo2.backend)
+                Assert.AreEqual(combo2.dtype, net.parameters.dtype)
+                Assert.AreEqual(combo2.device, net.parameters.device)
+                Assert.AreEqual(combo2.backend, net.parameters.backend)
+
+    [<Test>]
     member _.TestModelClone () =
         let net1 = ModelStyle1a()
         let p1 = net1.parameters
