@@ -11,8 +11,8 @@ open DiffSharp.Data
 let main _ =
     printfn "Hello World from F#!"
 
-    dsharp.seed(12)
     dsharp.config(backend=Backend.Torch)
+    dsharp.seed(12)
 
     let dataset = MNIST("./data", train=true)
     let dataloader = dataset.loader(16, shuffle=true)
@@ -42,8 +42,9 @@ let main _ =
 
     printfn "%A" net.parameters.backend
     Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=10, threshold=0.1)
-    let o = dsharp.randn([1;1;28;28]) --> net
-    printfn "%A %A" o o.backend
+    let i, t = dataset.item(0)
+    let o = i --> dsharp.move() --> dsharp.unsqueeze(0) --> net
+    printfn "%A %A %A" o o.backend t
 
 
     0 // return an integer exit code

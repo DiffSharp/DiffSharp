@@ -60,17 +60,10 @@ type Tensor =
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
     member t.move(?dtype:DType, ?device:Device, ?backend:Backend) =
-        let mutable tnew = t
-        match dtype with
-        | Some dt -> tnew <- tnew.cast(dt)
-        | None -> ()
-        match device with
-        | Some dv -> tnew <- tnew.move(dv)
-        | None -> ()
-        match backend with
-        | Some be -> tnew <- tnew.move(be)
-        | None -> ()
-        tnew
+        let dtype = defaultArg dtype DType.Default
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
+        t.cast(dtype).move(device).move(backend)
 
     member internal t.castAfterSummation(?dtype:DType) =
         match dtype with
