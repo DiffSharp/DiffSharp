@@ -116,13 +116,15 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
+        let confBackup = dsharp.config()
         for combo in Combos.All do
-            combo.randint(0,10,1) |> ignore // To ensure the backend assembly is loaded before dsharp.seed is called
+            dsharp.config(combo.dtype, combo.device, combo.backend)
             dsharp.seed(123)
             let t = combo.randint(0,10,[25])
             dsharp.seed(123)
             let t2 = combo.randint(0,10,[25])
             Assert.AreEqual(t, t2)
+        dsharp.config(confBackup)
 
     [<Test>]
     member this.TestDiff () =

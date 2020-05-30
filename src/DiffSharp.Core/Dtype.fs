@@ -108,7 +108,6 @@ type Dtype =
         | dt -> dt
 
 module Dtype =
-
     let (|FloatingPoint|_|) x =
         match x with
         | Float32 | Float64 -> Some()
