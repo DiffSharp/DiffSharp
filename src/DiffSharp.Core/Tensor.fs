@@ -35,35 +35,50 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
-    member internal t.castAfterSummation(dtype) =
-        match dtype with
-        | None -> t
-        | Some dt -> t.cast(dt)
-
-    member t.gpu() =
-        match t.device with 
-        | Device.GPU -> t
-        | _ -> 
-        match t with
-        | Tensor(tp) -> Tensor(tp.MoveTo(Device.GPU))
-        | TensorF(tp,_,_) -> failwith "cannot move TensorF to cuda - do not move a gradient pass"
-        | TensorR(tp,_,_,_,_) -> failwith "cannot move TensorR to cuda - do not move a gradient pass"
-
-    member t.cpu() =
-        match t.device with 
-        | Device.CPU -> t
-        | _ -> 
-        match t with
-        | Tensor(tp) -> Tensor(tp.MoveTo(Device.CPU))
-        | TensorF(tp,_,_) -> failwith "cannot move TensorF to cpu - do not move a gradient pass"
-        | TensorR(tp,_,_,_,_) -> failwith "cannot move TensorR to cpu - do not move a gradient pass"
-
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
         | Tensor(tp) -> Tensor(tp.Cast(dtype))
-        | TensorF(_,_,_) -> failwith "cannot cast TensorF"
-        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
+        | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
+        | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
+
+    member t.move(backend) =
+        if t.backend = backend then t else
+        match t with
+        | Tensor(tp) -> 
+            let tpflat = tp.ViewT([|tp.Nelement|]) //
+            let tpflatValues = tpflat.ToValues()
+            Tensor(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
+        | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
+        | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
+
+    member t.move(device) =
+        if t.device = device then t else
+        match t with
+        | Tensor(tp) -> Tensor(tp.MoveTo(device))
+        | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
+        | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
+
+    member t.move(?dtype:DType, ?device:Device, ?backend:Backend) =
+        let mutable tnew = t
+        match dtype with
+        | Some dt -> tnew <- tnew.cast(dt)
+        | None -> ()
+        match device with
+        | Some dv -> tnew <- tnew.move(dv)
+        | None -> ()
+        match backend with
+        | Some be -> tnew <- tnew.move(be)
+        | None -> ()
+        tnew
+
+    member internal t.castAfterSummation(?dtype:DType) =
+        match dtype with
+        | None -> t
+        | Some dt -> t.cast(dt)
+
+    member t.cpu() = t.move(Device.CPU)
+    member t.gpu() = t.move(Device.GPU)
 
     member t.bool() = t.cast(DType.Bool)
     member t.int8() = t.cast(DType.Int8)
@@ -735,6 +750,7 @@ type Tensor =
     member a.pow(b) = a ** a.scalarLike(b)
 
     member a.matmul (b:Tensor) =
+        printfn "aaaaa %A %A %A %A" a.backend a.shape b.backend b.shape
         Shape.checkCanMatmul a.shape b.shape
         let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
         let fTensor(a:Tensor,b) = a.matmul(b)
@@ -785,7 +801,7 @@ type Tensor =
                 s <- s + a.GetSlice(sBounds).cast(a.dtype.SummationType)
             s
        let res2 = if keepDim then res.unsqueeze(dim) else res
-       res2.castAfterSummation(dtype)
+       res2.castAfterSummation(?dtype=dtype)
 
     /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
     /// from newShape to shape must be possible.
@@ -806,7 +822,7 @@ type Tensor =
             for dim in 0 .. newShape.Length-1 do 
                 if oldShape.[trim+dim] <> newShape.[dim] then 
                     result <- result.sum(dim, keepDim=true)
-            result.castAfterSummation(dtype)
+            result.castAfterSummation(?dtype=dtype)
 
     member a.mean() = a.sum() / a.nelement
 

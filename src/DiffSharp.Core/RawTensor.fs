@@ -341,7 +341,7 @@ and [<AbstractClass>]
         match t.Dim with
         | 0 -> failwithf "Cannot convert scalar Tensor to array"
         | _ ->
-            match t.ToValues()with 
+            match t.ToValues() with 
             | :? System.Array as a -> a
             | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
 
