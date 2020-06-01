@@ -26,7 +26,7 @@ and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?
     member d.length = defaultArg numBatches (dataset.length/batchSize)
     member d.epoch() =
         let indexer = if shuffle then shuffledIndices (dataset.length) else id
-        let indices = Seq.init d.length id |> Seq.map indexer
+        let indices = Seq.init dataset.length id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
