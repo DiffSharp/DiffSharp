@@ -4833,9 +4833,9 @@ type TestDerivatives () =
             let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
             let revz = revx.mean()
             let revzCorrect = combo.tensor(2.)
-            revz.reverse(combo.tensor(3.))
+            revz.reverse(combo.tensor(30.))
             let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([1.; 1.; 1.])
+            let revxdCorrect = combo.tensor([10.; 10.; 10.])
 
             Assert.AreEqual(revzCorrect, revz)
             Assert.AreEqual(revxdCorrect, revxd)
