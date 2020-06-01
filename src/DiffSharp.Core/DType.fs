@@ -1,4 +1,4 @@
-﻿namespace rec DiffSharp
+﻿namespace DiffSharp
 
 type Device =
     | CPU
@@ -17,12 +17,11 @@ type Device =
         | GPU -> "GPU"
         | Other (name, _code) -> name
 
-    static member Default = Device.CPU
-
 module Device = 
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Device>()
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Device.Other(name, count.Value)))
+    let mutable Default = Device.CPU
 
 [<RequireQualifiedAccess>]
 type Backend =
@@ -30,8 +29,6 @@ type Backend =
     | Torch
     | OpenBLAS
     | Other of name: string * code: int
-
-    static member Default = Backend.Reference
 
     member internal x.Code = 
         match x with 
@@ -51,55 +48,99 @@ module Backend =
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Backend>()
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
+    let mutable Default = Backend.Reference
 
 type DType =
+    //| Float16
     | Float32
     | Float64
     | Int8
+    | Byte
     | Int16
     | Int32
     | Int64
     | Bool
-    | Other of name:string * code:int
+    | Other of name:string * code:int * inOutType: System.Type
 
     member internal x.Code =
         match x with
-        | Float32 -> 0x10000
-        | Float64 -> 0x20000
-        | Int8 -> 0x30000
-        | Int16 -> 0x40000
-        | Int32 -> 0x50000
-        | Int64 -> 0x60000
-        | Bool -> 0x70000
-        | Other (_name, code) -> (code + 8) <<< 16
+        //| Float16 -> 0x10000
+        | Float32 -> 0x20000
+        | Float64 -> 0x30000
+        | Int8 -> 0x40000
+        | Byte -> 0x50000
+        | Int16 -> 0x60000
+        | Int32 -> 0x70000
+        | Int64 -> 0x80000
+        | Bool -> 0x90000
+        | Other (_name, code, _) -> (code + 9) <<< 16
 
     member internal x.Name =
         match x with
+        //| Float16 -> "Float16"
         | Float32 -> "Float32"
         | Float64 -> "Float64"
         | Int8 -> "Int8"
+        | Byte -> "Byte"
         | Int16 -> "Int16"
         | Int32 -> "Int32"
         | Int64 -> "Int64"
         | Bool -> "Bool"
-        | Other (name, _) -> name
+        | Other (name, _, _) -> name
 
-    static member Default = DType.Float32
+    member x.AsType () =
+        match x with
+        //| Float16 -> typeof<single>
+        | Float32 -> typeof<single>
+        | Float64 -> typeof<double>
+        | Int8 -> typeof<int8>
+        | Byte -> typeof<byte>
+        | Int16 -> typeof<int16>
+        | Int32 -> typeof<int32>
+        | Int64 -> typeof<int64>
+        | Bool -> typeof<bool>
+        | Other (_name, _, typ) -> typ
+
+    /// Gets the natural result of the Sum(), SumToSize() and Sum(dim) operation on this dtype
+    member t.SummationType =
+        match t with
+        | Bool | Byte | Int8 | Int16 | Int32 | Int64 -> DType.Int64
+        | dt -> dt
 
 module DType =
+
+    let (|FloatingPoint|_|) x =
+        match x with
+        | Float32 | Float64 -> Some()
+        | _ -> None
+
+    let (|Integral|_|) x =
+        match x with
+        | Byte | Int8 | Int16 | Int32 | Int64 -> Some()
+        | _ -> None
+
+    let (|IntegralOrBool|_|) x =
+        match x with
+        | Integral | Bool -> Some()
+        | _ -> None
+
     /// Find the DType into which dtype1 and dtype2 can be widened
     let widen (dtype1: DType) (dtype2: DType) =
-        if dtype1 = dtype2 then dtype1
+        if dtype1 = dtype2 then Some dtype1
         else
             match dtype1, dtype2 with 
-            | Other _,_ | _, Other _ ->  failwith "cannot widen user-defined tensor types, must cast explicitly"
-            | Float64, _ | _, Float64 -> Float64
-            | Float32, _ | _, Float32 -> Float32
-            | Int64, _ | _, Int64 -> Int64
-            | Int32, _ | _, Int32 -> Int32
-            | Int16, _ | _, Int16 -> Int16
-            | Int8, _ | _, Int8 -> Int8
-            | _ -> Bool
+            | Other _,_ | _, Other _ ->  None //failwith "cannot widen user-defined tensor types, must cast explicitly"
+            | Float64, _ | _, Float64 -> Some Float64
+            | Float32, _ | _, Float32 -> Some Float32
+            | Int64, _ | _, Int64 -> Some Int64
+            | Int32, _ | _, Int32 -> Some Int32
+            | Int16, _ | _, Int16 -> Some Int16
+            | Int8, Bool | Bool, Int8 -> Some Int8
+            | Byte, Bool | Bool, Byte -> Some Byte
+            | Int8, Int8 -> Some Int8
+            | Byte, Byte -> Some Byte
+            | Bool, Bool -> Some Bool
+            | Int8, Byte | Byte, Int8  -> None
 
     /// Convert System.Type to DType
     let ofType (ty: System.Type) =
@@ -109,9 +150,22 @@ module DType =
         elif ty.Equals(typeof<int64>) then DType.Int64
         elif ty.Equals(typeof<int16>) then DType.Int16
         elif ty.Equals(typeof<int8>) then DType.Int8
+        elif ty.Equals(typeof<byte>) then DType.Byte
         elif ty.Equals(typeof<bool>) then DType.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
 
     let internal count = ref 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
-    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value)))
+
+    let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value, inOutType)))
+
+    let mutable Default = DType.Float32
+
+[<AutoOpen>]
+module DTypeGlobalOps =
+    let opNotSupported msg (t: DType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg t)
+
+    let opNotSupported2 msg (t1: DType) (t2: DType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg t1 t2)
+

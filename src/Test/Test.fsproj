@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiffSharp\DiffSharp.fsproj" />
+    <ProjectReference Include="..\..\bundles\DiffSharp-reference\DiffSharp-reference.fsproj" />
   </ItemGroup>
 
 </Project>

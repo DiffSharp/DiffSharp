@@ -57,9 +57,21 @@ type TestDiffSharp () =
         ()
 
     [<Test>]
+    member this.TestZero () =
+        let t = dsharp.zero()
+        let tCorrect = dsharp.tensor(0)
+        Assert.AreEqual(tCorrect, t)
+
+    [<Test>]
     member this.TestZeros () =
         let t = dsharp.zeros([2;3])
         let tCorrect = dsharp.tensor([[0,0,0],[0,0,0]])
+        Assert.AreEqual(tCorrect, t)
+
+    [<Test>]
+    member this.TestOne () =
+        let t = dsharp.one()
+        let tCorrect = dsharp.tensor(1)
         Assert.AreEqual(tCorrect, t)
 
     [<Test>]
@@ -549,3 +561,21 @@ type TestDiffSharp () =
         Assert.True(dCorrect.allclose(d2))
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))        
+
+
+    [<Test>]
+    member _.TestCanConfigure () =
+        let device = Device.Default
+        dsharp.config(device=Device.GPU)
+        Assert.AreEqual(Device.GPU, Device.Default)
+        dsharp.config(device=device)
+
+        let backend = Backend.Default
+        dsharp.config(backend=Backend.Torch)
+        Assert.AreEqual(Backend.Torch, Backend.Default)
+        dsharp.config(backend=backend)
+
+        let dtype = DType.Default
+        dsharp.config(dtype=DType.Int32)
+        Assert.AreEqual(DType.Int32, DType.Default)
+        dsharp.config(dtype=dtype)

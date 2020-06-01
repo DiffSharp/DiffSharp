@@ -14,7 +14,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
     member _.device = defaultArg defaultDevice Device.Default
 
     member _.dtype = defaultArg defaultDType DType.Default
-
+    
     member _.tensor(data: obj, ?device, ?backend, ?dtype) =
         dsharp.tensor(data, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDType)
 
@@ -73,6 +73,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
         match c.dtype with 
         | DType.Float32 -> arr |> Array.map float32 :> Array
         | DType.Float64 -> arr |> Array.map double :> Array
+        | DType.Byte -> arr |> Array.map byte :> Array
         | DType.Int8 -> arr |> Array.map int8 :> Array
         | DType.Int16 -> arr |> Array.map int16:> Array
         | DType.Int32 -> arr |> Array.map int32 :> Array
@@ -84,6 +85,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDType: 
         match c.dtype with 
         | DType.Float32 -> arr |> Array2D.map float32 :> Array
         | DType.Float64 -> arr |> Array2D.map double :> Array
+        | DType.Byte -> arr |> Array2D.map byte :> Array
         | DType.Int8 -> arr |> Array2D.map int8 :> Array
         | DType.Int16 -> arr |> Array2D.map int16:> Array
         | DType.Int32 -> arr |> Array2D.map int32 :> Array
@@ -95,19 +97,28 @@ module DTypes =
 
     // We run most tests at all these tensor types
     let Bool = [ DType.Bool ]
-    let Integral = [DType.Int8; DType.Int16; DType.Int32; DType.Int64]
-    let FloatingPoint = [DType.Float32; DType.Float64]
+    let SignedIntegral = [ DType.Int8; DType.Int16; DType.Int32; DType.Int64 ]
+    let UnsignedIntegral = [ DType.Byte ]
+    let Integral = SignedIntegral @ UnsignedIntegral
+    let FloatingPoint = [ DType.Float32; DType.Float64 ]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
+    let SignedIntegralAndFloatingPoint = FloatingPoint @ SignedIntegral
     let IntegralAndFloatingPoint = FloatingPoint @ Integral
     let IntegralAndBool = Integral @ Bool
     let All = FloatingPoint @ Integral @ Bool
 
 module Combos =
 
-    let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference ]
+    //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
+    //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
+    let backends = [ Backend.Reference; (* Backend.Register("TestDuplicate"); *) Backend.Torch ]
 
     let devices = [ Device.CPU ]
+    //let devices = [ Device.CPU; Device.GPU ]
 
     let makeCombos dtypes =
         [ for backend in backends do
@@ -118,6 +129,9 @@ module Combos =
     /// These runs though all devices, backends and DType
     let Integral = makeCombos DTypes.Integral
     let FloatingPoint = makeCombos DTypes.FloatingPoint
+    let UnsignedIntegral = makeCombos DTypes.UnsignedIntegral
+    let SignedIntegral = makeCombos DTypes.SignedIntegral
+    let SignedIntegralAndFloatingPoint = makeCombos DTypes.SignedIntegralAndFloatingPoint
     let IntegralAndFloatingPoint = makeCombos DTypes.IntegralAndFloatingPoint
     let Bool = makeCombos DTypes.Bool
     let IntegralAndBool = makeCombos DTypes.IntegralAndBool
@@ -133,11 +147,4 @@ module Combos =
 module TestUtils =
     let isException f = Assert.Throws<Exception>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
-
-[<TestFixture>]
-type TestUtil () =
-
-    [<SetUp>]
-    member this.Setup () =
-        ()
 

@@ -6,7 +6,7 @@ open DiffSharp.Util
 // Tensor operations
 type DiffSharp =
     static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member seed(?seed:int) = RawTensorStatics.Seed(?seed=seed)
+    static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
     static member isTensor(value:obj) = value :? Tensor
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
     static member load(fileName) = Tensor.load(fileName)
@@ -16,7 +16,7 @@ type DiffSharp =
     static member one(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
-    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
     static member full(length:int, value:scalar, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike([|length|], value)
     static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
     static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
@@ -190,6 +190,11 @@ type DiffSharp =
     static member conv3d(b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = fun (a:Tensor) -> a.conv3d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
     static member pad(paddings:seq<int>) = fun (a:Tensor) -> a.pad(paddings)
+
+    static member config(?backend: Backend, ?device: Device, ?dtype: DType) = 
+         dtype |> Option.iter (fun d -> DType.Default <- d)
+         backend |> Option.iter (fun d -> Backend.Default <- d)
+         device |> Option.iter (fun d -> Device.Default <- d)
 
 
 // Methods mirroring F# array modules
