@@ -27,12 +27,12 @@ type [<AbstractClass>]
             backend.Seed(seed)
 
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
-    /// A backend type is delivered consistent in-memory data - a type for dtype Int32 gets int32 data etc.
+    /// A backend type is delivered consistent with in-memory data - a type for dtype Int32 gets int32 data etc.
     abstract CreateFromFlatArray: data: System.Array * shape: int[] * device: Device -> RawTensor
 
-    static member Get(?dtype: DType, ?backend: Backend) =
+    static member Get(?dtype: Dtype, ?backend: Backend) =
         // Note we re-examing the default backends etc. each time we create a root tensor.
-        let dtype = defaultArg dtype DType.Default
+        let dtype = defaultArg dtype Dtype.Default
         let backend = defaultArg backend Backend.Default
         let code = dtype.Code + backend.Code
         match last with 
@@ -61,12 +61,12 @@ type [<AbstractClass>]
             res
 
 and [<AbstractClass>]
-    RawTensor(shape:int[], dtype:DType, device:Device, backend:Backend) =
+    RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
 
     member t.Shape = shape
     member t.Dim = shape.Length
     member t.Nelement = shapeLength shape
-    member t.DType = dtype
+    member t.Dtype = dtype
     member t.Device = device
     member t.Backend = backend
     override t.ToString() = t.GetString()
@@ -115,72 +115,72 @@ and [<AbstractClass>]
         // We deliver consistent in-memory data to the backend - a dtype Int32 gets int32 etc.
         let data, shape, dtype =
             match dtype with 
-            | Some DType.Int64 ->
+            | Some Dtype.Int64 ->
                 let a,s = dataOfValuesForInt64 values
-                (a :> Array), s, DType.Int64
-            | Some DType.Int32 ->
+                (a :> Array), s, Dtype.Int64
+            | Some Dtype.Int32 ->
                 let a,s = dataOfValuesForInt32 values
-                (a :> Array), s, DType.Int32
-            | Some DType.Int16 ->
+                (a :> Array), s, Dtype.Int32
+            | Some Dtype.Int16 ->
                 let a,s = dataOfValuesForInt16 values
-                (a :> Array), s, DType.Int16
-            | Some DType.Int8 ->
+                (a :> Array), s, Dtype.Int16
+            | Some Dtype.Int8 ->
                 let a,s = dataOfValuesForInt8 values
-                (a :> Array), s, DType.Int8
-            | Some DType.Byte ->
+                (a :> Array), s, Dtype.Int8
+            | Some Dtype.Byte ->
                 let a,s = dataOfValuesForByte values
-                (a :> Array), s, DType.Byte
-            | Some DType.Bool ->
+                (a :> Array), s, Dtype.Byte
+            | Some Dtype.Bool ->
                 let a,s = dataOfValuesForBool values
-                (a :> Array), s, DType.Bool
-            | Some DType.Float64 ->
+                (a :> Array), s, Dtype.Bool
+            | Some Dtype.Float64 ->
                 let a,s = dataOfValuesForFloat64 values
-                (a :> Array), s, DType.Float64
-            | Some DType.Float32 ->
+                (a :> Array), s, Dtype.Float64
+            | Some Dtype.Float32 ->
                 let a,s = dataOfValuesForFloat32 values
-                (a :> Array), s, DType.Float32
-            | Some (DType.Other (name, _, _)) ->
+                (a :> Array), s, Dtype.Float32
+            | Some (Dtype.Other (name, _, _)) ->
                 failwithf "can't directly create tensors of user-defined type %s" name
             | None ->
                 // Prefer Bool tensor if all bool
                 match values |> tryFlatArrayAndShape<bool> with
-                | Some (values, shape) -> ((values :> Array), shape, DType.Bool)
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Bool)
                 | _ ->
                 // Otherwise prefer float32
                 let a,s = dataOfValuesForFloat32 values 
-                (a :> Array), s, DType.Float32
+                (a :> Array), s, Dtype.Float32
 
         let statics = BackendStatics.Get(dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
 
         statics.CreateFromFlatArray(data, shape, device)
 
-    member t.CreateLike(values: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Create(values, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.CreateLike(values: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Create(values, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.ZeroLike(?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Zero(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.ZeroLike(?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Zero(dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.ZerosLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Zeros(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.ZerosLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Zeros(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.OneLike(?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.One(dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.OneLike(?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.One(dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.OnesLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Ones(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.OnesLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Ones(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.FullLike(shape: int[], value: obj, ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Full(shape, value, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.FullLike(shape: int[], value: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Full(shape, value, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.RandomLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.Random(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.RandomLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Random(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.RandomNormalLike(shape: int[], ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.RandomNormalLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
-    member t.RandomIntLike(shape: int[], low:int, high:int, ?dtype: DType, ?device: Device, ?backend: Backend) =
-        RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.DType, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+    member t.RandomIntLike(shape: int[], low:int, high:int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     abstract member Clone : unit -> RawTensor
     abstract member Expand: newShape: int[] -> RawTensor
@@ -196,7 +196,7 @@ and [<AbstractClass>]
 
     abstract member ToValues: unit -> obj
     abstract member Equals: RawTensor -> bool
-    abstract member Cast : DType -> RawTensor
+    abstract member Cast : Dtype -> RawTensor
     abstract member MoveTo : Device -> RawTensor
     abstract member ComputeHash: unit -> int
     abstract member AllClose: RawTensor * float * float -> bool
@@ -238,7 +238,7 @@ and [<AbstractClass>]
     abstract member Conv2D: RawTensor * int[] * int[] -> RawTensor
     abstract member Conv3D: RawTensor * int[] * int[] -> RawTensor
     abstract member NegT : unit -> RawTensor
-    abstract member SumT : ?resultType: DType -> RawTensor
+    abstract member SumT : ?resultType: Dtype -> RawTensor
     abstract member SumT2Dim0 : unit -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
@@ -271,12 +271,12 @@ and [<AbstractClass>]
 
     default t.IsInfT() =
         match dtype with 
-        | DType.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=DType.Bool)
+        | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
 
     default t.IsNaNT() =
         match dtype with 
-        | DType.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=DType.Bool)
+        | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 
     default t.GetString() =
@@ -341,7 +341,7 @@ and [<AbstractClass>]
         match t.Dim with
         | 0 -> failwithf "Cannot convert scalar Tensor to array"
         | _ ->
-            match t.ToValues()with 
+            match t.ToValues() with 
             | :? System.Array as a -> a
             | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
 

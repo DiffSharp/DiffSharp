@@ -50,7 +50,7 @@ module Backend =
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
     let mutable Default = Backend.Reference
 
-type DType =
+type Dtype =
     //| Float16
     | Float32
     | Float64
@@ -104,11 +104,10 @@ type DType =
     /// Gets the natural result of the Sum(), SumToSize() and Sum(dim) operation on this dtype
     member t.SummationType =
         match t with
-        | Bool | Byte | Int8 | Int16 | Int32 | Int64 -> DType.Int64
+        | Bool | Byte | Int8 | Int16 | Int32 | Int64 -> Dtype.Int64
         | dt -> dt
 
-module DType =
-
+module Dtype =
     let (|FloatingPoint|_|) x =
         match x with
         | Float32 | Float64 -> Some()
@@ -124,8 +123,8 @@ module DType =
         | Integral | Bool -> Some()
         | _ -> None
 
-    /// Find the DType into which dtype1 and dtype2 can be widened
-    let widen (dtype1: DType) (dtype2: DType) =
+    /// Find the Dtype into which dtype1 and dtype2 can be widened
+    let widen (dtype1: Dtype) (dtype2: Dtype) =
         if dtype1 = dtype2 then Some dtype1
         else
             match dtype1, dtype2 with 
@@ -142,30 +141,30 @@ module DType =
             | Bool, Bool -> Some Bool
             | Int8, Byte | Byte, Int8  -> None
 
-    /// Convert System.Type to DType
+    /// Convert System.Type to Dtype
     let ofType (ty: System.Type) =
-        if ty.Equals(typeof<int32>) then DType.Int32
-        elif ty.Equals(typeof<double>) then DType.Float64
-        elif ty.Equals(typeof<single>) then DType.Float32
-        elif ty.Equals(typeof<int64>) then DType.Int64
-        elif ty.Equals(typeof<int16>) then DType.Int16
-        elif ty.Equals(typeof<int8>) then DType.Int8
-        elif ty.Equals(typeof<byte>) then DType.Byte
-        elif ty.Equals(typeof<bool>) then DType.Bool
+        if ty.Equals(typeof<int32>) then Dtype.Int32
+        elif ty.Equals(typeof<double>) then Dtype.Float64
+        elif ty.Equals(typeof<single>) then Dtype.Float32
+        elif ty.Equals(typeof<int64>) then Dtype.Int64
+        elif ty.Equals(typeof<int16>) then Dtype.Int16
+        elif ty.Equals(typeof<int8>) then Dtype.Int8
+        elif ty.Equals(typeof<byte>) then Dtype.Byte
+        elif ty.Equals(typeof<bool>) then Dtype.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
 
     let internal count = ref 0
-    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,DType>()
+    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Dtype>()
 
-    let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; DType.Other(name, count.Value, inOutType)))
+    let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; Dtype.Other(name, count.Value, inOutType)))
 
-    let mutable Default = DType.Float32
+    let mutable Default = Dtype.Float32
 
 [<AutoOpen>]
-module DTypeGlobalOps =
-    let opNotSupported msg (t: DType) =
+module DtypeGlobalOps =
+    let opNotSupported msg (t: Dtype) =
         invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg t)
 
-    let opNotSupported2 msg (t1: DType) (t2: DType) =
+    let opNotSupported2 msg (t1: Dtype) (t2: Dtype) =
         invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg t1 t2)
 

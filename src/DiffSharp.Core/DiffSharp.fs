@@ -5,51 +5,53 @@ open DiffSharp.Util
 
 // Tensor operations
 type DiffSharp =
-    static member tensor(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
     static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
     static member isTensor(value:obj) = value :? Tensor
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
     static member load(fileName) = Tensor.load(fileName)
-    static member zero(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
-    static member zeros(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member zeros(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
-    static member one(?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
-    static member ones(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member ones(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
-    static member full(shape:seq<int>, value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member full(length:int, value:scalar, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike([|length|], value)
-    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
-    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
-    static member onehot(length:int, hot:int, ?dtype:DType, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
-    static member rand(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member rand(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
-    static member randn(shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member randn(length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
-    static member randint(low:int, high:int, shape:seq<int>, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Seq.toArray, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member randint(low:int, high:int, length:int, ?dtype:DType, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member one(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike([|length|], value)
+    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
+    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Seq.toArray, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
     static member multinomial(probs:Tensor, numSamples:int) = Tensor.multinomial(probs, numSamples)
     static member multinomial(numSamples:int) = fun (probs:Tensor) -> Tensor.multinomial(probs, numSamples)
-    static member zerosLike(a:Tensor, ?shape:seq<int>) = a.zerosLike(?shape=shape)
-    static member zerosLike(shape:seq<int>) = fun (a:Tensor) -> a.zerosLike(shape=shape)
-    static member onesLike(a:Tensor, ?shape:seq<int>) = a.onesLike(?shape=shape)
-    static member onesLike(shape:seq<int>) = fun (a:Tensor) -> a.onesLike(shape=shape)
-    static member fullLike(a:Tensor, shape:seq<int>, value:scalar) = a.fullLike(shape, value)
-    static member fullLike(shape:seq<int>, value:scalar) = fun (a:Tensor) -> a.fullLike(shape, value)
-    static member arangeLike(a:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype:DType, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member arangeLike(a:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:DType, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype:DType, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-    static member randLike(a:Tensor, ?shape:seq<int>) = a.randLike(?shape=shape)
-    static member randLike(shape:seq<int>) = fun (a:Tensor) -> a.randLike(shape=shape)
-    static member randnLike(a:Tensor, ?shape:seq<int>) = a.randnLike(?shape=shape)
-    static member randnLike(shape:seq<int>) = fun (a:Tensor) -> a.randnLike(shape=shape)
-    static member randintLike(a:Tensor, low:int, high:int, ?shape:seq<int>) = a.randintLike(low=low, high=high, ?shape=shape)
-    static member randintLike(low:int, high:int, ?shape:seq<int>) = fun (a:Tensor) -> a.randintLike(low=low, high=high, ?shape=shape)
-    static member zeroLike(a:Tensor) = a.zeroLike()
-    static member oneLike(a:Tensor) = a.oneLike()
+    static member zerosLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.zerosLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member zerosLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.zerosLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onesLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.onesLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onesLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.onesLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member fullLike(a:Tensor, shape:seq<int>, value:scalar, ?dtype, ?device, ?backend) = a.fullLike(shape, value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member fullLike(shape:seq<int>, value:scalar, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.fullLike(shape, value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(a:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(a:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onehotLike(a:Tensor, length:int, hot:int, ?dtype, ?device, ?backend) = a.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randnLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randnLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randnLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randnLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randintLike(a:Tensor, low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member zeroLike(a:Tensor, ?dtype, ?device, ?backend) = a.zeroLike(?dtype=dtype, ?device=device, ?backend=backend)
+    static member oneLike(a:Tensor, ?dtype, ?device, ?backend) = a.oneLike(?dtype=dtype, ?device=device, ?backend=backend)
     static member nelement(a:Tensor) = a.nelement
-    static member like(a:Tensor, value:obj) = a.like(value)
-    static member like(value:obj) = fun (a:Tensor) -> a.like(value)
+    static member like(a:Tensor, value:obj, ?dtype, ?device, ?backend) = a.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member like(value:obj, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
     static member clone(a:Tensor) = a.clone()
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
     static member lt(b:Tensor) = fun (a:Tensor) -> a.lt(b)
@@ -190,22 +192,42 @@ type DiffSharp =
     static member conv3d(b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = fun (a:Tensor) -> a.conv3d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
     static member pad(paddings:seq<int>) = fun (a:Tensor) -> a.pad(paddings)
-
-    static member config(?backend: Backend, ?device: Device, ?dtype: DType) = 
-         dtype |> Option.iter (fun d -> DType.Default <- d)
-         backend |> Option.iter (fun d -> Backend.Default <- d)
-         device |> Option.iter (fun d -> Device.Default <- d)
-
+    static member move(a:Tensor, ?dtype, ?device, ?backend) = a.move(?dtype=dtype, ?device=device, ?backend=backend)
+    static member move(?dtype, ?device, ?backend) = fun (a:Tensor) -> a.move(?dtype=dtype, ?device=device, ?backend=backend)
+    static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
+        dtype |> Option.iter (fun d -> Dtype.Default <- d)
+        device |> Option.iter (fun d -> Device.Default <- d)
+        backend |> Option.iter (fun d -> Backend.Default <- d)
+        DiffSharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+    static member config() = Dtype.Default, Device.Default, Backend.Default
+    static member config((dtype,device,backend)) = DiffSharp.config(dtype, device, backend)
 
 // Methods mirroring F# array modules
-// TODO: update to support non-float types once we have backing DTypes implemented
+// TODO: implement more differentiable higher-order functions and corresponding unit tests for their derivatives
 type DiffSharp with
-    static member init (count:int) (initializer:int->float) = Array.init count initializer |> DiffSharp.tensor
-    static member init2d (length1:int) (length2:int) (initializer:int->int->float) = Array2D.init length1 length2 initializer |> DiffSharp.tensor
-    static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->float) = Array3D.init length1 length2 length3 initializer |> DiffSharp.tensor
-    static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->float) = Array4D.init length1 length2 length3 length4 initializer |> DiffSharp.tensor
-    static member create (count:int) (value:float) = Array.create count value |> DiffSharp.tensor
+    static member init (count:int) (initializer:int->'a) = Array.init count initializer |> DiffSharp.tensor
+    static member init2d (length1:int) (length2:int) (initializer:int->int->'a) = Array2D.init length1 length2 initializer |> DiffSharp.tensor
+    static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->'a) = Array3D.init length1 length2 length3 initializer |> DiffSharp.tensor
+    static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> DiffSharp.tensor
+    static member create (count:int) (value:'a) = Array.create count value |> DiffSharp.tensor
     static member zeroCreate (count:int) = Array.zeroCreate count |> DiffSharp.tensor
+    static member map (mapping:Tensor->Tensor) (tensor:Tensor) = // Differentiable map
+        let tflat = tensor.view(-1)
+        let items = Array.init (tflat.nelement) (fun i -> mapping tflat.[i])
+        DiffSharp.stack(items).view(tensor.shape)
+    static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
+        if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
+        let tflat1 = tensor1.view(-1)
+        let tflat2 = tensor2.view(-1)
+        let items = Array.init (tflat1.nelement) (fun i -> mapping tflat1.[i] tflat2.[i])
+        DiffSharp.stack(items).view(tensor1.shape)
+    static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
+        if (tensor1.shape <> tensor2.shape) || (tensor2.shape <> tensor3.shape) then failwithf "Expecting tensor1.shape (%A), tensor2.shape (%A), tensor3.shape (%A) to be the same" tensor1.shape tensor2.shape tensor3.shape
+        let tflat1 = tensor1.view(-1)
+        let tflat2 = tensor2.view(-1)
+        let tflat3 = tensor3.view(-1)
+        let items = Array.init (tflat1.nelement) (fun i -> mapping tflat1.[i] tflat2.[i] tflat3.[i])
+        DiffSharp.stack(items).view(tensor1.shape)
 
 
 // Functional automatic differentiation API
