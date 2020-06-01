@@ -25,10 +25,11 @@ and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?
     let targetBackend = defaultArg targetBackend backend
     member d.length = defaultArg numBatches (dataset.length/batchSize)
     member d.epoch() =
-        seq {let index = if shuffle then shuffledIndices (dataset.length) else id
-            for i in 0..d.length-1 do 
-                let data, target = [for j in 0..batchSize-1 do dataset.item(index(i*batchSize + j))] |> List.unzip
-                i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend)}
+        let indexer = if shuffle then shuffledIndices (dataset.length) else id
+        let indices = Seq.init d.length id |> Seq.map indexer
+        let batchIndices = indices |> Seq.chunkBySize batchSize
+        let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
+        batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
 
 
 type TensorDataset(data:Tensor, target:Tensor) =
