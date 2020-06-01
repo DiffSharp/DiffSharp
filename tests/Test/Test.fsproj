@@ -11,7 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\bundles\DiffSharp-reference\DiffSharp-reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
   </ItemGroup>
 
 </Project>
