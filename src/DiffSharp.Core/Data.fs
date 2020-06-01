@@ -39,16 +39,17 @@ type TensorDataset(data:Tensor, target:Tensor) =
     override d.item(i) = data.[i], target.[i]
 
 
-type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath
     let train = defaultArg train true
     let transform = defaultArg transform (fun t -> ((t/255)-0.1307)/0.3081)
     let targetTransform = defaultArg targetTransform id
-    let urls = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"]
+    let urls = List.ofSeq <| defaultArg urls (Seq.ofList
+                   ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
     let filesProcessed = [for file in files do Path.ChangeExtension(file, ".tensor")]
     let data, target = 
