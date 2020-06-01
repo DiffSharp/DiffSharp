@@ -1,7 +1,50 @@
 <Project>
 
   <PropertyGroup>
+
+     <LibTorchVersion>1.5.0</LibTorchVersion>
+     <TorchSharpVersion>0.3.52216</TorchSharpVersion>
+      <!-- Standard nuget.org location -->
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
+
+      <!-- TorchSharp local build packages -->
+    <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
+        $(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release;
+    </RestoreSources>
+
+      <!-- TorchSharp local build packages -->
+    <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug')">
+        $(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug;
+    </RestoreSources>
+
+        <!-- TorchSharp CI build packages -->
+    <RestoreSources>
+        $(RestoreSources);
+        https://donsyme.pkgs.visualstudio.com/TorchSharp/_packaging/packages2/nuget/v3/index.json
+    </RestoreSources>
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
   </PropertyGroup>
+
+  <PropertyGroup>
+     <Version>0.9.5</Version>
+     <Authors>Gunes Baydin and DiffSharp contributors</Authors>
+     <Owners>DiffSharp maintainers</Owners>
+
+     <!-- local build uses number unique by day -->
+     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
+     <!-- tagged build on CI uses number -->
+     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' == '$(Version)'">$(Version)</PackageVersion>
+     <!-- untagged build on CI uses unique -->
+     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(Version)'">$(Version)-preview-$([System.DateTime]::Now.ToString(`yyMMddHHmm`))</PackageVersion>
+     <PackageOutputPath>$(MSBuildThisFileDirectory)/bin/packages</PackageOutputPath>
+
+     <NuspecProperties>Authors=$(Authors);Owners=$(Owners);ProjectId=$(MSBuildProjectName);PackageVersion=$(PackageVersion);TorchSharpVersion=$(TorchSharpVerion);LibTorchVersion=$(LibTorchVersion)</NuspecProperties>
+
+  </PropertyGroup>
+
+  <Target Name="Check" BeforeTargets="PrepareForBuild"
+          Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(Version)'">
+      <Error Test="mismatch betwen repo tag '$(APPVEYOR_REPO_TAG_NAME)' and version '$(Version)' in msbuild, refusing to build package" />
+  </Target>
 
 </Project>

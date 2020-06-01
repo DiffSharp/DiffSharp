@@ -36,23 +36,57 @@ type Tensor =
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
     member t.cast(dtype) =
+        if t.dtype = dtype then t else
         match t with
         | Tensor(tp) -> Tensor(tp.Cast(dtype))
-        | TensorF(_,_,_) -> failwith "cannot cast TensorF"
-        | TensorR(tp,_,_,_,_) -> failwith "cannot cast TensorR"
+        | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
+        | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
 
-    member t.bool() = t.cast(DType.Bool)
-    member t.int8() = t.cast(DType.Int8)
-    member t.int16() = t.cast(DType.Int16)
-    member t.int32() = t.cast(DType.Int32)
-    member t.int() = t.cast(DType.Int32)
-    member t.int64() = t.cast(DType.Int64)
-    member t.float32() = t.cast(DType.Float32)
-    member t.float64() = t.cast(DType.Float64)
-    member t.float() = t.cast(DType.Float64)
-    member t.double() = t.cast(DType.Float64)
+    member t.move(backend) =
+        if t.backend = backend then t else
+        match t with
+        | Tensor(tp) -> 
+            let tpflat = tp.ViewT([|tp.Nelement|]) //
+            let tpflatValues = tpflat.ToValues()
+            Tensor(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
+        | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
+        | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
-    member t.dtype = t.primalRaw.DType
+    member t.move(device) =
+        if t.device = device then t else
+        match t with
+        | Tensor(tp) -> Tensor(tp.MoveTo(device))
+        | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
+        | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
+
+    member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        let dtype = defaultArg dtype Dtype.Default
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
+        t.cast(dtype).move(device).move(backend)
+
+    member internal t.castAfterSummation(?dtype:Dtype) =
+        match dtype with
+        | None -> t
+        | Some dt -> t.cast(dt)
+
+    member t.cpu() = t.move(Device.CPU)
+    member t.gpu() = t.move(Device.GPU)
+
+    member t.bool() = t.cast(Dtype.Bool)
+    member t.int8() = t.cast(Dtype.Int8)
+    member t.int16() = t.cast(Dtype.Int16)
+    member t.int32() = t.cast(Dtype.Int32)
+    member t.int() = t.cast(Dtype.Int32)
+    member t.int64() = t.cast(Dtype.Int64)
+    member t.float32() = t.cast(Dtype.Float32)
+    member t.float64() = t.cast(Dtype.Float64)
+    member t.float() = t.cast(Dtype.Float64)
+    member t.double() = t.cast(Dtype.Float64)
+
+    member t.dtype = t.primalRaw.Dtype
+    member t.device = t.primalRaw.Device
+    member t.backend = t.primalRaw.Backend
 
     member t.depth =
         let rec depth x d =
@@ -143,12 +177,21 @@ type Tensor =
     member t.save(fileName:string) = saveBinary t fileName
     static member load(fileName:string):Tensor = loadBinary fileName
 
+    member t.summary() =
+        match t with
+        | Tensor(_) -> sprintf "Tensor %A" t.shape
+        | TensorF(_) -> sprintf "TensorF %A" t.shape
+        | TensorR(_,_,o,_,_) -> 
+            let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
+            let fields = c.GetFields()
+            sprintf "TensorR %A %s" t.shape c.Name
+
     member t.parents() =
         let mutable p = []
         let rec parents (t:obj) d =
-            p <- p |> List.append [t]
             match t with
             | :? Tensor as t ->
+                p <- p |> List.append [t]
                 match t with
                 | Tensor(_) -> sprintf "Tensor %A" t.shape
                 | TensorF(_) -> sprintf "TensorF %A" t.shape
@@ -161,13 +204,14 @@ type Tensor =
                         ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
                     ret
             | :? (Tensor array) as ts ->
+                // p <- p |> List.append (ts |> Array.toList)
                 let mutable ret = ""
                 let mutable prefix = ""
                 for t in ts do
                     ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (parents t (d+1))
                     prefix <- "\n"
                 ret
-            | _ -> indentNewLines (sprintf "%A" t) (d-1)
+            | _ -> indentNewLines (sprintf "%A" t) d
         let ps = parents t 1
         p |> List.rev, ps
 
@@ -181,7 +225,7 @@ type Tensor =
             match other with
             | :? Tensor as tensor -> 
                 if t.dim = tensor.dim && t.dim = 0 then
-                    t.primalRaw.CompareTo(tensor.primalRaw)
+                    (t.primalRaw :> System.IComparable).CompareTo(tensor.primalRaw)
                 else
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
@@ -250,7 +294,7 @@ type Tensor =
         let endVal = endVal |> float
         let startVal = defaultArg startVal 0 |> float
         let step = defaultArg step 1 |> float
-        let dtype = defaultArg dtype DType.Int32
+        let dtype = defaultArg dtype Dtype.Int32
         a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.clone() = Tensor(a.primalRaw.Clone())
@@ -263,8 +307,8 @@ type Tensor =
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
     member a.isinf() = Tensor(a.primalRaw.IsInfT())
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
-    member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=DType.Int64)
-    member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=DType.Int64)
+    member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
+    member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
     member a.maxIndex() = a.primalRaw.MaxIndexT()
     member a.minIndex() = a.primalRaw.MinIndexT()
     member a.max() = a.[a.maxIndex()]
@@ -339,7 +383,7 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    static member create(value:obj, ?dtype:DType, ?device:Device, ?backend:Backend) =
+    static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let res = value |> tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
         | Some (array, shape) -> 
@@ -354,25 +398,24 @@ type Tensor =
         if probs.dim = 1 then
             let p = 
                 match probs.dtype with
-                | DType.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
-                | DType.Float64 -> probs.toArray() :?> float[]
+                | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=Dtype.Int32)
         else
             let p = 
                 match probs.dtype with
-                | DType.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
-                | DType.Float64 -> probs.toArray() :?> float[,]
+                | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[,]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=DType.Int32)
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=Dtype.Int32)
 
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        if tensors.Length = 0 then failwithf "Expecting a non-empty sequence of Tensors"
         // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
-        let shapes = tensors |> Seq.map (fun t -> t.shape)
-        checkCanStack shapes
+        let shapes = tensors |> Array.map (fun t -> t.shape)
+        Shape.checkCanStack shapes dim |> ignore
         match Seq.head tensors with
         | Tensor(ap) -> Tensor(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
@@ -386,7 +429,7 @@ type Tensor =
 
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
-        checkCanUnstack a.dim
+        Shape.checkCanUnstack a.shape |> ignore
         match a with
         | Tensor(ap) -> ap.UnstackT(dim) |> Array.map Tensor
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
@@ -395,9 +438,9 @@ type Tensor =
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
+        // TODO: check if all Tensors are of the same nesting variety (Tensor, TensorF, or TensorR), have the same nesting tag, and have the same dtype, device, backend
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap .CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | Tensor(ap) -> Tensor(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
@@ -446,10 +489,12 @@ type Tensor =
 
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast + bCast
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "+" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast + bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.AddTT(b)
             let fTensor(a,b) = a + b
@@ -501,7 +546,7 @@ type Tensor =
             let dfTensorRevCT(a,b) = AddT2T1Const(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = broadcastShapes2 a.shape b.shape
+            let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded + bExpanded
@@ -512,10 +557,12 @@ type Tensor =
 
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast - bCast
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "-" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast - bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.SubTT(b)
             let fTensor(a,b) = a - b
@@ -547,7 +594,7 @@ type Tensor =
             let dfTensorRevCT(a,b) = SubTConstT0(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = broadcastShapes2 a.shape b.shape
+            let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded - bExpanded
@@ -558,10 +605,12 @@ type Tensor =
 
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast * bCast
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "*" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast * bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.MulTT(b)
             let fTensor(a,b) = a * b
@@ -593,7 +642,7 @@ type Tensor =
             let dfTensorRevCT(a,b) = MulTConstT0(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = broadcastShapes2 a.shape b.shape
+            let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded * bExpanded
@@ -604,10 +653,12 @@ type Tensor =
 
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast / bCast
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "/" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast / bCast
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.DivTT(b)
             let fTensor(a,b) = a / b
@@ -639,7 +690,7 @@ type Tensor =
             let dfTensorRevCT(a,b) = DivTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = broadcastShapes2 a.shape b.shape
+            let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded / bExpanded
@@ -650,10 +701,12 @@ type Tensor =
 
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
-            let tnew = DType.widen a.dtype b.dtype
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            Tensor.Pow (aCast, bCast)
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "Pow" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                Tensor.Pow (aCast, bCast)
         elif a.shape = b.shape then
             let fRaw(a:RawTensor,b) = a.PowTT(b)
             let fTensor(a:Tensor,b:Tensor) = a ** b
@@ -685,7 +738,7 @@ type Tensor =
             let dfTensorRevCT(a,b) = PowTConstT0(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
-            let newShape = broadcastShapes2 a.shape b.shape
+            let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
@@ -700,7 +753,7 @@ type Tensor =
     member a.pow(b) = a ** a.scalarLike(b)
 
     member a.matmul (b:Tensor) =
-        checkCanMatmul a.shape b.shape
+        Shape.checkCanMatmul a.shape b.shape
         let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
         let fTensor(a:Tensor,b) = a.matmul(b)
         let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
@@ -712,7 +765,7 @@ type Tensor =
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     member a.dot(b:Tensor) =
-        checkCanDot a.shape b.shape
+        Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
         let b:Tensor = b.view([b.nelement;1])
         a.matmul(b).view([])
@@ -725,15 +778,15 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     member a.neg() = -a
 
-    member a.sum() =
-        let fRaw(a:RawTensor) = a.SumT()
-        let fTensor(a:Tensor) = a.sum()
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum()
+    member a.sum(?dtype: Dtype) =
+        let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
+        let fTensor(a:Tensor) = a.sum(?dtype=dtype)
+        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
         let dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    member a.sum(dim:int, ?keepDim:bool) =
+    member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
        let keepDim = defaultArg keepDim false
        let res =
         if dim = 0 && a.dim = 0 then a
@@ -742,25 +795,28 @@ type Tensor =
             let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
             sBounds.[dim, 1] <- 0
             sBounds.[dim, 2] <- 1
-            let mutable s = a.zerosLike().GetSlice(sBounds)
+            let mutable s = a.zerosLike(dtype=a.dtype.SummationType).GetSlice(sBounds)
             for i=0 to a.shape.[dim]-1 do
                 sBounds.[dim,0] <- i
                 sBounds.[dim,1] <- i
                 sBounds.[dim,2] <- 1
-                s <- s + a.GetSlice(sBounds)
+                s <- s + a.GetSlice(sBounds).cast(a.dtype.SummationType)
             s
-       if keepDim then res.unsqueeze(dim) else res
+       let res2 = if keepDim then res.unsqueeze(dim) else res
+       res2.castAfterSummation(?dtype=dtype)
 
     /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
     /// from newShape to shape must be possible.
-    member a.sumToSize(newShape:int[]) =
+    member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
-        if oldShape = newShape then a
-        elif newShape.Length = 0 then a.sum()
+        if oldShape = newShape then
+            a.cast(defaultArg dtype a.dtype.SummationType)
+        elif newShape.Length = 0 then
+            a.sum(?dtype=dtype)
         else
-            checkCanExpandShape newShape oldShape
+            Shape.checkCanExpand newShape oldShape
             let trim = oldShape.Length - newShape.Length
-            let mutable result = a
+            let mutable result = a.cast(a.dtype.SummationType)
             // collapse the eliminated dimensions
             for _dim in 0 .. trim-1 do 
                 result <- result.sum(0, keepDim=false)
@@ -768,13 +824,16 @@ type Tensor =
             for dim in 0 .. newShape.Length-1 do 
                 if oldShape.[trim+dim] <> newShape.[dim] then 
                     result <- result.sum(dim, keepDim=true)
-            result
+            result.castAfterSummation(?dtype=dtype)
 
     member a.mean() = a.sum() / a.nelement
 
     member a.mean(dim:int, ?keepDim:bool) = 
         if dim = 0 && a.dim = 0 then a
-        else a.sum(dim, ?keepDim=keepDim) / a.shape.[dim]
+        else 
+           let sm = a.sum(dim, ?keepDim=keepDim)
+           let dv = sm / a.shape.[dim]
+           dv
 
     // This is the two-pass algorithm better than the naive algorithm
     member a.variance() = let a' = a - a.mean() in (a' * a').sum() / (a.nelement - 1)
@@ -812,7 +871,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
     member a.transpose() =
-        checkCanTranspose a.dim
+        Shape.checkCanTranspose a.dim
         let fRaw(a:RawTensor) = a.TransposeT2()
         let fTensor(a:Tensor) = a.transpose()
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
@@ -836,7 +895,7 @@ type Tensor =
 
     member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
-        checkCanFlip a.dim dims
+        Shape.checkCanFlip a.dim dims
         let fRaw(a:RawTensor) = a.FlipT(dims)
         let fTensor(a:Tensor) = a.flip(dims)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
@@ -845,7 +904,7 @@ type Tensor =
 
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
-        checkCanDilate a.dim dilations
+        Shape.checkCanDilate a.dim dilations
         let fRaw(a:RawTensor) = a.DilateT(dilations)
         let fTensor(a:Tensor) = a.dilate(dilations)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
@@ -861,7 +920,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     member a.repeat(dim:int, times:int) =
-        checkCanRepeat a.shape dim
+        Shape.checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
         newShape.[dim] <- times
         let mutable ret = a.zerosLike(newShape)
@@ -872,7 +931,7 @@ type Tensor =
         ret
 
     member a.gather(dim:int, indices:Tensor) =
-        checkCanGather a.shape dim indices.shape indices.dtype
+        Shape.checkCanGather a.shape dim indices.shape indices.dtype
         let fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
         let fTensor(a:Tensor) = a.gather(dim, indices)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
@@ -880,8 +939,8 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     member a.view(shape:seq<int>) =
-        let shape = shape |> Seq.toArray |> shapeComplete a.nelement  // Handles -1 semantics
-        checkCanView a.shape shape
+        let shape = shape |> Seq.toArray |> Shape.complete a.nelement  // Handles -1 semantics
+        Shape.checkCanView a.shape shape
         let fRaw(a:RawTensor) = a.ViewT(shape)
         let fTensor(a:Tensor) = a.view(shape)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
@@ -897,8 +956,8 @@ type Tensor =
         else
             let startDim = defaultArg startDim 0
             let endDim = defaultArg endDim (a.dim - 1)
-            checkCanFlatten a.shape startDim endDim
-            a.view(a.shape |> shapeFlatten startDim endDim)
+            Shape.checkCanFlatten a.shape startDim endDim
+            a.view(a.shape |> Shape.flatten startDim endDim)
 
     member a.sign() =
         let fRaw(a:RawTensor) = a.SignT()
@@ -1071,7 +1130,7 @@ type Tensor =
 
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
-        checkCanAddSlice a.shape location b.shape
+        Shape.checkCanAddSlice a.shape location b.shape
         let fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let fTensor(a:Tensor,b) = a.addSlice(location, b)
         let dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
@@ -1170,7 +1229,7 @@ type Tensor =
 
     member a.pad(paddings:seq<int>) =
         let paddings = paddings |> Array.ofSeq
-        checkCanPad a.shape paddings
+        Shape.checkCanPad a.shape paddings
         if paddings |> Array.sum = 0 then
             a
         else
@@ -1183,7 +1242,7 @@ type Tensor =
     member a.maxpool1di(kernelSize:int, ?stride:int, ?padding:int) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
-        checkCanMaxpool1d a.shape kernelSize stride padding
+        Shape.checkCanMaxpool1d a.shape kernelSize stride padding  |> ignore
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
@@ -1200,7 +1259,7 @@ type Tensor =
             | None -> 
                 let inputSize = a.shape.[2]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputSize-1) * stride - 2*padding + kernelSize)|]
-        checkCanMaxunpool1d indices.dtype indices.shape outputSize
+        Shape.checkCanMaxunpool1d a.shape indices.dtype indices.shape outputSize |> ignore
         let fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
         let fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
@@ -1226,7 +1285,7 @@ type Tensor =
             | Some p, None -> [|p; p|]
             | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
             | _ -> [|0; 0|]
-        checkCanMaxpool2d a.shape kernelSizes strides paddings
+        Shape.checkCanMaxpool2d a.shape kernelSizes strides paddings  |> ignore
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
@@ -1260,7 +1319,7 @@ type Tensor =
                 let inputHeight = a.shape.[2]
                 let inputWidth = a.shape.[3]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputHeight-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputWidth-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1])|]
-        checkCanMaxunpool2d indices.dtype indices.shape outputSize
+        Shape.checkCanMaxunpool2d a.shape indices.dtype indices.shape outputSize |> ignore
         let fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
         let fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
@@ -1286,7 +1345,7 @@ type Tensor =
             | Some p, None -> [|p; p; p|]
             | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
             | _ -> [|0; 0; 0|]
-        checkCanMaxpool3d a.shape kernelSizes strides paddings
+        Shape.checkCanMaxpool3d a.shape kernelSizes strides paddings |> ignore
         match a with
         | Tensor(ap)           -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
@@ -1321,7 +1380,7 @@ type Tensor =
                 let inputHeight = a.shape.[3]
                 let inputWidth = a.shape.[4]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputDepth-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputHeight-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1]); ((inputWidth-1) * strides.[2] - 2*paddings.[2] + kernelSizes.[2])|]
-        checkCanMaxunpool3d indices.dtype indices.shape outputSize
+        Shape.checkCanMaxunpool3d a.shape indices.dtype indices.shape outputSize |> ignore
         let fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
         let fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
@@ -1333,7 +1392,7 @@ type Tensor =
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
-        checkCanConv1d a.dtype b.dtype a.shape b.shape stride padding dilation
+        Shape.checkCanConv1d a.dtype b.dtype a.shape b.shape stride padding dilation |> ignore
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
@@ -1413,7 +1472,7 @@ type Tensor =
             | Some d, None -> [|d; d|]
             | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
             | _ -> [|1; 1|]
-        checkCanConv2d a.dtype b.dtype a.shape b.shape strides paddings dilations
+        Shape.checkCanConv2d a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
@@ -1500,7 +1559,7 @@ type Tensor =
             | Some d, None -> [|d; d; d|]
             | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
             | _ -> [|1; 1; 1|]
-        checkCanConv3d a.dtype b.dtype a.shape b.shape strides paddings dilations
+        Shape.checkCanConv3d a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
@@ -1829,9 +1888,9 @@ type Tensor =
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
                             push ((a.zeroLike(), a) :: tt)
-                        | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)
+                        | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.derivative, a) :: tt)
-                        | AddTConstTSlice(location, b) -> push ((t.derivative.GetSlice(shapeLocationToBounds b.shape location), b):: tt)
+                        | AddTConstTSlice(location, b) -> push ((t.derivative.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | SignT(a) -> push ((a.zerosLike(), a) :: tt)
                         | FloorT(a) -> push ((a.zerosLike(), a) :: tt)
                         | CeilT(a) -> push ((a.zerosLike(), a) :: tt)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
@@ -15,6 +15,7 @@
     <PackageReference Include="nunit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Update="FSharp.Core" Version="4.7.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
     <Compile Include="TestDiffSharp.fs" />
     <Compile Include="TestDerivatives.fs" />
     <Compile Include="TestDistributions.fs" />
+    <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
     <Compile Include="TestOptim.fs" />
     <Compile Include="Program.fs" />
@@ -30,8 +32,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <!-- execution projects must reference a libtorch runtime redist -->
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchVersion)" />
   </ItemGroup>
 
 </Project>
