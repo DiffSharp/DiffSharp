@@ -177,12 +177,21 @@ type Tensor =
     member t.save(fileName:string) = saveBinary t fileName
     static member load(fileName:string):Tensor = loadBinary fileName
 
+    member t.summary() =
+        match t with
+        | Tensor(_) -> sprintf "Tensor %A" t.shape
+        | TensorF(_) -> sprintf "TensorF %A" t.shape
+        | TensorR(_,_,o,_,_) -> 
+            let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
+            let fields = c.GetFields()
+            sprintf "TensorR %A %s" t.shape c.Name
+
     member t.parents() =
         let mutable p = []
         let rec parents (t:obj) d =
-            p <- p |> List.append [t]
             match t with
             | :? Tensor as t ->
+                p <- p |> List.append [t]
                 match t with
                 | Tensor(_) -> sprintf "Tensor %A" t.shape
                 | TensorF(_) -> sprintf "TensorF %A" t.shape
@@ -195,13 +204,14 @@ type Tensor =
                         ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
                     ret
             | :? (Tensor array) as ts ->
+                // p <- p |> List.append (ts |> Array.toList)
                 let mutable ret = ""
                 let mutable prefix = ""
                 for t in ts do
                     ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (parents t (d+1))
                     prefix <- "\n"
                 ret
-            | _ -> indentNewLines (sprintf "%A" t) (d-1)
+            | _ -> indentNewLines (sprintf "%A" t) d
         let ps = parents t 1
         p |> List.rev, ps
 
