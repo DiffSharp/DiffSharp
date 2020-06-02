@@ -31,7 +31,7 @@ module internal Utils =
     let toTorchDevice (device: Device) =
         match device with 
         | Device.CPU -> "cpu"
-        | Device.GPU -> "gpu"
+        | Device.GPU -> "cuda"
         | _ -> failwith "unknown device for Torch"
 
     let fromTorchShape (shape: int64[]) = shape |> Array.map int
@@ -67,7 +67,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             let stop = fullBounds.[i,1] + 1
 
             let len = stop - start
-            let idxs = LongTensor.Arange(int64 start, int64 stop, 1L)
+            let idxs = LongTensor.Arange(int64 start, int64 stop, 1L, device=toTorchDevice t.Device)
             res <- res.IndexSelect(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
             if fullBounds.[i, 2] = 1 && len = 1 then 
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
@@ -165,6 +165,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Dtype.Other _ -> failwith "Torch GetItem TBD other type"
 
     member t.ToRawData<'T>() : 'T[] =
+        match device with 
+        | Device.CPU -> ()
+        | _ -> invalidOp (sprintf "can't access raw data of '%A' tensor" device)
         let data = tt.Data<'T>()
         let res = Array.zeroCreate<'T> (int32 tt.NumberOfElements)
         for i in 0 .. int32 tt.NumberOfElements - 1 do
@@ -718,16 +721,25 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
                 DoubleTensor.From (data, toTorchShape shape) 
             | Dtype.Other _ -> failwith "deserialize other type in torch nyi"
 
-        TorchRawTensor(tt, shape, dtype, device)
+        let tt2 = 
+            match device with 
+            | Device.CPU -> tt
+            | Device.GPU -> tt.Cuda()
+            | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
+        TorchRawTensor(tt2, shape, dtype, device)
 
     interface System.Runtime.Serialization.ISerializable with
 
         //[SecurityPermissionAttribute(SecurityAction.Demand,  SerializationFormatter = true)]
         member t.GetObjectData(info, _context) =
-            info.AddValue("device", device)
-            info.AddValue("dtype", dtype)
-            info.AddValue("shape", shape)
-            info.AddValue("data", t.ToRawData())
+            
+            // Torch Tensors must be CPU before they can be saved
+            let tCpu = t.MoveTo(Device.CPU) :?> TorchRawTensor
+
+            info.AddValue("device", tCpu.Device)
+            info.AddValue("dtype", tCpu.Dtype)
+            info.AddValue("shape", tCpu.Shape)
+            info.AddValue("data", tCpu.ToRawData())
 
 /// The concrete implementation of BackendStatics for Float32 data.
 type TorchStatics<'T, 'T2>
