@@ -38,6 +38,12 @@ module internal Utils =
 
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
+    let torchMoveTo (tt: TorchTensor) device =
+        match device with 
+        | Device.CPU -> tt.Cpu()
+        | Device.GPU -> tt.Cuda()
+        | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
+
     type RawTensor with
         member x.TorchTensor = (x :?> TorchRawTensor).TorchTensor
 
@@ -122,6 +128,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t.MakeLike(tt.Expand(toTorchShape newShape), shape=newShape)
 
     override t.GetItem(indexes) = 
+
         let item = 
             match indexes with 
             | [| |] -> tt
@@ -130,6 +137,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | [| i0; i1; i2 |] -> tt.[int64 i0, int64 i1, int64 i2]
             | [| i0; i1; i2; i3 |] -> tt.[int64 i0, int64 i1, int64 i2, int64 i3]
             | _ -> tt.View(toTorchShape [|shapeLength shape|]).[int64 (indexToFlatIndex shape indexes)]
+
+        // Torch Tensors must be CPU before DataItem can be accessed
+        let item = torchMoveTo item Device.CPU
+
         let obj = 
             match dtype with 
             | Dtype.Bool -> box (item.DataItem<bool>())
@@ -144,6 +155,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         obj
 
     member t.ToValuesTyped<'T, 'T2>(conv) : obj =
+        // Torch Tensors must be CPU before DataItem can be accessed
+        let tt = torchMoveTo tt Device.CPU
+
         match t.Shape with
         | [|  |] -> t.GetItem()
         | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt.[int64 i].DataItem<'T2>() |> conv)
@@ -153,6 +167,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override t.ToValues() =
+        
         match dtype with 
         | Dtype.Bool -> t.ToValuesTyped<bool, bool>(id)
         | Dtype.Byte -> t.ToValuesTyped<byte, byte>(id)
@@ -164,13 +179,13 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Dtype.Float64 -> t.ToValuesTyped<double, double>(id)
         | Dtype.Other _ -> failwith "Torch GetItem TBD other type"
 
-    member t.ToRawData<'T>() : 'T[] =
-        match device with 
-        | Device.CPU -> ()
-        | _ -> invalidOp (sprintf "can't access raw data of '%A' tensor" device)
-        let data = tt.Data<'T>()
-        let res = Array.zeroCreate<'T> (int32 tt.NumberOfElements)
-        for i in 0 .. int32 tt.NumberOfElements - 1 do
+    member _.ToRawData<'T>() : 'T[] =
+        // Torch Tensors must be CPU before raw data can be accessed
+        let tt2 = torchMoveTo tt Device.CPU
+
+        let data = tt2.Data<'T>()
+        let res = Array.zeroCreate<'T> (int32 tt2.NumberOfElements)
+        for i in 0 .. int32 tt2.NumberOfElements - 1 do
             res.[i] <- data.[i]
         res
 
@@ -285,10 +300,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.MoveTo(device: Device) =
         if t.Device = device then (t :> _) else
-        match device with 
-        | Device.CPU -> t.MakeLike(t.TorchTensor.Cpu(), device=device)
-        | Device.GPU -> t.MakeLike(t.TorchTensor.Cuda(), device=device)
-        | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
+        let tt2 = torchMoveTo tt device
+        t.MakeLike(tt2, device=device)
 
     override _.Equals(t2:RawTensor) : bool = 
         if dtype = t2.Dtype then
@@ -334,6 +347,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t1.MakeLike(result, dtype=Dtype.Bool)
 
     override t.MaxIndexT() = 
+
         let res = Array.zeroCreate<int64> t.Dim
         let idxs = Array.zeroCreate t.Dim
         let mutable values = tt
@@ -343,6 +357,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             idxs.[i] <- indexes
         for i = 0 to t.Dim - 1 do 
             let idx = idxs.[i]
+
+            // Torch Tensors must be CPU before DataItem can be accessed
+            let idx = torchMoveTo idx Device.CPU
+
             res.[i] <- 
                 match i with 
                 | 0 -> idx.DataItem<int64>()
@@ -721,11 +739,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
                 DoubleTensor.From (data, toTorchShape shape) 
             | Dtype.Other _ -> failwith "deserialize other type in torch nyi"
 
-        let tt2 = 
-            match device with 
-            | Device.CPU -> tt
-            | Device.GPU -> tt.Cuda()
-            | _ -> invalidOp (sprintf "the device '%A' is not supported by the Torch backend" device)
+        let tt2 = torchMoveTo tt device
         TorchRawTensor(tt2, shape, dtype, device)
 
     interface System.Runtime.Serialization.ISerializable with
