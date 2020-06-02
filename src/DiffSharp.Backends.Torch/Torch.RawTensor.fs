@@ -750,9 +750,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             // Torch Tensors must be CPU before they can be saved
             let tCpu = t.MoveTo(Device.CPU) :?> TorchRawTensor
 
-            info.AddValue("device", tCpu.Device)
-            info.AddValue("dtype", tCpu.Dtype)
-            info.AddValue("shape", tCpu.Shape)
+            info.AddValue("device", device)
+            info.AddValue("dtype", dtype)
+            info.AddValue("shape", shape)
             info.AddValue("data", tCpu.ToRawData())
 
 /// The concrete implementation of BackendStatics for Float32 data.
