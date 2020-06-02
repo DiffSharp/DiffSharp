@@ -758,9 +758,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 /// The concrete implementation of BackendStatics for Float32 data.
 type TorchStatics<'T, 'T2>
        (dtype: Dtype, conv: 'T -> 'T2,
-        from0: 'T2 -> TorchTensor,
+        fromScalar: 'T2 -> TorchTensor,
         from: 'T2[] * TorchShape -> TorchTensor,
-        zero: 'T, one: 'T,
+        zero: 'T,
+        one: 'T,
         zeros: TorchShape  * string -> TorchTensor,
         ones: TorchShape  * string -> TorchTensor,
         random: TorchShape  * string -> TorchTensor,
@@ -771,9 +772,15 @@ type TorchStatics<'T, 'T2>
 
     inherit BackendStatics()
 
+    let moveTo device (tt: TorchTensor) = 
+        match device with 
+        | Device.CPU -> tt
+        | Device.GPU -> tt.Cuda()
+        | Device.Other _ -> failwith "device extensibility not available in Torch backend as yet"
+
     override _.Seed(seed) = Torch.SetSeed(int64 seed) // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch. However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
-    override _.Zero(device) = TorchRawTensor(from0(conv(zero)), Shape.scalar, dtype, device) :> _ 
-    override _.One(device) = TorchRawTensor(from0(conv(one)), Shape.scalar, dtype, device) :> _
+    override _.Zero(device) = TorchRawTensor(moveTo device (fromScalar (conv zero)), Shape.scalar, dtype, device) :> _ 
+    override _.One(device) = TorchRawTensor(moveTo device (fromScalar (conv one)), Shape.scalar, dtype, device) :> _
     override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
     override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, toTorchDevice device), shape, dtype, device) :> _
@@ -789,13 +796,9 @@ type TorchStatics<'T, 'T2>
         let values = values :?> 'T[] |> Array.map conv 
         let t = 
             match shape with 
-            | [| |] -> from0(values.[0])
+            | [| |] -> fromScalar(values.[0])
             | _ -> from (values, toTorchShape shape)
-        let tt = 
-           match device with 
-           | Device.CPU -> t
-           | Device.GPU -> t.Cuda()
-           | Device.Other _ -> failwith "device extensibility not available in Torch backend as yet"
+        let tt = moveTo device t
         TorchRawTensor(tt, shape, dtype, device) :> _
 
 /// The concrete implementation of BackendStatics for Bool  data.
