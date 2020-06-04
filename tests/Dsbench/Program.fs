@@ -356,10 +356,6 @@ let main argv =
         let run_grad_AD =  duration "grad (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.grad fvsD xvD)
         let run_grad_N =   duration "grad (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.grad fvs xv)
 
-        let run_computeAdjoints_AD =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fvsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xvD)))
-
-        let run_computeAdjoints_AD_m =  duration "computeAdjoints (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.computeAdjoints (fmsD (DiffSharp.AD.Float64.DOps.makeReverse 100u xmD)))
-
         let run_gradv_AD = duration "gradv (auto)" n (fun () -> DiffSharp.AD.Float64.DiffOps.gradv fvsD xvD vvD)
         let run_gradv_N =  duration "gradv (numeric)" n (fun () -> DiffSharp.Numerical.Float64.DiffOps.gradv fvs xv vv)
 
@@ -451,13 +447,13 @@ let main argv =
         let k v () = v
         let K (vl: Lazy<_>) () = vl.Force()
 
-        let opNames        = ["diff";       "diff2";       "diffn";       "computeAdjointsV";       "computeAdjointsM";       "gradV";      "gradv";       "hessian";       "hessianv";       "gradhessian";       "gradhessianv";       "laplacian";       "jacobian";       "jacobianv";       "jacobianT";       "jacobianTv"]
-        let row_originals  = [K fss;        K fss;         K fss;         K fvs;                   K fms;                     K fvs;        K fvs;         K fvs;           K fvs;            K fvs;               K fvs;                K fvs;             K fvv;            K fvv;             K fvv;             K fvv]
-        let row_originalsD = [K fssD;       K fssD;        K fssD;        K fvsD;                  K fmsD;                    K fvsD;       K fvsD;        K fvsD;          K fvsD;           K fvsD;              K fvsD;               K fvsD;            K fvvD;           K fvvD;            K fvvD;            K fvvD]
-        let row_AD         = [run_diff_AD;  run_diff2_AD;  run_diffn_AD;  run_computeAdjoints_AD;  run_computeAdjoints_AD_m;  run_grad_AD;  run_gradv_AD;  run_hessian_AD;  run_hessianv_AD;  run_gradhessian_AD;  run_gradhessianv_AD;  run_laplacian_AD;  run_jacobian_AD;  run_jacobianv_AD;  run_jacobianT_AD;  run_jacobianTv_AD]
-        let row_N          = [run_diff_N;   run_diff2_N;   run_diffn_N;   k 0.0;                   k 0.0;                     run_grad_N;   run_gradv_N;   run_hessian_N;   run_hessianv_N;   run_gradhessian_N;   run_gradhessianv_N;   run_laplacian_N;   run_jacobian_N;   run_jacobianv_N;   run_jacobianT_N;   run_jacobianTv_N]
-        let row'_AD        = [run_diff'_AD; run_diff2'_AD; run_diffn'_AD; k 0.0;                   k 0.0;                     run_grad'_AD; run_gradv'_AD; run_hessian'_AD; run_hessianv'_AD; run_gradhessian'_AD; run_gradhessianv'_AD; run_laplacian'_AD; run_jacobian'_AD; run_jacobianv'_AD; run_jacobianT'_AD; run_jacobianTv'_AD]
-        let row'_N         = [run_diff'_N;  run_diff2'_N;  run_diffn'_N;  k 0.0;                   k 0.0;                     run_grad'_N;  run_gradv'_N;  run_hessian'_N;  run_hessianv'_N;  run_gradhessian'_N;  run_gradhessianv'_N;  run_laplacian'_N;  run_jacobian'_N;  run_jacobianv'_N;  run_jacobianT'_N;  run_jacobianTv'_N]
+        let opNames        = ["diff";       "diff2";       "diffn";       "gradV";      "gradv";       "hessian";       "hessianv";       "gradhessian";       "gradhessianv";       "laplacian";       "jacobian";       "jacobianv";       "jacobianT";       "jacobianTv"]
+        let row_originals  = [K fss;        K fss;         K fss;         K fvs;        K fvs;         K fvs;           K fvs;            K fvs;               K fvs;                K fvs;             K fvv;            K fvv;             K fvv;             K fvv]
+        let row_originalsD = [K fssD;       K fssD;        K fssD;        K fvsD;       K fvsD;        K fvsD;          K fvsD;           K fvsD;              K fvsD;               K fvsD;            K fvvD;           K fvvD;            K fvvD;            K fvvD]
+        let row_AD         = [run_diff_AD;  run_diff2_AD;  run_diffn_AD;  run_gradv_AD;  run_hessian_AD;  run_hessianv_AD;  run_gradhessian_AD;  run_gradhessianv_AD;  run_laplacian_AD;  run_jacobian_AD;  run_jacobianv_AD;  run_jacobianT_AD;  run_jacobianTv_AD]
+        let row_N          = [run_diff_N;   run_diff2_N;   run_diffn_N;   run_grad_N;   run_gradv_N;   run_hessian_N;   run_hessianv_N;   run_gradhessian_N;   run_gradhessianv_N;   run_laplacian_N;   run_jacobian_N;   run_jacobianv_N;   run_jacobianT_N;   run_jacobianTv_N]
+        let row'_AD        = [run_diff'_AD; run_diff2'_AD; run_diffn'_AD; run_grad'_AD; run_gradv'_AD; run_hessian'_AD; run_hessianv'_AD; run_gradhessian'_AD; run_gradhessianv'_AD; run_laplacian'_AD; run_jacobian'_AD; run_jacobianv'_AD; run_jacobianT'_AD; run_jacobianTv'_AD]
+        let row'_N         = [run_diff'_N;  run_diff2'_N;  run_diffn'_N;  run_grad'_N;  run_gradv'_N;  run_hessian'_N;  run_hessianv'_N;  run_gradhessian'_N;  run_gradhessianv'_N;  run_laplacian'_N;  run_jacobian'_N;  run_jacobianv'_N;  run_jacobianT'_N;  run_jacobianTv'_N]
 
         if Set.ofList opNames <> Set.ofList opArgNames then failwith "opNames <> opArgNames - fix the benchmark program please"
         let doOp op = List.contains op opsToRun

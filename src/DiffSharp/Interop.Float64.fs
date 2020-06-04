@@ -32,7 +32,7 @@ type D(x:ADD) =
             match d with
             | AD.D(p) -> sprintf "D %A" p
             | AD.DF(p, t, _) -> sprintf "DF (%A, %A)" (s p) (s t)
-            | AD.DR(p, op, _, _) -> sprintf "DR (%A, %A)"  (s p) (op.ToString())
+            | AD.DR(p, op, _, _, _) -> sprintf "DR (%A, %A)"  (s p) (op.ToString())
         s (d.toADD())
     static member op_Explicit(d:D):AD.number = ADD.op_Explicit (d.toADD())
     static member op_Implicit(a:AD.number):D = D(a)
@@ -126,7 +126,7 @@ and DV(v:ADDV) =
             match d with
             | AD.DV(p) -> sprintf "DV %A" p
             | AD.DVF(p, t, _) -> sprintf "DVF (%A, %A)" (s p) (s t)
-            | AD.DVR(p, op, _, _) -> sprintf "DVR (%A, %A)" (s p) (op.ToString())
+            | AD.DVR(p, op, _, _, _) -> sprintf "DVR (%A, %A)" (s p) (op.ToString())
         s (d.toADDV())
     member d.Visualize() = d.toADDV().Visualize()
     static member op_Explicit(d:DV):AD.number[] = ADDV.op_Explicit(d.toADDV())
@@ -239,7 +239,7 @@ and DM(m:ADDM) =
             match d with
             | AD.DM(p) -> sprintf "DM %A" p
             | AD.DMF(p, t, _) -> sprintf "DMF (%A, %A)" (s p) (s t)
-            | AD.DMR(p, op, _, _) -> sprintf "DMR (%A, %A)" (s p) (op.ToString())
+            | AD.DMR(p, op, _, _, _) -> sprintf "DMR (%A, %A)" (s p) (op.ToString())
         s (d.toADDM())
     member d.Visualize() = d.toADDM().Visualize()
     static member op_Explicit(d:DM):AD.number[, ] = ADDM.op_Explicit(d.toADDM())
@@ -350,16 +350,6 @@ and DM(m:ADDM) =
     static member Variance (a:DM) = D(ADDM.Variance(a.toADDM()))
     static member Normalize (a:DM) = DM(ADDM.Normalize(a.toADDM()))
     static member Standardize (a:DM) = DM(ADDM.Standardize(a.toADDM()))
-
-and ADAdjoints = AD.Adjoints
-
-and Adjoints() =
-    let m = ADAdjoints()
-    member internal this.toADAdjoints() = m
-    member this.Item with get (d:D) = m.[d.toADD()] |> D.ADDtoD
-    member this.Item with get (d:DV) = m.[d.toADDV()] |> DV.ADDVtoDV
-    member this.Item with get (d:DM) = m.[d.toADDM()] |> DM.ADDMtoDM
-
 
 /// Nested forward and reverse mode automatic differentiation module
 type AD =

@@ -25,23 +25,10 @@ let ``AD.32.R.D.FixedPoint``() =
     Util.(=~)(p, D 5.f) && Util.(=~)(t, D 0.1f)*)
 
 [<Property>]
-let ``Compute Adjoint``() =
-    let tag = DiffSharp.Util.GlobalTagger.Next        
-    
-    let Wt = toDM [[0.0f; 1.0f]]
-    let Wt' = Wt |> makeReverse tag   
-    let loss (weights:DM) : D = cos (weights.Item(0,0))
-    
-    let L = loss Wt'
-    let A = computeAdjoints L //Smoke test computeAdjoints, was an issue with single precision
-
-    ()
-
-[<Property>]
 let ``Gradient descent``() =
 
     let minimize (f:DV->D) (x0:DV) = 
-        let eta = 1e-2f
+        let eta = 0.01f
         let mutable W = x0
         for _ in [0..10] do
             let L,g = grad' f W
@@ -60,7 +47,7 @@ let ``Gradient descent``() =
 let ``Gradient descent (with arrays)``() =
 
     let minimize (f:DV->D) (x0:DV) = 
-        let eta = 1e-2f
+        let eta = 0.01f
         let mutable W = x0
         for _ in [0..10] do
             let L,g = grad' f W
