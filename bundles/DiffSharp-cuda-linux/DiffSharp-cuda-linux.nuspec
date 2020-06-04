@@ -12,7 +12,7 @@
         <dependency id="DiffSharp.Backends.Torch" version="$PackageVersion$" exclude="Build,Analyzers" />
         <dependency id="DiffSharp.Core" version="$PackageVersion$" exclude="Build,Analyzers" />
         <dependency id="FSharp.Core" version="4.7.1" exclude="Build,Analyzers" />
-        <dependency id="libtorch-cuda-10.2-linux-x64" version="$LibTorchVersion$" exclude="Build,Analyzers" />
+        <dependency id="libtorch-cuda-10.2-linux-x64" version="$LibTorchNugetVersion$" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
