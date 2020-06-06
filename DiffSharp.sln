@@ -27,8 +27,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-cuda-windows", "b
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-reference", "bundles\DiffSharp-reference\DiffSharp-reference.fsproj", "{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Test", "tests\Test\Test.fsproj", "{37B10630-5A44-4097-9161-CCFDF690F5ED}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -147,18 +145,6 @@ Global
 		{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}.Release|x64.Build.0 = Release|Any CPU
 		{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}.Release|x86.ActiveCfg = Release|Any CPU
 		{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}.Release|x86.Build.0 = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|x64.Build.0 = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Debug|x86.Build.0 = Debug|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|x64.ActiveCfg = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|x64.Build.0 = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|x86.ActiveCfg = Release|Any CPU
-		{37B10630-5A44-4097-9161-CCFDF690F5ED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -173,7 +159,6 @@ Global
 		{E503419E-212A-4FC6-A50F-08E8FB4F8EA8} = {408BBEB8-B412-4387-8658-CD9A5FD361D6}
 		{5BE145D5-0240-4806-B87A-764503C497B9} = {408BBEB8-B412-4387-8658-CD9A5FD361D6}
 		{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3} = {408BBEB8-B412-4387-8658-CD9A5FD361D6}
-		{37B10630-5A44-4097-9161-CCFDF690F5ED} = {7BD8D35F-E131-4F4D-A67E-5AA66890D5E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89C67BAA-8BDB-467F-AF4D-D4C32E614CBB}
