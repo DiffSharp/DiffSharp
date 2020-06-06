@@ -24,12 +24,17 @@ let main _ =
     //     loss.reverse()
     //     optimizer.step()
     //     printfn "%A %A" i (float loss)
-    
-    dsharp.config(backend=Backend.Torch)
+    printfn "Press any key to continue... 1"
+    Console.ReadKey() |> ignore
+
+    dsharp.config(backend=Backend.Reference)
     dsharp.seed(12)
 
     let dataset = MNIST("./data", train=true)
     let dataloader = dataset.loader(64, shuffle=true)
+
+    printfn "Press any key to continue... 2"
+    Console.ReadKey() |> ignore
 
     // let net =
     //     let convs = Conv2d(1, 32, 3)
@@ -51,9 +56,24 @@ let main _ =
 
     printfn "net params: %A" net.nparameters
 
+    printfn "Press any key to continue... 3"
+    Console.ReadKey() |> ignore
+
     printfn "%A" net.parameters.backend
-    Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=200, threshold=0.1)
-    let i, t = dataset.item(0)
-    let o = i --> dsharp.move() --> dsharp.unsqueeze(0) --> net
-    printfn "%A %A %A" o o.backend t    
+    Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=200)
+
+    //let i, t = dataset.item(0)
+    //let o = i --> dsharp.move() --> dsharp.unsqueeze(0) --> net
+    //printfn "%A %A %A" o o.backend t    
+
+    printfn "Press any key to continue... 4"
+    Console.ReadKey() |> ignore
+
+    printfn "%A" net.parameters.backend
+    Optimizer.adam(net, dataloader, dsharp.crossEntropyLoss, iters=200)
+
+
+    printfn "Press any key to continue... 5"
+    Console.ReadKey() |> ignore
+
     0 // return an integer exit code
