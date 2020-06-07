@@ -59,6 +59,12 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
        if toTorchShape shape <> tt.Shape then 
            failwithf "mismatched Torch tensor shape, expected %A, got %A" (toTorchShape shape) tt.Shape
 
+    override _.Finalize() =
+        try
+            tt.Dispose()
+        finally
+            base.Finalize()
+
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)
 
