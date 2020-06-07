@@ -1953,15 +1953,15 @@ and TensorOp =
     | DivTT0Const of Tensor * Tensor // derivative test implemented
     | DivTConstT0 of Tensor * Tensor // derivative test implemented
 
-    | PowTT of Tensor * Tensor
-    | PowTTConst of Tensor * Tensor
-    | PowTConstT of Tensor * Tensor
-    | PowT0T of Tensor * Tensor
-    | PowT0TConst of Tensor * Tensor
-    | PowT0ConstT of Tensor * Tensor
-    | PowTT0 of Tensor * Tensor
-    | PowTT0Const of Tensor * Tensor
-    | PowTConstT0 of Tensor * Tensor
+    | PowTT of Tensor * Tensor // derivative test implemented
+    | PowTTConst of Tensor * Tensor // derivative test implemented
+    | PowTConstT of Tensor * Tensor // derivative test implemented
+    | PowT0T of Tensor * Tensor // derivative test implemented
+    | PowT0TConst of Tensor * Tensor // derivative test implemented
+    | PowT0ConstT of Tensor * Tensor // derivative test implemented
+    | PowTT0 of Tensor * Tensor // derivative test implemented
+    | PowTT0Const of Tensor * Tensor // derivative test implemented
+    | PowTConstT0 of Tensor * Tensor // derivative test implemented
 
     | MatMulT2T2 of Tensor * Tensor
     | MatMulT2T2Const of Tensor * Tensor
