@@ -1927,15 +1927,15 @@ and TensorOp =
     | AddT2T1Const of Tensor // derivative test implemented
     | AddT2ConstT1 of Tensor // derivative test implemented
     
-    | SubTT of Tensor * Tensor
-    | SubTTConst of Tensor
-    | SubTConstT of Tensor
-    | SubT0T of Tensor * Tensor
-    | SubT0TConst of Tensor
-    | SubT0ConstT of Tensor
-    | SubTT0 of Tensor * Tensor
-    | SubTT0Const of Tensor
-    | SubTConstT0 of Tensor
+    | SubTT of Tensor * Tensor // derivative test implemented
+    | SubTTConst of Tensor // derivative test implemented
+    | SubTConstT of Tensor // derivative test implemented
+    | SubT0T of Tensor * Tensor // derivative test implemented
+    | SubT0TConst of Tensor // derivative test implemented
+    | SubT0ConstT of Tensor // derivative test implemented
+    | SubTT0 of Tensor * Tensor // derivative test implemented
+    | SubTT0Const of Tensor // derivative test implemented
+    | SubTConstT0 of Tensor // derivative test implemented
 
     | MulTT of Tensor * Tensor
     | MulTTConst of Tensor * Tensor
