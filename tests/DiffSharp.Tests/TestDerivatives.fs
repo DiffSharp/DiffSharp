@@ -39,37 +39,177 @@ type TestDerivatives () =
             Assert.AreEqual(revydCorrect, revyd)
 
     [<Test>]
-    member _.TestDerivativeAddT2T1 () =
+    member _.TestDerivativeAddTTConst () =
         for combo in Combos.AllDevicesAndBackends do
-            let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
-            let fwdy = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([2.; 3.]))
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor([5.; 6.; 7.])
             let fwdz = fwdx + fwdy
-            let fwdzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+            let fwdzCorrect = combo.tensor([6.; 8.; 10.])
             let fwdzd = fwdz.derivative
-            let fwdzdCorrect = combo.tensor([[4.; 6.]; [6.; 8.]])
+            let fwdzdCorrect = combo.tensor([2.; 3.; 4.])
 
-            let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
-            let revy = combo.tensor([5.; 6.]).reverseDiff()
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.])
             let revz = revx + revy
-            let revzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
-            revz.reverse(combo.tensor([[2.; 3.]; [4.; 5.]]))
+            let revzCorrect = combo.tensor([6.; 8.; 10.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
             let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([[2.; 3.]; [4.; 5.]])
-            let revyd = revy.derivative
-            let revydCorrect = combo.tensor([6.; 8.])
+            let revxdCorrect = combo.tensor([5.; 5.; 5.])
 
             Assert.AreEqual(fwdzCorrect, fwdz)
             Assert.AreEqual(fwdzdCorrect, fwdzd)
             Assert.AreEqual(revzCorrect, revz)
             Assert.AreEqual(revxdCorrect, revxd)
-            Assert.AreEqual(revydCorrect, revyd)
 
-    // TODO: add test for AddTTConst
-    // TODO: add test for AddTT0
-    // TODO: add test for AddTT0Const
-    // TODO: add test for AddTConstT0
-    // TODO: add test for AddT2T1Const
-    // TODO: add test for AddT2ConstT1
+    [<Test>]
+    member _.TestDerivativeAddT2T1 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
+                let fwdy = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([2.; 3.]))
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([[4.; 6.]; [6.; 8.]])
+
+                let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
+                let revy = combo.tensor([5.; 6.]).reverseDiff()
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                revz.reverse(combo.tensor([[2.; 3.]; [4.; 5.]]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([[2.; 3.]; [4.; 5.]])
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor([6.; 8.])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+                Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeAddT2T1Const () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
+                let fwdy = combo.tensor([5.; 6.])
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([[2.; 3.]; [4.; 5.]])
+
+                let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
+                let revy = combo.tensor([5.; 6.])
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                revz.reverse(combo.tensor([[2.; 3.]; [4.; 5.]]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([[2.; 3.]; [4.; 5.]])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeAddT2ConstT1 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]])
+                let fwdy = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([2.; 3.]))
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([[2.; 3.]; [2.; 3.]])
+
+                let revx = combo.tensor([[1.; 2.]; [3.; 4.]])
+                let revy = combo.tensor([5.; 6.]).reverseDiff()
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([[6.; 8.]; [8.; 10.]])
+                revz.reverse(combo.tensor([[2.; 3.]; [4.; 5.]]))
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor([6.; 8.])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeAddTT0Const () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+                let fwdy = 5.
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([6.; 7.; 8.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([2.; 3.; 4.])
+
+                let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+                let revy = 5.
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([6.; 7.; 8.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([5.; 6.; 7.])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeAddTT0 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+                let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(3.))
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([6.; 7.; 8.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([5.; 6.; 7.])
+
+                let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+                let revy = combo.tensor(5.).reverseDiff()
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([6.; 7.; 8.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([5.; 6.; 7.])
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor(18.)
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+                Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeAddTConstT0 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.])
+                let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(3.))
+                let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
+                let fwdzCorrect = combo.tensor([6.; 7.; 8.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([3.; 3.; 3.])
+
+                let revx = combo.tensor([1.; 2.; 3.])
+                let revy = combo.tensor(5.).reverseDiff()
+                let revz = if swap then revy + revx else revx + revy
+                let revzCorrect = combo.tensor([6.; 7.; 8.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor(18.)
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revydCorrect, revyd)
 
     [<Test>]
     member _.TestDerivativeExpand () =
@@ -193,14 +333,195 @@ type TestDerivatives () =
             Assert.AreEqual(revxdCorrect, revxd)
             Assert.AreEqual(revydCorrect, revyd)
 
-    // TODO: add test for SubTTConst
-    // TODO: add test for SubTConstT
-    // TODO: add test for SubT0T
-    // TODO: add test for SubT0TConst
-    // TODO: add test for SubT0ConstT
-    // TODO: add test for SubTT0
-    // TODO: add test for SubTT0Const
-    // TODO: add test for SubTConstT0
+    [<Test>]
+    member _.TestDerivativeSubTTConst () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor([5.; 6.; 7.])
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([-4.; -4.; -4.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([2.; 3.; 4.])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.])
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([-4.; -4.; -4.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([5.; 5.; 5.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeSubTConstT () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.])
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([-4.; -4.; -4.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-2.; -2.; -3.])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([-4.; -4.; -4.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-5.; -5.; -5.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeSubT0T () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(9.).forwardDiff(combo.tensor(7.))
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([4.; 3.; 2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([5.; 5.; 4.])
+
+            let revx = combo.tensor(9.).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([4.; 3.; 2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor(15.)
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-5.; -5.; -5.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+            Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeSubTT0 () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(7.))
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([-4.; -3.; -2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-5.; -4.; -3.])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor(5.).reverseDiff()
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([-4.; -3.; -2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([5.; 5.; 5.])
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor(-15.)
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+            Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeSubT0TConst () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(9.).forwardDiff(combo.tensor(7.))
+            let fwdy = combo.tensor([5.; 6.; 7.])
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([4.; 3.; 2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([7.; 7.; 7.])
+
+            let revx = combo.tensor(9.).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.])
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([4.; 3.; 2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor(15.)
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeSubTConstT0 () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.])
+            let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(7.))
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([-4.; -3.; -2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-7.; -7.; -7.])
+
+            let revx = combo.tensor([1.; 2.; 3.])
+            let revy = combo.tensor(5.).reverseDiff()
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([-4.; -3.; -2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor(-15.)
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeSubT0ConstT () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(9.)
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([4.; 3.; 2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-2.; -2.; -3.])
+
+            let revx = combo.tensor(9.)
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([4.; 3.; 2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-5.; -5.; -5.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeSubTT0Const () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor(5.)
+            let fwdz = fwdx - fwdy
+            let fwdzCorrect = combo.tensor([-4.; -3.; -2.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([2.; 3.; 4.])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor(5.)
+            let revz = revx - revy
+            let revzCorrect = combo.tensor([-4.; -3.; -2.])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([5.; 5.; 5.])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member _.TestDerivativeMulTT () =
@@ -228,10 +549,104 @@ type TestDerivatives () =
             Assert.AreEqual(revxdCorrect, revxd)
             Assert.AreEqual(revydCorrect, revyd)
 
-    // TODO: add test for MulTTConst
-    // TODO: add test for MulTT0
-    // TODO: add test for MulTConstT0
-    // TODO: add test for MulTT0Const
+    [<Test>]
+    member _.TestDerivativeMulTTConst () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+                let fwdy = combo.tensor([5.; 6.; 7.])
+                let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
+                let fwdzCorrect = combo.tensor([5.; 12.; 21.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([10.; 18.; 28.])
+
+                let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+                let revy = combo.tensor([5.; 6.; 7.])
+                let revz = if swap then revy * revx else revx * revy
+                let revzCorrect = combo.tensor([5.; 12.; 21.])
+                revz.reverse(combo.tensor([5.; 5.; 5.]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([25.; 30.; 35.])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeMulTT0 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+                let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(2.))
+                let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
+                let fwdzCorrect = combo.tensor([5.; 10.; 15.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([12.; 19.; 26.])
+
+                let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+                let revy = combo.tensor(5.).reverseDiff()
+                let revz = if swap then revy * revx else revx * revy
+                let revzCorrect = combo.tensor([5.; 10.; 15.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([25.; 30.; 35.])
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor(38.)
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
+                Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeMulTConstT0 () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.])
+                let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(2.))
+                let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
+                let fwdzCorrect = combo.tensor([5.; 10.; 15.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([2.; 4.; 6.])
+
+                let revx = combo.tensor([1.; 2.; 3.])
+                let revy = combo.tensor(5.).reverseDiff()
+                let revz = if swap then revy * revx else revx * revy
+                let revzCorrect = combo.tensor([5.; 10.; 15.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revyd = revy.derivative
+                let revydCorrect = combo.tensor(38.)
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revydCorrect, revyd)
+
+    [<Test>]
+    member _.TestDerivativeMulTT0Const () =
+        for swap in [true; false] do
+            for combo in Combos.AllDevicesAndBackends do
+                let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+                let fwdy = combo.tensor(5.)
+                let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
+                let fwdzCorrect = combo.tensor([5.; 10.; 15.])
+                let fwdzd = fwdz.derivative
+                let fwdzdCorrect = combo.tensor([10.; 15.; 20.])
+
+                let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+                let revy = combo.tensor(5.)
+                let revz = if swap then revy * revx else revx * revy
+                let revzCorrect = combo.tensor([5.; 10.; 15.])
+                revz.reverse(combo.tensor([5.; 6.; 7.]))
+                let revxd = revx.derivative
+                let revxdCorrect = combo.tensor([25.; 30.; 35.])
+
+                Assert.AreEqual(fwdzCorrect, fwdz)
+                Assert.AreEqual(fwdzdCorrect, fwdzd)
+                Assert.AreEqual(revzCorrect, revz)
+                Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member _.TestDerivativeDivTT () =
@@ -258,15 +673,196 @@ type TestDerivatives () =
             Assert.True(revz.allclose(revzCorrect, 0.01))
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
             Assert.True(revyd.allclose(revydCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivTTConst () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor([5.; 6.; 7.])
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([0.4; 0.5; 0.571428571428571])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.])
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([1.; 0.833333; 0.714286])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
     
-    // TODO: add test for DivTTConst
-    // TODO: add test for DivTConstT
-    // TODO: add test for DivT0T
-    // TODO: add test for DivT0TConst
-    // TODO: add test for DivT0ConstT
-    // TODO: add test for DivTT0
-    // TODO: add test for DivTT0Const
-    // TODO: add test for DivTConstT0
+    [<Test>]
+    member _.TestDerivativeDivTConstT () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.])
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-0.08; -0.111111111111111; -0.183673469387755])
+
+            let revx = combo.tensor([1.; 2.; 3.])
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.2; 0.333333; 0.428571])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-0.2; -0.277778; -0.306122])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivTT0 () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(2.))
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([0.32; 0.44; 0.56])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor(5.).reverseDiff()
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([1.; 1.; 1.])
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor(-1.2)
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivT0T () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(3.).forwardDiff(combo.tensor(2.))
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([0.16; 0.166666666666667; 0.102040816326531])
+
+            let revx = combo.tensor(3.).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor(2.54761871428571)
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-0.6; -0.416666666666667; -0.306122448979592])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivTConstT0 () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.])
+            let fwdy = combo.tensor(5.).forwardDiff(combo.tensor(2.))
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-0.08; -0.16; -0.24])
+
+            let revx = combo.tensor([1.; 2.; 3.])
+            let revy = combo.tensor(5.).reverseDiff()
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor(-1.2)
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivT0TConst () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(3.).forwardDiff(combo.tensor(2.))
+            let fwdy = combo.tensor([5.; 6.; 7.])
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([0.4; 0.333333333333333; 0.285714285714286])
+
+            let revx = combo.tensor(3.).reverseDiff()
+            let revy = combo.tensor([5.; 6.; 7.])
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor(2.54761871428571)
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivTT0Const () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdy = combo.tensor(5.)
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([0.4; 0.6; 0.8])
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revy = combo.tensor(5.)
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.2; 0.4; 0.6])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([1.; 1.; 1.])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeDivT0ConstT () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor(3.)
+            let fwdy = combo.tensor([5.; 6.; 7.]).forwardDiff(combo.tensor([2.; 2.; 3.]))
+            let fwdz = fwdx / fwdy
+            let fwdzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-0.24; -0.166666666666667; -0.183673469387755])
+
+            let revx = combo.tensor(3.)
+            let revy = combo.tensor([5.; 6.; 7.]).reverseDiff()
+            let revz = revx / revy
+            let revzCorrect = combo.tensor([0.6; 0.5; 0.428571428571429])
+            revz.reverse(combo.tensor([5.; 5.; 5.]))
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([-0.6; -0.416666666666667; -0.306122448979592])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
     member _.TestDerivativePowTT () =
