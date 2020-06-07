@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/DiffSharp/DiffSharp.svg?branch=dev)](https://travis-ci.org/DiffSharp/DiffSharp)
 [![codecov](https://codecov.io/gh/DiffSharp/DiffSharp/branch/dev/graph/badge.svg)](https://codecov.io/gh/DiffSharp/DiffSharp)
 
-**NOTE: This branch is currently undergoing significant development. It has incomplete code, functionality, and design that are likely to change without notice, until we officially release DiffSharp 1.0.**
+**NOTE: This branch is currently undergoing significant development. It has incomplete code, functionality, and design that are likely to change without notice, until we officially release DiffSharp 1.0 and the corresponding documentation.**
 
 This is the development branch of DiffSharp 1.0.
 
