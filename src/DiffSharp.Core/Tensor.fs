@@ -1918,14 +1918,14 @@ type Tensor =
         push [(value, t)]
 
 and TensorOp =
-    | AddTT of Tensor * Tensor
-    | AddTTConst of Tensor
-    | AddTT0 of Tensor * Tensor
-    | AddTT0Const of Tensor
-    | AddTConstT0 of Tensor
-    | AddT2T1 of Tensor * Tensor
-    | AddT2T1Const of Tensor
-    | AddT2ConstT1 of Tensor
+    | AddTT of Tensor * Tensor// derivative test implemented
+    | AddTTConst of Tensor // derivative test implemented
+    | AddTT0 of Tensor * Tensor // derivative test implemented
+    | AddTT0Const of Tensor // derivative test implemented
+    | AddTConstT0 of Tensor // derivative test implemented
+    | AddT2T1 of Tensor * Tensor // derivative test implemented
+    | AddT2T1Const of Tensor // derivative test implemented
+    | AddT2ConstT1 of Tensor // derivative test implemented
     
     | SubTT of Tensor * Tensor
     | SubTTConst of Tensor
