@@ -1937,11 +1937,11 @@ and TensorOp =
     | SubTT0Const of Tensor // derivative test implemented
     | SubTConstT0 of Tensor // derivative test implemented
 
-    | MulTT of Tensor * Tensor
-    | MulTTConst of Tensor * Tensor
-    | MulTT0 of Tensor * Tensor
-    | MulTConstT0 of Tensor * Tensor
-    | MulTT0Const of Tensor * Tensor
+    | MulTT of Tensor * Tensor // derivative test implemented
+    | MulTTConst of Tensor * Tensor // derivative test implemented
+    | MulTT0 of Tensor * Tensor // derivative test implemented
+    | MulTT0Const of Tensor * Tensor // derivative test implemented
+    | MulTConstT0 of Tensor * Tensor // derivative test implemented
 
     | DivTT of Tensor * Tensor
     | DivTTConst of Tensor * Tensor
