@@ -1918,54 +1918,54 @@ type Tensor =
         push [(value, t)]
 
 and TensorOp =
-    | AddTT of Tensor * Tensor// derivative test implemented
-    | AddTTConst of Tensor // derivative test implemented
-    | AddTT0 of Tensor * Tensor // derivative test implemented
-    | AddTT0Const of Tensor // derivative test implemented
-    | AddTConstT0 of Tensor // derivative test implemented
-    | AddT2T1 of Tensor * Tensor // derivative test implemented
-    | AddT2T1Const of Tensor // derivative test implemented
-    | AddT2ConstT1 of Tensor // derivative test implemented
+    | AddTT of Tensor * Tensor
+    | AddTTConst of Tensor
+    | AddTT0 of Tensor * Tensor
+    | AddTT0Const of Tensor
+    | AddTConstT0 of Tensor
+    | AddT2T1 of Tensor * Tensor
+    | AddT2T1Const of Tensor
+    | AddT2ConstT1 of Tensor
     
-    | SubTT of Tensor * Tensor // derivative test implemented
-    | SubTTConst of Tensor // derivative test implemented
-    | SubTConstT of Tensor // derivative test implemented
-    | SubT0T of Tensor * Tensor // derivative test implemented
-    | SubT0TConst of Tensor // derivative test implemented
-    | SubT0ConstT of Tensor // derivative test implemented
-    | SubTT0 of Tensor * Tensor // derivative test implemented
-    | SubTT0Const of Tensor // derivative test implemented
-    | SubTConstT0 of Tensor // derivative test implemented
+    | SubTT of Tensor * Tensor
+    | SubTTConst of Tensor
+    | SubTConstT of Tensor
+    | SubT0T of Tensor * Tensor
+    | SubT0TConst of Tensor
+    | SubT0ConstT of Tensor
+    | SubTT0 of Tensor * Tensor
+    | SubTT0Const of Tensor
+    | SubTConstT0 of Tensor
 
-    | MulTT of Tensor * Tensor // derivative test implemented
-    | MulTTConst of Tensor * Tensor // derivative test implemented
-    | MulTT0 of Tensor * Tensor // derivative test implemented
-    | MulTT0Const of Tensor * Tensor // derivative test implemented
-    | MulTConstT0 of Tensor * Tensor // derivative test implemented
+    | MulTT of Tensor * Tensor
+    | MulTTConst of Tensor * Tensor
+    | MulTT0 of Tensor * Tensor
+    | MulTT0Const of Tensor * Tensor
+    | MulTConstT0 of Tensor * Tensor
 
-    | DivTT of Tensor * Tensor // derivative test implemented
-    | DivTTConst of Tensor * Tensor // derivative test implemented
-    | DivTConstT of Tensor * Tensor // derivative test implemented
-    | DivT0T of Tensor * Tensor // derivative test implemented
-    | DivT0TConst of Tensor * Tensor // derivative test implemented
-    | DivT0ConstT of Tensor * Tensor // derivative test implemented
-    | DivTT0 of Tensor * Tensor // derivative test implemented
-    | DivTT0Const of Tensor * Tensor // derivative test implemented
-    | DivTConstT0 of Tensor * Tensor // derivative test implemented
+    | DivTT of Tensor * Tensor
+    | DivTTConst of Tensor * Tensor
+    | DivTConstT of Tensor * Tensor
+    | DivT0T of Tensor * Tensor
+    | DivT0TConst of Tensor * Tensor
+    | DivT0ConstT of Tensor * Tensor
+    | DivTT0 of Tensor * Tensor
+    | DivTT0Const of Tensor * Tensor
+    | DivTConstT0 of Tensor * Tensor
 
-    | PowTT of Tensor * Tensor // derivative test implemented
-    | PowTTConst of Tensor * Tensor // derivative test implemented
-    | PowTConstT of Tensor * Tensor // derivative test implemented
-    | PowT0T of Tensor * Tensor // derivative test implemented
-    | PowT0TConst of Tensor * Tensor // derivative test implemented
-    | PowT0ConstT of Tensor * Tensor // derivative test implemented
-    | PowTT0 of Tensor * Tensor // derivative test implemented
-    | PowTT0Const of Tensor * Tensor // derivative test implemented
-    | PowTConstT0 of Tensor * Tensor // derivative test implemented
+    | PowTT of Tensor * Tensor
+    | PowTTConst of Tensor * Tensor
+    | PowTConstT of Tensor * Tensor
+    | PowT0T of Tensor * Tensor
+    | PowT0TConst of Tensor * Tensor
+    | PowT0ConstT of Tensor * Tensor
+    | PowTT0 of Tensor * Tensor
+    | PowTT0Const of Tensor * Tensor
+    | PowTConstT0 of Tensor * Tensor
 
-    | MatMulT2T2 of Tensor * Tensor // derivative test implemented
-    | MatMulT2T2Const of Tensor * Tensor // derivative test implemented
-    | MatMulT2ConstT2 of Tensor * Tensor // derivative test implemented
+    | MatMulT2T2 of Tensor * Tensor
+    | MatMulT2T2Const of Tensor * Tensor
+    | MatMulT2ConstT2 of Tensor * Tensor
 
     | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor
@@ -1976,21 +1976,21 @@ and TensorOp =
     | MaxPool3DT of Tensor * Tensor * int[]
     | MaxUnpool3DT of Tensor * Tensor
 
-    | Conv1DTT of Tensor * Tensor * int * int // derivative test implemented
-    | Conv1DTTConst of Tensor * Tensor * int * int // derivative test implemented
-    | Conv1DTConstT of Tensor * Tensor * int * int // derivative test implemented
+    | Conv1DTT of Tensor * Tensor * int * int
+    | Conv1DTTConst of Tensor * Tensor * int * int
+    | Conv1DTConstT of Tensor * Tensor * int * int
 
-    | Conv2DTT of Tensor * Tensor * int[] * int[] // derivative test implemented
-    | Conv2DTTConst of Tensor * Tensor * int[] * int[] // derivative test implemented
-    | Conv2DTConstT of Tensor * Tensor * int[] * int[] // derivative test implemented
+    | Conv2DTT of Tensor * Tensor * int[] * int[]
+    | Conv2DTTConst of Tensor * Tensor * int[] * int[]
+    | Conv2DTConstT of Tensor * Tensor * int[] * int[]
 
-    | Conv3DTT of Tensor * Tensor * int[] * int[] // derivative test implemented
-    | Conv3DTTConst of Tensor * Tensor * int[] * int[] // derivative test implemented
-    | Conv3DTConstT of Tensor * Tensor * int[] * int[] // derivative test implemented
+    | Conv3DTT of Tensor * Tensor * int[] * int[]
+    | Conv3DTTConst of Tensor * Tensor * int[] * int[]
+    | Conv3DTConstT of Tensor * Tensor * int[] * int[]
 
-    | AddTTSlice of Tensor * int[] * Tensor // derivative test implemented
-    | AddTTConstSlice of Tensor // derivative test implemented
-    | AddTConstTSlice of int[] * Tensor // derivative test implemented
+    | AddTTSlice of Tensor * int[] * Tensor
+    | AddTTConstSlice of Tensor
+    | AddTConstTSlice of int[] * Tensor
 
     | NegT of Tensor
     | SumT of Tensor
