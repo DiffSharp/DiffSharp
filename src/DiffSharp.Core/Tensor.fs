@@ -1980,9 +1980,9 @@ and TensorOp =
     | Conv1DTTConst of Tensor * Tensor * int * int // derivative test implemented
     | Conv1DTConstT of Tensor * Tensor * int * int // derivative test implemented
 
-    | Conv2DTT of Tensor * Tensor * int[] * int[]
-    | Conv2DTTConst of Tensor * Tensor * int[] * int[]
-    | Conv2DTConstT of Tensor * Tensor * int[] * int[]
+    | Conv2DTT of Tensor * Tensor * int[] * int[] // derivative test implemented
+    | Conv2DTTConst of Tensor * Tensor * int[] * int[] // derivative test implemented
+    | Conv2DTConstT of Tensor * Tensor * int[] * int[] // derivative test implemented
 
     | Conv3DTT of Tensor * Tensor * int[] * int[]
     | Conv3DTTConst of Tensor * Tensor * int[] * int[]
