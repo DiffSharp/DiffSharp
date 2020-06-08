@@ -1963,9 +1963,9 @@ and TensorOp =
     | PowTT0Const of Tensor * Tensor // derivative test implemented
     | PowTConstT0 of Tensor * Tensor // derivative test implemented
 
-    | MatMulT2T2 of Tensor * Tensor
-    | MatMulT2T2Const of Tensor * Tensor
-    | MatMulT2ConstT2 of Tensor * Tensor
+    | MatMulT2T2 of Tensor * Tensor // derivative test implemented
+    | MatMulT2T2Const of Tensor * Tensor // derivative test implemented
+    | MatMulT2ConstT2 of Tensor * Tensor // derivative test implemented
 
     | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor
