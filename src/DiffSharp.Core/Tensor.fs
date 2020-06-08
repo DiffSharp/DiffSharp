@@ -1988,6 +1988,10 @@ and TensorOp =
     | Conv3DTTConst of Tensor * Tensor * int[] * int[] // derivative test implemented
     | Conv3DTConstT of Tensor * Tensor * int[] * int[] // derivative test implemented
 
+    | AddTTSlice of Tensor * int[] * Tensor // derivative test implemented
+    | AddTTConstSlice of Tensor // derivative test implemented
+    | AddTConstTSlice of int[] * Tensor // derivative test implemented
+
     | NegT of Tensor
     | SumT of Tensor
     | SumT2Dim0 of Tensor
@@ -1997,9 +2001,6 @@ and TensorOp =
     | CatTs of Tensor[] * dim:int
     | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
-    | AddTTSlice of Tensor * int[] * Tensor
-    | AddTTConstSlice of Tensor
-    | AddTConstTSlice of int[] * Tensor
     | GatherT of Tensor * int * Tensor
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
