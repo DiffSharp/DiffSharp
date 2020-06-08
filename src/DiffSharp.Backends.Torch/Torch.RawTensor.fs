@@ -50,6 +50,7 @@ module internal Utils =
 /// This is the base class for all RawTensorXyz tuypes.
 /// All type-independent operations are implemented directly on this class. 
 type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
+
     inherit RawTensor(shape, dtype, device, Backend.Torch)
 
     do 
@@ -73,7 +74,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             let stop = fullBounds.[i,1] + 1
 
             let len = stop - start
-            let idxs = LongTensor.Arange(int64 start, int64 stop, 1L, device=toTorchDevice t.Device)
+            use idxs = LongTensor.Arange(int64 start, int64 stop, 1L, device=toTorchDevice t.Device)
             res <- res.IndexSelect(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
             if fullBounds.[i, 2] = 1 && len = 1 then 
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension

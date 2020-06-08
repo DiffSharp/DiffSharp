@@ -289,6 +289,13 @@ type TestTensor () =
             Assert.AreEqual(t1.dtype, combo.dtype)
 
     [<Test>]
+    member _.TestTensorZerosDisposal () =
+        for i in 0..1024 do
+            let _ = dsharp.zeros([1024; 1024])
+            printfn "%A" i
+            //System.GC.Collect()
+
+    [<Test>]
     member _.TestTensorZeros () =
         for combo in Combos.All do 
             let t0 = combo.zeros([])
