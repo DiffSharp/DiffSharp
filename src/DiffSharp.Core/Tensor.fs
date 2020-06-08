@@ -1976,9 +1976,9 @@ and TensorOp =
     | MaxPool3DT of Tensor * Tensor * int[]
     | MaxUnpool3DT of Tensor * Tensor
 
-    | Conv1DTT of Tensor * Tensor * int * int
-    | Conv1DTTConst of Tensor * Tensor * int * int
-    | Conv1DTConstT of Tensor * Tensor * int * int
+    | Conv1DTT of Tensor * Tensor * int * int // derivative test implemented
+    | Conv1DTTConst of Tensor * Tensor * int * int // derivative test implemented
+    | Conv1DTConstT of Tensor * Tensor * int * int // derivative test implemented
 
     | Conv2DTT of Tensor * Tensor * int[] * int[]
     | Conv2DTTConst of Tensor * Tensor * int[] * int[]
