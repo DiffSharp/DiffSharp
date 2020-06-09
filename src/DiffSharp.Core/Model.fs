@@ -221,3 +221,24 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     override c.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+
+
+type Dropout(?p:double) =
+    inherit Model()
+    override d.ToString() = sprintf "Dropout()"
+    override d.forward(value) =
+        if d.mode = Mode.Train then value.dropout(?p=p) else value
+
+
+type Dropout2d(?p:double) =
+    inherit Model()
+    override d.ToString() = sprintf "Dropout2d()"
+    override d.forward(value) =
+        if d.mode = Mode.Train then value.dropout2d(?p=p) else value
+
+
+type Dropout3d(?p:double) =
+    inherit Model()
+    override d.ToString() = sprintf "Dropout3d()"
+    override d.forward(value) =
+        if d.mode = Mode.Train then value.dropout3d(?p=p) else value
