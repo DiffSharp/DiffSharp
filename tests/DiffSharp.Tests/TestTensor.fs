@@ -572,19 +572,12 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorDropout () =
         for combo in Combos.FloatingPoint do
-            let p1 = 0.2
-            let t1 = combo.ones([100;100])
-            let d1 = dsharp.dropout(t1, p1)
-            let m1 = d1.mean() |> float
-            let m1Correct = 1. - p1
-            Assert.True(abs(m1Correct - m1) < 0.1)
-
-            let p2 = 0.8
-            let t2 = combo.ones([100;100])
-            let d2 = dsharp.dropout(t2, p2)
-            let m2 = d2.mean() |> float
-            let m2Correct = 1. - p2
-            Assert.True(abs(m2Correct - m2) < 0.1)
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100])
+                let d = dsharp.dropout(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
 
     [<Test>]
     member _.TestTensorToString () =
