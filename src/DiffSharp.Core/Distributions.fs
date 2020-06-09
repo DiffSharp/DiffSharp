@@ -24,20 +24,20 @@ type Uniform(low:Tensor, high:Tensor) =
     inherit Distribution()
     do if low.shape <> high.shape then failwithf "Expecting low and high with the same shape, received %A, %A" low.shape high.shape
     do if low.dim > 1 then failwithf "Expecting scalar parameters (0D) or a batch of scalar parameters (1D)"
-    member d.Low = low
-    member d.High = high
-    member private d.Range = high - low
+    member d.low = low
+    member d.high = high
+    member d.range = high - low
     override d.batchShape = low.shape
     override d.eventShape = [||]
     override d.mean = (low + high) / 2.
-    override d.stddev = d.Range * d.Range / 12.
-    override d.sample() = d.Low + dsharp.randLike(d.Low) * d.Range
+    override d.variance = d.range * d.range / 12.
+    override d.sample() = d.low + dsharp.randLike(d.low) * d.range
     override d.logprob(value) = 
         if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
         let lb = low.le(value).cast(low.dtype)
         let ub = high.gt(value).cast(high.dtype)
-        log (lb * ub) - log d.Range
-    override d.ToString() = sprintf "Uniform(low:%A, high:%A)" d.Low d.High
+        log (lb * ub) - log d.range
+    override d.ToString() = sprintf "Uniform(low:%A, high:%A)" d.low d.high
 
 
 type Normal(mean:Tensor, stddev:Tensor) =
@@ -57,30 +57,30 @@ type Normal(mean:Tensor, stddev:Tensor) =
 
 type Categorical(?probs:Tensor, ?logprobs:Tensor) =
     inherit Distribution()
-    member d.Probs =
+    member d.probs =
         let probs =
             match probs with
             | None ->
                 match logprobs with
                 | None -> failwith "Expecting either probs or logprobs"
-                | Some logprobs -> Tensor.Exp(logprobs)
+                | Some logprobs -> logprobs.exp()
             | Some probs -> probs
         if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting a vector (1d) or batch of vector parameters (2d), received shape %A" probs.shape
         probs
-    override d.batchShape = if d.Probs.dim = 1 then [||] else [|d.Probs.shape.[0]|]
+    override d.batchShape = if d.probs.dim = 1 then [||] else [|d.probs.shape.[0]|]
     override d.eventShape = [||]
-    override d.mean = dsharp.onesLike(d.Probs) * System.Double.NaN
-    override d.stddev = dsharp.onesLike(d.Probs) * System.Double.NaN
-    override d.sample(numSamples) = dsharp.multinomial(d.Probs, numSamples)
+    override d.mean = dsharp.onesLike(d.probs) * System.Double.NaN
+    override d.stddev = dsharp.onesLike(d.probs) * System.Double.NaN
+    override d.sample(numSamples) = dsharp.multinomial(d.probs, numSamples)
     override d.logprob(value) =
         if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
         if d.batchShape.Length = 0 then
             let i = value.toScalar() |> toInt
-            d.Probs.[i] |> dsharp.log
+            d.probs.[i] |> dsharp.log
         else
             // let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
-            Seq.init d.batchShape.[0] (fun i -> d.Probs.[i]) |> Tensor.stack |> dsharp.log
-    override d.ToString() = sprintf "Categorical(probs:%A)" d.Probs
+            Seq.init d.batchShape.[0] (fun i -> d.probs.[i]) |> dsharp.stack |> dsharp.log
+    override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
 
 
 // type Empirical(values:obj[], ?weights:Tensor, ?logweights:Tensor) =
