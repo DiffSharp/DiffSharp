@@ -239,6 +239,26 @@ type TestModel () =
         Assert.AreEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelTrainEval () =
+        let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
+        Assert.AreEqual(Mode.Train, m.mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+
+        m.eval()
+        Assert.AreEqual(Mode.Eval, m.mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[2].mode)
+
+        m.train()
+        Assert.AreEqual(Mode.Train, m.mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10

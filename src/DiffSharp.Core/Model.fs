@@ -3,6 +3,7 @@ open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
 
+
 type Parameter =
     val mutable value:Tensor
     new(value) = {value=value}
@@ -11,6 +12,7 @@ type Parameter =
     member p.noDiff() = p.value <- p.value.noDiff()
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
     override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
+
 
 type ParameterDict() =
     member val values:Dictionary<string, Parameter> = Dictionary()
@@ -69,26 +71,43 @@ type ParameterDict() =
         sb.ToString()
 
 
+type Mode =
+    | Train = 0
+    | Eval = 1
+
+
 [<AbstractClass>]
 type Model() =
+    [<DefaultValue>]
+    val mutable mode: Mode
     member val ParametersDict:ParameterDict = ParameterDict()
-    member val SubModels:Dictionary<string, Model> = Dictionary()
+    member val SubModelsDict:Dictionary<string, Model> = Dictionary()
+    member m.train() = 
+        m.mode <- Mode.Train
+        for model:Model in m.allModels do model.mode <- Mode.Train
+    member m.eval() = 
+        m.mode <- Mode.Eval
+        for model:Model in m.allModels do model.mode <- Mode.Eval
     member m.parametersDict
         with get () = m.ParametersDict
         and set parameters = m.ParametersDict.set(parameters)
     member m.parameters
         with get () = m.parametersDict.flatten()
         and set parameters = m.parametersDict.unflatten(parameters)
+    member m.allModels
+        with get () =
+            if m.SubModelsDict.Count = 0 then [m]
+            else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "p__%d" i)) |> Seq.toArray
+        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%d" i)) |> Seq.toArray
         if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
         for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p -> 
                 m.parametersDict.add(n, p)
             | :? Model as mm ->
-                m.SubModels.Add(n, mm)
+                m.SubModelsDict.Add(n, mm)
                 m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
@@ -108,6 +127,12 @@ type Model() =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
+    override m.ToString() =
+        let sb = System.Text.StringBuilder()
+        sb.Append("Model(\n") |> ignore
+        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
     static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
     static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
     static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
@@ -141,6 +166,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
     do base.add([w;b],["Linear__weight";"Linear__bias"])
+    override l.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
     override l.forward(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f
@@ -153,6 +179,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
+    override c.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
     override c.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
@@ -171,6 +198,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
+    override c.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
     override c.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
@@ -189,6 +217,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+    override c.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
     override c.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
