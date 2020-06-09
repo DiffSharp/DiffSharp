@@ -393,37 +393,6 @@ type Tensor =
         | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
-    static member multinomial(probs:Tensor, numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        // TODO: the following may be implemented by RawTensor at a later point
-        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
-        let dtype = defaultArg dtype Dtype.Int32
-        let device = defaultArg device probs.device
-        let backend = defaultArg backend probs.backend
-        if probs.dim = 1 then
-            let p = 
-                match probs.dtype with
-                | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
-                | Dtype.Float64 -> probs.toArray() :?> float[]
-                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
-        else
-            let p = 
-                match probs.dtype with
-                | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
-                | Dtype.Float64 -> probs.toArray() :?> float[,]
-                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
-
-    static member bernoulli(probs:Tensor, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        // TODO: the following may be implemented by RawTensor at a later point
-        if not (probs.dtype = Dtype.Float32 || probs.dtype = Dtype.Float64) then failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-        let dtype = defaultArg dtype probs.dtype
-        let device = defaultArg device probs.device
-        let backend = defaultArg backend probs.backend
-        let p:Tensor = probs.float().flatten()
-        let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
-        Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
-
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -875,6 +844,43 @@ type Tensor =
     member a.stddev(dim:int, ?keepDim) = a.variance(dim, ?keepDim=keepDim) |> Tensor.Sqrt
 
     member a.stddev() = a.variance() |> Tensor.Sqrt
+
+    member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        // TODO: the following may be implemented by RawTensor at a later point
+        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
+        let dtype = defaultArg dtype Dtype.Int32
+        let device = defaultArg device probs.device
+        let backend = defaultArg backend probs.backend
+        if probs.dim = 1 then
+            let p = 
+                match probs.dtype with
+                | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
+        else
+            let p = 
+                match probs.dtype with
+                | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
+                | Dtype.Float64 -> probs.toArray() :?> float[,]
+                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
+
+    member probs.bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        // TODO: the following may be implemented by RawTensor at a later point
+        if not (probs.dtype = Dtype.Float32 || probs.dtype = Dtype.Float64) then failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+        let dtype = defaultArg dtype probs.dtype
+        let device = defaultArg device probs.device
+        let backend = defaultArg backend probs.backend
+        let p:Tensor = probs.float().flatten()
+        let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
+        Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
+
+    member a.dropout(?p:double) =
+        let p = defaultArg p 0.5
+        if p < 0. || p > 1. then failwithf "Expecting 0 <= p <= 1, but received %A" p
+        let mask = a.fullLike(a.shape, 1.-p).bernoulli()
+        a * mask
 
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
     member internal a.sumT2Dim0() =
