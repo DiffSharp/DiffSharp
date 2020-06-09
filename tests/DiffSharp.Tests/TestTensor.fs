@@ -3913,6 +3913,51 @@ type TestTensor () =
             Assert.AreEqual(tSum2Correct, tSum2)
 
     [<Test>]
+    member _.TestTensorSumDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tsum_3 = t.sum(-3)
+            let tsum_2 = t.sum(-2)
+            let tsum_1 = t.sum(-1)
+            let tsum0 = t.sum(0)
+            let tsum1 = t.sum(1)
+            let tsum2 = t.sum(2)
+
+            Assert.AreEqual(tsum_3, tsum0)
+            Assert.AreEqual(tsum_2, tsum1)
+            Assert.AreEqual(tsum_1, tsum2)
+
+    [<Test>]
+    member _.TestTensorMeanDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tmean_3 = t.mean(-3)
+            let tmean_2 = t.mean(-2)
+            let tmean_1 = t.mean(-1)
+            let tmean0 = t.mean(0)
+            let tmean1 = t.mean(1)
+            let tmean2 = t.mean(2)
+
+            Assert.AreEqual(tmean_3, tmean0)
+            Assert.AreEqual(tmean_2, tmean1)
+            Assert.AreEqual(tmean_1, tmean2)
+
+    [<Test>]
+    member _.TestTensorVarianceDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tvariance_3 = t.variance(-3)
+            let tvariance_2 = t.variance(-2)
+            let tvariance_1 = t.variance(-1)
+            let tvariance0 = t.variance(0)
+            let tvariance1 = t.variance(1)
+            let tvariance2 = t.variance(2)
+
+            Assert.AreEqual(tvariance_3, tvariance0)
+            Assert.AreEqual(tvariance_2, tvariance1)
+            Assert.AreEqual(tvariance_1, tvariance2)
+
+    [<Test>]
     member _.TestTensorMean () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])

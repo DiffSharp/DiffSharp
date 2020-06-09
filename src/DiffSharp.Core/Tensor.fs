@@ -771,6 +771,7 @@ type Tensor =
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
        let keepDim = defaultArg keepDim false
+       let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
        let res =
         if dim = 0 && a.dim = 0 then a
         else
@@ -812,6 +813,7 @@ type Tensor =
     member a.mean() = a.sum() / a.nelement
 
     member a.mean(dim:int, ?keepDim:bool) = 
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         if dim = 0 && a.dim = 0 then a
         else 
            let sm = a.sum(dim, ?keepDim=keepDim)
@@ -824,7 +826,7 @@ type Tensor =
     // TODO: this is the naive algorithm, can be improved for better numerical stability
     member a.variance(dim:int, ?keepDim:bool) =
         let keepDim = defaultArg keepDim false
-        if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.dim
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
         sBounds.[dim, 1] <- 0
         sBounds.[dim, 2] <- 1
