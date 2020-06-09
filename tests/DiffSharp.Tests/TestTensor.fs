@@ -580,6 +580,26 @@ type TestTensor () =
                 Assert.True(abs(mCorrect - m) < 0.1)
 
     [<Test>]
+    member _.TestTensorDropout2d () =
+        for combo in Combos.FloatingPoint do
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100;8;8])
+                let d = dsharp.dropout2d(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
+
+    [<Test>]
+    member _.TestTensorDropout3d () =
+        for combo in Combos.FloatingPoint do
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100;8;8;8])
+                let d = dsharp.dropout3d(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
+
+    [<Test>]
     member _.TestTensorToString () =
         for combo in Combos.IntegralAndFloatingPoint do 
             let t0 = combo.tensor(2.)
