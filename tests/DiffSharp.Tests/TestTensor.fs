@@ -531,7 +531,7 @@ type TestTensor () =
     member _.TestTensorMultinomial () =
         for combo in Combos.FloatingPoint do
             let p1 = combo.tensor([0.2,0.3,0.5])
-            let m1 = dsharp.multinomial(p1, numSamples=2000)
+            let m1 = dsharp.multinomial(p1, numSamples=3000)
             let m1dtype = m1.dtype
             let m1dtypeCorrect = Dtype.Int32
             let m1mean = m1.float().mean()
@@ -543,7 +543,7 @@ type TestTensor () =
             Assert.True(m1stddevCorrect.allclose(m1stddev, 0.1))
 
             let p2 = combo.tensor([[0.2,0.3,0.5],[0.8,0.1,0.1]])
-            let m2 = dsharp.multinomial(p2, numSamples=2000)
+            let m2 = dsharp.multinomial(p2, numSamples=3000)
             let m2dtype = m2.dtype
             let m2dtypeCorrect = Dtype.Int32
             let m2mean = m2.float().mean(dim=1)
