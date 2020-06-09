@@ -9,7 +9,8 @@ type Parameter =
     member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
     member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
     member p.noDiff() = p.value <- p.value.noDiff()
-    override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" p.value.shape p.value
+    member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
+    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
 
 type ParameterDict() =
     member val values:Dictionary<string, Parameter> = Dictionary()
@@ -35,6 +36,7 @@ type ParameterDict() =
         let tag = defaultArg tag GlobalNestingLevel.Current
         d.iter(fun (_, p) -> p.reverseDiff(tag))
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
+    member d.move(?dtype, ?device, ?backend) = d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
     member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
     member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
     member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
@@ -58,7 +60,12 @@ type ParameterDict() =
         dd
     override d.ToString() =
         let sb = System.Text.StringBuilder()
-        for KeyValue(n, p) in d.values do sb.AppendLine(sprintf "%A, %A" n p) |> ignore
+        sb.Append("ParameterDict(") |> ignore
+        let mutable prefix = ""
+        for KeyValue(n, p) in d.values do 
+            sb.Append(sprintf "%s%A:%A" prefix n p) |> ignore
+            prefix <- ", "
+        sb.Append(")") |> ignore
         sb.ToString()
 
 
@@ -87,6 +94,7 @@ type Model() =
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
     member m.reverseDiff() = m.parametersDict.reverseDiff()
     member m.noDiff() = m.parametersDict.noDiff()
+    member m.move(?dtype, ?device, ?backend) = m.parametersDict.move(?dtype=dtype, ?device=device, ?backend=backend)
     member m.nparameters = m.parametersDict.nelement
     abstract member forward: Tensor -> Tensor
     member m.forwardParameters (input:Tensor) (parameters:Tensor) =

@@ -57,9 +57,21 @@ type TestDiffSharp () =
         ()
 
     [<Test>]
+    member this.TestZero () =
+        let t = dsharp.zero()
+        let tCorrect = dsharp.tensor(0)
+        Assert.AreEqual(tCorrect, t)
+
+    [<Test>]
     member this.TestZeros () =
         let t = dsharp.zeros([2;3])
         let tCorrect = dsharp.tensor([[0,0,0],[0,0,0]])
+        Assert.AreEqual(tCorrect, t)
+
+    [<Test>]
+    member this.TestOne () =
+        let t = dsharp.one()
+        let tCorrect = dsharp.tensor(1)
         Assert.AreEqual(tCorrect, t)
 
     [<Test>]
@@ -104,13 +116,15 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
+        let confBackup = dsharp.config()
         for combo in Combos.All do
-            combo.randint(0,10,1) |> ignore // To ensure the backend assembly is loaded before dsharp.seed is called
+            dsharp.config(combo.dtype, combo.device, combo.backend)
             dsharp.seed(123)
             let t = combo.randint(0,10,[25])
             dsharp.seed(123)
             let t2 = combo.randint(0,10,[25])
             Assert.AreEqual(t, t2)
+        dsharp.config(confBackup)
 
     [<Test>]
     member this.TestDiff () =
@@ -549,3 +563,21 @@ type TestDiffSharp () =
         Assert.True(dCorrect.allclose(d2))
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))        
+
+
+    [<Test>]
+    member _.TestCanConfigure () =
+        let device = Device.Default
+        dsharp.config(device=Device.GPU)
+        Assert.AreEqual(Device.GPU, Device.Default)
+        dsharp.config(device=device)
+
+        let backend = Backend.Default
+        dsharp.config(backend=Backend.Torch)
+        Assert.AreEqual(Backend.Torch, Backend.Default)
+        dsharp.config(backend=backend)
+
+        let dtype = Dtype.Default
+        dsharp.config(dtype=Dtype.Int32)
+        Assert.AreEqual(Dtype.Int32, Dtype.Default)
+        dsharp.config(dtype=dtype)

@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
+
   <ItemGroup>
-    <Compile Include="Empty.fs" />
+    <Compile Include="Torch.RawTensor.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <ProjectReference Include="..\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <PackageReference Include="TorchSharp" Version="$(TorchSharpVersion)" />
   </ItemGroup>
 
 </Project>
