@@ -384,6 +384,17 @@ module Shape =
         if shape.Length <> paddings.Length then failwithf "Expecting shape (%A) and paddings (%A) to have the same length" shape paddings
         if not (paddings |> Array.forall (fun p -> p >= 0)) then failwithf "Expecting all paddings (%A) >= 0" paddings
 
+    let checkCanDropout (p:double) =
+        if p < 0. || p > 1. then failwithf "Expecting 0 <= p <= 1, but received %A" p
+
+    let checkCanDropout2d (shape: Shape) (p:double) =
+        checkCanDropout p
+        if shape.Length <> 4 then failwithf "Expecting shape (%A) to be 4-dimensional (NxCxHxW: batchSize, inputChannels, inputHeight, inputWidth)" shape
+
+    let checkCanDropout3d (shape: Shape) (p:double) =
+        checkCanDropout p
+        if shape.Length <> 5 then failwithf "Expecting shape (%A) to be 5-dimensional (NxCxDxHxW: batchSize, inputChannels, inputDepth, inputHeight, inputWidth)" shape
+
     let squeeze (dim: int) (shape: Shape) =
         if dim = -1 then
             [|for s in shape do if s <> 1 then yield s|]

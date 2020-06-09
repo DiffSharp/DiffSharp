@@ -878,13 +878,35 @@ type Tensor =
 
     member a.dropout(?p:double) =
         let p = defaultArg p 0.5
-        if p < 0. || p > 1. then failwithf "Expecting 0 <= p <= 1, but received %A" p
+        Shape.checkCanDropout p
         if p = 0. then
             a
         elif p = 1. then
             a * a.zerosLike()
         else
             let mask = a.fullLike(a.shape, 1.-p).bernoulli()
+            a * mask
+
+    member a.dropout2d(?p:double) =
+        let p = defaultArg p 0.5
+        Shape.checkCanDropout2d a.shape p
+        if p = 0. then
+            a
+        elif p = 1. then
+            a * a.zerosLike()
+        else
+            let mask = a.fullLike(Array.append a.shape.[0..1] [|1;1|], 1.-p).bernoulli()
+            a * mask
+
+    member a.dropout3d(?p:double) =
+        let p = defaultArg p 0.5
+        Shape.checkCanDropout3d a.shape p
+        if p = 0. then
+            a
+        elif p = 1. then
+            a * a.zerosLike()
+        else
+            let mask = a.fullLike(Array.append a.shape.[0..1] [|1;1;1|], 1.-p).bernoulli()
             a * mask
 
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
