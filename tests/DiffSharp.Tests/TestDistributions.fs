@@ -6,7 +6,7 @@ open DiffSharp.Distributions
 
 [<TestFixture>]
 type TestDistributions () =
-    let numEmpiricalSamples = 10000
+    let numEmpiricalSamples = 5000
 
     [<SetUp>]
     member _.Setup () =
@@ -135,3 +135,55 @@ type TestDistributions () =
             Assert.True(samplesStddev.allclose(stddevCorrect, 0.1, 0.1))
             Assert.True(logprob.allclose(logprobCorrect, 0.1, 0.1))
 
+    [<Test>]
+    member _.TestDistributionsCategorical () =
+        for combo in Combos.AllDevicesAndBackends do
+            for logit in [false; true] do
+                let d =
+                    if logit then
+                        let logits = combo.tensor([-2.30259, -1.60944, -0.356675])
+                        Categorical(logits=logits)
+                    else
+                        let probs = combo.tensor([1, 2, 7]) // Gets normalized to [0.1, 0.2, 0.7]
+                        Categorical(probs=probs)
+                let batchShape = d.batchShape
+                let batchShapeCorrect = [||]
+                let eventShape = d.eventShape
+                let eventShapeCorrect = [||]
+                let samples = d.sample(numEmpiricalSamples).cast(combo.dtype)
+                let samplesMean = samples.mean(0)
+                let samplesStddev = samples.stddev(0)
+                let meanCorrect = combo.tensor(1.6)
+                let stddevCorrect = combo.tensor(0.666)
+                let logprob = d.logprob(combo.tensor(0))
+                let logprobCorrect = combo.tensor(-2.30259)
+
+                Assert.AreEqual(batchShapeCorrect, batchShape)
+                Assert.AreEqual(eventShapeCorrect, eventShape)
+                Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
+                Assert.True(samplesStddev.allclose(stddevCorrect, 0.1, 0.1))
+                Assert.True(logprob.allclose(logprobCorrect, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestDistributionsCategoricalBatched () =
+        for combo in Combos.AllDevicesAndBackends do
+            let probs = combo.tensor([[0.1, 0.2, 0.7],
+                                        [0.2, 0.5, 0.3]])
+            let d = Categorical(probs=probs)
+            let batchShape = d.batchShape
+            let batchShapeCorrect = [|2|]
+            let eventShape = d.eventShape
+            let eventShapeCorrect = [||]
+            let samples = d.sample(numEmpiricalSamples).cast(combo.dtype)
+            let samplesMean = samples.mean(0)
+            let samplesStddev = samples.stddev(0)
+            let meanCorrect = combo.tensor([1.6, 1.1])
+            let stddevCorrect = combo.tensor([0.666, 0.7])
+            let logprob = d.logprob(combo.tensor([0, 1]))
+            let logprobCorrect = combo.tensor([-2.30259, -0.693147])
+
+            Assert.AreEqual(batchShapeCorrect, batchShape)
+            Assert.AreEqual(eventShapeCorrect, eventShape)
+            Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
+            Assert.True(samplesStddev.allclose(stddevCorrect, 0.1, 0.1))
+            Assert.True(logprob.allclose(logprobCorrect, 0.1, 0.1))

@@ -464,7 +464,7 @@ module Shape =
             [|for d in shape do if d = -1 then yield missing else yield d|]
 
     let completeDim (dims:int) (dim:int) =
-      if dim < -dims || dim >= dims then failwithf "Invalid dim (%A)" dim
+      if dim < -dims || dim >= dims then failwithf "Invalid choice (%A) for dim (%A)" dim dims
       if dim < 0 then dims+dim
       else dim    
 

@@ -20,10 +20,25 @@ type Distribution() =
     member d.prob(value) = d.logprob(value).exp()
 
 
+type Normal(mean:Tensor, stddev:Tensor) =
+    inherit Distribution()
+    do if mean.shape <> stddev.shape then failwithf "Expecting mean and standard deviation with same shape, received %A, %A" mean.shape stddev.shape
+    do if mean.dim > 1 then failwithf "Expecting scalar parameters (0-dimensional mean and stddev) or a batch of scalar parameters (1-dimensional mean and stddev)"
+    override d.batchShape = d.mean.shape
+    override d.eventShape = [||]
+    override d.mean = mean
+    override d.stddev = stddev
+    override d.sample() = d.mean + dsharp.randnLike(d.mean) * d.stddev
+    override d.logprob(value) = 
+        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
+        let v = value - d.mean in -(v * v) / (2. * d.variance) - (log d.stddev) - logSqrt2Pi
+    override d.ToString() = sprintf "Normal(mean:%A, stddev:%A)" d.mean d.stddev
+
+
 type Uniform(low:Tensor, high:Tensor) =
     inherit Distribution()
-    do if low.shape <> high.shape then failwithf "Expecting low and high with the same shape, received %A, %A" low.shape high.shape
-    do if low.dim > 1 then failwithf "Expecting scalar parameters (0D) or a batch of scalar parameters (1D)"
+    do if low.shape <> high.shape then failwithf "Expecting low and high with same shape, received %A, %A" low.shape high.shape
+    do if low.dim > 1 then failwithf "Expecting scalar parameters (0-dimensional low and high) or a batch of scalar parameters (1-dimensional low and high)"
     member d.low = low
     member d.high = high
     member d.range = high - low
@@ -40,46 +55,30 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.ToString() = sprintf "Uniform(low:%A, high:%A)" d.low d.high
 
 
-type Normal(mean:Tensor, stddev:Tensor) =
-    inherit Distribution()
-    do if mean.shape <> stddev.shape then failwithf "Expecting mean and standard deviation with the same shape, received %A, %A" mean.shape stddev.shape
-    do if mean.dim > 1 then failwithf "Expecting scalar parameters (0D) or a batch of scalar parameters (1D)"
-    override d.batchShape = d.mean.shape
-    override d.eventShape = [||]
-    override d.mean = mean
-    override d.stddev = stddev
-    override d.sample() = d.mean + dsharp.randnLike(d.mean) * d.stddev
-    override d.logprob(value) = 
-        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
-        let v = value - d.mean in -(v * v) / (2. * d.variance) - (log d.stddev) - logSqrt2Pi
-    override d.ToString() = sprintf "Normal(mean:%A, stddev:%A)" d.mean d.stddev
-
-
-type Categorical(?probs:Tensor, ?logprobs:Tensor) =
+type Categorical(?probs:Tensor, ?logits:Tensor) =
     inherit Distribution()
     member d.probs =
-        let probs =
-            match probs with
-            | None ->
-                match logprobs with
-                | None -> failwith "Expecting either probs or logprobs"
-                | Some logprobs -> logprobs.exp()
-            | Some probs -> probs
-        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting a vector (1d) or batch of vector parameters (2d), received shape %A" probs.shape
-        probs
+        let probs = 
+            match probs, logits with
+            | Some _, Some _ -> failwithf "Expecting only one of probs, logits"
+            | Some p, None -> p
+            | None, Some lp -> lp.exp()
+            | None, None -> failwithf "Expecting either probs or logits"
+        if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting vector parameters (1-dimensional probs or logits) or batch of vector parameters (2-dimensional probs or logits), received shape %A" probs.shape
+        probs / probs.sum(-1, keepDim=true)
     override d.batchShape = if d.probs.dim = 1 then [||] else [|d.probs.shape.[0]|]
     override d.eventShape = [||]
     override d.mean = dsharp.onesLike(d.probs) * System.Double.NaN
     override d.stddev = dsharp.onesLike(d.probs) * System.Double.NaN
-    override d.sample(numSamples) = dsharp.multinomial(d.probs, numSamples)
+    override d.sample() = dsharp.multinomial(d.probs, 1).squeeze()
     override d.logprob(value) =
         if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
         if d.batchShape.Length = 0 then
-            let i = value.toScalar() |> toInt
+            let i = int value
             d.probs.[i] |> dsharp.log
         else
-            // let is:int[] = value.ToArray() :?> obj[] |> Array.map toInt
-            Seq.init d.batchShape.[0] (fun i -> d.probs.[i]) |> dsharp.stack |> dsharp.log
+            let is = value.int().toArray() :?> int[]
+            Array.init d.batchShape.[0] (fun i -> d.probs.[i, is.[i]]) |> dsharp.stack |> dsharp.log
     override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
 
 
