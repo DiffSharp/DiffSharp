@@ -275,8 +275,9 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override t.Cast(dtype: Dtype) =
         if dtype = t.Dtype then 
             upcast t
-        else 
-            RawTensor.Create(t.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device)
+        else
+            let tflat = t.ViewT([|t.Nelement|]) // We flatten, cast, and return with the correct shape because .ToValues() in the next line does not support tensors with dimension > 4.
+            RawTensor.Create(tflat.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device).ViewT(t.Shape)
 
     override t.MoveTo(device: Device) =
         match device with 
