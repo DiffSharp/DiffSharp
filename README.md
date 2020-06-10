@@ -121,9 +121,9 @@ with warning:
 
     warning : Packages will be incomplete and unusable on other platforms...
 
-To consume the packages into DiffSharp adust TorchSharpVersion in DIrectory.Build.props.
+To consume the packages into DiffSharp adjust TorchSharpVersion in Directory.Build.props.
 
-When rebuilding the TorchSHarp you will need to vlear your package cache to pick up the new nuget package with the same version id, e.g.
+When rebuilding the TorchSharp you will need to clear your package cache to pick up the new nuget package with the same version id, e.g.
 
     rmdir /q /s %USERPROFILE%\.nuget\packages\torchsharp
     rmdir /q /s %USERPROFILE%\.nuget\packages\LibTorch.Redist
