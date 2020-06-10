@@ -878,9 +878,13 @@ type Tensor =
         let dtype = defaultArg dtype probs.dtype
         let device = defaultArg device probs.device
         let backend = defaultArg backend probs.backend
-        let p:Tensor = probs.float().flatten()
-        let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
-        Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
+        if probs.dim = 0 then
+            let b = Random.Bernoulli (float probs)
+            Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
+        else
+            let p:Tensor = probs.float().flatten()
+            let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
+            Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
 
     member a.dropout(?p:double) =
         let p = defaultArg p 0.5
@@ -1019,12 +1023,12 @@ type Tensor =
             | Some l, None   -> a.like(l), a.max()
             | None,   Some h -> a.min(), a.like(h)
             | None, None     -> failwithf "Expecting at least one of low, high"
-        let getMask () =
+        let mask() = // one-zero mask where the clamped values are zero and the rest are one
             let ll = lowTensor.expand(a.shape)
             let hh = highTensor.expand(a.shape)
             1 - (a.lt(ll) + a.gt(hh)).cast(a.dtype)
         match a with
-        | Tensor(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), getMask() in Tensor(result), mask
+        | Tensor(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor(result), mask
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
         | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
 
@@ -1213,17 +1217,17 @@ type Tensor =
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     member a.softmax(dim:int) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
     member a.logsoftmax(dim:int) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         a - a.logsumexp(dim, keepDim=true)
 
     member a.logsumexp(dim:int, ?keepDim:bool) =
-        if dim < 0 || dim >= a.dim then failwithf "Expecting 0 <= dim (%A) < a.dim (%A)" dim a.dim
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let keepDim = defaultArg keepDim false
         let amax = a.max().noDiff()
         let e = (a - amax).exp()

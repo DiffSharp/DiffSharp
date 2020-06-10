@@ -202,6 +202,8 @@ type DiffSharp =
     static member conv3d(b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = fun (a:Tensor) -> a.conv3d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
     static member pad(paddings:seq<int>) = fun (a:Tensor) -> a.pad(paddings)
+    static member cast(a:Tensor, dtype:Dtype) = a.cast(dtype)
+    static member cast(dtype:Dtype) = fun (a:Tensor) -> a.cast(dtype)
     static member move(a:Tensor, ?dtype, ?device, ?backend) = a.move(?dtype=dtype, ?device=device, ?backend=backend)
     static member move(?dtype, ?device, ?backend) = fun (a:Tensor) -> a.move(?dtype=dtype, ?device=device, ?backend=backend)
     static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 

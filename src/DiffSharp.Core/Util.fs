@@ -835,4 +835,3 @@ let stringPad (s:string) (width:int) =
     else String.replicate (width - s.Length) " " + s
 
 let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
-
