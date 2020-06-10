@@ -16,24 +16,27 @@ module internal Utils =
 
 
 [<AbstractClass>]
-type Distribution() =
-    abstract member sample: unit -> Tensor
-    default d.sample() = d.sample(1)
-    abstract member sample: int -> Tensor
-    default d.sample(numSamples:int) = Array.init numSamples (fun _ -> d.sample()) |> dsharp.stack
+type Distribution<'T>() =
+    abstract member sample: unit -> 'T
+    abstract member logprob: 'T -> Tensor
+
+
+[<AbstractClass>]
+type TensorDistribution() =
+    inherit Distribution<Tensor>()
+    member d.sample(numSamples:int) = Array.init numSamples (fun _ -> d.sample()) |> dsharp.stack
     abstract member batchShape: int[]
     abstract member eventShape: int[]
     abstract member mean: Tensor
     abstract member stddev: Tensor
-    default d.stddev = d.variance.sqrt()
     abstract member variance: Tensor
+    default d.stddev = d.variance.sqrt()
     default d.variance = d.stddev * d.stddev
-    abstract member logprob: Tensor -> Tensor
     member d.prob(value) = d.logprob(value).exp()
 
 
 type Normal(mean:Tensor, stddev:Tensor) =
-    inherit Distribution()
+    inherit TensorDistribution()
     do if mean.shape <> stddev.shape then failwithf "Expecting mean and standard deviation with same shape, received %A, %A" mean.shape stddev.shape
     do if mean.dim > 1 then failwithf "Expecting scalar parameters (0-dimensional mean and stddev) or a batch of scalar parameters (1-dimensional mean and stddev)"
     override d.batchShape = d.mean.shape
@@ -48,7 +51,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
 
 
 type Uniform(low:Tensor, high:Tensor) =
-    inherit Distribution()
+    inherit TensorDistribution()
     do if low.shape <> high.shape then failwithf "Expecting low and high with same shape, received %A, %A" low.shape high.shape
     do if low.dim > 1 then failwithf "Expecting scalar parameters (0-dimensional low and high) or a batch of scalar parameters (1-dimensional low and high)"
     member d.low = low
@@ -68,7 +71,7 @@ type Uniform(low:Tensor, high:Tensor) =
 
 
 type Bernoulli(?probs:Tensor, ?logits:Tensor) =
-    inherit Distribution()
+    inherit TensorDistribution()
     let _probs, _logits, _dtype =
         match probs, logits with
         | Some _, Some _ -> failwithf "Expecting only one of probs, logits"
@@ -90,7 +93,7 @@ type Bernoulli(?probs:Tensor, ?logits:Tensor) =
 
 
 type Categorical(?probs:Tensor, ?logits:Tensor) =
-    inherit Distribution()
+    inherit TensorDistribution()
     let _probs, _logits, _dtype =
         match probs, logits with
         | Some _, Some _ -> failwithf "Expecting only one of probs, logits"
@@ -117,26 +120,18 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
     override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
 
 
-// type Empirical(values:obj[], ?weights:Tensor, ?logweights:Tensor) =
-//     inherit Distribution()
-//     member d.Values = values
-//     member d.Length = d.Values.Length
-//     member d.Weights =
-//         let weights =
-//             match weights with
-//             | None ->
-//                 match logweights with
-//                 | None -> failwith "Expecting either weights or logweights"
-//                 | Some logweights -> Tensor.Exp(logweights)
-//             | Some weights -> weights
-//         if weights.dim <> 1 then failwithf "Expecting a vector (1d) of weights or logweights, received shape %A" weights.shape
-//         weights
-//     member d.Logweights = d.Weights |> dsharp.log
-//     member d.Categorical = Categorical(probs=d.Weights)
-//     override d.batchShape = failwith "Not implemented"
-//     override d.eventShape = failwith "Not implemented"
-//     override d.logprob(value) = failwith "Not implemented"
-//     override d.mean = d.Values |> Tensor.Create |> Tensor.mean
-//     override d.variance = d.Values |> Tensor.Create |> Tensor.variance
-//     override d.sample() = failwith "Not implemented"
-//     override d.ToString() = sprintf "Empirical(length:%A)" d.Length
+type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
+    inherit Distribution<'T>()
+    let _categorical =
+        match weights, logWeights with
+        | Some _, Some _ -> failwithf "Expecting only one of weights, logWeights"
+        | Some w, None -> Categorical(probs=w)
+        | None, Some lw -> Categorical(logits=lw)
+        | None, None -> Categorical(probs=dsharp.ones([values |> Seq.length]))
+    member d.values = values |> Array.ofSeq
+    member d.length = d.values.Length
+    member d.weights = _categorical.probs
+    member d.logWeights = _categorical.logits
+    override d.sample() = let i = int <| _categorical.sample() in d.values.[i]
+    override d.logprob(_) = failwith "Not supported"
+    override d.ToString() = sprintf "Empirical(length:%A)" d.length
