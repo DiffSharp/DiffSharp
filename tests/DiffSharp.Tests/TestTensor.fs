@@ -1006,7 +1006,7 @@ type TestTensor () =
     member _.TestTensorFullLike () =
         for combo in Combos.All do 
             let t = combo.tensor([1.; 2.; 3.; 4.])
-            let i = t.fullLike([2], 4.0)
+            let i = t.fullLike(4.0, [2])
             let iCorrect = combo.tensor([4.; 4.])
             Assert.AreEqual(iCorrect, i)
 
@@ -4792,6 +4792,14 @@ type TestTensor () =
             Assert.AreEqual(combo.dtype, t2.dtype)
             Assert.AreEqual(combo.dtype, t4.dtype)
             Assert.AreEqual(combo.dtype, t6.dtype)
+
+    [<Test>]
+    member _.TestTensorClampT () =
+        for combo in Combos.SignedIntegralAndFloatingPoint do 
+            let t = combo.tensor([-4,-3,-2,-1,0,1,2,3,4])
+            let tClamped = dsharp.clamp(t, -2, 3)
+            let tClampedCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
+            Assert.AreEqual(tClampedCorrect, tClamped)
 
     [<Test>]
     member _.TestTensorView () =

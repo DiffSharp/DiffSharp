@@ -200,6 +200,7 @@ and [<AbstractClass>]
     abstract member MoveTo : Device -> RawTensor
     abstract member ComputeHash: unit -> int
     abstract member AllClose: RawTensor * float * float -> bool
+    abstract member ClampT: RawTensor * RawTensor -> RawTensor
     abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor

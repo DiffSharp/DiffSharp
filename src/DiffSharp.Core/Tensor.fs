@@ -269,10 +269,11 @@ type Tensor =
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
-    member a.fullLike(shape:seq<int>, value:scalar, ?dtype, ?device, ?backend) = 
+    member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
+        let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
     member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
-        a.fullLike([], scalar, ?dtype=dtype, ?device=device, ?backend=backend)
+        a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
@@ -847,12 +848,15 @@ type Tensor =
 
     member a.stddev() = a.variance() |> Tensor.Sqrt
 
-    member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?normalize:bool) =
         // TODO: the following may be implemented by RawTensor at a later point
         if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
         let dtype = defaultArg dtype Dtype.Int32
         let device = defaultArg device probs.device
         let backend = defaultArg backend probs.backend
+        let normalize = defaultArg normalize false
+        let mutable probs = probs
+        if normalize then probs <- probs / probs.sum(-1, keepDim=true)
         if probs.dim = 1 then
             let p = 
                 match probs.dtype with
@@ -886,7 +890,7 @@ type Tensor =
         elif p = 1. then
             a * a.zerosLike()
         else
-            let mask = a.fullLike(a.shape, 1.-p).bernoulli()
+            let mask = a.fullLike(1.-p).bernoulli()
             a * mask
 
     member a.dropout2d(?p:double) =
@@ -897,7 +901,7 @@ type Tensor =
         elif p = 1. then
             a * a.zerosLike()
         else
-            let mask = a.fullLike(Array.append a.shape.[0..1] [|1;1|], 1.-p).bernoulli()
+            let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1|]).bernoulli()
             a * mask
 
     member a.dropout3d(?p:double) =
@@ -908,7 +912,7 @@ type Tensor =
         elif p = 1. then
             a * a.zerosLike()
         else
-            let mask = a.fullLike(Array.append a.shape.[0..1] [|1;1;1|], 1.-p).bernoulli()
+            let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1;1|]).bernoulli()
             a * mask
 
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
@@ -1007,6 +1011,24 @@ type Tensor =
             let endDim = defaultArg endDim (a.dim - 1)
             Shape.checkCanFlatten a.shape startDim endDim
             a.view(a.shape |> Shape.flatten startDim endDim)
+
+    member internal a.clampWithMask(?low:scalar, ?high:scalar) =
+        let lowTensor, highTensor = 
+            match low, high with
+            | Some l, Some h -> a.like(l), a.like(h)
+            | Some l, None   -> a.like(l), a.max()
+            | None,   Some h -> a.min(), a.like(h)
+            | None, None     -> failwithf "Expecting at least one of low, high"
+        let getMask () =
+            let ll = lowTensor.expand(a.shape)
+            let hh = highTensor.expand(a.shape)
+            1 - (a.lt(ll) + a.gt(hh)).cast(a.dtype)
+        match a with
+        | Tensor(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), getMask() in Tensor(result), mask
+        | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
+        | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
+
+    member a.clamp(?low:scalar, ?high:scalar) = a.clampWithMask(?low=low, ?high=high) |> fst
 
     member a.sign() =
         let fRaw(a:RawTensor) = a.SignT()
@@ -1774,6 +1796,7 @@ type Tensor =
                         | DilateT(a,_) -> reset (a::tt)
                         | UndilateT(a,_) -> reset (a::tt)
                         | ViewT(a,_) -> reset (a::tt)
+                        | ClampT(a,_) -> reset (a::tt)
                         | SliceT(a,_) -> reset (a::tt)
                         | AddTTSlice(a,_,b) -> reset (a::b::tt)
                         | AddTTConstSlice(a) -> reset (a::tt)
@@ -1932,6 +1955,7 @@ type Tensor =
                         | DilateT(a, dilations) -> push ((t.derivative.undilate(dilations), a) :: tt)
                         | UndilateT(a, dilations) -> push ((t.derivative.dilate(dilations), a) :: tt)
                         | ViewT(a,aShape) -> push (((t.derivative.view(aShape)), a) :: tt)
+                        | ClampT(a, mask) -> push ((t.derivative * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
@@ -2058,6 +2082,7 @@ and TensorOp =
     | DilateT of Tensor * int[]
     | UndilateT of Tensor * int[]
     | ViewT of Tensor * int[]
+    | ClampT of Tensor * Tensor
     | SignT of Tensor
     | FloorT of Tensor
     | CeilT of Tensor
