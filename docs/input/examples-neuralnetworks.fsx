@@ -82,7 +82,7 @@ let createNetwork (l:int[]) =
     {layers = Array.init (l.Length - 1) (fun i ->
         {W = Mat.init l.[i + 1] l.[i] (fun _ _ -> -0.5 + rnd.NextDouble())
          b = Vec.init l.[i + 1] (fun _ -> -0.5 + rnd.NextDouble())
-         a = sigmoid})}
+         a = (fun t -> t.sigmoid())})}
 (**
 
 This gives us an easily scalable feedforward network architecture capable of expressing any number of inputs, outputs, and hidden layers. The network is fully connected, meaning that each neuron in a layer receives the output of all the neurons in the previous layer.
@@ -133,18 +133,19 @@ Please see the [Nested AD](gettingstarted-nestedad.html) page for a better under
 // x: training input vectors
 // y: training target vectors
 let backprop (n:Network) eta epochs (x:Vec[]) (y:Vec[]) =
-    let i = DiffSharp.Util.GlobalTagger.Next
+    dsharp.nest()
+    let i = dsharp.nestLevel()
     seq {for j in 0 .. epochs do
             for l in n.layers do
-                l.W <- l.W |> dsharp.makeReverse i
-                l.b <- l.b |> dsharp.makeReverse i
+                l.W <- l.W.reverseDiff i
+                l.b <- l.b.reverseDiff i
 
             let L = Array.map2 (fun x y -> Vec.l2normSq (y - runNetwork x n)) x y |> Array.sum
-            let adjoints = computeAdjoints L // Propagate adjoint value 1 backward
+            L |> dsharp.reversePush (v 1.) // Propagate adjoint value 1 backward
 
             for l in n.layers do
-                l.W <- dsharp.primal (l.W.primal - eta * adjoints.[l.W])
-                l.b <- dsharp.primal (l.b.primal - eta * adjoints.[l.b])
+                l.W <- dsharp.primal (l.W.primal - eta * l.W.derivative)
+                l.b <- dsharp.primal (l.b.primal - eta * l.b.derivative)
 
             printfn "Iteration %i, loss %f" j (float L)
             yield float L}
@@ -173,10 +174,10 @@ let ORy = [|vec [0.]
 let net2 = createNetwork [|2; 1|]
 
 // Train
-let train2 = backprop net2 0.9 1000 ORx ORy
+let train2 = backprop net2 (v 0.9) 1000 ORx ORy
 
 // Plot the error during training
-Chart.Line train2
+//Chart.Line train2
 
 (**
 
