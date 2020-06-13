@@ -313,10 +313,10 @@ type Tensor =
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
     member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
     member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
-    member a.maxIndex() = a.primalRaw.MaxIndexT()
-    member a.minIndex() = a.primalRaw.MinIndexT()
-    member a.max() = a.[a.maxIndex()]
-    member a.min() = a.[a.minIndex()]
+    member a.argmax() = a.primalRaw.MaxIndexT()
+    member a.argmin() = a.primalRaw.MinIndexT()
+    member a.max() = a.[a.argmax()]
+    member a.min() = a.[a.argmin()]
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
     member a.max(b) = a.max(a.like(b))
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
