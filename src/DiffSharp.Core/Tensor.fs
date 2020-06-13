@@ -230,6 +230,9 @@ type Tensor =
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
 
+    static member Zero = Tensor(RawTensor.Zero())
+    static member One = Tensor(RawTensor.One())
+
     static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
     static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
     static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte

@@ -1,6 +1,7 @@
 namespace DiffSharp.Distributions
 open DiffSharp
 open DiffSharp.Util
+open System.Collections.Generic
 
 
 [<AutoOpen>]
@@ -122,16 +123,60 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
 
 type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
     inherit Distribution<'T>()
-    let _categorical =
+    let _categorical, _weighted =
         match weights, logWeights with
         | Some _, Some _ -> failwithf "Expecting only one of weights, logWeights"
-        | Some w, None -> Categorical(probs=w)
-        | None, Some lw -> Categorical(logits=lw)
-        | None, None -> Categorical(probs=dsharp.ones([values |> Seq.length]))
-    member d.values = values |> Array.ofSeq
+        | Some w, None -> Categorical(probs=w), true
+        | None, Some lw -> Categorical(logits=lw), true
+        | None, None -> Categorical(probs=dsharp.ones([values |> Seq.length])), false  // Uniform weights for unweighted distributions
+    let _values = values |> Array.ofSeq
+    let _valuesTensor =
+            lazy(try _values |> Array.map (fun v -> box v :?> Tensor) |> dsharp.stack
+                    with | _ -> 
+                        try _values |> Array.map (dsharp.tensor) |> dsharp.stack
+                        with | _ -> failwith "Not supported because Empirical does not hold values that are Tensors or can be converted to Tensors")
+    member d.values = _values
+    member d.valuesTensor = _valuesTensor.Force()
     member d.length = d.values.Length
     member d.weights = _categorical.probs
     member d.logWeights = _categorical.logits
-    override d.sample() = let i = int <| _categorical.sample() in d.values.[i]
-    override d.logprob(_) = failwith "Not supported"
+    member d.isWeighted = _weighted
+    member d.Item
+        with get(i) = d.values.[i], d.weights.[i]
+    member d.GetSlice(start, finish) =
+        let start = defaultArg start 0
+        let finish = defaultArg finish d.length - 1
+        Empirical(_values.[start..finish], logWeights=d.logWeights.[start..finish])
+    member d.unweighted() = Empirical(d.values)
+    member d.map (f:'T->'a) = Empirical(Array.map f d.values, logWeights=d.logWeights)
+    member d.filter (predicate:'T->bool) =
+        let results = ResizeArray<'T*Tensor>()
+        Array.iteri (fun i v -> if predicate v then results.Add(v, d.logWeights.[i])) d.values
+        let v, lw = results.ToArray() |> Array.unzip
+        Empirical(v, logWeights=dsharp.stack(lw))
+    member d.sample(?minIndex:int, ?maxIndex:int) = // minIndex is inclusive, maxIndex is exclusive
+        let i =
+            if d.isWeighted then
+                if minIndex.IsSome || maxIndex.IsSome then
+                    // TODO: implement by reconstructing categorical with sliced weights
+                    failwithf "Sample with minIndex or maxIndex not implemented for weighted Empirical"
+                else
+                    _categorical.sample() |> int
+            else
+                let minIndex = defaultArg minIndex 0
+                let maxIndex = defaultArg maxIndex d.length
+                Random.Integer(minIndex, maxIndex)
+        d.values.[i]
+    member d.resample(numSamples, ?minIndex:int, ?maxIndex:int) = Array.init numSamples (fun _ -> d.sample(?minIndex=minIndex, ?maxIndex=maxIndex)) |> Empirical
+    member d.expectation (f:'T->Tensor) =
+        if d.isWeighted then d.values |> Array.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
+        else d.values |> Array.map f |> dsharp.stack |> dsharp.mean(0)
+    member d.mean = d.valuesTensor.mean(0)
+    member d.stddev = d.valuesTensor.stddev(0)
+    member d.variance = d.stddev * d.stddev
+    member d.min = d.valuesTensor.min()
+    member d.max = d.valuesTensor.max()
+    member d.effectiveSampleSize = 1. / d.weights.pow(2).sum()
+    override d.sample() = d.sample(minIndex=0, maxIndex=d.length)
+    override d.logprob(_) = failwith "Not supported"  // TODO: can be implemented using density estimation
     override d.ToString() = sprintf "Empirical(length:%A)" d.length
