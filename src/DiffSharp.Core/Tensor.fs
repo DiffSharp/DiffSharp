@@ -240,7 +240,6 @@ type Tensor =
             (Seq.init t.shape.[0] (fun i -> t.[i])).GetEnumerator()
     interface System.Collections.IEnumerable with
         member t.GetEnumerator() =
-            if t.dim < 1 then failwithf "Cannot enumerate Tensor with dim < 1"
             upcast (t :> System.Collections.Generic.IEnumerable<Tensor>).GetEnumerator()
 
     static member Zero = Tensor(RawTensor.Zero())

@@ -146,7 +146,7 @@ type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
     member d.GetSlice(start, finish) =
         let start = defaultArg start 0
         let finish = defaultArg finish d.length - 1
-        Empirical(_values.[start..finish], logWeights=d.logWeights.[start..finish])
+        Empirical(d.values.[start..finish], logWeights=d.logWeights.[start..finish])
     member d.unweighted() = Empirical(d.values)
     member d.map (f:'T->'a) = Empirical(Array.map f d.values, logWeights=d.logWeights)
     member d.filter (predicate:'T->bool) =
@@ -155,25 +155,25 @@ type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
         let v, lw = results.ToArray() |> Array.unzip
         Empirical(v, logWeights=dsharp.stack(lw))
     member d.sample(?minIndex:int, ?maxIndex:int) = // minIndex is inclusive, maxIndex is exclusive
+        let minIndex = defaultArg minIndex 0
+        let maxIndex = defaultArg maxIndex d.length
         let i =
             if d.isWeighted then
-                if minIndex.IsSome || maxIndex.IsSome then
+                if minIndex <> 0 || maxIndex <> d.length then
                     // TODO: implement by reconstructing categorical with sliced weights
                     failwithf "Sample with minIndex or maxIndex not implemented for weighted Empirical"
                 else
                     _categorical.sample() |> int
             else
-                let minIndex = defaultArg minIndex 0
-                let maxIndex = defaultArg maxIndex d.length
                 Random.Integer(minIndex, maxIndex)
         d.values.[i]
     member d.resample(numSamples, ?minIndex:int, ?maxIndex:int) = Array.init numSamples (fun _ -> d.sample(?minIndex=minIndex, ?maxIndex=maxIndex)) |> Empirical
-    member d.expectation (f:'T->Tensor) =
-        if d.isWeighted then d.values |> Array.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
-        else d.values |> Array.map f |> dsharp.stack |> dsharp.mean(0)
-    member d.mean = d.valuesTensor.mean(0)
-    member d.stddev = d.valuesTensor.stddev(0)
-    member d.variance = d.stddev * d.stddev
+    member d.expectation (f:Tensor->Tensor) =
+        if d.isWeighted then d.valuesTensor |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
+        else d.valuesTensor |> Seq.map f |> dsharp.stack |> dsharp.mean(0)
+    member d.mean = d.expectation(id)
+    member d.variance = let mean = d.mean in d.expectation(fun x -> (x-mean)**2)
+    member d.stddev = dsharp.sqrt(d.variance)
     member d.min = d.valuesTensor.min()
     member d.max = d.valuesTensor.max()
     member d.effectiveSampleSize = 1. / d.weights.pow(2).sum()

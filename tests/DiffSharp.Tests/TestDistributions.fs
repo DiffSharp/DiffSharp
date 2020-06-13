@@ -280,3 +280,45 @@ type TestDistributions () =
             Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
             Assert.True(samplesStddev.allclose(stddevCorrect, 0.1, 0.1))
             Assert.True(logprob.allclose(logprobCorrect, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestDistributionsEmpirical () =
+        for combo in Combos.AllDevicesAndBackends do
+            let values = combo.tensor([1,2,3])
+            let logWeights = combo.tensor([1,2,3])
+
+            let dist = Empirical(values, logWeights=logWeights)
+            let distMean = dist.mean
+            let distStddev = dist.stddev
+            let distMeanCorrect = combo.tensor(2.575210)
+            let distStddevCorrect = combo.tensor(0.651463)
+            let distMin = dist.min
+            let distMax = dist.max
+            let distMinCorrect = combo.tensor(1)
+            let distMaxCorrect = combo.tensor(3)
+            let distExpectationSin = dist.expectation(dsharp.sin)
+            let distExpectationSinCorrect = combo.tensor(0.392167)
+            let distMapSin = dist.map(dsharp.sin)
+            let distMapSinMean = distMapSin.mean
+            let distMapSinMeanCorrect = combo.tensor(0.392167)
+
+            let distEmpirical = Empirical([for _ = 0 to numEmpiricalSamples do dist.sample()])
+            let distEmpiricalMean = distEmpirical.mean
+            let distEmpiricalStddev = distEmpirical.stddev
+
+            let distUnweighted = dist.unweighted()
+            let distUnweightedMean = distUnweighted.mean
+            let distUnweightedStddev = distUnweighted.stddev
+            let distUnweightedMeanCorrect = combo.tensor(2.)
+            let distUnweightedStddevCorrect = combo.tensor(0.816497)
+
+            Assert.True(distMeanCorrect.allclose(distMean, 0.1))
+            Assert.True(distStddevCorrect.allclose(distStddev, 0.1))
+            Assert.AreEqual(distMinCorrect, distMin)
+            Assert.AreEqual(distMaxCorrect, distMax)
+            Assert.True(distExpectationSinCorrect.allclose(distExpectationSin, 0.1))
+            Assert.True(distMapSinMeanCorrect.allclose(distMapSinMean, 0.1))
+            Assert.True(distMeanCorrect.allclose(distEmpiricalMean, 0.1))
+            Assert.True(distStddevCorrect.allclose(distEmpiricalStddev, 0.1))
+            Assert.True(distUnweightedMeanCorrect.allclose(distUnweightedMean, 0.1))
+            Assert.True(distUnweightedStddevCorrect.allclose(distUnweightedStddev, 0.1))

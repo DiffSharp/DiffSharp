@@ -223,23 +223,26 @@ type DiffSharp with
     static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> DiffSharp.tensor
     static member create (count:int) (value:'a) = Array.create count value |> DiffSharp.tensor
     static member zeroCreate (count:int) = Array.zeroCreate count |> DiffSharp.tensor
-    static member map (mapping:Tensor->Tensor) (tensor:Tensor) = // Differentiable map
+    static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
         let tflat = tensor.view(-1)
-        let items = Array.init (tflat.nelement) (fun i -> mapping tflat.[i])
+        let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
         DiffSharp.stack(items).view(tensor.shape)
-    static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
+    static member mapi2 (mapping:int[]->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping tflat1.[i] tflat2.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
         DiffSharp.stack(items).view(tensor1.shape)
-    static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
+    static member mapi3 (mapping:int[]->Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
         if (tensor1.shape <> tensor2.shape) || (tensor2.shape <> tensor3.shape) then failwithf "Expecting tensor1.shape (%A), tensor2.shape (%A), tensor3.shape (%A) to be the same" tensor1.shape tensor2.shape tensor3.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let tflat3 = tensor3.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping tflat1.[i] tflat2.[i] tflat3.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i] tflat3.[i])
         DiffSharp.stack(items).view(tensor1.shape)
+    static member map (mapping:Tensor->Tensor) (tensor:Tensor) = tensor |> DiffSharp.mapi (fun _ v -> mapping v)
+    static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) = DiffSharp.mapi2 (fun _ v1 v2 -> mapping v1 v2) tensor1 tensor2
+    static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) = DiffSharp.mapi3 (fun _ v1 v2 v3 -> mapping v1 v2 v3) tensor1 tensor2 tensor3
 
 
 // Functional automatic differentiation API
