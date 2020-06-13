@@ -5490,7 +5490,15 @@ type TestTensor () =
             Assert.AreEqual(t3DepthCorrect, t3Depth)
 
     [<Test>]
-    member _.FSharpCoreOps () =
+    member _.TestTensorIEnumerable () =
+        for combo in Combos.All do 
+            let t1 = combo.tensor([1,2,3])
+            t1 |> Seq.iteri (fun i v -> Assert.AreEqual(t1.[i], v))
+            let t2 = combo.tensor([[1,2,3], [4,5,6]])
+            t2 |> Seq.iteri (fun i v -> Assert.AreEqual(t2.[i], v))
+
+    [<Test>]
+    member _.TestTensorFSharpCoreOps () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([0.1; 0.2; 0.3])
             let add = t + t
