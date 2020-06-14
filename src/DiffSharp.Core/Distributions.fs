@@ -121,7 +121,7 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
     override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
 
 
-type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
+type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor, ?combineDuplicates:bool) =
     inherit Distribution<'T>()
     let _categorical, _weighted =
         match weights, logWeights with
@@ -129,12 +129,33 @@ type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
         | Some w, None -> Categorical(probs=w), true
         | None, Some lw -> Categorical(logits=lw), true
         | None, None -> Categorical(probs=dsharp.ones([values |> Seq.length])), false  // Uniform weights for unweighted distributions
-    let _values = values |> Array.ofSeq
+    let mutable _categorical = _categorical
+    let mutable _weighted = _weighted
+    let mutable _values = values |> Array.ofSeq
     let _valuesTensor =
             lazy(try _values |> Array.map (fun v -> box v :?> Tensor) |> dsharp.stack
                     with | _ -> 
                         try _values |> Array.map (dsharp.tensor) |> dsharp.stack
                         with | _ -> failwith "Not supported because Empirical does not hold values that are Tensors or can be converted to Tensors")
+    do
+        let combineDuplicates = defaultArg combineDuplicates false
+        if combineDuplicates then
+            let newValues, newLogWeights = 
+                if _weighted then
+                    let uniques = Dictionary<'T, Tensor>()
+                    for i = 0 to _values.Length-1 do
+                        let v, lw = _values.[i], _categorical.logits.[i]
+                        if uniques.ContainsKey(v) then
+                            let lw2 = uniques.[v]
+                            uniques.[v] <- dsharp.stack([lw; lw2]).logsumexp(dim=0)
+                        else uniques.[v] <- lw
+                    copyKeys uniques, dsharp.stack(copyValues uniques).view(-1)
+                else
+                    let vals, counts = getUniqueCounts _values false
+                    vals, dsharp.tensor(counts)
+            _values <- newValues
+            _categorical <- Categorical(logits=newLogWeights)
+        _weighted <- not (allEqual _categorical.probs)
     member d.values = _values
     member d.valuesTensor = _valuesTensor.Force()
     member d.length = d.values.Length
@@ -157,23 +178,28 @@ type Empirical<'T>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor) =
     member d.sample(?minIndex:int, ?maxIndex:int) = // minIndex is inclusive, maxIndex is exclusive
         let minIndex = defaultArg minIndex 0
         let maxIndex = defaultArg maxIndex d.length
-        let i =
-            if d.isWeighted then
-                if minIndex <> 0 || maxIndex <> d.length then
-                    // TODO: implement by reconstructing categorical with sliced weights
-                    failwithf "Sample with minIndex or maxIndex not implemented for weighted Empirical"
-                else
-                    _categorical.sample() |> int
-            else
-                Random.Integer(minIndex, maxIndex)
-        d.values.[i]
+        if minIndex <> 0 || maxIndex <> d.length then
+            if minIndex < 0 || minIndex > d.length then failwithf "Expecting 0 <= minIndex (%A) <= %A" minIndex d.length
+            if maxIndex < 0 || maxIndex > d.length then failwithf "Expecting 0 <= maxIndex (%A) <= %A" maxIndex d.length
+            if minIndex >= maxIndex then failwithf "Expecting minIndex (%A) < maxIndex (%A)" minIndex maxIndex
+            d.[minIndex..maxIndex].sample()
+        else
+            let i = _categorical.sample() |> int in d.values.[i]
     member d.resample(numSamples, ?minIndex:int, ?maxIndex:int) = Array.init numSamples (fun _ -> d.sample(?minIndex=minIndex, ?maxIndex=maxIndex)) |> Empirical
+    member d.combineDuplicates() = Empirical(d.values, logWeights=d.logWeights, combineDuplicates=true)
     member d.expectation (f:Tensor->Tensor) =
         if d.isWeighted then d.valuesTensor |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
         else d.valuesTensor |> Seq.map f |> dsharp.stack |> dsharp.mean(0)
     member d.mean = d.expectation(id)
     member d.variance = let mean = d.mean in d.expectation(fun x -> (x-mean)**2)
     member d.stddev = dsharp.sqrt(d.variance)
+    member d.mode =
+        if d.isWeighted then 
+            let dCombined = d.combineDuplicates()
+            let i = dCombined.logWeights.argmax() in dCombined.values.[i.[0]]
+        else
+            let vals, _ = getUniqueCounts d.values true
+            vals.[0]
     member d.min = d.valuesTensor.min()
     member d.max = d.valuesTensor.max()
     member d.effectiveSampleSize = 1. / d.weights.pow(2).sum()

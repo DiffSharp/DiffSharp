@@ -292,6 +292,8 @@ type TestDistributions () =
             let distStddev = dist.stddev
             let distMeanCorrect = combo.tensor(2.575210)
             let distStddevCorrect = combo.tensor(0.651463)
+            let distEffectiveSampleSize = dist.effectiveSampleSize
+            let distEffectiveSampleSizeCorrect = combo.tensor(1.9587)
             let distMin = dist.min
             let distMax = dist.max
             let distMinCorrect = combo.tensor(1)
@@ -314,6 +316,7 @@ type TestDistributions () =
 
             Assert.True(distMeanCorrect.allclose(distMean, 0.1))
             Assert.True(distStddevCorrect.allclose(distStddev, 0.1))
+            Assert.True(distEffectiveSampleSizeCorrect.allclose(distEffectiveSampleSize, 0.1))
             Assert.AreEqual(distMinCorrect, distMin)
             Assert.AreEqual(distMaxCorrect, distMax)
             Assert.True(distExpectationSinCorrect.allclose(distExpectationSin, 0.1))
@@ -322,3 +325,92 @@ type TestDistributions () =
             Assert.True(distStddevCorrect.allclose(distEmpiricalStddev, 0.1))
             Assert.True(distUnweightedMeanCorrect.allclose(distUnweightedMean, 0.1))
             Assert.True(distUnweightedStddevCorrect.allclose(distUnweightedStddev, 0.1))
+
+    [<Test>]
+    member _.TestDistributionsEmpiricalCombineDuplicatesMode () =
+        for combo in Combos.AllDevicesAndBackends do
+            let values = combo.tensor([0,1,2,2,2,2,3,4,4,5,5,5,6,7,7,8,9])
+            let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592, 0.4845, 0.7710, 0.3588, 0.8622, 0.7621, 0.6102, 0.9421, 0.0774, 0.8294, 0.7371, 0.3742])
+
+            let dist = Empirical(values, weights=weights)
+            let distMode = dist.mode
+            let distModeCorrect = combo.tensor(5)
+            let distLength = dist.length
+            let distLengthCorrect = 17
+            Assert.AreEqual(distModeCorrect, distMode)
+            Assert.AreEqual(distLengthCorrect, distLength)
+
+            let distCombined = Empirical(values, weights=weights).combineDuplicates()
+            let distCombinedMode = distCombined.mode
+            let distCombinedModeCorrect = combo.tensor(5)
+            let distCombinedLength = distCombined.length
+            let distCombinedLengthCorrect = 10
+            Assert.AreEqual(distCombinedModeCorrect, distCombinedMode)
+            Assert.AreEqual(distCombinedLengthCorrect, distCombinedLength)
+
+            let distUnweighted = Empirical(values)
+            let distUnweightedMode = distUnweighted.mode
+            let distUnweightedModeCorrect = combo.tensor(2)
+            let distUnweightedLength = distUnweighted.length
+            let distUnweightedLengthCorrect = 17
+            Assert.AreEqual(distUnweightedModeCorrect, distUnweightedMode)
+            Assert.AreEqual(distUnweightedLengthCorrect, distUnweightedLength)
+
+            let distUnweightedCombined = Empirical(values).combineDuplicates()
+            let distUnweightedCombinedMode = distUnweightedCombined.mode
+            let distUnweightedCombinedModeCorrect = combo.tensor(2)
+            let distUnweightedCombinedLength = distUnweightedCombined.length
+            let distUnweightedCombinedLengthCorrect = 10
+            Assert.AreEqual(distUnweightedCombinedModeCorrect, distUnweightedCombinedMode)
+            Assert.AreEqual(distUnweightedCombinedLengthCorrect, distUnweightedCombinedLength)
+
+    [<Test>]
+    member _.TestDistributionsEmpiricalResampleFilter () =
+        for combo in Combos.AllDevicesAndBackends do
+            let values = combo.tensor([0,1,2,3,4,5])
+            let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592])
+
+            let dist = Empirical(values, weights=weights)
+            let distMean = dist.mean
+            let distStddev = dist.stddev
+            let distMeanCorrect = combo.tensor(2.8451)
+            let distStddevCorrect = combo.tensor(1.3844)
+            let distWeighted = dist.isWeighted
+            let distWeightedCorrect = true
+
+            let distResampled = dist.resample(numEmpiricalSamples)
+            let distResampledMean = distResampled.mean
+            let distResampledStddev = distResampled.stddev
+            let distResampledWeighted = distResampled.isWeighted
+            let distResampledWeightedCorrect = false
+
+            Assert.True(distMeanCorrect.allclose(distMean, 0.1))
+            Assert.True(distStddevCorrect.allclose(distStddev, 0.1))
+            Assert.AreEqual(distWeightedCorrect, distWeighted)
+            Assert.True(distMeanCorrect.allclose(distResampledMean, 0.1))
+            Assert.True(distStddevCorrect.allclose(distResampledStddev, 0.1))
+            Assert.AreEqual(distResampledWeightedCorrect, distResampledWeighted)
+
+            let distResampledMinMax = dist.resample(numEmpiricalSamples, minIndex=1, maxIndex=3)
+            let distResampledMinMaxMean = distResampledMinMax.mean
+            let distResampledMinMaxStddev = distResampledMinMax.stddev
+            let distResampledMinMaxMeanCorrect = combo.tensor(1.7802)
+            let distResampledMinMaxStddevCorrect = combo.tensor(0.4141)            
+            let distResampledMinMaxWeighted = distResampledMinMax.isWeighted
+            let distResampledMinMaxWeightedCorrect = false
+
+            Assert.True(distResampledMinMaxMeanCorrect.allclose(distResampledMinMaxMean, 0.1))
+            Assert.True(distResampledMinMaxStddevCorrect.allclose(distResampledMinMaxStddev, 0.1))
+            Assert.AreEqual(distResampledMinMaxWeightedCorrect, distResampledMinMaxWeighted)
+
+            let distFiltered = dist.filter(fun v -> v > combo.tensor(0) && v < combo.tensor(3))
+            let distFilteredMean = distFiltered.mean
+            let distFilteredStddev = distFiltered.stddev
+            let distFilteredMeanCorrect = combo.tensor(1.7802)
+            let distFilteredStddevCorrect = combo.tensor(0.4141)            
+            let distFilteredWeighted = distFiltered.isWeighted
+            let distFilteredWeightedCorrect = true
+
+            Assert.True(distFilteredMeanCorrect.allclose(distFilteredMean, 0.1))
+            Assert.True(distFilteredStddevCorrect.allclose(distFilteredStddev, 0.1))
+            Assert.AreEqual(distFilteredWeightedCorrect, distFilteredWeighted)

@@ -15,7 +15,7 @@ type Parameter =
 
 
 type ParameterDict() =
-    member val values:Dictionary<string, Parameter> = Dictionary()
+    member val values = Dictionary<string, Parameter>()
     member d.Item
         with get key = d.values.[key].value
         and set key v = d.values.[key].value <- v
@@ -52,7 +52,7 @@ type ParameterDict() =
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = getKeys d.values
+        let keys = copyKeys d.values
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1
@@ -80,8 +80,8 @@ type Mode =
 type Model() =
     [<DefaultValue>]
     val mutable mode: Mode
-    member val ParametersDict:ParameterDict = ParameterDict()
-    member val SubModelsDict:Dictionary<string, Model> = Dictionary()
+    member val ParametersDict = ParameterDict()
+    member val SubModelsDict = Dictionary<string, Model>()
     member m.train() = 
         m.mode <- Mode.Train
         for model:Model in m.allModels do model.mode <- Mode.Train

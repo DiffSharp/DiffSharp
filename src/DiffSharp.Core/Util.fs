@@ -781,10 +781,24 @@ let memoize fn =
             cache.Add(x,v)
             v
 
-let getKeys (dictionary:Dictionary<string, 'a>) =
-    let keys = Array.create dictionary.Count ""
+let getUniqueCounts (values:'a[]) (sorted:bool) =
+    let counts = Dictionary<'a, int>()
+    for v in values do
+        if counts.ContainsKey(v) then counts.[v] <- counts.[v] + 1 else counts.[v] <- 1
+    if sorted then
+        counts |> Array.ofSeq |> Array.sortByDescending (fun (KeyValue(_, v)) -> v) |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
+    else
+        counts |> Array.ofSeq |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
+
+let inline copyKeys (dictionary:Dictionary<'a, 'b>) =
+    let keys = Array.zeroCreate dictionary.Count
     dictionary.Keys.CopyTo(keys, 0)
     keys
+
+let inline copyValues (dictionary:Dictionary<'a, 'b>) =
+    let values = Array.zeroCreate dictionary.Count
+    dictionary.Values.CopyTo(values, 0)
+    values
 
 let download (url:string) (localFileName:string) =
     let wc = new WebClient()
