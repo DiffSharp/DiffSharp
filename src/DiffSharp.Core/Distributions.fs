@@ -186,6 +186,16 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
         else
             let i = _categorical.sample() |> int in d.values.[i]
     member d.resample(numSamples, ?minIndex:int, ?maxIndex:int) = Array.init numSamples (fun _ -> d.sample(?minIndex=minIndex, ?maxIndex=maxIndex)) |> Empirical
+    member d.thin(numSamples, ?minIndex:int, ?maxIndex:int) = 
+        if d.isWeighted then failwithf "Cannot thin weighted distribution. Consider transforming Empirical to an unweigted Empirical by resampling."
+        let minIndex = defaultArg minIndex 0
+        let maxIndex = defaultArg maxIndex d.length
+        let step = max 1 (int(floor (float (maxIndex - minIndex)) / (float numSamples)))
+        let results = ResizeArray<'T>()
+        for i in 0..step..d.length-1 do
+            let v = d.values.[i]
+            results.Add(v)
+        Empirical(results.ToArray())
     member d.combineDuplicates() = Empirical(d.values, logWeights=d.logWeights, combineDuplicates=true)
     member d.expectation (f:Tensor->Tensor) =
         if d.isWeighted then d.valuesTensor |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)

@@ -414,3 +414,12 @@ type TestDistributions () =
             Assert.True(distFilteredMeanCorrect.allclose(distFilteredMean, 0.1))
             Assert.True(distFilteredStddevCorrect.allclose(distFilteredStddev, 0.1))
             Assert.AreEqual(distFilteredWeightedCorrect, distFilteredWeighted)
+
+    [<Test>]
+    member _.TestDistributionsEmpiricalThin () =
+        let values = [1;2;3;4;5;6;7;8;9;10;11;12]
+        let dist = Empirical(values)
+        let distThinned = dist.thin(4)
+        let distThinnedValues = distThinned.values
+        let distThinnedValuesCorrect = [1;4;7;10]
+        Assert.AreEqual(distThinnedValuesCorrect, distThinnedValues)
