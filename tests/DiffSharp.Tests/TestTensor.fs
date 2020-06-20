@@ -531,28 +531,73 @@ type TestTensor () =
     member _.TestTensorMultinomial () =
         for combo in Combos.FloatingPoint do
             let p1 = combo.tensor([0.2,0.3,0.5])
-            let m1 = dsharp.multinomial(p1, numSamples=5000)
+            let m1 = dsharp.multinomial(p1, numSamples=3000)
             let m1dtype = m1.dtype
             let m1dtypeCorrect = Dtype.Int32
             let m1mean = m1.float().mean()
             let m1stddev = m1.float().stddev()
-            let m1meanCorrect = dsharp.tensor(1.3001).float()
-            let m1stddevCorrect = dsharp.tensor(0.7810).float()
+            let m1meanCorrect = combo.tensor(1.3001).float()
+            let m1stddevCorrect = combo.tensor(0.7810).float()
             Assert.AreEqual(m1dtypeCorrect, m1dtype)
             Assert.True(m1meanCorrect.allclose(m1mean, 0.1))
             Assert.True(m1stddevCorrect.allclose(m1stddev, 0.1))
 
             let p2 = combo.tensor([[0.2,0.3,0.5],[0.8,0.1,0.1]])
-            let m2 = dsharp.multinomial(p2, numSamples=5000)
+            let m2 = dsharp.multinomial(p2, numSamples=3000)
             let m2dtype = m2.dtype
             let m2dtypeCorrect = Dtype.Int32
             let m2mean = m2.float().mean(dim=1)
             let m2stddev = m2.float().stddev(dim=1)
-            let m2meanCorrect = dsharp.tensor([1.3001, 0.3001]).float()
-            let m2stddevCorrect = dsharp.tensor([0.7810, 0.6404]).float()
+            let m2meanCorrect = combo.tensor([1.3001, 0.3001]).float()
+            let m2stddevCorrect = combo.tensor([0.7810, 0.6404]).float()
             Assert.AreEqual(m2dtypeCorrect, m2dtype)
             Assert.True(m2meanCorrect.allclose(m2mean, 0.1))
             Assert.True(m2stddevCorrect.allclose(m2stddev, 0.1))
+
+    [<Test>]
+    member _.TestTensorBernoulli () =
+        for combo in Combos.FloatingPoint do
+            let p1 = combo.tensor([0.1,0.5,0.9])
+            let b1 = dsharp.bernoulli(p1.expand([2500;3]))
+            let b1mean = b1.mean(dim=0)
+            let b1meanCorrect = p1
+            Assert.True(b1meanCorrect.allclose(b1mean, 0.1, 0.1))
+
+            let p2 = combo.tensor([[0.2,0.4],[0.9, 0.5]])
+            let b2 = dsharp.bernoulli(p2.expand([2500;2;2]))
+            let b2mean = b2.mean(dim=0)
+            let b2meanCorrect = p2
+            Assert.True(b2meanCorrect.allclose(b2mean, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestTensorDropout () =
+        for combo in Combos.FloatingPoint do
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100])
+                let d = dsharp.dropout(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
+
+    [<Test>]
+    member _.TestTensorDropout2d () =
+        for combo in Combos.FloatingPoint do
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100;8;8])
+                let d = dsharp.dropout2d(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
+
+    [<Test>]
+    member _.TestTensorDropout3d () =
+        for combo in Combos.FloatingPoint do
+            for p in [0.; 0.2; 0.8; 1.] do
+                let t = combo.ones([100;100;8;8;8])
+                let d = dsharp.dropout3d(t, p)
+                let m = d.mean() |> float
+                let mCorrect = 1. - p
+                Assert.True(abs(mCorrect - m) < 0.1)
 
     [<Test>]
     member _.TestTensorToString () =
@@ -961,7 +1006,7 @@ type TestTensor () =
     member _.TestTensorFullLike () =
         for combo in Combos.All do 
             let t = combo.tensor([1.; 2.; 3.; 4.])
-            let i = t.fullLike([2], 4.0)
+            let i = t.fullLike(4.0, [2])
             let iCorrect = combo.tensor([4.; 4.])
             Assert.AreEqual(iCorrect, i)
 
@@ -3868,6 +3913,51 @@ type TestTensor () =
             Assert.AreEqual(tSum2Correct, tSum2)
 
     [<Test>]
+    member _.TestTensorSumDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tsum_3 = t.sum(-3)
+            let tsum_2 = t.sum(-2)
+            let tsum_1 = t.sum(-1)
+            let tsum0 = t.sum(0)
+            let tsum1 = t.sum(1)
+            let tsum2 = t.sum(2)
+
+            Assert.AreEqual(tsum_3, tsum0)
+            Assert.AreEqual(tsum_2, tsum1)
+            Assert.AreEqual(tsum_1, tsum2)
+
+    [<Test>]
+    member _.TestTensorMeanDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tmean_3 = t.mean(-3)
+            let tmean_2 = t.mean(-2)
+            let tmean_1 = t.mean(-1)
+            let tmean0 = t.mean(0)
+            let tmean1 = t.mean(1)
+            let tmean2 = t.mean(2)
+
+            Assert.AreEqual(tmean_3, tmean0)
+            Assert.AreEqual(tmean_2, tmean1)
+            Assert.AreEqual(tmean_1, tmean2)
+
+    [<Test>]
+    member _.TestTensorVarianceDimBackwards () =
+        for combo in Combos.FloatingPoint do 
+            let t = combo.randn([2;2;2])
+            let tvariance_3 = t.variance(-3)
+            let tvariance_2 = t.variance(-2)
+            let tvariance_1 = t.variance(-1)
+            let tvariance0 = t.variance(0)
+            let tvariance1 = t.variance(1)
+            let tvariance2 = t.variance(2)
+
+            Assert.AreEqual(tvariance_3, tvariance0)
+            Assert.AreEqual(tvariance_2, tvariance1)
+            Assert.AreEqual(tvariance_1, tvariance2)
+
+    [<Test>]
     member _.TestTensorMean () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([[[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]]; [[13.;14.;15.;16.]; [17.;18.;19.;20.]; [21.;22.;23.;24.]]])
@@ -4011,6 +4101,29 @@ type TestTensor () =
             Assert.AreEqual(tVariance0.dtype, combo.dtype)
             Assert.AreEqual(tVariance1.dtype, combo.dtype)
             Assert.AreEqual(tVariance2.dtype, combo.dtype)
+
+            let tVarianceBiased = t.variance(unbiased=false)
+            let tVarianceBiasedCorrect = combo.tensor(0.0551)
+
+            Assert.True(tVarianceBiased.allclose(tVarianceBiasedCorrect, 0.01))
+
+            let tVarianceBiased0 = t.variance(0, unbiased=false)
+            let tVarianceBiased0Correct = combo.tensor([[0.0216, 0.0282, 0.0271, 0.0014],
+                                                        [0.0020, 0.0446, 0.0237, 0.0007],
+                                                        [0.0281, 0.1068, 0.0558, 0.0690]])
+            let tVarianceBiased1 = t.variance(1, unbiased=false)
+            let tVarianceBiased1Correct = combo.tensor([[0.0362, 0.0592, 0.0565, 0.0113],
+                                                        [0.0382, 0.0957, 0.0271, 0.0444]])
+            let tVarianceBiased2 = t.variance(2, unbiased=false)
+            let tVarianceBiased2Correct = combo.tensor([[0.0389, 0.0639, 0.0467],
+                                                        [0.0299, 0.0407, 0.0568]])
+
+            Assert.True(tVarianceBiased0.allclose(tVarianceBiased0Correct, 0.01, 0.01))
+            Assert.True(tVarianceBiased1.allclose(tVarianceBiased1Correct, 0.01, 0.01))
+            Assert.True(tVarianceBiased2.allclose(tVarianceBiased2Correct, 0.01, 0.01))
+            Assert.AreEqual(tVarianceBiased0.dtype, combo.dtype)
+            Assert.AreEqual(tVarianceBiased1.dtype, combo.dtype)
+            Assert.AreEqual(tVarianceBiased2.dtype, combo.dtype)
 
     [<Test>]
     member _.TestTensorVarianceKeepDim () =
@@ -4704,6 +4817,14 @@ type TestTensor () =
             Assert.AreEqual(combo.dtype, t6.dtype)
 
     [<Test>]
+    member _.TestTensorClampT () =
+        for combo in Combos.SignedIntegralAndFloatingPoint do 
+            let t = combo.tensor([-4,-3,-2,-1,0,1,2,3,4])
+            let tClamped = dsharp.clamp(t, -2, 3)
+            let tClampedCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
+            Assert.AreEqual(tClampedCorrect, tClamped)
+
+    [<Test>]
     member _.TestTensorView () =
         for combo in Combos.All do 
             let t = combo.randint(0, 2, [10;10])
@@ -5392,7 +5513,15 @@ type TestTensor () =
             Assert.AreEqual(t3DepthCorrect, t3Depth)
 
     [<Test>]
-    member _.FSharpCoreOps () =
+    member _.TestTensorIEnumerable () =
+        for combo in Combos.All do 
+            let t1 = combo.tensor([1,2,3])
+            t1 |> Seq.iteri (fun i v -> Assert.AreEqual(t1.[i], v))
+            let t2 = combo.tensor([[1,2,3], [4,5,6]])
+            t2 |> Seq.iteri (fun i v -> Assert.AreEqual(t2.[i], v))
+
+    [<Test>]
+    member _.TestTensorFSharpCoreOps () =
         for combo in Combos.FloatingPoint do 
             let t = combo.tensor([0.1; 0.2; 0.3])
             let add = t + t

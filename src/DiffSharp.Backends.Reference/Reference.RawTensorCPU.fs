@@ -275,8 +275,9 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override t.Cast(dtype: Dtype) =
         if dtype = t.Dtype then 
             upcast t
-        else 
-            RawTensor.Create(t.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device)
+        else
+            let tflat = t.ViewT([|t.Nelement|]) // We flatten, cast, and return with the correct shape because .ToValues() in the next line does not support tensors with dimension > 4.
+            RawTensor.Create(tflat.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device).ViewT(t.Shape)
 
     override t.MoveTo(device: Device) =
         match device with 
@@ -325,7 +326,7 @@ module internal RawTensorCPU =
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
-        | _ -> opNotSupported "Cannot compare RawTensors of different types" t1.Dtype t2.Dtype
+        | _ -> invalidOp <| sprintf "Cannot compare RawTensors t1 (Shape=%A, Dtype=%A, Device=%A, Backend=%A) and t2 (Shape=%A, Dtype=%A, Device=%A, Backend=%A)" t1.Shape t1.Dtype t1.Device t1.Backend t2.Shape t2.Dtype t2.Device t2.Backend
 
     let inline Full(shape:int[], value: ^T) =
         let result = Array.create (shapeLength shape) value
@@ -334,7 +335,15 @@ module internal RawTensorCPU =
     let inline AllClose(t1: RawTensorCPU< ^T >, t2:RawTensor, relativeTolerance: ^T, absoluteTolerance: ^T) =
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && Array.allClose relativeTolerance absoluteTolerance t1.Values t2.Values
-        | _ -> opNotSupported2 "Cannot compare RawTensors of different types" t1.Dtype t2.Dtype
+        | _ -> invalidOp <| sprintf "Cannot compare RawTensors t1 (Shape=%A, Dtype=%A, Device=%A, Backend=%A) and t2 (Shape=%A, Dtype=%A, Device=%A, Backend=%A)" t1.Shape t1.Dtype t1.Device t1.Backend t2.Shape t2.Dtype t2.Device t2.Backend
+
+    let inline ClampT(t: RawTensorCPU< ^T>, low: RawTensor, high:RawTensor) : (^T[] * int[]) =
+        if low.Dim <> 0 || high.Dim <> 0 then failwithf "Expecting scalar low and high"
+        let tvalue = t.Values
+        let lowvalue = low.GetTypedValues().[0]
+        let highvalue = high.GetTypedValues().[0]
+        let result = Array.map (fun v -> (max (min v highvalue) lowvalue)) tvalue
+        (result, t.Shape)
 
     let inline LtTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (bool[] * int[]) =
         let t1value = t1.Values
@@ -827,6 +836,7 @@ type RawTensorFloat32(values: float32[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorFloat32(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
@@ -919,6 +929,7 @@ type RawTensorFloat64(values: double[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorFloat64(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, relativeTolerance, absoluteTolerance)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
@@ -1010,6 +1021,7 @@ type RawTensorInt8(values: int8[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorInt8(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
     override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
@@ -1098,6 +1110,7 @@ type RawTensorByte(values: byte[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorByte(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
     override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
@@ -1186,6 +1199,7 @@ type RawTensorInt16(values: int16[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorInt16(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
     override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
@@ -1274,6 +1288,7 @@ type RawTensorInt32(values: int32[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorInt32(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
     override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
@@ -1362,6 +1377,7 @@ type RawTensorInt64(values: int64[], shape:int[], device) =
     override t.MakeLike(values, shape) = upcast RawTensorInt64(values, shape, device)
     override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
     override t1.AllClose(t2:RawTensor, _relativeTolerance, _absoluteTolerance) = RawTensorCPU.Equals(t1, t2)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
     override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
     override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
     override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
@@ -1472,6 +1488,7 @@ type RawTensorBool(values: bool[], shape:int[], device) =
     override t.SumT2Dim0() = t.Cast(Int64).SumT2Dim0()
     override t.SignT() = t :> _
 
+    override t.ClampT(_low, _high) = opNotSupported "Clamp" t.Dtype
     override t1.SubTT(t2) = opNotSupported2 "SubTT" t1.Dtype t2.Dtype
     override t1.SubT0T(t2) = opNotSupported2 "SubT0T" t1.Dtype t2.Dtype
     override t1.SubTT0(t2) = opNotSupported2 "SubTT0" t1.Dtype t2.Dtype

@@ -239,6 +239,26 @@ type TestModel () =
         Assert.AreEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelTrainEval () =
+        let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
+        Assert.AreEqual(Mode.Train, m.mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+
+        m.eval()
+        Assert.AreEqual(Mode.Eval, m.mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Eval, m.allModels.[2].mode)
+
+        m.train()
+        Assert.AreEqual(Mode.Train, m.mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10
@@ -305,3 +325,39 @@ type TestModel () =
         Optimizer.sgd(net, dataloader, dsharp.crossEntropyLoss, lr=dsharp.tensor(lr), iters=iters)
         let y = inputs --> net --> dsharp.softmax 1
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestModelDropout () =
+        let m = Dropout(1.)
+        let x = dsharp.randn([10;10])
+        
+        m.train()
+        let xtrain = x --> m
+        Assert.AreEqual(x.zerosLike(), xtrain)
+        m.eval()
+        let xeval = x --> m
+        Assert.AreEqual(x, xeval)
+
+    [<Test>]
+    member _.TestModelDropout2d () =
+        let m = Dropout2d(1.)
+        let x = dsharp.randn([10;4;10;10])
+        
+        m.train()
+        let xtrain = x --> m
+        Assert.AreEqual(x.zerosLike(), xtrain)
+        m.eval()
+        let xeval = x --> m
+        Assert.AreEqual(x, xeval)
+
+    [<Test>]
+    member _.TestModelDropout3d () =
+        let m = Dropout3d(1.)
+        let x = dsharp.randn([10;4;10;10;10])
+        
+        m.train()
+        let xtrain = x --> m
+        Assert.AreEqual(x.zerosLike(), xtrain)
+        m.eval()
+        let xeval = x --> m
+        Assert.AreEqual(x, xeval)        
