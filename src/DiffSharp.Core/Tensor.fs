@@ -837,11 +837,15 @@ type Tensor =
            dv
 
     // This is the two-pass algorithm better than the naive algorithm
-    member a.variance() = let a' = a - a.mean() in (a' * a').sum() / (a.nelement - 1)
+    member a.variance(?unbiased:bool) = 
+        let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
+        let n = if unbiased then a.nelement - 1 else a.nelement
+        let a' = a - a.mean() in (a' * a').sum() / n
 
     // TODO: this is the naive algorithm, can be improved for better numerical stability
-    member a.variance(dim:int, ?keepDim:bool) =
+    member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
         let keepDim = defaultArg keepDim false
+        let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
         sBounds.[dim, 1] <- 0
@@ -856,12 +860,13 @@ type Tensor =
             let slice = a.GetSlice(sBounds)
             s <- s + slice
             sSquare <- sSquare + slice * slice
-        let res = (sSquare - (s * s) / n) / (n - 1)
+        let nn = if unbiased then n - 1 else n
+        let res = (sSquare - (s * s) / n) / nn
         if keepDim then res.unsqueeze(dim) else res
 
-    member a.stddev(dim:int, ?keepDim) = a.variance(dim, ?keepDim=keepDim) |> Tensor.Sqrt
+    member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
-    member a.stddev() = a.variance() |> Tensor.Sqrt
+    member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
 
     member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?normalize:bool) =
         // TODO: the following may be implemented by RawTensor at a later point

@@ -4102,6 +4102,29 @@ type TestTensor () =
             Assert.AreEqual(tVariance1.dtype, combo.dtype)
             Assert.AreEqual(tVariance2.dtype, combo.dtype)
 
+            let tVarianceBiased = t.variance(unbiased=false)
+            let tVarianceBiasedCorrect = combo.tensor(0.0551)
+
+            Assert.True(tVarianceBiased.allclose(tVarianceBiasedCorrect, 0.01))
+
+            let tVarianceBiased0 = t.variance(0, unbiased=false)
+            let tVarianceBiased0Correct = combo.tensor([[0.0216, 0.0282, 0.0271, 0.0014],
+                                                        [0.0020, 0.0446, 0.0237, 0.0007],
+                                                        [0.0281, 0.1068, 0.0558, 0.0690]])
+            let tVarianceBiased1 = t.variance(1, unbiased=false)
+            let tVarianceBiased1Correct = combo.tensor([[0.0362, 0.0592, 0.0565, 0.0113],
+                                                        [0.0382, 0.0957, 0.0271, 0.0444]])
+            let tVarianceBiased2 = t.variance(2, unbiased=false)
+            let tVarianceBiased2Correct = combo.tensor([[0.0389, 0.0639, 0.0467],
+                                                        [0.0299, 0.0407, 0.0568]])
+
+            Assert.True(tVarianceBiased0.allclose(tVarianceBiased0Correct, 0.01, 0.01))
+            Assert.True(tVarianceBiased1.allclose(tVarianceBiased1Correct, 0.01, 0.01))
+            Assert.True(tVarianceBiased2.allclose(tVarianceBiased2Correct, 0.01, 0.01))
+            Assert.AreEqual(tVarianceBiased0.dtype, combo.dtype)
+            Assert.AreEqual(tVarianceBiased1.dtype, combo.dtype)
+            Assert.AreEqual(tVarianceBiased2.dtype, combo.dtype)
+
     [<Test>]
     member _.TestTensorVarianceKeepDim () =
         for combo in Combos.FloatingPoint do 
