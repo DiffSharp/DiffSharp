@@ -241,6 +241,7 @@ and [<AbstractClass>]
     abstract member NegT : unit -> RawTensor
     abstract member SumT : ?resultType: Dtype -> RawTensor
     abstract member SumT2Dim0 : unit -> RawTensor
+    abstract member TransposeT: int * int -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
     abstract member UnsqueezeT: int -> RawTensor

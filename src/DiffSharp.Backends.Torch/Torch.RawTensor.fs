@@ -227,9 +227,15 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
+    override t.TransposeT(dim0, dim1) =
+        Shape.checkCanTranspose t.Shape dim0 dim1
+        let result = tt.Transpose(int64 dim0, int64 dim1)
+        let shape = result.Shape |> Array.map int32
+        t.MakeLike(result, shape=shape)
+
     override t.TransposeT2() =
-        Shape.checkCanTranspose t.Dim
-        let newShape = Shape.computeTranspose t.Shape
+        Shape.checkCanTranspose2d t.Dim
+        let newShape = Shape.computeTranspose2d t.Shape
         let result = tt.T()
         t.MakeLike(result, shape=newShape)
 
