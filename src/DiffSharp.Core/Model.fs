@@ -282,5 +282,10 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
             let res = (value - m) / (v + eps).sqrt()
             if affine then res * w.value + b.value else res
         elif value.dim = 3 then
-            failwithf ""
+            let vt = value.transpose(0,1).view([numFeatures;-1])
+            let batchMean = vt.mean(1).view([1;numFeatures;1])
+            let batchVar = vt.variance(1).view([1;numFeatures;1])
+            let m, v = m.meanVar batchMean batchVar
+            let res = (value - m) / (v + eps).sqrt()
+            if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
         else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
