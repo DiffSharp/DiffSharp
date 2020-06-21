@@ -166,8 +166,8 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
     do base.add([w;b],["Linear__weight";"Linear__bias"])
-    override l.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
-    override l.forward(value) =
+    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f
 
@@ -179,8 +179,8 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
-    override c.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
@@ -198,8 +198,8 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
-    override c.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
@@ -217,28 +217,70 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
-    override c.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
 
 type Dropout(?p:double) =
     inherit Model()
-    override d.ToString() = sprintf "Dropout()"
-    override d.forward(value) =
-        if d.mode = Mode.Train then value.dropout(?p=p) else value
+    override _.ToString() = sprintf "Dropout()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout(?p=p) else value
 
 
 type Dropout2d(?p:double) =
     inherit Model()
-    override d.ToString() = sprintf "Dropout2d()"
-    override d.forward(value) =
-        if d.mode = Mode.Train then value.dropout2d(?p=p) else value
+    override _.ToString() = sprintf "Dropout2d()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout2d(?p=p) else value
 
 
 type Dropout3d(?p:double) =
     inherit Model()
-    override d.ToString() = sprintf "Dropout3d()"
-    override d.forward(value) =
-        if d.mode = Mode.Train then value.dropout3d(?p=p) else value
+    override _.ToString() = sprintf "Dropout3d()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout3d(?p=p) else value
+
+
+type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool) =
+    inherit Model()
+    let eps = defaultArg eps 1e-5
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
+    let affine = defaultArg affine true
+    let trackRunningStats = defaultArg trackRunningStats true
+    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero()
+    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero()
+    let _mean = Parameter <| dsharp.zero()
+    let _variance = Parameter <| dsharp.zero()
+    let mutable uninitialized:bool = true
+    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they are not subject to gradient-based optimization
+    member _.mean = _mean.value
+    member _.variance = _variance.value
+    member _.stddev = _variance.value.sqrt()
+    member private m.meanVar batchMean batchVariance =
+        if uninitialized then
+            uninitialized <- false
+            _mean.value <- batchMean
+            _variance.value <- batchVariance
+        if trackRunningStats then
+            if m.mode = Mode.Train then
+                _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+                _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+        else
+            _mean.value <- batchMean
+            _variance.value <- batchVariance
+        _mean.value, _variance.value
+    override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
+    override m.forward(value) =
+        if value.dim = 2 then
+            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            let batchMean = value.mean(0)
+            let batchVar = value.variance(0)
+            let m, v = m.meanVar batchMean batchVar
+            let res = (value - m) / (v + eps).sqrt()
+            if affine then res * w.value + b.value else res
+        elif value.dim = 3 then
+            failwithf ""
+        else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
