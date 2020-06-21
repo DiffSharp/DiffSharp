@@ -4155,6 +4155,57 @@ type TestTensor () =
             Assert.AreEqual(tVariance2.dtype, combo.dtype)
 
     [<Test>]
+    member _.TestTensorTransposeT () =
+        for combo in Combos.All do 
+            let t = combo.arange(24).view([2;4;3]).cast(combo.dtype)
+            
+            let t00 = t.transpose(0, 0)
+            let t00Correct = t
+
+            let t01 = t.transpose(0, 1)
+            let t01Correct = combo.tensor([[[ 0,  1,  2],
+                                             [12, 13, 14]],
+
+                                            [[ 3,  4,  5],
+                                             [15, 16, 17]],
+
+                                            [[ 6,  7,  8],
+                                             [18, 19, 20]],
+
+                                            [[ 9, 10, 11],
+                                             [21, 22, 23]]])
+            let t02 = t.transpose(0, 2)
+            let t02Correct = combo.tensor([[[ 0, 12],
+                                             [ 3, 15],
+                                             [ 6, 18],
+                                             [ 9, 21]],
+
+                                            [[ 1, 13],
+                                             [ 4, 16],
+                                             [ 7, 19],
+                                             [10, 22]],
+
+                                            [[ 2, 14],
+                                             [ 5, 17],
+                                             [ 8, 20],
+                                             [11, 23]]])
+            let t12 = t.transpose(1, 2)
+            let t12Correct = combo.tensor([[[ 0,  3,  6,  9],
+                                             [ 1,  4,  7, 10],
+                                             [ 2,  5,  8, 11]],
+
+                                            [[12, 15, 18, 21],
+                                             [13, 16, 19, 22],
+                                             [14, 17, 20, 23]]])
+
+            Assert.AreEqual(t00Correct, t00)
+            Assert.AreEqual(t01Correct, t01)
+            Assert.AreEqual(t02Correct, t02)
+            Assert.AreEqual(t12Correct, t12)
+            Assert.AreEqual(t00.dtype, combo.dtype)
+            Assert.AreEqual(t01.dtype, combo.dtype)
+
+    [<Test>]
     member _.TestTensorTransposeT2 () =
         for combo in Combos.All do 
             let t1 = combo.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]])

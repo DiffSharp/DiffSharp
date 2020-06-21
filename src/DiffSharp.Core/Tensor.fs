@@ -947,8 +947,21 @@ type Tensor =
         let dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
+    member a.transpose(dim0:int, dim1:int) =
+        let dim0 = Shape.completeDim a.dim dim0  // Handles -1 semantics
+        let dim1 = Shape.completeDim a.dim dim1  // Handles -1 semantics
+        Shape.checkCanTranspose a.shape dim0 dim1
+        if dim0 = dim1 then
+            a
+        else
+            let fRaw(a:RawTensor) = a.TransposeT(dim0, dim1)
+            let fTensor(a:Tensor) = a.transpose(dim0, dim1)
+            let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose(dim0, dim1)
+            let dfTensorRev(a) = TransposeT(a, dim0, dim1)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     member a.transpose() =
-        Shape.checkCanTranspose a.dim
+        Shape.checkCanTranspose2d a.dim
         let fRaw(a:RawTensor) = a.TransposeT2()
         let fTensor(a:Tensor) = a.transpose()
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
@@ -1813,6 +1826,7 @@ type Tensor =
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
                         | GatherT(a,_,_) -> reset (a::tt)
+                        | TransposeT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
                         | UnsqueezeT(a) -> reset (a::tt)
@@ -1972,6 +1986,7 @@ type Tensor =
                                 loc.[dim] <- j
                                 a.derivative <- a.derivative.addSlice(loc, t)
                             push ((a.zeroLike(), a) :: tt)
+                        | TransposeT(a, dim0, dim1) -> push ((t.derivative.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
                         | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
                         | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
@@ -2099,6 +2114,7 @@ and TensorOp =
     | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
     | GatherT of Tensor * int * Tensor
+    | TransposeT of Tensor * int * int
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
     | UnsqueezeT of Tensor

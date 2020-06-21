@@ -151,7 +151,7 @@ module Shape =
         let outputShape = Array.append shape1 shape2
         shape1, shape2, outputShape
 
-    let computeTranspose (shape: Shape) =
+    let computeTranspose2d (shape: Shape) =
         let nrows = shape.[0]
         let ncols = shape.[1]
         let outputShape = [| ncols; nrows |]
@@ -339,8 +339,12 @@ module Shape =
         let isOK = canExpand oldShape newShape
         if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
 
-    let checkCanTranspose (dim: int) =
-        if dim <> 2 then failwith "Cannot transpose Tensor when dim=2"
+    let checkCanTranspose (shape: Shape) (dim0: int) (dim1: int) =
+        if dim0 < 0 || dim0 >= shape.Length then failwithf "Expecting 0 <= dim0 (%A) < shape.Length (%A)" dim0 shape.Length
+        if dim1 < 0 || dim1 >= shape.Length then failwithf "Expecting 0 <= dim1 (%A) < shape.Length (%A)" dim1 shape.Length
+
+    let checkCanTranspose2d (dim: int) =
+        if dim <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
 
     let checkCanFlip (dim: int) (dims: int[]) =
         if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim
