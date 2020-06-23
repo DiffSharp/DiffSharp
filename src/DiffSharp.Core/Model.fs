@@ -1,4 +1,4 @@
-namespace DiffSharp.Model
+namespace rec DiffSharp.Model
 open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
