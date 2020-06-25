@@ -1,4 +1,4 @@
-namespace DiffSharp.Distributions
+namespace rec DiffSharp.Distributions
 open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
