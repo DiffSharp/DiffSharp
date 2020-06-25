@@ -111,19 +111,21 @@ module Dtypes =
 module Combos =
 
     //let backends = [ Backend.Reference ]
-    //let backends = [ Backend.Torch ]
+    let backends = [ Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
     //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
-    let backends = [ Backend.Reference; Backend.Torch ]
+    //let backends = [ Backend.Reference; Backend.Torch ]
 
-    let devices = [ Device.CPU ]
-    //let devices = [ Device.CPU; Device.GPU ]
+    //let devices _ = [ Device.CPU ]
+    //let devices _ = [ Device.GPU ]
+    //let devices _ = [ Device.CPU; Device.GPU ]
+    let devices (backend: Backend) = dsharp.devices(backend)
 
     let makeCombos dtypes =
         [ for backend in backends do
-            for device in devices do
+            for device in devices backend do
               for dtype in dtypes do
                 yield ComboInfo(backend, device, dtype) ]
 
@@ -141,8 +143,8 @@ module Combos =
     /// This runs though all devices and backends but leaves the default Dtype
     let AllDevicesAndBackends = 
         [ for backend in backends do
-          for device in devices do
-          yield ComboInfo(defaultBackend=backend, defaultDevice=device) ]
+            for device in devices backend do
+              yield ComboInfo(defaultBackend=backend, defaultDevice=device) ]
 
 [<AutoOpen>]
 module TestUtils =

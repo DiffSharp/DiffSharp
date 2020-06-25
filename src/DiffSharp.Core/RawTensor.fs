@@ -19,6 +19,7 @@ type [<AbstractClass>]
     abstract Random: shape:int[] * device: Device -> RawTensor
     abstract RandomNormal: shape:int[] * device: Device -> RawTensor
     abstract RandomInt: shape:int[] * low:int * high:int * device: Device -> RawTensor
+    abstract GetDevices: unit -> Device list
     
     static member Seed(?seed:int) =
         let seed = defaultArg seed (int DateTime.Now.Ticks)
