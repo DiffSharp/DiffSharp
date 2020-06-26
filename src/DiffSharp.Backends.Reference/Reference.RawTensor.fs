@@ -848,6 +848,20 @@ module internal RawTensorCPU =
         let values = Array.init (shapeLength shape) (fun _ -> ofInt (DiffSharp.Util.Random.Integer(low, high)))
         (values, shape)
 
+[<AbstractClass>]
+type ReferenceBackendStatics() = 
+
+    inherit BackendStatics()
+
+    override _.GetDevices(deviceType) =
+        match deviceType with 
+        | None -> [ Device.CPU; Device.GPU ]
+        | Some DeviceType.CPU -> [ Device.CPU]
+        | Some DeviceType.CUDA -> [ Device.GPU ]
+        | Some _ -> []
+
+    override _.IsDeviceTypeSupported (deviceType) = (match deviceType with DeviceType.CPU | DeviceType.CUDA -> true | _ -> false)
+
 /// The concrete implementation of RawTensor for Float32 data.
 type RawTensorFloat32(values: float32[], shape:int[], device) =
     inherit RawTensorCPU<float32>(values, shape, Dtype.Float32, device)
@@ -927,7 +941,7 @@ type TestDuplicateFloat32Statics() =
 type ReferenceFloat32Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat32(values, shape, device)
 
     override _.Seed(seed) = Random.Seed(seed)
@@ -940,7 +954,6 @@ type ReferenceFloat32Statics() =
     override _.RandomNormal(shape:int[], device) = RawTensorCPU.RandomNormal float32 shape |> create device
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt float32 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorFloat64(values: double[], shape:int[], device) =
     inherit RawTensorCPU<double>(values, shape, Dtype.Float64, device)
@@ -1020,7 +1033,7 @@ type TestDuplicateFloat64Statics() =
 type ReferenceFloat64Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
     let create device (values, shape) : RawTensor = upcast RawTensorFloat64(values, shape, device)
 
     override _.Seed(seed) = Random.Seed(seed)
@@ -1033,7 +1046,6 @@ type ReferenceFloat64Statics() =
     override _.RandomNormal(shape:int[], device) = RawTensorCPU.RandomNormal double shape |> create device
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt double shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorInt8(values: int8[], shape:int[], device) =
     inherit RawTensorCPU<int8>(values, shape, Dtype.Int8, device)
@@ -1110,7 +1122,7 @@ type TestDuplicateInt8Statics() =
 type ReferenceInt8Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt8(values, shape, device)
     override _.Seed(seed) = Random.Seed(seed)
@@ -1123,7 +1135,6 @@ type ReferenceInt8Statics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Int8
     override _.RandomInt(shape, low, high, device) = RawTensorCPU.RandomInt int8 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorByte(values: byte[], shape:int[], device) =
     inherit RawTensorCPU<byte>(values, shape, Dtype.Byte, device)
@@ -1200,7 +1211,7 @@ type TestDuplicateByteStatics() =
 type ReferenceByteStatics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorByte(values, shape, device)
     override _.Seed(seed) = Random.Seed(seed)
@@ -1213,7 +1224,6 @@ type ReferenceByteStatics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Byte
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt byte shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorInt16(values: int16[], shape:int[], device) =
     inherit RawTensorCPU<int16>(values, shape, Dtype.Int16, device)
@@ -1290,7 +1300,7 @@ type TestDuplicateInt16Statics() =
 type ReferenceInt16Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt16(values, shape, device)
     override _.Seed(seed) = Random.Seed(seed)
@@ -1303,7 +1313,6 @@ type ReferenceInt16Statics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Int16
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int16 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorInt32(values: int32[], shape:int[], device) =
     inherit RawTensorCPU<int32>(values, shape, Dtype.Int32, device)
@@ -1380,7 +1389,7 @@ type TestDuplicateInt32Statics() =
 type ReferenceInt32Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt32(values, shape, device)
     override _.Seed(seed) = Random.Seed(seed)
@@ -1393,8 +1402,7 @@ type ReferenceInt32Statics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Int32
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int32 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
-                
+
 type RawTensorInt64(values: int64[], shape:int[], device) =
     inherit RawTensorCPU<int64>(values, shape, Dtype.Int64, device)
 
@@ -1474,7 +1482,7 @@ type TestDuplicateInt64Statics() =
 type ReferenceInt64Statics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorInt64(values, shape, device)
 
@@ -1488,7 +1496,6 @@ type ReferenceInt64Statics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Int64
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt int64 shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]
 
 type RawTensorBool(values: bool[], shape:int[], device) =
     inherit RawTensorCPU<bool>(values, shape, Dtype.Bool, device)
@@ -1564,7 +1571,7 @@ type TestDuplicateBoolStatics() =
 type ReferenceBoolStatics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit ReferenceBackendStatics()
 
     let create device (values, shape) : RawTensor = upcast RawTensorBool(values, shape, device)
 
@@ -1578,4 +1585,3 @@ type ReferenceBoolStatics() =
     override _.RandomNormal(_shape:int[], _device) = opNotSupported "RandomNormal" Dtype.Bool
     override _.RandomInt(shape:int[], low:int, high:int, device) = RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> create device
     override _.CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> create device
-    override _.GetDevices() = [ Device.CPU; Device.GPU ]

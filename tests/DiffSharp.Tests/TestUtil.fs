@@ -119,9 +119,9 @@ module Combos =
     //let backends = [ Backend.Reference; Backend.Torch ]
 
     //let devices _ = [ Device.CPU ]
-    //let devices _ = [ Device.GPU ]
+    let devices _ = [ Device.GPU ]
     //let devices _ = [ Device.CPU; Device.GPU ]
-    let devices (backend: Backend) = dsharp.devices(backend)
+    //let devices (backend: Backend) = dsharp.devices(backend=backend)
 
     let makeCombos dtypes =
         [ for backend in backends do

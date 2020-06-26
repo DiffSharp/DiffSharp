@@ -774,7 +774,23 @@ type TorchStatics<'T, 'T2>
         valueFromObj: obj -> 'T,
         scalarFromConvValue: 'T2 -> TorchScalar) = 
 
+      
     inherit BackendStatics()
+
+    let supported = Array.zeroCreate<int> 32
+    let isSupported (deviceType: DiffSharp.DeviceType) = 
+        let n = int deviceType
+        match supported.[n] with 
+        | 0 ->
+            try
+                FloatTensor.Empty([| 1L |], deviceType= enum (int deviceType), deviceIndex=0) |> ignore
+                supported.[n] <- 1
+                true
+             with _ -> 
+                supported.[n] <- 2
+                false
+        | 1 -> true
+        | _ -> false
 
     override _.Seed(seed) = Torch.SetSeed(int64 seed) // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch. However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
     override _.Zero(device) = TorchRawTensor(torchMoveTo (fromScalar (conv zero)) device, Shape.scalar, dtype, device) :> _ 
@@ -784,12 +800,6 @@ type TorchStatics<'T, 'T2>
     override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, device), shape, dtype, device) :> _
     override _.RandomNormal(shape:int[], device) = TorchRawTensor(randomN(toTorchShape shape, device), shape, dtype, device) :> _
     override _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, device), shape, dtype, device) :> _
-    override _.GetDevices() = 
-        [ yield Device.CPU; 
-          if Torch.IsCudaAvailable() then 
-              let ncuda = Torch.CudaDeviceCount()
-              for i in 0 .. ncuda - 1 do
-                  yield (Device(DiffSharp.DeviceType.CUDA, i)) ]
 
     override _.Full(shape:int[], value:obj, device) =
         let t = zeros(toTorchShape shape, device)
@@ -804,6 +814,31 @@ type TorchStatics<'T, 'T2>
             | _ -> from (values, toTorchShape shape)
         let tt = torchMoveTo t device
         TorchRawTensor(tt, shape, dtype, device) :> _
+
+    override _.GetDevices(deviceType) = 
+        [ 
+          match deviceType with
+          | None | Some DiffSharp.DeviceType.CPU ->
+              yield Device.CPU
+          | _ -> ()
+
+          match deviceType with
+          | None | Some DiffSharp.DeviceType.CUDA ->
+              if Torch.IsCudaAvailable() then 
+                  let ncuda = Torch.CudaDeviceCount()
+                  for i in 0 .. ncuda - 1 do
+                      yield (Device(DiffSharp.DeviceType.CUDA, i))
+          | _ -> ()
+          // We don't report other devices in GetDevices as yet though they may be usable
+          // There is currently no way in TorchSHarp to get the device count for other device types,
+          // you have to work it out via some other route.
+        ]
+
+    override _.IsDeviceTypeSupported (deviceType) =
+        match deviceType with 
+        | DiffSharp.DeviceType.CPU -> true
+        | DiffSharp.DeviceType.CUDA -> Torch.IsCudaAvailable()
+        | _ -> isSupported deviceType
 
 /// The concrete implementation of BackendStatics for Bool data.
 type TorchFloat32Statics() = 

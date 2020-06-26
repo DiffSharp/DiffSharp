@@ -567,17 +567,63 @@ type TestDiffSharp () =
 
     [<Test>]
     member _.TestCanConfigure () =
+        
+        // Default reference backend with "GPU" (faked)
         let device = Device.Default
         dsharp.config(device=Device.GPU)
         Assert.AreEqual(Device.GPU, Device.Default)
         dsharp.config(device=device)
 
+        // Torch with default backend (CPU)
         let backend = Backend.Default
         dsharp.config(backend=Backend.Torch)
         Assert.AreEqual(Backend.Torch, Backend.Default)
         dsharp.config(backend=backend)
 
+        // Default reference backend with "int32"
         let dtype = Dtype.Default
         dsharp.config(dtype=Dtype.Int32)
         Assert.AreEqual(Dtype.Int32, Dtype.Default)
         dsharp.config(dtype=dtype)
+
+    [<Test>]
+    member _.TestDevices () =
+        // Get devices for default reference backend
+        let defaultReferenceBackendDevices = dsharp.devices()
+        Assert.AreEqual([Device.CPU; Device.GPU], defaultReferenceBackendDevices)
+
+        // Get devices for explicitly specified reference backend
+        let explicitReferenceBackendDevices = dsharp.devices(backend=Backend.Reference)
+        Assert.AreEqual([Device.CPU; Device.GPU], explicitReferenceBackendDevices)
+
+        // Get GPU devices for explicitly specified reference backend
+        let implicitReferenceBackendCUDADevices = dsharp.devices(deviceType=DeviceType.CUDA)
+        Assert.AreEqual([Device.GPU], implicitReferenceBackendCUDADevices)
+
+        // Get CPU devices for explicitly specified reference backend
+        let explicitReferenceBackendCPUDevices = dsharp.devices(backend=Backend.Reference, deviceType=DeviceType.CPU)
+        Assert.AreEqual([Device.CPU], explicitReferenceBackendCPUDevices)
+
+        // Get devices for explicitly specified reference backend
+        let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
+        Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
+        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        Assert.AreEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
+
+        let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
+        Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
+        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        Assert.AreEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
+
+    [<Test>]
+    member _.TestIsDeviceTypeSupported () =
+        Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CPU))
+        Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CUDA)) 
+        Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CPU, Backend.Reference))
+        Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CUDA, Backend.Reference))
+
+        Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CPU, Backend.Torch))
+
+        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        let deviceSupported = dsharp.isDeviceTypeSupported(DeviceType.CUDA, Backend.Torch)
+        Assert.AreEqual(cudaAvailable, deviceSupported)

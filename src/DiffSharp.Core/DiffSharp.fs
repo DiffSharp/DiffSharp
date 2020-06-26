@@ -213,9 +213,12 @@ type DiffSharp =
         device |> Option.iter (fun d -> Device.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
         DiffSharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+
     static member config() = Dtype.Default, Device.Default, Backend.Default
     static member config((dtype,device,backend)) = DiffSharp.config(dtype, device, backend)
-    static member devices(?backend) = BackendStatics.Get(?backend=backend).GetDevices()
+    static member devices(?deviceType, ?backend) = BackendStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+    static member isDeviceTypeSupported(deviceType, ?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
+    static member isCudaSupported(?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
 
 // Methods mirroring F# array modules
 // TODO: implement more differentiable higher-order functions and corresponding unit tests for their derivatives
