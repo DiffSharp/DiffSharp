@@ -244,48 +244,58 @@ type Dropout3d(?p:double) =
         if m.mode = Mode.Train then value.dropout3d(?p=p) else value
 
 
-type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool) =
+type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
-    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero()
-    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero()
+    let reversible = defaultArg reversible false
+    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    let mutable uninitialized:bool = true
-    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
     member _.mean = _mean.value
     member _.variance = _variance.value
     member _.stddev = _variance.value.sqrt()
-    member private m.meanVar batchMean batchVariance =
-        if uninitialized then
-            uninitialized <- false
-            _mean.value <- batchMean
-            _variance.value <- batchVariance
-        if trackRunningStats then
-            if m.mode = Mode.Train then
-                _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
-                _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
-        else
-            _mean.value <- batchMean
-            _variance.value <- batchVariance
-        _mean.value, _variance.value
+    member _.weight = w.value
+    member _.bias = b.value
+    member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
+        let batchMean = if reversible then batchMean else batchMean.primal
+        let batchVariance = if reversible then batchVariance else batchVariance.primal
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
+        // https://github.com/pytorch/pytorch/issues/19902
+        // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
+        // Here we transform biased variance to unbiased variance for running statistics
+        let batchVariance = batchVariance * (float n) / (float n - 1.)
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
     override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
     override m.forward(value) =
         if value.dim = 2 then
             if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-            let batchMean = value.mean(0)
-            let batchVar = value.variance(0)
-            let m, v = m.meanVar batchMean batchVar
-            let res = (value - m) / (v + eps).sqrt()
+            let mean, var =
+                if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                    value.mean(0), value.variance(0, unbiased=false)
+                else
+                    _mean.value, _variance.value
+            if m.mode = Mode.Train && trackRunningStats then 
+                let batchSize = value.shape.[0]
+                m.updateStats mean var batchSize
+            let res = (value - mean) / (var + eps).sqrt()
             if affine then res * w.value + b.value else res
         elif value.dim = 3 then
+            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let vt = value.transpose(0,1).view([numFeatures;-1])
-            let batchMean = vt.mean(1).view([1;numFeatures;1])
-            let batchVar = vt.variance(1).view([1;numFeatures;1])
-            let m, v = m.meanVar batchMean batchVar
-            let res = (value - m) / (v + eps).sqrt()
+            let mean, var =
+                if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                    vt.mean(1), vt.variance(1, unbiased=false)
+                else
+                    _mean.value, _variance.value
+            if m.mode = Mode.Train && trackRunningStats then
+                let n = vt.shape.[1]
+                m.updateStats mean var n
+            let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
             if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
         else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
