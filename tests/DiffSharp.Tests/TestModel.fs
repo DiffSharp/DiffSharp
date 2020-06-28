@@ -704,3 +704,128 @@ type TestModel () =
                                               [-3.1903e+00, -6.6174e+00, -3.1020e+00, -7.0818e+00]]]])
 
         Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
+
+    [<Test>]
+    member _.TestModelBatchNorm3d () =
+        let m = BatchNorm3d(3, momentum=dsharp.tensor(0.1), trackRunningStats=true)
+        let x = dsharp.tensor([[[[  -1.9917, -125.1875],
+                                   [ -10.8246,   -0.6371]],
+
+                                  [[ -29.9101,   62.9125],
+                                   [-103.9648,  -40.4188]]],
+
+
+                                 [[[   2.1155, -179.4632],
+                                   [  14.3901,   79.1110]],
+
+                                  [[ 256.2570,  110.3948],
+                                   [  66.7616,  105.1888]]],
+
+
+                                 [[[-122.7142,  120.5997],
+                                   [  72.4510,  101.4663]],
+
+                                  [[   9.6043,  143.2797],
+                                   [   2.2688, -127.6234]]]]).unsqueeze(0)
+
+        m.train()
+        let z0 = x --> m
+        let z0Correct = dsharp.tensor([[[[ 0.5206, -1.6712],
+                                           [ 0.3634,  0.5447]],
+
+                                          [[ 0.0239,  1.6753],
+                                           [-1.2936, -0.1631]]],
+
+
+                                         [[[-0.4750, -2.0509],
+                                           [-0.3685,  0.1933]],
+
+                                          [[ 1.7307,  0.4648],
+                                           [ 0.0861,  0.4196]]],
+
+
+                                         [[[-1.5039,  0.9747],
+                                           [ 0.4842,  0.7798]],
+
+                                          [[-0.1560,  1.2057],
+                                           [-0.2307, -1.5539]]]]).unsqueeze(0)
+        let mean0 = m.mean
+        let mean0Correct = dsharp.tensor([-3.1253,  5.6844,  2.4917])
+        let var0 = m.variance
+        let var0Correct = dsharp.tensor([ 361.9645, 1518.0892, 1102.2589])
+        let weight0 = m.weight
+        let weight0Correct = dsharp.tensor([1., 1., 1.])
+        let bias0 = m.bias
+        let bias0Correct = dsharp.tensor([0., 0., 0.])
+
+        Assert.True(z0Correct.allclose(z0, 0.1, 0.1))
+        Assert.True(mean0Correct.allclose(mean0, 0.1, 0.1))
+        Assert.True(var0Correct.allclose(var0, 0.1, 0.1))
+        Assert.True(weight0Correct.allclose(weight0, 0.1, 0.1))
+        Assert.True(bias0Correct.allclose(bias0, 0.1, 0.1))
+
+        let optimizer = SGD(m)
+        for _=1 to 99 do
+            m.reverseDiff()
+            let z = x --> m
+            dsharp.mseLoss(z, x).reverse()
+            optimizer.step()
+
+        let z100 = x --> m
+        let z100Correct = dsharp.tensor([[[[  0.3601,  -9.5626],
+                                           [ -0.3514,   0.4692]],
+
+                                          [[ -1.8886,   5.5877],
+                                           [ -7.8533,  -2.7350]]],
+
+
+                                         [[[ -0.3095, -13.3858],
+                                           [  0.5745,   5.2353]],
+
+                                          [[ 17.9923,   7.4882],
+                                           [  4.3460,   7.1133]]],
+
+
+                                         [[[ -9.2480,   8.6175],
+                                           [  5.0822,   7.2126]],
+
+                                          [[  0.4676,  10.2828],
+                                           [ -0.0710,  -9.6084]]]]).unsqueeze(0)
+        let mean100 = m.mean
+        let mean100Correct = dsharp.tensor([-31.2520,  56.8431,  24.9159])
+        let var100 = m.variance
+        let var100Correct = dsharp.tensor([ 3610.5591, 15171.5293, 11013.3271])
+        let weight100 = m.weight
+        let weight100Correct = dsharp.tensor([4.5272, 8.2974, 7.2080])
+        let bias100 = m.bias
+        let bias100Correct = dsharp.tensor([-1.9967,  3.6318,  1.5919])
+
+        Assert.True(z100Correct.allclose(z100, 0.1, 0.1))
+        Assert.True(mean100Correct.allclose(mean100, 0.1, 0.1))
+        Assert.True(var100Correct.allclose(var100, 0.1, 0.1))
+        Assert.True(weight100Correct.allclose(weight100, 0.1, 0.1))
+        Assert.True(bias100Correct.allclose(bias100, 0.1, 0.1))
+
+        m.eval()
+        let zEval = x --> m
+        let zEvalCorrect = dsharp.tensor([[[[  0.2078,  -9.0741],
+                                               [ -0.4577,   0.3099]],
+
+                                              [[ -1.8956,   5.0979],
+                                               [ -7.4751,  -2.6874]]],
+
+
+                                             [[[ -0.0549, -12.2868],
+                                               [  0.7720,   5.1318]],
+
+                                              [[ 17.0651,   7.2392],
+                                               [  4.2999,   6.8885]]],
+
+
+                                             [[[ -8.5479,   8.1639],
+                                               [  4.8568,   6.8497]],
+
+                                              [[  0.5402,   9.7216],
+                                               [  0.0364,  -8.8851]]]]).unsqueeze(0)
+
+        Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))        
