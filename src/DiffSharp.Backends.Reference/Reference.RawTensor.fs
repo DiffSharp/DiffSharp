@@ -851,9 +851,9 @@ type ReferenceBackendStatics() =
 
     override _.GetDevices(deviceType) =
         match deviceType with 
-        | None -> [ Device.CPU; Device.GPU ]
+        | None -> [ Device.CPU (* ; Device.GPU *) ]
         | Some DeviceType.CPU -> [ Device.CPU]
-        | Some DeviceType.CUDA -> [ Device.GPU ]
+        //| Some DeviceType.CUDA -> [ Device.GPU ]
         | Some _ -> []
 
     override _.IsDeviceTypeSupported (deviceType) = (match deviceType with DeviceType.CPU | DeviceType.CUDA -> true | _ -> false)
