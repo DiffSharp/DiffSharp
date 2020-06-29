@@ -70,6 +70,7 @@ and [<AbstractClass>]
     member t.Nelement = shapeLength shape
     member t.Dtype = dtype
     member t.Device = device
+    member t.DeviceType = device.DeviceType
     member t.Backend = backend
     override t.ToString() = t.GetString()
     

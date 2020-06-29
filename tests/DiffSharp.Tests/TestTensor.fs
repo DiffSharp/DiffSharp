@@ -1672,7 +1672,7 @@ type TestTensor () =
             let t3 = combo.tensor(5.) ** combo.tensor([1.; 2.])
             let t3Correct = combo.tensor([5.; 25.])
 
-            Assert.AreEqual(t3Correct, t3)
+            Assert.True(t3.allclose(t3Correct, 0.01))
             Assert.AreEqual(t3.dtype, combo.dtype)
 
         for combo in Combos.IntegralAndBool do
@@ -3157,6 +3157,7 @@ type TestTensor () =
             let z = dsharp.conv1d(x,y)
             let zCorrect = combo.tensor([[[16]]])
             Assert.AreEqual(z, zCorrect)
+               
 
         // check types must always match
         for dtype1 in Dtypes.All do 

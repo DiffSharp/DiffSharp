@@ -101,6 +101,7 @@ module Dtypes =
     let UnsignedIntegral = [ Dtype.Byte ]
     let Integral = SignedIntegral @ UnsignedIntegral
     let FloatingPoint = [ Dtype.Float32; Dtype.Float64 ]
+    let Float32 = [ Dtype.Float32 ]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
     let SignedIntegralAndFloatingPoint = FloatingPoint @ SignedIntegral
@@ -112,10 +113,10 @@ module Combos =
 
     //let backends = [ Backend.Reference ]
     let backends = [ Backend.Torch ]
-    //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ] //; Backend.Register("TestDuplicate") ]
-    //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
-    //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Torch ]
 
     //let devices _ = [ Device.CPU ]
@@ -129,7 +130,8 @@ module Combos =
               for dtype in dtypes do
                 yield ComboInfo(backend, device, dtype) ]
 
-    /// These runs though all devices, backends and Dtype
+    /// These runs though all devices, backends and various Dtype
+    let Float32 = makeCombos Dtypes.Float32
     let Integral = makeCombos Dtypes.Integral
     let FloatingPoint = makeCombos Dtypes.FloatingPoint
     let UnsignedIntegral = makeCombos Dtypes.UnsignedIntegral

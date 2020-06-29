@@ -79,8 +79,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     override t.Clone() =
         t.MakeLike(tt.Clone())
 
-    // TODO: check if torch has a C++ hashing routine
-    override x.ComputeHash() = 
+    override _.ComputeHash() = 
+        // Torch Tensors must be CPU before DataItem can be accessed
+        let tt = torchMoveTo tt Device.CPU
+
         let mutable res = hash shape
         let n = shapeLength shape
         match dtype with 
@@ -250,7 +252,12 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t.MakeLike(tt.Unsqueeze(int64 dim), shape=outputShape)
 
     override t.FlipT(dims:int[]) = 
-        let result = tt.Flip(int64s dims)
+        // "flip_cuda" not implemented for 'Bool'"
+        let result =
+            if t.Dtype = Dtype.Bool then 
+                tt.ToType(ScalarType.Byte).Flip(int64s dims).ToType(ScalarType.Bool)
+            else
+                tt.Flip(int64s dims)
         t.MakeLike(result)
 
     override t.DilateT(dilations:int[]) = 
@@ -484,35 +491,56 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Dtype.Bool -> opNotSupported2 "MatMulT2T2" t1.Dtype t2.Dtype
         | _ ->  
         Shape.checkCanMatmul t1.Shape t2.Shape
-        let result = tt.Mm(t2.TorchTensor)
+        let result =
+            // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
+            match t1.DeviceType, t1.Dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                let tt1 = tt.ToType(ScalarType.Double)
+                let tt2 = t2.TorchTensor.ToType(ScalarType.Double)
+                tt1.Mm(tt2).Round().ToType(toTorchType dtype) 
+            | _ ->
+                tt.Mm(t2.TorchTensor)
         t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
 
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
-        let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape = Shape.checkCanConv1d t1.Dtype t2.Dtype t1.Shape t2.Shape stride padding 1
-        match t1.Dtype, t2.Dtype with 
-        | Dtype.Bool, _ | _, Dtype.Bool -> opNotSupported2 "Conv1D" t1.Dtype t2.Dtype
-        | _ ->
-        let resultt = t1.TorchTensor.Conv1D(t2.TorchTensor, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
+        let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape =
+            Shape.checkCanConv1d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype t1.Shape t2.Shape stride padding 1
+        let resultt =
+            // "conv1d for CUDA tensors only supports floating-point types."
+            match t1.DeviceType, t1.Dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                tt.ToType(ScalarType.Double).Conv1D(t2.TorchTensor.ToType(ScalarType.Double), stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)).Round().ToType(toTorchType dtype) 
+            | _ ->
+                tt.Conv1D(t2.TorchTensor, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
         t1.MakeLike(resultt, shape=outputShape)
 
     override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
-        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape  = Shape.checkCanConv2d t1.Dtype t2.Dtype t1.Shape t2.Shape strides paddings [| 1;1 |]
-        match t1.Dtype, t2.Dtype with 
-        | Dtype.Bool, _ | _, Dtype.Bool -> opNotSupported2 "Conv2D" t1.Dtype t2.Dtype
-        | _ ->
-        let resultt = tt.Conv2D(t2.TorchTensor, strides=int64s strides, padding=int64s paddings)
+        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.checkCanConv2d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype t1.Shape t2.Shape strides paddings [| 1;1 |]
+        let resultt =
+            // "conv2d for CUDA tensors only supports floating-point types."
+            match t1.DeviceType, t1.Dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                tt.ToType(ScalarType.Double).Conv2D(t2.TorchTensor.ToType(ScalarType.Double), strides=int64s strides, padding=int64s paddings).Round().ToType(toTorchType dtype) 
+            | _ ->
+                tt.Conv2D(t2.TorchTensor, strides=int64s strides, padding=int64s paddings)
         t1.MakeLike(resultt, shape=outputShape)
 
     override t1.Conv3D(t2, strides, paddings) = // TODO: bias, dilation and groups
-        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape = Shape.checkCanConv3d t1.Dtype t2.Dtype  t1.Shape t2.Shape strides paddings [| 1;1;1 |]
-        match t1.Dtype, t2.Dtype with 
-        | Dtype.Bool, _ | _, Dtype.Bool -> opNotSupported2 "Conv3D" t1.Dtype t2.Dtype
-        | _ ->
-        let resultt = tt.Conv3D(t2.TorchTensor, strides=int64s strides, padding=int64s paddings)
+        let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.checkCanConv3d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype  t1.Shape t2.Shape strides paddings [| 1;1;1 |]
+        let resultt =
+            // "conv2d for CUDA tensors only supports floating-point types."
+            match t1.DeviceType, t1.Dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                tt.ToType(ScalarType.Double).Conv3D(t2.TorchTensor.ToType(ScalarType.Double), strides=int64s strides, padding=int64s paddings).Round().ToType(toTorchType dtype) 
+            | _ ->
+                tt.Conv3D(t2.TorchTensor, strides=int64s strides, padding=int64s paddings)
         t1.MakeLike(resultt, shape=outputShape)
 
     override t1.MaxPool1D(kernelSize, stride, padding) = 
-        let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.checkCanMaxpool1d t1.Shape kernelSize stride padding
+        let _batchSize, _channels, _inputSize, _outputSize, outputShape =
+            Shape.checkCanMaxpool1d t1.Dtype t1.Shape kernelSize stride padding
         match t1.Dtype with 
         | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool1D" t1.Dtype
         | _ ->
@@ -523,10 +551,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         result, indices
 
     override t1.MaxPool2D(kernelSize, strides, paddings) = 
-        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape = Shape.checkCanMaxpool2d t1.Shape kernelSize strides paddings
-        match t1.Dtype with 
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool2D" t1.Dtype
-        | _ ->
+        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.checkCanMaxpool2d t1.Dtype t1.Shape kernelSize strides paddings
         let struct (resultt, indicest) = tt.MaxPool2DWithIndices(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
         // NOTE: DiffSharp currently expects indices as an Int32 tensor, Torch wants Int64
         let indices = t1.MakeLike(indicest, shape=outputShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
@@ -534,10 +560,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         result, indices
 
     override t1.MaxPool3D(kernelSize, strides, paddings) = 
-        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape = Shape.checkCanMaxpool3d t1.Shape kernelSize strides paddings
-        match t1.Dtype with 
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool3D" t1.Dtype 
-        | _ ->
+        let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
+            Shape.checkCanMaxpool3d t1.Dtype t1.Shape kernelSize strides paddings
         let struct (resultt, indicest) = tt.MaxPool3DWithIndices(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
         
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
@@ -556,10 +580,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         resultt
 
     override t1.MaxUnpool2D(indices, outputSize) = 
-        let _batchSize, _channels, _inputDimensions, outputShape = Shape.checkCanMaxunpool2d t1.Shape indices.Dtype indices.Shape outputSize
-        match t1.Dtype with 
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxUnpool2D" t1.Dtype 
-        | _ ->
+        let _batchSize, _channels, _inputDimensions, outputShape =
+            Shape.checkCanMaxunpool2d t1.Dtype t1.Shape indices.Dtype indices.Shape outputSize
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
         let indices = indices.Cast(Dtype.Int64)
 
@@ -573,10 +595,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t1.MakeLike(resultt, shape=outputShape)
 
     override t1.MaxUnpool3D(indices, outputSize) = 
-        let _batchSize, _channels, _inputDimensions, outputShape = Shape.checkCanMaxunpool3d t1.Shape indices.Dtype indices.Shape outputSize
-        match t1.Dtype with 
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxUnpool3D" t1.Dtype 
-        | _ ->
+        let _batchSize, _channels, _inputDimensions, outputShape =
+            Shape.checkCanMaxunpool3d t1.Dtype t1.Shape indices.Dtype indices.Shape outputSize
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
         let indices = indices.Cast(Dtype.Int64)
 

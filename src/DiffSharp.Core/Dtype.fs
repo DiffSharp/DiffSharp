@@ -180,9 +180,12 @@ module Dtype =
 
 [<AutoOpen>]
 module DtypeGlobalOps =
-    let opNotSupported msg (t: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg t)
+    let opNotSupported msg (dtype: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg dtype)
 
-    let opNotSupported2 msg (t1: Dtype) (t2: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg t1 t2)
+    let opNotSupportedOnDeviceType msg (dtype: Dtype) (deviceType: DeviceType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A on device type %A" msg dtype deviceType)
+
+    let opNotSupported2 msg (dtype1: Dtype) (dtype2: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg dtype1 dtype2)
 
