@@ -42,7 +42,13 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
         | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
 
-    member t.move(backend) =
+    member t.move(backend: Backend) =
+        // If a backend move is needed then first move to the CPU
+        let t = 
+            if t.backend = backend then t
+            elif t.device = Device.CPU then t
+            else t.move(Device.CPU)
+
         if t.backend = backend then t else
         match t with
         | Tensor(tp) -> 
@@ -52,7 +58,7 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
-    member t.move(device) =
+    member t.move(device: Device) =
         if t.device = device then t else
         match t with
         | Tensor(tp) -> Tensor(tp.MoveTo(device))
@@ -63,7 +69,7 @@ type Tensor =
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         let backend = defaultArg backend Backend.Default
-        t.cast(dtype).move(device).move(backend)
+        t.move(backend).cast(dtype).move(device)
 
     member internal t.castAfterSummation(?dtype:Dtype) =
         match dtype with

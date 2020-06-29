@@ -5,13 +5,17 @@ open DiffSharp
 open NUnit.Framework
 
 // This captures the expected semantics of different Dtypes
-type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: Dtype) =
+type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: Dtype, ?defaultFetchDevices: (DeviceType option * Backend option -> Device list)) =
 
     let dflt x y = match x with Some x -> Some x | None -> y
 
     member _.backend = defaultArg defaultBackend Backend.Default
 
     member _.device = defaultArg defaultDevice Device.Default
+
+    member _.devices(?deviceType, ?backend) = 
+       let f = defaultArg defaultFetchDevices (fun (deviceType, backend) -> dsharp.devices(?deviceType=deviceType, ?backend=backend))
+       f (deviceType, backend)
 
     member _.dtype = defaultArg defaultDtype Dtype.Default
     
@@ -118,19 +122,20 @@ module Combos =
     //let backends = [ Backend.Reference; Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Register("TestDuplicate") ]
-    //let devices _ = [ Device.CPU ]
-    //let devices _ = [ Device.GPU ]
-    //let devices _ = [ Device.CPU; Device.GPU ]
+    //let getDevices _ = [ Device.CPU ]
+    //let getDevices _ = [ Device.GPU ]
     
     //Use this in committed code
     let backends = [ Backend.Reference; Backend.Torch ]
-    let devices (backend: Backend) = dsharp.devices(backend=backend)
+    let getDevices (deviceType: DeviceType option, backend: Backend option) =
+        dsharp.devices(?deviceType=deviceType, ?backend=backend)
 
     let makeCombos dtypes =
         [ for backend in backends do
-            for device in devices backend do
+            let ds = getDevices (None, Some backend)
+            for device in ds do
               for dtype in dtypes do
-                yield ComboInfo(backend, device, dtype) ]
+                yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultDtype=dtype, defaultFetchDevices=getDevices) ]
 
     /// These runs though all devices, backends and various Dtype
     let Float32 = makeCombos Dtypes.Float32
@@ -147,8 +152,9 @@ module Combos =
     /// This runs though all devices and backends but leaves the default Dtype
     let AllDevicesAndBackends = 
         [ for backend in backends do
-            for device in devices backend do
-              yield ComboInfo(defaultBackend=backend, defaultDevice=device) ]
+            let ds = getDevices (None, Some backend)
+            for device in ds do
+              yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
 
 [<AutoOpen>]
 module TestUtils =

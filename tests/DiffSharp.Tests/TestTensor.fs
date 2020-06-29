@@ -552,7 +552,7 @@ type TestTensor () =
             let m2stddevCorrect = combo.tensor([0.7810, 0.6404]).float()
             Assert.AreEqual(m2dtypeCorrect, m2dtype)
             Assert.True(m2meanCorrect.allclose(m2mean, 0.1))
-            Assert.True(m2stddevCorrect.allclose(m2stddev, 0.1))
+            Assert.True(m2stddevCorrect.allclose(m2stddev, 0.15))
 
     [<Test>]
     member _.TestTensorBernoulli () =
