@@ -85,7 +85,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     override t.Clone() =
         t.MakeLike(tt.Clone())
 
-   // TODO: check if torch has a C++ hashing routine
+    // TODO: check if torch has a C++ hashing routine
     override x.ComputeHash() = 
         let mutable res = hash shape
         let n = shapeLength shape
@@ -227,9 +227,15 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
+    override t.TransposeT(dim0, dim1) =
+        Shape.checkCanTranspose t.Shape dim0 dim1
+        let result = tt.Transpose(int64 dim0, int64 dim1)
+        let shape = result.Shape |> Array.map int32
+        t.MakeLike(result, shape=shape)
+
     override t.TransposeT2() =
-        Shape.checkCanTranspose t.Dim
-        let newShape = Shape.computeTranspose t.Shape
+        Shape.checkCanTranspose2d t.Dim
+        let newShape = Shape.computeTranspose2d t.Shape
         let result = tt.T()
         t.MakeLike(result, shape=newShape)
 
@@ -290,7 +296,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.ViewT(shape:int[]) =
         Shape.checkCanView t.Shape shape
-        t.MakeLike(tt.View(toTorchShape shape), shape=shape)
+        t.MakeLike(tt.Reshape(toTorchShape shape), shape=shape)  // Use Reshape instead of View to ensure underlying non-contiguous libtorch tensors can be viewed. Internally Reshape uses View if possible, otherwise it copies data to a contiguous tensor and then views.
 
     override t.Cast(newDtype: Dtype) =
         if newDtype = t.Dtype then 
@@ -321,7 +327,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | _ -> tt.AllClose(t2.TorchTensor, relativeTolerance, absoluteTolerance)
         else 
             opNotSupported2 "Equals" dtype t2.Dtype
-        
+
+    override t.ClampT(low, high) =
+        let result = tt.Clamp(low.TorchTensor.Item(), high.TorchTensor.Item())
+        t.MakeLike(result)
 
     override t1.LtTT(t2) =
         let result = tt.Lt(t2.TorchTensor)
@@ -802,7 +811,7 @@ type TorchStatics<'T, 'T2>
         let tt = moveTo device t
         TorchRawTensor(tt, shape, dtype, device) :> _
 
-/// The concrete implementation of BackendStatics for Bool  data.
+/// The concrete implementation of BackendStatics for Bool data.
 type TorchFloat32Statics() = 
 
     inherit TorchStatics<single, single>(Dtype.Float32, id, 

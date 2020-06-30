@@ -25,7 +25,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-cuda-linux", "bun
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-cuda-windows", "bundles\DiffSharp-cuda-windows\DiffSharp-cuda-windows.fsproj", "{5BE145D5-0240-4806-B87A-764503C497B9}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-reference", "bundles\DiffSharp-reference\DiffSharp-reference.fsproj", "{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-lite", "bundles\DiffSharp-lite\DiffSharp-lite.fsproj", "{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{8A867B18-2C22-4DEE-AEE2-0148C7C9DD68}"
 	ProjectSection(SolutionItems) = preProject

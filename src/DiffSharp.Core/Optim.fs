@@ -1,4 +1,4 @@
-namespace DiffSharp.Optim
+namespace rec DiffSharp.Optim
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Data
@@ -200,7 +200,7 @@ type Optimizer(model:Model) =
         Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
 
-and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
     let lr = defaultArg lr (dsharp.tensor(1e-3))
     let nesterov = defaultArg nesterov true
@@ -227,7 +227,7 @@ and SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor
         t - lr * d
 
 
-and Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
+type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
     inherit Optimizer(model)
     let lr = defaultArg lr (dsharp.tensor(1e-3))
     let beta1 = defaultArg beta1 (dsharp.tensor(0.9))

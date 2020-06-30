@@ -6965,6 +6965,75 @@ type TestDerivatives () =
             Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member _.TestDerivativeTransposeT () =
+        for combo in Combos.AllDevicesAndBackends do
+            let fwdx = combo.tensor([[[ 0.,  1.],
+                                       [ 2.,  3.],
+                                       [ 4.,  5.]],
+
+                                      [[ 6.,  7.],
+                                       [ 8.,  9.],
+                                       [10., 11.]]]).forwardDiff(combo.tensor([[[  0.,  10.],
+                                                                                 [ 20.,  30.],
+                                                                                 [ 40.,  50.]],
+
+                                                                                [[ 60.,  70.],
+                                                                                 [ 80.,  90.],
+                                                                                 [100., 110.]]]))
+            let fwdz = fwdx.transpose(0,2)
+            let fwdzCorrect = combo.tensor([[[ 0.,  6.],
+                                               [ 2.,  8.],
+                                               [ 4., 10.]],
+
+                                              [[ 1.,  7.],
+                                               [ 3.,  9.],
+                                               [ 5., 11.]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[  0.,  60.],
+                                               [ 20.,  80.],
+                                               [ 40., 100.]],
+
+                                              [[ 10.,  70.],
+                                               [ 30.,  90.],
+                                               [ 50., 110.]]])
+
+            let revx = combo.tensor([[[ 0.,  1.],
+                                         [ 2.,  3.],
+                                         [ 4.,  5.]],
+
+                                        [[ 6.,  7.],
+                                         [ 8.,  9.],
+                                         [10., 11.]]]).reverseDiff()
+            let revz = revx.transpose(0,2)
+            let revzCorrect = combo.tensor([[[ 0.,  6.],
+                                             [ 2.,  8.],
+                                             [ 4., 10.]],
+
+                                            [[ 1.,  7.],
+                                             [ 3.,  9.],
+                                             [ 5., 11.]]])
+            revz.reverse(combo.tensor([[[  0., 120.],
+                                         [ 40., 160.],
+                                         [ 80., 200.]],
+
+                                        [[ 20., 140.],
+                                         [ 60., 180.],
+                                         [100., 220.]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[  0.,  20.],
+                                               [ 40.,  60.],
+                                               [ 80., 100.]],
+
+                                              [[120., 140.],
+                                               [160., 180.],
+                                               [200., 220.]]])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
+
+    [<Test>]
     member _.TestDerivativeTransposeT2 () =
         for combo in Combos.AllDevicesAndBackends do
             let fwdx = combo.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).forwardDiff(combo.tensor([[2.; 3.; 4.]; [10.; 20.; 30.]]))
@@ -7913,6 +7982,27 @@ type TestDerivatives () =
             Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
             Assert.True(revz.allclose(revzCorrect, 0.01))
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeClampT () =
+        for combo in Combos.SignedIntegralAndFloatingPoint do 
+            let fwdx = combo.tensor([-4,-3,-2,-1,0,1,2,3,4]).forwardDiff(combo.tensor([10, 20, 30, 40, 50, 60, 70, 80, 90]))
+            let fwdz = fwdx.clamp(-2, 3)
+            let fwdzCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([ 0,  0, 30, 40, 50, 60, 70, 80,  0])
+
+            let revx = combo.tensor([-4,-3,-2,-1,0,1,2,3,4]).reverseDiff()
+            let revz = revx.clamp(-2, 3)
+            let revzCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
+            revz.reverse(combo.tensor([100, 200, 300, 400, 500, 600, 700, 800, 900]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([  0,   0, 300, 400, 500, 600, 700, 800,   0])
+
+            Assert.AreEqual(fwdzCorrect, fwdz)
+            Assert.AreEqual(fwdzdCorrect, fwdzd)
+            Assert.AreEqual(revzCorrect, revz)
+            Assert.AreEqual(revxdCorrect, revxd)
 
     [<Test>]
     member _.TestDerivativeSoftmax () =

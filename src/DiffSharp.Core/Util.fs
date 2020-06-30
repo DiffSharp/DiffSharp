@@ -55,6 +55,8 @@ type Random() =
         Array.init numSamples (fun _ -> Random.ChoiceIndex(probs)) // Samples with replacement
     static member Multinomial(probs:float[,], numSamples:int) =
         Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
+    static member Bernoulli(prob:float) = if rnd.NextDouble() < prob then 1. else 0.
+    static member Bernoulli() = Random.Bernoulli(0.5)
     static member Shuffle(array:_[]) =
         // Durstenfeld/Knuth shuffle
         let a = array |> Array.copy
@@ -149,7 +151,7 @@ module Shape =
         let outputShape = Array.append shape1 shape2
         shape1, shape2, outputShape
 
-    let computeTranspose (shape: Shape) =
+    let computeTranspose2d (shape: Shape) =
         let nrows = shape.[0]
         let ncols = shape.[1]
         let outputShape = [| ncols; nrows |]
@@ -337,8 +339,12 @@ module Shape =
         let isOK = canExpand oldShape newShape
         if not isOK then failwithf "can't expand from shape %A to %A - each dimension must either be equal or expand from 1" oldShape newShape
 
-    let checkCanTranspose (dim: int) =
-        if dim <> 2 then failwith "Cannot transpose Tensor when dim=2"
+    let checkCanTranspose (shape: Shape) (dim0: int) (dim1: int) =
+        if dim0 < 0 || dim0 >= shape.Length then failwithf "Expecting 0 <= dim0 (%A) < shape.Length (%A)" dim0 shape.Length
+        if dim1 < 0 || dim1 >= shape.Length then failwithf "Expecting 0 <= dim1 (%A) < shape.Length (%A)" dim1 shape.Length
+
+    let checkCanTranspose2d (dim: int) =
+        if dim <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
 
     let checkCanFlip (dim: int) (dims: int[]) =
         if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim
@@ -381,6 +387,17 @@ module Shape =
     let checkCanPad (shape: Shape) (paddings: int[]) =
         if shape.Length <> paddings.Length then failwithf "Expecting shape (%A) and paddings (%A) to have the same length" shape paddings
         if not (paddings |> Array.forall (fun p -> p >= 0)) then failwithf "Expecting all paddings (%A) >= 0" paddings
+
+    let checkCanDropout (p:double) =
+        if p < 0. || p > 1. then failwithf "Expecting 0 <= p <= 1, but received %A" p
+
+    let checkCanDropout2d (shape: Shape) (p:double) =
+        checkCanDropout p
+        if shape.Length <> 4 then failwithf "Expecting shape (%A) to be 4-dimensional (NxCxHxW: batchSize, inputChannels, inputHeight, inputWidth)" shape
+
+    let checkCanDropout3d (shape: Shape) (p:double) =
+        checkCanDropout p
+        if shape.Length <> 5 then failwithf "Expecting shape (%A) to be 5-dimensional (NxCxDxHxW: batchSize, inputChannels, inputDepth, inputHeight, inputWidth)" shape
 
     let squeeze (dim: int) (shape: Shape) =
         if dim = -1 then
@@ -449,6 +466,12 @@ module Shape =
             if nelement % divisor <> 0 then failwithf "Cannot complete shape %A to have %A elements" shape nelement
             let missing = nelement / divisor
             [|for d in shape do if d = -1 then yield missing else yield d|]
+
+    let completeDim (dims:int) (dim:int) =
+      if dim < -dims || dim >= dims then failwithf "Invalid choice (%A) for dim (%A)" dim dims
+      if dim < 0 then dims+dim
+      else dim    
+
 
 module Array =
     [<ExcludeFromCodeCoverage>]
@@ -762,15 +785,30 @@ let memoize fn =
             cache.Add(x,v)
             v
 
-let getKeys (dictionary:Dictionary<string, 'a>) =
-    let keys = Array.create dictionary.Count ""
+let getUniqueCounts (values:'a[]) (sorted:bool) =
+    let counts = Dictionary<'a, int>()
+    for v in values do
+        if counts.ContainsKey(v) then counts.[v] <- counts.[v] + 1 else counts.[v] <- 1
+    if sorted then
+        counts |> Array.ofSeq |> Array.sortByDescending (fun (KeyValue(_, v)) -> v) |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
+    else
+        counts |> Array.ofSeq |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
+
+let inline copyKeys (dictionary:Dictionary<'a, 'b>) =
+    let keys = Array.zeroCreate dictionary.Count
     dictionary.Keys.CopyTo(keys, 0)
     keys
+
+let inline copyValues (dictionary:Dictionary<'a, 'b>) =
+    let values = Array.zeroCreate dictionary.Count
+    dictionary.Values.CopyTo(values, 0)
+    values
 
 let download (url:string) (localFileName:string) =
     let wc = new WebClient()
     printfn "Downloading %A to %A" url localFileName
     wc.DownloadFile(url, localFileName)
+    wc.Dispose()
 
 let saveBinary (object:'a) (fileName:string) =
     let formatter = BinaryFormatter()
@@ -815,4 +853,3 @@ let stringPad (s:string) (width:int) =
     else String.replicate (width - s.Length) " " + s
 
 let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
-
