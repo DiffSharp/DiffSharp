@@ -1,6 +1,10 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
-#r "../../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
+//#if NOTEBOOK
+//#r "nuget: DiffSharp-lite"
+//#else
+#r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
+#r "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
+//#endif
 
 
 (**
@@ -29,29 +33,33 @@ The following code implements gradient descent with fixed step size, stopping wh
 
 open DiffSharp
 
-#load "helpers.fsx"
+// Shorthand for dsharp.tensor
+let t x = dsharp.tensor x
+
 // Gradient descent
-// f: function, x0: starting point, eta: step size, epsilon: threshold
-let gd f x0 eta epsilon =
-    let rec desc x =
-        let g = dsharp.grad f x
-        if Vec.l2norm g < epsilon then x else desc (x - eta * g)
-    desc x0
+//   f: function
+//   x0: starting point
+//   eta: step size
+//   epsilon: threshold
+let rec gradientDescent f x eta epsilon =
+    let g = dsharp.grad f x
+    if g.norm < epsilon then x 
+    else gradientDescent f (x - eta * g) eta epsilon
 
 (**
 Let's find a minimum of $f(x, y) = (\sin x + \cos y)$.
 *)
 
-let inline f (x:Vec) =  sin x.[0] + cos x.[1]
+let inline f (x:Tensor) =  sin x.[0] + cos x.[1]
 
 // Find the minimum of f
 // Start from (1, 1), step size 0.9, threshold 0.00001
-let xmin = gd f (vec [1.; 1.]) (v 0.9) (v 0.00001)
+let xmin = gd f (t [1.; 1.]) (t 0.9) (t 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
-printf "val xmin : DV = DV [|-1.570790759; 3.141591964|]
-val fxmin : D = D -2.0"
+printf "val xmin : Tensor = tensor [ -1.570790759; 3.141591964 ]
+val fxmin : Tensor = tensor -2.0"
 (*** include-output: o ***)
 
 (**

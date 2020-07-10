@@ -28,8 +28,10 @@
 
   <PropertyGroup>
      <Version>0.9.5</Version>
-     <Authors>Gunes Baydin and DiffSharp contributors</Authors>
+     <Authors>Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
+     <PackageProjectUrl>https://diffsharp.github.io/DiffSharp</PackageProjectUrl>
+
 
      <!-- local build uses number unique by day -->
      <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>

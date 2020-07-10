@@ -1,7 +1,5 @@
 ﻿(*** hide ***)
-#r "../../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
-#r "../../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
-#load "helpers.fsx"
+#r "../../src/DiffSharp/bin/Debug/netstandard2.0/DiffSharp.dll"
 
 (**
 Nested AD
@@ -17,19 +15,18 @@ Background
 The library supports nested invocations of differentiation operations. So, for example, you can compute exact higher-order derivatives or take derivatives of functions that are themselves internally computing derivatives. 
 *)
 
-open DiffSharp
-
+open DiffSharp.AD.Float64
 
 let y x = sin (sqrt x)
 
 // Derivative of y
-let d1 = dsharp.diff y
+let d1 = diff y
 
 // 2nd derivative of y
-let d2 = dsharp.diff (dsharp.diff y)
+let d2 = diff (diff y)
 
 // 3rd derivative of y
-let d3 = dsharp.diff d2
+let d3 = diff d2
 
 (**
 
@@ -41,7 +38,7 @@ $$$
   \frac{d}{dx} \left. \left( x \left( \left. \frac{d}{dy} x y \; \right|_{y=3} \right) \right) \right|_{x=2}
 *)
 
-let d4 = dsharp.diff (fun x -> x * (dsharp.diff (fun y -> x * y) (v 3.))) (v 2.)
+let d4 = diff (fun x -> x * (diff (fun y -> x * y) (D 3.))) (D 2.)
 
 (*** hide, define-output: o ***)
 printf "val d4 : D = D 4.0"
@@ -74,51 +71,48 @@ The following are just a small selection of operations.
 
 *)
 
-type D = Tensor
-type DV = Tensor
-let v (x: 'T) = dsharp.tensor x
-let vec (x: 'T list) = dsharp.tensor x
+open DiffSharp.AD.Float64
 
 // f: D -> D
 let f (x:D) = sin (3. * sqrt x)
 
 // Derivative of f at 2
 // Uses forward AD
-let df = dsharp.diff f (v 2.)
+let df = diff f (D 2.)
 
 // g: DV -> D
 let g (x:DV) = sin (x.[0] * x.[1])
 
 // Directional derivative of g at (2, 3) with direction (4, 1)
 // Uses forward AD
-let ddg = dsharp.gradv g (vec [2.; 3.]) (vec [4.; 1.])
+let ddg = gradv g (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Gradient of g at (2, 3)
 // Uses reverse AD
-let gg = dsharp.grad g (vec [2.; 3.])
+let gg = grad g (toDV [2.; 3.])
 
 // Hessian-vector product of g at (2, 3) with vector (4, 1)
 // Uses reverse-on-forward AD
-let hvg = dsharp.hessianv g (vec [2.; 3.]) (vec [4.; 1.])
+let hvg = hessianv g (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Hessian of g at (2, 3)
 // Uses reverse-on-forward AD
-let hg = dsharp.hessian g (vec [2.; 3.])
+let hg = hessian g (toDV [2.; 3.])
 
 // h: DV -> DV
-let h (x:DV) = vec [sin x.[0]; cos x.[1]]
+let h (x:DV) = toDV [sin x.[0]; cos x.[1]]
 
 // Jacobian-vector product of h at (2, 3) with vector (4, 1)
 // Uses forward AD
-let jvh = dsharp.jacobianv h (vec [2.; 3.]) (vec [4.; 1.])
+let jvh = jacobianv h (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Transposed Jacobian-vector product of h at (2, 3) with vector (4, 1)
 // Uses reverse AD
-let tjvh = dsharp.jacobianTv h (vec [2.; 3.]) (vec [4.; 1.])
+let tjvh = jacobianTv h (toDV [2.; 3.]) (toDV [4.; 1.])
 
 // Jacobian of h at (2, 3)
 // Uses forward or reverse AD depending on the number of inputs and outputs
-let jh = dsharp.jacobian h (vec [2.; 3.])
+let jh = jacobian h (toDV [2.; 3.])
 
 (**
 Using the Reverse AD Trace
@@ -172,55 +166,67 @@ In order to write code using low-level AD functionality, you should understand t
 You can get access to adjoints as follows.
 *)
 
-open DiffSharp
+open DiffSharp.AD.Float64
 
-//// Get a fresh global tag for this run of reverse AD
-//let i = dsharp.GlobalTagger.Next
+// Get a fresh global tag for this run of reverse AD
+let i = DiffSharp.Util.GlobalTagger.Next
 
-//// Initialize input values for reverse AD
-//let a = v 0.5 |> makeReverse i
-//let b = v 1.2 |> makeReverse i
+// Initialize input values for reverse AD
+let a = D 0.5 |> makeReverse i
+let b = D 1.2 |> makeReverse i
 
-//// Perform a series of operations involving the D type
-//let e = (sin a) * (a + b)
+// Perform a series of operations involving the D type
+let e = (sin a) * (a + b)
 
-//// Propagate the adjoint value of 1 backward from e (or de/de = 1)
-//// i.e., calculate partial derivatives of e with respect to other variables
-//let adjoints = e |> computeAdjoints
+// Propagate the adjoint value of 1 backward from e (or de/de = 1)
+// i.e., calculate partial derivatives of e with respect to other variables
+let adjoints = e |> computeAdjoints
 
-//// Read the adjoint values of the inputs
-//// You can calculate all partial derivatives in just one reverse sweep!
-//let deda = adjoints.[a]
-//let dedb = adjoints.[b]
+// Read the adjoint values of the inputs
+// You can calculate all partial derivatives in just one reverse sweep!
+let deda = adjoints.[a]
+let dedb = adjoints.[b]
 
-//(*** hide, define-output: o2 ***)
-//(*** include-output: o2 ***)
+(*** hide, define-output: o2 ***)
+printf "val a : D = DR (D 0.5,Noop,219u)
+val b : D = DR (D 1.2,Noop,219u)
+val e : D =
+  DR
+    (D 0.8150234156,
+     Mul_D_D
+       (DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,219u)),219u),
+        DR (D 1.7,Add_D_D (DR (D 0.5,Noop,219u),DR (D 1.2,Noop,219u)),219u)),
+     219u)
+val adjoints : Adjoints
+val deda : D = D 1.971315894
+val dedb : D = D 0.4794255386"
+(*** include-output: o2 ***)
 
-//(** 
-//In addition to the partial derivatives of the dependent variable $e$ with respect to the independent variables $a$ and $b$, you can also extract the partial derivatives of $e$ with respect to any intermediate variable involved in this computation.
-//*)
+(** 
+In addition to the partial derivatives of the dependent variable $e$ with respect to the independent variables $a$ and $b$, you can also extract the partial derivatives of $e$ with respect to any intermediate variable involved in this computation.
+*)
 
-//// Get a fresh global tag for this run of reverse AD
-//let i' = DiffSharp.Util.GlobalTagger.Next
+// Get a fresh global tag for this run of reverse AD
+let i' = DiffSharp.Util.GlobalTagger.Next
 
-//// Initialize input values for reverse AD
-//let a' = D 0.5 |> makeReverse i'
-//let b' = D 1.2 |> makeReverse i'
+// Initialize input values for reverse AD
+let a' = D 0.5 |> makeReverse i'
+let b' = D 1.2 |> makeReverse i'
 
-//// Perform a series of operations involving the D type
-//let c' = sin a'
-//let d' = a' + b'
-//let e' = c' * d' // e' = (sin a') * (a' + b')
+// Perform a series of operations involving the D type
+let c' = sin a'
+let d' = a' + b'
+let e' = c' * d' // e' = (sin a') * (a' + b')
 
-//// Propagate the adjoint value of 1 backward from e
-//let adjoints' = e' |> computeAdjoints
+// Propagate the adjoint value of 1 backward from e
+let adjoints' = e' |> computeAdjoints
 
-//// Read the adjoint values
-//// You can calculate all partial derivatives in just one reverse sweep!
-//let de'da' = adjoints'.[a']
-//let de'db' = adjoints'.[b']
-//let de'dc' = adjoints'.[c']
-//let de'dd' = adjoints'.[d']
+// Read the adjoint values
+// You can calculate all partial derivatives in just one reverse sweep!
+let de'da' = adjoints'.[a']
+let de'db' = adjoints'.[b']
+let de'dc' = adjoints'.[c']
+let de'dd' = adjoints'.[d']
 
 (*** hide, define-output: o3 ***)
 printf "val a' : D = DR (D 0.5,Noop,221u)
