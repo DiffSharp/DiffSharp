@@ -1,54 +1,53 @@
-﻿(*** hide ***)
+﻿(*** condition: prepare ***)
 #r "../../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
 #r "../../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
+(*** condition: fsx ***)
+#if FSX
+#r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-lite,{{package-version}}"
+#endif // FSX
+(*** condition: ipynb ***)
+#if IPYNB
+#i "nuget: https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-lite,{{package-version}}"
+#endif // IPYNB
 
 (**
 DiffSharp: Differentiable Functional Programming
 ================================================
 
-DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library.
+DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) tensor-based library.
 
-AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from [numerical differentiation](https://en.wikipedia.org/wiki/Numerical_differentiation), which is prone to truncation and round-off errors, and [symbolic differentiation](https://en.wikipedia.org/wiki/Symbolic_computation), which is affected by expression swell and cannot fully handle algorithmic control flow.
+AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator
+level during program execution. AD is different from [numerical differentiation](https://en.wikipedia.org/wiki/Numerical_differentiation),
+which is prone to truncation and round-off errors, and [symbolic differentiation](https://en.wikipedia.org/wiki/Symbolic_computation), which
+is affected by expression swell and cannot fully handle algorithmic control flow.
 
-Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
+Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
+products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use
+the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested
+forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions
+that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
 
-The library is developed by [Atılım Güneş Baydin](https://www.cs.nuim.ie/~gunes/) and [Barak A. Pearlmutter](https://bcl.hamilton.ie/~barak/) mainly for research applications in machine learning, as part of their work at the [Brain and Computation Lab](https://www.bcl.hamilton.ie/), Hamilton Institute, National University of Ireland Maynooth.
+The library is developed by [Atılım Güneş Baydin](https://www.cs.nuim.ie/~gunes/), [Don Syme](https://www.microsoft.com/en-us/research/people/dsyme/)
+and contributors for applications in machine learning.
 
-DiffSharp is implemented in the F# language and [can be used from C#](csharp.html) and the [other languages](https://en.wikipedia.org/wiki/List_of_CLI_languages) running on Mono, [.NET Core](https://dotnet.github.io/), or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.
+DiffSharp is implemented in F#. It is tested on Linux and Windows.
 
-<div class="row">
-    <div class="span9">
-    <div class="well well-small" id="nuget" style="background-color:#C6AEC7">
-        Version 1.0 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version.
-    </div>
-    </div>
-</div>
-
+> Version 1.0 is a reimplementation as a tensor library using LibTorch as the primary backend.
 
 Current Features and Roadmap
 ----------------------------
 
-The following features are up and running:
+The primary features of DiffSharp 1.0 are:
 
-- _Functional nested differentiation with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
+- _Functional nested differentiation for tensor primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
 - _Matrix-free Jacobian- and Hessian-vector products_
-- _[OpenBLAS](https://github.com/xianyi/OpenBLAS/wiki) backend for highly optimized native BLAS and LAPACK operations_
-- _Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)_
-- _Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)_
+- _[PyTorch](https://pytorch.org/) backend for highly optimized native tensor operations_
 
-Possible future features include:
+See also our [github issues](https://github.com/DiffSharp/DiffSharp/issues/)
 
-- _GPU backend using CUDA/OpenCL_
-- _Generalization to tensors/multidimensional arrays_
-- _Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)_
-- _AD via syntax tree transformation, using code quotations_
-
-At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.
-
-How to Get
-----------
-
-Please see the [download page](download.html) for installation instructions for Linux and Windows.
+Please join with us to help us get the API right and ensure model development with DiffSharp is as succinct and clean as possible/
 
 Quick Usage Example
 -------------------
@@ -81,14 +80,5 @@ If you are using DiffSharp, we would be very happy to hear about it! Please get 
 If you would like to cite this library, please use the following information:
 
 _Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767_ ([link](https://arxiv.org/abs/1502.05767)) ([BibTeX](misc/adml2015.bib))
-
-You can also check our [**recent poster**](https://www.cs.nuim.ie/~gunes/files/ICML2015-MLOSS-Poster-A0.pdf) for the [Machine Learning Open Source Software Workshop](https://mloss.org/workshop/icml15/) at the International Conference on Machine Learning 2015. For in-depth material, you can check our [publications page](https://www.bcl.hamilton.ie/publications/) and the [autodiff.org](https://www.autodiff.org/) website. 
-
-Other sources:
-
-- [Introduction to Automatic Differentiation](https://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/) by Alexey Radul
-- [Automatic Differentiation: The most criminally underused tool in the potential machine learning toolbox?](https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/) by Justin Domke
-- [Differentiable Programming](https://edge.org/response-detail/26794) by David Dalrymple
-- [Neural Networks, Types, and Functional Programming](https://colah.github.io/posts/2015-09-NN-Types-FP/) by Christopher Olah
 
 *)
