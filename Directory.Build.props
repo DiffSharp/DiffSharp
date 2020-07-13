@@ -32,7 +32,7 @@
      <Owners>DiffSharp maintainers</Owners>
      <PackageProjectUrl>https://diffsharp.github.io/DiffSharp</PackageProjectUrl>
      <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
-     <PackageLicenseExpression>BSD 2-Clause</PackageLicenseExpression>
+     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
      <RepositoryType>git</RepositoryType>
      <Copyright>Copyright 2014-2020</Copyright>
      <PackageTags>F# fsharp ML AI Machine Learning PyTorch Automatic Differentiation Gradients</PackageTags>
