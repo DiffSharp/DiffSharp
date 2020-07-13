@@ -28,13 +28,930 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
-          {document}
-          {tooltips}          
+          <div>
+  <h1>
+    Shape Module
+  </h1>
+  <p>
+    Namespace: DiffSharp
+  </p>
+  <p>
+    Assembly: DiffSharp
+  </p>
+  <br/>
+  <span>
+    Parent Module: 
+    <a href="diffsharp-util.html">
+      Util
+    </a>
+  </span>
+  <div class="xmldoc"></div>
+  <div>
+    <h3>
+      Functions and values
+    </h3>
+    <table class="table table-bordered member-list">
+      <thead>
+        <tr>
+          <td>
+            Function or value
+          </td>
+          <td>
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '58', 58)" onmouseover="showTip(event, '58', 58)">
+                broadcast2 shape1 shape2
+              </code>
+              <div class="tip" id="58">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; shape2:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Find the shape into which shape1 and shape2 can be expanded</p>
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '59', 59)" onmouseover="showTip(event, '59', 59)">
+                broadcastShapes(shapes)
+              </code>
+              <div class="tip" id="59">
+                <strong>
+                  Signature:
+                </strong>
+                shapes:Shape [] -&gt; Shape
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Find the shape into which all the shapes can be expanded</p>
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
+                canExpand oldShape newShape
+              </code>
+              <div class="tip" id="60">
+                <strong>
+                  Signature:
+                </strong>
+                oldShape:Shape -&gt; newShape:Shape -&gt; bool
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '61', 61)" onmouseover="showTip(event, '61', 61)">
+                checkCanAddSlice shape1 location shape2
+              </code>
+              <div class="tip" id="61">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; location:int [] -&gt; shape2:Shape -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '62', 62)" onmouseover="showTip(event, '62', 62)">
+                checkCanCat shapes dim
+              </code>
+              <div class="tip" id="62">
+                <strong>
+                  Signature:
+                </strong>
+                shapes:Shape [] -&gt; dim:int -&gt; int * int [] * int * int [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '63', 63)" onmouseover="showTip(event, '63', 63)">
+                checkCanConv1d(...)
+              </code>
+              <div class="tip" id="63">
+                <strong>
+                  Signature:
+                </strong>
+                dtype1:Dtype -&gt; dtype2:Dtype -&gt; shape1:Shape -&gt; shape2:Shape -&gt; stride:int -&gt; padding:int -&gt; dilation:int -&gt; int * int * int * int * int * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '64', 64)" onmouseover="showTip(event, '64', 64)">
+                checkCanConv2d(...)
+              </code>
+              <div class="tip" id="64">
+                <strong>
+                  Signature:
+                </strong>
+                dtype1:Dtype -&gt; dtype2:Dtype -&gt; shape1:Shape -&gt; shape2:Shape -&gt; stride:int [] -&gt; padding:int [] -&gt; dilation:int [] -&gt; int * int * (int * int) * (int * int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '65', 65)" onmouseover="showTip(event, '65', 65)">
+                checkCanConv3d(...)
+              </code>
+              <div class="tip" id="65">
+                <strong>
+                  Signature:
+                </strong>
+                dtype1:Dtype -&gt; dtype2:Dtype -&gt; shape1:Shape -&gt; shape2:Shape -&gt; stride:int [] -&gt; padding:int [] -&gt; dilation:int [] -&gt; int * int * (int * int * int) * (int * int * int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '66', 66)" onmouseover="showTip(event, '66', 66)">
+                checkCanDilate dim dilations
+              </code>
+              <div class="tip" id="66">
+                <strong>
+                  Signature:
+                </strong>
+                dim:int -&gt; dilations:int [] -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '67', 67)" onmouseover="showTip(event, '67', 67)">
+                checkCanDot shape1 shape2
+              </code>
+              <div class="tip" id="67">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; shape2:Shape -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '68', 68)" onmouseover="showTip(event, '68', 68)">
+                checkCanDropout(p)
+              </code>
+              <div class="tip" id="68">
+                <strong>
+                  Signature:
+                </strong>
+                p:double -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '69', 69)" onmouseover="showTip(event, '69', 69)">
+                checkCanDropout2d shape p
+              </code>
+              <div class="tip" id="69">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; p:double -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '70', 70)" onmouseover="showTip(event, '70', 70)">
+                checkCanDropout3d shape p
+              </code>
+              <div class="tip" id="70">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; p:double -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '71', 71)" onmouseover="showTip(event, '71', 71)">
+                checkCanExpand oldShape newShape
+              </code>
+              <div class="tip" id="71">
+                <strong>
+                  Signature:
+                </strong>
+                oldShape:Shape -&gt; newShape:Shape -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '72', 72)" onmouseover="showTip(event, '72', 72)">
+                checkCanFlatten shape startDim endDim
+              </code>
+              <div class="tip" id="72">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; startDim:int -&gt; endDim:int -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
+                checkCanFlip dim dims
+              </code>
+              <div class="tip" id="73">
+                <strong>
+                  Signature:
+                </strong>
+                dim:int -&gt; dims:int [] -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '74', 74)" onmouseover="showTip(event, '74', 74)">
+                checkCanGather(...)
+              </code>
+              <div class="tip" id="74">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dim:int -&gt; indicesShape:Shape -&gt; indicesDtype:Dtype -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '75', 75)" onmouseover="showTip(event, '75', 75)">
+                checkCanGetSlice shape fullBounds
+              </code>
+              <div class="tip" id="75">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; fullBounds:int [,] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
+                checkCanMatmul shape1 shape2
+              </code>
+              <div class="tip" id="76">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; shape2:Shape -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '77', 77)" onmouseover="showTip(event, '77', 77)">
+                checkCanMaxpool1d(...)
+              </code>
+              <div class="tip" id="77">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; kernelSize:int -&gt; stride:int -&gt; padding:int -&gt; int * int * int * int * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '78', 78)" onmouseover="showTip(event, '78', 78)">
+                checkCanMaxpool2d(...)
+              </code>
+              <div class="tip" id="78">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; kernelSize:int [] -&gt; stride:int [] -&gt; padding:int [] -&gt; int * int * (int * int) * (int * int) * (int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '79', 79)" onmouseover="showTip(event, '79', 79)">
+                checkCanMaxpool3d(...)
+              </code>
+              <div class="tip" id="79">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; kernelSize:int [] -&gt; stride:int [] -&gt; padding:int [] -&gt; int * int * (int * int * int) * (int * int * int) * (int * int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '80', 80)" onmouseover="showTip(event, '80', 80)">
+                checkCanMaxunpool1d(...)
+              </code>
+              <div class="tip" id="80">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; indicesDtype:Dtype -&gt; indicesShape:Shape -&gt; outputSize:int [] -&gt; int * int * int * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '81', 81)" onmouseover="showTip(event, '81', 81)">
+                checkCanMaxunpool2d(...)
+              </code>
+              <div class="tip" id="81">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; indicesDtype:Dtype -&gt; indicesShape:Shape -&gt; outputSize:int [] -&gt; int * int * (int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '82', 82)" onmouseover="showTip(event, '82', 82)">
+                checkCanMaxunpool3d(...)
+              </code>
+              <div class="tip" id="82">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; indicesDtype:Dtype -&gt; indicesShape:Shape -&gt; outputSize:int [] -&gt; int * int * (int * int * int) * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '83', 83)" onmouseover="showTip(event, '83', 83)">
+                checkCanPad shape paddings
+              </code>
+              <div class="tip" id="83">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; paddings:int [] -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '84', 84)" onmouseover="showTip(event, '84', 84)">
+                checkCanRepeat shape dim
+              </code>
+              <div class="tip" id="84">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dim:int -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '85', 85)" onmouseover="showTip(event, '85', 85)">
+                checkCanSplit shape sizes dim
+              </code>
+              <div class="tip" id="85">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; sizes:int [] -&gt; dim:int -&gt; int [] []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '86', 86)" onmouseover="showTip(event, '86', 86)">
+                checkCanStack shapes dim
+              </code>
+              <div class="tip" id="86">
+                <strong>
+                  Signature:
+                </strong>
+                shapes:Shape [] -&gt; dim:int -&gt; int * int [] * int [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '87', 87)" onmouseover="showTip(event, '87', 87)">
+                checkCanTranspose shape dim0 dim1
+              </code>
+              <div class="tip" id="87">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dim0:int -&gt; dim1:int -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '88', 88)" onmouseover="showTip(event, '88', 88)">
+                checkCanTranspose2d(dim)
+              </code>
+              <div class="tip" id="88">
+                <strong>
+                  Signature:
+                </strong>
+                dim:int -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '89', 89)" onmouseover="showTip(event, '89', 89)">
+                checkCanUnsqueeze dim shape
+              </code>
+              <div class="tip" id="89">
+                <strong>
+                  Signature:
+                </strong>
+                dim:int -&gt; shape:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '90', 90)" onmouseover="showTip(event, '90', 90)">
+                checkCanUnstack shape dim
+              </code>
+              <div class="tip" id="90">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dim:int -&gt; int [] * int [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '91', 91)" onmouseover="showTip(event, '91', 91)">
+                checkCanView shape1 shape2
+              </code>
+              <div class="tip" id="91">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; shape2:Shape -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '92', 92)" onmouseover="showTip(event, '92', 92)">
+                complete nelement shape
+              </code>
+              <div class="tip" id="92">
+                <strong>
+                  Signature:
+                </strong>
+                nelement:int -&gt; shape:Shape -&gt; Shape
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '93', 93)" onmouseover="showTip(event, '93', 93)">
+                completeDim dims dim
+              </code>
+              <div class="tip" id="93">
+                <strong>
+                  Signature:
+                </strong>
+                dims:int -&gt; dim:int -&gt; int
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '94', 94)" onmouseover="showTip(event, '94', 94)">
+                computeTranspose2d(shape)
+              </code>
+              <div class="tip" id="94">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '95', 95)" onmouseover="showTip(event, '95', 95)">
+                contains bigShape smallShape
+              </code>
+              <div class="tip" id="95">
+                <strong>
+                  Signature:
+                </strong>
+                bigShape:Shape -&gt; smallShape:Shape -&gt; bool
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '96', 96)" onmouseover="showTip(event, '96', 96)">
+                dilated shape dilations
+              </code>
+              <div class="tip" id="96">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dilations:int [] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '97', 97)" onmouseover="showTip(event, '97', 97)">
+                dilated2 shape dilations
+              </code>
+              <div class="tip" id="97">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dilations:int [] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '98', 98)" onmouseover="showTip(event, '98', 98)">
+                flatten startDim endDim shape
+              </code>
+              <div class="tip" id="98">
+                <strong>
+                  Signature:
+                </strong>
+                startDim:int -&gt; endDim:int -&gt; shape:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '99', 99)" onmouseover="showTip(event, '99', 99)">
+                locationToBounds shape location
+              </code>
+              <div class="tip" id="99">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; location:int [] -&gt; int [,]
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '100', 100)" onmouseover="showTip(event, '100', 100)">
+                scalar
+              </code>
+              <div class="tip" id="100">
+                <strong>
+                  Signature:
+                </strong>
+                Shape
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '101', 101)" onmouseover="showTip(event, '101', 101)">
+                squeeze dim shape
+              </code>
+              <div class="tip" id="101">
+                <strong>
+                  Signature:
+                </strong>
+                dim:int -&gt; shape:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '102', 102)" onmouseover="showTip(event, '102', 102)">
+                undilatedShape shape dilations
+              </code>
+              <div class="tip" id="102">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; dilations:int [] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '103', 103)" onmouseover="showTip(event, '103', 103)">
+                unsqueezeAs shape1 shape2
+              </code>
+              <div class="tip" id="103">
+                <strong>
+                  Signature:
+                </strong>
+                shape1:Shape -&gt; shape2:Shape -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div></div>
+  <div></div>
+</div>
+                   
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -50,19 +967,20 @@
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
             <li><a href="api-overview.html">API Overview</a></li>
-            <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
             <li class="divider"></li>
 
             <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
 
             <li class="nav-header">Authors</li>
             <li class="divider"></li>
-            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
           </ul>
         </div>
       </div>

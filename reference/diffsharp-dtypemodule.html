@@ -28,13 +28,201 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
-          {document}
-          {tooltips}          
+          <div>
+  <h1>
+    Dtype Module
+  </h1>
+  <p>
+    Namespace: DiffSharp
+  </p>
+  <p>
+    Assembly: DiffSharp
+  </p>
+  <br/>
+  <div class="xmldoc"></div>
+  <div>
+    <h3>
+      Functions and values
+    </h3>
+    <table class="table table-bordered member-list">
+      <thead>
+        <tr>
+          <td>
+            Function or value
+          </td>
+          <td>
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '5', 5)" onmouseover="showTip(event, '5', 5)">
+                Default
+              </code>
+              <div class="tip" id="5">
+                <strong>
+                  Signature:
+                </strong>
+                Dtype
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '6', 6)" onmouseover="showTip(event, '6', 6)">
+                Register name inOutType
+              </code>
+              <div class="tip" id="6">
+                <strong>
+                  Signature:
+                </strong>
+                name:string -&gt; inOutType:Type -&gt; Dtype
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '7', 7)" onmouseover="showTip(event, '7', 7)">
+                ofType(ty)
+              </code>
+              <div class="tip" id="7">
+                <strong>
+                  Signature:
+                </strong>
+                ty:Type -&gt; Dtype
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Convert System.Type to Dtype</p>
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '8', 8)" onmouseover="showTip(event, '8', 8)">
+                widen dtype1 dtype2
+              </code>
+              <div class="tip" id="8">
+                <strong>
+                  Signature:
+                </strong>
+                dtype1:Dtype -&gt; dtype2:Dtype -&gt; Dtype option
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Find the Dtype into which dtype1 and dtype2 can be widened</p>
+
+
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div></div>
+  <div>
+    <h3>
+      Active patterns
+    </h3>
+    <table class="table table-bordered member-list">
+      <thead>
+        <tr>
+          <td>
+            Active pattern
+          </td>
+          <td>
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '9', 9)" onmouseover="showTip(event, '9', 9)">
+                ( |FloatingPoint|_| )(x)
+              </code>
+              <div class="tip" id="9">
+                <strong>
+                  Signature:
+                </strong>
+                x:Dtype -&gt; unit option
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
+                ( |IntegralOrBool|_| )(x)
+              </code>
+              <div class="tip" id="10">
+                <strong>
+                  Signature:
+                </strong>
+                x:Dtype -&gt; unit option
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
+                ( |Integral|_| )(x)
+              </code>
+              <div class="tip" id="11">
+                <strong>
+                  Signature:
+                </strong>
+                x:Dtype -&gt; unit option
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+                   
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -50,19 +238,20 @@
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
             <li><a href="api-overview.html">API Overview</a></li>
-            <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
             <li class="divider"></li>
 
             <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
 
             <li class="nav-header">Authors</li>
             <li class="divider"></li>
-            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
           </ul>
         </div>
       </div>

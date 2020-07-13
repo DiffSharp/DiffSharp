@@ -17,20 +17,20 @@ This published version of the docs can be refreshed by
        cd ..\FSharp.Formatting
        .\build
 
-2. Generate Docs
+2. Generate Docs (after building)
 
     rmdir /s /q ..\tmp
-    git clone https://github.com/DiffSharp/DiffSharp ../tmp/DiffSharp-docs -b gh-pages --depth 1
-    cd ..\tmp\DiffSharp-docs
-    git checkout -b tmpdocs
+    git clone https://github.com/DiffSharp/DiffSharp ../tmp/DiffSharp-docs -b tmpdocs --depth 1
+    pushd ..\tmp\DiffSharp-docs
     git rm -fr *
-    git checkout -b tmpdocs
-    cd ..\..\DiffSharp
+    popd ..\..\DiffSharp
     ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe build --output ..\tmp\DiffSharp-docs
-    cd ..\tmp\DiffSharp-docs
+    pushd ..\tmp\DiffSharp-docs
     git add .
     git commit -a -m "commit docs"
     git push -f https://github.com/DiffSharp/DiffSharp tmpdocs
+    git push -f https://github.com/dsyme/DiffSharp tmpdocs
+    popd ..\..\DiffSharp
 
 
 Typical URL and badges when docs are published:

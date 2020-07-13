@@ -28,13 +28,1022 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
-          {document}
-          {tooltips}          
+          <div>
+  <h1>
+    Util Module
+  </h1>
+  <p>
+    Namespace: DiffSharp
+  </p>
+  <p>
+    Assembly: DiffSharp
+  </p>
+  <br/>
+  <div class="xmldoc"></div>
+  <div>
+    <h2>
+      Types and modules
+    </h2>
+    <table class="table table-bordered type-list module-list">
+      <thead>
+        <tr>
+          <td>
+            Type/Module
+          </td>
+          <td>
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-globalnestinglevel.html">
+              GlobalNestingLevel
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-nestinglevel.html">
+              NestingLevel
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-random.html">
+              Random
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-shape.html">
+              Shape (Type)
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-array.html">
+              Array
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="diffsharp-util-shapemodule.html">
+              Shape (Module)
+            </a>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h3>
+      Functions and values
+    </h3>
+    <table class="table table-bordered member-list">
+      <thead>
+        <tr>
+          <td>
+            Function or value
+          </td>
+          <td>
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
+                allEqual(items)
+              </code>
+              <div class="tip" id="14">
+                <strong>
+                  Signature:
+                </strong>
+                items:seq&lt;&#39;a&gt; -&gt; bool
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
+                array3D(data)
+              </code>
+              <div class="tip" id="15">
+                <strong>
+                  Signature:
+                </strong>
+                data:seq&lt;&#39;?72520&gt; -&gt; &#39;?72522 [,,]
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72520, '?72521, '?72522
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Create a non-jagged 3D array from jagged data</p>
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
+                array4D(data)
+              </code>
+              <div class="tip" id="16">
+                <strong>
+                  Signature:
+                </strong>
+                data:seq&lt;&#39;?72524&gt; -&gt; &#39;?72527 [,,,]
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72524, '?72525, '?72526, '?72527
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            <p>Create a non-jagged 4D array from jagged data</p>
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
+                arrayND shape f
+              </code>
+              <div class="tip" id="17">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; f:(int [] -&gt; &#39;e) -&gt; obj
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'e
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
+                boundsToLocation(bounds)
+              </code>
+              <div class="tip" id="18">
+                <strong>
+                  Signature:
+                </strong>
+                bounds:int [,] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
+                boundsToShape(bounds)
+              </code>
+              <div class="tip" id="19">
+                <strong>
+                  Signature:
+                </strong>
+                bounds:int [,] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+                checkValidIndex shape index
+              </code>
+              <div class="tip" id="20">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; index:int [] -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
+                copyKeys(dictionary)
+              </code>
+              <div class="tip" id="21">
+                <strong>
+                  Signature:
+                </strong>
+                dictionary:Dictionary&lt;&#39;a, &#39;b&gt; -&gt; &#39;a []
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a, 'b
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+                copyValues(dictionary)
+              </code>
+              <div class="tip" id="22">
+                <strong>
+                  Signature:
+                </strong>
+                dictionary:Dictionary&lt;&#39;a, &#39;b&gt; -&gt; &#39;b []
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a, 'b
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+                cumulativeSum(a)
+              </code>
+              <div class="tip" id="23">
+                <strong>
+                  Signature:
+                </strong>
+                a:^?72482 [] -&gt; ^?72483 []
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                ^?72482, ^?72483
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
+                dataOfValues(...)
+              </code>
+              <div class="tip" id="24">
+                <strong>
+                  Signature:
+                </strong>
+                ofFloat32:(float32 -&gt; ^T) -&gt; ofFloat64:(double -&gt; ^T) -&gt; ofInt8:(int8 -&gt; ^T) -&gt; ofInt16:(int16 -&gt; ^T) -&gt; ofInt32:(int32 -&gt; ^T) -&gt; ofInt64:(int64 -&gt; ^T) -&gt; ofBool:(bool -&gt; ^T) -&gt; ofByte:(byte -&gt; ^T) -&gt; value:obj -&gt; ^T [] * int []
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                ^T
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
+                dataOfValuesForBool(value)
+              </code>
+              <div class="tip" id="25">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; bool [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
+                dataOfValuesForByte(value)
+              </code>
+              <div class="tip" id="26">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; byte [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+                dataOfValuesForFloat32(value)
+              </code>
+              <div class="tip" id="27">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; float32 [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
+                dataOfValuesForFloat64(value)
+              </code>
+              <div class="tip" id="28">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; double [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
+                dataOfValuesForInt16(value)
+              </code>
+              <div class="tip" id="29">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; int16 [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
+                dataOfValuesForInt32(value)
+              </code>
+              <div class="tip" id="30">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; int32 [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
+                dataOfValuesForInt64(value)
+              </code>
+              <div class="tip" id="31">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; int64 [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
+                dataOfValuesForInt8(value)
+              </code>
+              <div class="tip" id="32">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; int8 [] * int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
+                dilatedCoordinates coordinates dilations
+              </code>
+              <div class="tip" id="33">
+                <strong>
+                  Signature:
+                </strong>
+                coordinates:int [] -&gt; dilations:int [] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+                download url localFileName
+              </code>
+              <div class="tip" id="34">
+                <strong>
+                  Signature:
+                </strong>
+                url:string -&gt; localFileName:string -&gt; unit
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
+                duplicates(l)
+              </code>
+              <div class="tip" id="35">
+                <strong>
+                  Signature:
+                </strong>
+                l:seq&lt;&#39;?72506&gt; -&gt; &#39;?72506 list
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72506
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+                flatIndexToIndex shape flatIndex
+              </code>
+              <div class="tip" id="36">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; flatIndex:int -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
+                formatType(ty)
+              </code>
+              <div class="tip" id="37">
+                <strong>
+                  Signature:
+                </strong>
+                ty:Type -&gt; string
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
+                getUniqueCounts values sorted
+              </code>
+              <div class="tip" id="38">
+                <strong>
+                  Signature:
+                </strong>
+                values:&#39;a [] -&gt; sorted:bool -&gt; &#39;a [] * int []
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
+                hasDuplicates(l)
+              </code>
+              <div class="tip" id="39">
+                <strong>
+                  Signature:
+                </strong>
+                l:seq&lt;&#39;?72508&gt; -&gt; bool
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72508
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
+                indentNewLines str numSpaces
+              </code>
+              <div class="tip" id="40">
+                <strong>
+                  Signature:
+                </strong>
+                str:String -&gt; numSpaces:int -&gt; string
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
+                indexToFlatIndex shape index
+              </code>
+              <div class="tip" id="41">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; index:int [] -&gt; int
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
+                loadBinary(fileName)
+              </code>
+              <div class="tip" id="42">
+                <strong>
+                  Signature:
+                </strong>
+                fileName:string -&gt; &#39;a
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '43', 43)" onmouseover="showTip(event, '43', 43)">
+                log10Val
+              </code>
+              <div class="tip" id="43">
+                <strong>
+                  Signature:
+                </strong>
+                float&lt;MeasureOne&gt;
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '44', 44)" onmouseover="showTip(event, '44', 44)">
+                logSqrt2Pi
+              </code>
+              <div class="tip" id="44">
+                <strong>
+                  Signature:
+                </strong>
+                float&lt;MeasureOne&gt;
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '45', 45)" onmouseover="showTip(event, '45', 45)">
+                maxIndex(seq)
+              </code>
+              <div class="tip" id="45">
+                <strong>
+                  Signature:
+                </strong>
+                seq:seq&lt;&#39;?72569&gt; -&gt; int
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72569
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '46', 46)" onmouseover="showTip(event, '46', 46)">
+                memoize(fn)
+              </code>
+              <div class="tip" id="46">
+                <strong>
+                  Signature:
+                </strong>
+                fn:(&#39;?72573 -&gt; &#39;?72574) -&gt; &#39;?72573 -&gt; &#39;?72574
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72573, '?72574
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '47', 47)" onmouseover="showTip(event, '47', 47)">
+                minIndex(seq)
+              </code>
+              <div class="tip" id="47">
+                <strong>
+                  Signature:
+                </strong>
+                seq:seq&lt;&#39;?72571&gt; -&gt; int
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72571
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '48', 48)" onmouseover="showTip(event, '48', 48)">
+                mirrorCoordinates(...)
+              </code>
+              <div class="tip" id="48">
+                <strong>
+                  Signature:
+                </strong>
+                coordinates:int [] -&gt; shape:Shape -&gt; mirrorDims:int [] -&gt; int []
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
+                notNull(value)
+              </code>
+              <div class="tip" id="49">
+                <strong>
+                  Signature:
+                </strong>
+                value:&#39;?72504 -&gt; bool
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72504
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
+                saveBinary object fileName
+              </code>
+              <div class="tip" id="50">
+                <strong>
+                  Signature:
+                </strong>
+                object:&#39;a -&gt; fileName:string -&gt; unit
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'a
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
+                shapeLength(shape)
+              </code>
+              <div class="tip" id="51">
+                <strong>
+                  Signature:
+                </strong>
+                shape:Shape -&gt; int
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '52', 52)" onmouseover="showTip(event, '52', 52)">
+                shuffledIndices(length)
+              </code>
+              <div class="tip" id="52">
+                <strong>
+                  Signature:
+                </strong>
+                length:int -&gt; int -&gt; int
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '53', 53)" onmouseover="showTip(event, '53', 53)">
+                stringPad s width
+              </code>
+              <div class="tip" id="53">
+                <strong>
+                  Signature:
+                </strong>
+                s:string -&gt; width:int -&gt; string
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '54', 54)" onmouseover="showTip(event, '54', 54)">
+                stringPadAs s1 s2
+              </code>
+              <div class="tip" id="54">
+                <strong>
+                  Signature:
+                </strong>
+                s1:string -&gt; s2:string -&gt; string
+                <br/>
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '55', 55)" onmouseover="showTip(event, '55', 55)">
+                toInt(a)
+              </code>
+              <div class="tip" id="55">
+                <strong>
+                  Signature:
+                </strong>
+                a:&#39;?72567 -&gt; int
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                '?72567
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+        <tr>
+          <td class="member-name">
+            <div>
+              <code onmouseout="hideTip(event, '56', 56)" onmouseover="showTip(event, '56', 56)">
+                tryFlatArrayAndShape(value)
+              </code>
+              <div class="tip" id="56">
+                <strong>
+                  Signature:
+                </strong>
+                value:obj -&gt; (&#39;T [] * int []) option
+                <br/>
+                <strong>
+                  Type parameters: 
+                </strong>
+                'T
+              </div>
+            </div>
+          </td>
+          <td class="xmldoc">
+            
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div></div>
+  <div></div>
+</div>
+                   
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -50,19 +1059,20 @@
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
             <li><a href="api-overview.html">API Overview</a></li>
-            <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
             <li class="divider"></li>
 
             <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
 
             <li class="nav-header">Authors</li>
             <li class="divider"></li>
-            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
           </ul>
         </div>
       </div>

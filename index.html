@@ -29,13 +29,92 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
-          {document}
-          {tooltips}          
+          <h1><a name="DiffSharp-Differentiable-Functional-Programming" class="anchor" href="#DiffSharp-Differentiable-Functional-Programming">DiffSharp: Differentiable Functional Programming</a></h1>
+<p>DiffSharp is a functional <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) tensor-based library.</p>
+<p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator
+level during program execution. AD is different from <a href="https://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>,
+which is prone to truncation and round-off errors, and <a href="https://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which
+is affected by expression swell and cannot fully handle algorithmic control flow.</p>
+<p>Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
+products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use
+the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested
+forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions
+that are internally making use of differentiation. Please see the <a href="api-overview.html">API Overview</a> page for a list of available operations.</p>
+<p>The library is developed by <a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a>, <a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a>
+and contributors for applications in machine learning.</p>
+<p>DiffSharp is implemented in F#. It is tested on Linux and Windows.</p>
+<blockquote>
+<p>Version 1.0 is a reimplementation as a tensor library using LibTorch as the primary backend.</p>
+</blockquote>
+<h2><a name="Current-Features-and-Roadmap" class="anchor" href="#Current-Features-and-Roadmap">Current Features and Roadmap</a></h2>
+<p>The primary features of DiffSharp 1.0 are:</p>
+<ul>
+<li><em>Functional nested differentiation for tensor primitives, supporting forward and reverse AD, or any combination thereof, up to any level</em></li>
+<li><em>Matrix-free Jacobian- and Hessian-vector products</em></li>
+<li><em><a href="https://pytorch.org/">PyTorch</a> backend for highly optimized native tensor operations</em></li>
+</ul>
+<p>See also our <a href="https://github.com/DiffSharp/DiffSharp/issues/">github issues</a></p>
+<p>Please join with us to help us get the API right and ensure model development with DiffSharp is as succinct and clean as possible/</p>
+<h2><a name="Quick-Usage-Example" class="anchor" href="#Quick-Usage-Example">Quick Usage Example</a></h2>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">// Use mixed mode nested AD</span>
+<span class="k">open</span> <span class="id">DiffSharp</span>
+
+<span class="c">// A scalar-to-scalar function</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="fn">f</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="id">x</span><span class="pn">:</span> <span class="id">Tensor</span><span class="pn">)</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="fn">sin</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="fn">sqrt</span> <span onmouseout="hideTip(event, 'fs2', 5)" onmouseover="showTip(event, 'fs2', 5)" class="id">x</span><span class="pn">)</span>
+
+<span class="c">// Derivative of f</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs5', 6)" onmouseover="showTip(event, 'fs5', 6)" class="id">df</span> <span class="o">=</span> <span class="id">dsharp</span><span class="pn">.</span><span class="id">diff</span> <span onmouseout="hideTip(event, 'fs1', 7)" onmouseover="showTip(event, 'fs1', 7)" class="id">f</span>
+
+<span class="c">// A vector-to-scalar function</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 8)" onmouseover="showTip(event, 'fs6', 8)" class="fn">g</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs7', 9)" onmouseover="showTip(event, 'fs7', 9)" class="id">x</span><span class="pn">:</span> <span class="id">Tensor</span><span class="pn">)</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 10)" onmouseover="showTip(event, 'fs8', 10)" class="fn">exp</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs7', 11)" onmouseover="showTip(event, 'fs7', 11)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">0</span><span class="pn">]</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs7', 12)" onmouseover="showTip(event, 'fs7', 12)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">1</span><span class="pn">]</span><span class="pn">)</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs7', 13)" onmouseover="showTip(event, 'fs7', 13)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">2</span><span class="pn">]</span>
+
+<span class="c">// Gradient of g</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 14)" onmouseover="showTip(event, 'fs9', 14)" class="id">gg</span> <span class="o">=</span> <span class="id">dsharp</span><span class="pn">.</span><span class="id">grad</span> <span onmouseout="hideTip(event, 'fs6', 15)" onmouseover="showTip(event, 'fs6', 15)" class="id">g</span> 
+
+<span class="c">// Hessian of g</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 16)" onmouseover="showTip(event, 'fs10', 16)" class="id">hg</span> <span class="o">=</span> <span class="id">dsharp</span><span class="pn">.</span><span class="id">hessian</span> <span onmouseout="hideTip(event, 'fs6', 17)" onmouseover="showTip(event, 'fs6', 17)" class="id">g</span>
+</code></pre></td>
+</tr>
+</table>
+<h2><a name="More-Info-and-How-to-Cite" class="anchor" href="#More-Info-and-How-to-Cite">More Info and How to Cite</a></h2>
+<p>If you are using DiffSharp, we would be very happy to hear about it! Please get in touch with us using email or raise any issues you might have <a href="https://github.com/DiffSharp/DiffSharp">on GitHub</a>. We also have a <a href="https://gitter.im/DiffSharp/DiffSharp">Gitter chat room</a> that we follow.</p>
+<p>If you would like to cite this library, please use the following information:</p>
+<p><em>Atılım Güneş Baydin, Barak A. Pearlmutter, Alexey Andreyevich Radul, Jeffrey Mark Siskind (2015) Automatic differentiation and machine learning: a survey. arXiv preprint. arXiv:1502.05767</em> (<a href="https://arxiv.org/abs/1502.05767">link</a>) (<a href="misc/adml2015.bib">BibTeX</a>)</p>
+
+          <div class="tip" id="fs1">val f : x:float -&gt; float</div>
+<div class="tip" id="fs2">val x : float</div>
+<div class="tip" id="fs3">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)</div>
+<div class="tip" id="fs4">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)</div>
+<div class="tip" id="fs5">val df : obj</div>
+<div class="tip" id="fs6">val g : x:&#39;a -&gt; float</div>
+<div class="tip" id="fs7">val x : &#39;a</div>
+<div class="tip" id="fs8">val exp : value:&#39;T -&gt; &#39;T (requires member Exp)</div>
+<div class="tip" id="fs9">val gg : obj</div>
+<div class="tip" id="fs10">val hg : obj</div>
+         
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -51,19 +130,20 @@
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
             <li><a href="api-overview.html">API Overview</a></li>
-            <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
             <li class="divider"></li>
 
             <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
 
             <li class="nav-header">Authors</li>
             <li class="divider"></li>
-            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
           </ul>
         </div>
       </div>

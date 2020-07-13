@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- 
+      The {page-title} parameters will be replaced with the 
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>Nested AD
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors">
+    <meta name="description" content="DiffSharp is an automatic differentiation (AD) library implemented in the F# language by Atılım Güneş Baydin and Barak A. Pearlmutter, mainly for research applications in machine learning, as part of their work at the Brain and Computation Lab, Hamilton Institute, National University of Ireland Maynooth.">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    
+    <link type="text/css" rel="stylesheet" href="https://diffsharp.github.io/DiffSharp/misc/style.css" />
+    <script src="https://diffsharp.github.io/DiffSharp/misc/tips.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="https://fsharp.org">fsharp.org</a></li>
+        </ul>
+        <h3 class="muted">DiffSharp</h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          <h1><a name="Nested-AD" class="anchor" href="#Nested-AD">Nested AD</a></h1>
+<p>The main functionality of DiffSharp is found under the <strong>DiffSharp.AD</strong> namespace. Opening this namespace allows you to automatically evaluate derivatives of functions via forward and/or reverse AD. Internally, for any case involving a function <span class="math">\(f: \mathbb{R}^n \to \mathbb{R}^m\)</span>, DiffSharp uses forward AD when <span class="math">\(n \ll m\)</span> and reverse AD when <span class="math">\(n \gg m\)</span>. Combinations such as reverse-on-forward or forward-on-reverse AD can be also handled.</p>
+<p>For a complete list of the available differentiation operations, please refer to <a href="api-overview.html">API Overview</a> and <a href="reference/index.html">API Reference</a>.</p>
+<h2><a name="Background" class="anchor" href="#Background">Background</a></h2>
+<p>The library supports nested invocations of differentiation operations. So, for example, you can compute exact higher-order derivatives or take derivatives of functions that are themselves internally computing derivatives.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span class="id">DiffSharp</span><span class="pn">.</span><span class="id">AD</span><span class="pn">.</span><span class="id">Float64</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="fn">y</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="id">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="fn">sin</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="fn">sqrt</span> <span onmouseout="hideTip(event, 'fs2', 5)" onmouseover="showTip(event, 'fs2', 5)" class="id">x</span><span class="pn">)</span>
+
+<span class="c">// Derivative of y</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs5', 6)" onmouseover="showTip(event, 'fs5', 6)" class="id">d1</span> <span class="o">=</span> <span class="id">diff</span> <span onmouseout="hideTip(event, 'fs1', 7)" onmouseover="showTip(event, 'fs1', 7)" class="id">y</span>
+
+<span class="c">// 2nd derivative of y</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 8)" onmouseover="showTip(event, 'fs6', 8)" class="id">d2</span> <span class="o">=</span> <span class="id">diff</span> <span class="pn">(</span><span class="id">diff</span> <span onmouseout="hideTip(event, 'fs1', 9)" onmouseover="showTip(event, 'fs1', 9)" class="id">y</span><span class="pn">)</span>
+
+<span class="c">// 3rd derivative of y</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs7', 10)" onmouseover="showTip(event, 'fs7', 10)" class="id">d3</span> <span class="o">=</span> <span class="id">diff</span> <span onmouseout="hideTip(event, 'fs6', 11)" onmouseover="showTip(event, 'fs6', 11)" class="id">d2</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Nesting capability means more than just being able to compute higher-order derivatives of one function.</p>
+<p>DiffSharp can handle complex nested cases such as computing the derivative of a function <span class="math">\(f\)</span> that takes an argument <span class="math">\(x\)</span>, which, in turn, computes the derivative of another function <span class="math">\(g\)</span> nested inside <span class="math">\(f\)</span> that has a free reference to <span class="math">\(x\)</span>, the argument to the surrounding function.</p>
+<p><span class="math">\[  \frac{d}{dx} \left. \left( x \left( \left. \frac{d}{dy} x y \; \right|_{y=3} \right) \right) \right|_{x=2}\]</span></p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs8', 12)" onmouseover="showTip(event, 'fs8', 12)" class="id">d4</span> <span class="o">=</span> <span class="id">diff</span> <span class="pn">(</span><span class="k">fun</span> <span class="id">x</span> <span class="k">-&gt;</span> <span class="id">x</span> <span class="pn">*</span> <span class="pn">(</span><span class="id">diff</span> <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, 'fs1', 13)" onmouseover="showTip(event, 'fs1', 13)" class="id">y</span> <span class="k">-&gt;</span> <span class="id">x</span> <span class="pn">*</span> <span onmouseout="hideTip(event, 'fs1', 14)" onmouseover="showTip(event, 'fs1', 14)" class="id">y</span><span class="pn">)</span> <span class="pn">(</span><span class="id">D</span> <span class="n">3.</span><span class="pn">)</span><span class="pn">)</span><span class="pn">)</span> <span class="pn">(</span><span class="id">D</span> <span class="n">2.</span><span class="pn">)</span>
+</code></pre></td>
+</tr>
+</table>
+<table class="pre"><tr><td><pre><code>val d4 : D = D 4.0</code></pre></td></tr></table>
+<p>This allows you to write, for example, nested optimization algorithms of the form</p>
+<p><span class="math">\[  \mathbf{min} \left( \lambda x \; . \; (f \; x) + \mathbf{min} \left( \lambda y \; . \; g \; x \; y \right) \right)\; ,\]</span></p>
+<p>for functions <span class="math">\(f\)</span> and <span class="math">\(g\)</span> and a gradient-based minimization procedure <span class="math">\(\mathbf{min}\)</span>.</p>
+<p>Correctly nesting AD in a functional framework is achieved through the method of "tagging", which serves to prevent a class of bugs called "perturbation confusion" where a system fails to distinguish between distinct perturbations introduced by distinct invocations of differentiation operations. You can refer to the following articles, among others, to understand the issue and how it should be handled correctly:</p>
+<p><em>Jeffrey Mark Siskind and Barak A. Pearlmutter. Perturbation Confusion and Referential Transparency: Correct Functional Implementation of Forward-Mode AD. In Proceedings of the 17th International Workshop on Implementation and Application of Functional Languages (IFL2005), Dublin, Ireland, Sep. 19-21, 2005.</em></p>
+<p><em>Jeffrey Mark Siskind and Barak A. Pearlmutter. Nesting forward-mode AD in a functional framework. Higher Order and Symbolic Computation 21(4):361-76, 2008. <a href="https://dx.doi.org/10.1007/s10990-008-9037-1">doi:10.1007/s10990-008-9037-1</a> </em></p>
+<p><em>Barak A. Pearlmutter and Jeffrey Mark Siskind. Reverse-Mode AD in a functional framework: Lambda the ultimate backpropagator. TOPLAS 30(2):1-36, Mar. 2008. <a href="https://dx.doi.org/10.1145/1330017.1330018">doi:10.1145/1330017.1330018</a> </em></p>
+<h2><a name="Forward-and-Reverse-AD-Operations" class="anchor" href="#Forward-and-Reverse-AD-Operations">Forward and Reverse AD Operations</a></h2>
+<p>DiffSharp automatically selects forward or reverse AD, or a combination of these, for a given operation.</p>
+<p>The following are just a small selection of operations.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
+<span class="l">25: </span>
+<span class="l">26: </span>
+<span class="l">27: </span>
+<span class="l">28: </span>
+<span class="l">29: </span>
+<span class="l">30: </span>
+<span class="l">31: </span>
+<span class="l">32: </span>
+<span class="l">33: </span>
+<span class="l">34: </span>
+<span class="l">35: </span>
+<span class="l">36: </span>
+<span class="l">37: </span>
+<span class="l">38: </span>
+<span class="l">39: </span>
+<span class="l">40: </span>
+<span class="l">41: </span>
+<span class="l">42: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span class="id">DiffSharp</span><span class="pn">.</span><span class="id">AD</span><span class="pn">.</span><span class="id">Float64</span>
+
+<span class="c">// f: D -&gt; D</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 16)" onmouseover="showTip(event, 'fs10', 16)" class="fn">f</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs2', 17)" onmouseover="showTip(event, 'fs2', 17)" class="id">x</span><span class="pn">:</span><span class="id">D</span><span class="pn">)</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs3', 18)" onmouseover="showTip(event, 'fs3', 18)" class="fn">sin</span> <span class="pn">(</span><span class="n">3.</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs4', 19)" onmouseover="showTip(event, 'fs4', 19)" class="fn">sqrt</span> <span onmouseout="hideTip(event, 'fs2', 20)" onmouseover="showTip(event, 'fs2', 20)" class="id">x</span><span class="pn">)</span>
+
+<span class="c">// Derivative of f at 2</span>
+<span class="c">// Uses forward AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 21)" onmouseover="showTip(event, 'fs11', 21)" class="id">df</span> <span class="o">=</span> <span class="id">diff</span> <span onmouseout="hideTip(event, 'fs10', 22)" onmouseover="showTip(event, 'fs10', 22)" class="id">f</span> <span class="pn">(</span><span class="id">D</span> <span class="n">2.</span><span class="pn">)</span>
+
+<span class="c">// g: DV -&gt; D</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs12', 23)" onmouseover="showTip(event, 'fs12', 23)" class="fn">g</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs13', 24)" onmouseover="showTip(event, 'fs13', 24)" class="id">x</span><span class="pn">:</span><span class="id">DV</span><span class="pn">)</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs3', 25)" onmouseover="showTip(event, 'fs3', 25)" class="fn">sin</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs13', 26)" onmouseover="showTip(event, 'fs13', 26)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">0</span><span class="pn">]</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs13', 27)" onmouseover="showTip(event, 'fs13', 27)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">1</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Directional derivative of g at (2, 3) with direction (4, 1)</span>
+<span class="c">// Uses forward AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 28)" onmouseover="showTip(event, 'fs14', 28)" class="id">ddg</span> <span class="o">=</span> <span class="id">gradv</span> <span onmouseout="hideTip(event, 'fs12', 29)" onmouseover="showTip(event, 'fs12', 29)" class="id">g</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">4.</span><span class="pn">;</span> <span class="n">1.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Gradient of g at (2, 3)</span>
+<span class="c">// Uses reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs15', 30)" onmouseover="showTip(event, 'fs15', 30)" class="id">gg</span> <span class="o">=</span> <span class="id">grad</span> <span onmouseout="hideTip(event, 'fs12', 31)" onmouseover="showTip(event, 'fs12', 31)" class="id">g</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Hessian-vector product of g at (2, 3) with vector (4, 1)</span>
+<span class="c">// Uses reverse-on-forward AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 32)" onmouseover="showTip(event, 'fs16', 32)" class="id">hvg</span> <span class="o">=</span> <span class="id">hessianv</span> <span onmouseout="hideTip(event, 'fs12', 33)" onmouseover="showTip(event, 'fs12', 33)" class="id">g</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">4.</span><span class="pn">;</span> <span class="n">1.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Hessian of g at (2, 3)</span>
+<span class="c">// Uses reverse-on-forward AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs17', 34)" onmouseover="showTip(event, 'fs17', 34)" class="id">hg</span> <span class="o">=</span> <span class="id">hessian</span> <span onmouseout="hideTip(event, 'fs12', 35)" onmouseover="showTip(event, 'fs12', 35)" class="id">g</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// h: DV -&gt; DV</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs18', 36)" onmouseover="showTip(event, 'fs18', 36)" class="fn">h</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs13', 37)" onmouseover="showTip(event, 'fs13', 37)" class="id">x</span><span class="pn">:</span><span class="id">DV</span><span class="pn">)</span> <span class="o">=</span> <span class="id">toDV</span> <span class="pn">[</span><span onmouseout="hideTip(event, 'fs3', 38)" onmouseover="showTip(event, 'fs3', 38)" class="id">sin</span> <span onmouseout="hideTip(event, 'fs13', 39)" onmouseover="showTip(event, 'fs13', 39)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">0</span><span class="pn">]</span><span class="pn">;</span> <span onmouseout="hideTip(event, 'fs19', 40)" onmouseover="showTip(event, 'fs19', 40)" class="id">cos</span> <span onmouseout="hideTip(event, 'fs13', 41)" onmouseover="showTip(event, 'fs13', 41)" class="id">x</span><span class="pn">.</span><span class="pn">[</span><span class="n">1</span><span class="pn">]</span><span class="pn">]</span>
+
+<span class="c">// Jacobian-vector product of h at (2, 3) with vector (4, 1)</span>
+<span class="c">// Uses forward AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs20', 42)" onmouseover="showTip(event, 'fs20', 42)" class="id">jvh</span> <span class="o">=</span> <span class="id">jacobianv</span> <span onmouseout="hideTip(event, 'fs18', 43)" onmouseover="showTip(event, 'fs18', 43)" class="id">h</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">4.</span><span class="pn">;</span> <span class="n">1.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Transposed Jacobian-vector product of h at (2, 3) with vector (4, 1)</span>
+<span class="c">// Uses reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs21', 44)" onmouseover="showTip(event, 'fs21', 44)" class="id">tjvh</span> <span class="o">=</span> <span class="id">jacobianTv</span> <span onmouseout="hideTip(event, 'fs18', 45)" onmouseover="showTip(event, 'fs18', 45)" class="id">h</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">4.</span><span class="pn">;</span> <span class="n">1.</span><span class="pn">]</span><span class="pn">)</span>
+
+<span class="c">// Jacobian of h at (2, 3)</span>
+<span class="c">// Uses forward or reverse AD depending on the number of inputs and outputs</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 46)" onmouseover="showTip(event, 'fs22', 46)" class="id">jh</span> <span class="o">=</span> <span class="id">jacobian</span> <span onmouseout="hideTip(event, 'fs18', 47)" onmouseover="showTip(event, 'fs18', 47)" class="id">h</span> <span class="pn">(</span><span class="id">toDV</span> <span class="pn">[</span><span class="n">2.</span><span class="pn">;</span> <span class="n">3.</span><span class="pn">]</span><span class="pn">)</span>
+</code></pre></td>
+</tr>
+</table>
+<h2><a name="Using-the-Reverse-AD-Trace" class="anchor" href="#Using-the-Reverse-AD-Trace">Using the Reverse AD Trace</a></h2>
+<p>In addition to the high-level differentiation API that uses reverse AD (such as <strong>grad</strong>, <strong>jacobianTv</strong> ), you can make use of the exposed low-level <a href="https://en.wikipedia.org/wiki/Tracing_%28software%29">trace</a> functionality. Reverse AD automatically builds a global trace (or "tape", in AD literature) of all executed numeric operations, which allows a subsequent reverse sweep of these operations for propagating adjoint values in reverse.</p>
+<p>The technique is equivalent to the <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropagation</a> method commonly used for training artificial neural networks, which is essentially just a special case of reverse AD. (You can see an implementation of the backpropagation algorithm using reverse AD in the <a href="examples-neuralnetworks.html">neural networks example</a>.)</p>
+<p>For example, consider the computation</p>
+<p><span class="math">\[  e = (\sin a) (a + b) \; ,\]</span></p>
+<p>using the values <span class="math">\(a = 0.5\)</span> and <span class="math">\(b = 1.2\)</span>.</p>
+<p>During the execution of a program, this computation is carried out by the sequence of operations</p>
+<p><span class="math">\[ \begin{eqnarray*}
+ a &amp;=&amp; 0.5 \; ,\\
+ b &amp;=&amp; 1.2 \; , \\
+ c &amp;=&amp; \sin a \; , \\
+ d &amp;=&amp; a + b \; , \\
+ e &amp;=&amp; c \times d \; ,
+ \end{eqnarray*}\]</span></p>
+<p>the dependencies between which can be represented by the computational graph below.</p>
+<div class="row">
+    <div class="span6 offset2">
+        <img src="img/gettingstarted-reversead-graph.png" alt="Chart" style="width:350px;"/>
+    </div>
+</div>
+<p>Reverse mode AD works by propagating adjoint values from the output (e.g. <span class="math">\(\bar{e} = \frac{\partial e}{\partial e}\)</span>) towards the inputs (e.g. <span class="math">\(\bar{a} = \frac{\partial e}{\partial a}\)</span> and <span class="math">\(\bar{b} = \frac{\partial e}{\partial b}\)</span>), using adjoint propagation rules dictated by the dependencies in the computational graph:</p>
+<p><span class="math">\[ \begin{eqnarray*}
+ \bar{d} &amp;=&amp; \frac{\partial e}{\partial d} &amp;=&amp; \frac{\partial e}{\partial e} \frac{\partial e}{\partial d} &amp;=&amp; \bar{e} c\; , \\
+ \bar{c} &amp;=&amp; \frac{\partial e}{\partial c} &amp;=&amp; \frac{\partial e}{\partial e} \frac{\partial e}{\partial c} &amp;=&amp; \bar{e} d\; , \\
+ \bar{b} &amp;=&amp; \frac{\partial e}{\partial b} &amp;=&amp; \frac{\partial e}{\partial d} \frac{\partial d}{\partial b} &amp;=&amp; \bar{d} \; , \\
+ \bar{a} &amp;=&amp; \frac{\partial e}{\partial a} &amp;=&amp; \frac{\partial e}{\partial c} \frac{\partial c}{\partial a} + \frac{\partial e}{\partial d} \frac{\partial d}{\partial a} &amp;=&amp; \bar{c} (\cos a) + \bar{d} \; .\\
+ \end{eqnarray*}\]</span></p>
+<p>In order to write code using low-level AD functionality, you should understand the tagging method used for avoiding perturbation confusion. Users would need to write such code sporadically. The normal way of interacting with the library is through the high-level differentiation API, which handles these issues internally.</p>
+<p>You can get access to adjoints as follows.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span class="id">DiffSharp</span><span class="pn">.</span><span class="id">AD</span><span class="pn">.</span><span class="id">Float64</span>
+
+<span class="c">// Get a fresh global tag for this run of reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 48)" onmouseover="showTip(event, 'fs23', 48)" class="id">i</span> <span class="o">=</span> <span class="id">DiffSharp</span><span class="pn">.</span><span class="id">Util</span><span class="pn">.</span><span class="id">GlobalTagger</span><span class="pn">.</span><span class="id">Next</span>
+
+<span class="c">// Initialize input values for reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 49)" onmouseover="showTip(event, 'fs24', 49)" class="id">a</span> <span class="o">=</span> <span class="id">D</span> <span class="n">0.5</span> <span class="o">|&gt;</span> <span class="id">makeReverse</span> <span onmouseout="hideTip(event, 'fs23', 50)" onmouseover="showTip(event, 'fs23', 50)" class="id">i</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs25', 51)" onmouseover="showTip(event, 'fs25', 51)" class="id">b</span> <span class="o">=</span> <span class="id">D</span> <span class="n">1.2</span> <span class="o">|&gt;</span> <span class="id">makeReverse</span> <span onmouseout="hideTip(event, 'fs23', 52)" onmouseover="showTip(event, 'fs23', 52)" class="id">i</span>
+
+<span class="c">// Perform a series of operations involving the D type</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 53)" onmouseover="showTip(event, 'fs26', 53)" class="id">e</span> <span class="o">=</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs3', 54)" onmouseover="showTip(event, 'fs3', 54)" class="fn">sin</span> <span onmouseout="hideTip(event, 'fs24', 55)" onmouseover="showTip(event, 'fs24', 55)" class="id">a</span><span class="pn">)</span> <span class="o">*</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs24', 56)" onmouseover="showTip(event, 'fs24', 56)" class="id">a</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs25', 57)" onmouseover="showTip(event, 'fs25', 57)" class="id">b</span><span class="pn">)</span>
+
+<span class="c">// Propagate the adjoint value of 1 backward from e (or de/de = 1)</span>
+<span class="c">// i.e., calculate partial derivatives of e with respect to other variables</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs27', 58)" onmouseover="showTip(event, 'fs27', 58)" class="id">adjoints</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs26', 59)" onmouseover="showTip(event, 'fs26', 59)" class="id">e</span> <span class="o">|&gt;</span> <span class="id">computeAdjoints</span>
+
+<span class="c">// Read the adjoint values of the inputs</span>
+<span class="c">// You can calculate all partial derivatives in just one reverse sweep!</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs28', 60)" onmouseover="showTip(event, 'fs28', 60)" class="id">deda</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs27', 61)" onmouseover="showTip(event, 'fs27', 61)" class="id">adjoints</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs24', 62)" onmouseover="showTip(event, 'fs24', 62)" class="id">a</span><span class="pn">]</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs29', 63)" onmouseover="showTip(event, 'fs29', 63)" class="id">dedb</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs27', 64)" onmouseover="showTip(event, 'fs27', 64)" class="id">adjoints</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs25', 65)" onmouseover="showTip(event, 'fs25', 65)" class="id">b</span><span class="pn">]</span>
+</code></pre></td>
+</tr>
+</table>
+<table class="pre"><tr><td><pre><code>val a : D = DR (D 0.5,Noop,219u)
+val b : D = DR (D 1.2,Noop,219u)
+val e : D =
+  DR
+    (D 0.8150234156,
+     Mul_D_D
+       (DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,219u)),219u),
+        DR (D 1.7,Add_D_D (DR (D 0.5,Noop,219u),DR (D 1.2,Noop,219u)),219u)),
+     219u)
+val adjoints : Adjoints
+val deda : D = D 1.971315894
+val dedb : D = D 0.4794255386</code></pre></td></tr></table>
+<p>In addition to the partial derivatives of the dependent variable <span class="math">\(e\)</span> with respect to the independent variables <span class="math">\(a\)</span> and <span class="math">\(b\)</span>, you can also extract the partial derivatives of <span class="math">\(e\)</span> with respect to any intermediate variable involved in this computation.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">// Get a fresh global tag for this run of reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs30', 67)" onmouseover="showTip(event, 'fs30', 67)" class="id">i&#39;</span> <span class="o">=</span> <span class="id">DiffSharp</span><span class="pn">.</span><span class="id">Util</span><span class="pn">.</span><span class="id">GlobalTagger</span><span class="pn">.</span><span class="id">Next</span>
+
+<span class="c">// Initialize input values for reverse AD</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs31', 68)" onmouseover="showTip(event, 'fs31', 68)" class="id">a&#39;</span> <span class="o">=</span> <span class="id">D</span> <span class="n">0.5</span> <span class="o">|&gt;</span> <span class="id">makeReverse</span> <span onmouseout="hideTip(event, 'fs30', 69)" onmouseover="showTip(event, 'fs30', 69)" class="id">i&#39;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs32', 70)" onmouseover="showTip(event, 'fs32', 70)" class="id">b&#39;</span> <span class="o">=</span> <span class="id">D</span> <span class="n">1.2</span> <span class="o">|&gt;</span> <span class="id">makeReverse</span> <span onmouseout="hideTip(event, 'fs30', 71)" onmouseover="showTip(event, 'fs30', 71)" class="id">i&#39;</span>
+
+<span class="c">// Perform a series of operations involving the D type</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs33', 72)" onmouseover="showTip(event, 'fs33', 72)" class="id">c&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs3', 73)" onmouseover="showTip(event, 'fs3', 73)" class="fn">sin</span> <span onmouseout="hideTip(event, 'fs31', 74)" onmouseover="showTip(event, 'fs31', 74)" class="id">a&#39;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs34', 75)" onmouseover="showTip(event, 'fs34', 75)" class="id">d&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs31', 76)" onmouseover="showTip(event, 'fs31', 76)" class="id">a&#39;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs32', 77)" onmouseover="showTip(event, 'fs32', 77)" class="id">b&#39;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs35', 78)" onmouseover="showTip(event, 'fs35', 78)" class="id">e&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs33', 79)" onmouseover="showTip(event, 'fs33', 79)" class="id">c&#39;</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs34', 80)" onmouseover="showTip(event, 'fs34', 80)" class="id">d&#39;</span> <span class="c">// e&#39; = (sin a&#39;) * (a&#39; + b&#39;)</span>
+
+<span class="c">// Propagate the adjoint value of 1 backward from e</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs36', 81)" onmouseover="showTip(event, 'fs36', 81)" class="id">adjoints&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 82)" onmouseover="showTip(event, 'fs35', 82)" class="id">e&#39;</span> <span class="o">|&gt;</span> <span class="id">computeAdjoints</span>
+
+<span class="c">// Read the adjoint values</span>
+<span class="c">// You can calculate all partial derivatives in just one reverse sweep!</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs37', 83)" onmouseover="showTip(event, 'fs37', 83)" class="id">de&#39;da&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs36', 84)" onmouseover="showTip(event, 'fs36', 84)" class="id">adjoints&#39;</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs31', 85)" onmouseover="showTip(event, 'fs31', 85)" class="id">a&#39;</span><span class="pn">]</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs38', 86)" onmouseover="showTip(event, 'fs38', 86)" class="id">de&#39;db&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs36', 87)" onmouseover="showTip(event, 'fs36', 87)" class="id">adjoints&#39;</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs32', 88)" onmouseover="showTip(event, 'fs32', 88)" class="id">b&#39;</span><span class="pn">]</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs39', 89)" onmouseover="showTip(event, 'fs39', 89)" class="id">de&#39;dc&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs36', 90)" onmouseover="showTip(event, 'fs36', 90)" class="id">adjoints&#39;</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs33', 91)" onmouseover="showTip(event, 'fs33', 91)" class="id">c&#39;</span><span class="pn">]</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs40', 92)" onmouseover="showTip(event, 'fs40', 92)" class="id">de&#39;dd&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs36', 93)" onmouseover="showTip(event, 'fs36', 93)" class="id">adjoints&#39;</span><span class="pn">.</span><span class="pn">[</span><span onmouseout="hideTip(event, 'fs34', 94)" onmouseover="showTip(event, 'fs34', 94)" class="id">d&#39;</span><span class="pn">]</span>
+</code></pre></td>
+</tr>
+</table>
+<table class="pre"><tr><td><pre><code>val a' : D = DR (D 0.5,Noop,221u)
+val b' : D = DR (D 1.2,Noop,221u)
+val c' : D = DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,221u)),221u)
+val d' : D =
+  DR (D 1.7,Add_D_D (DR (D 0.5,Noop,221u),DR (D 1.2,Noop,221u)),221u)
+val e' : D =
+  DR
+    (D 0.8150234156,
+     Mul_D_D
+       (DR (D 0.4794255386,Sin_D (DR (D 0.5,Noop,221u)),221u),
+        DR (D 1.7,Add_D_D (DR (D 0.5,Noop,221u),DR (D 1.2,Noop,221u)),221u)),
+     221u)
+val adjoints' : Adjoints
+val de'da' : D = D 1.971315894
+val de'db' : D = D 0.4794255386
+val de'dc' : D = D 1.7
+val de'dd' : D = D 0.4794255386</code></pre></td></tr></table>
+
+          <div class="tip" id="fs1">val y : x:float -&gt; float</div>
+<div class="tip" id="fs2">val x : float</div>
+<div class="tip" id="fs3">val sin : value:&#39;T -&gt; &#39;T (requires member Sin)</div>
+<div class="tip" id="fs4">val sqrt : value:&#39;T -&gt; &#39;U (requires member Sqrt)</div>
+<div class="tip" id="fs5">val d1 : obj</div>
+<div class="tip" id="fs6">val d2 : obj</div>
+<div class="tip" id="fs7">val d3 : obj</div>
+<div class="tip" id="fs8">val d4 : obj</div>
+<div class="tip" id="fs9">val printf : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T</div>
+<div class="tip" id="fs10">val f : x:float -&gt; float</div>
+<div class="tip" id="fs11">val df : obj</div>
+<div class="tip" id="fs12">val g : x:&#39;a -&gt; float</div>
+<div class="tip" id="fs13">val x : &#39;a</div>
+<div class="tip" id="fs14">val ddg : obj</div>
+<div class="tip" id="fs15">val gg : obj</div>
+<div class="tip" id="fs16">val hvg : obj</div>
+<div class="tip" id="fs17">val hg : obj</div>
+<div class="tip" id="fs18">val h : x:&#39;a -&gt; &#39;b</div>
+<div class="tip" id="fs19">val cos : value:&#39;T -&gt; &#39;T (requires member Cos)</div>
+<div class="tip" id="fs20">val jvh : obj</div>
+<div class="tip" id="fs21">val tjvh : obj</div>
+<div class="tip" id="fs22">val jh : obj</div>
+<div class="tip" id="fs23">val i : obj</div>
+<div class="tip" id="fs24">val a : float</div>
+<div class="tip" id="fs25">val b : float</div>
+<div class="tip" id="fs26">val e : float</div>
+<div class="tip" id="fs27">val adjoints : obj</div>
+<div class="tip" id="fs28">val deda : obj</div>
+<div class="tip" id="fs29">val dedb : obj</div>
+<div class="tip" id="fs30">val i&#39; : obj</div>
+<div class="tip" id="fs31">val a&#39; : float</div>
+<div class="tip" id="fs32">val b&#39; : float</div>
+<div class="tip" id="fs33">val c&#39; : float</div>
+<div class="tip" id="fs34">val d&#39; : float</div>
+<div class="tip" id="fs35">val e&#39; : float</div>
+<div class="tip" id="fs36">val adjoints&#39; : obj</div>
+<div class="tip" id="fs37">val de&#39;da&#39; : obj</div>
+<div class="tip" id="fs38">val de&#39;db&#39; : obj</div>
+<div class="tip" id="fs39">val de&#39;dc&#39; : obj</div>
+<div class="tip" id="fs40">val de&#39;dd&#39; : obj</div>
+         
+        </div>
+        <div class="span3">
+          <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
+
+          <ul class="nav nav-list" id="menu">
+            <li class="nav-header">DiffSharp</li>
+            <li class="divider"></li>
+            <li><a href="index.html">Home Page</a></li>
+            <li><a href="">GitHub Page</a></li>
+            <li><a href="download.html">Download and FAQ</a></li>
+            <li><a href="/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li class="divider"></li>
+            <li><a href="api-overview.html">API Overview</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
+            <li><a href="reference/index.html">API Reference</a></li>
+
+            <li class="nav-header">Examples</li>
+            <li class="divider"></li>
+
+            <li class="nav-header">Machine Learning</li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
+
+            <li class="nav-header">Authors</li>
+            <li class="divider"></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

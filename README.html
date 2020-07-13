@@ -29,13 +29,63 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
-        <h3 class="muted">{project-name}</h3>
+        <h3 class="muted">DiffSharp</h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
-          {document}
-          {tooltips}          
+          <h1><a name="Running-notebooks-in-MyBinder" class="anchor" href="#Running-notebooks-in-MyBinder">Running notebooks in MyBinder</a></h1>
+<p>The <code>Dockerfile</code> and <code>NuGet.config</code> allow us to run generated notebooks in <a href="https://mybinder.org">MyBinder</a></p>
+<p>Since the generated docs are not yet "up", a recent version may be found in the gh-pages branch of dsyme/DiffSharp:</p>
+<ul>
+<li><p><code>gh-pages</code> branch of dsyme/DiffSharp:  <a href="https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages"><img src="https://mybinder.org/badge_logo.svg" alt="Binder" /></a></p></li>
+<li><p><code>index.ipynb</code> for <code>dev</code> branch of dsyme/DiffSharp: <a href="https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=notebooks/index.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt="Binder" /></a></p></li>
+</ul>
+<p>This published version of the docs can be refreshed by</p>
+<ol>
+<li>
+<p>Build FSharp.Formatting</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="id">git</span> <span class="id">clone</span> <span class="id">https</span><span class="pn">:</span><span class="c">//github.com/fsprojects/FSharp.Formatting  ../tmp/FSharp.Formatting</span>
+<span class="id">cd</span> <span class="o">..</span>
+<span class="pn">.</span>
+</code></pre></td>
+</tr>
+</table>
+</li>
+<li>
+<p>Generate Docs (after building)</p>
+<p>rmdir /s /q ..\tmp
+git clone <a href="https://github.com/DiffSharp/DiffSharp">https://github.com/DiffSharp/DiffSharp</a> ../tmp/DiffSharp-docs -b tmpdocs --depth 1
+pushd ..\tmp\DiffSharp-docs
+git rm -fr *
+popd ....\DiffSharp
+..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe build --output ..\tmp\DiffSharp-docs
+pushd ..\tmp\DiffSharp-docs
+git add .
+git commit -a -m "commit docs"
+git push -f <a href="https://github.com/DiffSharp/DiffSharp">https://github.com/DiffSharp/DiffSharp</a> tmpdocs
+git push -f <a href="https://github.com/dsyme/DiffSharp">https://github.com/dsyme/DiffSharp</a> tmpdocs
+popd ....\DiffSharp</p>
+</li>
+</ol>
+<p>Typical URL and badges when docs are published:</p>
+<ul>
+<li><p><code>gh-pages</code> branch of DiffSharp/DiffSharp:  <a href="https://mybinder.org/v2/gh/DiffSharp/DiffSharp/gh-pages"><img src="https://mybinder.org/badge_logo.svg" alt="Binder" /></a></p></li>
+<li><p><code>index.ipynb</code> for <code>dev</code> branch of DiffSharp/DiffSharp: <a href="https://mybinder.org/v2/gh/DiffSharp/DiffSharp/gh-pages?filepath=notebooks/index.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt="Binder" /></a></p></li>
+</ul>
+<h1><a name="How-it-works" class="anchor" href="#How-it-works">How it works</a></h1>
+<p>Notebooks are generated for all .md and .fsx files under docs as part of the build.</p>
+<ul>
+<li><p>Dockerfile - see <a href="https://github.com/dotnet/interactive/blob/master/docs/CreateBinder.md">https://github.com/dotnet/interactive/blob/master/docs/CreateBinder.md</a></p></li>
+<li>NuGet.config - likewise</li>
+</ul>
+<p>See MyBinder for creating URLs</p>
+
+                   
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -51,19 +101,20 @@
             <li class="nav-header">Getting Started</li>
             <li class="divider"></li>
             <li><a href="api-overview.html">API Overview</a></li>
-            <li><a href="gettingstarted-nestedad.html">Nested AD</a></li>
+            <li><a href="gettingstarted-topic1.html">Getting Started Topic 1</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
             <li class="divider"></li>
 
             <li class="nav-header">Machine Learning</li>
-            <li><a href="examples-gradientdescent.html">Gradient Descent</a></li>
+            <li><a href="examples-topic1.html">Topic 1</a></li>
 
             <li class="nav-header">Authors</li>
             <li class="divider"></li>
-            <li><a href="https://www.cs.nuim.ie/~gunes/">Atılım Güneş Baydin</a></li>
+            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
             <li><a href="https://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
           </ul>
         </div>
       </div>
