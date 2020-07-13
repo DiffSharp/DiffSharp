@@ -1,6 +1,6 @@
 ﻿(*** condition: prepare ***)
-#r "../../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
-#r "../../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
+#r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
+#r "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
@@ -15,6 +15,8 @@
 (**
 DiffSharp: Differentiable Functional Programming
 ================================================
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=notebooks/index.ipynb)
 
 DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) tensor-based library.
 

@@ -1,13 +1,21 @@
-﻿(*** hide ***)
-//#if NOTEBOOK
-//#r "nuget: DiffSharp-lite"
-//#else
+﻿(*** condition: prepare ***)
 #r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
 #r "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
-//#endif
+(*** condition: fsx ***)
+#if FSX
+#r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-lite,{{package-version}}"
+#endif // FSX
+(*** condition: ipynb ***)
+#if IPYNB
+#i "nuget: https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-lite,{{package-version}}"
+#endif // IPYNB
 
 
 (**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=notebooks/examples-topic1.ipynb)
+
 Gradient Descent
 ================
 
@@ -43,7 +51,8 @@ let t x = dsharp.tensor x
 //   epsilon: threshold
 let rec gradientDescent f x eta epsilon =
     let g = dsharp.grad f x
-    if g.norm < epsilon then x 
+    // TODO: this should be norm
+    if g.sum() < epsilon then x 
     else gradientDescent f (x - eta * g) eta epsilon
 
 (**
@@ -54,7 +63,7 @@ let inline f (x:Tensor) =  sin x.[0] + cos x.[1]
 
 // Find the minimum of f
 // Start from (1, 1), step size 0.9, threshold 0.00001
-let xmin = gd f (t [1.; 1.]) (t 0.9) (t 0.00001)
+let xmin = gradientDescent f (t [1.; 1.]) (t 0.9) (t 0.00001)
 let fxmin = f xmin
 
 (*** hide, define-output: o ***)
