@@ -13,7 +13,7 @@
 #endif // IPYNB
 
 (**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=notebooks/gett-ingstarted-topic1.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=gett-ingstarted-topic1.ipynb)
 
 Nested AD
 =========

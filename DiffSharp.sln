@@ -27,26 +27,13 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-cuda-windows", "b
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-lite", "bundles\DiffSharp-lite\DiffSharp-lite.fsproj", "{97D6F7AE-3ACA-4B3A-B4AF-BB22A85A05A3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docsrc", "docsrc", "{8A867B18-2C22-4DEE-AEE2-0148C7C9DD68}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{841AB16F-508E-4CEB-846C-0CCA056842B1}"
 	ProjectSection(SolutionItems) = preProject
-		docsrc\input\api-overview.fsx = docsrc\input\api-overview.fsx
-		docsrc\input\benchmarks.fsx = docsrc\input\benchmarks.fsx
-		docsrc\input\csharp.fsx = docsrc\input\csharp.fsx
-		docsrc\input\download.fsx = docsrc\input\download.fsx
-		docsrc\input\examples-gradientdescent.fsx = docsrc\input\examples-gradientdescent.fsx
-		docsrc\input\examples-hamiltonianmontecarlo.fsx = docsrc\input\examples-hamiltonianmontecarlo.fsx
-		docsrc\input\examples-helmholtzenergyfunction.fsx = docsrc\input\examples-helmholtzenergyfunction.fsx
-		docsrc\input\examples-inversekinematics.fsx = docsrc\input\examples-inversekinematics.fsx
-		docsrc\input\examples-kinematics.fsx = docsrc\input\examples-kinematics.fsx
-		docsrc\input\examples-kmeansclustering.fsx = docsrc\input\examples-kmeansclustering.fsx
-		docsrc\input\examples-lhopitalsrule.fsx = docsrc\input\examples-lhopitalsrule.fsx
-		docsrc\input\examples-neuralnetworks.fsx = docsrc\input\examples-neuralnetworks.fsx
-		docsrc\input\examples-newtonsmethod.fsx = docsrc\input\examples-newtonsmethod.fsx
-		docsrc\input\examples-stochasticgradientdescent.fsx = docsrc\input\examples-stochasticgradientdescent.fsx
-		docsrc\input\gettingstarted-nestedad.fsx = docsrc\input\gettingstarted-nestedad.fsx
-		docsrc\input\gettingstarted-typeinference.fsx = docsrc\input\gettingstarted-typeinference.fsx
-		docsrc\input\helpers.fsx = docsrc\input\helpers.fsx
-		docsrc\input\index.fsx = docsrc\input\index.fsx
+		docs\_template.html = docs\_template.html
+		docs\api-overview.fsx = docs\api-overview.fsx
+		docs\examples-topic1.fsx = docs\examples-topic1.fsx
+		docs\gettingstarted-topic1.fsx = docs\gettingstarted-topic1.fsx
+		docs\index.fsx = docs\index.fsx
 	EndProjectSection
 EndProject
 Global

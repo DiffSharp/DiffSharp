@@ -4,35 +4,30 @@
 
 The `Dockerfile` and `NuGet.config` allow us to run generated notebooks in [MyBinder](https://mybinder.org)
 
-Since the generated docs are not yet "up", a recent version may be found in the gh-pages branch of dsyme/DiffSharp:
-
 * `gh-pages` branch of dsyme/DiffSharp:  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages)
 
-* `index.ipynb` for `dev` branch of dsyme/DiffSharp: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=notebooks/index.ipynb)
+* `index.ipynb` for `dev` branch of dsyme/DiffSharp: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=index.ipynb)
 
-This published version of the docs can be refreshed by
+# Generating docs
 
-1. Build FSharp.Formatting
+This published version of the docs can be refreshed by these commands:
 
-       git clone https://github.com/fsprojects/FSharp.Formatting  ../tmp/FSharp.Formatting
+1. Prepare one off
+
+    dotnet tool restore
+    git clone https://github.com/dsyme/DiffSharp ../DiffSharp-docs -b gh-pages --depth 1
+
+2. Build
+
+    dotnet build
+    dotnet fsdocs build --clean --output ../DiffSharp-docs
+    bash -c "(cd ../DiffSharp-docs && git add . && git commit -a -m doc-update && git push -f https://github.com/dsyme/DiffSharp gh-pages)"
+
+To use a local builg of FSharp.Formatting:
+
+       git clone https://github.com/fsprojects/FSharp.Formatting  ../FSharp.Formatting
        cd ..\FSharp.Formatting
        .\build
-
-2. Generate Docs (after building)
-
-    rmdir /s /q ..\tmp
-    git clone https://github.com/dsyme/DiffSharp ../tmp/DiffSharp-docs -b gh-pages --depth 1
-    pushd ..\tmp\DiffSharp-docs
-    git rm -fr *
-    popd 
-
-    ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe build --output ..\tmp\DiffSharp-docs
-    pushd ..\tmp\DiffSharp-docs
-    git add .
-    git commit -a -m "commit docs"
-    git push -f https://github.com/dsyme/DiffSharp gh-pages
-    popd 
-
 
 # How it works
 
