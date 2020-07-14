@@ -155,7 +155,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
                     vals, dsharp.tensor(counts)
             _values <- newValues
             _categorical <- Categorical(logits=newLogWeights)
-        _weighted <- not (allEqual _categorical.probs)
+        _weighted <- not (allEqual (_categorical.probs.unstack()))
     member d.values = _values
     member d.valuesTensor = _valuesTensor.Force()
     member d.length = d.values.Length
@@ -198,8 +198,8 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
         Empirical(results.ToArray())
     member d.combineDuplicates() = Empirical(d.values, logWeights=d.logWeights, combineDuplicates=true)
     member d.expectation (f:Tensor->Tensor) =
-        if d.isWeighted then d.valuesTensor |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
-        else d.valuesTensor |> Seq.map f |> dsharp.stack |> dsharp.mean(0)
+        if d.isWeighted then d.valuesTensor.unstack() |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
+        else d.valuesTensor.unstack() |> Seq.map f |> dsharp.stack |> dsharp.mean(0)
     member d.mean = d.expectation(id)
     member d.variance = let mean = d.mean in d.expectation(fun x -> (x-mean)**2)
     member d.stddev = dsharp.sqrt(d.variance)

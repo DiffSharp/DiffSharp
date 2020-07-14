@@ -287,7 +287,7 @@ type TestDistributions () =
             let values = combo.tensor([1,2,3])
             let logWeights = combo.tensor([1,2,3])
 
-            let dist = Empirical(values, logWeights=logWeights)
+            let dist = Empirical(values.unstack(), logWeights=logWeights)
             let distMean = dist.mean
             let distStddev = dist.stddev
             let distMeanCorrect = combo.tensor(2.575210)
@@ -332,7 +332,7 @@ type TestDistributions () =
             let values = combo.tensor([0,1,2,2,2,2,3,4,4,5,5,5,6,7,7,8,9])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592, 0.4845, 0.7710, 0.3588, 0.8622, 0.7621, 0.6102, 0.9421, 0.0774, 0.8294, 0.7371, 0.3742])
 
-            let dist = Empirical(values, weights=weights)
+            let dist = Empirical(values.unstack(), weights=weights)
             let distMode = dist.mode
             let distModeCorrect = combo.tensor(5)
             let distLength = dist.length
@@ -340,7 +340,7 @@ type TestDistributions () =
             Assert.AreEqual(distModeCorrect, distMode)
             Assert.AreEqual(distLengthCorrect, distLength)
 
-            let distCombined = Empirical(values, weights=weights).combineDuplicates()
+            let distCombined = Empirical(values.unstack(), weights=weights).combineDuplicates()
             let distCombinedMode = distCombined.mode
             let distCombinedModeCorrect = combo.tensor(5)
             let distCombinedLength = distCombined.length
@@ -348,7 +348,7 @@ type TestDistributions () =
             Assert.AreEqual(distCombinedModeCorrect, distCombinedMode)
             Assert.AreEqual(distCombinedLengthCorrect, distCombinedLength)
 
-            let distUnweighted = Empirical(values)
+            let distUnweighted = Empirical(values.unstack())
             let distUnweightedMode = distUnweighted.mode
             let distUnweightedModeCorrect = combo.tensor(2)
             let distUnweightedLength = distUnweighted.length
@@ -356,7 +356,7 @@ type TestDistributions () =
             Assert.AreEqual(distUnweightedModeCorrect, distUnweightedMode)
             Assert.AreEqual(distUnweightedLengthCorrect, distUnweightedLength)
 
-            let distUnweightedCombined = Empirical(values).combineDuplicates()
+            let distUnweightedCombined = Empirical(values.unstack()).combineDuplicates()
             let distUnweightedCombinedMode = distUnweightedCombined.mode
             let distUnweightedCombinedModeCorrect = combo.tensor(2)
             let distUnweightedCombinedLength = distUnweightedCombined.length
@@ -370,7 +370,7 @@ type TestDistributions () =
             let values = combo.tensor([0,1,2,3,4,5])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592])
 
-            let dist = Empirical(values, weights=weights)
+            let dist = Empirical(values.unstack(), weights=weights)
             let distMean = dist.mean
             let distStddev = dist.stddev
             let distMeanCorrect = combo.tensor(2.8451)

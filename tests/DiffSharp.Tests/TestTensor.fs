@@ -5567,9 +5567,9 @@ type TestTensor () =
     member _.TestTensorIEnumerable () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3])
-            t1 |> Seq.iteri (fun i v -> Assert.AreEqual(t1.[i], v))
+            t1.unstack() |> Seq.iteri (fun i v -> Assert.AreEqual(t1.[i], v))
             let t2 = combo.tensor([[1,2,3], [4,5,6]])
-            t2 |> Seq.iteri (fun i v -> Assert.AreEqual(t2.[i], v))
+            t2.unstack() |> Seq.iteri (fun i v -> Assert.AreEqual(t2.[i], v))
 
     [<Test>]
     member _.TestTensorFSharpCoreOps () =

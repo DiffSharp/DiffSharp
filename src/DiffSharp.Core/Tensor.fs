@@ -230,18 +230,6 @@ type Tensor =
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
 
-    // Needed because we implement IEnumerable. Otherwise, for example, nunit Assert.AreEqual iterates over the IEnumerable and checks for equality of members, instead of using t.Equals
-    interface System.IEquatable<Tensor> with
-        member t.Equals(other) = t.Equals(other)
-
-    interface System.Collections.Generic.IEnumerable<Tensor> with
-        member t.GetEnumerator() =
-            if t.dim < 1 then failwithf "Cannot enumerate Tensor with dim < 1"
-            (Seq.init t.shape.[0] (fun i -> t.[i])).GetEnumerator()
-    interface System.Collections.IEnumerable with
-        member t.GetEnumerator() =
-            upcast (t :> System.Collections.Generic.IEnumerable<Tensor>).GetEnumerator()
-
     static member Zero = Tensor(RawTensor.Zero())
     static member One = Tensor(RawTensor.One())
 
