@@ -18,34 +18,32 @@ DiffSharp: Differentiable Functional Programming
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=index.ipynb)
 
-DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) tensor-based library.
+DiffSharp is a tensor library with advanced support for taking derivatives of tensor code using [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation)
 
-AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator
-level during program execution. AD is different from [numerical differentiation](https://en.wikipedia.org/wiki/Numerical_differentiation),
-which is prone to truncation and round-off errors, and [symbolic differentiation](https://en.wikipedia.org/wiki/Symbolic_computation), which
-is affected by expression swell and cannot fully handle algorithmic control flow.
+DiffSharp is designed for use in machine learning, probabilistic programming, optimization and other domains.
 
-Using the DiffSharp library, differentiation (gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
-products) is applied using higher-order functions, that is, functions which take other functions as arguments. Your functions can use
-the full expressive capability of the language including control flow. DiffSharp allows composition of differentiation using nested
+Using DiffSharp, advanced differentives including gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
+products are possible. This goes beyond the simple reverse-mode gradients of traditional tensor libraries such as TensorFlow and PyTorch.
+The full expressive capability of the language including control flow while still preserving the ability to take
+advanced differentiation compositions. These can use nested
 forward and reverse AD up to any level, meaning that you can compute exact higher-order derivatives or differentiate functions
 that are internally making use of differentiation. Please see the [API Overview](api-overview.html) page for a list of available operations.
 
 The library is developed by [Atılım Güneş Baydin](https://www.cs.nuim.ie/~gunes/), [Don Syme](https://www.microsoft.com/en-us/research/people/dsyme/)
-and contributors for applications in machine learning.
+and other contributors. Please join us!
 
-DiffSharp is implemented in F#. It is tested on Linux and Windows.
-
-> Version 1.0 is a reimplementation as a tensor library using LibTorch as the primary backend.
+> DiffSharp 1.0 is implemented in F# and the default backend uses the PyTorch C++ implementatio of tensors. It is tested on Linux and Windows.
 
 Current Features and Roadmap
 ----------------------------
 
 The primary features of DiffSharp 1.0 are:
 
-- _Functional nested differentiation for tensor primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
+- _Tensor programming model for F#_
+- _Reference backend for correctness testing_
+- _[PyTorch](https://pytorch.org/) backend for CUDA support and highly optimized native tensor operations_
+- _Nested differentiation for tensors, supporting forward and reverse AD, or any combination thereof, up to any level_
 - _Matrix-free Jacobian- and Hessian-vector products_
-- _[PyTorch](https://pytorch.org/) backend for highly optimized native tensor operations_
 
 See also our [github issues](https://github.com/DiffSharp/DiffSharp/issues/)
 
@@ -55,7 +53,6 @@ Quick Usage Example
 -------------------
 *)
 
-// Use mixed mode nested AD
 open DiffSharp
 
 // A scalar-to-scalar function

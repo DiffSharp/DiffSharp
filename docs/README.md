@@ -17,19 +17,39 @@ This published version of the docs can be refreshed by these commands:
     dotnet tool restore
     git clone https://github.com/dsyme/DiffSharp ../DiffSharp-docs -b gh-pages --depth 1
 
-2. Build
+2. To Iterate on Literate Docs 
 
-    dotnet build
-    dotnet fsdocs build --clean --output ../DiffSharp-docs
+    dotnet fsdocs watch --eval
+
+    open http://localhost:8901/index.html
+
+3. To Iterate on API Docs (requires evaluation off since DLLs get locked)
+
+    dotnet fsdocs watch 
+
+    explorer http://localhost:8901/reference/index.html
+
+4. Build Final and Release
+
+    dotnet build 
+    dotnet fsdocs build --eval --clean --output ../DiffSharp-docs
     bash -c "(cd ../DiffSharp-docs && git add . && git commit -a -m doc-update && git push -f https://github.com/dsyme/DiffSharp gh-pages)"
 
-To use a local builg of FSharp.Formatting:
+## Generating docs using  a local build of FSharp.Formatting
+
+To use a local build of FSharp.Formatting:
 
        git clone https://github.com/fsprojects/FSharp.Formatting  ../FSharp.Formatting
-       cd ..\FSharp.Formatting
+       pushd ..\FSharp.Formatting
        .\build
+       popd
 
-# How it works
+Then:
+
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe watch 
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe build --clean --output ../DiffSharp-docs
+
+## Generated Notebooks
 
 Notebooks are generated for all .md and .fsx files under docs as part of the build.
 
