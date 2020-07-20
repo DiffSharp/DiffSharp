@@ -30,7 +30,7 @@
      <Version>0.9.5</Version>
      <Authors>Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
-     <PackageProjectUrl>https://diffsharp.github.io/DiffSharp</PackageProjectUrl>
+     <PackageProjectUrl>https://dsyme.github.io/DiffSharp</PackageProjectUrl>
      <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
      <RepositoryBranch>dev</RepositoryBranch>
      <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
