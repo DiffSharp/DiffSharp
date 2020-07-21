@@ -28,8 +28,16 @@
 
   <PropertyGroup>
      <Version>0.9.5</Version>
-     <Authors>Gunes Baydin and DiffSharp contributors</Authors>
+     <Authors>Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
+     <PackageProjectUrl>https://dsyme.github.io/DiffSharp</PackageProjectUrl>
+     <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
+     <RepositoryBranch>dev</RepositoryBranch>
+     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+     <RepositoryType>git</RepositoryType>
+     <Copyright>Copyright 2014-2020</Copyright>
+     <PackageTags>F# fsharp ML AI Machine Learning PyTorch Automatic Differentiation Gradients</PackageTags>
+
 
      <!-- local build uses number unique by day -->
      <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
