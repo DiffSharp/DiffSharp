@@ -18,7 +18,7 @@ DiffSharp: Differentiable Functional Programming
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dsyme/DiffSharp/gh-pages?filepath=index.ipynb)
 
-DiffSharp is a tensor library with advanced support for taking derivatives of tensor code using [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation)
+DiffSharp is a tensor library with advanced support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
 
 DiffSharp is designed for use in machine learning, probabilistic programming, optimization and other domains.
 
