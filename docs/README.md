@@ -21,13 +21,9 @@ This published version of the docs can be refreshed by these commands:
 
     dotnet fsdocs watch --eval
 
-    open http://localhost:8901/index.html
-
 3. To Iterate on API Docs (requires evaluation off since DLLs get locked)
 
     dotnet fsdocs watch 
-
-    explorer http://localhost:8901/reference/index.html
 
 4. Build Final and Release
 

@@ -32,7 +32,7 @@ that are internally making use of differentiation. Please see the [API Overview]
 The library is developed by [Atılım Güneş Baydin](https://www.cs.nuim.ie/~gunes/), [Don Syme](https://www.microsoft.com/en-us/research/people/dsyme/)
 and other contributors. Please join us!
 
-> DiffSharp 1.0 is implemented in F# and the default backend uses the PyTorch C++ implementatio of tensors. It is tested on Linux and Windows.
+> DiffSharp 1.0 is implemented in F# and the default backend uses PyTorch C++ tensors. It is tested on Linux and Windows.
 
 Current Features and Roadmap
 ----------------------------
@@ -45,9 +45,8 @@ The primary features of DiffSharp 1.0 are:
 - _Nested differentiation for tensors, supporting forward and reverse AD, or any combination thereof, up to any level_
 - _Matrix-free Jacobian- and Hessian-vector products_
 
-See also our [github issues](https://github.com/DiffSharp/DiffSharp/issues/)
-
-Please join with us to help us get the API right and ensure model development with DiffSharp is as succinct and clean as possible/
+Please join with us to help us get the API right and ensure model development with DiffSharp is as succinct and clean as
+possible. See also our [github issues](https://github.com/DiffSharp/DiffSharp/issues/). 
 
 Quick Usage Example
 -------------------
