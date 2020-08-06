@@ -3,7 +3,8 @@ namespace DiffSharp
 open DiffSharp.Backends
 open DiffSharp.Util
 
-// Tensor operations
+/// Tensor operations
+
 type DiffSharp =
     static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
     static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
