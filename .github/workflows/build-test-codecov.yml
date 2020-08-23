@@ -24,4 +24,4 @@ jobs:
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --no-restore --verbosity normal
     - name: Codecov
-    uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v1
