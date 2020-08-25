@@ -157,8 +157,21 @@ module Shape =
         let outputShape = [| ncols; nrows |]
         outputShape
 
-    let checkCanConv1d (dtype1: Dtype) (dtype2: Dtype) (shape1:Shape) (shape2:Shape) (stride: int) (padding: int) (dilation: int) =
-        if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    let checkDeviceTypes (deviceType1: DeviceType) (deviceType2: DeviceType) =
+        if deviceType1 <> deviceType2 then failwithf "Expecting input device types %A and %A to be the same" deviceType1 deviceType2
+
+    let checkDtypes (dtype1: Dtype) (dtype2: Dtype) =
+        if dtype1 <> dtype2 then failwithf "Expecting input tensor types %A and %A to be the same" dtype1 dtype2
+
+    let private checkConvDType op (dtype: Dtype) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported op dtype
+        | _ -> ()
+
+    let checkCanConv1d (deviceType1: DeviceType) (deviceType2: DeviceType) (dtype1: Dtype) (dtype2: Dtype) (shape1:Shape) (shape2:Shape) (stride: int) (padding: int) (dilation: int) =
+        checkDeviceTypes deviceType1 deviceType2
+        checkDtypes dtype1 dtype2
+        checkConvDType "conv1d" dtype1
         if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
         if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
         if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
@@ -176,8 +189,10 @@ module Shape =
         let outputShape = [|batchSize; outputChannels; outputSize|]
         batchSize, inputChannels, kernelLength, outputChannels, outputSize, outputShape
 
-    let checkCanConv2d (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
-        if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    let checkCanConv2d (deviceType1: DeviceType) (deviceType2: DeviceType) (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
+        checkDeviceTypes deviceType1 deviceType2
+        checkDtypes dtype1 dtype2
+        checkConvDType "conv2d" dtype1
         if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
         if stride.Length <> 2 then failwithf "Expecting stride (%A) to be a two-dimensional array" stride
         if padding.Length <> 2 then failwithf "Expecting padding (%A) to be a two-dimensional array" padding
@@ -203,8 +218,10 @@ module Shape =
         let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
         batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape
 
-    let checkCanConv3d (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
-        if dtype1 <> dtype2 then failwithf "Expecting input type %A and weight type %A to be the same" dtype1 dtype2
+    let checkCanConv3d (deviceType1: DeviceType) (deviceType2: DeviceType) (dtype1: Dtype) (dtype2: Dtype) (shape1: Shape) (shape2: Shape) (stride: int[]) (padding: int[]) (dilation: int[]) =
+        checkDeviceTypes deviceType1 deviceType2
+        checkDtypes dtype1 dtype2
+        checkConvDType "conv3d" dtype1
         if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
         if stride.Length <> 3 then failwithf "Expecting stride (%A) to be a length-three array" stride
         if padding.Length <> 3 then failwithf "Expecting padding (%A) to be a length-three array" padding
@@ -235,7 +252,10 @@ module Shape =
         let outputShape = [|batchSize; outputChannels; outputDepth; outputHeight; outputWidth|]
         batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape
 
-    let checkCanMaxpool1d (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
+    let checkCanMaxpool1d (dtype: Dtype) (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool1d" dtype
+        | _ ->
         if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
         if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
         if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
@@ -250,7 +270,10 @@ module Shape =
         let outputShape = [|batchSize; channels; outputSize|]
         batchSize, channels, inputSize, outputSize, outputShape
 
-    let checkCanMaxpool2d (shape: Shape) (kernelSize: int[]) (stride: int[]) (padding: int[]) =
+    let checkCanMaxpool2d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (stride: int[]) (padding: int[]) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool2d" dtype
+        | _ ->
         if shape.Length <> 4 then failwithf "Expecting a 4d tensor (NxCxHxW: batchSize x inputChannels x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
         if padding.[0] < 0 || padding.[1] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
@@ -271,7 +294,10 @@ module Shape =
         let outputShape = [|batchSize; channels; outputHeight; outputWidth|]
         (batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape)
 
-    let checkCanMaxpool3d (shape: Shape) (kernelSize: int[]) (stride: int[]) (padding: int[]) =
+    let checkCanMaxpool3d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (stride: int[]) (padding: int[]) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool3d" dtype
+        | _ ->
         if shape.Length <> 5 then failwithf "Expecting a 5d tensor (NxCxDxHxW: batchSize x inputChannels x inputDepth x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 || kernelSize.[2] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
         if padding.[0] < 0 || padding.[1] < 0 || padding.[2] < 0 then failwithf "Expecting all paddings (%A) >= 0" padding
@@ -297,7 +323,10 @@ module Shape =
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
 
-    let checkCanMaxunpool1d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+    let checkCanMaxunpool1d (dtype: Dtype) (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxunpool2d" dtype
+        | _ ->
         if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 3 then failwithf "Expecting outputSize (%A) to be 3-dimensional" outputSize
         let batchSize = shape.[0]
@@ -307,7 +336,10 @@ module Shape =
         let outputShape = [|batchSize; channels; outputSize.[2]|]
         batchSize, channels, inputSize, outputShape
 
-    let checkCanMaxunpool2d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+    let checkCanMaxunpool2d (dtype: Dtype) (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxunpool2d" dtype
+        | _ ->
         if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 4 then failwithf "Expecting outputSize (%A) to be 4-dimensional" outputSize
         let batchSize = shape.[0]
@@ -318,7 +350,10 @@ module Shape =
         let outputShape = [|batchSize; channels; outputSize.[2]; outputSize.[3]|]
         batchSize, channels, (inputHeight, inputWidth), outputShape
 
-    let checkCanMaxunpool3d (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+    let checkCanMaxunpool3d (dtype: Dtype) (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxunpool2d" dtype
+        | _ ->
         if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
         if outputSize.Length <> 5 then failwithf "Expecting outputSize (%A) to be 5-dimensional" outputSize
         let batchSize = shape.[0]

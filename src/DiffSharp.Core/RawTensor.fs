@@ -19,6 +19,8 @@ type [<AbstractClass>]
     abstract Random: shape:int[] * device: Device -> RawTensor
     abstract RandomNormal: shape:int[] * device: Device -> RawTensor
     abstract RandomInt: shape:int[] * low:int * high:int * device: Device -> RawTensor
+    abstract GetDevices: ?deviceType: DeviceType -> Device list
+    abstract IsDeviceTypeSupported: deviceType: DeviceType -> bool
     
     static member Seed(?seed:int) =
         let seed = defaultArg seed (int DateTime.Now.Ticks)
@@ -68,6 +70,7 @@ and [<AbstractClass>]
     member t.Nelement = shapeLength shape
     member t.Dtype = dtype
     member t.Device = device
+    member t.DeviceType = device.DeviceType
     member t.Backend = backend
     override t.ToString() = t.GetString()
     

@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <!-- execution projects must reference a libtorch runtime redist -->
     <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+    <!-- <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" /> -->
   </ItemGroup>
 
 </Project>

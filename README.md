@@ -137,6 +137,21 @@ When rebuilding the TorchSharp you will need to clear your package cache to pick
 
 The LibTorch packages are quite large and you may need to watch disk space.
 
+## The Reference Backend
 
+The "Reference" backend defines the semantics we expect of the Torch backend.
+
+Sometimes configurations of Torch expose small differences in semantics (e.g. when using CUDA, or functionality not suppored for integer tensors).  We generally seek to paper
+over those cracks by working around the problems in the Torch backend. 
+
+## Developing and Testing on GPU
+
+By default in-branch testing is only done on CPU.  To enable on GPU/CUDA you must:
+
+1. Make sure you have a device eligible for CUDA 10.2 and all device drivers installed (e.g. install the appropriate NVIDIA CUDA SDK)
+
+2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj`
+
+3. Verify that `dsharp.isCudaEnabled()` is returning true and GPU testing is enabled in `TestUtil.fs`.
 
 
