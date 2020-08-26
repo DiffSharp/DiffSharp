@@ -106,7 +106,7 @@ type Tensor =
 
     member t.parentOp =
         match t with
-        | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+        | Tensor(_) -> failwith "Cannot get parent operation of constant Tensor"
         | TensorF(_)-> failwith "Cannot get parent operation of TensorF"
         | TensorR(_,_,o,_,_) -> o
 
