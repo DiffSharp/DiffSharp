@@ -10,6 +10,67 @@ type Optimizer(model:Model) =
     member val model = model
     member o.step() = model.parametersDict.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
     abstract member updateRule: string -> Tensor -> Tensor
+
+
+type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+    inherit Optimizer(model)
+    let lr = defaultArg lr (dsharp.tensor(1e-3))
+    let nesterov = defaultArg nesterov true
+    let reversible = defaultArg reversible false
+    let mutable momInit = false
+    let mutable momBuffer = ParameterDict()
+    override o.updateRule name t = 
+        let mutable d = t.derivative
+        let t = if reversible then t else t.primal
+        match weightDecay with
+        | Some wd -> d <- d.add(t.primal * wd)
+        | None -> ()
+        match momentum with
+        | Some mom ->
+            if not momInit then 
+                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
+                momInit <- true
+            let mb = momBuffer.[name]
+            let mb = mb.mul(mom).add(d)
+            momBuffer.[name] <- mb
+            if nesterov then d <- d.add(mb*mom)
+            else d <- mb
+        | None -> ()   
+        t - lr * d
+
+
+type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
+    inherit Optimizer(model)
+    let lr = defaultArg lr (dsharp.tensor(1e-3))
+    let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
+    let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
+    let eps = defaultArg eps (dsharp.tensor(1e-8))
+    let reversible = defaultArg reversible false
+    let mutable stateStep = 0
+    let mutable stateExpAvg = ParameterDict()
+    let mutable stateExpAvgSq = ParameterDict()
+    override o.updateRule name t =
+        let mutable d = t.derivative
+        let t = if reversible then t else t.primal
+        match weightDecay with
+        | Some wd -> d <- d.add(t.primal * wd)
+        | None -> ()
+        if stateStep = 0 then
+            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+        stateStep <- stateStep + 1
+        let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
+        let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
+        stateExpAvg.[name] <- expAvg
+        stateExpAvgSq.[name] <- expAvgSq
+        let biasCorrection1 = 1. - beta1 ** stateStep
+        let biasCorrection2 = 1. - beta2 ** stateStep
+        let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
+        let stepSize = lr / biasCorrection1
+        t - stepSize * (expAvg/denom)
+
+
+type optim =
     static member internal optimizeFun(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let iters = defaultArg iters -1
         let threshold, thresholdGiven = 
@@ -168,7 +229,7 @@ type Optimizer(model:Model) =
                 else p <- momBuffer
             | None -> ()
             f, x - lr * p
-        Optimizer.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
     static member adam(f, x0:Tensor, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let lr = defaultArg lr (dsharp.tensor(1e-3))
@@ -189,70 +250,12 @@ type Optimizer(model:Model) =
             let p = expAvg / denom
             let stepSize = lr / biasCorrection1
             f, x - stepSize * p
-        Optimizer.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
     static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let optimizer = SGD(model, ?lr=lr, ?momentum=momentum, ?nesterov=nesterov, ?weightDecay=weightDecay, ?reversible=reversible)
-        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
 
     static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
         let optimizer = Adam(model, ?lr=lr, ?beta1=beta1, ?beta2=beta2, ?eps=eps, ?weightDecay=weightDecay, ?reversible=reversible)
-        Optimizer.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
-
-
-type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
-    inherit Optimizer(model)
-    let lr = defaultArg lr (dsharp.tensor(1e-3))
-    let nesterov = defaultArg nesterov true
-    let reversible = defaultArg reversible false
-    let mutable momInit = false
-    let mutable momBuffer = ParameterDict()
-    override o.updateRule name t = 
-        let mutable d = t.derivative
-        let t = if reversible then t else t.primal
-        match weightDecay with
-        | Some wd -> d <- d.add(t.primal * wd)
-        | None -> ()
-        match momentum with
-        | Some mom ->
-            if not momInit then 
-                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
-                momInit <- true
-            let mb = momBuffer.[name]
-            let mb = mb.mul(mom).add(d)
-            momBuffer.[name] <- mb
-            if nesterov then d <- d.add(mb*mom)
-            else d <- mb
-        | None -> ()   
-        t - lr * d
-
-
-type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
-    inherit Optimizer(model)
-    let lr = defaultArg lr (dsharp.tensor(1e-3))
-    let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
-    let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
-    let eps = defaultArg eps (dsharp.tensor(1e-8))
-    let reversible = defaultArg reversible false
-    let mutable stateStep = 0
-    let mutable stateExpAvg = ParameterDict()
-    let mutable stateExpAvgSq = ParameterDict()
-    override o.updateRule name t =
-        let mutable d = t.derivative
-        let t = if reversible then t else t.primal
-        match weightDecay with
-        | Some wd -> d <- d.add(t.primal * wd)
-        | None -> ()
-        if stateStep = 0 then
-            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
-        stateStep <- stateStep + 1
-        let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
-        let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
-        stateExpAvg.[name] <- expAvg
-        stateExpAvgSq.[name] <- expAvgSq
-        let biasCorrection1 = 1. - beta1 ** stateStep
-        let biasCorrection2 = 1. - beta2 ** stateStep
-        let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
-        let stepSize = lr / biasCorrection1
-        t - stepSize * (expAvg/denom)
+        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
