@@ -5,7 +5,7 @@ open DiffSharp.Util
 
 /// Tensor operations
 
-type DiffSharp =
+type dsharp =
     static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
     static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
     static member isTensor(value:obj) = value :? Tensor
@@ -18,10 +18,10 @@ type DiffSharp =
     static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
     static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
-    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
-    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
-    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
-    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = DiffSharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
+    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
+    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
     static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
     static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
@@ -213,47 +213,47 @@ type DiffSharp =
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         device |> Option.iter (fun d -> Device.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
-        DiffSharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+        dsharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
     static member config() = Dtype.Default, Device.Default, Backend.Default
-    static member config((dtype,device,backend)) = DiffSharp.config(dtype, device, backend)
+    static member config((dtype,device,backend)) = dsharp.config(dtype, device, backend)
     static member devices(?deviceType, ?backend) = BackendStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
     static member isDeviceTypeSupported(deviceType, ?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
     static member isCudaSupported(?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
 
 // Methods mirroring F# array modules
 // TODO: implement more differentiable higher-order functions and corresponding unit tests for their derivatives
-type DiffSharp with
-    static member init (count:int) (initializer:int->'a) = Array.init count initializer |> DiffSharp.tensor
-    static member init2d (length1:int) (length2:int) (initializer:int->int->'a) = Array2D.init length1 length2 initializer |> DiffSharp.tensor
-    static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->'a) = Array3D.init length1 length2 length3 initializer |> DiffSharp.tensor
-    static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> DiffSharp.tensor
-    static member create (count:int) (value:'a) = Array.create count value |> DiffSharp.tensor
-    static member zeroCreate (count:int) = Array.zeroCreate count |> DiffSharp.tensor
+type dsharp with
+    static member init (count:int) (initializer:int->'a) = Array.init count initializer |> dsharp.tensor
+    static member init2d (length1:int) (length2:int) (initializer:int->int->'a) = Array2D.init length1 length2 initializer |> dsharp.tensor
+    static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->'a) = Array3D.init length1 length2 length3 initializer |> dsharp.tensor
+    static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> dsharp.tensor
+    static member create (count:int) (value:'a) = Array.create count value |> dsharp.tensor
+    static member zeroCreate (count:int) = Array.zeroCreate count |> dsharp.tensor
     static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
         let tflat = tensor.view(-1)
         let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
-        DiffSharp.stack(items).view(tensor.shape)
+        dsharp.stack(items).view(tensor.shape)
     static member mapi2 (mapping:int[]->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
-        DiffSharp.stack(items).view(tensor1.shape)
+        dsharp.stack(items).view(tensor1.shape)
     static member mapi3 (mapping:int[]->Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
         if (tensor1.shape <> tensor2.shape) || (tensor2.shape <> tensor3.shape) then failwithf "Expecting tensor1.shape (%A), tensor2.shape (%A), tensor3.shape (%A) to be the same" tensor1.shape tensor2.shape tensor3.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let tflat3 = tensor3.view(-1)
         let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i] tflat3.[i])
-        DiffSharp.stack(items).view(tensor1.shape)
-    static member map (mapping:Tensor->Tensor) (tensor:Tensor) = tensor |> DiffSharp.mapi (fun _ v -> mapping v)
-    static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) = DiffSharp.mapi2 (fun _ v1 v2 -> mapping v1 v2) tensor1 tensor2
-    static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) = DiffSharp.mapi3 (fun _ v1 v2 v3 -> mapping v1 v2 v3) tensor1 tensor2 tensor3
+        dsharp.stack(items).view(tensor1.shape)
+    static member map (mapping:Tensor->Tensor) (tensor:Tensor) = tensor |> dsharp.mapi (fun _ v -> mapping v)
+    static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) = dsharp.mapi2 (fun _ v1 v2 -> mapping v1 v2) tensor1 tensor2
+    static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) = dsharp.mapi3 (fun _ v1 v2 v3 -> mapping v1 v2 v3) tensor1 tensor2 tensor3
 
 
 // Functional automatic differentiation API
-type DiffSharp with
+type dsharp with
     static member nest() = GlobalNestingLevel.Next() |> ignore
     static member nest(level) = GlobalNestingLevel.Set(level)
     static member nestLevel() = GlobalNestingLevel.Current
@@ -266,11 +266,11 @@ type DiffSharp with
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
     static member reverse (value:Tensor) (tensor:Tensor) = tensor.reverse(value)
-    static member evalForwardDiff f x v = x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> DiffSharp.primalDerivative
+    static member evalForwardDiff f x v = x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> dsharp.primalDerivative
     static member evalReverseDiff f x =
-        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
+        let x = x |> dsharp.reverseDiff (GlobalNestingLevel.Next())
         let fx = f x
-        let r = fun v -> fx |> DiffSharp.reverse v; x.derivative
+        let r = fun v -> fx |> dsharp.reverse v; x.derivative
         fx.primal, r
     static member evalForwardDiffs (f:Tensor->Tensor) x (v:Tensor[]) =
         let n = v.Length
@@ -278,7 +278,7 @@ type DiffSharp with
         else
             let mutable x = x
             for i in 0..n-1 do
-                x <- x |> DiffSharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
+                x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
             let mutable fx = f x
             [|for _ in 0..n-1 do
                 let d = fx.derivativeDeep
@@ -287,212 +287,209 @@ type DiffSharp with
                 |] |> Array.rev |> Array.append [|fx|]
     static member fjacobianv f (x:Tensor) (v:Tensor) = 
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
-        let fx, d = DiffSharp.evalForwardDiff f x v
+        let fx, d = dsharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
-    static member jacobianv f x v = DiffSharp.fjacobianv f x v |> snd
+    static member jacobianv f x v = dsharp.fjacobianv f x v |> snd
     static member fgradv f (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
-        let fx, d = DiffSharp.evalForwardDiff f x v
+        let fx, d = dsharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
-    static member gradv f x v = DiffSharp.fgradv f x v |> snd
+    static member gradv f x v = dsharp.fgradv f x v |> snd
     static member fdiff f (x:Tensor) =
-        let fx, d = DiffSharp.evalForwardDiff f x (x.onesLike())
+        let fx, d = dsharp.evalForwardDiff f x (x.onesLike())
         if x.dim <> 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
         fx, d
-    static member diff f x = DiffSharp.fdiff f x |> snd
+    static member diff f x = dsharp.fdiff f x |> snd
     static member ffdiffn (n:int) (f:Tensor->Tensor) (x:Tensor) =
         if n < 0 then failwith "Differentiation order n must be >= 0"
         if x.dim <> 0 then failwithf "f must be a function of a scalar"
-        DiffSharp.evalForwardDiffs f x (Array.create n (x.onesLike()))
-    static member fdiffn n f x = let a = DiffSharp.ffdiffn n f x in a |> Array.head, a |> Array.last
-    static member diffn n f x = DiffSharp.fdiffn n f x |> snd
-    static member fdiff2 f x = DiffSharp.fdiffn 2 f x
-    static member diff2 f x = DiffSharp.diffn 2 f x
+        dsharp.evalForwardDiffs f x (Array.create n (x.onesLike()))
+    static member fdiffn n f x = let a = dsharp.ffdiffn n f x in a |> Array.head, a |> Array.last
+    static member diffn n f x = dsharp.fdiffn n f x |> snd
+    static member fdiff2 f x = dsharp.fdiffn 2 f x
+    static member diff2 f x = dsharp.diffn 2 f x
     static member fjacobianTv f x (v:Tensor) =
-        let fx, r = DiffSharp.evalReverseDiff f x
+        let fx, r = dsharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         if fx.nelement <> v.nelement then failwithf "(f x) and v must have the same number of elements"
         fx, r v
-    static member jacobianTv f x v = DiffSharp.fjacobianTv f x v |> snd
+    static member jacobianTv f x v = dsharp.fjacobianTv f x v |> snd
     static member fjacobian (f:Tensor->Tensor) x =
-        let fx, r = DiffSharp.evalReverseDiff f x
+        let fx, r = dsharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         if x.nelement > fx.nelement then
-            fx, DiffSharp.stack(Array.init fx.nelement (fun i -> r (x.onehotLike(fx.nelement, i))), 0)
+            fx, dsharp.stack(Array.init fx.nelement (fun i -> r (x.onehotLike(fx.nelement, i))), 0)
         else
-            fx, DiffSharp.stack(Array.init x.nelement (fun j -> DiffSharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
-    static member jacobian f x = DiffSharp.fjacobian f x |> snd
+            fx, dsharp.stack(Array.init x.nelement (fun j -> dsharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
+    static member jacobian f x = dsharp.fjacobian f x |> snd
     static member fgrad f (x:Tensor) =
         if x.dim = 0 then 
-            DiffSharp.fdiff f x
+            dsharp.fdiff f x
         else
-            let fx, r = DiffSharp.evalReverseDiff f x
+            let fx, r = dsharp.evalReverseDiff f x
             if x.dim > 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector or scalar, encountered f:%A->%A" x.shape fx.shape
             fx, r (fx.onesLike())
-    static member grad f x = DiffSharp.fgrad f x |> snd
+    static member grad f x = dsharp.fgrad f x |> snd
     static member fgradhessianv f (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
-        let x = x |> DiffSharp.reverseDiff (GlobalNestingLevel.Next())
-        let fx, gv = DiffSharp.fgradv f x v
+        let x = x |> dsharp.reverseDiff (GlobalNestingLevel.Next())
+        let fx, gv = dsharp.fgradv f x v
         gv.reverse()
         fx.primal, gv.primal, x.derivative
-    static member gradhessianv f x v = let _, gv, hv = DiffSharp.fgradhessianv f x v in gv, hv
-    static member fhessianv f x v = let fx, _, hv = DiffSharp.fgradhessianv f x v in fx, hv
-    static member hessianv f x v = DiffSharp.fhessianv f x v |> snd
+    static member gradhessianv f x v = let _, gv, hv = dsharp.fgradhessianv f x v in gv, hv
+    static member fhessianv f x v = let fx, _, hv = dsharp.fgradhessianv f x v in fx, hv
+    static member hessianv f x v = dsharp.fhessianv f x v |> snd
     static member fgradhessian (f:Tensor->Tensor) (x:Tensor) =
-        let mutable fx = DiffSharp.zero()
-        let gvs, hvs = Array.init x.nelement (fun j -> let ffxx, gv, hv = DiffSharp.fgradhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; gv, hv) |> Array.unzip
-        let h = DiffSharp.stack(hvs, 1)
-        let g = DiffSharp.stack(gvs)
+        let mutable fx = dsharp.zero()
+        let gvs, hvs = Array.init x.nelement (fun j -> let ffxx, gv, hv = dsharp.fgradhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; gv, hv) |> Array.unzip
+        let h = dsharp.stack(hvs, 1)
+        let g = dsharp.stack(gvs)
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, g, h
-    static member gradhessian f x = let _, g, h = DiffSharp.fgradhessian f x in g, h
+    static member gradhessian f x = let _, g, h = dsharp.fgradhessian f x in g, h
     static member fhessian (f:Tensor->Tensor) (x:Tensor) =
-        let mutable fx = DiffSharp.zero()
-        let h = DiffSharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = DiffSharp.fhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; hv), 1)
+        let mutable fx = dsharp.zero()
+        let h = dsharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = dsharp.fhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; hv), 1)
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, h
-    static member hessian f x = DiffSharp.fhessian f x |> snd
+    static member hessian f x = dsharp.fhessian f x |> snd
     static member flaplacian f x =
-        let fx, h = DiffSharp.fhessian f x
+        let fx, h = dsharp.fhessian f x
         fx, h.trace()
-    static member laplacian f x = DiffSharp.flaplacian f x |> snd
+    static member laplacian f x = dsharp.flaplacian f x |> snd
     static member fcurl f x =
-        let fx, j = DiffSharp.fjacobian f x
+        let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
-    static member curl f x = DiffSharp.fcurl f x |> snd
+        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+    static member curl f x = dsharp.fcurl f x |> snd
     static member fdivergence f x =
-        let fx, j = DiffSharp.fjacobian f x
+        let fx, j = dsharp.fjacobian f x
         if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
         fx, j.trace()
-    static member divergence f x = DiffSharp.fdivergence f x |> snd
+    static member divergence f x = dsharp.fdivergence f x |> snd
     static member fcurldivergence f x =
-        let fx, j = DiffSharp.fjacobian f x
+        let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
-    static member curldivergence f x = let _, c, d = DiffSharp.fcurldivergence f x in c, d
+        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+    static member curldivergence f x = let _, c, d = dsharp.fcurldivergence f x in c, d
 
 
 // Functional automatic differentiation API shorthand names
-type DiffSharp with
-    static member gvp f x v = DiffSharp.gradv f x v
-    static member g f x = DiffSharp.grad f x
-    static member hvp f x v = DiffSharp.hessianv f x v
-    static member h f x = DiffSharp.hessian f x
-    static member gh f x = DiffSharp.gradhessian f x
-    static member ghvp f x v = DiffSharp.gradhessianv f x v
-    static member jvp f x v = DiffSharp.jacobianv f x v
-    static member vjp f x v = DiffSharp.jacobianTv f x v
-    static member j f x = DiffSharp.jacobian f x
-    static member fgvp f x v = DiffSharp.fgradv f x v
-    static member fg f x = DiffSharp.fgrad f x
-    static member fgh f x = DiffSharp.fgradhessian f x
-    static member fhvp f x v = DiffSharp.fhessianv f x v
-    static member fh f x = DiffSharp.fhessian f x
-    static member fghvp f x v = DiffSharp.fgradhessianv f x v
-    static member fjvp f x v = DiffSharp.fjacobianv f x v
-    static member fvjp f x v = DiffSharp.fjacobianTv f x v
-    static member fj f x = DiffSharp.fjacobian f x    
+type dsharp with
+    static member gvp f x v = dsharp.gradv f x v
+    static member g f x = dsharp.grad f x
+    static member hvp f x v = dsharp.hessianv f x v
+    static member h f x = dsharp.hessian f x
+    static member gh f x = dsharp.gradhessian f x
+    static member ghvp f x v = dsharp.gradhessianv f x v
+    static member jvp f x v = dsharp.jacobianv f x v
+    static member vjp f x v = dsharp.jacobianTv f x v
+    static member j f x = dsharp.jacobian f x
+    static member fgvp f x v = dsharp.fgradv f x v
+    static member fg f x = dsharp.fgrad f x
+    static member fgh f x = dsharp.fgradhessian f x
+    static member fhvp f x v = dsharp.fhessianv f x v
+    static member fh f x = dsharp.fhessian f x
+    static member fghvp f x v = dsharp.fgradhessianv f x v
+    static member fjvp f x v = dsharp.fjacobianv f x v
+    static member fvjp f x v = dsharp.fjacobianTv f x v
+    static member fj f x = dsharp.fjacobian f x    
 
 
 // Functional numerical differentiation API
-type DiffSharp with
+type dsharp with
     static member numdiff (epsilon:float) (f:Tensor->Tensor) (x:Tensor) = 
         if x.dim <> 0 then failwithf "f must be a function of a scalar"
         ((f (x + epsilon)) - (f (x - epsilon))) / (2.*epsilon)
-    static member numfdiff epsilon f x = f x, DiffSharp.numdiff epsilon f x
+    static member numfdiff epsilon f x = f x, dsharp.numdiff epsilon f x
     static member numfdiff2 (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
         if x.dim <> 0 then failwithf "f must be a function of a scalar"
         let fx = f x
         fx, ((f (x + epsilon)) - 2. * fx + (f (x - epsilon))) / (epsilon * epsilon)
-    static member numdiff2 epsilon f x = DiffSharp.numfdiff2 epsilon f x |> snd
+    static member numdiff2 epsilon f x = dsharp.numfdiff2 epsilon f x |> snd
     static member numjacobianv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let veps = v * epsilon
         let fxa, fxb = f (x+veps), f (x-veps)
         if x.dim <> 1 || fxa.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
         (fxa - fxb) / (2.*epsilon)
-    static member numfjacobianv epsilon f x v = f x, DiffSharp.numjacobianv epsilon f x v
+    static member numfjacobianv epsilon f x v = f x, dsharp.numjacobianv epsilon f x v
     static member numfjacobian (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
         let fx = f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         let j = fx.expand([x.nelement; fx.nelement])
-        let jj = DiffSharp.stack(Array.init x.nelement (fun i -> f (x + DiffSharp.onehot(x.nelement, i)*epsilon)))
+        let jj = dsharp.stack(Array.init x.nelement (fun i -> f (x + dsharp.onehot(x.nelement, i)*epsilon)))
         fx, (jj - j).transpose() / epsilon
-    static member numjacobian epsilon f x = DiffSharp.numfjacobian epsilon f x |> snd
+    static member numjacobian epsilon f x = dsharp.numfjacobian epsilon f x |> snd
     static member numgradv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let veps = v * epsilon
         let fxa, fxb = f (x + veps), f (x - veps)
         if x.dim <> 1 || fxa.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fxa.shape
         (fxa - fxb) / (2.*epsilon)
-    static member numfgradv epsilon f x v = f x, DiffSharp.numgradv epsilon f x v
+    static member numfgradv epsilon f x v = f x, dsharp.numgradv epsilon f x v
     static member numfgrad (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
         if x.dim = 0 then
-            DiffSharp.numfdiff epsilon f x
+            dsharp.numfdiff epsilon f x
         else
             let fx = f x
             if x.dim > 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector or scalar, encountered f:%A->%A" x.shape fx.shape
-            let gg = DiffSharp.stack(Array.init x.nelement (fun i -> let h = DiffSharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
+            let gg = dsharp.stack(Array.init x.nelement (fun i -> let h = dsharp.onehot(x.nelement, i)*epsilon in f (x + h) - f (x - h)))
             fx, gg/(2.*epsilon)
-    static member numgrad epsilon f x = DiffSharp.numfgrad epsilon f x |> snd
+    static member numgrad epsilon f x = dsharp.numfgrad epsilon f x |> snd
     static member numfgradhessian (epsilon:float) (f:Tensor->Tensor) (x:Tensor) =
-        let fx, g = DiffSharp.numfgrad epsilon f x
+        let fx, g = dsharp.numfgrad epsilon f x
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         let h = g.expand([x.nelement; x.nelement])
-        let hh = DiffSharp.stack(Array.init x.nelement (fun i -> DiffSharp.numgrad epsilon f (x + DiffSharp.onehot(x.nelement, i)*epsilon)))
+        let hh = dsharp.stack(Array.init x.nelement (fun i -> dsharp.numgrad epsilon f (x + dsharp.onehot(x.nelement, i)*epsilon)))
         fx, g, (hh - h) / epsilon
-    static member numgradhessian epsilon f x = let _, g, h = DiffSharp.numfgradhessian epsilon f x in g, h
-    static member numfhessian epsilon f x = let fx, _, h = DiffSharp.numfgradhessian epsilon f x in fx, h
-    static member numhessian epsilon f x = DiffSharp.numfhessian epsilon f x |> snd
+    static member numgradhessian epsilon f x = let _, g, h = dsharp.numfgradhessian epsilon f x in g, h
+    static member numfhessian epsilon f x = let fx, _, h = dsharp.numfgradhessian epsilon f x in fx, h
+    static member numhessian epsilon f x = dsharp.numfhessian epsilon f x |> snd
     static member numfhessianv (epsilon:float) (f:Tensor->Tensor) (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let veps = v*epsilon
-        let fx, g = DiffSharp.numfgrad epsilon f x
+        let fx, g = dsharp.numfgrad epsilon f x
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
-        let gg = DiffSharp.numgrad epsilon f (x + veps)
+        let gg = dsharp.numgrad epsilon f (x + veps)
         fx, (gg-g)/epsilon
-    static member numhessianv epsilon f x v = DiffSharp.numfhessianv epsilon f x v |> snd
+    static member numhessianv epsilon f x v = dsharp.numfhessianv epsilon f x v |> snd
     static member numflaplacian epsilon f x =
-        let fx, h = DiffSharp.numfhessian epsilon f x
+        let fx, h = dsharp.numfhessian epsilon f x
         fx, h.trace()
-    static member numlaplacian epsilon f x = DiffSharp.numflaplacian epsilon f x |> snd
+    static member numlaplacian epsilon f x = dsharp.numflaplacian epsilon f x |> snd
     static member numfcurl epsilon f x =
-        let fx, j = DiffSharp.numfjacobian epsilon f x
+        let fx, j = dsharp.numfjacobian epsilon f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
-    static member numcurl epsilon f x = DiffSharp.numfcurl epsilon f x |> snd
+        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+    static member numcurl epsilon f x = dsharp.numfcurl epsilon f x |> snd
     static member numfdivergence epsilon f x =
-        let fx, j = DiffSharp.numfjacobian epsilon f x
+        let fx, j = dsharp.numfjacobian epsilon f x
         if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
         fx, j.trace()
-    static member numdivergence epsilon f x = DiffSharp.numfdivergence epsilon f x |> snd
+    static member numdivergence epsilon f x = dsharp.numfdivergence epsilon f x |> snd
     static member numfcurldivergence epsilon f x =
-        let fx, j = DiffSharp.numfjacobian epsilon f x
+        let fx, j = dsharp.numfjacobian epsilon f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, DiffSharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
-    static member numcurldivergence epsilon f x = let _, c, d = DiffSharp.numfcurldivergence epsilon f x in c, d
+        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+    static member numcurldivergence epsilon f x = let _, c, d = dsharp.numfcurldivergence epsilon f x in c, d
 
 
 // Functional numerical differentiation API shorthand names
-type DiffSharp with
-    static member numgvp f x v = DiffSharp.numgradv f x v
-    static member numg f x = DiffSharp.numgrad f x
-    static member numhvp f x v = DiffSharp.numhessianv f x v
-    static member numh f x = DiffSharp.numhessian f x
-    static member numgh f x = DiffSharp.numgradhessian f x
-    static member numjvp f x v = DiffSharp.numjacobianv f x v
-    static member numj f x = DiffSharp.numjacobian f x
-    static member numfgvp f x v = DiffSharp.numfgradv f x v
-    static member numfg f x = DiffSharp.numfgrad f x
-    static member numfhvp f x v = DiffSharp.numfhessianv f x v
-    static member numfh f x = DiffSharp.numfhessian f x
-    static member numfgh f x = DiffSharp.numfgradhessian f x
-    static member numfjvp f x v = DiffSharp.numfjacobianv f x v
-    static member numfj f x = DiffSharp.numfjacobian f x    
-
-
-type dsharp = DiffSharp
+type dsharp with
+    static member numgvp f x v = dsharp.numgradv f x v
+    static member numg f x = dsharp.numgrad f x
+    static member numhvp f x v = dsharp.numhessianv f x v
+    static member numh f x = dsharp.numhessian f x
+    static member numgh f x = dsharp.numgradhessian f x
+    static member numjvp f x v = dsharp.numjacobianv f x v
+    static member numj f x = dsharp.numjacobian f x
+    static member numfgvp f x v = dsharp.numfgradv f x v
+    static member numfg f x = dsharp.numfgrad f x
+    static member numfhvp f x v = dsharp.numfhessianv f x v
+    static member numfh f x = dsharp.numfhessian f x
+    static member numfgh f x = dsharp.numfgradhessian f x
+    static member numfjvp f x v = dsharp.numfjacobianv f x v
+    static member numfj f x = dsharp.numfjacobian f x    
