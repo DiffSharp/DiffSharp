@@ -100,7 +100,7 @@ type Model() =
             else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%d" i)) |> Seq.toArray
+        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
         if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
         for p, n in Array.zip parameters names do
             match (box p) with

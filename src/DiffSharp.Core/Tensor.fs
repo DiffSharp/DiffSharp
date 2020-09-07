@@ -3,9 +3,6 @@
 open DiffSharp.Backends
 open DiffSharp.Util
 open System
-open System.IO
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Formatters.Binary
 open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
@@ -323,8 +320,8 @@ type Tensor =
     member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
     member a.argmax() = a.primalRaw.MaxIndexT()
     member a.argmin() = a.primalRaw.MinIndexT()
-    member a.max() = a.[a.argmax()]
-    member a.min() = a.[a.argmin()]
+    member a.max() = if a.dim = 0 then a else a.[a.argmax()]
+    member a.min() = if a.dim = 0 then a else a.[a.argmin()]
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
     member a.max(b) = a.max(a.like(b))
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
@@ -1269,6 +1266,25 @@ type Tensor =
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
         let z = input - target
         let l = z * z
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            l.mean()
+        else // reduction = "sum"
+            l.sum()
+
+    member input.bceLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
+        if input.shape <> target.shape then failwithf "Expecting input shape (%A) and target shape (%A) to be the same" input.shape target.shape
+        if target.max() > target.oneLike() || target.min() < target.zeroLike() then failwith "Expecting target values to be between 0 and 1."
+        if input.dim < 1 then let ret:Tensor = input.view(-1).bceLoss(target.view(-1), ?weight=weight, ?reduction=reduction) in if ret.dim = 0 then ret else ret.[0]
+        else
+        let n = input.shape.[0]
+        let weight = defaultArg weight (input.onesLike(shape=[|n|]))
+        if weight.shape.[0] <> n then failwithf "Expecting weight to be a vector of size %A, but received %A" n weight.shape.[0]
+        let reduction = defaultArg reduction "mean"
+        if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        let clampLog = -100
+        let l = -weight.unsqueeze(1)*(target * input.log().clamp(low=clampLog) + (1.-target) * (1.-input).log().clamp(low=clampLog))
         if reduction = "none" then
             l
         elif reduction = "mean" then

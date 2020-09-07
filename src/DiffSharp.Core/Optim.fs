@@ -71,18 +71,16 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
 
 
 type optim =
-    static member internal optimizeFun(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member internal optimizeFun(update:Tensor->Tensor*Tensor, x0:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let iters = defaultArg iters -1
         let threshold, thresholdGiven = 
             match threshold with
             | Some t -> t, true
             | None -> -1., false
         let print = defaultArg print true
-        let printEvery = defaultArg printEvery 1 // (max 1 (iters/20))
+        let printEvery = defaultArg printEvery (max 1 (iters/20))
         let printPrefix = defaultArg printPrefix ""
         let printPostfix = defaultArg printPostfix ""
-        let printNewLine = defaultArg printNewLine false
-        let mutable printEnd = ""
         let mutable status = ""
         let mutable x = x0
         let mutable fx = dsharp.zero()
@@ -99,43 +97,39 @@ type optim =
             fx <- nfx
             let fxScalar = float fx
 
-            printEnd <- if printNewLine then "\n" else "                    \r"
             if fx.hasnan() || fx.hasinf() then
                 status <- "Diverged"
-                printEnd <- "\n"
                 stop <- true
             elif thresholdGiven && fxScalar <= threshold then
                 status <- sprintf "Converged (value < %g)" threshold
-                printEnd <- "\n"
                 stop <- true
             elif (iters <> -1) && (i=iters-1) then
                 status <- sprintf "Iters=%d reached" iters
-                printEnd <- "\n"
                 stop <- true
             elif fxScalar < fxMin then
                 fxMin <- fxScalar
-                printEnd <- "\n"
-                status <- "🡾 New min"
+                status <- "- New min"
             elif fxScalar > fxMax then
                 fxMax <- fxScalar
-                printEnd <- "\n"
-                status <- "🡽 New max"
+                status <- "+ New max"
             elif fxScalar < fxPrev then
-                status <- "🡾"
+                status <- "-"
+            elif fxScalar > fxPrev then
+                status <- "+"
             else
-                status <- "🡽"
+                status <- ""
 
             let duration = System.DateTime.Now - start
             if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
                 let printDepthPrefix = String.replicate nx.depth "  "
                 let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
-                printf "%s%s%s | %3d | %e %s%s%s" printDepthPrefix printPrefix durationStr (i+1) fxScalar status printPostfix printEnd
+                printfn "%s%s%s | %3d | %e %s%s" printDepthPrefix printPrefix durationStr (i+1) fxScalar status printPostfix
 
             fxPrev <- fxScalar
             if not stop then x <- nx
         fx, x
 
-    static member internal optimizeModel(model:Model, optimizer:Optimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member internal optimizeModel(model:Model, optimizer:Optimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let iters, epochs =
             match iters, epochs with
             | Some _, Some _ -> failwithf "Expecting only one of iters, epochs"
@@ -147,11 +141,9 @@ type optim =
             | Some t -> t, true
             | None -> -1., false
         let print = defaultArg print true
-        let printEvery = defaultArg printEvery 1 // (max 1 (iters/20))
+        let printEvery = defaultArg printEvery (max 1 (iters/20))
         let printPrefix = defaultArg printPrefix ""
         let printPostfix = defaultArg printPostfix ""
-        let printNewLine = defaultArg printNewLine false
-        let mutable printEnd = ""
         let mutable status = ""
         let mutable epoch = -1
         let mutable i = -1
@@ -174,45 +166,40 @@ type optim =
                 
                 let lScalar = float l
 
-                printEnd <- if printNewLine then "\n" else "                    \r"
                 if l.hasnan() || l.hasinf() then
                     status <- "Diverged"
-                    printEnd <- "\n"
                     stop <- true
                 elif thresholdGiven && lScalar <= threshold then
                     status <- sprintf "Converged (loss < %g)" threshold
-                    printEnd <- "\n"
                     stop <- true
                 elif (iters <> -1) && (i=iters-1) then
                     status <- sprintf "Iters=%d reached" iters
-                    printEnd <- "\n"
                     stop <- true
                 elif lScalar < lMin then
                     lMin <- lScalar
-                    status <- "🡾 New min"
-                    printEnd <- "\n"
+                    status <- "- New min"
                 elif lScalar > lMax then
                     lMax <- lScalar
-                    status <- "🡽 New max"
-                    printEnd <- "\n"
+                    status <- "+ New max"
                 elif (epochs <> -1) && (epoch=epochs) then
                     status <- sprintf "Epochs=%d reached" epochs
-                    printEnd <- "\n"
                     stop <- true
                 elif lScalar < lPrev then
-                    status <- "🡾"
+                    status <- "-"
+                elif lScalar > lPrev then
+                    status <- "+"
                 else
-                    status <- "🡽"
+                    status <- ""
 
                 if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
                     let duration = System.DateTime.Now - start
                     let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
-                    printf "%s%s | %3d | %d | %d/%d | %e %s%s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix printEnd
+                    printf "%s%s | %3d | %d | %d/%d | %e %s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix
                 lPrev <- lScalar
                 not stop
             ) |> Seq.iter ignore
 
-    static member sgd(f, x0:Tensor, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member sgd(f, x0:Tensor, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let lr = defaultArg lr (dsharp.tensor(0.001))
         let mutable momBuffer = dsharp.zero()
         let mutable momInit = false
@@ -229,9 +216,9 @@ type optim =
                 else p <- momBuffer
             | None -> ()
             f, x - lr * p
-        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
-    static member adam(f, x0:Tensor, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member adam(f, x0:Tensor, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let lr = defaultArg lr (dsharp.tensor(1e-3))
         let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
         let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
@@ -250,12 +237,12 @@ type optim =
             let p = expAvg / denom
             let stepSize = lr / biasCorrection1
             f, x - stepSize * p
-        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
-    static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let optimizer = SGD(model, ?lr=lr, ?momentum=momentum, ?nesterov=nesterov, ?weightDecay=weightDecay, ?reversible=reversible)
-        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
-    static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string, ?printNewLine:bool) =
+    static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let optimizer = Adam(model, ?lr=lr, ?beta1=beta1, ?beta2=beta2, ?eps=eps, ?weightDecay=weightDecay, ?reversible=reversible)
-        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix, ?printNewLine=printNewLine)
+        optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)

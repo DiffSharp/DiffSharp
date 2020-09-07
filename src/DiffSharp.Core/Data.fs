@@ -12,7 +12,9 @@ type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
     member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
-
+    member t.Item
+        with get(i:int) =
+            t.item(i)
 
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
@@ -43,7 +45,7 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath
     let train = defaultArg train true
-    let transform = defaultArg transform (fun t -> ((t/255)-0.1307)/0.3081)
+    let transform = defaultArg transform (fun t -> (t - 0.1307) / 0.3081)
     let targetTransform = defaultArg targetTransform id
     let urls = List.ofSeq <| defaultArg urls (Seq.ofList
                    ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
@@ -81,6 +83,7 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             |> Array.map float32
             |> dsharp.tensor
             |> dsharp.view ([n; 1; 28; 28])
+            |> fun t -> t / 255
         | _ -> failwith "Given file is not in the MNIST format."
     static member internal LoadMNISTLabels(filename, ?n:int) =
         let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
