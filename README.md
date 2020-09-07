@@ -73,22 +73,29 @@ The packages above are large as they include libtorch.  If you already have `lib
 
 ## Using and installing .NET Interactive
 
-Examples are often written and executed using .NET Interactive.
+Examples are often written and executed using .NET Interactive. To use a recent release of .NET Interactive do the following:
 
-To use latest master of .NET Interactive do the following
+In browser, use ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)).
 
-In browser - use ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)).
+Locally:
 
-Windows:
+    dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" microsoft.dotnet-interactive
+    dotnet interactive jupyter install
+
+To build master (Windows)
 
     git clone https://github.com/dotnet/interactive
+    cd interactive
     .\build
     pwsh.exe src/dotnet-interactive/build-and-install-dotnet-interactive.ps1
     jupyter lab
 
-Linux:
+When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
 
-    TBD
+```fsharp
+Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
+```
 
 ## Using CI build packages
 

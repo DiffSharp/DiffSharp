@@ -12,6 +12,9 @@
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
 #r "nuget: DiffSharp-cpu,{{package-version}}"
+
+Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 open System
