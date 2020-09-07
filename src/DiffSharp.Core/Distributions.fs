@@ -151,7 +151,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
                         else uniques.[v] <- lw
                     Dictionary.copyKeys uniques, dsharp.stack(Dictionary.copyValues uniques).view(-1)
                 else
-                    let vals, counts = getUniqueCounts _values false
+                    let vals, counts = _values |> Array.getUniqueCounts false
                     vals, dsharp.tensor(counts)
             _values <- newValues
             _categorical <- Categorical(logits=newLogWeights)
@@ -208,7 +208,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
             let dCombined = d.combineDuplicates()
             let i = dCombined.logWeights.argmax() in dCombined.values.[i.[0]]
         else
-            let vals, _ = getUniqueCounts d.values true
+            let vals, _ = d.values |> Array.getUniqueCounts true
             vals.[0]
     member d.min = d.valuesTensor.min()
     member d.max = d.valuesTensor.max()

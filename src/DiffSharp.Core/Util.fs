@@ -2,18 +2,11 @@
 namespace DiffSharp.Util
 
 open System
-open System.Net
 open System.Collections
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
-open System.IO
-open System.IO.Compression
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Formatters.Binary
-
-open DiffSharp
-
 open FSharp.Reflection
+open DiffSharp
 
 /// Represents a nesting level with a differentiation operation.
 type NestingLevel =
@@ -322,45 +315,6 @@ module UtilAutoOpens =
         | :? float32 as a -> a |> int
         | :? int as a -> a
         | _ -> failwith "Cannot convert to int"
-
-    let getUniqueCounts (values:'a[]) (sorted:bool) =
-        let counts = Dictionary<'a, int>()
-        for v in values do
-            if counts.ContainsKey(v) then counts.[v] <- counts.[v] + 1 else counts.[v] <- 1
-        if sorted then
-            counts |> Array.ofSeq |> Array.sortByDescending (fun (KeyValue(_, v)) -> v) |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
-        else
-            counts |> Array.ofSeq |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
-
-    let download (url:string) (localFileName:string) =
-        let wc = new WebClient()
-        printfn "Downloading %A to %A" url localFileName
-        wc.DownloadFile(url, localFileName)
-        wc.Dispose()
-
-    let saveBinary (object:'a) (fileName:string) =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Create)
-        let cs = new GZipStream(fs, CompressionMode.Compress)
-        try
-            formatter.Serialize(cs, object)
-            cs.Flush()
-            cs.Close()
-            fs.Close()
-        with
-        | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
-
-    let loadBinary (fileName:string):'a =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Open)
-        let cs = new GZipStream(fs, CompressionMode.Decompress)
-        try
-            let object = formatter.Deserialize(cs) :?> 'a
-            cs.Close()
-            fs.Close()
-            object
-        with
-        | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 
     let shuffledIndices (length: int) =
         let indices = Array.init length id
