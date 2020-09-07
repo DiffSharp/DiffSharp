@@ -218,3 +218,6 @@ ModelManifest.xml
 .fake
 
 data/
+output/
+.fsdocs/
+tmp/

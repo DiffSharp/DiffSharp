@@ -15,7 +15,7 @@
     <PackageReference Include="nunit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-    <PackageReference Update="FSharp.Core" Version="4.7.1" />
+    <PackageReference Update="FSharp.Core" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +36,8 @@
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <!-- execution projects must reference a libtorch runtime redist -->
-    <PackageReference Include="libtorch-cpu" Version="$(LibTorchVersion)" />
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+    <!-- <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" /> -->
   </ItemGroup>
 
 </Project>

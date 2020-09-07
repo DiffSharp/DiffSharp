@@ -19,6 +19,8 @@ type [<AbstractClass>]
     abstract Random: shape:int[] * device: Device -> RawTensor
     abstract RandomNormal: shape:int[] * device: Device -> RawTensor
     abstract RandomInt: shape:int[] * low:int * high:int * device: Device -> RawTensor
+    abstract GetDevices: ?deviceType: DeviceType -> Device list
+    abstract IsDeviceTypeSupported: deviceType: DeviceType -> bool
     
     static member Seed(?seed:int) =
         let seed = defaultArg seed (int DateTime.Now.Ticks)
@@ -68,6 +70,7 @@ and [<AbstractClass>]
     member t.Nelement = shapeLength shape
     member t.Dtype = dtype
     member t.Device = device
+    member t.DeviceType = device.DeviceType
     member t.Backend = backend
     override t.ToString() = t.GetString()
     
@@ -200,6 +203,7 @@ and [<AbstractClass>]
     abstract member MoveTo : Device -> RawTensor
     abstract member ComputeHash: unit -> int
     abstract member AllClose: RawTensor * float * float -> bool
+    abstract member ClampT: RawTensor * RawTensor -> RawTensor
     abstract member GatherT: int * RawTensor -> RawTensor
     abstract member LtTT: RawTensor -> RawTensor
     abstract member GtTT: RawTensor -> RawTensor
@@ -240,6 +244,7 @@ and [<AbstractClass>]
     abstract member NegT : unit -> RawTensor
     abstract member SumT : ?resultType: Dtype -> RawTensor
     abstract member SumT2Dim0 : unit -> RawTensor
+    abstract member TransposeT: int * int -> RawTensor
     abstract member TransposeT2: unit -> RawTensor
     abstract member SqueezeT: int -> RawTensor
     abstract member UnsqueezeT: int -> RawTensor

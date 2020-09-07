@@ -1,27 +1,45 @@
 ﻿namespace DiffSharp
 
-type Device =
-    | CPU
-    | GPU
-    | Other of name:string * code:int
+// Note, same indexes as PyTorch
+type DeviceType =
+    | CPU = 0
+    | CUDA = 1 // CUDA.
+    | MKLDNN = 2 // Reserved for explicit MKLDNN
+    | OPENGL = 3 // OpenGL
+    | OPENCL = 4 // OpenCL
+    | IDEEP = 5 // IDEEP.
+    | HIP = 6 // AMD HIP
+    | FPGA = 7 // FPGA
+    | MSNPU = 8 // MSNPU
+    | XLA = 9 // XLA / TPU
 
-    member internal x.Code =
-        match x with
-        | CPU -> 0x0000
-        | GPU -> 0x0001
-        | Other (_name, code) -> (code + 2)
+
+[<Struct>]
+type Device =
+    | Device of DeviceType * int
+    member x.DeviceType = (let (Device(a,_)) = x in a)
+    member x.DeviceIndex = (let (Device(_,b)) = x in b)
+    static member CPU = Device(DeviceType.CPU, 0)
+    static member GPU = Device(DeviceType.CUDA, 0)
+
+    member internal x.Code = (int x.DeviceType <<< 4) + x.DeviceIndex
 
     member internal x.Name =
-        match x with
-        | CPU -> "CPU"
-        | GPU -> "GPU"
-        | Other (name, _code) -> name
+       (match x.DeviceType with
+        | DeviceType.CPU -> "cpu"
+        | DeviceType.CUDA -> "cuda"
+        | DeviceType.MKLDNN -> "mkldnn"
+        | DeviceType.OPENGL -> "opengl"
+        | DeviceType.OPENCL -> "opencl"
+        | DeviceType.IDEEP -> "ideep"
+        | DeviceType.HIP -> "hip"
+        | DeviceType.FPGA -> "fpga"
+        | DeviceType.MSNPU -> "msnpu"
+        | DeviceType.XLA -> "xla"
+        | _ -> failwith "unknown device type") + string x.DeviceIndex
 
 module Device = 
-    let internal count = ref 0
-    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Device>()
-    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Device.Other(name, count.Value)))
-    let mutable Default = Device.CPU
+    let mutable Default : Device = Device(DeviceType.CPU, 0)
 
 [<RequireQualifiedAccess>]
 type Backend =
@@ -162,9 +180,12 @@ module Dtype =
 
 [<AutoOpen>]
 module DtypeGlobalOps =
-    let opNotSupported msg (t: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg t)
+    let opNotSupported msg (dtype: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg dtype)
 
-    let opNotSupported2 msg (t1: Dtype) (t2: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg t1 t2)
+    let opNotSupportedOnDeviceType msg (dtype: Dtype) (deviceType: DeviceType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A on device type %A" msg dtype deviceType)
+
+    let opNotSupported2 msg (dtype1: Dtype) (dtype2: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg dtype1 dtype2)
 

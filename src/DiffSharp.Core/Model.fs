@@ -1,7 +1,8 @@
-namespace DiffSharp.Model
+namespace rec DiffSharp.Model
 open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
+
 
 type Parameter =
     val mutable value:Tensor
@@ -12,8 +13,9 @@ type Parameter =
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
     override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
 
+
 type ParameterDict() =
-    member val values:Dictionary<string, Parameter> = Dictionary()
+    member val values = Dictionary<string, Parameter>()
     member d.Item
         with get key = d.values.[key].value
         and set key v = d.values.[key].value <- v
@@ -50,7 +52,7 @@ type ParameterDict() =
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = getKeys d.values
+        let keys = copyKeys d.values
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1
@@ -69,26 +71,43 @@ type ParameterDict() =
         sb.ToString()
 
 
+type Mode =
+    | Train = 0
+    | Eval = 1
+
+
 [<AbstractClass>]
 type Model() =
-    member val ParametersDict:ParameterDict = ParameterDict()
-    member val SubModels:Dictionary<string, Model> = Dictionary()
+    [<DefaultValue>]
+    val mutable mode: Mode
+    member val ParametersDict = ParameterDict()
+    member val SubModelsDict = Dictionary<string, Model>()
+    member m.train() = 
+        m.mode <- Mode.Train
+        for model:Model in m.allModels do model.mode <- Mode.Train
+    member m.eval() = 
+        m.mode <- Mode.Eval
+        for model:Model in m.allModels do model.mode <- Mode.Eval
     member m.parametersDict
         with get () = m.ParametersDict
         and set parameters = m.ParametersDict.set(parameters)
     member m.parameters
         with get () = m.parametersDict.flatten()
         and set parameters = m.parametersDict.unflatten(parameters)
+    member m.allModels
+        with get () =
+            if m.SubModelsDict.Count = 0 then [m]
+            else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "p__%d" i)) |> Seq.toArray
+        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%d" i)) |> Seq.toArray
         if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
         for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p -> 
                 m.parametersDict.add(n, p)
             | :? Model as mm ->
-                m.SubModels.Add(n, mm)
+                m.SubModelsDict.Add(n, mm)
                 m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
@@ -108,6 +127,12 @@ type Model() =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
+    override m.ToString() =
+        let sb = System.Text.StringBuilder()
+        sb.Append("Model(\n") |> ignore
+        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
     static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
     static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
     static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
@@ -141,7 +166,8 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
     do base.add([w;b],["Linear__weight";"Linear__bias"])
-    override l.forward(value) =
+    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f
 
@@ -153,7 +179,8 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
@@ -171,7 +198,8 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
@@ -189,6 +217,171 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
-    override c.forward(value) =
+    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+
+
+type Dropout(?p:double) =
+    inherit Model()
+    override _.ToString() = sprintf "Dropout()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout(?p=p) else value
+
+
+type Dropout2d(?p:double) =
+    inherit Model()
+    override _.ToString() = sprintf "Dropout2d()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout2d(?p=p) else value
+
+
+type Dropout3d(?p:double) =
+    inherit Model()
+    override _.ToString() = sprintf "Dropout3d()"
+    override m.forward(value) =
+        if m.mode = Mode.Train then value.dropout3d(?p=p) else value
+
+
+type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+    inherit Model()
+    let eps = defaultArg eps 1e-5
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
+    let affine = defaultArg affine true
+    let trackRunningStats = defaultArg trackRunningStats true
+    let reversible = defaultArg reversible false
+    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _mean = Parameter <| dsharp.zero()
+    let _variance = Parameter <| dsharp.zero()
+    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    member _.mean = _mean.value
+    member _.variance = _variance.value
+    member _.stddev = _variance.value.sqrt()
+    member _.weight = w.value
+    member _.bias = b.value
+    member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
+        let batchMean = if reversible then batchMean else batchMean.primal
+        let batchVariance = if reversible then batchVariance else batchVariance.primal
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
+        // https://github.com/pytorch/pytorch/issues/19902
+        // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
+        // Here we transform biased variance to unbiased variance for running statistics
+        let batchVariance = batchVariance * (float n) / (float n - 1.)
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+    override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
+    override m.forward(value) =
+        if value.dim = 2 then
+            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            let mean, var =
+                if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                    value.mean(0), value.variance(0, unbiased=false)
+                else
+                    _mean.value, _variance.value
+            if m.mode = Mode.Train && trackRunningStats then 
+                let batchSize = value.shape.[0]
+                m.updateStats mean var batchSize
+            let res = (value - mean) / (var + eps).sqrt()
+            if affine then res * w.value + b.value else res
+        elif value.dim = 3 then
+            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            let vt = value.transpose(0,1).view([numFeatures;-1])
+            let mean, var =
+                if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                    vt.mean(1), vt.variance(1, unbiased=false)
+                else
+                    _mean.value, _variance.value
+            if m.mode = Mode.Train && trackRunningStats then
+                let n = vt.shape.[1]
+                m.updateStats mean var n
+            let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
+            if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
+        else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
+
+
+type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+    inherit Model()
+    let eps = defaultArg eps 1e-5
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
+    let affine = defaultArg affine true
+    let trackRunningStats = defaultArg trackRunningStats true
+    let reversible = defaultArg reversible false
+    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _mean = Parameter <| dsharp.zero()
+    let _variance = Parameter <| dsharp.zero()
+    do base.add([w;b],["BatchNorm2d__weight";"BatchNorm2d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    member _.mean = _mean.value
+    member _.variance = _variance.value
+    member _.stddev = _variance.value.sqrt()
+    member _.weight = w.value
+    member _.bias = b.value
+    member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
+        let batchMean = if reversible then batchMean else batchMean.primal
+        let batchVariance = if reversible then batchVariance else batchVariance.primal
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
+        // https://github.com/pytorch/pytorch/issues/19902
+        // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
+        // Here we transform biased variance to unbiased variance for running statistics
+        let batchVariance = batchVariance * (float n) / (float n - 1.)
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+    override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
+    override m.forward(value) =
+        if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        let vt = value.transpose(0,1).view([numFeatures;-1])
+        let mean, var =
+            if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                vt.mean(1), vt.variance(1, unbiased=false)
+            else
+                _mean.value, _variance.value
+        if m.mode = Mode.Train && trackRunningStats then
+            let n = vt.shape.[1]
+            m.updateStats mean var n
+        let res = (value - mean.view([1;numFeatures;1;1])) / (var.view([1;numFeatures;1;1]) + eps).sqrt()
+        if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
+
+
+type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+    inherit Model()
+    let eps = defaultArg eps 1e-5
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
+    let affine = defaultArg affine true
+    let trackRunningStats = defaultArg trackRunningStats true
+    let reversible = defaultArg reversible false
+    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _mean = Parameter <| dsharp.zero()
+    let _variance = Parameter <| dsharp.zero()
+    do base.add([w;b],["BatchNorm3d__weight";"BatchNorm3d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    member _.mean = _mean.value
+    member _.variance = _variance.value
+    member _.stddev = _variance.value.sqrt()
+    member _.weight = w.value
+    member _.bias = b.value
+    member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
+        let batchMean = if reversible then batchMean else batchMean.primal
+        let batchVariance = if reversible then batchVariance else batchVariance.primal
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
+        // https://github.com/pytorch/pytorch/issues/19902
+        // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
+        // Here we transform biased variance to unbiased variance for running statistics
+        let batchVariance = batchVariance * (float n) / (float n - 1.)
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+    override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
+    override m.forward(value) =
+        if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        let vt = value.transpose(0,1).view([numFeatures;-1])
+        let mean, var =
+            if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
+                vt.mean(1), vt.variance(1, unbiased=false)
+            else
+                _mean.value, _variance.value
+        if m.mode = Mode.Train && trackRunningStats then
+            let n = vt.shape.[1]
+            m.updateStats mean var n
+        let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
+        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res        

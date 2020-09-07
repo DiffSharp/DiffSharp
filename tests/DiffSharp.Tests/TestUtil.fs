@@ -5,13 +5,17 @@ open DiffSharp
 open NUnit.Framework
 
 // This captures the expected semantics of different Dtypes
-type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: Dtype) =
+type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: Dtype, ?defaultFetchDevices: (DeviceType option * Backend option -> Device list)) =
 
     let dflt x y = match x with Some x -> Some x | None -> y
 
     member _.backend = defaultArg defaultBackend Backend.Default
 
     member _.device = defaultArg defaultDevice Device.Default
+
+    member _.devices(?deviceType, ?backend) = 
+       let f = defaultArg defaultFetchDevices (fun (deviceType, backend) -> dsharp.devices(?deviceType=deviceType, ?backend=backend))
+       f (deviceType, backend)
 
     member _.dtype = defaultArg defaultDtype Dtype.Default
     
@@ -101,6 +105,7 @@ module Dtypes =
     let UnsignedIntegral = [ Dtype.Byte ]
     let Integral = SignedIntegral @ UnsignedIntegral
     let FloatingPoint = [ Dtype.Float32; Dtype.Float64 ]
+    let Float32 = [ Dtype.Float32 ]
 
     // Some operations have quirky behaviour on bool types, we pin these down manually
     let SignedIntegralAndFloatingPoint = FloatingPoint @ SignedIntegral
@@ -110,24 +115,30 @@ module Dtypes =
 
 module Combos =
 
+    // Use these to experiment in your local branch
     //let backends = [ Backend.Reference ]
     //let backends = [ Backend.Torch ]
-    //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ] //; Backend.Register("TestDuplicate") ]
-    //let backends = [ Backend.Reference; Backend.Torch ] //; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Reference; Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
-    //let backends = [ (* Backend.Reference; *) Backend.Register("TestDuplicate") ]
+    //let backends = [ Backend.Register("TestDuplicate") ]
+    //let getDevices _ = [ Device.CPU ]
+    //let getDevices _ = [ Device.GPU ]
+    
+    //Use this in committed code
     let backends = [ Backend.Reference; Backend.Torch ]
-
-    let devices = [ Device.CPU ]
-    //let devices = [ Device.CPU; Device.GPU ]
+    let getDevices (deviceType: DeviceType option, backend: Backend option) =
+        dsharp.devices(?deviceType=deviceType, ?backend=backend)
 
     let makeCombos dtypes =
         [ for backend in backends do
-            for device in devices do
+            let ds = getDevices (None, Some backend)
+            for device in ds do
               for dtype in dtypes do
-                yield ComboInfo(backend, device, dtype) ]
+                yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultDtype=dtype, defaultFetchDevices=getDevices) ]
 
-    /// These runs though all devices, backends and Dtype
+    /// These runs though all devices, backends and various Dtype
+    let Float32 = makeCombos Dtypes.Float32
     let Integral = makeCombos Dtypes.Integral
     let FloatingPoint = makeCombos Dtypes.FloatingPoint
     let UnsignedIntegral = makeCombos Dtypes.UnsignedIntegral
@@ -141,8 +152,9 @@ module Combos =
     /// This runs though all devices and backends but leaves the default Dtype
     let AllDevicesAndBackends = 
         [ for backend in backends do
-          for device in devices do
-          yield ComboInfo(defaultBackend=backend, defaultDevice=device) ]
+            let ds = getDevices (None, Some backend)
+            for device in ds do
+              yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
 
 [<AutoOpen>]
 module TestUtils =
