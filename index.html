@@ -8,7 +8,7 @@
       document title extracted from the <h1> element or
       file name, if there is no <h1> heading
     -->
-    <title>DiffSharp: Differentiable Functional Programming
+    <title>DiffSharp: Differentiable Functional Programming (v0.8)
 </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -46,6 +46,8 @@
         <div class="span9" id="main">
           <h1>DiffSharp: Differentiable Functional Programming</h1>
 
+<p><b>For DiffSharp 1.0 see  https://diffsharp.github.io/</b>.</p>
+
 <p>DiffSharp is a functional <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library.</p>
 
 <p>AD allows exact and efficient calculation of derivatives, by systematically invoking the chain rule of calculus at the elementary operator level during program execution. AD is different from <a href="https://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a>, which is prone to truncation and round-off errors, and <a href="https://en.wikipedia.org/wiki/Symbolic_computation">symbolic differentiation</a>, which is affected by expression swell and cannot fully handle algorithmic control flow.</p>
@@ -56,15 +58,7 @@
 
 <p>DiffSharp is implemented in the F# language and <a href="csharp.html">can be used from C#</a> and the <a href="http://en.wikipedia.org/wiki/List_of_CLI_languages">other languages</a> running on Mono, <a href="http://dotnet.github.io/">.NET Core</a>, or the .Net Framework, targeting the 64 bit platform. It is tested on Linux and Windows. We are working on interfaces/ports to other languages.</p>
 
-<div class="row">
-    <div class="span9">
-    <div class="well well-small" id="nuget" style="background-color:#C6AEC7">
-        Version 0.7 is a reimplementation of the library with support for <b>linear algebra primitives, BLAS/LAPACK, 32- and 64-bit precision, and different CPU/GPU backends.</b> Please see the <a href="https://github.com/DiffSharp/DiffSharp/releases">release notes</a> to learn about the changes and how you can move your code to this version. (If you still need pre-0.7 documentation, <a href="https://diffsharp.github.io/DiffSharp/0.6.3/">here they are</a>).
-    </div>
-    </div>
-</div>
-
-<h2>Current Features and Roadmap</h2>
+<h2>Current Features</h2>
 
 <p>The following features are up and running:</p>
 
@@ -75,17 +69,6 @@
 <li><em>Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)</em></li>
 <li><em>Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)</em></li>
 </ul>
-
-<p>We are working on the following features for the next release:</p>
-
-<ul>
-<li><em>GPU backend using CUDA/OpenCL</em></li>
-<li><em>Generalization to tensors/multidimensional arrays</em></li>
-<li><em>Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)</em></li>
-<li><em>AD via syntax tree transformation, using code quotations</em></li>
-</ul>
-
-<p>At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.</p>
 
 <h2>How to Get</h2>
 
