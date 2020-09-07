@@ -19,40 +19,18 @@ jobs:
         dotnet-version: 3.1.301
     - name: Install dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --no-restore --verbosity normal
-    - name: Codecov
-      uses: codecov/codecov-action@v1
     - name: Install tool dependencies
       run: dotnet tool restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore --verbosity normal
+    - name: Pack
+      run: dotnet pack --configuration Release --no-build --verbosity normal
+    - name: Test
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
+    - name: Codecov
+      uses: codecov/codecov-action@v1
     - name: Run fsdocs
       run: dotnet fsdocs build --eval
-    - name: Publish NuGet (DiffSharp.Core)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/DiffSharp.Core/DiffSharp.Core.fsproj
-    - name: Publish NuGet (DiffSharp.Backends.Reference)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Backends.Reference.fsproj
-    - name: Publish NuGet (DiffSharp.Backends.Torch)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/DiffSharp.Backends.Torch/DiffSharp.Backends.Torch.fsproj
-    - name: Publish NuGet (DiffSharp-cpu)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cpu.fsproj
-    - name: Publish NuGet (DiffSharp-cuda-linux)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: bundles/DiffSharp-cuda-linux/DiffSharp-cuda-linux.fsproj
-    - name: Publish NuGet (DiffSharp-cuda-windows)
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: bundles/DiffSharp-cuda-windows/DiffSharp-cuda-windows.fsproj
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
@@ -61,3 +39,7 @@ jobs:
         publish_dir: ./output
         publish_branch: master
         force_orphan: true
+    - name: Publish NuGets
+      run: dotnet nuget push bin/packages/*.nupkg -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
+
+# note, the nuget org token expires around June 2021
