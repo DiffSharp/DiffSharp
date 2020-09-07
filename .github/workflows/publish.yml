@@ -21,8 +21,12 @@ jobs:
       run: dotnet restore
     - name: Install tool dependencies
       run: dotnet tool restore
+    # Release build is used to prepare packages
     - name: Build
       run: dotnet build --configuration Release --no-restore --verbosity normal
+    # Debug build is used to prepare docs
+    - name: Build
+      run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
     - name: Codecov
@@ -40,6 +44,6 @@ jobs:
         publish_branch: master
         force_orphan: true
     - name: Publish NuGets
-      run: dotnet nuget push bin/packages/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
+      run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
 
 # note, the nuget org token expires around June 2021
