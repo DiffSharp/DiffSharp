@@ -22,7 +22,9 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --no-restore --verbosity normal
+    - name: Codecov
+      uses: codecov/codecov-action@v1
     - name: Install tool dependencies
       run: dotnet tool restore
     - name: Run fsdocs
@@ -30,7 +32,7 @@ jobs:
     - name: Publish NuGet (DiffSharp.Core)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
-        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Core.fsproj
+        PROJECT_FILE_PATH: src/DiffSharp.Core/DiffSharp.Core.fsproj
     - name: Publish NuGet (DiffSharp.Backends.Reference)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -38,7 +40,7 @@ jobs:
     - name: Publish NuGet (DiffSharp.Backends.Torch)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
-        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Backends.Torch.fsproj
+        PROJECT_FILE_PATH: src/DiffSharp.Backends.Torch/DiffSharp.Backends.Torch.fsproj
     - name: Publish NuGet (DiffSharp-cpu)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -46,11 +48,11 @@ jobs:
     - name: Publish NuGet (DiffSharp-cuda-linux)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
-        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cuda-linux.fsproj
+        PROJECT_FILE_PATH: bundles/DiffSharp-cuda-linux/DiffSharp-cuda-linux.fsproj
     - name: Publish NuGet (DiffSharp-cuda-windows)
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
-        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cuda-windows.fsproj
+        PROJECT_FILE_PATH: bundles/DiffSharp-cuda-windows/DiffSharp-cuda-windows.fsproj
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
