@@ -13,6 +13,39 @@ git clone --branch dev https://github.com/DiffSharp/DiffSharp.git
 cd DiffSharp
 ```
 
+## Getting Started
+
+To use DiffSharp you must reference an appropriate nuget pacakge. Reference one of the following from https://nuget.org:
+
+    #r "nuget: DiffSharp-lite,0.9.5-preview-NNNN"
+
+    #r "nuget: DiffSharp-cpu,0.9.5-preview-NNNN"
+
+    #r "nuget: DiffSharp-cuda-linux,0.9.5-preview-NNNN"
+
+    #r "nuget: DiffSharp-cuda-windows,0.9.5-preview-NNNN"
+
+For the last three add:
+
+    dsharp.config(backend=Backend.Torch)
+
+## Developing DiffSharp Libraries
+
+To develop libraries built on DiffSharp which are designed for general use (not just in your own code), do the following:
+
+1. reference `DiffSharp.Core` in your library code
+2. reference `DiffSharp.Backends.Reference` in your correctness testing code.
+3. reference `DiffSharp.Backends.Torch` and `libtorch-cpu` in your CPU testing code.
+4. reference `DiffSharp.Backends.Torch` and `libtorch-cuda` in your (optional) GPU testing code.
+
+## Using a pre-installed or self-built LibTorch 1.5.0
+
+The packages above are large as they include libtorch.  If you already have `libtorch` 1.5.0 available on your machine you can
+
+1. reference `DiffSharp-lite`
+2. set `LD_LIBRARY_PATH` to include a directory containing the relevant `torch_cpu.so` and `torch_cuda.so`.
+3. use `dsharp.config(backend=Backend.Torch)`
+
 ## Run tests
 
 Required:
@@ -37,68 +70,6 @@ Use the following to instantiate a Docker container from the `diffsharp` image a
 ```
 docker run --rm diffsharp dotnet test
 ```
-
-## Getting Started
-
-After building, to use DiffSharp in this development branch you must reference an appropriate configuration.
-
-Reference one of
-
-* `DiffSharp-cpu`
-* `DiffSharp-cuda-win`
-* `DiffSharp-cuda-linux`
-
-Then use:
-
-    dsharp.config(backend=Backend.Torch)
-
-Alternatively use the reference backend via `DiffSharp-lite`.
-
-## Developing DiffSharp Libraries
-
-To develop libraries built on DiffSharp which are designed for general use (not just in your own code), do the following:
-
-1. reference `DiffSharp.Core` in your library code
-2. reference `DiffSharp.Backends.Reference` in your correctness testing code.
-3. reference `DiffSharp.Backends.Torch` and `libtorch-cpu` in your CPU testing code.
-4. reference `DiffSharp.Backends.Torch` and `libtorch-cuda` in your (optional) GPU testing code.
-
-## Using a pre-installed or self-built LibTorch 1.5.0
-
-The packages above are large as they include libtorch.  If you already have `libtorch` 1.5.0 available on your machine you can
-
-1. reference `DiffSharp-lite`
-2. set `LD_LIBRARY_PATH` to include a directory containing the relevant `torch_cpu.so` and `torch_cuda.so`.
-3. use `dsharp.config(backend=Backend.Torch)`
-
-## Using CI build packages
-
-To consume CI build packages in a .NET Interactive Jupyter notebook ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)) you can do
-
-    #i "nuget:https://ci.appveyor.com/nuget/diffsharp"
-
-In F# 5.0 scripts (with `--langversion:preview`) do:
-
-    #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
-
-Then add a reference to the version you want, tha package numbers can be found in the "artifacts" tabs of [the DiffSharp CI builds](https://ci.appveyor.com/project/dsyme/diffsharp/history).
-
-    #r "nuget: DiffSharp-lite,0.9.5-preview-NNNN"
-
-or
-
-    #r "nuget: DiffSharp-cpu,0.9.5-preview-NNNN"
-    dsharp.config(backend=Backend.Torch)
-
-or 
-
-    #r "nuget: DiffSharp-cuda-linux,0.9.5-preview-NNNN"
-    dsharp.config(backend=Backend.Torch)
-
-or
-
-    #r "nuget: DiffSharp-cuda-windows,0.9.5-preview-NNNN"
-    dsharp.config(backend=Backend.Torch)
 
 ## Building against locally built TorchSharp packages
 
@@ -153,5 +124,3 @@ By default in-branch testing is only done on CPU.  To enable on GPU/CUDA you mus
 2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj`
 
 3. Verify that `dsharp.isCudaEnabled()` is returning true and GPU testing is enabled in `TestUtil.fs`.
-
-

@@ -22,10 +22,10 @@ jobs:
     - name: Install tool dependencies
       run: dotnet tool restore
     # Release build is used to prepare packages
-    - name: Build
+    - name: Build (Release)
       run: dotnet build --configuration Release --no-restore --verbosity normal
     # Debug build is used to prepare docs
-    - name: Build
+    - name: Build (Debug)
       run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
