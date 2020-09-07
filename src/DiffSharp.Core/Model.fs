@@ -52,7 +52,7 @@ type ParameterDict() =
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = copyKeys d.values
+        let keys = Dictionary.copyKeys d.values
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1

@@ -149,13 +149,13 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
                             let lw2 = uniques.[v]
                             uniques.[v] <- dsharp.stack([lw; lw2]).logsumexp(dim=0)
                         else uniques.[v] <- lw
-                    copyKeys uniques, dsharp.stack(copyValues uniques).view(-1)
+                    Dictionary.copyKeys uniques, dsharp.stack(Dictionary.copyValues uniques).view(-1)
                 else
                     let vals, counts = getUniqueCounts _values false
                     vals, dsharp.tensor(counts)
             _values <- newValues
             _categorical <- Categorical(logits=newLogWeights)
-        _weighted <- not (allEqual (_categorical.probs.unstack()))
+        _weighted <- not (Seq.allEqual (_categorical.probs.unstack()))
     member d.values = _values
     member d.valuesTensor = _valuesTensor.Force()
     member d.length = d.values.Length
