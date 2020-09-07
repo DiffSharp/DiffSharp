@@ -1,4 +1,4 @@
-name: Build / test / codecov pull request
+name: Build/test Debug
 
 on:
   pull_request:

@@ -1,4 +1,4 @@
-name: Build / test / publish / docs
+name: Build/test/docs/publish
 
 on:
   push:
@@ -40,6 +40,6 @@ jobs:
         publish_branch: master
         force_orphan: true
     - name: Publish NuGets
-      run: dotnet nuget push bin/packages/*.nupkg -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
+      run: dotnet nuget push bin/packages/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
 
 # note, the nuget org token expires around June 2021

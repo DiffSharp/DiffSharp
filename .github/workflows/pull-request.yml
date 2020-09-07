@@ -1,4 +1,4 @@
-name: Build / test / codecov pull request
+name: Build/test/codecov Release
 
 on:
   pull_request:
