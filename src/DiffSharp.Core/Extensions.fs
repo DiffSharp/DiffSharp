@@ -1,5 +1,6 @@
 ﻿namespace DiffSharp.Util
 
+open System
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open System.IO
@@ -132,3 +133,53 @@ module ExtensionAutoOpens =
         with
         | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 
+    let logSqrt2Pi = log(sqrt(2. * Math.PI))
+
+    let log10Val = log 10.
+
+    let indentNewLines (str:String) numSpaces =
+        let mutable ret = ""
+        let spaces = String.replicate numSpaces " "
+        str |> Seq.toList |> List.iter (fun c -> 
+                            if c = '\n' then 
+                                ret <- ret + "\n" + spaces
+                            else ret <- ret + string c)
+        ret
+
+    let stringPad (s:string) (width:int) =
+        if s.Length > width then s
+        else String.replicate (width - s.Length) " " + s
+
+    let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
+
+    /// Create a non-jagged 3D array from jagged data
+    let array3D data = 
+        let data = data |> Array.ofSeq |> Array.map array2D
+        let r1, r2, r3 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1)
+        for i in 0 .. r1-1 do 
+            let q2 = data.[i].GetLength(0)
+            let q3 = data.[i].GetLength(1)
+            if q2 <> r2 || q3 <> r3 then 
+                invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d, later is _ x _ x %d x %d" i r2 r3 q2 q3)
+        Array3D.init r1 r2 r3 (fun i j k -> data.[i].[j,k])
+
+    /// Create a non-jagged 4D array from jagged data
+    let array4D data = 
+        let data = data |> array2D |> Array2D.map array2D
+        let r1,r2,r3,r4 = (data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0),data.[0,0].GetLength(1))
+        for i in 0 .. r1-1 do 
+          for j in 0 .. r2-1 do 
+            let q3 = data.[i,j].GetLength(0)
+            let q4 = data.[i,j].GetLength(1)
+            if q3 <> r3 || q4 <> r4 then 
+                invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
+        Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+
+    let arrayND (shape: int[]) f =
+        match shape with 
+        | [| |] -> f [| |] |> box
+        | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
+        | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
+        | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
+        | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
+        | _ -> failwith "arrayND - nyi for dim > 4"

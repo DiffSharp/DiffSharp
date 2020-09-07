@@ -396,7 +396,7 @@ type Tensor =
             t.GetSlice(bounds)
 
     static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        let res = value |> tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
         | Some (array, shape) -> 
             let array = array |> Array.map float32

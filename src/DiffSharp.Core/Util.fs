@@ -3,7 +3,6 @@ namespace DiffSharp.Util
 
 open System
 open System.Collections
-open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open FSharp.Reflection
 open DiffSharp
@@ -14,7 +13,7 @@ type NestingLevel =
     new() = {Current = 0u}
     member t.Next() = t.Current <- t.Current + 1u; t.Current
 
-/// Operations to get, set or reset the global nesting level for differentiation operations.
+/// Contains operations to get, set or reset the global nesting level for differentiation operations.
 type GlobalNestingLevel() =
     static let tagger = NestingLevel()
     static member Current = tagger.Current
@@ -22,34 +21,63 @@ type GlobalNestingLevel() =
     static member Reset() = tagger.Current <- 0u
     static member Set(level) = tagger.Current <- level
 
+/// Contains operations relating to the random generation of data
 type Random() =
     static let mutable rnd = System.Random()
+
+    /// Set the random seed
     static member Seed(seed) = rnd <- System.Random(seed)
+
+    /// Return a random value for the uniform distribution over the interval [0,1)
     static member Uniform() = rnd.NextDouble()
+
+    /// Return a random value for the uniform distribution with the given parameters
     static member Uniform(low, high) = low + (rnd.NextDouble() * (high-low))
+
+    /// Return a random value for the normal distribution with the given parameters
     static member Normal() =
         let rec normal() = 
             let x, y = (rnd.NextDouble()) * 2.0 - 1.0, (rnd.NextDouble()) * 2.0 - 1.0
             let s = x * x + y * y
             if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
         normal()
+
+    /// Return a random value for the normal distribution with the given parameters
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
+
+    /// Return a random integer in the given range
     static member Integer(low, high) = rnd.Next(low, high)
+
+    /// Choose an index at random according to the given weights
     static member ChoiceIndex(probs:float[]) =
         let probsSum = probs |> Array.sum
         let cumulativeProbs = probs |> Array.map (fun v -> v / probsSum) |> Array.cumulativeSum
         let p = rnd.NextDouble()
         cumulativeProbs |> Array.findIndex (fun v -> v >= p)
+
+    /// Choose a value at random
     static member Choice(array:_[]) = array.[rnd.Next(array.Length)]
+
+    /// Choose multiple values at random independently
     static member Choice(array:_[], probs:float[]) = 
         if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
         array.[Random.ChoiceIndex(probs)]
+
+    /// Return an array of random values for the given weighted distribution
     static member Multinomial(probs:float[], numSamples:int) =
         Array.init numSamples (fun _ -> Random.ChoiceIndex(probs)) // Samples with replacement
+
+    /// Return an array of random values for the given weighted distribution
     static member Multinomial(probs:float[,], numSamples:int) =
         Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
+
+    /// Return a random value for the given distribution
     static member Bernoulli(prob:float) = if rnd.NextDouble() < prob then 1. else 0.
+
+    /// Return a random value according a fair coin flip
     static member Bernoulli() = Random.Bernoulli(0.5)
+
+    /// Randomly shuffle the given array in-place 
     static member Shuffle(array:_[]) =
         // Durstenfeld/Knuth shuffle
         let a = array |> Array.copy
@@ -62,43 +90,15 @@ type Random() =
             a.[n] <- temp
         a
 
-[<AutoOpen>]
-module UtilAutoOpens =
-    let logSqrt2Pi = log(sqrt(2. * Math.PI))
+/// Contains operations relating to random generation of data
+module Random = 
+    let shuffledIndices (length: int) =
+        let indices = Array.init length id
+        let indicesShuffled = Random.Shuffle(indices)
+        fun (i: int) -> indicesShuffled.[i]
 
-    let log10Val = log 10.
-
-    /// Create a non-jagged 3D array from jagged data
-    let array3D data = 
-        let data = data |> Array.ofSeq |> Array.map array2D
-        let r1, r2, r3 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1)
-        for i in 0 .. r1-1 do 
-            let q2 = data.[i].GetLength(0)
-            let q3 = data.[i].GetLength(1)
-            if q2 <> r2 || q3 <> r3 then 
-                invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d, later is _ x _ x %d x %d" i r2 r3 q2 q3)
-        Array3D.init r1 r2 r3 (fun i j k -> data.[i].[j,k])
-
-    /// Create a non-jagged 4D array from jagged data
-    let array4D data = 
-        let data = data |> array2D |> Array2D.map array2D
-        let r1,r2,r3,r4 = (data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0),data.[0,0].GetLength(1))
-        for i in 0 .. r1-1 do 
-          for j in 0 .. r2-1 do 
-            let q3 = data.[i,j].GetLength(0)
-            let q4 = data.[i,j].GetLength(1)
-            if q3 <> r3 || q4 <> r4 then 
-                invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
-        Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
-
-    let arrayND (shape: Shape) f =
-        match shape with 
-        | [| |] -> f [| |] |> box
-        | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
-        | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
-        | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
-        | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
-        | _ -> failwith "arrayND - nyi for dim > 4"
+/// Contains operations relating to converting .NET data to tensor data
+module DataConverter =
 
     /// Get the elements of an arbitrary IEnumerble
     let private seqElements (ie: obj) = 
@@ -309,29 +309,3 @@ module UtilAutoOpens =
     let dataOfValuesForBool (value:obj) =
         dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
 
-    let toInt a =
-        match box a with
-        | :? float as a -> a |> int
-        | :? float32 as a -> a |> int
-        | :? int as a -> a
-        | _ -> failwith "Cannot convert to int"
-
-    let shuffledIndices (length: int) =
-        let indices = Array.init length id
-        let indicesShuffled = Random.Shuffle(indices)
-        fun (i: int) -> indicesShuffled.[i]
-
-    let indentNewLines (str:String) numSpaces =
-        let mutable ret = ""
-        let spaces = String.replicate numSpaces " "
-        str |> Seq.toList |> List.iter (fun c -> 
-                            if c = '\n' then 
-                                ret <- ret + "\n" + spaces
-                            else ret <- ret + string c)
-        ret
-
-    let stringPad (s:string) (width:int) =
-        if s.Length > width then s
-        else String.replicate (width - s.Length) " " + s
-
-    let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
