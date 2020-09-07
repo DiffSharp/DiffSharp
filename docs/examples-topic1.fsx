@@ -4,12 +4,12 @@
 (*** condition: fsx ***)
 #if FSX
 #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-lite,{{package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-lite,{{package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // IPYNB
 
 

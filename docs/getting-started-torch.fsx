@@ -5,12 +5,12 @@
 (*** condition: fsx ***)
 #if FSX
 #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-cpu,{{package-version}}"
+#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-cpu,{{package-version}}"
+#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
 
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
