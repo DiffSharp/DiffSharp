@@ -4,7 +4,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Extensions.fs" />
     <Compile Include="Dtype.fs" />
+    <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="RawTensor.fs" />
     <Compile Include="Tensor.fs" />

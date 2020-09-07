@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Util
 open System
 
 [<TestFixture>]
@@ -220,7 +221,7 @@ type TestTensor () =
         let t3 = combo.tensor(t3Values)
         let t3ShapeCorrect = [|1; 2; 3|]
         let t3DimCorrect = 3
-        let t3ValuesCorrect = Util.array3D (List.map (List.map (List.map float32)) t3Values)
+        let t3ValuesCorrect = array3D (List.map (List.map (List.map float32)) t3Values)
 
         Assert.AreEqual(t3ShapeCorrect, t3.shape)
         Assert.AreEqual(t3DimCorrect, t3.dim)
@@ -233,7 +234,7 @@ type TestTensor () =
         let t4 = combo.tensor(t4Values)
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
-        let t4ValuesCorrect = Util.array4D (List.map (List.map (List.map (List.map float32))) t4Values)
+        let t4ValuesCorrect = array4D (List.map (List.map (List.map (List.map float32))) t4Values)
 
         Assert.AreEqual(t4ShapeCorrect, t4.shape)
         Assert.AreEqual(t4DimCorrect, t4.dim)
@@ -1183,7 +1184,7 @@ type TestTensor () =
 
         let t7Results, t7CommuteResults = 
             [| for shape in t7Shapes do 
-                  let t7b = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7b = combo.tensor(arrayND shape (fun is -> double (Array.sum is) + 2.0))
                   let t7 = t7a + t7b
                   let t7Commute = t7b + t7a
                   yield (t7b, t7), (t7b, t7Commute) |]
@@ -1576,7 +1577,7 @@ type TestTensor () =
 
         let t6Results, t6CommuteResults = 
             [| for shape in t6Shapes do 
-                  let t6b = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6b = combo.tensor( arrayND shape (fun is -> double (Array.sum is) + 2.0))
                   let t6 = t6a * t6b
                   let t6Commute = t6b * t6a
                   yield (t6b, t6 ), (t6b, t6Commute ) |]

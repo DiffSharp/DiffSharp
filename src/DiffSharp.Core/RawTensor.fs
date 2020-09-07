@@ -1,11 +1,11 @@
-namespace DiffSharp.Backends
+namespace rec DiffSharp.Backends
 
 open System
 open DiffSharp
 open DiffSharp.Util
 
-type [<AbstractClass>]
-     BackendStatics() = 
+[<AbstractClass>]
+type BackendStatics() = 
     // cache for most recently accessed backend
     static let mutable last = None
     static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, BackendStatics>()
@@ -62,8 +62,8 @@ type [<AbstractClass>]
             last <- Some (code, res)
             res
 
-and [<AbstractClass>]
-    RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
+[<AbstractClass>]
+type RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
 
     member t.Shape = shape
     member t.Dim = shape.Length
@@ -119,38 +119,38 @@ and [<AbstractClass>]
         let data, shape, dtype =
             match dtype with 
             | Some Dtype.Int64 ->
-                let a,s = dataOfValuesForInt64 values
+                let a,s = DataConverter.dataOfValuesForInt64 values
                 (a :> Array), s, Dtype.Int64
             | Some Dtype.Int32 ->
-                let a,s = dataOfValuesForInt32 values
+                let a,s = DataConverter.dataOfValuesForInt32 values
                 (a :> Array), s, Dtype.Int32
             | Some Dtype.Int16 ->
-                let a,s = dataOfValuesForInt16 values
+                let a,s = DataConverter.dataOfValuesForInt16 values
                 (a :> Array), s, Dtype.Int16
             | Some Dtype.Int8 ->
-                let a,s = dataOfValuesForInt8 values
+                let a,s = DataConverter.dataOfValuesForInt8 values
                 (a :> Array), s, Dtype.Int8
             | Some Dtype.Byte ->
-                let a,s = dataOfValuesForByte values
+                let a,s = DataConverter.dataOfValuesForByte values
                 (a :> Array), s, Dtype.Byte
             | Some Dtype.Bool ->
-                let a,s = dataOfValuesForBool values
+                let a,s = DataConverter.dataOfValuesForBool values
                 (a :> Array), s, Dtype.Bool
             | Some Dtype.Float64 ->
-                let a,s = dataOfValuesForFloat64 values
+                let a,s = DataConverter.dataOfValuesForFloat64 values
                 (a :> Array), s, Dtype.Float64
             | Some Dtype.Float32 ->
-                let a,s = dataOfValuesForFloat32 values
+                let a,s = DataConverter.dataOfValuesForFloat32 values
                 (a :> Array), s, Dtype.Float32
             | Some (Dtype.Other (name, _, _)) ->
                 failwithf "can't directly create tensors of user-defined type %s" name
             | None ->
                 // Prefer Bool tensor if all bool
-                match values |> tryFlatArrayAndShape<bool> with
+                match values |> DataConverter.tryFlatArrayAndShape<bool> with
                 | Some (values, shape) -> ((values :> Array), shape, Dtype.Bool)
                 | _ ->
                 // Otherwise prefer float32
-                let a,s = dataOfValuesForFloat32 values 
+                let a,s = DataConverter.dataOfValuesForFloat32 values 
                 (a :> Array), s, Dtype.Float32
 
         let statics = BackendStatics.Get(dtype=dtype, ?backend=backend)

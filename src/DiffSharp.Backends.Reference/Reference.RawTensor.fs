@@ -403,10 +403,10 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline MaxIndexT(t: RawTensorCPU< ^T >) =
-        t.FlatIndexToIndex(maxIndex t.Values)
+        t.FlatIndexToIndex(Seq.maxIndex t.Values)
 
     let inline MinIndexT(t: RawTensorCPU< ^T >) =
-        t.FlatIndexToIndex(minIndex t.Values)
+        t.FlatIndexToIndex(Seq.minIndex t.Values)
 
     let inline AddTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values
