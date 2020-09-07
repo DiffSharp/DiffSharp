@@ -14,7 +14,7 @@
 
 (**
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=api-overview.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=api-overview.ipynb) [Script](api-overview.fsx)
 
 API Overview
 ============

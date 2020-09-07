@@ -10,13 +10,16 @@
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
 #r "nuget: DiffSharp-lite,{{package-version}}"
+
+Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
 DiffSharp: Differentiable Functional Programming
 ================================================
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb) [Script](index.fsx)
 
 DiffSharp is a tensor library with advanced support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
 
@@ -54,20 +57,36 @@ Quick Usage Example
 
 open DiffSharp
 
+// A 1D tensor
+let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 5.0 ]
+
+// A 2D tensor
+let t2 = dsharp.tensor [ [ 0; 1]; [2; 2 ] ]
+
 // A scalar-to-scalar function
 let f (x: Tensor) = sin (sqrt x)
+
+f (dsharp.tensor 1.2)
 
 // Derivative of f
 let df = dsharp.diff f
 
+df (dsharp.tensor 1.2)
+
 // A vector-to-scalar function
 let g (x: Tensor) = exp (x.[0] * x.[1]) + x.[2]
+
+g (dsharp.tensor [ 0.0; 0.3; 0.1 ])
 
 // Gradient of g
 let gg = dsharp.grad g 
 
+gg (dsharp.tensor [ 0.0; 0.3; 0.1 ])
+
 // Hessian of g
 let hg = dsharp.hessian g
+
+hg (dsharp.tensor [ 0.0; 0.3; 0.1 ])
 
 (**
 More Info and How to Cite
