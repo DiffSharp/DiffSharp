@@ -4,16 +4,16 @@
 (*** condition: fsx ***)
 #if FSX
 #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-lite,{{package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-lite,{{package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // IPYNB
 
 (**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=gett-ingstarted-topic1.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-topic1.ipynb) [Script](getting-started-topic1.fsx)
 
 Nested AD
 =========

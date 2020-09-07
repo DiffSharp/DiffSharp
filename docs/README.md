@@ -4,9 +4,7 @@
 
 The `Dockerfile` and `NuGet.config` allow us to run generated notebooks in [MyBinder](https://mybinder.org)
 
-* `gh-pages` branch of diffsharp/diffsharp.github.io:  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master)
-
-* `index.ipynb` for `dev` branch of diffsharp/diffsharp.github.io: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)
+* `master` branch of diffsharp/diffsharp.github.io:  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master)
 
 # Generating docs
 
@@ -24,12 +22,6 @@ This published version of the docs can be refreshed by these commands:
 3. To Iterate on API Docs (requires evaluation off since DLLs get locked)
 
     dotnet fsdocs watch 
-
-4. Build Final and Release
-
-    dotnet build 
-    dotnet fsdocs build --eval --clean --output ../DiffSharp-docs
-    bash -c "(cd ../DiffSharp-docs && git add . && git commit -a -m doc-update && git push -f https://github.com/diffsharp/diffsharp.github.io gh-pages)"
 
 ## Generating docs using  a local build of FSharp.Formatting
 
