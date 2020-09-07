@@ -1,0 +1,61 @@
+name: Build / test / publish / docs
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Install tool dependencies
+      run: dotnet tool restore
+    - name: Run fsdocs
+      run: dotnet fsdocs build --eval
+    - name: Publish NuGet (DiffSharp.Core)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Core.fsproj
+    - name: Publish NuGet (DiffSharp.Backends.Reference)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Backends.Reference.fsproj
+    - name: Publish NuGet (DiffSharp.Backends.Torch)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/DiffSharp.Backends.Reference/DiffSharp.Backends.Torch.fsproj
+    - name: Publish NuGet (DiffSharp-cpu)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cpu.fsproj
+    - name: Publish NuGet (DiffSharp-cuda-linux)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cuda-linux.fsproj
+    - name: Publish NuGet (DiffSharp-cuda-windows)
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: bundles/DiffSharp-cpu/DiffSharp-cuda-windows.fsproj
+    - name: Deploy docs
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        personal_token: ${{ secrets.PERSONAL_TOKEN }}
+        external_repository: DiffSharp/diffsharp.github.io
+        publish_dir: ./output
+        publish_branch: master
+        force_orphan: true
