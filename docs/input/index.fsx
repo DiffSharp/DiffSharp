@@ -2,8 +2,10 @@
 #r "../../src/DiffSharp/bin/Debug/netstandard2.0/DiffSharp.dll"
 
 (**
-DiffSharp: Differentiable Functional Programming
+DiffSharp: Differentiable Functional Programming (v0.8)
 ================================================
+
+**For DiffSharp 1.0 see  https://diffsharp.github.io/**
 
 DiffSharp is a functional [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD) library.
 
@@ -24,10 +26,10 @@ DiffSharp is implemented in the F# language and [can be used from C#](csharp.htm
 </div>
 
 
-Current Features and Roadmap
+Features
 ----------------------------
 
-The following features are up and running:
+The following features are in v0.8:
 
 - _Functional nested differentiation with linear algebra primitives, supporting forward and reverse AD, or any combination thereof, up to any level_
 - _Matrix-free Jacobian- and Hessian-vector products_
@@ -35,14 +37,7 @@ The following features are up and running:
 - _Parallel implementations of non-BLAS operations (e.g. Hadamard products, matrix transpose)_
 - _Support for 32- and 64-bit floating point precision (32 bit float operations run significantly faster on many systems)_
 
-Possible future features include:
-
-- _GPU backend using CUDA/OpenCL_
-- _Generalization to tensors/multidimensional arrays_
-- _Improved Hessian calculations exploiting sparsity structure (e.g. matrix-coloring)_
-- _AD via syntax tree transformation, using code quotations_
-
-At this point we are debugging algorithmic complexity and the APIs. We are hoping the community will help us get the API right and ensure that the latest models can make use of DiffSharp as succinctly and as cleanly as possible, which would make it convenient to use in production.
+For DiffSharp 1.0 see  https://diffsharp.github.io/
 
 How to Get
 ----------
