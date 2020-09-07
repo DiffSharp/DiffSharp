@@ -13,7 +13,6 @@ type Dataset() =
     abstract member item: int -> Tensor * Tensor
     member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
 
-
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
     let batchSize = min batchSize dataset.length
@@ -25,19 +24,17 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, 
     let targetBackend = defaultArg targetBackend backend
     member d.length = defaultArg numBatches (dataset.length/batchSize)
     member d.epoch() =
-        let indexer = if shuffle then shuffledIndices (dataset.length) else id
+        let indexer = if shuffle then Random.shuffledIndices (dataset.length) else id
         let indices = Seq.init dataset.length id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
-
 
 type TensorDataset(data:Tensor, target:Tensor) =
     inherit Dataset()
     do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
     override d.length = data.shape.[0]
     override d.item(i) = data.[i], target.[i]
-
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()

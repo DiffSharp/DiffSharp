@@ -1,6 +1,7 @@
 ﻿(*** condition: prepare ***)
-#r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
-#r "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1/DiffSharp.Backends.Reference.dll"
+#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
+#r "DiffSharp.Core.dll"
+#r "DiffSharp.Backends.Reference.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
@@ -10,6 +11,9 @@
 #if IPYNB
 #i "nuget: https://ci.appveyor.com/nuget/diffsharp"
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
+
+Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**

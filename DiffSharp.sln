@@ -32,7 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{841AB16F-5
 		docs\_template.html = docs\_template.html
 		docs\api-overview.fsx = docs\api-overview.fsx
 		docs\examples-topic1.fsx = docs\examples-topic1.fsx
-		docs\gettingstarted-topic1.fsx = docs\gettingstarted-topic1.fsx
+		docs\getting-started-topic1.fsx = docs\getting-started-topic1.fsx
+		docs\getting-started-torch.fsx = docs\getting-started-torch.fsx
 		docs\index.fsx = docs\index.fsx
 	EndProjectSection
 EndProject
