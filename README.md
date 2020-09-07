@@ -71,6 +71,25 @@ The packages above are large as they include libtorch.  If you already have `lib
 2. set `LD_LIBRARY_PATH` to include a directory containing the relevant `torch_cpu.so` and `torch_cuda.so`.
 3. use `dsharp.config(backend=Backend.Torch)`
 
+## Using and installing .NET Interactive
+
+Examples are often written and executed using .NET Interactive.
+
+To use latest master of .NET Interactive do the following
+
+In browser - use ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)).
+
+Windows:
+
+    git clone https://github.com/dotnet/interactive
+    .\build
+    pwsh.exe src/dotnet-interactive/build-and-install-dotnet-interactive.ps1
+    jupyter lab
+
+Linux:
+
+    TBD
+
 ## Using CI build packages
 
 To consume CI build packages in a .NET Interactive Jupyter notebook ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)) you can do
