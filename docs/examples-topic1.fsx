@@ -66,10 +66,7 @@ let inline f (x:Tensor) =  sin x.[0] + cos x.[1]
 let xmin = gradientDescent f (t [1.; 1.]) (t 0.9) (t 0.00001)
 let fxmin = f xmin
 
-(*** hide, define-output: o ***)
-printf "val xmin : Tensor = tensor [ -1.570790759; 3.141591964 ]
-val fxmin : Tensor = tensor -2.0"
-(*** include-output: o ***)
+(*** include-fsi-output ***)
 
 (**
 

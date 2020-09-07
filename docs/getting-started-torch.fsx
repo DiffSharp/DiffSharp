@@ -37,7 +37,6 @@ dsharp.config(backend=Backend.Torch)
 
 let t = dsharp.tensor [ 0 .. 10 ]
 
-(** include-fsi-output *)
 (**
 Now examine the device and backend:
 *)
@@ -45,7 +44,7 @@ Now examine the device and backend:
 let device = t.device
 let backend = t.backend
 
-(** include-fsi-output *)
+(*** include-fsi-output ***)
 (** 
 
 To move a tensor to the GPU use the following:
