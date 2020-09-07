@@ -1,7 +1,19 @@
 // Learn more about F# at http://fsharp.org
-#r "../bundles/DiffSharp-cpu/bin/Debug/netcoreapp3.0/DiffSharp.Core.dll"
-#r "../bundles/DiffSharp-cpu/bin/Debug/netcoreapp3.0/DiffSharp.Backends.Torch.dll"
-#r "/home/gunes/.nuget/packages/torchsharp/0.3.52267/lib/netcoreapp3.0/TorchSharp.dll"
+(*** condition: prepare ***)
+#r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
+#r "../src/DiffSharp.Backends.Torch/bin/Debug/netcoreapp3.0/DiffSharp.Backends.Torch.dll"
+#r "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0/TorchSharp.dll"
+(*** condition: fsx ***)
+#if FSX
+#r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-cpu,{{package-version}}"
+#endif // FSX
+(*** condition: ipynb ***)
+#if IPYNB
+#i "nuget: https://ci.appveyor.com/nuget/diffsharp"
+#r "nuget: DiffSharp-cpu,{{package-version}}"
+#endif // IPYNB
+
 open System
 open DiffSharp
 open DiffSharp.Model
@@ -59,7 +71,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 
 
 
-dsharp.config(backend=Backend.Torch, device=Device.GPU)
+dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
 let trainSet = MNIST("./mnist", train=true)
