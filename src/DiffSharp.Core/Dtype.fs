@@ -222,7 +222,7 @@ module Dtype =
 
 /// Contains global functions and settings related to tensor element types, used when writing backends.
 [<AutoOpen>]
-module DtypeGlobalOps =
+module DtypeAutoOpens =
 
     /// Raise an exception indicating the given operation is not supported for the given tensor element type.
     let opNotSupported msg (dtype: Dtype) =
