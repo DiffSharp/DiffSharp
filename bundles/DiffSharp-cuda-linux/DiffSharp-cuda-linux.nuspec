@@ -8,7 +8,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>DiffSharp with runtime for Torch Cuda backend on Linux</description>
     <dependencies>
-      <group targetFramework=".NETCoreApp3.0">
+      <group targetFramework="netcoreapp3.0">
         <dependency id="DiffSharp.Backends.Torch" version="$PackageVersion$" exclude="Build,Analyzers" />
         <dependency id="DiffSharp.Core" version="$PackageVersion$" exclude="Build,Analyzers" />
         <dependency id="FSharp.Core" version="4.7.1" exclude="Build,Analyzers" />
@@ -17,6 +17,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="..\empty.txt" target="lib\netstandard2.1\_._" />
+    <file src="..\empty.txt" target="lib\netcoreapp3.0\_._" />
   </files>
 </package>
