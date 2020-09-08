@@ -34,9 +34,9 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release --verbosity normal
     - name: Pack (DiffSharp-cuda-linux)
-      run: dotnet pack --configuration Release --verbosity normal bundles\DiffSharp-cuda-linux
+      run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-linux
     - name: Pack (DiffSharp-cuda-windows)
-      run: dotnet pack --configuration Release --verbosity normal bundles\DiffSharp-cuda-windows
+      run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-windows
     - name: Run fsdocs
       run: dotnet fsdocs build --eval
     - name: Deploy docs
