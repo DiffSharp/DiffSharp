@@ -53,7 +53,7 @@ type Device =
 module Device = 
 
     /// Get or set the default device used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
-    let mutable Default : Device = Device(DeviceType.CPU, 0)
+    let mutable Default : Device = Device.CPU
 
 /// Represents a backend for DiffSharp tensors
 [<RequireQualifiedAccess>]
