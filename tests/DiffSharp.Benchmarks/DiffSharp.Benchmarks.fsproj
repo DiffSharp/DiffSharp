@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
   <ItemGroup>
     <!-- <ProjectReference Include="..\..\bundles\DiffSharp-cpu\DiffSharp-cpu.fsproj" /> -->
     <ProjectReference Include="..\..\bundles\DiffSharp-cuda-windows\DiffSharp-cuda-windows.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
   </ItemGroup>
 
 </Project>

@@ -14,7 +14,9 @@ open BenchmarkDotNet.Running
 type TensorSize_VectorAdd() = 
     let N = pown 2 18
 
-    do dsharp.config(backend=Backend.Torch, device=Device.GPU)
+    do dsharp.config(backend=Backend.Reference, device=Device.CPU)
+    //do dsharp.config(backend=Backend.Torch, device=Device.CPU)
+    //do dsharp.config(backend=Backend.Torch, device=Device.GPU)
     let n1, t1 = N, dsharp.tensor [ 1 ]
     let n8, t8 = N/8, dsharp.tensor [ 1 .. 8 ]
     let n64, t64 = N/64, dsharp.tensor [ 1 .. 64 ]
@@ -49,27 +51,27 @@ type TensorSize_VectorAdd() =
 
 let summary = BenchmarkRunner.Run<TensorSize_VectorAdd>()
 
-(*
+type Analysis() = 
 
-let N = pown 2 18
+    let N = pown 2 18
 
-// Fit a pair of points to a linear model 
-//    t = c1 * N + c2 / (N/n)
-//    c1 = cost per tensor element
-//    c2 = cost per tensor and/or tensor addition operation
-let fitp (n1, r1) (n2, r2) = 
-    let c2 = (r1 - r2) / (float (N / n1) - float (N / n2))
-    let c1 = (r1 - c2 * float (N / n1)) / float N
-    c1, c2
+    // Fit a pair of points to a linear model 
+    //    t = c1 * N + c2 * (N/n)
+    //    c1 = cost per tensor element
+    //    c2 = cost per tensor and/or tensor addition operation
+    let fitp (n1, r1) (n2, r2) = 
+        let c2 = (r1 - r2) / (float (N / n1) - float (N / n2))
+        let c1 = (r1 - c2 * float (N / n1)) / float N
+        c1, c2
 
-let fit data = 
-    data
-    |> List.mapi (fun i t -> pown 2 (i * 3), t) 
-    |> List.pairwise 
-    |> List.map (fun (p1,p2) -> fitp p1 p2)
-    |> List.unzip 
-    // average but discard last which seems to have major cache effects
-    //|> (fun (a,b) -> List.average a.[0..a.Length-2], List.average b.[0..b.Length-2])
+    let fit data = 
+        data
+        |> List.mapi (fun i t -> pown 2 (i * 3), t) 
+        |> List.pairwise 
+        |> List.map (fun (p1,p2) -> fitp p1 p2)
+        |> List.unzip 
+        // average but discard last which seems to have major cache effects
+        //|> (fun (a,b) -> List.average a.[0..a.Length-2], List.average b.[0..b.Length-2])
 
 (*
 
@@ -87,11 +89,7 @@ let fit data =
 
 *)
 
-let fits1 = fit [ 2_084_633.0; 256_473.0; 32_725.0; 4_911.0; 1_599.0; 1_008.0; 388.7 ] 
-//val fits : (float * float) list =
-//  [(-0.01790128435, 7.970145089); (0.002902984619, 7.803710938);
-//   (0.003576551165, 7.760602679); (0.004294804164, 7.392857143);
-//   (0.003523145403, 10.55357143); (0.00114528111, 88.47142857)]
+    let fits1 = fit [ 2_084_633.0; 256_473.0; 32_725.0; 4_911.0; 1_599.0; 1_008.0; 388.7 ] 
 
 (*
 
@@ -107,7 +105,7 @@ let fits1 = fit [ 2_084_633.0; 256_473.0; 32_725.0; 4_911.0; 1_599.0; 1_008.0; 3
 |  Add32768 |     1_018.9 us |     19.38 us |     41.72 us |       997.0 us |
 | Add262144 |       388.9 us |      4.97 us |      3.88 us |       390.2 us |
 *)
-let fits2 = fit [ 2_195_873.0; 276_061.0; 35_767.0; 5_101.0; 1_619.0; 1_018.0; 388.7 ]
+    let fits2 = fit [ 2_195_873.0; 276_061.0; 35_767.0; 5_101.0; 1_619.0; 1_018.0; 388.7 ]
 
 (*
 
@@ -123,21 +121,24 @@ let fits2 = fit [ 2_195_873.0; 276_061.0; 35_767.0; 5_101.0; 1_619.0; 1_018.0; 3
 |  Add32768 |     1_026.2 us |     25.73 us |     75.47 us |     1_012.8 us |
 | Add262144 |       372.6 us |      7.42 us |      7.29 us |       371.9 us |
 *)
-let fits3 = fit [ 1_731_513.0; 233_161.0; 28_019.0; 5_770.0; 1_532.0; 1_026.0; 372.7 ] 
+    let fits3 = fit [ 1_731_513.0; 233_161.0; 28_019.0; 5_770.0; 1_532.0; 1_026.0; 372.7 ] 
 
 (*
 
-4. 3 + removing "dtype" and "device" fields from TorchTensor
+4. 3 + removing "device" fields from TorchTensor + running on Torch CPU
 
-|    Method |           Mean |        Error |       StdDev |
-|---------- |---------------:|-------------:|-------------:|
-|      Add1 | 2,013,602.7 us | 38,145.49 us | 45,409.49 us |
-|      Add8 |   239,202.7 us |  3,742.78 us |  3,317.88 us |
-|     Add64 |    30,317.0 us |    598.83 us |    614.95 us |
-|    Add512 |     4,530.2 us |     89.77 us |    152.43 us |
-|   Add4096 |     1,628.4 us |     32.05 us |     43.87 us |
-|  Add32768 |     1,021.0 us |     20.25 us |     38.04 us |
-| Add262144 |       386.0 us |      6.58 us |      5.84 us |*)
+|    Method |           Mean |           Error |       StdDev |
+|---------- |---------------:|----------------:|-------------:|
+|      Add1 | 1_791_513.0 us | 1_057_817.29 us | 57_982.54 us |
+|      Add8 |   225_713.3 us |   110_940.05 us |  6_081.00 us |
+|     Add64 |    28_231.9 us |     5_307.85 us |    290.94 us |
+|    Add512 |     4_289.1 us |     2_075.17 us |    113.75 us |
+|   Add4096 |     1_462.1 us |       327.50 us |     17.95 us |
+|  Add32768 |     1_026.8 us |       202.28 us |     11.09 us |
+| Add262144 |       389.5 us |        65.88 us |      3.61 us |
+*)
+
+    let fits4 = fit [ 1_791_513.0; 225_713.0; 28_231.0; 4_289.0; 1_462.; 1_026.; 389. ] 
 
 (*
 
@@ -155,5 +156,22 @@ let fits3 = fit [ 1_731_513.0; 233_161.0; 28_019.0; 5_770.0; 1_532.0; 1_026.0; 3
 
 *)
 
-let fits5 = fit [ 19_576_903.0; 2_201_603.0; 420_980.0; 34_422.0; 5_906.0; 533.0; 79.6 ] 
+    let fits5 = fit [ 19_576_903.0; 2_201_603.0; 420_980.0; 34_422.0; 5_906.0; 533.0; 79.6 ] 
+
+(*
+
+6. 3 + running on Reference backend
+
+|    Method |         Mean |         Error |       StdDev |
+|---------- |-------------:|--------------:|-------------:|
+|      Add1 | 242_813.9 us | 192_225.46 us | 10_536.53 us |
+|      Add8 |  30_931.0 us |  15_950.54 us |    874.30 us |
+|     Add64 |   4_596.7 us |   1_736.71 us |     95.20 us |
+|    Add512 |   1_080.2 us |     219.47 us |     12.03 us |
+|   Add4096 |     676.8 us |      60.02 us |      3.29 us |
+|  Add32768 |     737.9 us |   1_333.39 us |     73.09 us |
+| Add262144 |     770.2 us |     203.48 us |     11.15 us |
 *)
+
+    let fits6 = fit [ 242_813.0; 30_931.0; 4_596.0; 1_080.0; 676.0; 737.0; 770.2 ] 
+

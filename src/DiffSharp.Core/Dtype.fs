@@ -30,7 +30,7 @@ type Device =
     | Device of DeviceType * int
     member x.DeviceType = (let (Device(a,_)) = x in a)
     member x.DeviceIndex = (let (Device(_,b)) = x in b)
-    static member CPU = Device(DeviceType.CPU, 0)
+    static member CPU = Device(DeviceType.CPU, -1)
     static member GPU = Device(DeviceType.CUDA, 0)
 
     member internal x.Code = (int x.DeviceType <<< 4) + x.DeviceIndex
