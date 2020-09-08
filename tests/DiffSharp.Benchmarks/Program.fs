@@ -51,7 +51,7 @@ type TensorSize_VectorAdd() =
 
 let summary = BenchmarkRunner.Run<TensorSize_VectorAdd>()
 
-type Analysis() = 
+module Analysis =
 
     let N = pown 2 18
 
