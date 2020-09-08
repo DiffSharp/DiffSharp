@@ -79,9 +79,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
            failwithf "mismatched Torch tensor shape, expected %A, got %A" (toTorchShape shape) tt.Shape
 
     let device = () // make sure 'device' isn't accessed in a member and stored as a field
-#else
-    do ignore device
 #endif
+    do ignore device
 
     override _.Shape = shape
     override _.Dim = shape.Length

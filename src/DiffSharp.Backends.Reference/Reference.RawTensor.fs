@@ -21,11 +21,6 @@ module internal Utils =
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtype, device: Device) =
     inherit RawTensor()
-#if TEST_DUPLICATE_BACKEND
-    let backend = Backend.Register "TestDuplicate"
-#else
-    let backend = Backend.Reference
-#endif
 
     override _.Shape = shape
     override _.Dim = shape.Length
@@ -33,7 +28,12 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override _.Dtype = dtype
     override _.Device = device
     override _.DeviceType = device.DeviceType
-    override _.Backend = backend
+    override _.Backend =
+#if TEST_DUPLICATE_BACKEND
+        Backend.Register "TestDuplicate"
+#else
+        Backend.Reference
+#endif
 
     member _.Values : 'T[] = values
 
