@@ -24,7 +24,18 @@ module internal Utils =
         | Dtype.Int64 -> ScalarType.Long
         | Dtype.Float32 -> ScalarType.Float
         | Dtype.Float64 -> ScalarType.Double
-        | Dtype.Other _ -> failwith "Torch GetItem TBD other type"
+
+    let fromTorchType ttype =
+        match ttype with 
+        | ScalarType.Bool -> Dtype.Bool
+        | ScalarType.SByte -> Dtype.Int8
+        | ScalarType.Byte -> Dtype.Byte
+        | ScalarType.Short -> Dtype.Int16
+        | ScalarType.Int -> Dtype.Int32
+        | ScalarType.Long -> Dtype.Int64
+        | ScalarType.Float -> Dtype.Float32
+        | ScalarType.Double -> Dtype.Float64
+        |  _ -> failwith "fromTorchType - other type"
 
     let toTorchShape (shape: int[]) : TorchShape = int64s shape
 
@@ -43,16 +54,41 @@ module internal Utils =
 
 /// This is the base class for all RawTensorXyz tuypes.
 /// All type-independent operations are implemented directly on this class. 
-type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
+type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device) =
 
-    inherit RawTensor(shape, dtype, device, Backend.Torch)
+    inherit RawTensor()
 
+    // Note, shape and dtype are stored as fields.  These dupicate information in TorchTensor, but
+    // it is a little too costly to repeatedly re-extract this information.
+    //
+    // 'device' is not stored as a field, it is rarely accessed and can be fetched from TorchTensor
+
+#if DEBUG
+    // Check the invariants associated with the tensors
     do 
        if tt.Type <> toTorchType dtype then
            failwithf "mismatched Torch tensor type, expected %A, got %A" (toTorchType dtype) tt.Type
 
+       if int tt.DeviceType <> int device.DeviceType then
+           failwithf "mismatched Torch tensor device, expected %A, got %A" tt.DeviceType device.DeviceType
+
+       if int tt.DeviceIndex <> int device.DeviceIndex then
+           failwithf "mismatched Torch tensor index, expected %A, got %A" tt.DeviceIndex device.DeviceIndex
+
        if toTorchShape shape <> tt.Shape then 
            failwithf "mismatched Torch tensor shape, expected %A, got %A" (toTorchShape shape) tt.Shape
+
+    let device = () // make sure 'device' isn't accessed in a member and stored as a field
+#endif
+    do ignore device
+
+    override _.Shape = shape
+    override _.Dim = shape.Length
+    override _.Nelement = shapeLength shape
+    override _.Dtype = dtype
+    override _.DeviceType : DiffSharp.DeviceType = enum (int tt.DeviceType)
+    override t.Device = Device(t.DeviceType, tt.DeviceIndex)
+    override _.Backend = Backend.Torch
 
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)
@@ -68,7 +104,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             let stop = fullBounds.[i,1] + 1
 
             let len = stop - start
-            use idxs = LongTensor.Arange((int64 start).ToScalar(), (int64 stop).ToScalar(), 1L.ToScalar(), device.TorchDeviceType, device.DeviceIndex)
+            use idxs = LongTensor.Arange((int64 start).ToScalar(), (int64 stop).ToScalar(), 1L.ToScalar(), tt.DeviceType, tt.DeviceIndex)
             res <- res.IndexSelect(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
             if fullBounds.[i, 2] = 1 && len = 1 then 
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
@@ -79,10 +115,11 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     override t.Clone() =
         t.MakeLike(tt.Clone())
 
-    override _.ComputeHash() = 
+    override t.ComputeHash() = 
         // Torch Tensors must be CPU before DataItem can be accessed
         let tt = torchMoveTo tt Device.CPU
 
+        let shape = t.Shape
         let mutable res = hash shape
         let n = shapeLength shape
         match dtype with 
@@ -118,7 +155,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             let data = tt.Data<double>()
             for i in 0 .. n-1 do
                  res <- combineHashes res (hash data.[i])
-        | Dtype.Other _ -> failwith "Other types not supported by torch"
         res
     
     override t.Expand(newShape) =
@@ -133,7 +169,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | [| i0; i1 |] -> tt.[int64 i0, int64 i1]
             | [| i0; i1; i2 |] -> tt.[int64 i0, int64 i1, int64 i2]
             | [| i0; i1; i2; i3 |] -> tt.[int64 i0, int64 i1, int64 i2, int64 i3]
-            | _ -> tt.View(toTorchShape [|shapeLength shape|]).[int64 (indexToFlatIndex shape indexes)]
+            | _ -> 
+                let shape = t.Shape
+                tt.View(toTorchShape [|shapeLength shape|]).[int64 (indexToFlatIndex shape indexes)]
 
         // Torch Tensors must be CPU before DataItem can be accessed
         let item = torchMoveTo item Device.CPU
@@ -148,7 +186,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | Dtype.Int64 -> box (item.DataItem<int64>())
             | Dtype.Float32 -> box (item.DataItem<float32>())
             | Dtype.Float64 -> box (item.DataItem<double>())
-            | _ -> failwith "Torch GetItem TBD type"
         obj
 
     member t.ToValuesTyped<'T, 'T2>(conv) : obj =
@@ -174,7 +211,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Dtype.Int64 -> t.ToValuesTyped<int64, int64>(id)
         | Dtype.Float32 -> t.ToValuesTyped<float32, float32>(id)
         | Dtype.Float64 -> t.ToValuesTyped<double, double>(id)
-        | Dtype.Other _ -> failwith "Torch GetItem TBD other type"
 
     member _.ToRawData<'T>() : 'T[] =
         // Torch Tensors must be CPU before raw data can be accessed
@@ -196,7 +232,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         | Dtype.Int64 -> t.ToRawData<int64>() |> box
         | Dtype.Float32 -> t.ToRawData<float32>() |> box
         | Dtype.Float64 -> t.ToRawData<double>() |> box
-        | Dtype.Other _ -> failwith "Torch GetItem TBD other type"
 
     override _.StackTs(tensors, dim) =
         let tts, shapes = tensors |> Array.map (fun t -> (t :?> TorchRawTensor).TorchTensor, t.Shape) |> Array.unzip
@@ -254,7 +289,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
     override t.FlipT(dims:int[]) = 
         // "flip_cuda" not implemented for 'Bool'"
         let result =
-            if t.Dtype = Dtype.Bool then 
+            if dtype = Dtype.Bool then 
                 tt.ToType(ScalarType.Byte).Flip(int64s dims).ToType(ScalarType.Bool)
             else
                 tt.Flip(int64s dims)
@@ -280,7 +315,8 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t.MakeLike(res, outputShape)
 
     override t.UndilateT(dilations:int[]) =
-        let outputShape = Shape.undilatedShape t.Shape dilations
+        let shape = t.Shape
+        let outputShape = Shape.undilatedShape shape dilations
         let mutable res = tt
         for d in 0 .. dilations.Length - 1 do
             res <- res.Slice(int64 d, 0L, int64 shape.[d], int64 dilations.[d])
@@ -300,7 +336,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         t.MakeLike(tt.Reshape(toTorchShape shape), shape=shape)  // Use Reshape instead of View to ensure underlying non-contiguous libtorch tensors can be viewed. Internally Reshape uses View if possible, otherwise it copies data to a contiguous tensor and then views.
 
     override t.Cast(newDtype: Dtype) =
-        if newDtype = t.Dtype then 
+        if newDtype = dtype then 
             upcast t
         else 
             let result = tt.ToType(toTorchType newDtype)
@@ -311,9 +347,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
         let tt2 = torchMoveTo tt device
         t.MakeLike(tt2, device=device)
 
-    override _.Equals(t2:RawTensor) : bool = 
+    override t.Equals(t2:RawTensor) : bool = 
         if dtype = t2.Dtype then
-            let r1 = (shape = t2.Shape)
+            let r1 = (t.Shape = t2.Shape)
             if not r1 then false else
             let tt2 = t2.TorchTensor
             let r2 = tt.Equal(tt2)
@@ -417,7 +453,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.SubTT(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "SubT" t1.Dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "SubT" dtype t2.Dtype
         | _ ->
         let result = tt.Sub(t2.TorchTensor)
         t1.MakeLike(result)
@@ -443,14 +479,14 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.DivTT(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "DivTT" t1.Dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
         let result = tt.Div(t2.TorchTensor)
         t1.MakeLike(result)
 
     override t1.DivT0T(t2) =
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "DivTT" t1.Dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
         let t1v = t1.TorchTensor.Item()
         let result = t1v / t2.TorchTensor
@@ -458,7 +494,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.DivTT0(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "DivTT" t1.Dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
         let t2v = t2.TorchTensor.Item()
         let result = tt.Div(t2v)
@@ -488,12 +524,12 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MatMulT2T2(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "MatMulT2T2" t1.Dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "MatMulT2T2" dtype t2.Dtype
         | _ ->  
         Shape.checkCanMatmul t1.Shape t2.Shape
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
-            match t1.DeviceType, t1.Dtype with 
+            match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 let tt1 = tt.ToType(ScalarType.Double)
                 let tt2 = t2.TorchTensor.ToType(ScalarType.Double)
@@ -504,10 +540,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape =
-            Shape.checkCanConv1d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype t1.Shape t2.Shape stride padding 1
+            Shape.checkCanConv1d t1.DeviceType t2.DeviceType dtype t2.Dtype t1.Shape t2.Shape stride padding 1
         let resultt =
             // "conv1d for CUDA tensors only supports floating-point types."
-            match t1.DeviceType, t1.Dtype with 
+            match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 tt.ToType(ScalarType.Double).Conv1D(t2.TorchTensor.ToType(ScalarType.Double), stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)).Round().ToType(toTorchType dtype) 
             | _ ->
@@ -516,10 +552,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape =
-            Shape.checkCanConv2d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype t1.Shape t2.Shape strides paddings [| 1;1 |]
+            Shape.checkCanConv2d t1.DeviceType t2.DeviceType dtype t2.Dtype t1.Shape t2.Shape strides paddings [| 1;1 |]
         let resultt =
             // "conv2d for CUDA tensors only supports floating-point types."
-            match t1.DeviceType, t1.Dtype with 
+            match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 tt.ToType(ScalarType.Double).Conv2D(t2.TorchTensor.ToType(ScalarType.Double), strides=int64s strides, padding=int64s paddings).Round().ToType(toTorchType dtype) 
             | _ ->
@@ -528,10 +564,10 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.Conv3D(t2, strides, paddings) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelDimensions, _outputDimensions, outputShape =
-            Shape.checkCanConv3d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype  t1.Shape t2.Shape strides paddings [| 1;1;1 |]
+            Shape.checkCanConv3d t1.DeviceType t2.DeviceType dtype t2.Dtype  t1.Shape t2.Shape strides paddings [| 1;1;1 |]
         let resultt =
             // "conv2d for CUDA tensors only supports floating-point types."
-            match t1.DeviceType, t1.Dtype with 
+            match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 tt.ToType(ScalarType.Double).Conv3D(t2.TorchTensor.ToType(ScalarType.Double), strides=int64s strides, padding=int64s paddings).Round().ToType(toTorchType dtype) 
             | _ ->
@@ -540,9 +576,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MaxPool1D(kernelSize, stride, padding) = 
         let _batchSize, _channels, _inputSize, _outputSize, outputShape =
-            Shape.checkCanMaxpool1d t1.Dtype t1.Shape kernelSize stride padding
-        match t1.Dtype with 
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool1D" t1.Dtype
+            Shape.checkCanMaxpool1d dtype t1.Shape kernelSize stride padding
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool1D" dtype
         | _ ->
         let struct (resultt, indicest) = tt.MaxPool1DWithIndices(int64 kernelSize, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
@@ -552,7 +588,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MaxPool2D(kernelSize, strides, paddings) = 
         let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
-            Shape.checkCanMaxpool2d t1.Dtype t1.Shape kernelSize strides paddings
+            Shape.checkCanMaxpool2d dtype t1.Shape kernelSize strides paddings
         let struct (resultt, indicest) = tt.MaxPool2DWithIndices(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
         // NOTE: DiffSharp currently expects indices as an Int32 tensor, Torch wants Int64
         let indices = t1.MakeLike(indicest, shape=outputShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
@@ -561,7 +597,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MaxPool3D(kernelSize, strides, paddings) = 
         let _batchSize, _channels, _inputDimensions, _kernelDimensions, _outputDimensions, outputShape =
-            Shape.checkCanMaxpool3d t1.Dtype t1.Shape kernelSize strides paddings
+            Shape.checkCanMaxpool3d dtype t1.Shape kernelSize strides paddings
         let struct (resultt, indicest) = tt.MaxPool3DWithIndices(int64s kernelSize, strides=int64s strides, padding=int64s paddings)
         
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
@@ -581,7 +617,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MaxUnpool2D(indices, outputSize) = 
         let _batchSize, _channels, _inputDimensions, outputShape =
-            Shape.checkCanMaxunpool2d t1.Dtype t1.Shape indices.Dtype indices.Shape outputSize
+            Shape.checkCanMaxunpool2d dtype t1.Shape indices.Dtype indices.Shape outputSize
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
         let indices = indices.Cast(Dtype.Int64)
 
@@ -596,7 +632,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t1.MaxUnpool3D(indices, outputSize) = 
         let _batchSize, _channels, _inputDimensions, outputShape =
-            Shape.checkCanMaxunpool3d t1.Dtype t1.Shape indices.Dtype indices.Shape outputSize
+            Shape.checkCanMaxunpool3d dtype t1.Shape indices.Dtype indices.Shape outputSize
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
         let indices = indices.Cast(Dtype.Int64)
 
@@ -618,7 +654,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.NegT() =
         match dtype with 
-        | Dtype.Bool -> opNotSupported "NegT" t.Dtype
+        | Dtype.Bool -> opNotSupported "NegT" dtype
         | _ ->  t.MakeLike(-tt)
 
     override t.SumT(?resultType) =
@@ -631,104 +667,104 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
 
     override t.FloorT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "FloorT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "FloorT" dtype
         | _ ->  t.MakeLike(tt.Floor())
 
     override t.CeilT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "CeilT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "CeilT" dtype
         | _ ->  t.MakeLike(tt.Ceil())
 
     override t.RoundT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "RoundT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "RoundT" dtype
         | _ ->  t.MakeLike(tt.Round())
 
     override t.AbsT() = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported "AbsT" t.Dtype
+        | Dtype.Bool -> opNotSupported "AbsT" dtype
         | Dtype.Int8 -> t.Cast(Dtype.Int32).AbsT().Cast(Dtype.Int8) // TODO: there is odd behaviour from torch for relu on int8, may have been fixed in later version?
         | _ -> t.MakeLike(tt.Abs ())
 
     override t.SoftplusT() = 
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "SoftplusT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "SoftplusT" dtype
         | _ -> t.MakeLike(tt.Softplus())
 
     override t.ReluT() =
         match dtype with 
-        | Dtype.Bool -> opNotSupported "ReluT" t.Dtype
+        | Dtype.Bool -> opNotSupported "ReluT" dtype
         | Dtype.Int8 -> t.Cast(Dtype.Int32).ReluT().Cast(Dtype.Int8) // TODO: there is odd behaviour from torch for relu on int8, may have been fixed in later version?
         | _ ->   t.MakeLike(tt.Relu())
 
     override t.SigmoidT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "SigmoidT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "SigmoidT" dtype
         | _ ->  t.MakeLike(tt.Sigmoid())
 
     override t.ExpT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "ExpT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "ExpT" dtype
         | _ ->  t.MakeLike(tt.Exp())
 
     override t.LogT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "LogT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "LogT" dtype
         | _ ->  t.MakeLike(tt.Log())
 
     override t.Log10T() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "Log10T" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "Log10T" dtype
         | _ ->   t.MakeLike(tt.Log10())
 
     override t.SqrtT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "SqrtT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "SqrtT" dtype
         | _ ->  t.MakeLike(tt.Sqrt())
 
     override t.SinT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "SinT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "SinT" dtype
         | _ ->  t.MakeLike(tt.Sin())
 
     override t.CosT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "CosT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "CosT" dtype
         | _ ->  t.MakeLike(tt.Cos())
 
     override t.TanT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "TanT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "TanT" dtype
         | _ ->  t.MakeLike(tt.Tan())
 
     override t.SinhT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "SinhT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "SinhT" dtype
         | _ ->  t.MakeLike(tt.Sinh())
 
     override t.CoshT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "CoshT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "CoshT" dtype
         | _ ->  t.MakeLike(tt.Cosh())
 
     override t.TanhT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "TanhT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "TanhT" dtype
         | _ ->  t.MakeLike(tt.Tanh())
 
     override t.AsinT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "AsinT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "AsinT" dtype
         | _ ->  t.MakeLike(tt.Asin())
 
     override t.AcosT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "AcosT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "AcosT" dtype
         | _ ->  t.MakeLike(tt.Acos())
 
     override t.AtanT() =
         match dtype with 
-        | Dtype.IntegralOrBool -> opNotSupported "AtanT" t.Dtype
+        | Dtype.IntegralOrBool -> opNotSupported "AtanT" dtype
         | _ ->  t.MakeLike(tt.Atan())
 
     new (info: System.Runtime.Serialization.SerializationInfo, _context: System.Runtime.Serialization.StreamingContext) =
@@ -761,7 +797,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             | Dtype.Float64 -> 
                 let data = info.GetValue("data", typeof<double[]>)  :?> double[]
                 DoubleTensor.From (data, toTorchShape shape) 
-            | Dtype.Other _ -> failwith "deserialize other type in torch nyi"
 
         let tt2 = torchMoveTo tt device
         TorchRawTensor(tt2, shape, dtype, device)
@@ -774,9 +809,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype, device) =
             // Torch Tensors must be CPU before they can be saved
             let tCpu = t.MoveTo(Device.CPU) :?> TorchRawTensor
 
-            info.AddValue("device", device)
-            info.AddValue("dtype", dtype)
-            info.AddValue("shape", shape)
+            info.AddValue("device", tCpu.Device)
+            info.AddValue("dtype", tCpu.Dtype)
+            info.AddValue("shape", tCpu.Shape)
             info.AddValue("data", tCpu.ToRawData())
 
 /// The concrete implementation of BackendStatics for Float32 data.

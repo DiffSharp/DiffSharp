@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-  
   </PropertyGroup>
+  
   <ItemGroup>
     <Compile Include="Empty.fs" />
   </ItemGroup>
