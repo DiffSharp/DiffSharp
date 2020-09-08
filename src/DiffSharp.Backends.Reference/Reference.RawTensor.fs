@@ -20,13 +20,22 @@ module internal Utils =
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtype, device: Device) =
+    inherit RawTensor()
 #if TEST_DUPLICATE_BACKEND
-    inherit RawTensor(shape, dtype, device, Backend.Register "TestDuplicate")
+    let backend = Backend.Register "TestDuplicate"
 #else
-    inherit RawTensor(shape, dtype, device, Backend.Reference)
+    let backend = Backend.Reference
 #endif
 
-    member _.Values = values
+    override _.Shape = shape
+    override _.Dim = shape.Length
+    override _.Nelement = shapeLength shape
+    override _.Dtype = dtype
+    override _.Device = device
+    override _.DeviceType = device.DeviceType
+    override _.Backend = backend
+
+    member _.Values : 'T[] = values
 
     member internal t.IndexToFlatIndex(index:int[]) =
         indexToFlatIndex t.Shape index

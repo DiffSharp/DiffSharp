@@ -63,15 +63,21 @@ type BackendStatics() =
             res
 
 [<AbstractClass>]
-type RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
+type RawTensor() =
 
-    member t.Shape = shape
-    member t.Dim = shape.Length
-    member t.Nelement = shapeLength shape
-    member t.Dtype = dtype
-    member t.Device = device
-    member t.DeviceType = device.DeviceType
-    member t.Backend = backend
+    //let dummy1 = Array.copy shape
+    //let dummy2 = Array.copy shape
+    //let dummy3 = Array.copy shape
+    //let dummy4 = Array.copy shape
+
+    //member t.Dummy = (dummy1, dummy2, dummy3, dummy4)
+    abstract member Shape : int[]
+    abstract member Dim : int
+    abstract member Nelement : int
+    abstract member Dtype : Dtype
+    abstract member Device : Device
+    abstract member DeviceType : DeviceType
+    abstract member Backend : Backend
     override t.ToString() = t.GetString()
     
     static member Zero(?dtype, ?device, ?backend) = 
@@ -142,8 +148,6 @@ type RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
             | Some Dtype.Float32 ->
                 let a,s = DataConverter.dataOfValuesForFloat32 values
                 (a :> Array), s, Dtype.Float32
-            | Some (Dtype.Other (name, _, _)) ->
-                failwithf "can't directly create tensors of user-defined type %s" name
             | None ->
                 // Prefer Bool tensor if all bool
                 match values |> DataConverter.tryFlatArrayAndShape<bool> with
@@ -275,12 +279,12 @@ type RawTensor(shape:int[], dtype:Dtype, device:Device, backend:Backend) =
     abstract member AtanT: unit -> RawTensor
 
     default t.IsInfT() =
-        match dtype with 
+        match t.Dtype with 
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.AbsT().EqTT(t.FullLike(t.Shape,System.Single.PositiveInfinity))
 
     default t.IsNaNT() =
-        match dtype with 
+        match t.Dtype with 
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 

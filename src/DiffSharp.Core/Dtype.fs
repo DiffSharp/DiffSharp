@@ -63,22 +63,18 @@ type Backend =
     /// The LibTorch backend 
     | Torch
     /// Reserved for future use
-    | OpenBLAS
-    /// Reserved for future use
     | Other of name: string * code: int
 
     member internal x.Code = 
         match x with 
         | Reference -> 0x000
-        | OpenBLAS -> 0x0100
-        | Torch -> 0x0200
+        | Torch -> 0x0100
         | Other (_name, code) -> (code + 3) <<< 8
 
     /// Get the name of the backend
     member x.Name = 
         match x with 
         | Reference -> "Reference"
-        | OpenBLAS -> "OpenBLAS"
         | Torch -> "Torch"
         | Other (name, _) -> name
 
@@ -94,6 +90,7 @@ module Backend =
     let mutable Default = Backend.Reference
 
 /// Represents a storage type for elements of a tensor
+[<Struct>]
 type Dtype =
     //| Float16
     /// Store elements as 32-bit floating point numbers
@@ -112,8 +109,6 @@ type Dtype =
     | Int64
     /// Store elements as booleans
     | Bool
-    /// Reserved for future use
-    | Other of name:string * code:int * inOutType: System.Type
 
     member internal x.Code =
         match x with
@@ -126,7 +121,6 @@ type Dtype =
         | Int32 -> 0x70000
         | Int64 -> 0x80000
         | Bool -> 0x90000
-        | Other (_name, code, _) -> (code + 9) <<< 16
 
     member internal x.Name =
         match x with
@@ -139,7 +133,6 @@ type Dtype =
         | Int32 -> "Int32"
         | Int64 -> "Int64"
         | Bool -> "Bool"
-        | Other (name, _, _) -> name
 
     /// Get the .NET type that corresponds to this type when data is transferred to .NET
     member x.AsType () =
@@ -153,7 +146,6 @@ type Dtype =
         | Int32 -> typeof<int32>
         | Int64 -> typeof<int64>
         | Bool -> typeof<bool>
-        | Other (_name, _, typ) -> typ
 
     /// Gets the natural result of the Sum(), SumToSize() and Sum(dim) operation on this dtype
     member t.SummationType =
@@ -186,7 +178,6 @@ module Dtype =
         if dtype1 = dtype2 then Some dtype1
         else
             match dtype1, dtype2 with 
-            | Other _,_ | _, Other _ ->  None //failwith "cannot widen user-defined tensor types, must cast explicitly"
             | Float64, _ | _, Float64 -> Some Float64
             | Float32, _ | _, Float32 -> Some Float32
             | Int64, _ | _, Int64 -> Some Int64
@@ -210,12 +201,6 @@ module Dtype =
         elif ty.Equals(typeof<byte>) then Dtype.Byte
         elif ty.Equals(typeof<bool>) then Dtype.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
-
-    let internal count = ref 0
-    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Dtype>()
-
-    /// Register a user-defined type (reserved for future use)
-    let Register name inOutType = codes.GetOrAdd(name, (fun _ -> incr count; Dtype.Other(name, count.Value, inOutType)))
 
     /// Get or set the default element type used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32

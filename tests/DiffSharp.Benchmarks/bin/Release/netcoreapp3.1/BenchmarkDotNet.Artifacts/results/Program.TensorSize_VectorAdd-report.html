@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Program.TensorSize_VectorAdd-20200908-183746</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.17134.1667 (1803/April2018Update/Redstone4)
+Intel Xeon CPU E5-1620 0 3.60GHz, 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.1.401
+  [Host]   : .NET Core 3.1.7 (CoreCLR 4.700.20.36602, CoreFX 4.700.20.37001), X64 RyuJIT DEBUG
+  ShortRun : .NET Core 3.1.7 (CoreCLR 4.700.20.36602, CoreFX 4.700.20.37001), X64 RyuJIT
+</code></pre>
+<pre><code>Job=ShortRun  IterationCount=3  LaunchCount=1  
+WarmupCount=3  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>      Mean</th><th>     Error</th><th>  StdDev</th>
+</tr>
+</thead><tbody><tr><td>Add1</td><td>19,576,903.47 &mu;s</td><td>11,596,251.89 &mu;s</td><td>635,629.696 &mu;s</td>
+</tr><tr><td>Add8</td><td>2,201,603.13 &mu;s</td><td>39,920.38 &mu;s</td><td>2,188.171 &mu;s</td>
+</tr><tr><td>Add64</td><td>420,980.60 &mu;s</td><td>30,840.46 &mu;s</td><td>1,690.469 &mu;s</td>
+</tr><tr><td>Add512</td><td>34,422.14 &mu;s</td><td>333.76 &mu;s</td><td>18.294 &mu;s</td>
+</tr><tr><td>Add4096</td><td>5,906.75 &mu;s</td><td>1,541.00 &mu;s</td><td>84.468 &mu;s</td>
+</tr><tr><td>Add32768</td><td>533.04 &mu;s</td><td>43.67 &mu;s</td><td>2.394 &mu;s</td>
+</tr><tr><td>Add262144</td><td>79.60 &mu;s</td><td>379.62 &mu;s</td><td>20.808 &mu;s</td>
+</tr></tbody></table>
+</body>
+</html>
