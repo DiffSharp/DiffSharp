@@ -786,7 +786,7 @@ type Tensor =
         if a.dim = 1 && b.dim = 1 then a.dot(b) 
         // Increase to at least 2x2
         elif a.dim = 1 && b.dim > 1 then a.unsqueeze(0).matmul(b).squeeze(b.dim-2)
-        elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(b.dim-1)
+        elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(a.dim-1)
         else
         let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
         if aBatchPart = bBatchPart then
