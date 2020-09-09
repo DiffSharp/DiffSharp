@@ -3,39 +3,51 @@
 open DiffSharp.Backends
 open DiffSharp.Util
 open System
-open System.IO
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Formatters.Binary
 open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
 type scalar = IConvertible
 
+/// <summary>
+///   Represents a multi-dimensional matrix containing elements of a single data type.
+/// </summary>
+///
+/// <example>
+///   A tensor can be constructed from a list or sequence using <see cref="M:DiffSharp.dsharp.tensor(System.Object)" />
+///
+///  <code>
+///    let t = dsharp.tensor([[1.; -1.]; [1.; -1.]])
+///  </code>
+/// </example>
 [<CustomEquality; CustomComparison>]
 type Tensor = 
     | Tensor of primalRaw:RawTensor
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
     | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
+    /// Gets the value of the tensor ignoring its first derivative
     member t.primal =
         match t with
         | Tensor(_) -> t
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
+    /// Gets the value of the tensor ignoring all its derivatives
     member t.primalDeep =
         match t with
         | Tensor(_) -> t
         | TensorF(tp,_,_) -> tp.primalDeep
         | TensorR(tp,_,_,_,_) -> tp.primalDeep
 
+    /// Gets the value of the tensor ignoring all its derivatives
     member t.primalRaw =
         match t with
         | Tensor(tp) -> tp
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
+    /// Converts the tensor to a new tensor with the given element type
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
@@ -43,6 +55,7 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
         | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
 
+    /// Returns a new tensor with the same contents moved to the given backend
     member t.move(backend: Backend) =
         // If a backend move is needed then first move to the CPU
         let t = 
@@ -59,6 +72,7 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
+    /// Returns a new tensor with the same contents moved to the given device
     member t.move(device: Device) =
         if t.device = device then t else
         match t with
@@ -66,6 +80,7 @@ type Tensor =
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
+    /// Returns a new tensor with the same contents moved to the given configuration
     member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
@@ -77,25 +92,55 @@ type Tensor =
         | None -> t
         | Some dt -> t.cast(dt)
 
+    /// Returns a new tensor with the same contents moved to the CPU
     member t.cpu() = t.move(Device.CPU)
+
+    /// Returns a new tensor with the same contents moved to the primary GPU device
     member t.gpu() = t.move(Device.GPU)
 
+    /// Returns a new tensor with each element converted to type bool
     member t.bool() = t.cast(Dtype.Bool)
+
+    /// Returns a new tensor with each element converted to type int8
     member t.int8() = t.cast(Dtype.Int8)
+
+    /// Returns a new tensor with each element converted to type int16
     member t.int16() = t.cast(Dtype.Int16)
+
+    /// Returns a new tensor with each element converted to type int32
     member t.int32() = t.cast(Dtype.Int32)
+
+    /// Returns a new tensor with each element converted to type int32
     member t.int() = t.cast(Dtype.Int32)
+
+    /// Returns a new tensor with each element converted to type int64
     member t.int64() = t.cast(Dtype.Int64)
+
+    /// Returns a new tensor with each element converted to type float32
     member t.float32() = t.cast(Dtype.Float32)
+
+    /// Returns a new tensor with each element converted to type float64
     member t.float64() = t.cast(Dtype.Float64)
+
+    /// Returns a new tensor with each element converted to type float64
     member t.float() = t.cast(Dtype.Float64)
+
+    /// Returns a new tensor with each element converted to type float64
     member t.double() = t.cast(Dtype.Float64)
 
+    /// Gets the element type of the tensor
     member t.dtype = t.primalRaw.Dtype
+
+    /// Gets the device of the tensor
     member t.device = t.primalRaw.Device
+
+    /// Gets the device type of the tensor
     member t.deviceType = t.primalRaw.Device.DeviceType
+
+    /// Gets the backend of the tensor
     member t.backend = t.primalRaw.Backend
 
+    /// Gets the differentiation depth of the tensor
     member t.depth =
         let rec depth x d =
             match x with
@@ -104,12 +149,14 @@ type Tensor =
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
 
+    /// Gets the parent operation of a tensor used in reverse-mode differentiation
     member t.parentOp =
         match t with
         | Tensor(_) -> failwith "Cannot get parent operation of constant Tensor"
         | TensorF(_)-> failwith "Cannot get parent operation of TensorF"
         | TensorR(_,_,o,_,_) -> o
 
+    /// Gets or sets the derivative of a tensor used in differentiation
     member t.derivative
         with get() =
             match t with
@@ -134,6 +181,7 @@ type Tensor =
             | Tensor(_) -> !td
             | _ -> (!td).derivativeDeep
 
+    /// Gets the fanout of a tensor used in reverse-mode differentiation
     member t.fanout
         with get() =
             match t with
@@ -149,27 +197,47 @@ type Tensor =
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         if t.shape = derivative.shape then TensorF(t, derivative, tag) else failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
+
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
+
     member t.noDiff() = Tensor(t.primalRaw)
+
+    /// Indicates if a tensor is part of a forward-mode differentiation
     member t.isForwardDiff() =
         match t with
         | TensorF(_) -> true
         | _ -> false
+
+    /// Indicates if a tensor is part of a reverse-mode differentiation
     member t.isReverseDiff() =
         match t with
         | TensorR(_) -> true
         | _ -> false
+
+    /// Indicates if a tensor is not part of a forward or reverse-mode differentiation
     member t.isNoDiff() =
         match t with
         | Tensor(_) -> true
         | _ -> false
+
+    /// Gets the shape of the tensor
     member t.shape = t.primalRaw.Shape
+
+    /// Gets the number of dimensions of the tensor
     member t.dim = t.primalRaw.Dim
+
+    /// Gets the number of elements in the tensor
     member t.nelement = t.primalRaw.Nelement
+
+    /// Returns the value of a (non-scalar) tensor as an array
     member t.toArray() = t.primalRaw.ToArray()
+
+    /// Returns the value of a scalar tensor as an object
     member t.toScalar() = t.primalRaw.ToScalar()
+
+    /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
         | Tensor(_),  Tensor(_)  -> true
@@ -182,7 +250,10 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
+    /// Saves the tensor to the given file using a bespoke binary format
     member t.save(fileName:string) = saveBinary t fileName
+
+    /// Loads the tensor from the given file
     static member load(fileName:string):Tensor = loadBinary fileName
 
     member t.summary() =
