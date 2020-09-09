@@ -365,9 +365,10 @@ module Shape =
     /// Check if the given shape is appropriate for a matmul operation.
     let checkCanMatmul (shape1:int[]) (shape2:int[]) =
         if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
-        let t1MatrixPart = shape1.[shape1.Length-2..]
-        let t2MatrixPart = shape2.[shape2.Length-2..]
-        if t1MatrixPart.[1] <> t2MatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
+        let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
+        let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
+        if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
+        (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart)
 
     /// Check if the given shape is appropriate for a dot product operation.
     let checkCanDot (shape1: Shape) (shape2: Shape) =

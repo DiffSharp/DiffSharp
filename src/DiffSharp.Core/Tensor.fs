@@ -747,10 +747,48 @@ type Tensor =
     member a.pow(b:Tensor) = a ** b
     member a.pow(b) = a ** a.scalarLike(b)
 
-    member a.matmul (b:Tensor) =
-        Shape.checkCanMatmul a.shape b.shape
-        let aBatchPart, aMatrixPart = Array.splitAt (a.shape.Length-2) a.shape
-        let bBatchPart, bMatrixPart = Array.splitAt (b.shape.Length-2) b.shape
+    /// <summary>Matrix product of two tensors.</summary>
+    ///
+    /// <remarks>
+    /// <para>
+    /// The behavior depends on the dimensionality of the tensors as follows:
+    /// </para>
+    /// 
+    /// <para>
+    /// If both tensors are 1-dimensional, the dot product (scalar) is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If both arguments are 2-dimensional, the matrix-matrix product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If the first argument is 1-dimensional and the second argument is 2-dimensional, a 1 is prepended to its dimension for the purpose of the matrix multiply. After the matrix multiply, the prepended dimension is removed.
+    /// </para>
+    /// 
+    /// <para>
+    /// <para>
+    ///  If the first argument is 2-dimensional and the second argument is 1-dimensional, the matrix-vector product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    ///  If both arguments are at least 1-dimensional and at least one argument is N-dimensional (where N > 2), then a 
+    ///  batched matrix multiply is returned. If the first argument is 1-dimensional, a 1 is prepended to its dimension for the
+    ///  purpose of the batched matrix multiply and removed after. If the second argument is 1-dimensional, a 1 is appended to
+    ///  its dimension for the purpose of the batched matrix multiple and removed after. The non-matrix (i.e. batch) dimensions
+    ///  are broadcasted (and thus must be broadcastable). For example, if input is a (j \times 1 \times n \times m)(j×1×n×m)
+    ///  tensor and other is a (k \times m \times p)(k×m×p) tensor, out will be an (j \times k \times n \times p)(j×k×n×p)
+    ///  tensor.
+    /// </para>
+    /// </remarks>
+
+    member a.matmul (b:Tensor) : Tensor =
+        if a.dim = 1 && b.dim = 1 then a.dot(b) 
+        // Increase to at least 2x2
+        elif a.dim = 1 && b.dim > 1 then a.unsqueeze(0).matmul(b).squeeze(b.dim-2)
+        elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(b.dim-1)
+        else
+        let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
         if aBatchPart = bBatchPart then
             let fRaw(a:RawTensor,b) = a.MatMulTT(b)
             let fTensor(a:Tensor,b) = a.matmul(b)
@@ -982,7 +1020,7 @@ type Tensor =
         let dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    member a.unsqueeze(dim:int) =
+    member a.unsqueeze(dim:int) : Tensor =
         let fRaw(a:RawTensor) = a.UnsqueezeT(dim)
         let fTensor(a:Tensor) = a.unsqueeze(dim)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)

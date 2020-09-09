@@ -525,10 +525,8 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline MatMulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
-        Shape.checkCanMatmul t1.Shape t2.Shape
-        let t1BatchPart, t1MatrixPart = t1.Shape |> Array.splitAt (t1.Shape.Length-2)
-        let t2BatchPart, t2MatrixPart = t2.Shape |> Array.splitAt (t2.Shape.Length-2)
-        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
+        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
+        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
         let t1rows, t1cols = t1MatrixPart.[0], t1MatrixPart.[1]
         let t2rows, t2cols = t2MatrixPart.[0], t2MatrixPart.[1]
         let t1value = t1.Values

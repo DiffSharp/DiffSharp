@@ -1813,7 +1813,83 @@ type TestTensor () =
             Assert.AreEqual(t1aCorrect, t1a)
 
     [<Test>]
-    member this.TestTensorBatchMatMul33 () =
+    member _.TestTensorBatchMatMul11 () =
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        let t2 = dsharp.tensor([5.1067; 7.4633; 3.6027; 9.0070; 7.3012])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.dot(t2)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorBatchMatMul12 () =
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.expand([1;5]).matmul(t2).squeeze(0)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorBatchMatMul13 () =
+        // 5 --> 1x5 --> 3x1x5 (batching expansion)
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        
+        // 3x5x2 (batch dimension is 3)
+        let t2 = dsharp.tensor([[[5.1067; 0.0681];
+                                 [7.4633; 3.6027];
+                                 [9.0070; 7.3012];
+                                 [2.6639; 2.8728];
+                                 [7.9229; 2.3695]];
+                                [[1.1067; 0.0681];
+                                 [2.4633; 3.6027];
+                                 [3.0070; 7.3012];
+                                 [4.6639; 2.8728];
+                                 [5.9229; 2.3695]];
+                                [[7.1067; 0.0681];
+                                 [8.4633; 3.6027];
+                                 [7.0070; 7.3012];
+                                 [8.6639; 2.8728];
+                                 [7.9229; 2.3695]]])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.expand([3;1;5]).matmul(t2).squeeze(1)
+
+        Assert.AreEqual([|3;2|], t3.shape)
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorBatchMatMul21 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]])
+        let t2 = dsharp.tensor([0.0681; 3.6027; 7.3012; 2.8728; 2.3695])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.matmul(t2.unsqueeze(1)).squeeze(1)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorBatchMatMul31 () =
+        //2 x 2 x 5
+        let t1 = dsharp.tensor([[[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                 [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]];
+                                [[9.0766; 4.3030; 2.1732; 8.9448; 1.1028];
+                                 [3.1067; 5.4633; 3.6027; 9.0070; 7.3012]]])
+        
+        // 5 --> 5x1 (matmul expand) -> 2x5x1 (batch expand)
+        let t2 = dsharp.tensor([0.0681; 3.6027; 7.3012; 2.8728; 2.3695])
+        // 2x2x5 * 2x5x1 --> 2x2x1 --> 2x2 (reverse matmul expand)
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.matmul(t2.unsqueeze(1)).squeeze(2)
+
+        Assert.AreEqual([|2;2|], t3.shape)
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorBatchMatMul33 () =
         let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                 [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                 [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
