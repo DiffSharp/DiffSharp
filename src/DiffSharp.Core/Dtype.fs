@@ -9,7 +9,7 @@
 /// </remarks>
 ///
 /// <namespacedoc>
-///   <summary>Contains fundamental types for the DiffSharp tensor programming model, including Tensor and Shape, and the <c>dsharp</c> API.</summary>
+///   <summary>Contains fundamental types for the tensor programming model, including Tensor, Shape and dsharp.</summary>
 /// </namespacedoc>
 type DeviceType =
     | CPU = 0
