@@ -81,6 +81,6 @@ By default in-branch testing is only done on CPU.  To enable on GPU/CUDA you mus
 
 1. Make sure you have a device eligible for CUDA 10.2 and all device drivers installed (e.g. install the appropriate NVIDIA CUDA SDK)
 
-2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj`
+2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj` or set the `DIFFSHARP_TESTGPU` environment variable to `true` (e.g. `dotnet test /p:DIFFSHARP_TESTGPU=true`)
 
 3. Verify that `dsharp.isCudaEnabled()` is returning true and GPU testing is enabled in `TestUtil.fs`.
