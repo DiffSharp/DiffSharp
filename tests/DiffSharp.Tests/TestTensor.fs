@@ -623,7 +623,6 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
-                | Dtype.Other _ -> failwith "unexpected user-defined type"
             let t0StringCorrect = sprintf "Tensor 2%s" suffix
             let t1StringCorrect = sprintf "Tensor [[2%s], \n [2%s]]" suffix suffix
             let t2StringCorrect = sprintf "Tensor [[[2%s, 2%s]]]" suffix suffix
