@@ -35,9 +35,18 @@
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <!-- execution projects must reference a libtorch runtime redist -->
-    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
-    <!-- <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" /> -->
   </ItemGroup>
 
+  <!-- Choose the appropriate version of libtorch for our current OS and environment -->
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
+    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
+    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
 </Project>
