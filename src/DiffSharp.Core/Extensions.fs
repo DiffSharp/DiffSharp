@@ -18,7 +18,7 @@ open System.Runtime.Serialization.Formatters.Binary
 /// </namespacedoc>
 module Array =
 
-    /// Determine if all values of the first array lie within the given tolerances of the second array
+    /// Determines if all values of the first array lie within the given tolerances of the second array.
     [<ExcludeFromCodeCoverage>]
     let inline allClose (relativeTolerance:'T) (absoluteTolerance:'T) (array1:'T[]) (array2:'T[]) =
         let dim1 = array1.Length
@@ -26,11 +26,11 @@ module Array =
         if dim1 <> dim2 then false
         else (array1,array2) ||> Array.forall2 (fun a b -> abs(a-b) <= absoluteTolerance + relativeTolerance*abs(b)) 
 
-    /// Get the cumulative sum of the input array
+    /// Gets the cumulative sum of the input array.
     [<ExcludeFromCodeCoverage>]
     let inline cumulativeSum (a:_[]) = (Array.scan (+) LanguagePrimitives.GenericZero a).[1..]
 
-    /// Get the unique counts of the input array
+    /// Gets the unique counts of the input array.
     let getUniqueCounts (sorted:bool) (values:'T[]) =
         let counts = Dictionary<'T, int>()
         for v in values do
@@ -43,18 +43,18 @@ module Array =
 /// Contains extensions to the F# Seq module. 
 module Seq =
 
-    /// Get the index of the maximum element of the sequence
+    /// Gets the index of the maximum element of the sequence.
     let maxIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.maxBy snd |> fst
 
-    /// Get the index of the minimum element of the sequence
+    /// Gets the index of the minimum element of the sequence.
     let minIndex seq =  seq |> Seq.mapi (fun i x -> i, x) |> Seq.minBy snd |> fst
 
-    /// Indicates if all elements of the sequence are equal
+    /// Indicates if all elements of the sequence are equal.
     let allEqual (items:seq<'T>) =
         let item0 = items |> Seq.head
         items |> Seq.forall ((=) item0)
 
-    /// Get the duplicate elements in the sequence
+    /// Gets the duplicate elements in the sequence.
     let duplicates l =
        l |> List.ofSeq
        |> List.groupBy id
@@ -62,34 +62,34 @@ module Seq =
               | _, x::_::_ -> Some x
               | _ -> None )
 
-    /// Indicates if a sequence has duplicate elements
+    /// Indicates if a sequence has duplicate elements.
     let hasDuplicates l =
         duplicates l |> List.isEmpty |> not
 
 /// Contains extensions related to .NET dictionaries. 
 module Dictionary =
 
-    /// Get a fresh array containing the keys of the dictionary
+    /// Gets a fresh array containing the keys of the dictionary.
     let copyKeys (dictionary:Dictionary<'Key, 'Value>) =
         let keys = Array.zeroCreate dictionary.Count
         dictionary.Keys.CopyTo(keys, 0)
         keys
 
-    /// Get a fresh array containing the values of the dictionary
+    /// Gets a fresh array containing the values of the dictionary.
     let copyValues (dictionary:Dictionary<'Key, 'Value>) =
         let values = Array.zeroCreate dictionary.Count
         dictionary.Values.CopyTo(values, 0)
         values
 
-/// Contains auto-opened extensions to the F# programming model
+/// Contains auto-opened extensions to the F# programming model.
 [<AutoOpen>]
 module ExtensionAutoOpens =
 
-    /// Indicates if a value is not null
+    /// Indicates if a value is not null.
     [<ExcludeFromCodeCoverage>]
     let inline notNull value = not (obj.ReferenceEquals(value, null))
 
-    /// Return a function that memoizes the given function using a lookaside table
+    /// Returns a function that memoizes the given function using a lookaside table.
     let memoize fn =
         let cache = new Dictionary<_,_>()
         fun x ->
@@ -100,14 +100,14 @@ module ExtensionAutoOpens =
                 cache.Add(x,v)
                 v
 
-    /// Synchronously download the given URL to the given local file
+    /// Synchronously downloads the given URL to the given local file.
     let download (url:string) (localFileName:string) =
         let wc = new WebClient()
         printfn "Downloading %A to %A" url localFileName
         wc.DownloadFile(url, localFileName)
         wc.Dispose()
 
-    /// Save the given value to the given local file using binary serialization
+    /// Saves the given value to the given local file using binary serialization.
     let saveBinary (object: 'T) (fileName:string) =
         let formatter = BinaryFormatter()
         let fs = new FileStream(fileName, FileMode.Create)
@@ -120,7 +120,7 @@ module ExtensionAutoOpens =
         with
         | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
 
-    /// Load the given value from the given local file using binary serialization
+    /// Loads the given value from the given local file using binary serialization.
     let loadBinary (fileName:string):'T =
         let formatter = BinaryFormatter()
         let fs = new FileStream(fileName, FileMode.Open)
@@ -133,10 +133,14 @@ module ExtensionAutoOpens =
         with
         | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 
+    /// Value of log(sqrt(2*Math.PI)).
     let logSqrt2Pi = log(sqrt(2. * Math.PI))
 
+    /// Value of log(10).
     let log10Val = log 10.
 
+
+    /// Indents all lines of the given string by the given number of spaces.
     let indentNewLines (str:String) numSpaces =
         let mutable ret = ""
         let spaces = String.replicate numSpaces " "
@@ -146,13 +150,15 @@ module ExtensionAutoOpens =
                             else ret <- ret + string c)
         ret
 
+    /// Left-pads a string up to the given length.
     let stringPad (s:string) (width:int) =
         if s.Length > width then s
         else String.replicate (width - s.Length) " " + s
 
+    /// Left-pads a string to match the length of another string.
     let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
 
-    /// Create a non-jagged 3D array from jagged data
+    /// Creates a non-jagged 3D array from jagged data.
     let array3D data = 
         let data = data |> Array.ofSeq |> Array.map array2D
         let r1, r2, r3 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1)
@@ -163,7 +169,7 @@ module ExtensionAutoOpens =
                 invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d, later is _ x _ x %d x %d" i r2 r3 q2 q3)
         Array3D.init r1 r2 r3 (fun i j k -> data.[i].[j,k])
 
-    /// Create a non-jagged 4D array from jagged data
+    /// Creates a non-jagged 4D array from jagged data.
     let array4D data = 
         let data = data |> array2D |> Array2D.map array2D
         let r1,r2,r3,r4 = (data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0),data.[0,0].GetLength(1))
@@ -175,6 +181,7 @@ module ExtensionAutoOpens =
                 invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
         Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
 
+    /// Initializes an array with a given shape and initializer function.
     let arrayND (shape: int[]) f =
         match shape with 
         | [| |] -> f [| |] |> box
