@@ -14,6 +14,7 @@ type scalar = IConvertible
 
 [<CustomEquality; CustomComparison>]
 type Tensor = 
+    internal 
     | Tensor of primalRaw:RawTensor
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
     | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
@@ -455,13 +456,13 @@ type Tensor =
 
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
-    static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
+    static member inline internal OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor(ap)           -> Tensor(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
         | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
 
-    static member inline OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
+    static member inline internal OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
         | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
