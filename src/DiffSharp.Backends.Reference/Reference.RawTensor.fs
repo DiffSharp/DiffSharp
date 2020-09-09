@@ -532,19 +532,8 @@ module internal RawTensorCPU =
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values        
         let newShape = Array.append t1BatchPart [| t1rows; t2cols |]
-        let values = 
-            match t1.Dim with 
-            | 2 ->
-                Array.initFlat2D t1rows t2cols (fun i j -> Array.sumBy (fun k -> t1value.[i*t1cols + k] * t2value.[k*t2cols + j]) [|0..(t2rows-1)|] )
-            | 3 ->
-                let nb = t1BatchPart.[0]
-                Array.initFlat3D nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
-            | 4 ->
-                let nb0 = t1BatchPart.[0]
-                let nb1 = t1BatchPart.[1]
-                Array.initFlat4D nb0 nb1 t1rows t2cols (fun b0 b1 i j -> Array.sumBy (fun k -> t1value.[((b0*nb1+b1)*t1rows+i)*t1cols+k] * t2value.[((b0*nb1+b1)*t2rows+k)*t2cols+j]) [|0..(t2rows-1)|] )
-            | _ -> failwith "MatMulTT - tensor size > 4 nyi"
-
+        let nb = shapeLength t1BatchPart
+        let values = Array.initFlat3D nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
         (values, newShape)
     
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =

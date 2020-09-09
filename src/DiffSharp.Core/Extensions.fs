@@ -46,9 +46,6 @@ module Array =
     // Create a 3D array using a flat representation
     let initFlat3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
 
-    // Create a 4D array using a flat representation
-    let initFlat4D i j k l f = Array.init (i*j*k*l) (fun ijkl -> f (ijkl/j/k/l) ((ijkl/k/l)%j) ((ijkl/l)%k) (ijkl%l))
-
 /// Contains extensions to the F# Seq module. 
 module Seq =
 
