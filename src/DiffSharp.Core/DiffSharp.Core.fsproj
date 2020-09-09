@@ -1,9 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DType.fs" />
+    <Compile Include="Extensions.fs" />
+    <Compile Include="Dtype.fs" />
+    <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="RawTensor.fs" />
     <Compile Include="Tensor.fs" />

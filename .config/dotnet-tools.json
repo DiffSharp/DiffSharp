@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "fsharp.formatting.commandtool": {
+      "version": "7.2.6",
+      "commands": [
+        "fsdocs"
+      ]
+    }
+  }
+}

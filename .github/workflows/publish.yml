@@ -1,0 +1,53 @@
+name: Build/test/docs/publish
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Install tool dependencies
+      run: dotnet tool restore
+    # Release build is used to prepare packages
+    - name: Build (Release)
+      run: dotnet build --configuration Release --no-restore --verbosity normal
+    # Debug build is used to prepare docs
+    - name: Build (Debug)
+      run: dotnet build --configuration Debug --no-restore --verbosity normal
+    - name: Test
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Pack
+      run: dotnet pack --configuration Release --verbosity normal
+    - name: Pack (DiffSharp-cuda-linux)
+      run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-linux
+    - name: Pack (DiffSharp-cuda-windows)
+      run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-windows
+    - name: Run fsdocs
+      run: dotnet fsdocs build --eval
+    - name: Deploy docs
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        personal_token: ${{ secrets.PERSONAL_TOKEN }}
+        external_repository: DiffSharp/diffsharp.github.io
+        publish_dir: ./output
+        publish_branch: master
+        force_orphan: true
+    - name: Publish NuGets
+      run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
+
+# note, the nuget org token expires around June 2021

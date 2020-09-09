@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Reference.RawTensorCPU.fs" />
+    <Compile Include="Reference.RawTensor.fs" />
   </ItemGroup>
 
   <ItemGroup>

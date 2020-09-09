@@ -218,3 +218,7 @@ ModelManifest.xml
 .fake
 
 data/
+output/
+.fsdocs/
+tmp/
+docs/.ipynb_checkpoints/

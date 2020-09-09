@@ -1,4 +1,4 @@
-namespace DiffSharp.Data
+namespace rec DiffSharp.Data
 
 open DiffSharp
 open DiffSharp.Util
@@ -11,18 +11,24 @@ open System.IO.Compression
 type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
-    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches)
+    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
 
-
-and DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int) =
+type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
+    let batchSize = min batchSize dataset.length
+    let dtype = defaultArg dtype Dtype.Default
+    let device = defaultArg device Device.Default
+    let backend = defaultArg backend Backend.Default
+    let targetDtype = defaultArg targetDtype dtype
+    let targetDevice = defaultArg targetDevice device
+    let targetBackend = defaultArg targetBackend backend
     member d.length = defaultArg numBatches (dataset.length/batchSize)
     member d.epoch() =
-        seq {let index = if shuffle then shuffledIndices (dataset.length) else id
-            for i in 0..d.length-1 do 
-                let data, target = [for j in 0..batchSize-1 do dataset.item(index(i*batchSize + j))] |> List.unzip
-                i, data |> dsharp.stack, target |> dsharp.stack}
-
+        let indexer = if shuffle then Random.shuffledIndices (dataset.length) else id
+        let indices = Seq.init dataset.length id |> Seq.map indexer
+        let batchIndices = indices |> Seq.chunkBySize batchSize
+        let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
+        batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
 
 type TensorDataset(data:Tensor, target:Tensor) =
     inherit Dataset()
@@ -30,17 +36,17 @@ type TensorDataset(data:Tensor, target:Tensor) =
     override d.length = data.shape.[0]
     override d.item(i) = data.[i], target.[i]
 
-
-type MNIST(path:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath
     let train = defaultArg train true
     let transform = defaultArg transform (fun t -> ((t/255)-0.1307)/0.3081)
     let targetTransform = defaultArg targetTransform id
-    let urls = ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
-                "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"]
+    let urls = List.ofSeq <| defaultArg urls (Seq.ofList
+                   ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
+                    "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
     let filesProcessed = [for file in files do Path.ChangeExtension(file, ".tensor")]
     let data, target = 
