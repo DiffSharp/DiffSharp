@@ -112,7 +112,7 @@ module DataConverter =
         else 
            None
 
-    /// Match an tuple type
+    /// Match a tuple type
     let private (|TupleTy|_|) (ty: Type) = 
         if FSharpType.IsTuple ty then 
             Some(FSharpType.GetTupleElements ty)

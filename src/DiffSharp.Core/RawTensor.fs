@@ -441,7 +441,7 @@ type RawTensor() =
     /// Returns the element-wise negation of the tensor
     abstract member NegT : unit -> RawTensor
 
-    /// Returns the scalar tensor for the summation of all elements in the the tensor 
+    /// Returns the scalar tensor for the summation of all elements in the tensor 
     abstract member SumT : ?resultType: Dtype -> RawTensor
 
     /// Returns a vector representing the summation of each the matrix along the first dimension 
@@ -462,10 +462,10 @@ type RawTensor() =
     /// Returns the flip of the tensor along the given dimensions 
     abstract member FlipT: dims: int[] -> RawTensor
 
-    /// Returns the dilation of the tensor using the given dilations paramaters
+    /// Returns the dilation of the tensor using the given dilations parameters
     abstract member DilateT: dilations: int[] -> RawTensor
 
-    /// Returns the reverse of the dilation of the tensor using the given dilations paramaters
+    /// Returns the reverse of the dilation of the tensor using the given dilations parameters
     abstract member UndilateT: dilations: int[] -> RawTensor
 
     /// Returns the tensor with the same values viewed as a different shape
