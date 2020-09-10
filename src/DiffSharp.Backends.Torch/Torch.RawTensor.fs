@@ -158,7 +158,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
         res
     
     override t.Expand(newShape) =
-        t.MakeLike(tt.Expand(toTorchShape newShape), shape=newShape)
+        let expanded = tt.Expand(toTorchShape newShape)
+        let expandedShape = expanded.Shape |> Array.map int
+        t.MakeLike(expanded, shape=expandedShape)
 
     override t.GetItem(indexes) = 
 

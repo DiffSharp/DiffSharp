@@ -309,7 +309,8 @@ module Shape =
     let canExpand (oldShape: Shape) (newShape: Shape) =
         newShape.Length >= oldShape.Length &&
         let trim = newShape.Length - oldShape.Length
-        (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+        newShape.[..trim-1] |> Array.forall (fun m -> m >= 1)
+            && (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
 
     /// Check if one shape can expand into another through the addition of single or broadcast dimensions
     let checkCanExpand (oldShape: Shape) (newShape: Shape) =

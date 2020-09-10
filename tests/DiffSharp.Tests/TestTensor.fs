@@ -4748,6 +4748,23 @@ type TestTensor () =
 
             Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
+            let t6 = combo.tensor([[1.]; [2.]; [3.]]) // 3x1
+            let t6Expand = t6.expand([-1;4]) // 3x4
+            let t6ExpandCorrect = combo.tensor([[1.;1.;1.;1.];[2.;2.;2.;2.];[3.;3.;3.;3.]])
+
+            Assert.AreEqual(t6ExpandCorrect, t6Expand)
+
+            try 
+                t6.expand([-1;3;4]) |> ignore
+                Assert.Fail("The expanded size of the tensor (-1) isn't allowed in a leading, non-existing dimension 0")
+            with 
+            | _ -> ()
+
+            let t6Expand2 = t6.expand([2;-1;-1]) // 2x3x4
+            let t6ExpandCorrect2 = combo.tensor([[[1.]; [2.]; [3.]] ; [[1.]; [2.]; [3.]]])
+            Assert.AreEqual(t6ExpandCorrect2, t6Expand2)
+
+
     [<Test>]
     member _.TestTensorSqueezeT () =
         for combo in Combos.All do 
