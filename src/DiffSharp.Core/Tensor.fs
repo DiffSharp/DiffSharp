@@ -388,7 +388,8 @@ type Tensor =
         let absoluteTolerance = defaultArg absoluteTolerance 1e-8
         t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
 
-    /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
+    /// Returns a new tensor filled with '0' values for the given shape, element type and configuration, defaulting to the 
+
     /// shape and configuration of the input tensor.
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
