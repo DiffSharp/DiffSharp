@@ -418,7 +418,8 @@ type Tensor =
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
 
-    /// Returns a new tensor with random values drawn from the normal distribution, for the
+    /// Returns a new tensor with random values drawn from the standard normal distribution, for the
+
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
