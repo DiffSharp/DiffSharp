@@ -40,7 +40,7 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalDeep
         | TensorR(tp,_,_,_,_) -> tp.primalDeep
 
-    /// Gets the value of the tensor ignoring all its derivatives
+    /// Gets the raw value of the tensor ignoring all its derivatives
     member t.primalRaw =
         match t with
         | Tensor(tp) -> tp
@@ -194,29 +194,47 @@ type Tensor =
             | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
+    /// <summary>
+    ///  Returns the input tensor with added support for forward-mode automatic differentiation.
+    /// </summary>
+    /// <remarks>
+    ///  Any tensors produced using this tensor will also have derivatives computed using forward propagation.
+    ///  The current global nesting level is used for nested differentiation.
+    /// </remarks>
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        if t.shape = derivative.shape then TensorF(t, derivative, tag) else failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
+        if t.shape <> derivative.shape then
+            failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
+        TensorF(t, derivative, tag)
 
+    /// <summary>
+    ///  Returns the input tensor with added support for reverse-mode automatic differentiation.
+    /// </summary>
+    /// <remarks>
+    ///  Any tensors produced using this tensor will also support reverse-mode propagation. After the completion
+    ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
+    ///  will be available. The current global nesting level is used for nested differentiation.
+    /// </remarks>
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
 
-    member t.noDiff() = Tensor(t.primalRaw)
+    ///  Returns the input tensor but with any support for automatic differentiation removed.
+    member t.noDiff() = t.primalDeep
 
-    /// Indicates if a tensor is part of a forward-mode differentiation
+    /// Indicates if a tensor includes support for forward-mode differentiation
     member t.isForwardDiff() =
         match t with
         | TensorF(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor is part of a reverse-mode differentiation
+    /// Indicates if a tensor includes support for reverse-mode differentiation
     member t.isReverseDiff() =
         match t with
         | TensorR(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor is not part of a forward or reverse-mode differentiation
+    /// Indicates if a tensor includes support for forward or reverse-mode differentiation
     member t.isNoDiff() =
         match t with
         | Tensor(_) -> true
@@ -256,6 +274,7 @@ type Tensor =
     /// Loads the tensor from the given file
     static member load(fileName:string):Tensor = loadBinary fileName
 
+    /// Returns a string summarising the tensor
     member t.summary() =
         match t with
         | Tensor(_) -> sprintf "Tensor %A" t.shape
@@ -264,6 +283,8 @@ type Tensor =
             let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
             let fields = c.GetFields()
             sprintf "TensorR %A %s" t.shape c.Name
+
+    /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
 
     member t.parents() =
         let mutable p = []
@@ -298,7 +319,9 @@ type Tensor =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
         | _ -> false
+
     override t.GetHashCode() = hash t.primalRaw
+
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
@@ -309,16 +332,34 @@ type Tensor =
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
 
+    /// Get the scalar zero tensor for the current configuration
     static member Zero = Tensor(RawTensor.Zero())
+
+    /// Get the scalar one tensor for the current configuration
     static member One = Tensor(RawTensor.One())
 
+    /// Convert a scalar tensor to a float32 value
     static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+
+    /// Convert a scalar tensor to a float64 value
     static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+
+    /// Convert a scalar tensor to a byte value
     static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+
+    /// Convert a scalar tensor to a signed byte value
     static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
+
+    /// Convert a scalar tensor to an int16 value
     static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+
+    /// Convert a scalar tensor to an int32 value
     static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+
+    /// Convert a scalar tensor to an int64 value
     static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+
+    /// Convert a scalar tensor to a boolean value
     static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
 
     interface System.IConvertible with
@@ -340,67 +381,149 @@ type Tensor =
         override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
         override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
 
+    /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
+    /// given tolerances.
     member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
         let relativeTolerance = defaultArg relativeTolerance 1e-5
         let absoluteTolerance = defaultArg absoluteTolerance 1e-8
         t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
 
+    /// Returns a new tensor filled with '0' values for the given shape, element type and configuration, defaulting to the 
+
+    /// shape and configuration of the input tensor.
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor filled with the given scalar value for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
         a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with random values drawn from the standard normal distribution, for the
+
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with random integer values drawn from the given range, for the
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a scalar '0' tensor for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a scalar '1' tensor for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
         let startVal = defaultArg startVal 0.
         let step = defaultArg step 1.
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
         a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype, ?device, ?backend) =
         let endVal = endVal |> float
         let startVal = defaultArg startVal 0 |> float
         let step = defaultArg step 1 |> float
         let dtype = defaultArg dtype Dtype.Int32
         a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>
+    ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
+    ///  the element type and configuration of the input tensor.
+    /// </summary>
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with underlying storage copied.
     member a.clone() = Tensor(a.primalRaw.Clone())
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
         a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Computes element-wise (\a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &lt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
+
+    /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
     member a.isinf() = Tensor(a.primalRaw.IsInfT())
+
+    /// <summary>Returns a new tensor with boolean elements representing if each element is NaN or not. Complex values are considered NaN when either their real and/or imaginary part is NaN.</summary>
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
+
+    /// Gets if any value in the tensor is +/- INF.
     member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
+
+    /// Gets if any value in the tensor is NaN.
     member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
+
+    /// Gets the index of a maximum value in the tensor.
     member a.argmax() = a.primalRaw.MaxIndexT()
+
+    /// Gets the index of a minimum value in the tensor.
     member a.argmin() = a.primalRaw.MinIndexT()
+
+    /// Returns the maximum value of all elements in the input tensor.
     member a.max() = a.[a.argmax()]
+
+    /// Returns the minimum value of all elements in the input tensor.
     member a.min() = a.[a.argmin()]
+
+    /// Returns the element-wise maximum of the elements in the two tensors.
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
+
+    /// Returns the element-wise maximum of the tensor and the given data.
     member a.max(b) = a.max(a.like(b))
+
+    /// Returns the element-wise minimum of the elements in the two tensors.
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+
+    /// Returns the element-wise minimum of the tensor and the given data.
     member a.min(b) = a.min(a.like(b))
 
+    /// <summary>
+    ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
+    ///  The argument offset controls which diagonal to consider.
+    /// </summary>
     member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
         if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
         let offset = defaultArg offset 0
