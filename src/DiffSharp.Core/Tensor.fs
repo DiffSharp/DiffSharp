@@ -284,7 +284,8 @@ type Tensor =
             let fields = c.GetFields()
             sprintf "TensorR %A %s" t.shape c.Name
 
-    /// A debugging routine to compute the parents of a tensor involved in reverse-mode autmoatic differentiation
+    /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
+
     member t.parents() =
         let mutable p = []
         let rec parents (t:obj) d =
