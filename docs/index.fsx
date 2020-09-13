@@ -19,7 +19,6 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 DiffSharp: Differentiable Functional Programming
 ================================================
 
-
 DiffSharp is a tensor library with advanced support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
 It is designed for use in machine learning, probabilistic programming, optimization and other domains.
 

@@ -23,63 +23,69 @@
   </head>
   <body>
     <div class="container">
-      <div class="masthead">
+      <!-- <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li><a href="https://fsharp.org">fsharp.org</a></li>
         </ul>
         <h3 class="muted">{{fsdocs-collection-name}}</h3>
-      </div>
-      <hr />
+      </div> -->
+      <!-- <hr /> -->
       <div class="row">
-        <div class="span9" id="fsdocs-content">
-          {{fsdocs-content}}
-          {{fsdocs-tooltips}}         
-        </div>
+        <div class="col-xs-12" style="height:20px;"></div>
+      </div>
+      <div class="row">
         <div class="span3">
           <a href="index.html"><img src="{{root}}img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
 
-                <!-- BEGIN SEARCH BOX: this adds support for the search box -->
-                <div id="header">
-                  <div class="searchbox">
-                      <label for="search-by">
-                          <i class="fas fa-search"></i>
-                      </label>
-                      <input data-search-input="" id="search-by" type="search" placeholder="Search..." />
-                      <span data-search-clear="">
-                          <i class="fas fa-times"></i>
-                      </span>
-                  </div>
-              </div>
-              <!-- END SEARCH BOX: this adds support for the search box -->
+          <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+          <div id="header">
+            <div class="searchbox">
+                <label for="search-by">
+                    <i class="fas fa-search"></i>
+                </label>
+                <input data-search-input="" id="search-by" type="search" placeholder="Search..." />
+                <span data-search-clear="">
+                    <i class="fas fa-times"></i>
+                </span>
+            </div>
+          </div>
+          <!-- END SEARCH BOX: this adds support for the search box -->
 
-        <ul class="nav nav-list" id="menu">
-            <li class="nav-header">DiffSharp</li>
-            <li class="divider"></li>
-            <li><a href="{{root}}index.html">Home Page</a></li>
-            <li><a href="https://github.com/DiffSharp/DiffSharp/">GitHub Page</a></li>
+          <ul class="nav nav-list" id="menu">
+              <!-- <li class="nav-header">DiffSharp</li> -->
+              <!-- <li class="divider"></li> -->
+              <li><a href="{{root}}index.html">Home</a></li>
+              <li><a href="https://github.com/DiffSharp/DiffSharp/">GitHub</a></li>
 
-            <li class="nav-header">Getting Started</li>
-            <li class="divider"></li>
-            <li><a href="{{root}}api-overview.html">API Overview</a></li>
-            <li><a href="{{root}}getting-started-torch.html">Using DiffSharp with LibTorch</a></li>
-            <li><a href="{{root}}getting-started-topic1.html">Getting Started Topic 1</a></li>
-            <li><a href="{{root}}reference/index.html">API Reference</a></li>
+              <li class="nav-header">Getting Started</li>
+              <!-- <li class="divider"></li> -->
+              <li><a href="{{root}}api-overview.html">API Overview</a></li>
+              <li><a href="{{root}}getting-started-torch.html">Using DiffSharp with LibTorch</a></li>
+              <li><a href="{{root}}getting-started-topic1.html">Getting Started Topic 1</a></li>
+              <li><a href="{{root}}reference/index.html">API Reference</a></li>
 
-            <li class="nav-header">Examples</li>
-            <li class="divider"></li>
+              <!-- <li class="nav-header">Examples</li> -->
+              <!-- <li class="divider"></li> -->
 
-            <li class="nav-header">Machine Learning</li>
-            <li><a href="{{root}}examples-topic1.html">Topic 1</a></li>
+              <li class="nav-header">Machine Learning</li>
+              <li><a href="{{root}}examples-topic1.html">Topic 1</a></li>
 
-            <li class="nav-header">Authors</li>
-            <li class="divider"></li>
-            <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
-            <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
-            <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li>
-          </ul>
+              <!-- <li class="nav-header">Authors</li> -->
+              <!-- <li class="divider"></li> -->
+              <!-- <li><a href="http://www.robots.ox.ac.uk/~gunes/">Atılım Güneş Baydin</a></li>
+              <li><a href="http://www.bcl.hamilton.ie/~barak/">Barak A. Pearlmutter</a></li>
+              <li><a href="https://www.microsoft.com/en-us/research/people/dsyme/">Don Syme</a></li> -->
+            </ul>
+        </div>
+        <div class="span9" id="fsdocs-content">
+          {{fsdocs-content}}
+          {{fsdocs-tooltips}}
         </div>
       </div>
-    </div>
+      <div class="row">
+        <div class="col-xs-12" style="height:60px;"></div>
+      </div>
+  </div>
     <!-- BEGIN SEARCH BOX: this adds support for the search box -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
     <script type="text/javascript">var fsdocs_search_baseurl = '{{root}}'</script>
