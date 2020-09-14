@@ -188,6 +188,8 @@ type dsharp =
     static member logsumexp(dim:int, ?keepDim:bool) = fun (a:Tensor) -> a.logsumexp(dim, ?keepDim=keepDim)
     static member mseLoss(input:Tensor, target:Tensor, ?reduction:string) = input.mseLoss(target, ?reduction=reduction)
     static member mseLoss(target:Tensor) = fun (input:Tensor) -> input.mseLoss(target)
+    static member bceLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.bceLoss(target, ?weight=weight, ?reduction=reduction)
+    static member bceLoss(target:Tensor) = fun (input:Tensor) -> input.bceLoss(target)
     static member nllLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.nllLoss(target, ?weight=weight, ?reduction=reduction)
     static member nllLoss(target:Tensor) = fun (input:Tensor) -> input.nllLoss(target)
     static member crossEntropyLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.crossEntropyLoss(target, ?weight=weight, ?reduction=reduction)

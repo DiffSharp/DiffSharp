@@ -503,10 +503,10 @@ type Tensor =
     member a.argmin() = a.primalRaw.MinIndexT()
 
     /// Returns the maximum value of all elements in the input tensor.
-    member a.max() = a.[a.argmax()]
+    member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
     /// Returns the minimum value of all elements in the input tensor.
-    member a.min() = a.[a.argmin()]
+    member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
     /// Returns the element-wise maximum of the elements in the two tensors.
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
@@ -1463,6 +1463,25 @@ type Tensor =
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
         let z = input - target
         let l = z * z
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            l.mean()
+        else // reduction = "sum"
+            l.sum()
+
+    member input.bceLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
+        if input.shape <> target.shape then failwithf "Expecting input shape (%A) and target shape (%A) to be the same" input.shape target.shape
+        if target.max() > target.oneLike() || target.min() < target.zeroLike() then failwith "Expecting target values to be between 0 and 1."
+        if input.dim < 1 then let ret:Tensor = input.view(-1).bceLoss(target.view(-1), ?weight=weight, ?reduction=reduction) in if ret.dim = 0 then ret else ret.[0]
+        else
+        let n = input.shape.[0]
+        let weight = defaultArg weight (input.onesLike(shape=[|n|]))
+        if weight.shape.[0] <> n then failwithf "Expecting weight to be a vector of size %A, but received %A" n weight.shape.[0]
+        let reduction = defaultArg reduction "mean"
+        if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        let clampLog = -100
+        let l = -weight.unsqueeze(1)*(target * input.log().clamp(low=clampLog) + (1.-target) * (1.-input).log().clamp(low=clampLog))
         if reduction = "none" then
             l
         elif reduction = "mean" then

@@ -5544,6 +5544,40 @@ type TestTensor () =
             Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
 
     [<Test>]
+    member _.TestTensorBceLoss () =
+        for combo in Combos.FloatingPoint do 
+            let t1a = combo.tensor([[0.6732, 0.3984, 0.1378, 0.4564, 0.0396],
+                                    [0.7311, 0.6797, 0.8294, 0.8716, 0.5781],
+                                    [0.6032, 0.0346, 0.3714, 0.7304, 0.0434]])
+            let t1b = combo.tensor([[0.1272, 0.8250, 0.5473, 0.2635, 0.2387],
+                                    [0.9150, 0.9273, 0.3127, 0.7458, 0.5805],
+                                    [0.2771, 0.3095, 0.8710, 0.0176, 0.7242]])
+            let t1w = combo.tensor([0.9270, 0.4912, 0.7324])
+            let l1 = dsharp.bceLoss(t1a, t1b)
+            let l1Correct = combo.tensor(0.9516)
+            let l2 = dsharp.bceLoss(t1a, t1b, reduction="none")
+            let l2Correct = combo.tensor([[1.0264, 0.8481, 1.1520, 0.6556, 0.8016],
+                                            [0.3982, 0.4408, 1.2739, 0.6242, 0.6801],
+                                            [0.8083, 1.0655, 0.9226, 1.2933, 2.2837]])
+            let l3 = dsharp.bceLoss(t1a, t1b, reduction="sum")
+            let l3Correct = combo.tensor(14.2745)
+            let l4 = dsharp.bceLoss(t1a, t1b, weight=t1w)
+            let l4Correct = combo.tensor(0.7002)
+            let l5 = dsharp.bceLoss(t1a, t1b, reduction="none", weight=t1w)
+            let l5Correct = combo.tensor([[0.9515, 0.7862, 1.0679, 0.6078, 0.7431],
+                                            [0.1956, 0.2165, 0.6258, 0.3066, 0.3341],
+                                            [0.5920, 0.7804, 0.6757, 0.9472, 1.6726]])
+            let l6 = dsharp.bceLoss(t1a, t1b, reduction="sum", weight=t1w)
+            let l6Correct = combo.tensor(10.5032)
+
+            Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
+            Assert.True(l2Correct.allclose(l2, 0.01, 0.01))
+            Assert.True(l3Correct.allclose(l3, 0.01, 0.01))
+            Assert.True(l4Correct.allclose(l4, 0.01, 0.01))
+            Assert.True(l5Correct.allclose(l5, 0.01, 0.01))
+            Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
+
+    [<Test>]
     member _.TestTensorDepth () =
         for combo in Combos.All do 
             let t0 = combo.tensor([1.;2.])
