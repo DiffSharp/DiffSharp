@@ -43,8 +43,12 @@ body {
 
 /* Change font sizes for headings etc. */
 #fsdocs-content h1 {
-    font-size: 2.0rem;
-    margin: 10px 0px 15px 0px;
+    margin: 40px 0px 15px 0px;
+    /* font-weight: 400; */
+    font-size: 2rem;
+    letter-spacing: 1.78px;
+    line-height: 2.5rem;
+    text-transform: uppercase;    
     font-weight: 400;
 }
 
@@ -74,6 +78,10 @@ body {
     color: #262626;
     letter-spacing: 0.01px;
     font-weight: 500;
+}
+
+#fsdocs-content a {
+    color: #4974D1;
 }
 
 /*--------------------------------------------------------------------------
@@ -220,9 +228,10 @@ body {
 } */
 
 #fsdocs-nav img.logo{
-    width:140px;
-    height:140px;
+    width:90%;
+    /* height:140px; */
     /* margin:10px 0px 0px 20px; */
+    margin-top:40px;
     border-style:none;
 }
 
@@ -286,10 +295,10 @@ body {
     white-space: pre;
     font: 9pt 'Droid Sans Mono',consolas,monospace;
     width: 90%;
-    margin: 10px 20px 20px 20px;
-    background-color: #212d30;
+    /* margin: 10px 20px 20px 20px; */
+    background-color: #f3f4f7;
     padding: 10px;
-    border-radius: 5px;
+    /* border-radius: 5px; */
     color: #d1d1d1;
     max-width: none;
 }
@@ -420,7 +429,7 @@ body {
 
 /* identifiers --- and styles for more specific identifier types */
 #fsdocs-content span.id {
-    color: #d1d1d1;
+    color: #262626;
 }
 /* module */
 #fsdocs-content span.m {
@@ -428,7 +437,7 @@ body {
 }
 /* reference type */
 #fsdocs-content span.rt {
-    color: #43AEC6;
+    color: #4974D1;
 }
 /* value type */
 #fsdocs-content span.vt {
@@ -454,9 +463,15 @@ body {
 #fsdocs-content span.p {
     color: #43AEC6;
 }
+#fsdocs-content span.pn {
+    color: #262626;
+}
 /* function */
 #fsdocs-content span.f {
     color: #e1e1e1;
+}
+#fsdocs-content span.fn {
+    color: #771212;
 }
 /* active pattern */
 #fsdocs-content span.pat {
@@ -472,7 +487,7 @@ body {
 }
 /* keywords */
 #fsdocs-content span.k {
-    color: #FAB11D;
+    color: #b68015;
 }
 /* comment */
 #fsdocs-content span.c {
@@ -484,7 +499,7 @@ body {
 }
 /* numbers */
 #fsdocs-content span.n {
-    color: #96C71D;
+    color: #009999;
 }
 /* line number */
 #fsdocs-content span.l {
