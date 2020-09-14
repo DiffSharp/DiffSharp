@@ -22,9 +22,8 @@ DiffSharp: Differentiable Functional Programming
 DiffSharp is a tensor library with advanced support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
 It is designed for use in machine learning, probabilistic programming, optimization and other domains.
 
-DiffSharp provides advanced automatic differentiation capabilities for tensor code.
-Using DiffSharp, it is possible to use derivative-taking operations, including gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
-products, as high-order functional compositions. This goes far beyond the simple reverse-mode gradients of traditional tensor libraries such as TensorFlow and PyTorch, allowing the use of nested
+DiffSharp provides advanced automatic differentiation capabilities for tensor code, making it possible to use derivative-taking operations, including gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
+products, as higher-order function compositions. This goes far beyond the standard reverse-mode gradients of traditional tensor libraries such as TensorFlow and PyTorch, allowing the use of nested
 forward and reverse differentiation up to any level, meaning that you can compute higher-order derivatives efficiently or differentiate functions
 that are internally making use of differentiation. Please see [API Overview](api-overview.html) for a list of available operations.
 
