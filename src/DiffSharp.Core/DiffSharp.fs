@@ -26,7 +26,7 @@ type dsharp =
     /// </summary>
     /// 
     /// <remarks>
-    ////  Non-integer steps may be subject to floating point rounding errors when comparing against end.
+    ///  Non-integer steps may be subject to floating point rounding errors when comparing against end.
     /// </remarks>
     static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
 
