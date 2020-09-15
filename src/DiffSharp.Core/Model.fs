@@ -4,47 +4,99 @@ open DiffSharp.Util
 open System.Collections.Generic
 
 
+/// <summary>TBD</summary>
 type Parameter =
     val mutable value:Tensor
     new(value) = {value=value}
+
+    /// <summary>TBD</summary>
     member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
+
+    /// <summary>TBD</summary>
     member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
+
+    /// <summary>TBD</summary>
     member p.noDiff() = p.value <- p.value.noDiff()
+
+    /// <summary>TBD</summary>
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
     override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
 
 
+/// <summary>TBD</summary>
 type ParameterDict() =
+
+    /// <summary>TBD</summary>
     member val values = Dictionary<string, Parameter>()
+
+    /// <summary>TBD</summary>
     member d.Item
         with get key = d.values.[key].value
         and set key v = d.values.[key].value <- v
+
+    /// <summary>TBD</summary>
     member d.add(name, parameter) = d.values.Add(name, parameter)
+
+    /// <summary>TBD</summary>
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
+
+    /// <summary>TBD</summary>
     member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
+
+    /// <summary>TBD</summary>
     member d.copy() = d.map(fun (t:Tensor) -> t)
+
+    /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
         let ret = ParameterDict()
         for KeyValue(n, p) in d.values do ret.values.Add(f(n,p))
         ret
+
+    /// <summary>TBD</summary>
     member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.value) in nn, Parameter(tt))
+
+    /// <summary>TBD</summary>
     member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
+
+    /// <summary>TBD</summary>
     member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
+
+    /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
+
+    /// <summary>TBD</summary>
     member d.forwarddiff(derivatives:ParameterDict, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
+
+    /// <summary>TBD</summary>
     member d.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         d.iter(fun (_, p) -> p.reverseDiff(tag))
+
+    /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
+
+    /// <summary>TBD</summary>
     member d.move(?dtype, ?device, ?backend) = d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>TBD</summary>
     member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
+
+    /// <summary>TBD</summary>
     member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
+
+    /// <summary>TBD</summary>
     member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
+
+    /// <summary>TBD</summary>
     member d.flatten() =
         let ts = [for t in d.values.Values do t.value.view(-1)]
         dsharp.cat(ts)
+
+    /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
@@ -56,10 +108,14 @@ type ParameterDict() =
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1
+
+    /// <summary>TBD</summary>
     member d.unflattenToNew(tensors:Tensor) = 
         let dd = d.copy()
         dd.unflatten(tensors)
         dd
+
+    /// <summary>TBD</summary>
     override d.ToString() =
         let sb = System.Text.StringBuilder()
         sb.Append("ParameterDict(") |> ignore
@@ -71,33 +127,50 @@ type ParameterDict() =
         sb.ToString()
 
 
+/// <summary>TBD</summary>
 type Mode =
     | Train = 0
     | Eval = 1
 
-
 [<AbstractClass>]
+/// <summary>TBD</summary>
 type Model() =
     [<DefaultValue>]
     val mutable mode: Mode
+
+    /// <summary>TBD</summary>
     member val ParametersDict = ParameterDict()
+
+    /// <summary>TBD</summary>
     member val SubModelsDict = Dictionary<string, Model>()
+
+    /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
         for model:Model in m.allModels do model.mode <- Mode.Train
+
+    /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
         for model:Model in m.allModels do model.mode <- Mode.Eval
+
+    /// <summary>TBD</summary>
     member m.parametersDict
         with get () = m.ParametersDict
         and set parameters = m.ParametersDict.set(parameters)
+
+    /// <summary>TBD</summary>
     member m.parameters
         with get () = m.parametersDict.flatten()
         and set parameters = m.parametersDict.unflatten(parameters)
+
+    /// <summary>TBD</summary>
     member m.allModels
         with get () =
             if m.SubModelsDict.Count = 0 then [m]
             else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
+
+    /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
         let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
@@ -110,55 +183,102 @@ type Model() =
                 m.SubModelsDict.Add(n, mm)
                 m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+
+    /// <summary>TBD</summary>
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
+
+    /// <summary>TBD</summary>
     member m.reverseDiff() = m.parametersDict.reverseDiff()
+
+    /// <summary>TBD</summary>
     member m.noDiff() = m.parametersDict.noDiff()
+
+    /// <summary>TBD</summary>
     member m.move(?dtype, ?device, ?backend) = m.parametersDict.move(?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
     member m.nparameters = m.parametersDict.nelement
+
+    /// <summary>TBD</summary>
     abstract member forward: Tensor -> Tensor
+
+    /// <summary>TBD</summary>
     member m.forwardParameters (input:Tensor) (parameters:Tensor) =
         m.parameters <- parameters
         let f = m.forward(input) in m.noDiff(); f
+
+    /// <summary>TBD</summary>
     member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
         m.forwardParameters input parameters |> f
+
+    /// <summary>TBD</summary>
     member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
         m.forwardCompose (f target) input parameters
+
+    /// <summary>TBD</summary>
     static member create ps f =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
+
+    /// <summary>TBD</summary>
     override m.ToString() =
         let sb = System.Text.StringBuilder()
         sb.Append("Model(\n") |> ignore
         for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
+
+    /// <summary>TBD</summary>
     static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
+
+    /// <summary>TBD</summary>
     static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
+
+    /// <summary>TBD</summary>
     static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
+
+    /// <summary>TBD</summary>
     static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
+
+    /// <summary>TBD</summary>
     static member (-->) (t:Tensor, m:Model) = m.forward t
+
+    /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parameters.save(fileName)
+
+    /// <summary>TBD</summary>
     member m.loadParameters(fileName) = m.parameters <- Tensor.load(fileName)
+
+    /// <summary>TBD</summary>
     member m.save(fileName) = saveBinary m fileName
+
+    /// <summary>TBD</summary>
     static member load(fileName):Model = loadBinary fileName
+
+    /// <summary>TBD</summary>
     member m.clone() = 
         let fileName = System.IO.Path.GetTempFileName()
         m.save(fileName)
         Model.load(fileName)
 
-
+/// <summary>TBD</summary>
 type Weight() =
+
+    /// <summary>TBD</summary>
     static member kaiming(fanIn, fanOut, ?a:float) = 
         // He et al. 2015. https://arxiv.org/abs/1502.01852
         let a = defaultArg a (sqrt 5.)
         let w = dsharp.randn([fanIn; fanOut])
         let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
         w * s
+
+    /// <summary>TBD</summary>
     static member standard(shape:int[], k:float) =
         -k + dsharp.rand(shape) * 2*k
 
 
+/// <summary>TBD</summary>
 type Linear(inFeatures, outFeatures, ?bias:bool) =
     inherit Model()
     let bias = defaultArg bias true
@@ -166,12 +286,17 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.standard([|outFeatures|], k) else dsharp.zero())
     do base.add([w;b],["Linear__weight";"Linear__bias"])
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+
+    /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f
 
 
+/// <summary>TBD</summary>
 type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
     inherit Model()
     let bias = defaultArg bias true
@@ -179,12 +304,17 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+
+    /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
+/// <summary>TBD</summary>
 type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
     let kernelSizes = 
@@ -198,12 +328,17 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+
+    /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
 
+/// <summary>TBD</summary>
 type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
     let kernelSizes = 
@@ -217,33 +352,52 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let w = Parameter <| Weight.standard([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.standard([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+
+    /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
-
+/// <summary>TBD</summary>
 type Dropout(?p:double) =
     inherit Model()
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Dropout()"
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if m.mode = Mode.Train then value.dropout(?p=p) else value
 
 
+/// <summary>TBD</summary>
 type Dropout2d(?p:double) =
     inherit Model()
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Dropout2d()"
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if m.mode = Mode.Train then value.dropout2d(?p=p) else value
 
 
+/// <summary>TBD</summary>
 type Dropout3d(?p:double) =
     inherit Model()
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "Dropout3d()"
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if m.mode = Mode.Train then value.dropout3d(?p=p) else value
 
 
+/// <summary>TBD</summary>
 type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
@@ -256,11 +410,22 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
     do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+
+    /// <summary>TBD</summary>
     member _.mean = _mean.value
+
+    /// <summary>TBD</summary>
     member _.variance = _variance.value
+
+    /// <summary>TBD</summary>
     member _.stddev = _variance.value.sqrt()
+
+    /// <summary>TBD</summary>
     member _.weight = w.value
+
+    /// <summary>TBD</summary>
     member _.bias = b.value
+
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
@@ -271,7 +436,11 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim = 2 then
             if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
@@ -301,6 +470,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
 
 
+/// <summary>TBD</summary>
 type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
@@ -313,11 +483,22 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
     do base.add([w;b],["BatchNorm2d__weight";"BatchNorm2d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+
+    /// <summary>TBD</summary>
     member _.mean = _mean.value
+
+    /// <summary>TBD</summary>
     member _.variance = _variance.value
+
+    /// <summary>TBD</summary>
     member _.stddev = _variance.value.sqrt()
+
+    /// <summary>TBD</summary>
     member _.weight = w.value
+
+    /// <summary>TBD</summary>
     member _.bias = b.value
+
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
@@ -328,7 +509,11 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
@@ -344,6 +529,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
 
 
+/// <summary>TBD</summary>
 type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
@@ -356,11 +542,22 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
     do base.add([w;b],["BatchNorm3d__weight";"BatchNorm3d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+
+    /// <summary>TBD</summary>
     member _.mean = _mean.value
+
+    /// <summary>TBD</summary>
     member _.variance = _variance.value
+
+    /// <summary>TBD</summary>
     member _.stddev = _variance.value.sqrt()
+
+    /// <summary>TBD</summary>
     member _.weight = w.value
+
+    /// <summary>TBD</summary>
     member _.bias = b.value
+
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
@@ -371,7 +568,11 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+
+    /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
+
+    /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
