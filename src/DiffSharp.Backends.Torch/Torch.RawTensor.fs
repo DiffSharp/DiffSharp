@@ -768,7 +768,6 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
         | _ ->  t.MakeLike(tt.Atan())
 
     new (info: System.Runtime.Serialization.SerializationInfo, _context: System.Runtime.Serialization.StreamingContext) =
-        let device = info.GetValue("device", typeof<Device>) :?> Device
         let dtype = info.GetValue("dtype", typeof<Dtype>) :?> Dtype
         let shape = info.GetValue("shape", typeof<Shape>) :?> Shape
         let tt =
@@ -798,18 +797,16 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
                 let data = info.GetValue("data", typeof<double[]>)  :?> double[]
                 DoubleTensor.From (data, toTorchShape shape) 
 
-        let tt2 = torchMoveTo tt device
-        TorchRawTensor(tt2, shape, dtype, device)
+        TorchRawTensor(tt, shape, dtype, Device.CPU)
 
     interface System.Runtime.Serialization.ISerializable with
 
         //[SecurityPermissionAttribute(SecurityAction.Demand,  SerializationFormatter = true)]
         member t.GetObjectData(info, _context) =
             
-            // Torch Tensors must be CPU before they can be saved
+            // Torch Tensors must be CPU before they can access RawData
             let tCpu = t.MoveTo(Device.CPU) :?> TorchRawTensor
 
-            info.AddValue("device", t.Device)
             info.AddValue("dtype", t.Dtype)
             info.AddValue("shape", t.Shape)
             info.AddValue("data", tCpu.ToRawData())

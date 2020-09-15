@@ -9,8 +9,23 @@ type dsharp =
     static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
     static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
     static member isTensor(value:obj) = value :? Tensor
+
+    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <remarks>
+    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
+    ///   The format used may change from version to version of DiffSharp.
+    /// </remarks>
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
+
+    /// <summary>Loads the tensor from the given file using the given configuration. If no configuration is specified the default configuration is used.</summary>
+    ///
+    /// <remarks>
+    ///   The backend used at the time of saving the tensor must be available when the tensor is reloaded.
+    ///   The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///   in the process of reloading.
+    /// </remarks>
     static member load(fileName) = Tensor.load(fileName)
+
     static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
     static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))

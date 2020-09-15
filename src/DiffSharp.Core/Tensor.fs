@@ -268,11 +268,23 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
-    /// Saves the tensor to the given file using a bespoke binary format
+    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <remarks>
+    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
+    ///   The format used may change from version to version of DiffSharp.
+    /// </remarks>
     member t.save(fileName:string) = saveBinary t fileName
 
-    /// Loads the tensor from the given file
-    static member load(fileName:string):Tensor = loadBinary fileName
+    /// <summary>Loads the tensor from the given file using the given configuration. If no configuration is specified the default configuration is used.</summary>
+    ///
+    /// <remarks>
+    ///   The backend used at the time of saving the tensor must be available when the tensor is reloaded.
+    ///   The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///   in the process of reloading.
+    /// </remarks>
+    static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
+        let t : Tensor = loadBinary fileName
+        t.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// Returns a string summarising the tensor
     member t.summary() =
