@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Util
 open System
 
 [<TestFixture>]
@@ -220,7 +221,7 @@ type TestTensor () =
         let t3 = combo.tensor(t3Values)
         let t3ShapeCorrect = [|1; 2; 3|]
         let t3DimCorrect = 3
-        let t3ValuesCorrect = Util.array3D (List.map (List.map (List.map float32)) t3Values)
+        let t3ValuesCorrect = array3D (List.map (List.map (List.map float32)) t3Values)
 
         Assert.AreEqual(t3ShapeCorrect, t3.shape)
         Assert.AreEqual(t3DimCorrect, t3.dim)
@@ -233,7 +234,7 @@ type TestTensor () =
         let t4 = combo.tensor(t4Values)
         let t4ShapeCorrect = [|1; 1; 1; 2|]
         let t4DimCorrect = 4
-        let t4ValuesCorrect = Util.array4D (List.map (List.map (List.map (List.map float32))) t4Values)
+        let t4ValuesCorrect = array4D (List.map (List.map (List.map (List.map float32))) t4Values)
 
         Assert.AreEqual(t4ShapeCorrect, t4.shape)
         Assert.AreEqual(t4DimCorrect, t4.dim)
@@ -622,7 +623,6 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
-                | Dtype.Other _ -> failwith "unexpected user-defined type"
             let t0StringCorrect = sprintf "Tensor 2%s" suffix
             let t1StringCorrect = sprintf "Tensor [[2%s], \n [2%s]]" suffix suffix
             let t2StringCorrect = sprintf "Tensor [[[2%s, 2%s]]]" suffix suffix
@@ -1183,7 +1183,7 @@ type TestTensor () =
 
         let t7Results, t7CommuteResults = 
             [| for shape in t7Shapes do 
-                  let t7b = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7b = combo.tensor(arrayND shape (fun is -> double (Array.sum is) + 2.0))
                   let t7 = t7a + t7b
                   let t7Commute = t7b + t7a
                   yield (t7b, t7), (t7b, t7Commute) |]
@@ -1576,7 +1576,7 @@ type TestTensor () =
 
         let t6Results, t6CommuteResults = 
             [| for shape in t6Shapes do 
-                  let t6b = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6b = combo.tensor( arrayND shape (fun is -> double (Array.sum is) + 2.0))
                   let t6 = t6a * t6b
                   let t6Commute = t6b * t6a
                   yield (t6b, t6 ), (t6b, t6Commute ) |]
@@ -5535,6 +5535,40 @@ type TestTensor () =
                                             [9.2194e-01, 5.6358e+00, 2.2848e+00, 1.5011e-01, 6.2556e-04]])
             let l6 = dsharp.mseLoss(t2a, t2b, reduction="sum")
             let l6Correct = combo.tensor(28.0416)
+
+            Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
+            Assert.True(l2Correct.allclose(l2, 0.01, 0.01))
+            Assert.True(l3Correct.allclose(l3, 0.01, 0.01))
+            Assert.True(l4Correct.allclose(l4, 0.01, 0.01))
+            Assert.True(l5Correct.allclose(l5, 0.01, 0.01))
+            Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
+
+    [<Test>]
+    member _.TestTensorBceLoss () =
+        for combo in Combos.FloatingPoint do 
+            let t1a = combo.tensor([[0.6732, 0.3984, 0.1378, 0.4564, 0.0396],
+                                    [0.7311, 0.6797, 0.8294, 0.8716, 0.5781],
+                                    [0.6032, 0.0346, 0.3714, 0.7304, 0.0434]])
+            let t1b = combo.tensor([[0.1272, 0.8250, 0.5473, 0.2635, 0.2387],
+                                    [0.9150, 0.9273, 0.3127, 0.7458, 0.5805],
+                                    [0.2771, 0.3095, 0.8710, 0.0176, 0.7242]])
+            let t1w = combo.tensor([0.9270, 0.4912, 0.7324])
+            let l1 = dsharp.bceLoss(t1a, t1b)
+            let l1Correct = combo.tensor(0.9516)
+            let l2 = dsharp.bceLoss(t1a, t1b, reduction="none")
+            let l2Correct = combo.tensor([[1.0264, 0.8481, 1.1520, 0.6556, 0.8016],
+                                            [0.3982, 0.4408, 1.2739, 0.6242, 0.6801],
+                                            [0.8083, 1.0655, 0.9226, 1.2933, 2.2837]])
+            let l3 = dsharp.bceLoss(t1a, t1b, reduction="sum")
+            let l3Correct = combo.tensor(14.2745)
+            let l4 = dsharp.bceLoss(t1a, t1b, weight=t1w)
+            let l4Correct = combo.tensor(0.7002)
+            let l5 = dsharp.bceLoss(t1a, t1b, reduction="none", weight=t1w)
+            let l5Correct = combo.tensor([[0.9515, 0.7862, 1.0679, 0.6078, 0.7431],
+                                            [0.1956, 0.2165, 0.6258, 0.3066, 0.3341],
+                                            [0.5920, 0.7804, 0.6757, 0.9472, 1.6726]])
+            let l6 = dsharp.bceLoss(t1a, t1b, reduction="sum", weight=t1w)
+            let l6Correct = combo.tensor(10.5032)
 
             Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
             Assert.True(l2Correct.allclose(l2, 0.01, 0.01))

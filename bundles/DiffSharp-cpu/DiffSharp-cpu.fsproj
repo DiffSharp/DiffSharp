@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-  
   </PropertyGroup>
+  
   <ItemGroup>
     <Compile Include="Empty.fs" />
   </ItemGroup>
@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <!--  reference a libtorch runtime redist -->
     <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
 </Project>

@@ -20,13 +20,22 @@ module internal Utils =
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtype, device: Device) =
+    inherit RawTensor()
+
+    override _.Shape = shape
+    override _.Dim = shape.Length
+    override _.Nelement = shapeLength shape
+    override _.Dtype = dtype
+    override _.Device = device
+    override _.DeviceType = device.DeviceType
+    override _.Backend =
 #if TEST_DUPLICATE_BACKEND
-    inherit RawTensor(shape, dtype, device, Backend.Register "TestDuplicate")
+        Backend.Register "TestDuplicate"
 #else
-    inherit RawTensor(shape, dtype, device, Backend.Reference)
+        Backend.Reference
 #endif
 
-    member _.Values = values
+    member _.Values : 'T[] = values
 
     member internal t.IndexToFlatIndex(index:int[]) =
         indexToFlatIndex t.Shape index
@@ -403,10 +412,10 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline MaxIndexT(t: RawTensorCPU< ^T >) =
-        t.FlatIndexToIndex(maxIndex t.Values)
+        t.FlatIndexToIndex(Seq.maxIndex t.Values)
 
     let inline MinIndexT(t: RawTensorCPU< ^T >) =
-        t.FlatIndexToIndex(minIndex t.Values)
+        t.FlatIndexToIndex(Seq.minIndex t.Values)
 
     let inline AddTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * int[]) =
         let t1value = t1.Values

@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Util
 
 #nowarn "0058"
 
@@ -288,9 +289,9 @@ type TestDerivatives () =
 
             // For each shape, create a broadcasting addition and take forward and reverse derivatives
             for shape in shapes do 
-                let t1b = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                let t1b = combo.tensor( arrayND shape (fun is -> double (Array.sum is) + 2.0))
                 let t1a_deriv = t1a + 1.0
-                let t1b_delta = combo.tensor( Util.arrayND shape (fun is -> double (Array.sum is) - 2.0))
+                let t1b_delta = combo.tensor( arrayND shape (fun is -> double (Array.sum is) - 2.0))
                 let fwda = t1a.forwardDiff(t1a_deriv)
                 let fwdb = t1b.forwardDiff(t1b_delta)
                 let fwdz = fwda + fwdb
@@ -306,8 +307,8 @@ type TestDerivatives () =
 
                 // In the simple case of broadcasting a constant, check the result against the non-broadcast case
                 if t1b.sum() = combo.tensor(2.0) then 
-                    let t1c = combo.tensor( Util.arrayND [| 2;3;4 |] (fun _idxs -> 2.0))
-                    let t1c_deriv = combo.tensor( Util.arrayND [| 2;3;4 |] (fun _idxs -> -2.0))
+                    let t1c = combo.tensor( arrayND [| 2;3;4 |] (fun _idxs -> 2.0))
+                    let t1c_deriv = combo.tensor( arrayND [| 2;3;4 |] (fun _idxs -> -2.0))
                     let fwda = t1a.forwardDiff(t1a_deriv)
                     let fwdc = t1c.forwardDiff(t1c_deriv)
                     let fwdz2 = fwda + fwdc

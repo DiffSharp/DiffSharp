@@ -4,6 +4,7 @@
 
      <LibTorchNugetVersion>1.5.6</LibTorchNugetVersion>
      <TorchSharpVersion>0.3.52267</TorchSharpVersion>
+	 <FSharpCoreVersion>4.7.2</FSharpCoreVersion>
       <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
 
@@ -23,14 +24,14 @@
         https://donsyme.pkgs.visualstudio.com/TorchSharp/_packaging/packages2/nuget/v3/index.json
     </RestoreSources>
     -->
-    <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
+    <OtherFlags>--warnon:1182 --warnon:3390 $(OtherFlags)</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup>
-     <Version>0.9.5</Version>
+     <Version>1.0.0</Version>
      <Authors>Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
-     <PackageProjectUrl>https://dsyme.github.io/DiffSharp</PackageProjectUrl>
+     <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
      <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
      <RepositoryBranch>dev</RepositoryBranch>
      <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
@@ -40,11 +41,11 @@
 
 
      <!-- local build uses number unique by day -->
-     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' == ''">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' != 'true'">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
      <!-- tagged build on CI uses number -->
-     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' == '$(Version)'">$(Version)</PackageVersion>
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' == 'refs/tags/v$(Version)'">$(Version)</PackageVersion>
      <!-- untagged build on CI uses unique -->
-     <PackageVersion Condition="'$(APPVEYOR_REPO_TAG)' != '' AND '$(APPVEYOR_REPO_TAG_NAME)' != '$(Version)'">$(Version)-preview-$([System.DateTime]::Now.ToString(`yyMMddHHmm`))</PackageVersion>
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' != 'refs/tags/v$(Version)'">$(Version)-preview-$(GITHUB_RUN_ID)</PackageVersion>
      <PackageOutputPath>$(MSBuildThisFileDirectory)/bin/packages</PackageOutputPath>
 
      <NuspecProperties>Authors=$(Authors);Owners=$(Owners);ProjectId=$(MSBuildProjectName);PackageVersion=$(PackageVersion);TorchSharpVersion=$(TorchSharpVerion);LibTorchNugetVersion=$(LibTorchNugetVersion)</NuspecProperties>

@@ -1,5 +1,6 @@
 namespace Tests
 
+open System.IO
 open NUnit.Framework
 open DiffSharp
 open DiffSharp.Data
@@ -10,8 +11,14 @@ type TestData () =
 
     [<Test>]
     member _.TestMNISTDataset () =
-        // Note: this test can fail if http://yann.lecun.com website goes down or file urls change
+        // Note: this test can fail if http://yann.lecun.com website goes down or file urls change 
+        // or setialized binary format of tensors changes on disk
         let folder = System.IO.Path.GetTempPath()
+        try 
+            let path = Path.Combine(folder, "mnist")
+            for file in Directory.GetFiles(path, "*.tensor") do
+               File.Delete(file)
+        with _ -> ()
         let urls =
            ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
             "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
