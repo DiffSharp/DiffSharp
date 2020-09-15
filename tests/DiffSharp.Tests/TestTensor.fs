@@ -258,7 +258,7 @@ type TestTensor () =
             Assert.AreEqual(a, b)
 
     [<Test>]
-    member _.TestTensorSaveLoadBackToDefaultConfiguarion () =
+    member _.TestTensorSaveLoadBackToDefaultConfiguarionThenMoveToCombo () =
         let fileName = System.IO.Path.GetTempFileName()
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
@@ -266,6 +266,16 @@ type TestTensor () =
             let b = Tensor.load(fileName)
             let bInCombo = combo.move(b)
             Assert.AreEqual(a, bInCombo)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarion () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let aInDefault = a.move(device=Device.Default, backend=Backend.Default)
+            let b = Tensor.load(fileName)
+            Assert.AreEqual(aInDefault, b)
 
     [<Test>]
     member _.TestTensorSaveLoadConfiguarion () =

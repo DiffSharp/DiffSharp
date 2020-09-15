@@ -35,12 +35,17 @@ type dsharp =
     /// </remarks>
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
 
-    /// <summary>Loads the tensor from the given file using the given configuration. If no configuration is specified the default configuration is used.</summary>
+    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
+    ///
+    /// <param name="fileName">The file from which to load the tensor.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
+    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
     ///
     /// <remarks>
-    ///   The backend used at the time of saving the tensor must be available when the tensor is reloaded.
-    ///   The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
-    ///   in the process of reloading.
+    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///    in the process of reloading.
     /// </remarks>
     static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
 

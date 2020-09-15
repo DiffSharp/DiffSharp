@@ -58,7 +58,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
 
     inherit RawTensor()
 
-    // Note, shape and dtype are stored as fields.  These dupicate information in TorchTensor, but
+    // Note, shape and dtype are stored as fields. These dupicate information in TorchTensor, but
     // it is a little too costly to repeatedly re-extract this information.
     //
     // 'device' is not stored as a field, it is rarely accessed and can be fetched from TorchTensor

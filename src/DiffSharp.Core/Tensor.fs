@@ -275,16 +275,22 @@ type Tensor =
     /// </remarks>
     member t.save(fileName:string) = saveBinary t fileName
 
-    /// <summary>Loads the tensor from the given file using the given configuration. If no configuration is specified the default configuration is used.</summary>
+    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
+    ///
+    /// <param name="fileName">The file from which to load the tensor.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
+    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
     ///
     /// <remarks>
-    ///   The backend used at the time of saving the tensor must be available when the tensor is reloaded.
-    ///   The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
-    ///   in the process of reloading.
+    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///    in the process of reloading.
     /// </remarks>
     static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
         let t : Tensor = loadBinary fileName
-        t.move(?dtype=dtype, ?device=device, ?backend=backend)
+        let dtype = defaultArg dtype t.dtype
+        t.move(dtype=dtype, ?device=device, ?backend=backend)
 
     /// Returns a string summarising the tensor
     member t.summary() =
@@ -1077,7 +1083,7 @@ type Tensor =
        let res2 = if keepDim then res.unsqueeze(dim) else res
        res2.castAfterSummation(?dtype=dtype)
 
-    /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
+    /// Reduce the dimensionality via summation until we reach `newShape`. An expansion
     /// from newShape to shape must be possible.
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
