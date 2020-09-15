@@ -40,7 +40,7 @@ type TestOptim () =
         // Trains a linear regressor
         let net = Linear(din, dout)
         let lr, mom, epochs = 1e-2, 0.9, 250
-        Optimizer.sgd(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), momentum=dsharp.tensor(mom), nesterov=true,  threshold=1e-4, epochs=epochs)
+        optim.sgd(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), momentum=dsharp.tensor(mom), nesterov=true,  threshold=1e-4, epochs=epochs)
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
@@ -80,7 +80,7 @@ type TestOptim () =
         // Trains a linear regressor
         let net = Linear(din, dout)
         let lr, epochs = 1e-2, 50
-        Optimizer.adam(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), threshold=1e-4, epochs=epochs)
+        optim.adam(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), threshold=1e-4, epochs=epochs)
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
@@ -88,7 +88,7 @@ type TestOptim () =
     member _.TestOptimFunSGD () =
         let x0 = dsharp.tensor([1.5, 1.5])
         let lr, momentum, iters, threshold = 1e-3, 0.5, 1000, 1e-3
-        let fx, x = Optimizer.sgd(rosenbrock, x0, lr=dsharp.tensor(lr), momentum=dsharp.tensor(momentum), nesterov=true, iters=iters, threshold=threshold)
+        let fx, x = optim.sgd(rosenbrock, x0, lr=dsharp.tensor(lr), momentum=dsharp.tensor(momentum), nesterov=true, iters=iters, threshold=threshold)
         let fxOpt = dsharp.tensor(0.)
         let xOpt = dsharp.tensor([1., 1.])
         Assert.True(fxOpt.allclose(fx, 0.1, 0.1))
@@ -98,7 +98,7 @@ type TestOptim () =
     member _.TestOptimFunAdam () =
         let x0 = dsharp.tensor([1.5, 1.5])
         let lr, iters, threshold = 1., 1000, 1e-3
-        let fx, x = Optimizer.adam(rosenbrock, x0, lr=dsharp.tensor(lr), iters=iters, threshold=threshold)
+        let fx, x = optim.adam(rosenbrock, x0, lr=dsharp.tensor(lr), iters=iters, threshold=threshold)
         let fxOpt = dsharp.tensor(0.)
         let xOpt = dsharp.tensor([1., 1.])
         Assert.True(fxOpt.allclose(fx, 0.1, 0.1))

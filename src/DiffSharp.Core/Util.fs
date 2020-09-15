@@ -7,7 +7,7 @@ open System.Diagnostics.CodeAnalysis
 open FSharp.Reflection
 open DiffSharp
 
-/// Represents a nesting level with a differentiation operation.
+/// Represents a differentiation nesting level.
 type NestingLevel =
     val mutable Current:uint32
     new() = {Current = 0u}
@@ -21,20 +21,20 @@ type GlobalNestingLevel() =
     static member Reset() = tagger.Current <- 0u
     static member Set(level) = tagger.Current <- level
 
-/// Contains operations relating to the random generation of data
+/// Contains operations relating to pseudo-random number generation.
 type Random() =
     static let mutable rnd = System.Random()
 
-    /// Set the random seed
+    /// Sets the random seed.
     static member Seed(seed) = rnd <- System.Random(seed)
 
-    /// Return a random value for the uniform distribution over the interval [0,1)
+    /// Samples a random value from the standard uniform distribution over the interval [0,1).
     static member Uniform() = rnd.NextDouble()
 
-    /// Return a random value for the uniform distribution with the given parameters
+    /// Samples a random value from the uniform distribution with the given parameters [low, high).
     static member Uniform(low, high) = low + (rnd.NextDouble() * (high-low))
 
-    /// Return a random value for the normal distribution with the given parameters
+    /// Samples a random value from the standard normal distribution with mean 0 and standard deviation 1.
     static member Normal() =
         let rec normal() = 
             let x, y = (rnd.NextDouble()) * 2.0 - 1.0, (rnd.NextDouble()) * 2.0 - 1.0
@@ -42,42 +42,45 @@ type Random() =
             if s > 1.0 then normal() else x * sqrt (-2.0 * (log s) / s)
         normal()
 
-    /// Return a random value for the normal distribution with the given parameters
+    /// Samples a random value from the normal distribution with the given mean and standard deviation.
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
 
-    /// Return a random integer in the given range
+    /// Samples a random integer in the given range [low, high).
     static member Integer(low, high) = rnd.Next(low, high)
 
-    /// Choose an index at random according to the given weights
+    /// Samples an index at random with the given categorical probabilities.
     static member ChoiceIndex(probs:float[]) =
         let probsSum = probs |> Array.sum
         let cumulativeProbs = probs |> Array.map (fun v -> v / probsSum) |> Array.cumulativeSum
         let p = rnd.NextDouble()
         cumulativeProbs |> Array.findIndex (fun v -> v >= p)
 
-    /// Choose a value at random
+    /// Samples a value at random from the given array.
     static member Choice(array:_[]) = array.[rnd.Next(array.Length)]
 
-    /// Choose multiple values at random independently
+    /// Samples a value at random from the given array using the given categorical probabilities.
     static member Choice(array:_[], probs:float[]) = 
         if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
         array.[Random.ChoiceIndex(probs)]
 
-    /// Return an array of random values for the given weighted distribution
+    /// Samples a number of random values  array of random values for the given weighted distribution
     static member Multinomial(probs:float[], numSamples:int) =
         Array.init numSamples (fun _ -> Random.ChoiceIndex(probs)) // Samples with replacement
 
-    /// Return an array of random values for the given weighted distribution
+    /// Returns a 2D array where each row contains `numSamples` indices sampled from the multinomial probability distribution defined by the probabilities in the corresponding row of the `probs` array.
     static member Multinomial(probs:float[,], numSamples:int) =
         Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
 
-    /// Return a random value for the given distribution
+    /// Samples a random value from the Bernoulli distribution with the given probability.
     static member Bernoulli(prob:float) = if rnd.NextDouble() < prob then 1. else 0.
 
-    /// Return a random value according a fair coin flip
+    /// Samples a random value from the Bernoulli distribution.
     static member Bernoulli() = Random.Bernoulli(0.5)
 
-    /// Randomly shuffle the given array in-place 
+    /// Returns a universally unique identifier (UUID) string
+    static member UUID() = System.Guid.NewGuid().ToString()
+
+    /// Returns an array that is a randomly-shuffled version of the given array, using the Durstenfeld/Knuth shuffle.
     static member Shuffle(array:_[]) =
         // Durstenfeld/Knuth shuffle
         let a = array |> Array.copy
@@ -90,29 +93,31 @@ type Random() =
             a.[n] <- temp
         a
 
-/// Contains operations relating to random generation of data
+/// Contains operations relating to pseudo-random number generation.
 module Random = 
+
+    /// Returns a function that maps a given index to a shuffled version of the indexes up to the given `length`
     let shuffledIndices (length: int) =
         let indices = Array.init length id
         let indicesShuffled = Random.Shuffle(indices)
         fun (i: int) -> indicesShuffled.[i]
 
-/// Contains operations relating to converting .NET data to tensor data
+/// Contains operations relating to converting .NET data to tensor data.
 module DataConverter =
 
-    /// Get the elements of an arbitrary IEnumerble
+    /// Gets the elements of an arbitrary IEnumerble.
     let private seqElements (ie: obj) = 
         let e = (ie :?> IEnumerable).GetEnumerator()
         [| while e.MoveNext() do yield e.Current |]
 
-    /// Match an array type of arbitrary rank
+    /// Matches an array type of arbitrary rank.
     let private (|ArrayTy|_|) (ty: Type) = 
         if ty.IsArray && ty.GetArrayRank() <= 4 then
             Some(ty.GetArrayRank(), ty.GetElementType())
         else 
            None
 
-    /// Match an tuple type
+    /// Matches a tuple type.
     let private (|TupleTy|_|) (ty: Type) = 
         if FSharpType.IsTuple ty then 
             Some(FSharpType.GetTupleElements ty)
@@ -125,7 +130,7 @@ module DataConverter =
         else   
             None
 
-    /// Match a 1D sequence type (seq<_>) or a subclass
+    /// Matches a 1D sequence type (seq<_>) or a subclass.
     let rec private  (|SeqTy|_|) (ty: Type) = 
         if ty.IsGenericType && ty.GetGenericTypeDefinition().Equals(typedefof<seq<int>>) then
            Some (ty.GetGenericArguments().[0])
@@ -308,4 +313,3 @@ module DataConverter =
 
     let dataOfValuesForBool (value:obj) =
         dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
-
