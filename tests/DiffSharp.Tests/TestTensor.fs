@@ -249,23 +249,33 @@ type TestTensor () =
             Assert.AreEqual(tToArrayCorrect, t.toArray())
 
     [<Test>]
-    member _.TestTensorSaveLoad () =
+    member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let b = combo.load(fileName)
+            Assert.AreEqual(a, b)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarion () =
         let fileName = System.IO.Path.GetTempFileName()
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
             a.save(fileName)
             let b = Tensor.load(fileName)
-            Assert.AreEqual(a, b)
+            let bInCombo = combo.move(b)
+            Assert.AreEqual(a, bInCombo)
 
     [<Test>]
     member _.TestTensorSaveLoadConfiguarion () =
         let fileName = System.IO.Path.GetTempFileName()
         let a = dsharp.tensor([[1,2],[3,4]])
         a.save(fileName)
-        let b = Tensor.load(fileName)
-        Assert.AreEqual(a, b)
-        let b2 = Tensor.load(fileName, dtype=Dtype.Float32)
-        Assert.AreEqual(a.move(dtype=Dtype.Float32), b2)
+        for combo in Combos.All do 
+            let aInCombo = combo.move(a)
+            let b = combo.load(fileName)
+            Assert.AreEqual(aInCombo, b)
 
     [<Test>]
     member _.TestTensorClone () =
