@@ -1024,7 +1024,6 @@ type Tensor =
     /// </para>
     /// 
     /// <para>
-    /// <para>
     ///  If the first argument is 2-dimensional and the second argument is 1-dimensional, the matrix-vector product is returned.
     /// </para>
     /// 
