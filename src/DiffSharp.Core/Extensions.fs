@@ -196,3 +196,7 @@ module ExtensionAutoOpens =
         | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
         | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
         | _ -> failwith "arrayND - nyi for dim > 4"
+
+    /// Print the given value to the console using the '%A' printf format specifier
+    let print x = printfn "%A" x 
+
