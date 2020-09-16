@@ -180,7 +180,7 @@ type RawTensor() =
     /// </summary>
     ///
     /// <remarks>
-    ///  The value may be a scalar, an array, or an array of tupled objects.  If the <c>dtype</c> is not specified
+    ///  The value may be a scalar, an array, or an array of tupled objects. If the <c>dtype</c> is not specified
     ///  then it is inferred from the .NET type of the object.
     /// </remarks>
     static member Create(values: obj, ?dtype, ?device, ?backend) =
@@ -292,7 +292,7 @@ type RawTensor() =
     /// <summary> Get a slice of the given tensor.</summary>
     ///
     /// <param name="fullBounds">
-    ///  The indexes are an Nx3 array.   The first row is the start bounds, the second row is
+    ///  The indexes are an Nx3 array.  The first row is the start bounds, the second row is
     ///  the end bounds, the third is 1/0 indicating dimension removal.
     /// </param>
     abstract member GetSlice: fullBounds: int[,] -> RawTensor
@@ -309,7 +309,7 @@ type RawTensor() =
     /// Returns a tensor moved to the given device.
     abstract member MoveTo: device: Device -> RawTensor
 
-    /// Returns a hash of the contents of the tensor.  This operation may cause the
+    /// Returns a hash of the contents of the tensor. This operation may cause the
     /// tensor to be moved to the CPU, and its entire contents iterated.
     abstract member ComputeHash: unit -> int
 

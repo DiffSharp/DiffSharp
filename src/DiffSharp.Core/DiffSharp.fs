@@ -28,11 +28,26 @@ type dsharp =
     /// <summary>Indicates if an object is a tensor</summary>
     static member isTensor(value:obj) = value :? Tensor
 
-    /// <summary>Saves the tensor to the given file paath</summary>
+    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <remarks>
+    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
+    ///   The format used may change from version to version of DiffSharp.
+    /// </remarks>
     static member save(tensor:Tensor, fileName) = tensor.save(fileName)
 
-    /// <summary>Loads the tensor from the given file path</summary>
-    static member load(fileName) = Tensor.load(fileName)
+    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
+    ///
+    /// <param name="fileName">The file from which to load the tensor.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
+    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
+    ///
+    /// <remarks>
+    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///    in the process of reloading.
+    /// </remarks>
+    static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
     static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))

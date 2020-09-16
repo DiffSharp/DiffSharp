@@ -249,13 +249,43 @@ type TestTensor () =
             Assert.AreEqual(tToArrayCorrect, t.toArray())
 
     [<Test>]
-    member _.TestTensorSaveLoad () =
+    member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let b = combo.load(fileName)
+            Assert.AreEqual(a, b)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarionThenMoveToCombo () =
         let fileName = System.IO.Path.GetTempFileName()
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
             a.save(fileName)
             let b = Tensor.load(fileName)
-            Assert.AreEqual(a, b)
+            let bInCombo = combo.move(b)
+            Assert.AreEqual(a, bInCombo)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarion () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let aInDefault = a.move(device=Device.Default, backend=Backend.Default)
+            let b = Tensor.load(fileName, dtype = combo.dtype)
+            Assert.AreEqual(aInDefault, b)
+
+    [<Test>]
+    member _.TestTensorSaveLoadConfiguarion () =
+        let fileName = System.IO.Path.GetTempFileName()
+        let a = dsharp.tensor([[1,2],[3,4]])
+        a.save(fileName)
+        for combo in Combos.All do 
+            let aInCombo = combo.move(a)
+            let b = combo.load(fileName)
+            Assert.AreEqual(aInCombo, b)
 
     [<Test>]
     member _.TestTensorClone () =
@@ -753,12 +783,21 @@ type TestTensor () =
                 // printfn "%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 let t1 = combo1.tensor([0, 1, 2, 3])
                 let t2 = t1.move(combo2.dtype, combo2.device, combo2.backend)
-                let t1b = t2.move(combo1.dtype, combo1.device, combo1.backend)
+                let t2b = t2.move(combo1.dtype, combo1.device, combo1.backend)
                 Assert.AreEqual(combo2.dtype, t2.dtype)
                 Assert.AreEqual(combo2.device, t2.device)
                 Assert.AreEqual(combo2.backend, t2.backend)
                 if combo2.dtype <> Dtype.Bool then // Conversion to bool is irreversible for tensor([0, 1, 2, 3])
-                    Assert.AreEqual(t1, t1b)
+                    Assert.AreEqual(t1, t2b)
+
+    [<Test>]
+    member _.TestTensorMoveDefaultBackend () =
+        // Check that device and backend are not changed if not specified in move
+        for combo1 in Combos.All do
+            let t1 = combo1.tensor([0, 1, 2, 3])
+            let t1b = t1.move(combo1.dtype, ?backend=None, ?device=None)
+            Assert.AreEqual(combo1.backend, t1b.backend)
+            Assert.AreEqual(combo1.device, t1b.device)
 
     [<Test>]
     member _.TestTensorCast () =

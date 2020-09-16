@@ -64,6 +64,12 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.zero(?device, ?backend, ?dtype) =
         dsharp.zero(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.move(tensor, ?device, ?backend, ?dtype) =
+        dsharp.move(tensor, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.load(fileName, ?device, ?backend, ?dtype) =
+        dsharp.load(fileName, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.onehot(length, hot, ?device, ?backend, ?dtype) =
         dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 

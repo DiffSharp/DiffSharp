@@ -82,10 +82,10 @@ type Tensor =
 
     /// Returns a new tensor with the same contents moved to the given configuration
     member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Dtype.Default
-        let device = defaultArg device Device.Default
-        let backend = defaultArg backend Backend.Default
-        t.move(backend).cast(dtype).move(device)
+        let t = match backend with None -> t | Some backend -> t.move(backend)
+        let t = match dtype with None -> t | Some dtype -> t.cast(dtype)
+        let t = match device with None -> t | Some device -> t.move(device)
+        t
 
     member internal t.castAfterSummation(?dtype:Dtype) =
         match dtype with
@@ -268,11 +268,31 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
-    /// Saves the tensor to the given file using a bespoke binary format
+    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <remarks>
+    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
+    ///   The format used may change from version to version of DiffSharp.
+    /// </remarks>
     member t.save(fileName:string) = saveBinary t fileName
 
-    /// Loads the tensor from the given file
-    static member load(fileName:string):Tensor = loadBinary fileName
+    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
+    ///
+    /// <param name="fileName">The file from which to load the tensor.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
+    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
+    ///
+    /// <remarks>
+    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///    in the process of reloading.
+    /// </remarks>
+    static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
+        let t : Tensor = loadBinary fileName
+        let dtype = defaultArg dtype t.dtype
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
+        t.move(dtype=dtype, device=device, backend=backend)
 
     /// Returns a string summarising the tensor
     member t.summary() =
@@ -1065,7 +1085,7 @@ type Tensor =
        let res2 = if keepDim then res.unsqueeze(dim) else res
        res2.castAfterSummation(?dtype=dtype)
 
-    /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
+    /// Reduce the dimensionality via summation until we reach `newShape`. An expansion
     /// from newShape to shape must be possible.
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
