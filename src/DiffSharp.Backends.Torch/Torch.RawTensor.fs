@@ -89,6 +89,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
     override _.DeviceType : DiffSharp.DeviceType = enum (int tt.DeviceType)
     override t.Device = Device(t.DeviceType, tt.DeviceIndex)
     override _.Backend = Backend.Torch
+    override _.Handle = box tt
 
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)

@@ -94,6 +94,11 @@ type TestTensor () =
         Assert.AreEqual(Dtype.Float32, t4.dtype)
 
     [<Test>]
+    member _.TestTensorHandle () =
+        let t1 = dsharp.tensor([1.0f ; 1.0f ])
+        Assert.AreEqual([| 1.0f ; 1.0f |], (t1.primalRaw.Handle :?> float32[]))
+
+    [<Test>]
     member _.TestTensorCreate0 () =
       for combo in Combos.AllDevicesAndBackends do
         let t0 = combo.tensor(1.)

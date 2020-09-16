@@ -125,6 +125,10 @@ type RawTensor() =
     /// Gets the backend for the tensor
     abstract member Backend : Backend
 
+    /// Gets a handle to the underlying representation of the the tensor. For example, if the Torch
+    /// backend is used this will be the corresponding TorchSharp TorchTensor.
+    abstract member Handle : obj
+
     override t.ToString() = t.GetString()
     
     /// Gets the scalar zero tensor for the given configuration
