@@ -82,10 +82,10 @@ type Tensor =
 
     /// Returns a new tensor with the same contents moved to the given configuration
     member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Dtype.Default
-        let device = defaultArg device Device.Default
-        let backend = defaultArg backend Backend.Default
-        t.move(backend).cast(dtype).move(device)
+        let t = match backend with None -> t | Some backend -> t.move(backend)
+        let t = match dtype with None -> t | Some dtype -> t.cast(dtype)
+        let t = match device with None -> t | Some device -> t.move(device)
+        t
 
     member internal t.castAfterSummation(?dtype:Dtype) =
         match dtype with
@@ -290,7 +290,9 @@ type Tensor =
     static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
         let t : Tensor = loadBinary fileName
         let dtype = defaultArg dtype t.dtype
-        t.move(dtype=dtype, ?device=device, ?backend=backend)
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
+        t.move(dtype=dtype, device=device, backend=backend)
 
     /// Returns a string summarising the tensor
     member t.summary() =
