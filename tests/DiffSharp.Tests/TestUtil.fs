@@ -58,6 +58,12 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.zeros(length:int, ?device, ?backend, ?dtype) =
         dsharp.zeros(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.empty(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.empty(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.empty(length:int, ?device, ?backend, ?dtype) =
+        dsharp.empty(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.one(?device, ?backend, ?dtype) =
         dsharp.one(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
