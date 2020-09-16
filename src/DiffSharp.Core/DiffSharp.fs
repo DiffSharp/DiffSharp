@@ -49,11 +49,17 @@ type dsharp =
     /// </remarks>
     static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
 
+    /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration</summary>
+    static member empty(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Empty(shape|>Seq.toArrayQuick, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given length, element type and configuration</summary>
+    static member empty(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Empty([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
     static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration</summary>
-    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given length, element type and configuration</summary>
     static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
@@ -62,13 +68,13 @@ type dsharp =
     static member one(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration</summary>
-    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with '1' values for the given element type and configuration</summary>
     static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration</summary>
-    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Seq.toArray, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with <paramref name="value" />, for the given element type and configuration</summary>
     static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
@@ -90,19 +96,19 @@ type dsharp =
     static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
 
     /// <summary>TBD</summary>
-    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
-    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Seq.toArray, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
-    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Seq.toArray, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Shape.create, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))

@@ -331,6 +331,7 @@ type TestTensor () =
             printfn "%A" i
             //System.GC.Collect()
 
+
     [<Test>]
     member _.TestTensorZeros () =
         for combo in Combos.All do 
@@ -345,6 +346,17 @@ type TestTensor () =
             Assert.AreEqual(t1.shape, ([| 2 |]: int32[]) )
             Assert.AreEqual(t1.dtype, combo.dtype)
             Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member _.TestTensorEmpty () =
+        for combo in Combos.All do 
+            let t0 = combo.empty([])
+            Assert.AreEqual(t0.shape, ([| |]: int32[]) )
+            Assert.AreEqual(t0.dtype, combo.dtype)
+
+            let t1 = combo.empty([2])
+            Assert.AreEqual(t1.shape, ([| 2 |]: int32[]) )
+            Assert.AreEqual(t1.dtype, combo.dtype)
 
     [<Test>]
     member _.TestTensorOne () =

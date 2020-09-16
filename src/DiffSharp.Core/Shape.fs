@@ -474,6 +474,7 @@ module Shape =
       if dim < 0 then dims+dim
       else dim    
 
+    let inline create (xs: seq<int>) = Seq.toArrayQuick xs
 
 [<AutoOpen>]
 module ShapeAutoOpens =
