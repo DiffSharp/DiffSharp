@@ -578,7 +578,7 @@ type Tensor =
 
     /// <summary>TBD</summary>
     member a.expand(newShape:seq<int>) =
-        let newShape = newShape|>Seq.toArray
+        let newShape = newShape|>Shape.create
         if a.shape = newShape then a else
         match a with
         | Tensor(ap) -> Tensor(ap.Expand(newShape))
@@ -1331,7 +1331,7 @@ type Tensor =
 
     /// <summary>TBD</summary>
     member a.view(shape:seq<int>) =
-        let shape = shape |> Seq.toArray |> Shape.complete a.nelement  // Handles -1 semantics
+        let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
         Shape.checkCanView a.shape shape
         let fRaw(a:RawTensor) = a.ViewT(shape)
         let fTensor(a:Tensor) = a.view(shape)

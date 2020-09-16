@@ -23,6 +23,9 @@ type BackendStatics() =
     /// Gets the scalar 0 tensor for the given device
     abstract Zero: device: Device -> RawTensor
 
+    /// Gets a tensor filled with arbitrary values for the given shape and device
+    abstract Empty: shape:int[] * device: Device -> RawTensor
+
     /// Gets a tensor filled with zeros for the given shape and device
     abstract Zeros: shape:int[] * device: Device -> RawTensor
 
@@ -131,6 +134,12 @@ type RawTensor() =
 
     override t.ToString() = t.GetString()
     
+    /// Gets a tensor containing arbitrary values for the given shape and configuration
+    static member Empty(shape:int[], ?dtype, ?device, ?backend) = 
+        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let device = defaultArg device Device.Default
+        statics.Empty(shape, device)
+
     /// Gets the scalar zero tensor for the given configuration
     static member Zero(?dtype, ?device, ?backend) = 
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
@@ -138,7 +147,7 @@ type RawTensor() =
         statics.Zero(device)
 
     /// Gets the zero tensor for the given shape and configuration
-    static member Zeros(shape, ?dtype, ?device, ?backend) = 
+    static member Zeros(shape:int[], ?dtype, ?device, ?backend) = 
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
         statics.Zeros(shape, device)
@@ -150,34 +159,34 @@ type RawTensor() =
         statics.One(device)
 
     /// Gets a tensor filled with 1 values for the given shape and configuration
-    static member Ones(shape, ?dtype, ?device, ?backend) =
+    static member Ones(shape:int[], ?dtype, ?device, ?backend) =
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
         statics.Ones(shape, device)
 
     /// Gets a tensor filled with the given value for the given shape and configuration
-    static member Full(shape, value, ?dtype, ?device, ?backend) =
+    static member Full(shape:int[], value, ?dtype, ?device, ?backend) =
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
         statics.Full(shape, value, device)
 
     /// Gets a tensor filled with random values for the given shape and configuration
-    static member Random(shape, ?dtype, ?device, ?backend) =
+    static member Random(shape:int[], ?dtype, ?device, ?backend) =
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
         statics.Random(shape, device)
 
     /// Gets a tensor filled with random values from the normal distribution for the given shape and configuration
-    static member RandomNormal(shape, ?dtype, ?device, ?backend) =
+    static member RandomNormal(shape:int[], ?dtype, ?device, ?backend) =
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
         statics.RandomNormal(shape, device)
 
     /// Gets a tensor filled with random integer values from the given range for the given shape and configuration
-    static member RandomInt(shape, low, high, ?dtype, ?device, ?backend) =
+    static member RandomInt(shape:int[], low, high, ?dtype, ?device, ?backend) =
         let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
         let device = defaultArg device Device.Default
-        statics.RandomInt(shape|>Seq.toArray, low, high, device)
+        statics.RandomInt(shape, low, high, device)
 
     /// <summary>
     ///   Gets a tensor filled with values drawn from the given .NET object.
@@ -233,6 +242,11 @@ type RawTensor() =
     /// given configuration settings, defaulting to the configuration settings of the object tensor.
     member t.CreateLike(values: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Create(values, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    /// Gets a tensor filled with arbitrary values for the given shape and configuration settings,
+    /// defaulting to the configuration settings of the object tensor
+    member t.EmptyLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Empty(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a zero tensor for the given configuration settings, defaulting to the configuration settings of the object tensor
     member t.ZeroLike(?dtype: Dtype, ?device: Device, ?backend: Backend) =

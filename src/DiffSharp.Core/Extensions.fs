@@ -66,6 +66,12 @@ module Seq =
     let hasDuplicates l =
         duplicates l |> List.isEmpty |> not
 
+    /// Like Seq.toArray but does not clone the array if the input is already an array
+    let inline toArrayQuick (xs: seq<'T>) =
+        match xs with
+        | :? ('T[]) as arr -> arr
+        | _ -> Seq.toArray xs
+
 /// Contains extensions related to .NET dictionaries. 
 module Dictionary =
 
