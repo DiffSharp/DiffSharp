@@ -28,6 +28,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override _.Dtype = dtype
     override _.Device = device
     override _.DeviceType = device.DeviceType
+    override _.Handle = box values
     override _.Backend =
 #if TEST_DUPLICATE_BACKEND
         Backend.Register "TestDuplicate"
