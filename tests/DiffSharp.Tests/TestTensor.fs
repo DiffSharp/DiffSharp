@@ -4976,6 +4976,17 @@ type TestTensor () =
             Assert.AreEqual(t1.dtype, combo.dtype)
 
     [<Test>]
+    member _.TestTensorViewAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([1,2,3,4,5,6])
+            let t2 = combo.zeros([3;2])
+            let t1View = t1.viewAs(t2)
+            let t1ViewCorrect = combo.tensor([[1, 2],
+                                                [3, 4],
+                                                [5, 6]])
+            Assert.AreEqual(t1ViewCorrect, t1View)
+
+    [<Test>]
     member _.TestTensorFlatten () =
         for combo in Combos.All do 
             let t1 = combo.randint(0, 2, [5;5;5;5])
