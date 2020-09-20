@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
 </Project>

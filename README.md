@@ -1,8 +1,12 @@
-# DiffSharp
+<div align="left">
+  <a href="https://diffsharp.github.io"> <img height="80px" src="docs/img/diffsharp-logo-text.png"></a>
+</div>
 
-[Documentation](https://diffsharp.github.io/).
+-----------------------------------------
 
-[![Build Status](https://travis-ci.org/DiffSharp/DiffSharp.svg?branch=dev)](https://travis-ci.org/DiffSharp/DiffSharp)
+[Documentation](https://diffsharp.github.io/)
+
+[![Build Status](https://github.com/DiffSharp/DiffSharp/workflows/Build/test/docs/publish/badge.svg)](https://github.com/DiffSharp/DiffSharp/actions)
 [![codecov](https://codecov.io/gh/DiffSharp/DiffSharp/branch/dev/graph/badge.svg)](https://codecov.io/gh/DiffSharp/DiffSharp)
 
 This is the development branch of DiffSharp 1.0.

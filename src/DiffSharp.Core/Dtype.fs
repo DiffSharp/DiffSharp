@@ -52,7 +52,7 @@ type Device =
 /// Contains functions and settings related to device specifications.
 module Device = 
 
-    /// Get or set the default device used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
+    /// Get or set the default device used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default : Device = Device.CPU
 
 /// Represents a backend for DiffSharp tensors
@@ -86,7 +86,7 @@ module Backend =
     /// Register a new backend
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
 
-    /// Get or set the default backend used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
+    /// Get or set the default backend used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Backend.Reference
 
 /// Represents a storage type for elements of a tensor
@@ -202,7 +202,7 @@ module Dtype =
         elif ty.Equals(typeof<bool>) then Dtype.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
 
-    /// Get or set the default element type used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
+    /// Get or set the default element type used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32
 
 /// Contains global functions and settings related to tensor element types, used when writing backends.

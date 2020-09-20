@@ -40,7 +40,7 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalDeep
         | TensorR(tp,_,_,_,_) -> tp.primalDeep
 
-    /// Gets the value of the tensor ignoring all its derivatives
+    /// Gets the raw value of the tensor ignoring all its derivatives
     member t.primalRaw =
         match t with
         | Tensor(tp) -> tp
@@ -82,10 +82,10 @@ type Tensor =
 
     /// Returns a new tensor with the same contents moved to the given configuration
     member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        let dtype = defaultArg dtype Dtype.Default
-        let device = defaultArg device Device.Default
-        let backend = defaultArg backend Backend.Default
-        t.move(backend).cast(dtype).move(device)
+        let t = match backend with None -> t | Some backend -> t.move(backend)
+        let t = match dtype with None -> t | Some dtype -> t.cast(dtype)
+        let t = match device with None -> t | Some device -> t.move(device)
+        t
 
     member internal t.castAfterSummation(?dtype:Dtype) =
         match dtype with
@@ -194,29 +194,47 @@ type Tensor =
             | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
+    /// <summary>
+    ///  Returns the input tensor with added support for forward-mode automatic differentiation.
+    /// </summary>
+    /// <remarks>
+    ///  Any tensors produced using this tensor will also have derivatives computed using forward propagation.
+    ///  The current global nesting level is used for nested differentiation.
+    /// </remarks>
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        if t.shape = derivative.shape then TensorF(t, derivative, tag) else failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
+        if t.shape <> derivative.shape then
+            failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
+        TensorF(t, derivative, tag)
 
+    /// <summary>
+    ///  Returns the input tensor with added support for reverse-mode automatic differentiation.
+    /// </summary>
+    /// <remarks>
+    ///  Any tensors produced using this tensor will also support reverse-mode propagation. After the completion
+    ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
+    ///  will be available. The current global nesting level is used for nested differentiation.
+    /// </remarks>
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
 
-    member t.noDiff() = Tensor(t.primalRaw)
+    ///  Returns the input tensor but with any support for automatic differentiation removed.
+    member t.noDiff() = t.primalDeep
 
-    /// Indicates if a tensor is part of a forward-mode differentiation
+    /// Indicates if a tensor includes support for forward-mode differentiation
     member t.isForwardDiff() =
         match t with
         | TensorF(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor is part of a reverse-mode differentiation
+    /// Indicates if a tensor includes support for reverse-mode differentiation
     member t.isReverseDiff() =
         match t with
         | TensorR(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor is not part of a forward or reverse-mode differentiation
+    /// Indicates if a tensor includes support for forward or reverse-mode differentiation
     member t.isNoDiff() =
         match t with
         | Tensor(_) -> true
@@ -250,12 +268,33 @@ type Tensor =
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
-    /// Saves the tensor to the given file using a bespoke binary format
+    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <remarks>
+    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
+    ///   The format used may change from version to version of DiffSharp.
+    /// </remarks>
     member t.save(fileName:string) = saveBinary t fileName
 
-    /// Loads the tensor from the given file
-    static member load(fileName:string):Tensor = loadBinary fileName
+    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
+    ///
+    /// <param name="fileName">The file from which to load the tensor.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
+    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
+    ///
+    /// <remarks>
+    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
+    ///    in the process of reloading.
+    /// </remarks>
+    static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
+        let t : Tensor = loadBinary fileName
+        let dtype = defaultArg dtype t.dtype
+        let device = defaultArg device Device.Default
+        let backend = defaultArg backend Backend.Default
+        t.move(dtype=dtype, device=device, backend=backend)
 
+    /// Returns a string summarising the tensor
     member t.summary() =
         match t with
         | Tensor(_) -> sprintf "Tensor %A" t.shape
@@ -264,6 +303,8 @@ type Tensor =
             let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
             let fields = c.GetFields()
             sprintf "TensorR %A %s" t.shape c.Name
+
+    /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
 
     member t.parents() =
         let mutable p = []
@@ -298,7 +339,9 @@ type Tensor =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
         | _ -> false
+
     override t.GetHashCode() = hash t.primalRaw
+
     interface System.IComparable with
         override t.CompareTo(other) =
             match other with
@@ -309,16 +352,34 @@ type Tensor =
                     failwith "Cannot compare non-scalar Tensors"
             | _ -> failwith "Cannot compare Tensor with another type"
 
+    /// Get the scalar zero tensor for the current configuration
     static member Zero = Tensor(RawTensor.Zero())
+
+    /// Get the scalar one tensor for the current configuration
     static member One = Tensor(RawTensor.One())
 
+    /// Convert a scalar tensor to a float32 value
     static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+
+    /// Convert a scalar tensor to a float64 value
     static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+
+    /// Convert a scalar tensor to a byte value
     static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+
+    /// Convert a scalar tensor to a signed byte value
     static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
+
+    /// Convert a scalar tensor to an int16 value
     static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+
+    /// Convert a scalar tensor to an int32 value
     static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+
+    /// Convert a scalar tensor to an int64 value
     static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+
+    /// Convert a scalar tensor to a boolean value
     static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
 
     interface System.IConvertible with
@@ -340,67 +401,148 @@ type Tensor =
         override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
         override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
 
+    /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
+    /// given tolerances.
     member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
         let relativeTolerance = defaultArg relativeTolerance 1e-5
         let absoluteTolerance = defaultArg absoluteTolerance 1e-8
         t.primalRaw.AllClose(tensor.primalRaw, relativeTolerance, absoluteTolerance)
 
+    /// Returns a new tensor filled with '0' values for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor filled with the given scalar value for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
+    /// shape and configuration of the input tensor.
     member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
         a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with random values drawn from the standard normal distribution, for the
+
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with random integer values drawn from the given range, for the
+    /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
         Tensor(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a scalar '0' tensor for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a scalar '1' tensor for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
         let startVal = defaultArg startVal 0.
         let step = defaultArg step 1.
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
         a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype, ?device, ?backend) =
         let endVal = endVal |> float
         let startVal = defaultArg startVal 0 |> float
         let step = defaultArg step 1 |> float
         let dtype = defaultArg dtype Dtype.Int32
         a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>
+    ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
+    ///  the element type and configuration of the input tensor.
+    /// </summary>
     member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a new tensor with underlying storage copied.
     member a.clone() = Tensor(a.primalRaw.Clone())
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
     member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
         a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Computes element-wise (\a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &lt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
+
+    /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
+
+    /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
     member a.isinf() = Tensor(a.primalRaw.IsInfT())
+
+    /// <summary>Returns a new tensor with boolean elements representing if each element is NaN or not. Complex values are considered NaN when either their real and/or imaginary part is NaN.</summary>
     member a.isnan() = Tensor(a.primalRaw.IsNaNT())
+
+    /// Gets if any value in the tensor is +/- INF.
     member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
+
+    /// Gets if any value in the tensor is NaN.
     member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
+
+    /// Gets the index of a maximum value in the tensor.
     member a.argmax() = a.primalRaw.MaxIndexT()
+
+    /// Gets the index of a minimum value in the tensor.
     member a.argmin() = a.primalRaw.MinIndexT()
-    member a.max() = a.[a.argmax()]
-    member a.min() = a.[a.argmin()]
+
+    /// Returns the maximum value of all elements in the input tensor.
+    member a.max() = if a.dim = 0 then a else a.[a.argmax()]
+
+    /// Returns the minimum value of all elements in the input tensor.
+    member a.min() = if a.dim = 0 then a else a.[a.argmin()]
+
+    /// Returns the element-wise maximum of the elements in the two tensors.
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
+
+    /// Returns the element-wise maximum of the tensor and the given data.
     member a.max(b) = a.max(a.like(b))
+
+    /// Returns the element-wise minimum of the elements in the two tensors.
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+
+    /// Returns the element-wise minimum of the tensor and the given data.
     member a.min(b) = a.min(a.like(b))
 
+    /// <summary>
+    ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
+    ///  The argument offset controls which diagonal to consider.
+    /// </summary>
     member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
         if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
         let offset = defaultArg offset 0
@@ -431,10 +573,12 @@ type Tensor =
         if d |> List.isEmpty then failwithf "Empty diagonal"
         Tensor.stack(d)
 
+    /// <summary>TBD</summary>
     member a.trace() = let d:Tensor = a.diagonal() in d.sum()
 
+    /// <summary>TBD</summary>
     member a.expand(newShape:seq<int>) =
-        let newShape = newShape|>Seq.toArray
+        let newShape = newShape|>Shape.create
         if a.shape = newShape then a 
         else
             let newShape = Shape.completeExpand a.shape newShape  // Handles -1 semantics
@@ -449,6 +593,7 @@ type Tensor =
                 let cp = ap.expand(newShape)
                 TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
 
+    /// <summary>TBD</summary>
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
@@ -462,6 +607,7 @@ type Tensor =
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
         | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
 
+    /// <summary>TBD</summary>
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
             if t.dim = 0 then failwith "Cannot index a scalar Tensor"
@@ -469,6 +615,7 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
+    /// <summary>TBD</summary>
     static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
@@ -479,6 +626,7 @@ type Tensor =
         | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
+    /// <summary>TBD</summary>
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -496,6 +644,7 @@ type Tensor =
             let cp = Tensor.stack(ap,dim=dim)
             TensorR(cp, ref (cp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
 
+    /// <summary>TBD</summary>
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
         Shape.checkCanUnstack a.shape |> ignore
@@ -504,6 +653,7 @@ type Tensor =
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
 
+    /// <summary>TBD</summary>
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -519,6 +669,7 @@ type Tensor =
             let cp = Tensor.cat(ap, dim=dim)
             TensorR(cp, ref (cp.zeroLike()), CatTs(tensors, dim), ref 0u, at)
 
+    /// <summary>TBD</summary>
     member a.split (sizes: seq<int>, ?dim: int) =
         let dim = defaultArg dim 0
         let sizes = sizes |> Seq.toArray
@@ -527,14 +678,17 @@ type Tensor =
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
+    /// <summary>TBD</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
+    /// <summary>TBD</summary>
     static member inline OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor(ap)           -> Tensor(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
         | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
 
+    /// <summary>TBD</summary>
     static member inline OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
@@ -556,6 +710,7 @@ type Tensor =
         | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
+    /// <summary>TBD</summary>
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -619,11 +774,20 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded + bExpanded
+
+    /// <summary>TBD</summary>
     static member (+) (a:Tensor, b) = a + a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member (+) (a, b:Tensor) = b.scalarLike(a) + b
+
+    /// <summary>TBD</summary>
     member a.add(b:Tensor) = a + b
+
+    /// <summary>TBD</summary>
     member a.add(b) = a + a.scalarLike(b)
 
+    /// <summary>TBD</summary>
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -667,11 +831,20 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded - bExpanded
+
+    /// <summary>TBD</summary>
     static member (-) (a:Tensor, b) = a - a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member (-) (a, b:Tensor) = b.scalarLike(a) - b
+
+    /// <summary>TBD</summary>
     member a.sub(b:Tensor) = a - b
+
+    /// <summary>TBD</summary>
     member a.sub(b) = a - a.scalarLike(b)
 
+    /// <summary>TBD</summary>
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -715,11 +888,20 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded * bExpanded
+
+    /// <summary>TBD</summary>
     static member (*) (a:Tensor, b) = a * a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member (*) (a, b:Tensor) = b.scalarLike(a) * b
+
+    /// <summary>TBD</summary>
     member a.mul(b:Tensor) = a * b
+
+    /// <summary>TBD</summary>
     member a.mul(b) = a * a.scalarLike(b)
 
+    /// <summary>TBD</summary>
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -763,11 +945,20 @@ type Tensor =
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             aExpanded / bExpanded
+
+    /// <summary>TBD</summary>
     static member (/) (a:Tensor, b) = a / a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member (/) (a, b:Tensor) = b.scalarLike(a) / b
+
+    /// <summary>TBD</summary>
     member a.div(b:Tensor) = a / b
+
+    /// <summary>TBD</summary>
     member a.div(b) = a / a.scalarLike(b)
 
+    /// <summary>TBD</summary>
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -812,15 +1003,31 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
+    /// <summary>TBD</summary>
     static member Pow (a:Tensor, b:float) = a ** a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
+
+    /// <summary>TBD</summary>
     static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
+
+    /// <summary>TBD</summary>
     static member Pow (a:int, b:Tensor) = b.scalarLike(a) ** b
+
+    /// <summary>TBD</summary>
     static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
+
+    /// <summary>TBD</summary>
     member a.pow(b:Tensor) = a ** b
+
+    /// <summary>TBD</summary>
     member a.pow(b) = a ** a.scalarLike(b)
 
+    /// <summary>TBD</summary>
     member a.matmul (b:Tensor) =
         Shape.checkCanMatmul a.shape b.shape
         let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
@@ -833,20 +1040,25 @@ type Tensor =
         let dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    /// <summary>TBD</summary>
     member a.dot(b:Tensor) =
         Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
         let b:Tensor = b.view([b.nelement;1])
         a.matmul(b).view([])
 
+    /// <summary>TBD</summary>
     static member (~-) (a:Tensor) =
         let fRaw(a:RawTensor) = a.NegT()
         let fTensor(a) = -a
         let dfTensorFwd(cp,ap,ad) = -ad
         let dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     member a.neg() = -a
 
+    /// <summary>TBD</summary>
     member a.sum(?dtype: Dtype) =
         let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
         let fTensor(a:Tensor) = a.sum(?dtype=dtype)
@@ -855,6 +1067,7 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
+    /// <summary>TBD</summary>
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
        let keepDim = defaultArg keepDim false
        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
@@ -875,7 +1088,7 @@ type Tensor =
        let res2 = if keepDim then res.unsqueeze(dim) else res
        res2.castAfterSummation(?dtype=dtype)
 
-    /// Reduce the dimensionality via summation until we reach `newShape`.  An expansion
+    /// Reduce the dimensionality via summation until we reach `newShape`. An expansion
     /// from newShape to shape must be possible.
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
@@ -896,8 +1109,10 @@ type Tensor =
                     result <- result.sum(dim, keepDim=true)
             result.castAfterSummation(?dtype=dtype)
 
+    /// <summary>TBD</summary>
     member a.mean() = a.sum() / a.nelement
 
+    /// <summary>TBD</summary>
     member a.mean(dim:int, ?keepDim:bool) = 
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         if dim = 0 && a.dim = 0 then a
@@ -906,12 +1121,14 @@ type Tensor =
            let dv = sm / a.shape.[dim]
            dv
 
+    /// <summary>TBD</summary>
     // This is the two-pass algorithm better than the naive algorithm
     member a.variance(?unbiased:bool) = 
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
         let a' = a - a.mean() in (a' * a').sum() / n
 
+    /// <summary>TBD</summary>
     // TODO: this is the naive algorithm, can be improved for better numerical stability
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
         let keepDim = defaultArg keepDim false
@@ -934,10 +1151,13 @@ type Tensor =
         let res = (sSquare - (s * s) / n) / nn
         if keepDim then res.unsqueeze(dim) else res
 
+    /// <summary>TBD</summary>
     member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
+    /// <summary>TBD</summary>
     member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
 
+    /// <summary>TBD</summary>
     member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?normalize:bool) =
         // TODO: the following may be implemented by RawTensor at a later point
         if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
@@ -962,6 +1182,7 @@ type Tensor =
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
             Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
 
+    /// <summary>TBD</summary>
     member probs.bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
         if not (probs.dtype = Dtype.Float32 || probs.dtype = Dtype.Float64) then failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
@@ -976,6 +1197,7 @@ type Tensor =
             let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
             Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
 
+    /// <summary>TBD</summary>
     member a.dropout(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout p
@@ -987,6 +1209,7 @@ type Tensor =
             let mask = a.fullLike(1.-p).bernoulli()
             a * mask
 
+    /// <summary>TBD</summary>
     member a.dropout2d(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout2d a.shape p
@@ -998,6 +1221,7 @@ type Tensor =
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1|]).bernoulli()
             a * mask
 
+    /// <summary>TBD</summary>
     member a.dropout3d(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout3d a.shape p
@@ -1009,6 +1233,7 @@ type Tensor =
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1;1|]).bernoulli()
             a * mask
 
+    /// <summary>TBD</summary>
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
     member internal a.sumT2Dim0() =
         let fRaw(a:RawTensor) = a.SumT2Dim0()
@@ -1017,6 +1242,7 @@ type Tensor =
         let dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
+    /// <summary>TBD</summary>
     member a.transpose(dim0:int, dim1:int) =
         let dim0 = Shape.completeDim a.dim dim0  // Handles -1 semantics
         let dim1 = Shape.completeDim a.dim dim1  // Handles -1 semantics
@@ -1030,6 +1256,7 @@ type Tensor =
             let dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.transpose() =
         Shape.checkCanTranspose2d a.dim
         let fRaw(a:RawTensor) = a.TransposeT2()
@@ -1038,6 +1265,7 @@ type Tensor =
         let dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.squeeze(?dim:int) =
         let dim = defaultArg dim -1
         let fRaw(a:RawTensor) = a.SqueezeT(dim)
@@ -1046,6 +1274,7 @@ type Tensor =
         let dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.unsqueeze(dim:int) =
         let fRaw(a:RawTensor) = a.UnsqueezeT(dim)
         let fTensor(a:Tensor) = a.unsqueeze(dim)
@@ -1053,6 +1282,7 @@ type Tensor =
         let dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
         Shape.checkCanFlip a.dim dims
@@ -1062,6 +1292,7 @@ type Tensor =
         let dfTensorRev(a) = FlipT(a, dims)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         Shape.checkCanDilate a.dim dilations
@@ -1071,6 +1302,7 @@ type Tensor =
         let dfTensorRev(a) = DilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.undilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         let fRaw(a:RawTensor) = a.UndilateT(dilations)
@@ -1079,6 +1311,7 @@ type Tensor =
         let dfTensorRev(a) = UndilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.repeat(dim:int, times:int) =
         Shape.checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
@@ -1090,6 +1323,7 @@ type Tensor =
             ret <- ret.addSlice(location, a)
         ret
 
+    /// <summary>TBD</summary>
     member a.gather(dim:int, indices:Tensor) =
         Shape.checkCanGather a.shape dim indices.shape indices.dtype
         let fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
@@ -1098,18 +1332,23 @@ type Tensor =
         let dfTensorRev(a) = GatherT(a, dim, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.view(shape:seq<int>) =
-        let shape = shape |> Seq.toArray |> Shape.complete a.nelement  // Handles -1 semantics
+        let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
         Shape.checkCanView a.shape shape
         let fRaw(a:RawTensor) = a.ViewT(shape)
         let fTensor(a:Tensor) = a.view(shape)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
         let dfTensorRev(a) = ViewT(a, a.shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     member t.view(shape:int) = t.view([|shape|])
 
+    /// <summary>TBD</summary>
     member a.viewAs(b:Tensor) = a.view(b.shape)
 
+    /// <summary>TBD</summary>
     member a.flatten(?startDim:int, ?endDim:int) =
         if a.dim < 2 then 
             a
@@ -1135,8 +1374,10 @@ type Tensor =
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
         | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
 
+    /// <summary>TBD</summary>
     member a.clamp(?low:scalar, ?high:scalar) = a.clampWithMask(?low=low, ?high=high) |> fst
 
+    /// <summary>TBD</summary>
     member a.sign() =
         let fRaw(a:RawTensor) = a.SignT()
         let fTensor(a:Tensor) = a.sign()
@@ -1145,38 +1386,51 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     // static member Sign(a:Tensor) = a.sign() // not supported becaose FSharp.Core sign operator returns int
 
+    /// <summary>TBD</summary>
     member a.floor() =
         let fRaw(a:RawTensor) = a.FloorT()
         let fTensor(a:Tensor) = a.floor()
         let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Floor(a:Tensor) = a.floor() // needed for FSharp.Core floor operator overload
 
+    /// <summary>TBD</summary>
     member a.ceil() =
         let fRaw(a:RawTensor) = a.CeilT()
         let fTensor(a:Tensor) = a.ceil()
         let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Ceiling(a:Tensor) = a.ceil() // needed for FSharp.Core ceil operator overload
 
+    /// <summary>TBD</summary>
     member a.round() =
         let fRaw(a:RawTensor) = a.RoundT()
         let fTensor(a:Tensor) = a.round()
         let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Round(a:Tensor) = a.round() // needed for FSharp.Core round operator overload
 
+    /// <summary>TBD</summary>
     member a.abs() =
         let fRaw(a:RawTensor) = a.AbsT()
         let fTensor(a:Tensor) = a.abs()
         let dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
         let dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Abs(a:Tensor) = a.abs() // needed for FSharp.Core abs operator overload
 
+    /// <summary>TBD</summary>
     member a.relu() =
         let fRaw(a:RawTensor) = a.ReluT()
         let fTensor(a:Tensor) = a.relu()
@@ -1184,10 +1438,12 @@ type Tensor =
         let dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.leakyRelu(?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
         let zeros = a.zerosLike() in zeros.max(a) + negativeSlope * zeros.min(a)
 
+    /// <summary>TBD</summary>
     member a.sigmoid() =
         let fRaw(a:RawTensor) = a.SigmoidT()
         let fTensor(a:Tensor) = a.sigmoid()
@@ -1195,22 +1451,29 @@ type Tensor =
         let dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.exp() =
         let fRaw(a:RawTensor) = a.ExpT()
         let fTensor(a:Tensor) = a.exp()
         let dfTensorFwd(cp,ap,ad) = ad * cp
         let dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Exp(a:Tensor) = a.exp() // needed for FSharp.Core exp operator overload
 
+    /// <summary>TBD</summary>
     member a.log() =
         let fRaw(a:RawTensor) = a.LogT()
         let fTensor(a:Tensor) = a.log()
         let dfTensorFwd(cp,ap,ad) = ad / ap
         let dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
 
+    /// <summary>TBD</summary>
     member a.softplus() =
         let fRaw(a:RawTensor) = a.SoftplusT()
         let fTensor(a:Tensor) = a.softplus()
@@ -1218,94 +1481,128 @@ type Tensor =
         let dfTensorRev(a) = SoftplusT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.log10() =
         let fRaw(a:RawTensor) = a.Log10T()
         let fTensor(a:Tensor) = a.log10()
         let dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
         let dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Log10(a:Tensor) = a.log10() // needed for FSharp.Core log10 operator overload
 
+    /// <summary>TBD</summary>
     member a.sqrt() =
         let fRaw(a:RawTensor) = a.SqrtT()
         let fTensor(a:Tensor) = a.sqrt()
         let dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
         let dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Sqrt(a:Tensor) = a.sqrt() // needed for FSharp.Core sqrt operator overload
 
+    /// <summary>TBD</summary>
     member a.sin() =
         let fRaw(a:RawTensor) = a.SinT()
         let fTensor(a:Tensor) = a.sin()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
         let dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Sin(a:Tensor) = a.sin() // needed for FSharp.Core sin operator overload
 
+    /// <summary>TBD</summary>
     member a.cos() =
         let fRaw(a:RawTensor) = a.CosT()
         let fTensor(a:Tensor) = a.cos()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
         let dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Cos(a:Tensor) = a.cos() // needed for FSharp.Core cos operator overload
 
+    /// <summary>TBD</summary>
     member a.tan() =
         let fRaw(a:RawTensor) = a.TanT()
         let fTensor(a:Tensor) = a.tan()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
         let dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Tan(a:Tensor) = a.tan() // needed for FSharp.Core tan operator overload
 
+    /// <summary>TBD</summary>
     member a.sinh() =
         let fRaw(a:RawTensor) = a.SinhT()
         let fTensor(a:Tensor) = a.sinh()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
         let dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Sinh(a:Tensor) = a.sinh() // needed for FSharp.Core sinh operator overload
 
+    /// <summary>TBD</summary>
     member a.cosh() =
         let fRaw(a:RawTensor) = a.CoshT()
         let fTensor(a:Tensor) = a.cosh()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
         let dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Cosh(a:Tensor) = a.cosh() // needed for FSharp.Core cosh operator overload
 
+    /// <summary>TBD</summary>
     member a.tanh() =
         let fRaw(a:RawTensor) = a.TanhT()
         let fTensor(a:Tensor) = a.tanh()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
         let dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Tanh(a:Tensor) = a.tanh() // needed for FSharp.Core tanh operator overload
 
+    /// <summary>TBD</summary>
     member a.asin() =
         let fRaw(a:RawTensor) = a.AsinT()
         let fTensor(a:Tensor) = a.asin()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
         let dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Asin(a:Tensor) = a.asin() // needed for FSharp.Core asin operator overload
 
+    /// <summary>TBD</summary>
     member a.acos() =
         let fRaw(a:RawTensor) = a.AcosT()
         let fTensor(a:Tensor) = a.acos()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
         let dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Acos(a:Tensor) = a.acos() // needed for FSharp.Core acos operator overload
 
+    /// <summary>TBD</summary>
     member a.atan() =
         let fRaw(a:RawTensor) = a.AtanT()
         let fTensor(a:Tensor) = a.atan()
         let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
         let dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>TBD</summary>
     static member Atan(a:Tensor) = a.atan() // needed for FSharp.Core atan operator overload
 
+    /// <summary>TBD</summary>
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
         Shape.checkCanAddSlice a.shape location b.shape
@@ -1319,16 +1616,19 @@ type Tensor =
         let dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    /// <summary>TBD</summary>
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
+    /// <summary>TBD</summary>
     member a.logsoftmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         a - a.logsumexp(dim, keepDim=true)
 
+    /// <summary>TBD</summary>
     member a.logsumexp(dim:int, ?keepDim:bool) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let keepDim = defaultArg keepDim false
@@ -1337,6 +1637,7 @@ type Tensor =
         let res = amax + e.sum(dim).add(System.Single.Epsilon).log()
         if keepDim then res.unsqueeze(dim) else res
 
+    /// <summary>TBD</summary>
     member input.mseLoss(target:Tensor, ?reduction:string) = 
         if input.shape <> target.shape then failwithf "Expecting input.shape (%A) and target.shape (%A) to be the same" input.shape target.shape
         let reduction = defaultArg reduction "mean"
@@ -1350,9 +1651,31 @@ type Tensor =
         else // reduction = "sum"
             l.sum()
 
+    /// <summary>TBD</summary>
+    member input.bceLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
+        if input.shape <> target.shape then failwithf "Expecting input shape (%A) and target shape (%A) to be the same" input.shape target.shape
+        if target.max() > target.oneLike() || target.min() < target.zeroLike() then failwith "Expecting target values to be between 0 and 1."
+        if input.dim < 1 then let ret:Tensor = input.view(-1).bceLoss(target.view(-1), ?weight=weight, ?reduction=reduction) in if ret.dim = 0 then ret else ret.[0]
+        else
+        let n = input.shape.[0]
+        let weight = defaultArg weight (input.onesLike(shape=[|n|]))
+        if weight.shape.[0] <> n then failwithf "Expecting weight to be a vector of size %A, but received %A" n weight.shape.[0]
+        let reduction = defaultArg reduction "mean"
+        if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        let clampLog = -100
+        let l = -weight.unsqueeze(1)*(target * input.log().clamp(low=clampLog) + (1.-target) * (1.-input).log().clamp(low=clampLog))
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            l.mean()
+        else // reduction = "sum"
+            l.sum()
+
+    /// <summary>TBD</summary>
     member input.crossEntropyLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         input.logsoftmax(dim=1).nllLoss(target, ?weight=weight, ?reduction=reduction)
 
+    /// <summary>TBD</summary>
     member input.nllLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         let n, classes, d = 
             if input.dim < 2 
@@ -1405,6 +1728,7 @@ type Tensor =
             else // reduction = "sum"
                 l.sum()
 
+    /// <summary>TBD</summary>
     member a.pad(paddings:seq<int>) =
         let paddings = paddings |> Array.ofSeq
         Shape.checkCanPad a.shape paddings
@@ -1417,6 +1741,7 @@ type Tensor =
             let ret = a.zerosLike(shape)
             ret.addSlice(paddings, a)
 
+    /// <summary>TBD</summary>
     member a.maxpool1di(kernelSize:int, ?stride:int, ?padding:int) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
@@ -1426,8 +1751,10 @@ type Tensor =
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
 
+    /// <summary>TBD</summary>
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
+    /// <summary>TBD</summary>
     member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:seq<int>) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
@@ -1444,6 +1771,7 @@ type Tensor =
         let dfTensorRev(a) = MaxUnpool1DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.maxpool2di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
         let kernelSizes =
             match kernelSize, kernelSizes with
@@ -1469,8 +1797,10 @@ type Tensor =
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
 
+    /// <summary>TBD</summary>
     member a.maxpool2d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
 
+    /// <summary>TBD</summary>
     member a.maxunpool2d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
         let kernelSizes =
             match kernelSize, kernelSizes with
@@ -1504,6 +1834,7 @@ type Tensor =
         let dfTensorRev(a) = MaxUnpool2DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.maxpool3di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
         let kernelSizes =
             match kernelSize, kernelSizes with
@@ -1529,8 +1860,10 @@ type Tensor =
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool3DT(a, indices, kernelSizes), ref 0u, at), indices
 
+    /// <summary>TBD</summary>
     member a.maxpool3d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool3di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
 
+    /// <summary>TBD</summary>
     member a.maxunpool3d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
         let kernelSizes =
             match kernelSize, kernelSizes with
@@ -1565,6 +1898,7 @@ type Tensor =
         let dfTensorRev(a) = MaxUnpool3DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>TBD</summary>
     member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
         // a: input, b: filter
         let stride = defaultArg stride 1
@@ -1631,6 +1965,7 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
         aderivative, bderivative
 
+    /// <summary>TBD</summary>
     member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let strides = 
             match stride, strides with
@@ -1664,6 +1999,7 @@ type Tensor =
         let dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    /// <summary>TBD</summary>
     // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
     // b: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
     // t: output, NxKxLxM (batchSize x outputChannels x outputHeight x outputWidth)
@@ -1718,6 +2054,7 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], c)
         aderivative, bderivative
 
+    /// <summary>TBD</summary>
     member a.conv3d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let strides = 
             match stride, strides with
@@ -1751,6 +2088,7 @@ type Tensor =
         let dfTensorRevCT(a,b) = Conv3DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
+    /// <summary>TBD</summary>
     // a: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
     // b: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
     // t: output, NxKxLxMxN (batchSize x outputChannels x outputDepth x outputHeight x outputWidth)
@@ -1809,6 +2147,7 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], c)
         aderivative, bderivative
 
+    /// <summary>TBD</summary>
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
@@ -1816,8 +2155,10 @@ type Tensor =
         t.reverseReset(zeroDerivatives)
         t.reversePush(value)
 
+    /// <summary>TBD</summary>
     member inline t.backward(value) = t.reverse(value)
 
+    /// <summary>TBD</summary>
     member t.reverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
             match ts with
@@ -1935,6 +2276,7 @@ type Tensor =
                 | _ -> reset tt
         reset [t]
 
+    /// <summary>TBD</summary>
     member t.reversePush(value:Tensor) =
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with

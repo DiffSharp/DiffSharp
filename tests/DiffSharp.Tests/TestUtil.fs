@@ -58,11 +58,23 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.zeros(length:int, ?device, ?backend, ?dtype) =
         dsharp.zeros(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.empty(shape:seq<int>, ?device, ?backend, ?dtype) =
+        dsharp.empty(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.empty(length:int, ?device, ?backend, ?dtype) =
+        dsharp.empty(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.one(?device, ?backend, ?dtype) =
         dsharp.one(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.zero(?device, ?backend, ?dtype) =
         dsharp.zero(?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.move(tensor, ?device, ?backend, ?dtype) =
+        dsharp.move(tensor, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.load(fileName, ?device, ?backend, ?dtype) =
+        dsharp.load(fileName, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.onehot(length, hot, ?device, ?backend, ?dtype) =
         dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
