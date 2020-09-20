@@ -309,7 +309,8 @@ module Shape =
     let canExpand (oldShape: Shape) (newShape: Shape) =
         newShape.Length >= oldShape.Length &&
         let trim = newShape.Length - oldShape.Length
-        (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
+        newShape.[..trim-1] |> Array.forall (fun m -> m >= 1)
+            && (oldShape,newShape.[trim..]) ||> Array.forall2 (fun n m -> n = 1 || n = m)
 
     /// Checks if one shape can expand into another through the addition of broadcast dimensions.
     let checkCanExpand (oldShape: Shape) (newShape: Shape) =
@@ -472,7 +473,12 @@ module Shape =
     let completeDim (dims:int) (dim:int) =
       if dim < -dims || dim >= dims then failwithf "Invalid choice (%A) for dim (%A)" dim dims
       if dim < 0 then dims+dim
-      else dim    
+      else dim
+
+    /// Completes the new shape for an expand operation based on the current shape of the tensor.
+    let completeExpand (shape: Shape) (newShape: Shape) =
+        let trim = newShape.Length - shape.Length
+        newShape |> Array.mapi (fun i x -> if i>=trim && x = -1 then shape.[i - trim] else x)
 
     let inline create (xs: seq<int>) = Seq.toArrayQuick xs
 

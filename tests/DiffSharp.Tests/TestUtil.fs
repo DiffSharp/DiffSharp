@@ -170,4 +170,5 @@ module Combos =
 module TestUtils =
     let isException f = Assert.Throws<Exception>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
+    let isAnyException f = Assert.Catch(TestDelegate(fun () -> f() |> ignore)) |> ignore
 

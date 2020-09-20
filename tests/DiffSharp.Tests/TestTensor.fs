@@ -4804,6 +4804,29 @@ type TestTensor () =
 
             Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
+            let t6 = combo.tensor([[1.]; [2.]; [3.]]) // 3x1
+            let t6Expand = t6.expand([-1;4]) // 3x4
+            let t6ExpandCorrect = combo.tensor([[1.;1.;1.;1.];[2.;2.;2.;2.];[3.;3.;3.;3.]])
+
+            Assert.AreEqual(t6ExpandCorrect, t6Expand)
+
+            isAnyException(fun () -> t6.expand([-1;3;4]))
+
+            let t6Expand2 = t6.expand([2;-1;-1]) // 2x3x1
+            let t6ExpandCorrect2 = combo.tensor([[[1.]; [2.]; [3.]] ; [[1.]; [2.]; [3.]]])
+            Assert.AreEqual(t6ExpandCorrect2, t6Expand2)
+
+    [<Test>]
+    member _.TestTensorExpandAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([[1], [2], [3]])
+            let t2 = combo.zeros([3;2])
+            let t1Expand = t1.expandAs(t2)
+            let t1ExpandCorrect = combo.tensor([[1, 1],
+                                                [2, 2],
+                                                [3, 3]])
+            Assert.AreEqual(t1ExpandCorrect, t1Expand)
+
     [<Test>]
     member _.TestTensorSqueezeT () =
         for combo in Combos.All do 
@@ -4951,6 +4974,17 @@ type TestTensor () =
             Assert.AreEqual(t3ShapeCorrect, t3Shape)
             Assert.AreEqual(t4ShapeCorrect, t4Shape)
             Assert.AreEqual(t1.dtype, combo.dtype)
+
+    [<Test>]
+    member _.TestTensorViewAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([1,2,3,4,5,6])
+            let t2 = combo.zeros([3;2])
+            let t1View = t1.viewAs(t2)
+            let t1ViewCorrect = combo.tensor([[1, 2],
+                                                [3, 4],
+                                                [5, 6]])
+            Assert.AreEqual(t1ViewCorrect, t1View)
 
     [<Test>]
     member _.TestTensorFlatten () =

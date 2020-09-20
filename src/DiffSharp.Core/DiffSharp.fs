@@ -291,6 +291,12 @@ type dsharp =
     static member expand(shape:seq<int>) = fun (a:Tensor) -> a.expand(shape)
 
     /// <summary>TBD</summary>
+    static member expandAs(a:Tensor, b:Tensor) = a.expandAs(b)
+
+    /// <summary>TBD</summary>
+    static member expandAs(b:Tensor) = fun (a:Tensor) -> a.expandAs(b)
+
+    /// <summary>TBD</summary>
     static member stack(tensors:seq<Tensor>, ?dim:int) = Tensor.stack(tensors, ?dim=dim)
 
     /// <summary>TBD</summary>
