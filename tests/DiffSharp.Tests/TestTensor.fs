@@ -4816,6 +4816,16 @@ type TestTensor () =
             let t6ExpandCorrect2 = combo.tensor([[[1.]; [2.]; [3.]] ; [[1.]; [2.]; [3.]]])
             Assert.AreEqual(t6ExpandCorrect2, t6Expand2)
 
+    [<Test>]
+    member _.TestTensorExpandAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([[1], [2], [3]])
+            let t2 = combo.zeros([3;2])
+            let t1Expand = t1.expandAs(t2)
+            let t1ExpandCorrect = combo.tensor([[1, 1],
+                                                [2, 2],
+                                                [3, 3]])
+            Assert.AreEqual(t1ExpandCorrect, t1Expand)
 
     [<Test>]
     member _.TestTensorSqueezeT () =

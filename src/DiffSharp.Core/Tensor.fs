@@ -594,6 +594,9 @@ type Tensor =
                 TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
 
     /// <summary>TBD</summary>
+    member a.expandAs(b:Tensor) = a.expand(b.shape)
+
+    /// <summary>TBD</summary>
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
