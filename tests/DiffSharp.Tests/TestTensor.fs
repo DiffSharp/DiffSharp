@@ -94,6 +94,11 @@ type TestTensor () =
         Assert.AreEqual(Dtype.Float32, t4.dtype)
 
     [<Test>]
+    member _.TestTensorHandle () =
+        let t1 = dsharp.tensor([1.0f ; 1.0f ])
+        Assert.AreEqual([| 1.0f ; 1.0f |], (t1.primalRaw.Handle :?> float32[]))
+
+    [<Test>]
     member _.TestTensorCreate0 () =
       for combo in Combos.AllDevicesAndBackends do
         let t0 = combo.tensor(1.)
@@ -249,13 +254,43 @@ type TestTensor () =
             Assert.AreEqual(tToArrayCorrect, t.toArray())
 
     [<Test>]
-    member _.TestTensorSaveLoad () =
+    member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let b = combo.load(fileName)
+            Assert.AreEqual(a, b)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarionThenMoveToCombo () =
         let fileName = System.IO.Path.GetTempFileName()
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
             a.save(fileName)
             let b = Tensor.load(fileName)
-            Assert.AreEqual(a, b)
+            let bInCombo = combo.move(b)
+            Assert.AreEqual(a, bInCombo)
+
+    [<Test>]
+    member _.TestTensorSaveLoadBackToDefaultConfiguarion () =
+        let fileName = System.IO.Path.GetTempFileName()
+        for combo in Combos.All do 
+            let a = combo.tensor([[1,2],[3,4]])
+            a.save(fileName)
+            let aInDefault = a.move(device=Device.Default, backend=Backend.Default)
+            let b = Tensor.load(fileName, dtype = combo.dtype)
+            Assert.AreEqual(aInDefault, b)
+
+    [<Test>]
+    member _.TestTensorSaveLoadConfiguarion () =
+        let fileName = System.IO.Path.GetTempFileName()
+        let a = dsharp.tensor([[1,2],[3,4]])
+        a.save(fileName)
+        for combo in Combos.All do 
+            let aInCombo = combo.move(a)
+            let b = combo.load(fileName)
+            Assert.AreEqual(aInCombo, b)
 
     [<Test>]
     member _.TestTensorClone () =
@@ -296,6 +331,7 @@ type TestTensor () =
             printfn "%A" i
             //System.GC.Collect()
 
+
     [<Test>]
     member _.TestTensorZeros () =
         for combo in Combos.All do 
@@ -310,6 +346,17 @@ type TestTensor () =
             Assert.AreEqual(t1.shape, ([| 2 |]: int32[]) )
             Assert.AreEqual(t1.dtype, combo.dtype)
             Assert.AreEqual(t1, t1Expected)
+
+    [<Test>]
+    member _.TestTensorEmpty () =
+        for combo in Combos.All do 
+            let t0 = combo.empty([])
+            Assert.AreEqual(t0.shape, ([| |]: int32[]) )
+            Assert.AreEqual(t0.dtype, combo.dtype)
+
+            let t1 = combo.empty([2])
+            Assert.AreEqual(t1.shape, ([| 2 |]: int32[]) )
+            Assert.AreEqual(t1.dtype, combo.dtype)
 
     [<Test>]
     member _.TestTensorOne () =
@@ -753,12 +800,21 @@ type TestTensor () =
                 // printfn "%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 let t1 = combo1.tensor([0, 1, 2, 3])
                 let t2 = t1.move(combo2.dtype, combo2.device, combo2.backend)
-                let t1b = t2.move(combo1.dtype, combo1.device, combo1.backend)
+                let t2b = t2.move(combo1.dtype, combo1.device, combo1.backend)
                 Assert.AreEqual(combo2.dtype, t2.dtype)
                 Assert.AreEqual(combo2.device, t2.device)
                 Assert.AreEqual(combo2.backend, t2.backend)
                 if combo2.dtype <> Dtype.Bool then // Conversion to bool is irreversible for tensor([0, 1, 2, 3])
-                    Assert.AreEqual(t1, t1b)
+                    Assert.AreEqual(t1, t2b)
+
+    [<Test>]
+    member _.TestTensorMoveDefaultBackend () =
+        // Check that device and backend are not changed if not specified in move
+        for combo1 in Combos.All do
+            let t1 = combo1.tensor([0, 1, 2, 3])
+            let t1b = t1.move(combo1.dtype, ?backend=None, ?device=None)
+            Assert.AreEqual(combo1.backend, t1b.backend)
+            Assert.AreEqual(combo1.device, t1b.device)
 
     [<Test>]
     member _.TestTensorCast () =
@@ -4748,6 +4804,29 @@ type TestTensor () =
 
             Assert.AreEqual(t5ExpandCorrect, t5Expand)
 
+            let t6 = combo.tensor([[1.]; [2.]; [3.]]) // 3x1
+            let t6Expand = t6.expand([-1;4]) // 3x4
+            let t6ExpandCorrect = combo.tensor([[1.;1.;1.;1.];[2.;2.;2.;2.];[3.;3.;3.;3.]])
+
+            Assert.AreEqual(t6ExpandCorrect, t6Expand)
+
+            isAnyException(fun () -> t6.expand([-1;3;4]))
+
+            let t6Expand2 = t6.expand([2;-1;-1]) // 2x3x1
+            let t6ExpandCorrect2 = combo.tensor([[[1.]; [2.]; [3.]] ; [[1.]; [2.]; [3.]]])
+            Assert.AreEqual(t6ExpandCorrect2, t6Expand2)
+
+    [<Test>]
+    member _.TestTensorExpandAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([[1], [2], [3]])
+            let t2 = combo.zeros([3;2])
+            let t1Expand = t1.expandAs(t2)
+            let t1ExpandCorrect = combo.tensor([[1, 1],
+                                                [2, 2],
+                                                [3, 3]])
+            Assert.AreEqual(t1ExpandCorrect, t1Expand)
+
     [<Test>]
     member _.TestTensorSqueezeT () =
         for combo in Combos.All do 
@@ -4895,6 +4974,17 @@ type TestTensor () =
             Assert.AreEqual(t3ShapeCorrect, t3Shape)
             Assert.AreEqual(t4ShapeCorrect, t4Shape)
             Assert.AreEqual(t1.dtype, combo.dtype)
+
+    [<Test>]
+    member _.TestTensorViewAs () =
+        for combo in Combos.All do
+            let t1 = combo.tensor([1,2,3,4,5,6])
+            let t2 = combo.zeros([3;2])
+            let t1View = t1.viewAs(t2)
+            let t1ViewCorrect = combo.tensor([[1, 2],
+                                                [3, 4],
+                                                [5, 6]])
+            Assert.AreEqual(t1ViewCorrect, t1View)
 
     [<Test>]
     member _.TestTensorFlatten () =
@@ -5535,6 +5625,40 @@ type TestTensor () =
                                             [9.2194e-01, 5.6358e+00, 2.2848e+00, 1.5011e-01, 6.2556e-04]])
             let l6 = dsharp.mseLoss(t2a, t2b, reduction="sum")
             let l6Correct = combo.tensor(28.0416)
+
+            Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
+            Assert.True(l2Correct.allclose(l2, 0.01, 0.01))
+            Assert.True(l3Correct.allclose(l3, 0.01, 0.01))
+            Assert.True(l4Correct.allclose(l4, 0.01, 0.01))
+            Assert.True(l5Correct.allclose(l5, 0.01, 0.01))
+            Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
+
+    [<Test>]
+    member _.TestTensorBceLoss () =
+        for combo in Combos.FloatingPoint do 
+            let t1a = combo.tensor([[0.6732, 0.3984, 0.1378, 0.4564, 0.0396],
+                                    [0.7311, 0.6797, 0.8294, 0.8716, 0.5781],
+                                    [0.6032, 0.0346, 0.3714, 0.7304, 0.0434]])
+            let t1b = combo.tensor([[0.1272, 0.8250, 0.5473, 0.2635, 0.2387],
+                                    [0.9150, 0.9273, 0.3127, 0.7458, 0.5805],
+                                    [0.2771, 0.3095, 0.8710, 0.0176, 0.7242]])
+            let t1w = combo.tensor([0.9270, 0.4912, 0.7324])
+            let l1 = dsharp.bceLoss(t1a, t1b)
+            let l1Correct = combo.tensor(0.9516)
+            let l2 = dsharp.bceLoss(t1a, t1b, reduction="none")
+            let l2Correct = combo.tensor([[1.0264, 0.8481, 1.1520, 0.6556, 0.8016],
+                                            [0.3982, 0.4408, 1.2739, 0.6242, 0.6801],
+                                            [0.8083, 1.0655, 0.9226, 1.2933, 2.2837]])
+            let l3 = dsharp.bceLoss(t1a, t1b, reduction="sum")
+            let l3Correct = combo.tensor(14.2745)
+            let l4 = dsharp.bceLoss(t1a, t1b, weight=t1w)
+            let l4Correct = combo.tensor(0.7002)
+            let l5 = dsharp.bceLoss(t1a, t1b, reduction="none", weight=t1w)
+            let l5Correct = combo.tensor([[0.9515, 0.7862, 1.0679, 0.6078, 0.7431],
+                                            [0.1956, 0.2165, 0.6258, 0.3066, 0.3341],
+                                            [0.5920, 0.7804, 0.6757, 0.9472, 1.6726]])
+            let l6 = dsharp.bceLoss(t1a, t1b, reduction="sum", weight=t1w)
+            let l6Correct = combo.tensor(10.5032)
 
             Assert.True(l1Correct.allclose(l1, 0.01, 0.01))
             Assert.True(l2Correct.allclose(l2, 0.01, 0.01))
