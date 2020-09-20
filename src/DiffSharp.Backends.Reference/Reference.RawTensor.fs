@@ -84,9 +84,8 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     
     override t.Expand(newShape) =
         if shape = newShape then t :> _ else
-        let trim = newShape.Length - shape.Length
-        let newShape = newShape |> Array.mapi (fun i x -> if i>=trim && x = -1 then shape.[i - trim] else x)
         Shape.checkCanExpand shape newShape
+        let trim = newShape.Length - shape.Length
         let exp = shapeLength newShape.[0..trim-1]
         let jshape = newShape.[trim..]
         let n = shapeLength newShape

@@ -473,7 +473,11 @@ module Shape =
     let completeDim (dims:int) (dim:int) =
       if dim < -dims || dim >= dims then failwithf "Invalid choice (%A) for dim (%A)" dim dims
       if dim < 0 then dims+dim
-      else dim    
+      else dim
+
+    let completeExpand (shape: Shape) (newShape: Shape) =
+        let trim = newShape.Length - shape.Length
+        newShape |> Array.mapi (fun i x -> if i>=trim && x = -1 then shape.[i - trim] else x)
 
 
 [<AutoOpen>]

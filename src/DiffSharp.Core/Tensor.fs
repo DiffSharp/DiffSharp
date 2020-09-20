@@ -435,16 +435,19 @@ type Tensor =
 
     member a.expand(newShape:seq<int>) =
         let newShape = newShape|>Seq.toArray
-        if a.shape = newShape then a else
-        match a with
-        | Tensor(ap) -> Tensor(ap.Expand(newShape))
-        | TensorF(ap,ad,at) ->
-            let cp = ap.expand(newShape)
-            let cd = ad.expand(newShape)
-            TensorF(cp,cd,at)
-        | TensorR(ap,_,_,_,at) ->
-            let cp = ap.expand(newShape)
-            TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
+        if a.shape = newShape then a 
+        else
+            let newShape = Shape.completeExpand a.shape newShape  // Handles -1 semantics
+            Shape.checkCanExpand a.shape newShape
+            match a with
+            | Tensor(ap) -> Tensor(ap.Expand(newShape))
+            | TensorF(ap,ad,at) ->
+                let cp = ap.expand(newShape)
+                let cd = ad.expand(newShape)
+                TensorF(cp,cd,at)
+            | TensorR(ap,_,_,_,at) ->
+                let cp = ap.expand(newShape)
+                TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
 
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
