@@ -475,6 +475,7 @@ module Shape =
       if dim < 0 then dims+dim
       else dim
 
+    /// Completes the new shape for an expand operation based on the current shape of the tensor.
     let completeExpand (shape: Shape) (newShape: Shape) =
         let trim = newShape.Length - shape.Length
         newShape |> Array.mapi (fun i x -> if i>=trim && x = -1 then shape.[i - trim] else x)
