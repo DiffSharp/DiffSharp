@@ -10,7 +10,7 @@ open System.Diagnostics.CodeAnalysis
 type scalar = IConvertible
 
 /// <summary>
-///   Represents a multi-dimensional matrix containing elements of a single data type.
+///   Represents a multi-dimensional data type containing elements of a single data type.
 /// </summary>
 ///
 /// <example>
