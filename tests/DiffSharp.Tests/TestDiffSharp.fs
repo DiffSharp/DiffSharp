@@ -2,6 +2,10 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Compose
+open DiffSharp.Shorten
+open DiffSharp.Numerical
+open DiffSharp.Numerical.Shorten
 
 [<TestFixture>]
 type TestDiffSharp () =
@@ -624,3 +628,22 @@ type TestDiffSharp () =
         let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
         let deviceSupported = dsharp.isDeviceTypeSupported(DeviceType.CUDA, Backend.Torch)
         Assert.AreEqual(cudaAvailable, deviceSupported)
+
+    [<Test>]
+    member _.TestTensorAPIStyles () =
+        let x = dsharp.randn([5;5])
+
+        // Base API
+        dsharp.seed(0)
+        let y1 = x.dropout(0.2).leakyRelu(0.1).sum(1)
+
+        // PyTorch-like API
+        dsharp.seed(0)
+        let y2 = dsharp.sum(dsharp.leakyRelu(dsharp.dropout(x, 0.2), 0.1), 1)
+
+        // Compositional API for pipelining Tensor -> Tensor functions (optional, accessed through DiffSharp.Compose)
+        dsharp.seed(0)
+        let y3 = x |> dsharp.dropout 0.2 |> dsharp.leakyRelu 0.1 |> dsharp.sum 1
+
+        Assert.AreEqual(y1, y2)
+        Assert.AreEqual(y1, y3)
