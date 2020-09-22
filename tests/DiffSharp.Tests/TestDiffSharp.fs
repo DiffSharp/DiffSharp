@@ -2,6 +2,9 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Shorten
+open DiffSharp.Numerical
+open DiffSharp.Numerical.Shorten
 
 [<TestFixture>]
 type TestDiffSharp () =
