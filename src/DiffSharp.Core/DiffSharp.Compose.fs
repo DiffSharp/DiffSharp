@@ -1,6 +1,6 @@
-// Pipelined operations
 module DiffSharp.Compose
 
+// Pipelined operations
 type dsharp with
 
     /// <summary>TBD</summary>

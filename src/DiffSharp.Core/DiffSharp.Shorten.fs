@@ -1,4 +1,3 @@
-// Pipelined operations
 module DiffSharp.Shorten
 
 // Functional automatic differentiation API shorthand names

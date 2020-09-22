@@ -1,4 +1,3 @@
-// Pipelined operations
 module DiffSharp.Numerical
 
 // Functional numerical differentiation API
