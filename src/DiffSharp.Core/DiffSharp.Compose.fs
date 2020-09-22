@@ -1,6 +1,12 @@
 module DiffSharp.Compose
 
-// Pipelined operations
+// Pipelined operations for composing Tensor -> Tensor functions
+// The rule for binary operations like add, sub, mul, etc. is simple:
+// in the returned function, the functions argument is always taken as the first operand of the binary operation
+// For example:
+// static member add(b:Tensor) = fun (a:Tensor) -> a.add(b)
+// static member sub(b:Tensor) = fun (a:Tensor) -> a.sub(b)
+
 type dsharp with
 
     /// <summary>TBD</summary>
