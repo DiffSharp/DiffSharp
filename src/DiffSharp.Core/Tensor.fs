@@ -304,6 +304,15 @@ type Tensor =
         else
             (t - min) / range
 
+    /// Returns the tensor after standardization (z-score normalization)
+    member t.standardize() =
+        let stddev = t.stddev()
+        print stddev
+        if stddev = t.zeroLike() || stddev.hasnan() then
+            t.zerosLike()
+        else
+            (t - t.mean()) / stddev
+
     /// Returns a string summarising the tensor
     member t.summary() =
         match t with

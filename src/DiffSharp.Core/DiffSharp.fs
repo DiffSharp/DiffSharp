@@ -219,6 +219,12 @@ type dsharp =
     static member clamp(a:Tensor, ?low:scalar, ?high:scalar) = a.clamp(?low=low, ?high=high)
 
     /// <summary>TBD</summary>
+    static member normalize(a:Tensor) = a.normalize()
+
+    /// <summary>TBD</summary>
+    static member standardize(a:Tensor) = a.standardize()
+
+    /// <summary>TBD</summary>
     static member diagonal(a:Tensor, ?offset:int, ?dim1:int, ?dim2:int) = a.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
 
     /// <summary>TBD</summary>
