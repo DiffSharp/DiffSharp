@@ -616,27 +616,54 @@ type Tensor =
     member a.expandAs(b:Tensor) = a.expand(b.shape)
 
     /// <summary>Convert tensor to an image tensor with shape Channels x Height x Width</summary>
-    member t.toImage(?pixelMin:double, ?pixelMax:double, ?normalize:bool) =
+    member t.toImage(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
         let pixelMin = defaultArg pixelMin 0.
         let pixelMax = defaultArg pixelMax 1.
         let normalize = defaultArg normalize false
-        if t.dim < 1 || t.dim > 3 then failwithf "Expecting the tensor 1 <= dim (%A) <= 3, received shape %A" t.dim t.shape
-        let mutable pixels = t
-        if t.dim = 1 then
-            pixels <- pixels.view([1; 1; t.nelement])
-            pixels <- pixels.expand([3; -1; -1])
-        elif t.dim = 2 then
-            pixels <- pixels.view([1; t.shape.[0]; t.shape.[1]])
-            pixels <- pixels.expand([3; -1; -1])
-        elif t.shape.[0] > 3 then failwithf "Expecting the number of channels (%A) to be <= 3" t.shape.[0]
-        if pixelMin < 0. || pixelMin > 1. then failwithf "Expecting 0 <= pixelMin (%A) <= 1" pixelMin
-        if pixelMax < 0. || pixelMax > 1. then failwithf "Expecting 0 <= pixelMax (%A) <= 1" pixelMax
-        let pixelRange = pixelMax - pixelMin
-        if pixelRange <= 0. then failwithf "Expecting pixelMin (%A) < pixelMax (%A)" pixelMin pixelMax
-        if normalize then
-            pixels <- pixels.normalize()
-        pixels <- pixelMin + pixels.mul(pixelRange)
-        pixels
+        if t.dim < 1 || t.dim > 4 then failwithf "Expecting the tensor 1 <= dim (%A) <= 4, received shape %A" t.dim t.shape
+
+        if t.dim = 4 then // we make an image grid
+            let mutable numItems = t.shape.[0]
+            let cols = defaultArg gridCols (int(ceil(sqrt(float(numItems)))))
+            let mutable rows = 0
+            let mutable items = numItems
+            while items > 0 do
+                rows <- rows + 1
+                items <- items - cols
+            print rows, cols
+            let c, h, w = t.shape.[1], t.shape.[2], t.shape.[3]
+            let mutable tgrid = t.zerosLike([c; h*rows; w*cols])
+            // transform [n, c, h, w] to [n, h, w, c]
+            let t:Tensor = t.transpose(1, 3)
+            let t = t.transpose(2, 1)
+            let mutable i = 0
+            for row=0 to rows-1 do
+                for col=0 to cols-1 do
+                    if i < numItems then
+                        tgrid <- tgrid.addSlice([0; row*h; col*w], t.[i])
+                        i <- i + 1
+
+            // transform [n, h, w, c] to [n, c, h, w]
+            tgrid <- tgrid.transpose(1, 3)
+            tgrid <- tgrid.transpose(2, 3)
+            tgrid.toImage(pixelMin=pixelMin, pixelMax=pixelMax, normalize=normalize)
+        else
+            let mutable pixels = t
+            if t.dim = 1 then
+                pixels <- pixels.view([1; 1; t.nelement])
+                pixels <- pixels.expand([3; -1; -1])
+            elif t.dim = 2 then
+                pixels <- pixels.view([1; t.shape.[0]; t.shape.[1]])
+                pixels <- pixels.expand([3; -1; -1])
+            elif t.shape.[0] > 3 then failwithf "Expecting the number of channels (%A) to be <= 3" t.shape.[0]
+            if pixelMin < 0. || pixelMin > 1. then failwithf "Expecting 0 <= pixelMin (%A) <= 1" pixelMin
+            if pixelMax < 0. || pixelMax > 1. then failwithf "Expecting 0 <= pixelMax (%A) <= 1" pixelMax
+            let pixelRange = pixelMax - pixelMin
+            if pixelRange <= 0. then failwithf "Expecting pixelMin (%A) < pixelMax (%A)" pixelMin pixelMax
+            if normalize then
+                pixels <- pixels.normalize()
+            pixels <- pixelMin + pixels.mul(pixelRange)
+            pixels
 
     /// <summary>Convert tensor to a grayscale image tensor and return a string representation approximating grayscale values</summary>
     member t.toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) =
