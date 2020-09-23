@@ -625,14 +625,15 @@ type Tensor =
         if t.dim = 4 then // we make an image grid
             let mutable numItems = t.shape.[0]
             let cols = defaultArg gridCols (int(ceil(sqrt(float(numItems)))))
+            if cols < 1 || cols > numItems then failwithf "Expecting 1 <= gridCols (%A) <= %A" cols numItems
             let mutable rows = 0
             let mutable items = numItems
             while items > 0 do
                 rows <- rows + 1
                 items <- items - cols
-            print rows, cols
+            print (rows, cols)
             let c, h, w = t.shape.[1], t.shape.[2], t.shape.[3]
-            let mutable tgrid = t.zerosLike([c; h*rows; w*cols])
+            let mutable tgrid = t.zerosLike([h*rows; w*cols; c])
             // transform [n, c, h, w] to [n, h, w, c]
             let t:Tensor = t.transpose(1, 3)
             let t = t.transpose(2, 1)
@@ -640,12 +641,11 @@ type Tensor =
             for row=0 to rows-1 do
                 for col=0 to cols-1 do
                     if i < numItems then
-                        tgrid <- tgrid.addSlice([0; row*h; col*w], t.[i])
+                        tgrid <- tgrid.addSlice([row*h; col*w; 0], t.[i])
                         i <- i + 1
-
-            // transform [n, h, w, c] to [n, c, h, w]
-            tgrid <- tgrid.transpose(1, 3)
-            tgrid <- tgrid.transpose(2, 3)
+            // transform [h, w, c] to [c, h, w]
+            tgrid <- tgrid.transpose(0, 2)
+            tgrid <- tgrid.transpose(1, 2)
             tgrid.toImage(pixelMin=pixelMin, pixelMax=pixelMax, normalize=normalize)
         else
             let mutable pixels = t
@@ -666,9 +666,9 @@ type Tensor =
             pixels
 
     /// <summary>Convert tensor to a grayscale image tensor and return a string representation approximating grayscale values</summary>
-    member t.toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) =
+    member t.toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) =
         let asciiPalette = defaultArg asciiPalette """ .'`,^:";~-_+<>i!lI?/\|()1{}[]rcvunxzjftLCJUYXZO0Qoahkbdpqwm*WMB8&%$#@"""
-        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize).mean(0) // make it grayscale
+        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols).mean(0) // make it grayscale
         let numToAscii (numZeroToOne:float) =
             let c = int (numZeroToOne * float(asciiPalette.Length)) - 1
             let c = min (asciiPalette.Length - 1) (max 0 c)
@@ -682,8 +682,8 @@ type Tensor =
         sb.ToString()
 
     /// <summary>Save tensor to an image file using png or jpg format</summary>
-    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) =
-        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
+    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
+        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
         let c, h, w = pixels.shape.[0], pixels.shape.[1], pixels.shape.[2]        
         let image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector>(w, h)
         for y=0 to h-1 do
