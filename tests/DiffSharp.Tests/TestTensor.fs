@@ -5668,6 +5668,26 @@ type TestTensor () =
             Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
 
     [<Test>]
+    member _.TestTensorNormalize () =
+        for combo in Combos.FloatingPoint do
+            let t0 = combo.tensor(0.5)
+            let t0n = t0.normalize()
+            let t0nCorrect = combo.tensor(0.)
+
+            let t1 = combo.tensor([-2,-1,0,1,2,3])
+            let t1n = t1.normalize()
+            let t1nCorrect = combo.tensor([0.0000, 0.2000, 0.4000, 0.6000, 0.8000, 1.0000])
+
+            let t2 = combo.tensor([[-2.,-1.,0.,1.,2.,3.],[0.5, 0.7, -5.2, 2.3, 1., 2.]])
+            let t2n = t2.normalize()
+            let t2nCorrect = combo.tensor([[0.3902, 0.5122, 0.6341, 0.7561, 0.8780, 1.0000],
+                                            [0.6951, 0.7195, 0.0000, 0.9146, 0.7561, 0.8780]])
+
+            Assert.True(t0nCorrect.allclose(t0n, 0.01, 0.01))
+            Assert.True(t1nCorrect.allclose(t1n, 0.01, 0.01))
+            Assert.True(t2nCorrect.allclose(t2n, 0.01, 0.01))
+
+    [<Test>]
     member _.TestTensorDepth () =
         for combo in Combos.All do 
             let t0 = combo.tensor([1.;2.])

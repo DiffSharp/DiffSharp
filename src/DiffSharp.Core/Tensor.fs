@@ -295,6 +295,15 @@ type Tensor =
         let backend = defaultArg backend Backend.Default
         t.move(dtype=dtype, device=device, backend=backend)
 
+    /// Returns the tensor after min-max scaling
+    member t.normalize() =
+        let min = t.min()
+        let range = t.max() - min
+        if range = t.zeroLike() then
+            t.zerosLike()
+        else
+            (t - min) / range
+
     /// Returns a string summarising the tensor
     member t.summary() =
         match t with
