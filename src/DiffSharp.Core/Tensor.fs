@@ -630,7 +630,7 @@ type Tensor =
         let pixelMax = defaultArg pixelMax 1.
         let pixelRange = pixelMax - pixelMin
         if pixelRange <= 0. then failwithf "Expecting pixelMin (%A) < pixelMax (%A)" pixelMin pixelMax
-        pixels <- pixelMin + pixels.normalize() * pixelRange
+        pixels <- pixelMin + pixels.normalize().mul(pixelRange)
         let c, h, w = pixels.shape.[0], pixels.shape.[1], pixels.shape.[2]        
         let image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector>(w, h)
         for y=0 to h-1 do
