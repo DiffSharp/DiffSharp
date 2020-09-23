@@ -464,6 +464,18 @@ type dsharp =
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
 
     /// <summary>TBD</summary>
+    static member toImage(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) = a.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
+
+    /// <summary>TBD</summary>
+    static member toImageString(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) = a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?asciiPalette=asciiPalette)
+
+    /// <summary>TBD</summary>
+    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) = Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
+    static member saveImage(a:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) = a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
+
+    /// <summary>TBD</summary>
     static member cast(a:Tensor, dtype:Dtype) = a.cast(dtype)
 
     /// <summary>TBD</summary>

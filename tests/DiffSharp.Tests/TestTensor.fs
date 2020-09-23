@@ -5708,6 +5708,15 @@ type TestTensor () =
             Assert.True(t2sCorrect.allclose(t2s, 0.01, 0.01))
 
     [<Test>]
+    member _.TestTensorSaveImageLoadImage () =
+        let fileName = System.IO.Path.GetTempFileName() + ".png"
+        let t0 = dsharp.rand([3; 16; 16])
+        t0.saveImage(fileName)
+        let t1 = dsharp.loadImage(fileName)
+
+        Assert.True(t0.allclose(t1, 0.01, 0.01))
+
+    [<Test>]
     member _.TestTensorDepth () =
         for combo in Combos.All do 
             let t0 = combo.tensor([1.;2.])

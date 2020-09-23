@@ -615,8 +615,11 @@ type Tensor =
     /// <summary>TBD</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
 
-    /// Save the tensor to an image file using png format
-    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double) =
+    /// <summary>Convert tensor to an image tensor with shape Channels x Height x Width</summary>
+    member t.toImage(?pixelMin:double, ?pixelMax:double, ?normalize:bool) =
+        let pixelMin = defaultArg pixelMin 0.
+        let pixelMax = defaultArg pixelMax 1.
+        let normalize = defaultArg normalize false
         if t.dim < 1 || t.dim > 3 then failwithf "Expecting the tensor 1 <= dim (%A) <= 3, received shape %A" t.dim t.shape
         let mutable pixels = t
         if t.dim = 1 then
@@ -626,11 +629,34 @@ type Tensor =
             pixels <- pixels.view([1; t.shape.[0]; t.shape.[1]])
             pixels <- pixels.expand([3; -1; -1])
         elif t.shape.[0] > 3 then failwithf "Expecting the number of channels (%A) to be <= 3" t.shape.[0]
-        let pixelMin = defaultArg pixelMin 0.
-        let pixelMax = defaultArg pixelMax 1.
+        if pixelMin < 0. || pixelMin > 1. then failwithf "Expecting 0 <= pixelMin (%A) <= 1" pixelMin
+        if pixelMax < 0. || pixelMax > 1. then failwithf "Expecting 0 <= pixelMax (%A) <= 1" pixelMax
         let pixelRange = pixelMax - pixelMin
         if pixelRange <= 0. then failwithf "Expecting pixelMin (%A) < pixelMax (%A)" pixelMin pixelMax
-        pixels <- pixelMin + pixels.normalize().mul(pixelRange)
+        if normalize then
+            pixels <- pixels.normalize()
+        pixels <- pixelMin + pixels.mul(pixelRange)
+        pixels
+
+    /// <summary>Convert tensor to a grayscale image tensor and return a string representation approximating grayscale values</summary>
+    member t.toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) =
+        let asciiPalette = defaultArg asciiPalette """ .'`,^:";~-_+<>i!lI?/\|()1{}[]rcvunxzjftLCJUYXZO0Qoahkbdpqwm*WMB8&%$#@"""
+        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize).mean(0) // make it grayscale
+        let numToAscii (numZeroToOne:float) =
+            let c = int (numZeroToOne * float(asciiPalette.Length)) - 1
+            let c = min (asciiPalette.Length - 1) (max 0 c)
+            asciiPalette.[c]
+        let h, w = pixels.shape.[0], pixels.shape.[1]
+        let sb = System.Text.StringBuilder()
+        for y=0 to h-1 do
+            for x=0 to w-1 do
+                sb.Append(numToAscii (float(pixels.[y, x]))) |> ignore
+            sb.AppendLine() |> ignore
+        sb.ToString()
+
+    /// <summary>Save tensor to an image file using png or jpg format</summary>
+    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) =
+        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
         let c, h, w = pixels.shape.[0], pixels.shape.[1], pixels.shape.[2]        
         let image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector>(w, h)
         for y=0 to h-1 do
@@ -644,8 +670,27 @@ type Tensor =
                         float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
                 image.Item(x, y) <- SixLabors.ImageSharp.PixelFormats.RgbaVector(r, g, b)
         let fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create)
-        image.Save(fs, SixLabors.ImageSharp.Formats.Png.PngEncoder())
+        let encoder =
+            if fileName.EndsWith(".jpg") then
+                SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() :> SixLabors.ImageSharp.Formats.IImageEncoder
+            elif fileName.EndsWith(".png") then
+                SixLabors.ImageSharp.Formats.Png.PngEncoder() :> SixLabors.ImageSharp.Formats.IImageEncoder
+            else
+                failwithf "Expecting fileName (%A) to end with .png or .jpg" fileName
+        image.Save(fs, encoder)
         fs.Close()
+
+    /// <summary>Load an image file and return it as a tensor</summary>
+    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        let normalize = defaultArg normalize false
+        let image:SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector> = SixLabors.ImageSharp.Image.Load(fileName)
+        let pixels = Array3D.init 3 image.Height image.Width (fun c y x -> let p = image.Item(x, y)
+                                                                           if c = 0 then p.R
+                                                                           elif c = 1 then p.G
+                                                                           else p.B)
+        let mutable pixels:Tensor = Tensor.create(pixels, ?dtype=dtype, ?device=device, ?backend=backend)
+        if normalize then pixels <- pixels.normalize()
+        pixels
 
     /// <summary>TBD</summary>
     member internal t.GetSlice(bounds:int[,]) =
