@@ -631,7 +631,6 @@ type Tensor =
             while items > 0 do
                 rows <- rows + 1
                 items <- items - cols
-            print (rows, cols)
             let c, h, w = t.shape.[1], t.shape.[2], t.shape.[3]
             let mutable tgrid = t.zerosLike([h*rows; w*cols; c])
             // transform [n, c, h, w] to [n, h, w, c]
@@ -655,7 +654,11 @@ type Tensor =
             elif t.dim = 2 then
                 pixels <- pixels.view([1; t.shape.[0]; t.shape.[1]])
                 pixels <- pixels.expand([3; -1; -1])
-            elif t.shape.[0] > 3 then failwithf "Expecting the number of channels (%A) to be <= 3" t.shape.[0]
+            else
+                if t.shape.[0] = 1 then
+                    pixels <- pixels.expand([3; -1; -1])
+                elif t.shape.[0] <> 3 then 
+                    failwithf "Expecting the number of channels (%A) to be 1 or 3" t.shape.[0]
             if pixelMin < 0. || pixelMin > 1. then failwithf "Expecting 0 <= pixelMin (%A) <= 1" pixelMin
             if pixelMax < 0. || pixelMax > 1. then failwithf "Expecting 0 <= pixelMax (%A) <= 1" pixelMax
             let pixelRange = pixelMax - pixelMin
@@ -690,9 +693,8 @@ type Tensor =
             for x=0 to w-1 do
                 let r, g, b = 
                     if c = 1 then
-                        float32(pixels.[0, y, x]), 0.f, 0.f
-                    elif c = 2 then
-                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), 0.f
+                        let v = float32(pixels.[0, y, x])
+                        v, v, v
                     else
                         float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
                 image.Item(x, y) <- SixLabors.ImageSharp.PixelFormats.RgbaVector(r, g, b)
