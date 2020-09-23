@@ -615,6 +615,38 @@ type Tensor =
     /// <summary>TBD</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
 
+    /// Save the tensor to an image file using png format
+    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double) =
+        if t.dim < 1 || t.dim > 3 then failwithf "Expecting the tensor 1 <= dim (%A) <= 3, received shape %A" t.dim t.shape
+        let mutable pixels = t
+        if t.dim = 1 then
+            pixels <- pixels.view([1; 1; t.nelement])
+            pixels <- pixels.expand([3; -1; -1])
+        elif t.dim = 2 then
+            pixels <- pixels.view([1; t.shape.[0]; t.shape.[1]])
+            pixels <- pixels.expand([3; -1; -1])
+        elif t.shape.[0] > 3 then failwithf "Expecting the number of channels (%A) to be <= 3" t.shape.[0]
+        let pixelMin = defaultArg pixelMin 0.
+        let pixelMax = defaultArg pixelMax 1.
+        let pixelRange = pixelMax - pixelMin
+        if pixelRange <= 0. then failwithf "Expecting pixelMin (%A) < pixelMax (%A)" pixelMin pixelMax
+        pixels <- pixelMin + pixels.normalize() * pixelRange
+        let c, h, w = pixels.shape.[0], pixels.shape.[1], pixels.shape.[2]        
+        let image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector>(w, h)
+        for y=0 to h-1 do
+            for x=0 to w-1 do
+                let r, g, b = 
+                    if c = 1 then
+                        float32(pixels.[0, y, x]), 0.f, 0.f
+                    elif c = 2 then
+                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), 0.f
+                    else
+                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
+                image.Item(x, y) <- SixLabors.ImageSharp.PixelFormats.RgbaVector(r, g, b)
+        let fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create)
+        image.Save(fs, SixLabors.ImageSharp.Formats.Png.PngEncoder())
+        fs.Close()
+
     /// <summary>TBD</summary>
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds

@@ -275,7 +275,7 @@ type Weight() =
 
     /// <summary>TBD</summary>
     static member standard(shape:int[], k:float) =
-        -k + dsharp.rand(shape) * 2*k
+        -k + dsharp.rand(shape) * 2.*k
 
 
 /// <summary>TBD</summary>
