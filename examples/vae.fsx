@@ -1,18 +1,29 @@
-// Learn more about F# at http://fsharp.org
 (*** condition: prepare ***)
-#r "../src/DiffSharp.Core/bin/Debug/netstandard2.1/DiffSharp.Core.dll"
-#r "../src/DiffSharp.Backends.Torch/bin/Debug/netcoreapp3.0/DiffSharp.Backends.Torch.dll"
-#r "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0/TorchSharp.dll"
+#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
+#r "DiffSharp.Core.dll"
+#r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
-#r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-cpu,{{package-version}}"
+#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
-#i "nuget: https://ci.appveyor.com/nuget/diffsharp"
-#r "nuget: DiffSharp-cpu,{{package-version}}"
+#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+#endif // IPYNB
 
+(*** condition: fsx ***)
+#if FSX
+// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
+System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
+#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+#endif // FSX
+
+(*** condition: ipynb ***)
+#if IPYNB
+// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
+System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
+
+// Set up formatting for notebooks
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
@@ -65,44 +76,47 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
         let z = latent mu logVar
         decode z, mu, logVar
 
-    member _.sample(?numSamples:int) = 
-        let numSamples = defaultArg numSamples 1
-        dsharp.randn([|numSamples; zDim|]) |> decode
-    override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
     override m.forward(x) =
         let x, _, _ = m.encodeDecode(x) in x
 
+    override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
+
+    static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
+        let bce = dsharp.bceLoss(xRecon, x.view([|-1; 28*28|]), reduction="sum")
+        let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
+        bce + kl
+
+    member m.loss(x) =
+        let xRecon, mu, logVar = m.encodeDecode x
+        VAE.loss(xRecon, x, mu, logVar)
+
+    member _.sample(?numSamples:int) = 
+        let numSamples = defaultArg numSamples 1
+        dsharp.randn([|numSamples; zDim|]) |> decode
 
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
-let trainSet = MNIST("./mnist", train=true)
-let validSet = MNIST("./mnist", train=false)
+let trainSet = MNIST("./mnist", train=true, transform=id)
 let trainLoader = trainSet.loader(batchSize=32, shuffle=true)
-let validLoader = validSet.loader(batchSize=32)
 
 let model = VAE(28*28, 16, [512; 256])
 printfn "%A" model
 
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
-let loss xRecon (x:Tensor) (mu:Tensor) (logVar:Tensor) =
-    let bce = dsharp.bceLoss(xRecon, x.view([|-1; 28*28|]), reduction="sum")
-    let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
-    bce + kl
-
-for epoch = 0 to 2 do
-    printfn "Epoch %A" epoch
-    for _, x, _ in trainLoader.epoch() do
+let epochs = 2
+for epoch = 0 to epochs do
+    for i, x, _ in trainLoader.epoch() do
         model.reverseDiff()
-        let xRecon, mu, logVar = model.encodeDecode x
-        let l = loss xRecon x mu logVar
+        let l = model.loss(x)
         l.reverse()
         optimizer.step()
-        printfn "%A" (float(l))
+        printfn "epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
 
-        printfn "%A" (model.sample())
-//         printfn "%A %A %A" z mu logVar
-        // let loss = dsharp.bin
+        if i % 250 = 0 then
+            printfn "Saving samples"
+            let samples = model.sample(64).view([-1; 1; 28; 28])
+            samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
 
