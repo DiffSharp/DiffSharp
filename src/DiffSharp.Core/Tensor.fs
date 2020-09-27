@@ -2180,7 +2180,7 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
         aderivative, bderivative
 
-    member a.convTranspose2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
+    member a.convTranspose2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
         let strides = 
             match stride, strides with
             | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
@@ -2199,6 +2199,12 @@ type Tensor =
             | Some d, None -> [|d; d|]
             | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
             | _ -> [|1; 1|]
+        let outputPaddings = 
+            match outputPadding, outputPaddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
@@ -2209,13 +2215,12 @@ type Tensor =
         let kernelHeight = b.shape.[2]
         let kernelWidth = b.shape.[3]        
         let outputChannels = b.shape.[1]
-        let outputHeight = strides.[0] * (inputHeight - 1) + kernelHeight - 2 * paddings.[0]
-        let outputWidth = strides.[1] * (inputWidth - 1) + kernelWidth - 2 * paddings.[1]
+        let outputHeight = strides.[0] * (inputHeight - 1) + kernelHeight - 2 * paddings.[0] + outputPaddings.[0]
+        let outputWidth = strides.[1] * (inputWidth - 1) + kernelWidth - 2 * paddings.[1] + outputPaddings.[1]
         let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
-        printfn "outputShape %A" outputShape
         let cderivative = a
-        // let a = a.zerosLike([1; 3; 8; 8])
         let a = a.zerosLike(outputShape)
+        // Use conv2d reverse mode to implement convTranspose2d
         let (aderivative:Tensor), _ = Tensor.conv2dReverseDiff(a, b, cderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
         aderivative
 
