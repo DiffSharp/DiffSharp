@@ -328,6 +328,54 @@ type TestModel () =
         Assert.True(targetsp.allclose(y, 0.1, 0.1))
 
     [<Test>]
+    member _.TestModelConvTranspose1d () =
+        let x = dsharp.randn([5; 3; 12])
+        let m = ConvTranspose1d(3, 4, 3)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|5; 4; 14|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+        let x = dsharp.randn([3; 3; 12])
+        let m = ConvTranspose1d(3, 5, 2, dilation=5)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|3; 5; 17|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+    [<Test>]
+    member _.TestModelConvTranspose2d () =
+        let x = dsharp.randn([3; 3; 12; 6])
+        let m = ConvTranspose2d(3, 5, 3)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|3; 5; 14; 8|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+        let x = dsharp.randn([2; 3; 12; 6])
+        let m = ConvTranspose2d(3, 1, 5, stride=2)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|2; 1; 27; 15|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+    [<Test>]
+    member _.TestModelConvTranspose3d () =
+        let x = dsharp.randn([2; 3; 12; 6; 6])
+        let m = ConvTranspose3d(3, 2, 3)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|2; 2; 14; 8; 8|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+        let x = dsharp.randn([2; 3; 12; 6; 6])
+        let m = ConvTranspose3d(3, 2, 2, padding=1)
+        let y = x --> m
+        let yShape = y.shape
+        let yShapeCorrect = [|2; 2; 11; 5; 5|]
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+    [<Test>]
     member _.TestModelDropout () =
         let m = Dropout(1.)
         let x = dsharp.randn([10;10])
