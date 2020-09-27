@@ -2047,18 +2047,18 @@ type Tensor =
     // a: input, NxCxI (batchSize x inputChannels x inputLength)
     // b: filters, KxCxF (outputChannels x inputChannels x kernelLength)
     // t: output, NxKxL (batchSize x outputChannels x outputLength)
-    member internal t.conv1dReverseDiff(a: Tensor, b:Tensor, aConst:bool, bConst:bool, stride:int, padding:int) =
+    static member internal conv1dReverseDiff(a: Tensor, b:Tensor, cderivative:Tensor, aConst:bool, bConst:bool, stride:int, padding:int) =
         let a = if aConst then a else a.primal
         let b = if bConst then b else b.primal
-        let batchSize = t.shape.[0]
-        let outputChannels = t.shape.[1]
-        // let outputLength = t.shape.[2]
+        let batchSize = cderivative.shape.[0]
+        let outputChannels = cderivative.shape.[1]
+        // let outputLength = cderivative.shape.[2]
         let inputChannels = a.shape.[1]
         let inputLength = a.shape.[2]
         let kernelLength = b.shape.[2]
-        let mutable tderivative = t.derivative
+        let mutable cderivative = cderivative
         if stride > 1 then
-            tderivative <- tderivative.dilate([|1;1;stride|])
+            cderivative <- cderivative.dilate([|1;1;stride|])
         let mutable aderivative = a.zeroLike()
         let mutable bderivative = b.zeroLike()
         if not aConst then
@@ -2067,8 +2067,8 @@ type Tensor =
             let bFlipped = b.flip([|2|])
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]]
-                let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
+                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]]
+                let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
                 let mutable c = d.conv1d(b, padding=kernelLength-1)
                 if padding > 0 then
                     let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; padding + inputLength - 1; 1]]
@@ -2080,9 +2080,9 @@ type Tensor =
             bderivative <- b.zerosLike()
             for n=0 to batchSize-1 do
                 let aa = a.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
-                let d = tderivative.[n]
+                let d = cderivative.[n]
                 for k=0 to outputChannels-1 do
-                    let dd = d.[k].view([|1; 1; tderivative.shape.[2]|])
+                    let dd = d.[k].view([|1; 1; cderivative.shape.[2]|])
                     let mutable c = aa.conv1d(dd, padding=padding)
                     c <- c.view([|1; inputChannels; c.shape.[2]|])
                     let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelLength-1;1]]
@@ -2090,6 +2090,25 @@ type Tensor =
                     c <- c.view([|1; inputChannels; kernelLength|])
                     bderivative <- bderivative.addSlice([|k; 0; 0|], c)
         aderivative, bderivative
+    
+    /// <summary>TBD</summary>
+    member a.convTranspose1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
+        let stride = defaultArg stride 1
+        let padding = defaultArg padding 0
+        let dilation = defaultArg dilation 1
+        let outputPadding = defaultArg outputPadding 0
+
+        let batchSize, inputChannels, kernelLength, outputChannels, outputSize, outputShape =
+            Shape.checkCanConvTranspose1d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape stride padding dilation outputPadding
+        print outputShape
+        let mutable b = b
+        if dilation > 1 then
+            b <- b.dilate([|1; 1; dilation|])
+        let cderivative = a
+        let a = a.zerosLike(outputShape)
+        // Use convolution reverse mode to implement transposed convolution
+        let (aderivative:Tensor), _ = Tensor.conv1dReverseDiff(a, b, cderivative, aConst=false, bConst=true, stride=stride, padding=padding)
+        aderivative
 
     /// <summary>TBD</summary>
     member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
@@ -2215,7 +2234,7 @@ type Tensor =
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
         let cderivative = a
         let a = a.zerosLike(outputShape)
-        // Use conv2d reverse mode to implement convTranspose2d
+        // Use convolution reverse mode to implement transposed convolution
         let (aderivative:Tensor), _ = Tensor.conv2dReverseDiff(a, b, cderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
         aderivative
 
@@ -2505,13 +2524,13 @@ type Tensor =
                         | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | MaxUnpool3DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
-                            let aderivative, bderivative = t.conv1dReverseDiff(a, b, false, false, stride, padding)
+                            let aderivative, bderivative = Tensor.conv1dReverseDiff(a, b, t.derivative, false, false, stride, padding)
                             push ((aderivative, a) :: (bderivative, b) :: tt)
                         | Conv1DTTConst(a,b,stride,padding) ->
-                            let aderivative, _ = t.conv1dReverseDiff(a, b, false, true, stride, padding)
+                            let aderivative, _ = Tensor.conv1dReverseDiff(a, b, t.derivative, false, true, stride, padding)
                             push ((aderivative, a) :: tt)                        
                         | Conv1DTConstT(a,b,stride,padding) ->
-                            let _, bderivative = t.conv1dReverseDiff(a, b, true, false, stride, padding)
+                            let _, bderivative = Tensor.conv1dReverseDiff(a, b, t.derivative, true, false, stride, padding)
                             push ((bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,stride,padding) -> 
                             let aderivative, bderivative = Tensor.conv2dReverseDiff(a, b, t.derivative, false, false, stride, padding)
