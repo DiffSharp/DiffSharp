@@ -2179,7 +2179,8 @@ type Tensor =
                     bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
         aderivative, bderivative
-
+    
+    /// <summary>TBD</summary>
     member a.convTranspose2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
         let strides = 
             match stride, strides with
@@ -2205,19 +2206,13 @@ type Tensor =
             | Some p, None -> [|p; p|]
             | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
             | _ -> [|0; 0|]
+
+        let batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape =
+            Shape.checkCanConvTranspose2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
+        print outputShape
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
-        let batchSize = a.shape.[0]
-        let inputChannels = a.shape.[1]
-        let inputHeight = a.shape.[2]
-        let inputWidth = a.shape.[3]
-        let kernelHeight = b.shape.[2]
-        let kernelWidth = b.shape.[3]        
-        let outputChannels = b.shape.[1]
-        let outputHeight = strides.[0] * (inputHeight - 1) + kernelHeight - 2 * paddings.[0] + outputPaddings.[0]
-        let outputWidth = strides.[1] * (inputWidth - 1) + kernelWidth - 2 * paddings.[1] + outputPaddings.[1]
-        let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
         let cderivative = a
         let a = a.zerosLike(outputShape)
         // Use conv2d reverse mode to implement convTranspose2d
