@@ -2332,6 +2332,45 @@ type Tensor =
         aderivative, bderivative
 
     /// <summary>TBD</summary>
+    member a.convTranspose3d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        let strides = 
+            match stride, strides with
+            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> [|1; 1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d; d|]
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
+            | _ -> [|1; 1; 1|]
+        let outputPaddings = 
+            match outputPadding, outputPaddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting outputPaddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+
+        let batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape =
+            Shape.checkCanConvTranspose3d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
+        print outputShape
+        let mutable b = b
+        if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
+            b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
+        let cderivative = a
+        let a = a.zerosLike(outputShape)
+        // Use convolution reverse mode to implement transposed convolution
+        let (aderivative:Tensor), _ = Tensor.conv2dReverseDiff(a, b, cderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
+        aderivative
+
+    /// <summary>TBD</summary>
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
