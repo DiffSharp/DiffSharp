@@ -461,6 +461,15 @@ type dsharp =
     static member conv3d(a:Tensor, b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = a.conv3d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
 
     /// <summary>TBD</summary>
+    static member convTranspose1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) = a.convTranspose1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
+
+    /// <summary>TBD</summary>
+    static member convTranspose2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) = a.convTranspose2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+
+    /// <summary>TBD</summary>
+    static member convTranspose3d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) = a.convTranspose3d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+
+    /// <summary>TBD</summary>
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
 
     /// <summary>TBD</summary>
