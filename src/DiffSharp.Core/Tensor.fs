@@ -2209,8 +2209,8 @@ type Tensor =
         let kernelHeight = b.shape.[2]
         let kernelWidth = b.shape.[3]        
         let outputChannels = b.shape.[1]
-        let outputHeight = strides.[0] * (inputHeight - 1) + kernelHeight - paddings.[0]
-        let outputWidth = strides.[1] * (inputWidth - 1) + kernelWidth - paddings.[1]
+        let outputHeight = strides.[0] * (inputHeight - 1) + kernelHeight - 2 * paddings.[0]
+        let outputWidth = strides.[1] * (inputWidth - 1) + kernelWidth - 2 * paddings.[1]
         let outputShape = [|batchSize; outputChannels; outputHeight; outputWidth|]
         printfn "outputShape %A" outputShape
         let cderivative = a
