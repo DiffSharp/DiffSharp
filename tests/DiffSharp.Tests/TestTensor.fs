@@ -3078,7 +3078,7 @@ type TestTensor () =
                                     [0.7678; 0.0733; 0.3396];
                                     [0.6023; 0.6546; 0.3439]]])
 
-            let t3 = t1.conv1d(t2)
+            let t3 = dsharp.conv1d(t1, t2)
             let t3Correct = combo.tensor([[[2.8516; 2.0732; 2.6420];
                                            [2.3239; 1.7078; 2.7450]];
 
@@ -3090,7 +3090,7 @@ type TestTensor () =
 
             Assert.True(t3.allclose(t3Correct, 0.01))
 
-            let t3p1 = t1.conv1d(t2, padding=1)
+            let t3p1 = dsharp.conv1d(t1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[1.4392; 2.8516; 2.0732; 2.6420; 2.1177];
                                              [1.4345; 2.3239; 1.7078; 2.7450; 2.1474]];
 
@@ -3102,7 +3102,7 @@ type TestTensor () =
 
             Assert.True(t3p1.allclose(t3p1Correct, 0.01))
 
-            let t3p2 = t1.conv1d(t2, padding=2)
+            let t3p2 = dsharp.conv1d(t1, t2, padding=2)
             let t3p2Correct = combo.tensor([[[0.6333; 1.4392; 2.8516; 2.0732; 2.6420; 2.1177; 1.0258];
                                              [0.6539; 1.4345; 2.3239; 1.7078; 2.7450; 2.1474; 1.2585]];
 
@@ -3114,7 +3114,7 @@ type TestTensor () =
 
             Assert.True(t3p2.allclose(t3p2Correct, 0.01))
 
-            let t3s2 = t1.conv1d(t2, stride=2)
+            let t3s2 = dsharp.conv1d(t1, t2, stride=2)
             let t3s2Correct = combo.tensor([[[2.8516; 2.6420];
                                              [2.3239; 2.7450]];
 
@@ -3126,7 +3126,7 @@ type TestTensor () =
 
             Assert.True(t3s2.allclose(t3s2Correct, 0.01))
 
-            let t3s3 = t1.conv1d(t2, stride=3)
+            let t3s3 = dsharp.conv1d(t1, t2, stride=3)
             let t3s3Correct = combo.tensor([[[2.8516];
                                              [2.3239]];
 
@@ -3138,7 +3138,7 @@ type TestTensor () =
 
             Assert.True(t3s3.allclose(t3s3Correct, 0.01))
 
-            let t3s2p1 = t1.conv1d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.conv1d(t1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[1.4392; 2.0732; 2.1177];
                                                  [1.4345; 1.7078; 2.1474]];
 
@@ -3150,7 +3150,7 @@ type TestTensor () =
 
             Assert.True(t3s2p1.allclose(t3s2p1Correct, 0.01))
 
-            let t3s3p2 = t1.conv1d(t2, stride=3, padding=2)
+            let t3s3p2 = dsharp.conv1d(t1, t2, stride=3, padding=2)
             let t3s3p2Correct = combo.tensor([[[0.6333; 2.0732; 1.0258];
                                                  [0.6539; 1.7078; 1.2585]];
 
@@ -3162,7 +3162,7 @@ type TestTensor () =
         
             Assert.True(t3s3p2.allclose(t3s3p2Correct, 0.01))
 
-            let t3d2 = t1.conv1d(t2, dilation=2)
+            let t3d2 = dsharp.conv1d(t1, t2, dilation=2)
             let t3d2Correct = combo.tensor([[[2.8030];
                                              [2.4735]];
 
@@ -3174,7 +3174,7 @@ type TestTensor () =
 
             Assert.True(t3d2.allclose(t3d2Correct, 0.01))
 
-            let t3p2d3 = t1.conv1d(t2, padding=2, dilation=3)
+            let t3p2d3 = dsharp.conv1d(t1, t2, padding=2, dilation=3)
             let t3p2d3Correct = combo.tensor([[[2.1121; 0.8484; 2.2709];
                                                  [1.6692; 0.5406; 1.8381]];
 
@@ -3186,7 +3186,7 @@ type TestTensor () =
 
             Assert.True(t3p2d3.allclose(t3p2d3Correct, 0.01))
 
-            let t3s3p6d3 = t1.conv1d(t2, stride=3, padding=6, dilation=3)
+            let t3s3p6d3 = dsharp.conv1d(t1, t2, stride=3, padding=6, dilation=3)
             let t3s3p6d3Correct = combo.tensor([[[0.6333; 1.5018; 2.2709; 1.0580];
                                                  [0.6539; 1.5130; 1.8381; 1.0479]];
 
@@ -3277,7 +3277,7 @@ type TestTensor () =
                                       [-6.5763, -6.3535,  7.2228],
                                       [15.1009,  4.9045,  5.1197]]]])
 
-            let t3 = t1.conv2d(t2)
+            let t3 = dsharp.conv2d(t1, t2)
             let t3Correct = combo.tensor([[[[  10.6089;   -1.4459];
                                             [-132.3437; -165.9882]];
 
@@ -3297,7 +3297,7 @@ type TestTensor () =
                                              [[-106.0468;  -94.3428];
                                               [ -78.6259;  136.6283]]]])
 
-            let t3p1 = t1.conv2d(t2, padding=1)
+            let t3p1 = dsharp.conv2d(t1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[[  86.6988;    8.1164;  -85.8172;   69.5001];
                                               [-154.2592;   10.6089;   -1.4459; -126.2889];
                                               [-176.1860; -132.3437; -165.9882;  -23.2585];
@@ -3329,7 +3329,7 @@ type TestTensor () =
                                               [ -44.8701;  -78.6259;  136.6283;   89.6921];
                                               [  60.9218;   14.3467;  -86.6495;   49.3313]]]])
 
-            let t3p12 = t1.conv2d(t2, paddings=[|1; 2|])
+            let t3p12 = dsharp.conv2d(t1, t2, paddings=[|1; 2|])
             let t3p12Correct = combo.tensor([[[[   7.5867;   86.6988;    8.1164;  -85.8172;   69.5001;  -35.4485];
                                               [ 210.3501; -154.2592;   10.6089;   -1.4459; -126.2889;   24.8066];
                                               [ -42.1367; -176.1860; -132.3437; -165.9882;  -23.2585;  -44.1093];
@@ -3361,7 +3361,7 @@ type TestTensor () =
                                               [  21.9169;  -44.8701;  -78.6259;  136.6283;   89.6921; -113.2355];
                                               [ -30.5091;   60.9218;   14.3467;  -86.6495;   49.3313;   22.9582]]]])
 
-            let t3s2 = t1.conv2d(t2, stride=2)
+            let t3s2 = dsharp.conv2d(t1, t2, stride=2)
             let t3s2Correct = combo.tensor([[[[  10.6089]];
 
                                              [[  97.8425]];
@@ -3375,7 +3375,7 @@ type TestTensor () =
 
                                              [[-106.0468]]]])
 
-            let t3s13 = t1.conv2d(t2, strides=[|1; 3|])
+            let t3s13 = dsharp.conv2d(t1, t2, strides=[|1; 3|])
             let t3s13Correct = combo.tensor([[[[  10.6089];
                                               [-132.3437]];
 
@@ -3395,7 +3395,7 @@ type TestTensor () =
                                              [[-106.0468];
                                               [ -78.6259]]]])
 
-            let t3s2p1 = t1.conv2d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.conv2d(t1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[[  86.6988;  -85.8172];
                                                   [-176.1860; -165.9882]];
 
@@ -3415,7 +3415,7 @@ type TestTensor () =
                                                  [[  96.3737;  -68.9841];
                                                   [ -44.8701;  136.6283]]]])
 
-            let t3s23p32 = t1.conv2d(t2, strides=[2; 3], paddings=[3; 2])
+            let t3s23p32 = dsharp.conv2d(t1, t2, strides=[2; 3], paddings=[3; 2])
             let t3s23p32Correct = combo.tensor([[[[   0.0000,    0.0000],
                                                       [   7.5866,  -85.8172],
                                                       [ -42.1364, -165.9885],
@@ -3447,7 +3447,7 @@ type TestTensor () =
                                                       [  21.9173,  136.6280],
                                                       [  11.1650,   48.6844]]]])
         
-            let t3p1d2 = t1.conv2d(t2, padding=1, dilation=2)
+            let t3p1d2 = dsharp.conv2d(t1, t2, padding=1, dilation=2)
             let t3p1d2Correct = combo.tensor([[[[ -72.7697,  -34.7305],
                                                   [ -35.3463, -230.5320]],
 
@@ -3467,7 +3467,7 @@ type TestTensor () =
                                                  [[ -25.4452,   -9.8843],
                                                   [  35.7940,   27.9557]]]])
 
-            let t3p22d23 = t1.conv2d(t2, paddings=[2;2], dilations=[2;3])
+            let t3p22d23 = dsharp.conv2d(t1, t2, paddings=[2;2], dilations=[2;3])
             let t3p22d23Correct = combo.tensor([[[[-3.2693e+01, -4.3192e+01],
                                                       [ 4.7954e+01,  9.6877e+00],
                                                       [ 1.7971e+01, -7.0747e+01],
@@ -3499,7 +3499,7 @@ type TestTensor () =
                                                       [ 3.1457e+01,  4.8352e+01],
                                                       [-8.1167e+01,  3.2597e+01]]]])
 
-            let t3s3p6d3 = t1.conv2d(t2, stride=3, padding=6, dilation=3)
+            let t3s3p6d3 = dsharp.conv2d(t1, t2, stride=3, padding=6, dilation=3)
             let t3s3p6d3Correct = combo.tensor([[[[  78.0793,   88.7191,  -32.2774,   12.5512],
                                                       [  27.0241, -107.5002,   98.7433,  -41.9933],
                                                       [  11.7470, -105.7288, -152.6583,   23.1514],
@@ -3639,14 +3639,14 @@ type TestTensor () =
                                        [ 0.2239,  0.7976,  1.5523],
                                        [ 0.6226, -0.4116,  1.0639]]]]).unsqueeze(0)
 
-            let t3 = t1.conv3d(t2)
+            let t3 = dsharp.conv3d(t1, t2)
             let t3Correct = combo.tensor([[[[ 3.1109,  6.7899],
                                                [ 4.3064,  4.1053]],
 
                                               [[ 5.0324, -8.8943],
                                                [-0.1298,  1.2862]]]]).unsqueeze(0)
 
-            let t3p1 = t1.conv3d(t2, padding=1)
+            let t3p1 = dsharp.conv3d(t1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[[  2.9555,  -2.2637,  -7.1829,   5.6339],
                                                [ -3.3115,  11.7124,   2.7917,   2.6118],
                                                [  5.5319,   3.0030,   3.2099,  -2.7804],
@@ -3667,7 +3667,7 @@ type TestTensor () =
                                                [ -0.0842,   0.3416,  -3.8301,  -2.1084],
                                                [  4.0825,  -1.9845,  -1.1269,   2.3267]]]]).unsqueeze(0)
 
-            let t3p123 = t1.conv3d(t2, paddings=[|1; 2; 3|])
+            let t3p123 = dsharp.conv3d(t1, t2, paddings=[|1; 2; 3|])
             let t3p123Correct = combo.tensor([[[[ 0.0000e+00, -2.9020e+00,  4.5825e+00, -3.1431e+00, -1.0803e+00,
                                                          8.2371e-01,  1.4897e-01,  0.0000e+00],
                                                    [ 0.0000e+00, -1.2234e+00,  2.9555e+00, -2.2637e+00, -7.1829e+00,
@@ -3720,21 +3720,21 @@ type TestTensor () =
                                                    [ 0.0000e+00,  1.3527e+00, -3.7297e+00,  1.3533e+00,  1.6894e+00,
                                                         -3.2651e-01,  2.1566e-01,  0.0000e+00]]]]).unsqueeze(0)
 
-            let t3s2 = t1.conv3d(t2, stride=2)
+            let t3s2 = dsharp.conv3d(t1, t2, stride=2)
             let t3s2Correct = combo.tensor([[[[3.1109]]]]).unsqueeze(0)
 
-            let t3s132 = t1.conv3d(t2, strides=[|1; 3; 2|])
+            let t3s132 = dsharp.conv3d(t1, t2, strides=[|1; 3; 2|])
             let t3s132Correct = combo.tensor([[[[3.1109]],
                                                   [[5.0324]]]]).unsqueeze(0)
 
-            let t3s2p1 = t1.conv3d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.conv3d(t1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[[ 2.9555, -7.1829],
                                                    [ 5.5319,  3.2099]],
 
                                                   [[-1.4721,  4.6180],
                                                    [-1.5404,  1.2862]]]]).unsqueeze(0)
 
-            let t3s231p321 = t1.conv3d(t2, strides=[2; 3; 1], paddings=[3; 2; 1])
+            let t3s231p321 = dsharp.conv3d(t1, t2, strides=[2; 3; 1], paddings=[3; 2; 1])
             let t3s231p321Correct = combo.tensor([[[[ 0.0000,  0.0000,  0.0000,  0.0000],
                                                        [ 0.0000,  0.0000,  0.0000,  0.0000]],
 
@@ -3755,7 +3755,7 @@ type TestTensor () =
             Assert.True(t3s2p1.allclose(t3s2p1Correct, 0.01, 0.01))
             Assert.True(t3s231p321.allclose(t3s231p321Correct, 0.01, 0.01))
 
-            let t3p1d2 = t1.conv3d(t2, padding=1, dilation=2)
+            let t3p1d2 = dsharp.conv3d(t1, t2, padding=1, dilation=2)
             let t3p1d2Correct = combo.tensor([[[[-0.2568,  0.7812],
                                                    [ 3.7157,  2.1968]],
 
@@ -3763,7 +3763,7 @@ type TestTensor () =
                                                    [-1.2951, -2.1536]]]]).unsqueeze(0)
             Assert.True(t3p1d2.allclose(t3p1d2Correct, 0.01, 0.01))
 
-            let t3p224d234 = t1.conv3d(t2, paddings=[2;2;4], dilations=[2;3;4])
+            let t3p224d234 = dsharp.conv3d(t1, t2, paddings=[2;2;4], dilations=[2;3;4])
             let t3p224d234Correct = 
                                    combo.tensor([[[[ 0.5110,  0.8308,  0.8378,  2.1878],
                                                    [ 0.5542,  0.8628,  0.0433,  0.7889]],
@@ -3778,7 +3778,7 @@ type TestTensor () =
                                                    [-0.8259, -1.5293,  0.9234, -0.6048]]]]).unsqueeze(0)
             Assert.True(t3p224d234.allclose(t3p224d234Correct, 0.01, 0.01))
 
-            let t3s3p6d3 = t1.conv3d(t2, stride=3, padding=6, dilation=3)
+            let t3s3p6d3 = dsharp.conv3d(t1, t2, stride=3, padding=6, dilation=3)
             let t3s3p6d3Correct = 
                                    combo.tensor([[[[-1.2082,  1.2172,  0.9059, -0.4916],
                                                    [ 2.1467, -3.7502,  5.0506,  0.3885],
@@ -5860,27 +5860,27 @@ type TestTensor () =
                                    [[-0.0849,  0.5367, -1.4039],
                                     [-0.1863,  0.8559,  0.1834]]])
 
-            let t3 = t1.convTranspose1d(t2)
+            let t3 = dsharp.convTranspose1d(t1, t2)
             let t3Correct = combo.tensor([[[-0.0135, -1.1538,  4.0443, -2.5593, -0.2493,  3.5484,  1.9425,
                                             -1.4259],
                                            [-2.6092,  3.0392,  0.1504, -3.7002, -1.8314,  1.1058, -2.9461,
                                             -1.3352]]])
 
-            let t3p1 = t1.convTranspose1d(t2, padding=1)
+            let t3p1 = dsharp.convTranspose1d(t1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[-1.1538,  4.0443, -2.5593, -0.2493,  3.5484,  1.9425],
                                               [ 3.0392,  0.1504, -3.7002, -1.8314,  1.1058, -2.9461]]])
 
-            let t3p2 = t1.convTranspose1d(t2, padding=2)
+            let t3p2 = dsharp.convTranspose1d(t1, t2, padding=2)
             let t3p2Correct = combo.tensor([[[ 4.0443, -2.5593, -0.2493,  3.5484],
                                              [ 0.1504, -3.7002, -1.8314,  1.1058]]])
 
-            let t3s2 = t1.convTranspose1d(t2, stride=2)
+            let t3s2 = dsharp.convTranspose1d(t1, t2, stride=2)
             let t3s2Correct = combo.tensor([[[-0.0135, -1.1240,  3.0214,  0.8161, -1.9989, -0.3710,  0.8596,
                                               -1.4742,  4.3680, -0.6374,  1.6282,  0.4848, -1.4259],
                                              [-2.6092,  0.3466,  3.5738, -0.1917, -1.0763, -1.2325, -2.5556,
                                                0.0154, -0.2591, -2.3758,  1.2422, -1.6693, -1.3352]]])
 
-            let t3s3 = t1.convTranspose1d(t2, stride=3)
+            let t3s3 = dsharp.convTranspose1d(t1, t2, stride=3)
             let t3s3Correct = combo.tensor([[[-0.0135, -1.1240,  3.0512, -0.0298,  0.8161, -2.1758,  0.1770,
                                               -0.3710,  0.8721, -0.0125, -1.4742,  4.0153,  0.3527, -0.6374,
                                                1.4576,  0.1705,  0.4848, -1.4259],
@@ -5888,31 +5888,31 @@ type TestTensor () =
                                               -1.2325, -0.6251, -1.9305,  0.0154,  0.9626, -1.2217, -2.3758,
                                               -1.2768,  2.5191, -1.6693, -1.3352]]])
 
-            let t3s2p1 = t1.convTranspose1d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.convTranspose1d(t1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[-1.1240,  3.0214,  0.8161, -1.9989, -0.3710,  0.8596, -1.4742,
                                                  4.3680, -0.6374,  1.6282,  0.4848],
                                                [ 0.3466,  3.5738, -0.1917, -1.0763, -1.2325, -2.5556,  0.0154,
                                                  -0.2591, -2.3758,  1.2422, -1.6693]]])
 
-            let t3s3p2 = t1.convTranspose1d(t2, stride=3, padding=2)
+            let t3s3p2 = dsharp.convTranspose1d(t1, t2, stride=3, padding=2)
             let t3s3p2Correct = combo.tensor([[[ 3.0512, -0.0298,  0.8161, -2.1758,  0.1770, -0.3710,  0.8721,
                                                   -0.0125, -1.4742,  4.0153,  0.3527, -0.6374,  1.4576,  0.1705],
                                                  [ 0.8812,  2.6926, -0.1917, -0.5372, -0.5391, -1.2325, -0.6251,
                                                    -1.9305,  0.0154,  0.9626, -1.2217, -2.3758, -1.2768,  2.5191]]])
 
-            let t3d2 = t1.convTranspose1d(t2, dilation=2)
+            let t3d2 = dsharp.convTranspose1d(t1, t2, dilation=2)
             let t3d2Correct = combo.tensor([[[-0.0135, -0.0298, -0.9470,  0.8036,  3.0329, -3.4795,  0.2347,
                                                  4.5001,  1.4576, -1.4259],
                                                [-2.6092,  2.6926, -0.1925, -2.1222, -1.5730,  1.9973, -3.0009,
                                                 -0.7067, -1.2768, -1.3352]]])
 
-            let t3p2d3 = t1.convTranspose1d(t2, padding=2, dilation=3)
+            let t3p2d3 = dsharp.convTranspose1d(t1, t2, padding=2, dilation=3)
             let t3p2d3Correct = combo.tensor([[[ 0.1770, -1.1365,  1.1688, -0.2005,  1.5770, -2.8133,  1.3570,
                                                      4.0153],
                                                    [-0.5391, -1.5840, -1.4133,  1.2866,  0.8965, -2.9130, -2.2944,
                                                      0.9626]]])
 
-            let t3s3p6d3 = t1.convTranspose1d(t2, stride=3, padding=6, dilation=3)
+            let t3s3p6d3 = dsharp.convTranspose1d(t1, t2, stride=3, padding=6, dilation=3)
             let t3s3p6d3Correct = combo.tensor([[[ 4.0443,  0.0000,  0.0000, -2.5593,  0.0000,  0.0000, -0.2493,
                                                    0.0000,  0.0000,  3.5484],
                                                  [ 0.1504,  0.0000,  0.0000, -3.7002,  0.0000,  0.0000, -1.8314,
@@ -5988,7 +5988,7 @@ type TestTensor () =
                                        [-1.4746,  0.9296,  0.3400],
                                        [ 0.1843,  1.0527,  0.3531]]]])
 
-            let t3 = t1.convTranspose2d(t2)
+            let t3 = dsharp.convTranspose2d(t1, t2)
             let t3Correct = combo.tensor([[[[ -7.2488,  -0.8234, -16.3482, -18.8535,  -6.9405,  -9.0783],
                                                [ 10.5350,  13.9143,   8.8096,  -6.3821,   4.9971,  -8.7103],
                                                [ -6.4071,  -6.7860,  18.0874,  51.6045,  28.4071,   8.8040],
@@ -6061,7 +6061,7 @@ type TestTensor () =
                                        [ 8.1575, -5.9643, -5.5036, -1.8790, -2.2454, -1.4370],
                                        [-1.7650, -5.9335,  3.4498,  0.8872, -1.0203,  3.9062]]]])
 
-            let t3p1 = t1p1.convTranspose2d(t2, padding=1)
+            let t3p1 = dsharp.convTranspose2d(t1p1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[[-2.5539e+01,  9.8793e+00,  2.3522e+00,  1.6893e+01,  1.4417e+01,
                                                  1.2602e+01],
                                                [-3.1444e+01, -3.5893e+01, -6.7083e+01,  5.7391e+00, -7.6345e+01,
@@ -6194,7 +6194,7 @@ type TestTensor () =
                                            [-1.0461e+00, -4.1427e+00,  1.4182e-01,  5.8372e+00, -3.7351e-01,
                                             -2.1219e+00, -5.3250e-01,  7.3212e-01]]]])
 
-            let t3p12 = t1p12.convTranspose2d(t2, paddings=[1;2])
+            let t3p12 = dsharp.convTranspose2d(t1p12, t2, paddings=[1;2])
             let t3p12Correct = combo.tensor([[[[-3.3253e+00,  5.4371e+00, -5.9816e+01,  3.2848e+01,  4.3607e+00,
                                                  1.6492e+00],
                                                [ 9.7679e+01,  6.7747e+00, -4.1665e+01,  2.0032e+01, -5.2838e+01,
@@ -6266,7 +6266,7 @@ type TestTensor () =
                              
                                       [[-3.0583, -7.1895],
                                        [ 9.4745,  6.8794]]]])
-            let t3s2 = t1s2.convTranspose2d(t2, stride=2)
+            let t3s2 = dsharp.convTranspose2d(t1s2, t2, stride=2)
             let t3s2Correct = combo.tensor([[[[ 11.5695,  -2.6138,  10.4181,  -0.7474,   0.3506],
                                                [  5.1947, -23.8791,  10.8908, -33.8715,   9.9235],
                                                [ 15.2073,   0.4402,  57.1628,  -4.9930,  45.5023],
@@ -6322,7 +6322,7 @@ type TestTensor () =
                                            [-2.7608,  3.7158],
                                            [ 1.1023,  0.6211],
                                            [ 0.3481, -3.1282]]]])
-            let t3s13 = t1s13.convTranspose2d(t2, strides=[1;3])
+            let t3s13 = dsharp.convTranspose2d(t1s13, t2, strides=[1;3])
             let t3s13Correct = combo.tensor([[[[  6.4277,  -8.5650, -20.7816,  -0.8889,  -3.3346,  -6.9913],
                                                [ 17.7955, -13.1661,   6.8624,   2.1615,  14.0141,   9.2549],
                                                [ 25.4467,  29.5152,  14.0191, -11.9140,  19.9407,  -5.1138],
@@ -6376,7 +6376,7 @@ type TestTensor () =
                                           [[ -7.7843,  -7.3282,   1.5546],
                                            [ -3.3539,  -1.5674,   0.0477],
                                            [  2.6323,   6.4161,   6.6779]]]])
-            let t3s2p1 = t1s2p1.convTranspose2d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.convTranspose2d(t1s2p1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[[ 4.1190e+01, -2.2363e+01,  1.7022e+00, -2.3258e+00, -2.6575e+01],
                                                    [ 1.6455e+01, -3.0412e+01, -5.9070e+00, -1.7994e+01, -7.7708e+00],
                                                    [-1.7504e+01,  9.6857e+00,  3.2733e+01, -1.1493e+01,  6.0931e+00],
@@ -6438,7 +6438,7 @@ type TestTensor () =
                                            [-3.2521, -4.7905, -0.4381],
                                            [-0.6507,  4.6023, -2.5422],
                                            [-1.2853, -0.8996,  0.0497]]]])
-            let t3s23p32 = t1s23p32.convTranspose2d(t2, strides=[2;3], paddings=[3;2])
+            let t3s23p32 = dsharp.convTranspose2d(t1s23p32, t2, strides=[2;3], paddings=[3;2])
             let t3s23p32Correct = combo.tensor([[[[ -1.8653,   0.2227,  14.6477,  -6.0192,   4.7756],
                                                    [-13.3418,  -2.7359,   5.2295, -16.5054,  14.1446],
                                                    [  6.1026,   4.8817, -24.8045,  12.7971,   0.5372],
@@ -6494,7 +6494,7 @@ type TestTensor () =
                                            [  5.0292,  12.8169,  -0.9108,  -7.8711],
                                            [  2.2663,  -4.1982,   0.8442,   5.2652],
                                            [  2.8034,  -1.7984,  -8.3519,   4.9279]]]])
-            let t3p1d2 = t1p1d2.convTranspose2d(t2, padding=1, dilation=2)
+            let t3p1d2 = dsharp.convTranspose2d(t1p1d2, t2, padding=1, dilation=2)
             let t3p1d2Correct = combo.tensor([[[[  8.4979,   8.1578,  -0.9246,  -9.1176, -10.5874,  -6.6205],
                                                    [  5.2079, -13.8357,  28.0654,  -0.8426,  -2.0303,   7.9319],
                                                    [ 18.6946,   1.6702, -26.3933,  37.9199,  30.4063,  -2.4531],
@@ -6566,7 +6566,7 @@ type TestTensor () =
                                            [ 3.0872e+00, -1.5992e+00, -7.6902e-01,  1.6764e+00],
                                            [ 4.4828e-01,  2.8493e+00,  5.6855e-01, -5.2895e+00],
                                            [ 2.8623e+00,  3.1194e+00, -3.9290e+00, -2.4554e+00]]]])
-            let t3p22d23 = t1p22d23.convTranspose2d(t2, paddings=[2;2], dilations=[2;3])
+            let t3p22d23 = dsharp.convTranspose2d(t1p22d23, t2, paddings=[2;2], dilations=[2;3])
             let t3p22d23Correct = combo.tensor([[[[ 4.6280e+00,  2.4009e+01,  9.5642e+00, -3.9685e+00,  1.6077e+01,
                                                     -1.0013e+01],
                                                    [ 1.7769e+00,  6.6014e+00,  9.8511e+00, -8.8935e+00, -5.1148e-01,
@@ -6650,7 +6650,7 @@ type TestTensor () =
                                            [-1.6423,  1.9599, -2.7169,  1.5076],
                                            [-1.4196,  1.2534, -3.9894,  3.1457],
                                            [-0.2654, -2.1439,  1.0330,  0.4360]]]])
-            let t3s3p6d3 = t1s3p6d3.convTranspose2d(t2, stride=3, padding=6, dilation=3)
+            let t3s3p6d3 = dsharp.convTranspose2d(t1s3p6d3, t2, stride=3, padding=6, dilation=3)
             let t3s3p6d3Correct = combo.tensor([[[[-38.8444,   0.0000,   0.0000,   8.3644],
                                                    [  0.0000,   0.0000,   0.0000,   0.0000],
                                                    [  0.0000,   0.0000,   0.0000,   0.0000],
@@ -6722,7 +6722,7 @@ type TestTensor () =
                                        [ 1.5946, -0.9011, -0.1317],
                                        [-0.5122, -1.3610, -0.1057]]]]).unsqueeze(0)
               
-            let t3 = t1.convTranspose3d(t2)
+            let t3 = dsharp.convTranspose3d(t1, t2)
             let t3Correct = combo.tensor([[[[-0.6776, -1.2371,  3.6305,  2.9081, -1.2242],
                                                [ 0.6655, -0.5798, -3.4461, -0.7301,  0.0174],
                                                [ 0.7937,  2.2132, -0.8753,  0.5767,  3.4039],
@@ -6784,7 +6784,7 @@ type TestTensor () =
                                                [ 2.5176, -0.5630,  2.5744, -2.3779, -0.2962],
                                                [-0.8012, -2.3222, -1.6117, -2.5178, -0.1925]]]]).unsqueeze(0)
 
-            let t3p1 = t1.convTranspose3d(t2, padding=1)
+            let t3p1 = dsharp.convTranspose3d(t1, t2, padding=1)
             let t3p1Correct = combo.tensor([[[[ 0.9441,  0.6938, -3.0770],
                                                [-0.8891, -1.5376,  2.0150],
                                                [-1.5267,  0.7838, -1.4336]],
@@ -6810,7 +6810,7 @@ type TestTensor () =
                                                [-0.9847,  2.8202, -2.1327],
                                                [ 2.2345,  2.3475, -3.3519]]]]).unsqueeze(0)
 
-            let t3p122 = t1.convTranspose3d(t2, paddings=[1; 2; 2])
+            let t3p122 = dsharp.convTranspose3d(t1, t2, paddings=[1; 2; 2])
             let t3p122Correct = combo.tensor([[[[-1.5376]],
 
                                                   [[ 4.5485]],
@@ -6824,7 +6824,7 @@ type TestTensor () =
 
                                                   [[ 2.8202]]]]).unsqueeze(0)
 
-            let t3s2 = t1.convTranspose3d(t2, stride=2)
+            let t3s2 = dsharp.convTranspose3d(t1, t2, stride=2)
             let t3s2Correct = combo.tensor([[[[-6.7761e-01,  6.2121e-01, -5.8084e-01,  1.7037e+00,  4.1528e+00,
                                                 -5.9531e-01, -1.2242e+00],
                                                [ 6.0999e-01, -1.1421e+00,  4.7885e-01, -3.1322e+00, -3.8592e+00,
@@ -7036,7 +7036,7 @@ type TestTensor () =
                                                [-8.0118e-01, -2.1289e+00, -3.5876e-01, -5.1380e-01, -9.7246e-01,
                                                 -2.4779e+00, -1.9252e-01]]]]).unsqueeze(0)
 
-            let t3s132 = t1.convTranspose3d(t2, strides=[1;3;2])
+            let t3s132 = dsharp.convTranspose3d(t1, t2, strides=[1;3;2])
             let t3s132Correct = combo.tensor([[[[-6.7761e-01,  6.2121e-01, -5.8084e-01,  1.7037e+00,  4.1528e+00,
                                                   -5.9531e-01, -1.2242e+00],
                                                  [ 6.0999e-01, -1.1421e+00,  4.7885e-01, -3.1322e+00, -3.8592e+00,
@@ -7228,7 +7228,7 @@ type TestTensor () =
                                                  [-8.0118e-01, -2.1289e+00, -3.5876e-01, -5.1380e-01, -9.7246e-01,
                                                   -2.4779e+00, -1.9252e-01]]]]).unsqueeze(0)
 
-            let t3s2p1 = t1.convTranspose3d(t2, stride=2, padding=1)
+            let t3s2p1 = dsharp.convTranspose3d(t1, t2, stride=2, padding=1)
             let t3s2p1Correct = combo.tensor([[[[ 5.1107e-01,  3.3656e+00,  1.4016e+00,  2.8882e-01, -4.8976e-01],
                                                  [-1.2520e+00, -2.9655e+00, -3.2308e+00, -4.6937e+00,  1.0909e+00],
                                                  [-4.1827e-02,  1.6104e+00,  7.9930e-01, -1.8915e-01, -4.5081e-01],
@@ -7290,7 +7290,7 @@ type TestTensor () =
                                                  [ 1.7452e+00, -1.8257e+00,  6.3668e-01,  3.7559e-01,  1.6663e+00],
                                                  [-3.1537e-01, -6.7241e-01, -7.6114e-02,  9.6129e-01, -3.6708e-01]]]]).unsqueeze(0)
 
-            let t3p1d2 = t1.convTranspose3d(t2, padding=1, dilation=2)
+            let t3p1d2 = dsharp.convTranspose3d(t1, t2, padding=1, dilation=2)
             let t3p1d2Correct = combo.tensor([[[[-1.0245e-01, -5.9647e-01,  9.3921e-02, -7.5587e-01,  1.9314e-01],
                                                  [-1.2189e+00, -1.8433e+00,  1.6070e+00, -1.1514e+00,  2.3350e+00],
                                                  [ 9.2224e-02,  9.4806e-01, -1.7268e-01,  5.7531e-01, -1.8053e-01],
