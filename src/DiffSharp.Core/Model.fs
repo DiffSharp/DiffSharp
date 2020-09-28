@@ -707,7 +707,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 
     /// <summary>TBD</summary>
     static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
-        let bce = dsharp.bceLoss(xRecon, x.view([|-1; 28*28|]), reduction="sum")
+        let bce = dsharp.bceLoss(xRecon, x.viewAs(xRecon), reduction="sum")
         let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
         bce + kl
 

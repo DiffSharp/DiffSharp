@@ -877,4 +877,22 @@ type TestModel () =
                                               [[  0.5402,   9.7216],
                                                [  0.0364,  -8.8851]]]]).unsqueeze(0)
 
-        Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))        
+        Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
+    
+    [<Test>]
+    member _.TestModelVAE () =
+        let xdim, zdim, n = 16, 4, 32
+        let m = VAE(xdim, zdim)
+        printfn "%A" m
+        let x = dsharp.rand([n; xdim])
+        
+        let lr, steps = 1e-3, 1000
+        let optimizer = Adam(m, lr=dsharp.tensor(lr))
+        for _ in 0..steps do
+            m.reverseDiff()
+            let loss = m.loss(x)
+            loss.reverse()
+            optimizer.step()
+            printfn "%A" (float loss)
+
+        Assert.True(true)
