@@ -100,6 +100,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
+let epochs = 2
 let batchSize = 32
 let validInterval = 250
 let numSamples = 32
@@ -114,8 +115,7 @@ printfn "Model: %A" model
 
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
-let epochs = 2
-for epoch = 0 to epochs do
+for epoch = 1 to epochs do
     for i, x, _ in trainLoader.epoch() do
         model.reverseDiff()
         let l = model.loss(x)
