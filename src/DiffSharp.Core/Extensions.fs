@@ -145,7 +145,6 @@ module ExtensionAutoOpens =
     /// Value of log(10).
     let log10Val = log 10.
 
-
     /// Indents all lines of the given string by the given number of spaces.
     let indentNewLines (str:String) numSpaces =
         let mutable ret = ""

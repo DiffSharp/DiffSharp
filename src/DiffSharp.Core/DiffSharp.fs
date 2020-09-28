@@ -219,6 +219,12 @@ type dsharp =
     static member clamp(a:Tensor, ?low:scalar, ?high:scalar) = a.clamp(?low=low, ?high=high)
 
     /// <summary>TBD</summary>
+    static member normalize(a:Tensor) = a.normalize()
+
+    /// <summary>TBD</summary>
+    static member standardize(a:Tensor) = a.standardize()
+
+    /// <summary>TBD</summary>
     static member diagonal(a:Tensor, ?offset:int, ?dim1:int, ?dim2:int) = a.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
 
     /// <summary>TBD</summary>
@@ -456,6 +462,18 @@ type dsharp =
 
     /// <summary>TBD</summary>
     static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
+
+    /// <summary>TBD</summary>
+    static member toImage(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) = a.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
+
+    /// <summary>TBD</summary>
+    static member toImageString(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) = a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
+
+    /// <summary>TBD</summary>
+    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) = Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
+    static member saveImage(a:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) = a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
 
     /// <summary>TBD</summary>
     static member cast(a:Tensor, dtype:Dtype) = a.cast(dtype)
