@@ -755,6 +755,14 @@ type Tensor =
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
     /// <summary>TBD</summary>
+    static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        let cols = defaultArg cols rows
+        if rows <= 0 || cols <= 0 then Tensor.create([], ?dtype=dtype, ?device=device, ?backend=backend)
+        else
+            let vals = Array2D.init rows cols (fun i j -> if i = j then 1 else 0)
+            Tensor.create(vals, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray

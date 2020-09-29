@@ -287,7 +287,11 @@ module DataConverter =
         | Some (values, shape) -> (values |> Array.map ofInt16, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<bool> with
-        | Some (values, shape) ->(values |> Array.map ofBool, shape) 
+        | Some (values, shape) -> (values |> Array.map ofBool, shape) 
+        | None -> 
+        match value with
+        | :? (obj[]) as v when Array.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
+        | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
         | _ -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
 
     let dataOfValuesForFloat32 (value:obj) =
