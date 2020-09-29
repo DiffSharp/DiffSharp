@@ -603,6 +603,10 @@ type TestTensor () =
             let tMulCorrect = t
             Assert.AreEqual(tMulCorrect, tMul)
 
+            let tSum = t.sum()
+            let tSumCorrect = tSum.zeroLike()
+            Assert.AreEqual(tSumCorrect, tSum)
+
             if combo.dtype <> Dtype.Bool then
                 let tSub = t - 2
                 let tSubCorrect = t

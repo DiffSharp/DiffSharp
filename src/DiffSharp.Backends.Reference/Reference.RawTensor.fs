@@ -753,6 +753,7 @@ module internal RawTensorCPU =
         (result, t.Shape)
 
     let inline SumT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
+        if Array.isEmpty t.Values then ([|zero< ^T >|], [||]) else // Return a zero-valued scalar tensor if summing a zero-sized tensor (not holding any value). This is mirroring the behavior in PyTorch 1.5.1.
         let result = Array.reduce (+) t.Values
         ([|result|], [||])
     
