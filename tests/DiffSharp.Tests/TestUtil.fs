@@ -79,6 +79,9 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.onehot(length, hot, ?device, ?backend, ?dtype) =
         dsharp.onehot(length, hot, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.eye(rows:int, ?cols:int, ?device, ?backend, ?dtype) =
+        dsharp.eye(rows, ?cols=cols, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.arange(endVal:float, ?startVal:float, ?step:float, ?device, ?backend, ?dtype) =
         dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 

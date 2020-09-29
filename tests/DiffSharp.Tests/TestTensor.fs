@@ -614,7 +614,6 @@ type TestTensor () =
             let tCloneCorrect = t
             Assert.AreEqual(tCloneCorrect, tClone)
 
-
         for combo in Combos.IntegralAndFloatingPoint do
             let t = combo.tensor([])
 
@@ -645,6 +644,30 @@ type TestTensor () =
             let tPowCorrect = t
             Assert.AreEqual(tPowCorrect, tPow)
 
+    [<Test>]
+    member _.TestTensorEye () =
+        for combo in Combos.All do
+            let t = combo.eye(3)
+            let tCorrect = combo.tensor([[1., 0., 0.],
+                                          [0., 1., 0.],
+                                          [0., 0., 1.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(3, 2)
+            let tCorrect = combo.tensor([[1., 0.],
+                                          [0., 1.],
+                                          [0., 0.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(2, 3)
+            let tCorrect = combo.tensor([[1., 0., 0.],
+                                          [0., 1., 0.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(2, 0)
+            let tCorrect = combo.tensor([])
+            Assert.True(tCorrect.allclose(t))
+        
     [<Test>]
     member _.TestTensorMultinomial () =
         for combo in Combos.FloatingPoint do
