@@ -482,10 +482,10 @@ type dsharp =
     static member toImageString(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) = a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
 
     /// <summary>TBD</summary>
-    static member loadImage(fileName:string, ?normalize:bool, ?resizeTo:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) = Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?resizeTo=resizeTo, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) = Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?resize=resize, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member saveImage(a:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resizeTo:int*int, ?gridCols:int) = a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?resizeTo=resizeTo, ?gridCols=gridCols)
+    static member saveImage(a:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resize:int*int, ?gridCols:int) = a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?resize=resize, ?gridCols=gridCols)
 
     /// <summary>TBD</summary>
     static member cast(a:Tensor, dtype:Dtype) = a.cast(dtype)

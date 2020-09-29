@@ -141,7 +141,7 @@ module ExtensionAutoOpens =
         with
         | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 
-    let saveImage (pixels:float32[,,]) (fileName:string) (resizeTo:option<int*int>) =
+    let saveImage (pixels:float32[,,]) (fileName:string) (resize:option<int*int>) =
         let c, h, w = pixels.GetLength(0), pixels.GetLength(1), pixels.GetLength(2)
         let image = new Image<PixelFormats.RgbaVector>(w, h)
         for y=0 to h-1 do
@@ -161,7 +161,7 @@ module ExtensionAutoOpens =
                 Formats.Png.PngEncoder() :> Formats.IImageEncoder
             else
                 failwithf "Expecting fileName (%A) to end with .png or .jpg" fileName
-        match resizeTo with
+        match resize with
             | Some(width, height) ->
                 if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
                 image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))
@@ -169,9 +169,9 @@ module ExtensionAutoOpens =
         image.Save(fs, encoder)
         fs.Close()
 
-    let loadImage (fileName:string) (resizeTo:option<int*int>) =
+    let loadImage (fileName:string) (resize:option<int*int>) =
         let image:Image<PixelFormats.RgbaVector> = Image.Load(fileName)
-        match resizeTo with
+        match resize with
             | Some(width, height) ->
                 if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
                 image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))

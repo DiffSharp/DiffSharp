@@ -685,14 +685,14 @@ type Tensor =
         sb.ToString()
 
     /// <summary>Save tensor to an image file using png or jpg format</summary>
-    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resizeTo:int*int, ?gridCols:int) =
+    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resize:int*int, ?gridCols:int) =
         let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
-        saveImage (pixels.float32().toArray() :?> float32[,,]) fileName resizeTo
+        saveImage (pixels.float32().toArray() :?> float32[,,]) fileName resize
 
     /// <summary>Load an image file and return it as a tensor</summary>
-    static member loadImage(fileName:string, ?normalize:bool, ?resizeTo:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         let normalize = defaultArg normalize false
-        let pixels = loadImage fileName resizeTo
+        let pixels = loadImage fileName resize
         let pixels:Tensor = Tensor.create(pixels, ?dtype=dtype, ?device=device, ?backend=backend)
         if normalize then pixels.normalize() else pixels
 
