@@ -561,6 +561,7 @@ type TestTensor () =
         let t4 = combo.tensor([[[[1.]]]])
         Assert.AreEqual(1.0, System.Convert.ToDouble (t4.[0,0,0,0].toScalar()))
 
+    [<Test>]
     member _.TestTensorArange () =
         for combo in Combos.All do
             let t = combo.arange(5.)
@@ -574,6 +575,25 @@ type TestTensor () =
             let t3 = combo.arange(5)
             let t3Correct = combo.tensor([0,1,2,3,4], dtype=Dtype.Int32)
             Assert.AreEqual(t3Correct, t3)
+
+    [<Test>]
+    member _.TestTensorZeroSize () =
+        for combo in Combos.All do
+          let t = combo.tensor([])
+          let tshape = t.shape
+          let tshapeCorrect = [|0|]
+          let tdtype = t.dtype
+          let tdtypeCorrect = combo.dtype
+          Assert.AreEqual(tshapeCorrect, tshape)
+          Assert.AreEqual(tdtypeCorrect, tdtype)
+
+          let t = combo.tensor([||])
+          let tshape = t.shape
+          let tshapeCorrect = [|0|]
+          let tdtype = t.dtype
+          let tdtypeCorrect = combo.dtype
+          Assert.AreEqual(tshapeCorrect, tshape)
+          Assert.AreEqual(tdtypeCorrect, tdtype)
 
     [<Test>]
     member _.TestTensorMultinomial () =
