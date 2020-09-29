@@ -595,6 +595,9 @@ type TestTensor () =
             Assert.AreEqual(tshapeCorrect, tshape)
             Assert.AreEqual(tdtypeCorrect, tdtype)
 
+        for combo in Combos.All do
+            let t = combo.tensor([])
+
             let tAdd = t + 2
             let tAddCorrect = t
             Assert.AreEqual(tAddCorrect, tAdd)
@@ -607,14 +610,40 @@ type TestTensor () =
             let tSumCorrect = tSum.zeroLike()
             Assert.AreEqual(tSumCorrect, tSum)
 
-            if combo.dtype <> Dtype.Bool then
-                let tSub = t - 2
-                let tSubCorrect = t
-                Assert.AreEqual(tSubCorrect, tSub)
+            let tClone = t.clone()
+            let tCloneCorrect = t
+            Assert.AreEqual(tCloneCorrect, tClone)
 
-                let tDiv = t / 2
-                let tDivCorrect = t
-                Assert.AreEqual(tDivCorrect, tDiv)
+
+        for combo in Combos.IntegralAndFloatingPoint do
+            let t = combo.tensor([])
+
+            let tSub = t - 2
+            let tSubCorrect = t
+            Assert.AreEqual(tSubCorrect, tSub)
+
+            let tDiv = t / 2
+            let tDivCorrect = t
+            Assert.AreEqual(tDivCorrect, tDiv)
+
+            let tNeg = -t
+            let tNegCorrect = t
+            Assert.AreEqual(tNegCorrect, tNeg)
+
+            let tAbs = dsharp.abs(t)
+            let tAbsCorrect = t
+            Assert.AreEqual(tAbsCorrect, tAbs)
+
+            let tSign = dsharp.sign(t)
+            let tSignCorrect = t
+            Assert.AreEqual(tSignCorrect, tSign)
+
+        for combo in Combos.FloatingPoint do
+            let t = combo.tensor([])
+
+            let tPow = t ** 2
+            let tPowCorrect = t
+            Assert.AreEqual(tPowCorrect, tPow)
 
     [<Test>]
     member _.TestTensorMultinomial () =
