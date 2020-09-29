@@ -8,6 +8,8 @@ open System.IO.Compression
 open System.Net
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
+open SixLabors.ImageSharp
+open SixLabors.ImageSharp.Processing
 
 /// <summary>
 ///   Contains extensions to the F# Array module. 
@@ -138,6 +140,47 @@ module ExtensionAutoOpens =
             object
         with
         | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
+
+    let saveImage (pixels:float32[,,]) (fileName:string) (resizeTo:option<int*int>) =
+        let c, h, w = pixels.GetLength(0), pixels.GetLength(1), pixels.GetLength(2)
+        let image = new Image<PixelFormats.RgbaVector>(w, h)
+        for y=0 to h-1 do
+            for x=0 to w-1 do
+                let r, g, b = 
+                    if c = 1 then
+                        let v = float32(pixels.[0, y, x])
+                        v, v, v
+                    else
+                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
+                image.Item(x, y) <- PixelFormats.RgbaVector(r, g, b)
+        let fs = new FileStream(fileName, FileMode.Create)
+        let encoder =
+            if fileName.EndsWith(".jpg") then
+                Formats.Jpeg.JpegEncoder() :> Formats.IImageEncoder
+            elif fileName.EndsWith(".png") then
+                Formats.Png.PngEncoder() :> Formats.IImageEncoder
+            else
+                failwithf "Expecting fileName (%A) to end with .png or .jpg" fileName
+        match resizeTo with
+            | Some(width, height) ->
+                if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
+                image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))
+            | None -> ()
+        image.Save(fs, encoder)
+        fs.Close()
+
+    let loadImage (fileName:string) (resizeTo:option<int*int>) =
+        let image:Image<PixelFormats.RgbaVector> = Image.Load(fileName)
+        match resizeTo with
+            | Some(width, height) ->
+                if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
+                image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))
+            | None -> ()
+        let pixels = Array3D.init 3 image.Height image.Width (fun c y x -> let p = image.Item(x, y)
+                                                                           if c = 0 then p.R
+                                                                           elif c = 1 then p.G
+                                                                           else p.B)
+        pixels
 
     /// Value of log(sqrt(2*Math.PI)).
     let logSqrt2Pi = log(sqrt(2. * Math.PI))
