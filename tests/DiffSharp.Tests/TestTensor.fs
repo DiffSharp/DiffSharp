@@ -579,21 +579,38 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorZeroSize () =
         for combo in Combos.All do
-          let t = combo.tensor([])
-          let tshape = t.shape
-          let tshapeCorrect = [|0|]
-          let tdtype = t.dtype
-          let tdtypeCorrect = combo.dtype
-          Assert.AreEqual(tshapeCorrect, tshape)
-          Assert.AreEqual(tdtypeCorrect, tdtype)
+            let t = combo.tensor([])
+            let tshape = t.shape
+            let tshapeCorrect = [|0|]
+            let tdtype = t.dtype
+            let tdtypeCorrect = combo.dtype
+            Assert.AreEqual(tshapeCorrect, tshape)
+            Assert.AreEqual(tdtypeCorrect, tdtype)
 
-          let t = combo.tensor([||])
-          let tshape = t.shape
-          let tshapeCorrect = [|0|]
-          let tdtype = t.dtype
-          let tdtypeCorrect = combo.dtype
-          Assert.AreEqual(tshapeCorrect, tshape)
-          Assert.AreEqual(tdtypeCorrect, tdtype)
+            let t = combo.tensor([||])
+            let tshape = t.shape
+            let tshapeCorrect = [|0|]
+            let tdtype = t.dtype
+            let tdtypeCorrect = combo.dtype
+            Assert.AreEqual(tshapeCorrect, tshape)
+            Assert.AreEqual(tdtypeCorrect, tdtype)
+
+            let tAdd = t + 2
+            let tAddCorrect = t
+            Assert.AreEqual(tAddCorrect, tAdd)
+
+            let tMul = t * 2
+            let tMulCorrect = t
+            Assert.AreEqual(tMulCorrect, tMul)
+
+            if combo.dtype <> Dtype.Bool then
+                let tSub = t - 2
+                let tSubCorrect = t
+                Assert.AreEqual(tSubCorrect, tSub)
+
+                let tDiv = t / 2
+                let tDivCorrect = t
+                Assert.AreEqual(tDivCorrect, tDiv)
 
     [<Test>]
     member _.TestTensorMultinomial () =

@@ -84,6 +84,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override x.ComputeHash() = hash shape + hash values
     
     override t.Expand(newShape) =
+        if newShape.Length = 1 && newShape.[0] = 0 then t.MakeLike([||], newShape) else  // Return zero-sized tensor if expanding to zero-sized tensor
         if shape = newShape then t :> _ else
         Shape.checkCanExpand shape newShape
         let trim = newShape.Length - shape.Length

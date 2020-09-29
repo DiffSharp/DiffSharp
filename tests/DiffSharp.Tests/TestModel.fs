@@ -877,4 +877,4 @@ type TestModel () =
                                               [[  0.5402,   9.7216],
                                                [  0.0364,  -8.8851]]]]).unsqueeze(0)
 
-        Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))        
+        Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
