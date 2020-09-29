@@ -579,22 +579,46 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorZeroSize () =
         for combo in Combos.All do
-          let t = combo.tensor([])
-          let tshape = t.shape
-          let tshapeCorrect = [|0|]
-          let tdtype = t.dtype
-          let tdtypeCorrect = combo.dtype
-          Assert.AreEqual(tshapeCorrect, tshape)
-          Assert.AreEqual(tdtypeCorrect, tdtype)
+            let t = combo.tensor([])
+            let tshape = t.shape
+            let tshapeCorrect = [|0|]
+            let tdtype = t.dtype
+            let tdtypeCorrect = combo.dtype
+            Assert.AreEqual(tshapeCorrect, tshape)
+            Assert.AreEqual(tdtypeCorrect, tdtype)
 
-          let t = combo.tensor([||])
-          let tshape = t.shape
-          let tshapeCorrect = [|0|]
-          let tdtype = t.dtype
-          let tdtypeCorrect = combo.dtype
-          Assert.AreEqual(tshapeCorrect, tshape)
-          Assert.AreEqual(tdtypeCorrect, tdtype)
+            let t = combo.tensor([||])
+            let tshape = t.shape
+            let tshapeCorrect = [|0|]
+            let tdtype = t.dtype
+            let tdtypeCorrect = combo.dtype
+            Assert.AreEqual(tshapeCorrect, tshape)
+            Assert.AreEqual(tdtypeCorrect, tdtype)
 
+    [<Test>]
+    member _.TestTensorEye () =
+        for combo in Combos.All do
+            let t = combo.eye(3)
+            let tCorrect = combo.tensor([[1., 0., 0.],
+                                          [0., 1., 0.],
+                                          [0., 0., 1.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(3, 2)
+            let tCorrect = combo.tensor([[1., 0.],
+                                          [0., 1.],
+                                          [0., 0.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(2, 3)
+            let tCorrect = combo.tensor([[1., 0., 0.],
+                                          [0., 1., 0.]])
+            Assert.True(tCorrect.allclose(t))
+
+            let t = combo.eye(2, 0)
+            let tCorrect = combo.tensor([])
+            Assert.True(tCorrect.allclose(t))
+        
     [<Test>]
     member _.TestTensorMultinomial () =
         for combo in Combos.FloatingPoint do
