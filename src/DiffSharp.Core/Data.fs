@@ -132,5 +132,7 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             |> dsharp.tensor
             |> dsharp.view ([n])
         | _ -> failwith "Given file is not in the MNIST format."
+    member d.classes = 10
+    member d.classNames = Array.init 10 id |> Array.map string
     override d.length = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform target.[i]

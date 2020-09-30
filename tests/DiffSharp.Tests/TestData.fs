@@ -41,6 +41,13 @@ type TestData () =
         Assert.AreEqual(xShapeCorrect, xShape)
         Assert.AreEqual(yShapeCorrect, yShape)
 
+        let classes = mnist.classes
+        let classesCorrect = 10
+        let classNames = mnist.classNames
+        let classNamesCorrect = [|"0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"|]
+        Assert.AreEqual(classesCorrect, classes)
+        Assert.AreEqual(classNamesCorrect, classNames)
+
     [<Test>]
     member _.TestTensorDataset () =
         let n, din, dout = 128, 64, 16

@@ -883,7 +883,7 @@ type TestModel () =
     member _.TestModelVAE () =
         // Fits a little VAE to structured noise
         let xdim, zdim, n = 16, 4, 32
-        let m = VAE(xdim, zdim)
+        let m = VAE(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
         let lr, steps = 1e-3, 200
