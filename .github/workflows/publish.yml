@@ -38,7 +38,7 @@ jobs:
     - name: Pack (DiffSharp-cuda-windows)
       run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-windows
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval
+      run: dotnet fsdocs build --eval --strict
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
