@@ -694,7 +694,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 
     /// <summary>TBD</summary>
     member _.encodeDecode(x:Tensor) =
-        let mu, logVar = encode (x.view([-1; xDim]))
+        let batchSize = x.shape.[0]
+        let mu, logVar = encode (x.view([batchSize; xDim]))
         let z = sampleLatent mu logVar
         decode z, mu, logVar
 

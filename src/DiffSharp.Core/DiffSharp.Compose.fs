@@ -9,6 +9,9 @@ module DiffSharp.Compose
 
 type dsharp with
     /// <summary>TBD</summary>
+    static member tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (value:obj) -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    
+    /// <summary>TBD</summary>
     static member multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (probs:Tensor) -> probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
