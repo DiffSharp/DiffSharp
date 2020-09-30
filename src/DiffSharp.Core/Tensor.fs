@@ -592,10 +592,21 @@ type Tensor =
         if d |> List.isEmpty then failwithf "Empty diagonal"
         Tensor.stack(d)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of the elements of the diagonal of the input 2-D matrix.</summary>
     member a.trace() = let d:Tensor = a.diagonal() in d.sum()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new view of the object tensor with singleton dimensions expanded to a larger size.</summary>
+    /// <remarks>
+    ///   <para>Passing -1 as the size for a dimension means not changing the size of that dimension.</para>
+    ///   <para>The tensor can be also expanded to a larger number of dimensions, and the new ones will be appended 
+    ///         at the front. For the new dimensions, the size cannot be set to -1.
+    ///   </para>
+    ///   <para>
+    ///      Expanding a tensor does not allocate new memory, but only creates a new view on the existing tensor
+    ///      where a dimension of size one is expanded to a larger size by setting the stride to 0. Any dimension
+    ///      of size 1 can be expanded to an arbitrary value without allocating new memory.
+    ///   </para>
+    /// </remarks>
     member a.expand(newShape:seq<int>) =
         let newShape = newShape|>Shape.create
         if a.shape = newShape then a 
@@ -612,7 +623,7 @@ type Tensor =
                 let cp = ap.expand(newShape)
                 TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Expand this tensor to the same size as the other.</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
 
     /// <summary>Convert tensor to an image tensor with shape Channels x Height x Width</summary>
@@ -735,7 +746,7 @@ type Tensor =
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
         | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the item at the given index as a scalar tensor.</summary>
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
             if t.dim = 0 then failwith "Cannot index a scalar Tensor"
@@ -743,7 +754,9 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// Creates a new tensor from the given data, using the given element type and configuration.
+    /// </summary>
     static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
@@ -754,7 +767,7 @@ type Tensor =
         | None ->
             Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let cols = defaultArg cols rows
         if rows <= 0 || cols <= 0 then Tensor.create([], ?dtype=dtype, ?device=device, ?backend=backend)
@@ -762,7 +775,10 @@ type Tensor =
             let vals = Array2D.init rows cols (fun i j -> if i = j then 1 else 0)
             Tensor.create(vals, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates sequence of tensors along a new dimension.</summary>
+    /// <remarks>All tensors need to be of the same shape.</remarks>
+    /// <param name="tensors">sequence of tensors to concatenate</param>
+    /// <param name="dim">dimension to insert. Has to be between 0 and the number of dimensions of concatenated tensors (inclusive)</param>
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -780,7 +796,9 @@ type Tensor =
             let cp = Tensor.stack(ap,dim=dim)
             TensorR(cp, ref (cp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Removes a tensor dimension.</summary>
+    /// <param name="dim">The dimension to remove, defaults to 0.</param>
+    /// <returns>Returns an array of all slices along a given dimension.</returns>
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
         Shape.checkCanUnstack a.shape |> ignore
@@ -789,7 +807,10 @@ type Tensor =
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates the given sequence of seq tensors in the given dimension.</summary>
+    /// <remarks>All tensors must either have the same shape (except in the concatenating dimension) or be empty.</remarks>
+    /// <param name="tensors">The tensors to concatenate.</param>
+    /// <param name="dim">The dimension over which the tensors are concatenated, defaults to 0.</param>
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -805,7 +826,9 @@ type Tensor =
             let cp = Tensor.cat(ap, dim=dim)
             TensorR(cp, ref (cp.zeroLike()), CatTs(tensors, dim), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Splits the tensor into chunks. Each chunk is a view of the original tensor.</summary>
+    /// <param name="sizes">List of sizes for each chunk</param>
+    /// <param name="dim">The dimension along which to split the tensor, defaults to 0.</param>
     member a.split (sizes: seq<int>, ?dim: int) =
         let dim = defaultArg dim 0
         let sizes = sizes |> Seq.toArray
@@ -814,7 +837,7 @@ type Tensor =
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
-    /// <summary>TBD</summary>
+    /// <summary>Pipeline the tensor into a function.</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
     static member inline internal OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
@@ -844,7 +867,8 @@ type Tensor =
         | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
-    /// <summary>TBD</summary>
+    /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (+) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -909,19 +933,21 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded + bExpanded
 
-    /// <summary>TBD</summary>
-    static member (+) (a:Tensor, b) = a + a.scalarLike(b)
+    /// <summary>Each element of the tensor <paramref name="a" /> is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (+) (a:Tensor, b: scalar) = a + a.scalarLike(b)
 
-    /// <summary>TBD</summary>
-    static member (+) (a, b:Tensor) = b.scalarLike(a) + b
+    /// <summary>The scalar <paramref name="a" /> is added to each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (+) (a: scalar, b:Tensor) = b.scalarLike(a) + b
 
-    /// <summary>TBD</summary>
+    /// <summary>Each element of the object tensor is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.add(b:Tensor) = a + b
 
-    /// <summary>TBD</summary>
-    member a.add(b) = a + a.scalarLike(b)
+    /// <summary>Each element of the object tensor is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    member a.add(b:scalar) = a + a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Subtracts each element of the tensor <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -966,19 +992,21 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded - bExpanded
 
-    /// <summary>TBD</summary>
-    static member (-) (a:Tensor, b) = a - a.scalarLike(b)
+    /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    static member (-) (a:Tensor, b:scalar) = a - a.scalarLike(b)
 
-    /// <summary>TBD</summary>
-    static member (-) (a, b:Tensor) = b.scalarLike(a) - b
+    /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
+    static member (-) (a:scalar, b:Tensor) = b.scalarLike(a) - b
 
-    /// <summary>TBD</summary>
+    /// <summary>Subtracts each element of the object tensor from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.sub(b:Tensor) = a - b
 
-    /// <summary>TBD</summary>
-    member a.sub(b) = a - a.scalarLike(b)
+    /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the object tensor. The resulting tensor is returned.</summary>
+    member a.sub(b:scalar) = a - a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -1023,19 +1051,22 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded * bExpanded
 
-    /// <summary>TBD</summary>
-    static member (*) (a:Tensor, b) = a * a.scalarLike(b)
+    /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (*) (a:Tensor, b:scalar) = a * a.scalarLike(b)
 
-    /// <summary>TBD</summary>
-    static member (*) (a, b:Tensor) = b.scalarLike(a) * b
+    /// <summary>Multiplies the scalar <paramref name="a" /> by each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (*) (a:scalar, b:Tensor) = b.scalarLike(a) * b
 
-    /// <summary>TBD</summary>
+    /// <summary>Multiplies each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.mul(b:Tensor) = a * b
 
-    /// <summary>TBD</summary>
+    /// <summary>Multiplies each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.mul(b) = a * a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Divides each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -1080,19 +1111,22 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded / bExpanded
 
-    /// <summary>TBD</summary>
-    static member (/) (a:Tensor, b) = a / a.scalarLike(b)
+    /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (/) (a:Tensor, b:scalar) = a / a.scalarLike(b)
 
-    /// <summary>TBD</summary>
-    static member (/) (a, b:Tensor) = b.scalarLike(a) / b
+    /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (/) (a:scalar, b:Tensor) = b.scalarLike(a) / b
 
-    /// <summary>TBD</summary>
+    /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.div(b:Tensor) = a / b
 
-    /// <summary>TBD</summary>
-    member a.div(b) = a / a.scalarLike(b)
+    /// <summary>Divides each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    member a.div(b:scalar) = a / a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member Pow (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -1137,28 +1171,29 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:Tensor, b:float) = a ** a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:int, b:Tensor) = b.scalarLike(a) ** b
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.pow(b:Tensor) = a ** b
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     member a.pow(b) = a ** a.scalarLike(b)
 
     /// <summary>TBD</summary>
@@ -1174,14 +1209,15 @@ type Tensor =
         let dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes the dot product (inner product) of two tensors.</summary>
+    /// <remarks>This function does not broadcast.</remarks>
     member a.dot(b:Tensor) =
         Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
         let b:Tensor = b.view([b.nelement;1])
         a.matmul(b).view([])
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the negative of the elements of <paramref name="a" />.</summary>
     static member (~-) (a:Tensor) =
         let fRaw(a:RawTensor) = a.NegT()
         let fTensor(a) = -a
@@ -1189,10 +1225,11 @@ type Tensor =
         let dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the negative of the elements of the object tensor.</summary>
     member a.neg() = -a
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of all elements in the input tensor.</summary>
+    /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(?dtype: Dtype) =
         let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
         let fTensor(a:Tensor) = a.sum(?dtype=dtype)
@@ -1200,9 +1237,13 @@ type Tensor =
         let dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
+    /// <remarks>If keepdim is <c>true</c>, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension.</remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
+       // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
        let keepDim = defaultArg keepDim false
        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
        let res =
@@ -1222,8 +1263,7 @@ type Tensor =
        let res2 = if keepDim then res.unsqueeze(dim) else res
        res2.castAfterSummation(?dtype=dtype)
 
-    /// Reduce the dimensionality via summation until we reach `newShape`. An expansion
-    /// from newShape to shape must be possible.
+    /// <summary>Sum this tensor to size <paramref name="newShape" />, which must be broadcastable to this tensor size.</summary>
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
         if oldShape = newShape then
@@ -1243,10 +1283,13 @@ type Tensor =
                     result <- result.sum(dim, keepDim=true)
             result.castAfterSummation(?dtype=dtype)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the mean value of all elements in the input tensor</summary>
     member a.mean() = a.sum() / a.nelement
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the mean value of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension.</remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     member a.mean(dim:int, ?keepDim:bool) = 
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         if dim = 0 && a.dim = 0 then a
@@ -1255,16 +1298,24 @@ type Tensor =
            let dv = sm / a.shape.[dim]
            dv
 
-    /// <summary>TBD</summary>
-    // This is the two-pass algorithm better than the naive algorithm
+    /// <summary>Returns the variance of all elements in the input tensor.</summary>
+    /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
+    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
     member a.variance(?unbiased:bool) = 
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
         let a' = a - a.mean() in (a' * a').sum() / n
 
-    /// <summary>TBD</summary>
-    // TODO: this is the naive algorithm, can be improved for better numerical stability
+    /// <summary>Returns the variance of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>
+    ///   <para>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension(s).</para>
+    ///   <para>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</para>
+    /// </remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
+         // TODO: this is the naive algorithm, can be improved for better numerical stability
         let keepDim = defaultArg keepDim false
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
@@ -1285,10 +1336,19 @@ type Tensor =
         let res = (sSquare - (s * s) / n) / nn
         if keepDim then res.unsqueeze(dim) else res
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>
+    ///   <para>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension(s).</para>
+    ///   <para>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</para>
+    /// </remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
     member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
+    /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
+    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
     member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>TBD</summary>
@@ -1476,7 +1536,14 @@ type Tensor =
         let dfTensorRev(a) = ViewT(a, a.shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the same data as the object tensor but of a different shape.</summary>
+    /// <remarks>
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="shape">the desired shape</param>
     member t.view(shape:int) = t.view([|shape|])
 
     /// <summary>TBD</summary>
