@@ -84,6 +84,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: int[], dtype: Dtyp
     override x.ComputeHash() = hash shape + hash values
     
     override t.Expand(newShape) =
+        if newShape.Length = 1 && newShape.[0] = 0 then t.MakeLike([||], newShape) else  // Return zero-sized tensor if expanding to zero-sized tensor
         if shape = newShape then t :> _ else
         Shape.checkCanExpand shape newShape
         let trim = newShape.Length - shape.Length
@@ -752,6 +753,7 @@ module internal RawTensorCPU =
         (result, t.Shape)
 
     let inline SumT(t: RawTensorCPU< ^T >) : (^T[] * int[]) =
+        if Array.isEmpty t.Values then ([|zero< ^T >|], [||]) else // Return a zero-valued scalar tensor if summing a zero-sized tensor (not holding any value). This is mirroring the behavior in PyTorch 1.5.1.
         let result = Array.reduce (+) t.Values
         ([|result|], [||])
     
