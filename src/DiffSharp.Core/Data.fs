@@ -17,6 +17,7 @@ type Dataset() =
         with get(i:int) =
             t.item(i)
 
+
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
     let batchSize = min batchSize dataset.length
@@ -34,11 +35,34 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, 
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
 
+
 type TensorDataset(data:Tensor, target:Tensor) =
     inherit Dataset()
     do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
     override d.length = data.shape.[0]
     override d.item(i) = data.[i], target.[i]
+
+
+type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int) =
+    inherit Dataset()
+    let fileExtension = defaultArg fileExtension "png"
+    let subdirs = Directory.GetDirectories(path) |> Array.sort
+    let filesInSubdirs = [|for subdir in subdirs do
+                            let files = Directory.GetFiles(subdir, "*."+fileExtension)
+                            if files.Length > 0 then files|]
+    let _classes = filesInSubdirs.Length
+    let data = [|for i in 0.._classes-1 do
+                    let files = filesInSubdirs.[i]
+                    yield! Array.map (fun file -> file, i) files|]
+    do print data
+    let _classNames = Array.map (fun (f:string[]) -> DirectoryInfo(f.[0]).Parent.Name) filesInSubdirs
+    member d.classes = _classes
+    member d.classNames = _classNames
+    override d.length = data.Length
+    override d.item(i) =
+        let fileName, category = data.[i]
+        dsharp.loadImage(fileName, ?resize=resize), dsharp.tensor(category)
+
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()

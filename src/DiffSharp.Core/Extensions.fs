@@ -141,6 +141,7 @@ module ExtensionAutoOpens =
         with
         | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
 
+    /// Saves the given pixel array to a file and optionally resizes it in the process. Resizing uses bicubic interpolation. Supports .png and .jpg formats.
     let saveImage (pixels:float32[,,]) (fileName:string) (resize:option<int*int>) =
         let c, h, w = pixels.GetLength(0), pixels.GetLength(1), pixels.GetLength(2)
         let image = new Image<PixelFormats.RgbaVector>(w, h)
@@ -169,6 +170,7 @@ module ExtensionAutoOpens =
         image.Save(fs, encoder)
         fs.Close()
 
+    /// Loads a pixel array from a file and optionally resizes it in the process. Resizing uses bicubic interpolation.
     let loadImage (fileName:string) (resize:option<int*int>) =
         let image:Image<PixelFormats.RgbaVector> = Image.Load(fileName)
         match resize with
