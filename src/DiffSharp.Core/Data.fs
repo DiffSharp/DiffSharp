@@ -73,13 +73,28 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
     let targetTransform = defaultArg targetTransform id
     let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
     let file = Path.Combine(path, Path.GetFileName(url))
-    do
+
+    let loadCIFAR10 fileName =
+            let br = new BinaryReader(File.OpenRead(fileName))
+            [|for _ in 1..10000 do
+                let label = br.ReadBytes(1) |> dsharp.tensor
+                let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32])
+                image/255, label
+            |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
+
+    let data, target =
         Directory.CreateDirectory(path) |> ignore
         if not (File.Exists(file)) then download url file
-        if not (Directory.Exists(Path.Combine(path, "cifar-10-batches-bin"))) then extractTarGz file path
+        let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
+        if not (Directory.Exists(pathExtracted)) then extractTarGz file path
+        let files = [|"data_batch_1.bin"; "data_batch_2.bin"; "data_batch_3.bin"; "data_batch_4.bin"; "data_batch_5.bin"; "test_batch.bin"|] |> Array.map (fun f -> Path.Combine(pathExtracted, f))
+        if train then
+            failwithf "Not implemented"
+        else
+            loadCIFAR10 files.[5]
 
-    override d.item(_) = failwithf "Not implemented"
-    override d.length = failwithf "Not implemented"
+    override d.length = data.shape.[0]
+    override d.item(i) = transform data.[i], targetTransform target.[i]
 
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
@@ -94,19 +109,9 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
                     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
-    let data, target = 
-        Directory.CreateDirectory(path) |> ignore
-        if train then
-            if not (File.Exists(files.[0])) then download urls.[0] files.[0]
-            if not (File.Exists(files.[1])) then download urls.[1] files.[1]
-            MNIST.LoadMNISTImages(files.[0]), MNIST.LoadMNISTLabels(files.[1])
-        else
-            if not (File.Exists(files.[2])) then download urls.[2] files.[2]
-            if not (File.Exists(files.[3])) then download urls.[3] files.[3]
-            MNIST.LoadMNISTImages(files.[2]), MNIST.LoadMNISTLabels(files.[3])
 
-    static member internal LoadMNISTImages(filename, ?n:int) =
-        let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
+    let loadMNISTImages(filename:string) (n:option<int>) =
+        let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2051 -> // Images
@@ -120,8 +125,8 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             |> dsharp.view ([n; 1; 28; 28])
             |> fun t -> t / 255
         | _ -> failwith "Given file is not in the MNIST format."
-    static member internal LoadMNISTLabels(filename, ?n:int) =
-        let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
+    let loadMNISTLabels(filename:string) (n:option<int>) =
+        let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2049 -> // Labels
@@ -132,6 +137,18 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             |> dsharp.tensor
             |> dsharp.view ([n])
         | _ -> failwith "Given file is not in the MNIST format."
+
+    let data, target = 
+        Directory.CreateDirectory(path) |> ignore
+        if train then
+            if not (File.Exists(files.[0])) then download urls.[0] files.[0]
+            if not (File.Exists(files.[1])) then download urls.[1] files.[1]
+            loadMNISTImages files.[0] None, loadMNISTLabels files.[1] None
+        else
+            if not (File.Exists(files.[2])) then download urls.[2] files.[2]
+            if not (File.Exists(files.[3])) then download urls.[3] files.[3]
+            loadMNISTImages files.[2] None, loadMNISTLabels files.[3] None
+
     member d.classes = 10
     member d.classNames = Array.init 10 id |> Array.map string
     override d.length = data.shape.[0]
