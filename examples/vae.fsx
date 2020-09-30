@@ -1,3 +1,5 @@
+#!/usr/bin/env -S dotnet fsi
+
 (*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
 #r "DiffSharp.Core.dll"
