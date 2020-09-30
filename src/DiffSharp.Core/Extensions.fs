@@ -5,6 +5,7 @@ open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open System.IO
 open System.IO.Compression
+open System.Text
 open System.Net
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
@@ -183,6 +184,50 @@ module ExtensionAutoOpens =
                                                                            elif c = 1 then p.G
                                                                            else p.B)
         pixels
+
+    let extractTarStream (stream:Stream) (outputDir:string) =
+        let buffer:byte[] = Array.zeroCreate 100
+        let mutable stop = false
+        while not stop do
+            stream.Read(buffer, 0, 100) |> ignore
+            let name = Encoding.ASCII.GetString(buffer).Trim(Convert.ToChar(0)).Trim()
+            if String.IsNullOrWhiteSpace(name) then stop <- true
+            if not stop then
+                stream.Seek(24L, SeekOrigin.Current) |> ignore
+                stream.Read(buffer, 0, 12) |> ignore
+                let size = Convert.ToInt32(Encoding.ASCII.GetString(buffer, 0, 12).Trim(Convert.ToChar(0)).Trim(), 8)
+                printfn "Extracting %A (%A Bytes)" name size
+                stream.Seek(376L, SeekOrigin.Current) |> ignore
+                let output = Path.Combine(outputDir, name)
+                if not (Directory.Exists(Path.GetDirectoryName(output))) then
+                    Directory.CreateDirectory(Path.GetDirectoryName(output)) |> ignore
+                if size > 0 then
+                    let str = File.Open(output, FileMode.OpenOrCreate, FileAccess.Write)
+                    let buf:byte[] = Array.zeroCreate size
+                    stream.Read(buf, 0, buf.Length) |> ignore
+                    str.Write(buf, 0, buf.Length)
+                    str.Close()
+                let pos = stream.Position
+                let mutable offset = 512L - (pos % 512L)
+                if offset = 512L then
+                    offset <- 0L
+                stream.Seek(offset, SeekOrigin.Current) |> ignore
+
+    let extractTarGz (fileName:string) (outputDir:string) =
+        let fs = File.OpenRead(fileName)
+        let gz = new GZipStream(fs, CompressionMode.Decompress)
+        let chunk = 4096
+        let memstr = new MemoryStream()
+        let mutable read = chunk
+        let buffer:byte[] = Array.zeroCreate chunk
+        while read = chunk do
+            read <- gz.Read(buffer, 0, chunk)
+            memstr.Write(buffer, 0, read)
+        gz.Close()
+        fs.Close()
+        memstr.Seek(0L, SeekOrigin.Begin) |> ignore
+        extractTarStream memstr outputDir
+        memstr.Close()
 
     /// Value of log(sqrt(2*Math.PI)).
     let logSqrt2Pi = log(sqrt(2. * Math.PI))

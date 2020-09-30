@@ -65,6 +65,23 @@ type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transfor
         transform (dsharp.loadImage(fileName, ?resize=resize)), targetTransform (dsharp.tensor(category))
 
 
+type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+    inherit Dataset()
+    let path = Path.Combine(path, "cifar10") |> Path.GetFullPath
+    let train = defaultArg train true
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
+    let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
+    let file = Path.Combine(path, Path.GetFileName(url))
+    do
+        Directory.CreateDirectory(path) |> ignore
+        if not (File.Exists(file)) then download url file
+        if not (Directory.Exists(Path.Combine(path, "cifar-10-batches-bin"))) then extractTarGz file path
+
+    override d.item(_) = failwithf "Not implemented"
+    override d.length = failwithf "Not implemented"
+
+
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath
