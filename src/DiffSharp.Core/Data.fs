@@ -43,9 +43,11 @@ type TensorDataset(data:Tensor, target:Tensor) =
     override d.item(i) = data.[i], target.[i]
 
 
-type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int) =
+type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let fileExtension = defaultArg fileExtension "png"
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
     let subdirs = Directory.GetDirectories(path) |> Array.sort
     let filesInSubdirs = [|for subdir in subdirs do
                             let files = Directory.GetFiles(subdir, "*."+fileExtension)
@@ -60,7 +62,7 @@ type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int) =
     override d.length = data.Length
     override d.item(i) =
         let fileName, category = data.[i]
-        dsharp.loadImage(fileName, ?resize=resize), dsharp.tensor(category)
+        transform (dsharp.loadImage(fileName, ?resize=resize)), targetTransform (dsharp.tensor(category))
 
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
