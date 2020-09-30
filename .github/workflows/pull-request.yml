@@ -27,4 +27,4 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval --strict
+      run: dotnet fsdocs build --eval --strict --property Configuration=Release
