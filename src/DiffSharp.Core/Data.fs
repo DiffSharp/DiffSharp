@@ -54,7 +54,6 @@ type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int) =
     let data = [|for i in 0.._classes-1 do
                     let files = filesInSubdirs.[i]
                     yield! Array.map (fun file -> file, i) files|]
-    do print data
     let _classNames = Array.map (fun (f:string[]) -> DirectoryInfo(f.[0]).Parent.Name) filesInSubdirs
     member d.classes = _classes
     member d.classNames = _classNames
