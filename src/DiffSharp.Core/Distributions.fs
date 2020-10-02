@@ -37,10 +37,10 @@ type TensorDistribution() =
     member d.sample(numSamples:int) = Array.init numSamples (fun _ -> d.sample()) |> dsharp.stack
 
     /// <summary>TBD</summary>
-    abstract member batchShape: int[]
+    abstract member batchShape: Shape
 
     /// <summary>TBD</summary>
-    abstract member eventShape: int[]
+    abstract member eventShape: Shape
 
     /// <summary>TBD</summary>
     abstract member mean: Tensor

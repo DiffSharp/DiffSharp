@@ -46,6 +46,10 @@ module rec Shape =
                     yield len|]
         outputShape
 
+    /// Computes the shape that results from a dilation operation.
+    let dilated (shape: Shape) (dilations: int[]) =
+        Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
+
     /// Checks if the given shapes are appropriate for a concatenation operation and returns information related to the resulting shape.
     let checkCanCat (shapes: Shape[]) (dim: int) =
         let n = shapes.Length
@@ -203,7 +207,7 @@ module rec Shape =
         let filtersChannels = shape2.[0]
         let kernelLength = shape2.[2]
         let kernelShape = [|kernelLength|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape [|dilation|]
+        let kernelShapeAfterDilation = dilated kernelShape [|dilation|]
         let kernelLength = kernelShapeAfterDilation.[0]
         if filtersChannels <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels filtersChannels
         let outputSize = stride * (inputLength - 1) + kernelLength - 2 * padding + outputPadding
@@ -233,7 +237,7 @@ module rec Shape =
         let kernelHeight = shape2.[2]
         let kernelWidth = shape2.[3]
         let kernelShape = [|kernelHeight; kernelWidth|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape dilations
+        let kernelShapeAfterDilation = dilated kernelShape dilations
         let kernelHeight = kernelShapeAfterDilation.[0]
         let kernelWidth = kernelShapeAfterDilation.[1]
         if filtersChannels <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels filtersChannels
@@ -267,7 +271,7 @@ module rec Shape =
         let kernelHeight = shape2.[3]
         let kernelWidth = shape2.[4]
         let kernelShape = [|kernelDepth; kernelHeight; kernelWidth|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape dilations
+        let kernelShapeAfterDilation = dilated kernelShape dilations
         let kernelDepth = kernelShapeAfterDilation.[0]
         let kernelHeight = kernelShapeAfterDilation.[1]
         let kernelWidth = kernelShapeAfterDilation.[2]
@@ -534,10 +538,6 @@ module rec Shape =
 
     /// Finds the shape into which all the shapes can be expanded.
     let broadcastShapes (shapes: Shape[]) = Array.reduce broadcast2 shapes
-
-    /// Computes the shape that results from a dilation operation.
-    let dilated (shape: Shape) (dilations: int[]) =
-        Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
 
     // /// Computes the shape that results from a pairwise dilation operation.
     // let dilated2 (shape: Shape) (dilations: int[]) =
