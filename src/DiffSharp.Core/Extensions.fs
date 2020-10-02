@@ -187,7 +187,7 @@ module ExtensionAutoOpens =
         Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
 
     /// Initializes an array with a given shape and initializer function.
-    let arrayND (shape: Shape) f =
+    let arrayND (shape: int[]) f =
         match shape with 
         | [| |] -> f [| |] |> box
         | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
