@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <DIFFSHARP_TESTGPU>true</DIFFSHARP_TESTGPU>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="2.8.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nunit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../DiffSharp.Tests/TestUtil.fs" />
+    <Compile Include="../DiffSharp.Tests/TestTensor.fs" />
+    <Compile Include="../DiffSharp.Tests/TestDiffSharp.fs" />
+    <Compile Include="../DiffSharp.Tests/TestDerivatives.fs" />
+    <Compile Include="../DiffSharp.Tests/TestDistributions.fs" />
+    <Compile Include="../DiffSharp.Tests/TestData.fs" />
+    <Compile Include="../DiffSharp.Tests/TestModel.fs" />
+    <Compile Include="../DiffSharp.Tests/TestOptim.fs" />
+    <Compile Include="../DiffSharp.Tests/Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiffSharp.Backends.TestDuplicate\DiffSharp.Backends.TestDuplicate.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+  </ItemGroup>
+
+  <!-- Choose the appropriate version of libtorch for our current OS and environment -->
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
+    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
+    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+</Project>

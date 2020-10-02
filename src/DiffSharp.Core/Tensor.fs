@@ -5542,4 +5542,5 @@ type Tensor with
         t.GetSlice(bounds)
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
+[<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests.Gpu")>]
 do()

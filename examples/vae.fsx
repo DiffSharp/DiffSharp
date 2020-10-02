@@ -1,5 +1,8 @@
+#targetfx "netcore"
+#time;;
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
+#I "../tests/DiffSharp.Tests.Gpu/bin/Release/netcoreapp3.0"
+#r "TorchSharp.dll"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
@@ -28,6 +31,12 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
+System.Runtime.InteropServices.NativeLibrary.Load(@"E:\GitHub\dsyme\DiffSharp\tests\DiffSharp.Tests.Gpu\bin\Release\netcoreapp3.0\runtimes\win-x64\native\torch_cuda.dll")
+System.Runtime.InteropServices.NativeLibrary.Load(@"E:\GitHub\dsyme\DiffSharp\tests\DiffSharp.Tests.Gpu\bin\Release\netcoreapp3.0\runtimes\win-x64\native\nvrtc-builtins64_102.dll")
+System.Runtime.InteropServices.NativeLibrary.Load(@"E:\GitHub\dsyme\DiffSharp\tests\DiffSharp.Tests.Gpu\bin\Release\netcoreapp3.0\runtimes\win-x64\native\caffe2_nvrtc.dll")
+System.Runtime.InteropServices.NativeLibrary.Load(@"E:\GitHub\dsyme\DiffSharp\tests\DiffSharp.Tests.Gpu\bin\Release\netcoreapp3.0\runtimes\win-x64\native\nvrtc64_102_0.dll")
+TorchSharp.Torch.IsCudaAvailable()
+
 open System
 open DiffSharp
 open DiffSharp.Model
@@ -35,6 +44,7 @@ open DiffSharp.Optim
 open DiffSharp.Data
 
 
+/// VAE(28*28, 16, [512; 256])
 type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
     inherit Model()
     let hDims = defaultArg hDims (let d = (xDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
@@ -95,28 +105,65 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
         dsharp.randn([|numSamples; zDim|]) |> decode
 
 
-dsharp.config(backend=Backend.Torch, device=Device.CPU)
+TorchSharp.Torch.IsCudaAvailable()
+dsharp.config(backend=Backend.Torch, device=Device.GPU)
 dsharp.seed(0)
-
+dsharp.tensor([1..10])
 let trainSet = MNIST("./mnist", train=true, transform=id)
-let trainLoader = trainSet.loader(batchSize=32, shuffle=true)
+let trainLoader = trainSet.loader(batchSize=2048, shuffle=true)
 
 let model = VAE(28*28, 16, [512; 256])
 printfn "%A" model
-
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
-let epochs = 2
+let epochs = 0
 for epoch = 0 to epochs do
+    let t = Diagnostics.Stopwatch()
+    t.Start()
+    let mutable tlast = t.Elapsed
     for i, x, _ in trainLoader.epoch() do
+        printfn "trainLoader.epoch(): %A" (t.Elapsed - tlast)
+        tlast <- t.Elapsed
         model.reverseDiff()
+        printfn "reverseDiff(): %A" (t.Elapsed - tlast)
+        tlast <- t.Elapsed
         let l = model.loss(x)
+        printfn "model.loss(): %A" (t.Elapsed - tlast)
+        tlast <- t.Elapsed
         l.reverse()
+        printfn "l.reverse(): %A" (t.Elapsed - tlast)
+        tlast <- t.Elapsed
         optimizer.step()
-        printfn "epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
+        printfn "optimizer.step: %A" (t.Elapsed - tlast)
+        tlast <- t.Elapsed
+        printfn "epoch: %A/%A minibatch: %A/%A loss: %A time: %A" epoch epochs i trainLoader.length (float(l)) t.Elapsed
 
-        if i % 250 = 0 then
+        if i % 250 = 0 && i <> 0 then
             printfn "Saving samples"
             let samples = model.sample(64).view([-1; 1; 28; 28])
-            samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
+            samples.move(Device.CPU).saveImage(sprintf "samples_%A_%A.png" epoch i)
+            printfn "Done saving samples"
+
+(*
+
+CPU: 
+
+    typical trainLoader.epoch(): 00:00:00.3543867
+    typical optimizer.step     : 00:00:00.0350334
+    Real: 00:00:25.789, CPU: 00:01:41.250, GC gen0: 27, gen1: 12, gen2: 1
+
+GPU with data loading mod: 
+
+    typical trainLoader.epoch(): 00:00:00.2713589
+    optimizer.step: 00:00:00.0743182
+    Real: 00:00:19.201, CPU: 00:00:22.203, GC gen0: 27, gen1: 11, gen2: 1
+
+GPU without data loading mod: 
+
+    typical trainLoader.epoch(): 00:00:05.1245604
+    optimizer.step: 00:00:00.0843537
+    Real: 00:02:36.755, CPU: 00:02:37.109, GC gen0: 30, gen1: 13, gen2: 1
+
+
+*)
 
