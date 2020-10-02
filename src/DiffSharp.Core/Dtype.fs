@@ -23,7 +23,6 @@ type DeviceType =
     | MSNPU = 8 // MSNPU
     | XLA = 9 // XLA / TPU
 
-
 /// Represents a device specification.
 [<Struct>]
 type Device =
@@ -109,18 +108,6 @@ type Dtype =
     | Int64
     /// Store elements as booleans
     | Bool
-
-    member internal x.Code =
-        match x with
-        //| Float16 -> 0x10000
-        | Float32 -> 0x20000
-        | Float64 -> 0x30000
-        | Int8 -> 0x40000
-        | Byte -> 0x50000
-        | Int16 -> 0x60000
-        | Int32 -> 0x70000
-        | Int64 -> 0x80000
-        | Bool -> 0x90000
 
     member internal x.Name =
         match x with

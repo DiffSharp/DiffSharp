@@ -306,7 +306,7 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
             s.[i] <- int64 outputShape.[i]
             let resnew = t.ZerosLike(fromTorchShape s)
             let indices = Array.init t.Shape.[i] id |> Array.map ((*) dilations.[i] >> int64)
-            let mutable d = TorchInt64Statics().CreateFromFlatArray(indices, shape=[|t.Shape.[i]|], device=t.Device)
+            let mutable d = TorchInt64TensorOps().CreateFromFlatArray(indices, shape=[|t.Shape.[i]|], device=t.Device)
             for _=0 to i-1 do
                 d <- d.UnsqueezeT(0)
             for _=i+1 to dims-1 do
@@ -812,8 +812,9 @@ type TorchRawTensor(tt: TorchTensor, shape: int[], dtype: Dtype, device: Device)
             info.AddValue("shape", t.Shape)
             info.AddValue("data", tCpu.ToRawData())
 
-/// The concrete implementation of BackendStatics for Float32 data.
-type TorchStatics<'T, 'T2>
+/// The parameterized implementation of the static ops. Use a generic class to
+/// make sure we get the correlation with .NET types correct and systematic
+type TorchTensorOps<'T, 'T2>
        (dtype: Dtype, conv: 'T -> 'T2,
         fromScalar: 'T2 -> TorchTensor,
         from: 'T2[] * TorchShape -> TorchTensor,
@@ -828,9 +829,160 @@ type TorchStatics<'T, 'T2>
         valueFromObj: obj -> 'T,
         scalarFromConvValue: 'T2 -> TorchScalar) = 
 
-      
+    member _.Zero(device) = TorchRawTensor(torchMoveTo (fromScalar (conv zero)) device, Shape.scalar, dtype, device) :> RawTensor 
+    member _.One(device) = TorchRawTensor(torchMoveTo (fromScalar (conv one)) device, Shape.scalar, dtype, device) :> RawTensor
+    member _.Empty(shape:int[], device) = TorchRawTensor(empty(toTorchShape shape, device), shape, dtype, device) :> RawTensor
+    member _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, device), shape, dtype, device) :> RawTensor
+    member _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, device), shape, dtype, device) :> RawTensor
+    member _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, device), shape, dtype, device) :> RawTensor
+    member _.RandomNormal(shape:int[], device) = TorchRawTensor(randomN(toTorchShape shape, device), shape, dtype, device) :> RawTensor
+    member _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, device), shape, dtype, device) :> RawTensor
+
+    member _.Full(shape:int[], value:obj, device) =
+        let t = zeros(toTorchShape shape, device)
+        t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
+        TorchRawTensor(t, shape, dtype, device) :> RawTensor
+
+    member _.CreateFromFlatArray(values:Array, shape:int[], device:Device) : RawTensor =
+        let values = values :?> 'T[] |> Array.map conv 
+        let t = 
+            match shape with 
+            | [| |] -> fromScalar(values.[0])
+            | _ -> from (values, toTorchShape shape)
+        let tt = torchMoveTo t device
+        TorchRawTensor(tt, shape, dtype, device) :> RawTensor
+
+type TorchFloat32TensorOps() = 
+
+    inherit TorchTensorOps<single, single>(Dtype.Float32, id, 
+        (fun v -> FloatTensor.From(v)), 
+        (fun (data, shape) -> FloatTensor.From(data, shape)), 
+        0.0f, 1.0f, 
+        (fun (shape, device) -> FloatTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> FloatTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> FloatTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> FloatTensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> FloatTensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, low, high, device) -> FloatTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((float low).ToScalar())), 
+        System.Convert.ToSingle, 
+        TorchScalar.op_Implicit)
+
+type TorchFloat64TensorOps() = 
+
+    inherit TorchTensorOps<double, double>(Dtype.Float64, id, 
+        (fun v -> DoubleTensor.From(v)), 
+        (fun (data, shape) -> DoubleTensor.From(data, shape)), 
+        0.0, 1.0, 
+        (fun (shape, device) -> DoubleTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> DoubleTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> DoubleTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> DoubleTensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> DoubleTensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, low, high, device) -> DoubleTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((double low).ToScalar())), 
+        System.Convert.ToDouble, 
+        TorchScalar.op_Implicit)
+
+type TorchInt8TensorOps() = 
+
+    inherit TorchTensorOps<sbyte, sbyte>(Dtype.Int8, sbyte,
+        (fun v -> SByteTensor.From(v)), 
+        (fun (data, shape) -> SByteTensor.From(data, shape)), 
+        0y, 1y,
+        (fun (shape, device) -> SByteTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> SByteTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> SByteTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Int8), 
+        (fun _ -> opNotSupported "RandomNormal" Dtype.Int8), 
+        (fun (shape, low, high, device) -> SByteTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((sbyte low).ToScalar())), 
+        System.Convert.ToSByte, 
+        TorchScalar.op_Implicit)
+
+type TorchInt16TensorOps() = 
+
+    inherit TorchTensorOps<int16, int16>(Dtype.Int16, int16, 
+        (fun v -> ShortTensor.From(v)), 
+        (fun (data, shape) -> ShortTensor.From(data, shape)), 
+        0s, 1s,
+        (fun (shape, device) -> ShortTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> ShortTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> ShortTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Int16), 
+        (fun _ -> opNotSupported "RandomNormal" Dtype.Int16), 
+        (fun (shape, low, high, device) -> ShortTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int16 low).ToScalar())), 
+        System.Convert.ToInt16, 
+        TorchScalar.op_Implicit)
+
+type TorchInt32TensorOps() = 
+
+    inherit TorchTensorOps<int32, int32>(Dtype.Int32, int32, 
+        (fun v -> IntTensor.From(v)), 
+        IntTensor.From, 
+        0, 1,
+        (fun (shape, device) -> IntTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> IntTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> IntTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Int32), 
+        (fun _ -> opNotSupported "RandomNormal" Dtype.Int32), 
+        (fun (shape, low, high, device) -> IntTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int32 low).ToScalar())), 
+        System.Convert.ToInt32, 
+        TorchScalar.op_Implicit)
+
+type TorchInt64TensorOps() = 
+
+    inherit TorchTensorOps<int64, int64>(Dtype.Int64, int64, 
+        (fun v -> LongTensor.From(v)), 
+        (fun (data, shape) -> LongTensor.From(data, shape)), 
+        0L, 1L,
+        (fun (shape, device) -> LongTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> LongTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> LongTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Int64), 
+        (fun _ -> opNotSupported "RandomNormal" Dtype.Int64), 
+        (fun (shape, low, high, device) -> LongTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int64 low).ToScalar())), 
+        System.Convert.ToInt64, 
+        TorchScalar.op_Implicit)
+
+type TorchBoolTensorOps() = 
+
+    inherit TorchTensorOps<bool, bool>(Dtype.Bool, id, 
+        (fun v -> BoolTensor.From(v)), 
+        (fun (data, shape) -> BoolTensor.From(data, shape)), 
+        false, true,
+        (fun (shape, device) -> BoolTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BoolTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BoolTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Bool), 
+        (fun _ -> opNotSupported "RandomNormal"  Dtype.Bool), 
+        (fun (shape, low, high, device) -> BoolTensor.RandomIntegers(min 2L (int64 (high-low)), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((low > 0).ToScalar())), 
+        System.Convert.ToBoolean, 
+        TorchScalar.op_Implicit)
+
+type TorchByteTensorOps() = 
+
+    inherit TorchTensorOps<byte, byte>(Dtype.Byte, id, 
+        (fun v -> ByteTensor.From(v)), 
+        (fun (data, shape) -> ByteTensor.From(data, shape)), 
+        0uy, 1uy,
+        (fun (shape, device) -> ByteTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> ByteTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> ByteTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun _ -> opNotSupported "Random" Dtype.Byte), 
+        (fun _ -> opNotSupported "RandomNormal"  Dtype.Byte), 
+        (fun (shape, low, high, device) -> ByteTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((byte low).ToScalar())), 
+        System.Convert.ToByte, 
+        TorchScalar.op_Implicit)
+
+type TorchBackendStatics() =
     inherit BackendStatics()
 
+    let torchFloat32 = TorchFloat32TensorOps()
+    let torchFloat64 = TorchFloat64TensorOps()
+    let torchInt8 = TorchInt8TensorOps()
+    let torchInt16 = TorchInt16TensorOps()
+    let torchInt32 = TorchInt32TensorOps()
+    let torchInt64 = TorchInt64TensorOps()
+    let torchByte = TorchByteTensorOps()
+    let torchBool = TorchBoolTensorOps()
     let supported = Array.zeroCreate<int> 32
     let isSupported (deviceType: DiffSharp.DeviceType) = 
         let n = int deviceType
@@ -845,30 +997,6 @@ type TorchStatics<'T, 'T2>
                 false
         | 1 -> true
         | _ -> false
-
-    override _.Seed(seed) = Torch.SetSeed(int64 seed) // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch. However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
-    override _.Zero(device) = TorchRawTensor(torchMoveTo (fromScalar (conv zero)) device, Shape.scalar, dtype, device) :> _ 
-    override _.One(device) = TorchRawTensor(torchMoveTo (fromScalar (conv one)) device, Shape.scalar, dtype, device) :> _
-    override _.Empty(shape:int[], device) = TorchRawTensor(empty(toTorchShape shape, device), shape, dtype, device) :> _
-    override _.Zeros(shape:int[], device) = TorchRawTensor(zeros(toTorchShape shape, device), shape, dtype, device) :> _
-    override _.Ones(shape:int[], device) = TorchRawTensor(ones(toTorchShape shape, device), shape, dtype, device) :> _
-    override _.Random(shape:int[], device) = TorchRawTensor(random(toTorchShape shape, device), shape, dtype, device) :> _
-    override _.RandomNormal(shape:int[], device) = TorchRawTensor(randomN(toTorchShape shape, device), shape, dtype, device) :> _
-    override _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, device), shape, dtype, device) :> _
-
-    override _.Full(shape:int[], value:obj, device) =
-        let t = zeros(toTorchShape shape, device)
-        t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
-        TorchRawTensor(t, shape, dtype, device) :> _
-
-    override _.CreateFromFlatArray(values:Array, shape, device) =
-        let values = values :?> 'T[] |> Array.map conv 
-        let t = 
-            match shape with 
-            | [| |] -> fromScalar(values.[0])
-            | _ -> from (values, toTorchShape shape)
-        let tt = torchMoveTo t device
-        TorchRawTensor(tt, shape, dtype, device) :> _
 
     override _.GetDevices(deviceType) = 
         [ 
@@ -895,123 +1023,117 @@ type TorchStatics<'T, 'T2>
         | DiffSharp.DeviceType.CUDA -> Torch.IsCudaAvailable()
         | _ -> isSupported deviceType
 
-/// The concrete implementation of BackendStatics for Bool data.
-type TorchFloat32Statics() = 
+    override _.Seed(seed) =
+        // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch.
+        // However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
+        Torch.SetSeed(int64 seed) 
 
-    inherit TorchStatics<single, single>(Dtype.Float32, id, 
-        (fun v -> FloatTensor.From(v)), 
-        (fun (data, shape) -> FloatTensor.From(data, shape)), 
-        0.0f, 1.0f, 
-        (fun (shape, device) -> FloatTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> FloatTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> FloatTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> FloatTensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> FloatTensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, low, high, device) -> FloatTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((float low).ToScalar())), 
-        System.Convert.ToSingle, 
-        TorchScalar.op_Implicit)
+    override _.Zero(dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.Zero(device)
+        | Float64 -> torchFloat64.Zero(device)
+        | Int8 -> torchInt8.Zero(device)
+        | Byte -> torchByte.Zero(device)
+        | Int16 -> torchInt16.Zero(device)
+        | Int32 -> torchInt32.Zero(device)
+        | Int64 -> torchInt64.Zero(device)
+        | Bool -> torchBool.Zero(device)
 
-type TorchFloat64Statics() = 
+    override _.One(dtype, device) = 
+        match dtype with 
+        | Float32 -> torchFloat32.One(device)
+        | Float64 -> torchFloat64.One(device)
+        | Int8 -> torchInt8.One(device)
+        | Byte -> torchByte.One(device)
+        | Int16 -> torchInt16.One(device)
+        | Int32 -> torchInt32.One(device)
+        | Int64 -> torchInt64.One(device)
+        | Bool -> torchBool.One(device)
 
-    inherit TorchStatics<double, double>(Dtype.Float64, id, 
-        (fun v -> DoubleTensor.From(v)), 
-        (fun (data, shape) -> DoubleTensor.From(data, shape)), 
-        0.0, 1.0, 
-        (fun (shape, device) -> DoubleTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> DoubleTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> DoubleTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> DoubleTensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> DoubleTensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, low, high, device) -> DoubleTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((double low).ToScalar())), 
-        System.Convert.ToDouble, 
-        TorchScalar.op_Implicit)
+    override _.Zeros(shape:int[], dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.Zeros(shape, device)
+        | Float64 -> torchFloat64.Zeros(shape, device)
+        | Int8 -> torchInt8.Zeros(shape, device)
+        | Byte -> torchByte.Zeros(shape, device)
+        | Int16 -> torchInt16.Zeros(shape, device)
+        | Int32 -> torchInt32.Zeros(shape, device)
+        | Int64 -> torchInt64.Zeros(shape, device)
+        | Bool -> torchBool.Zeros(shape, device)
 
-type TorchInt8Statics() = 
+    override _.Empty(shape:int[], dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.Empty(shape, device)
+        | Float64 -> torchFloat64.Empty(shape, device)
+        | Int8 -> torchInt8.Empty(shape, device)
+        | Byte -> torchByte.Empty(shape, device)
+        | Int16 -> torchInt16.Empty(shape, device)
+        | Int32 -> torchInt32.Empty(shape, device)
+        | Int64 -> torchInt64.Empty(shape, device)
+        | Bool -> torchBool.Empty(shape, device)
 
-    inherit TorchStatics<sbyte, sbyte>(Dtype.Int8, sbyte,
-        (fun v -> SByteTensor.From(v)), 
-        (fun (data, shape) -> SByteTensor.From(data, shape)), 
-        0y, 1y,
-        (fun (shape, device) -> SByteTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> SByteTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> SByteTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Int8), 
-        (fun _ -> opNotSupported "RandomNormal" Dtype.Int8), 
-        (fun (shape, low, high, device) -> SByteTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((sbyte low).ToScalar())), 
-        System.Convert.ToSByte, 
-        TorchScalar.op_Implicit)
+    override _.Ones(shape:int[], dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.Ones(shape, device)
+        | Float64 -> torchFloat64.Ones(shape, device)
+        | Int8 -> torchInt8.Ones(shape, device)
+        | Byte -> torchByte.Ones(shape, device)
+        | Int16 -> torchInt16.Ones(shape, device)
+        | Int32 -> torchInt32.Ones(shape, device)
+        | Int64 -> torchInt64.Ones(shape, device)
+        | Bool -> torchBool.Ones(shape, device)
 
-type TorchInt16Statics() = 
+    override _.Full(shape:int[], value:obj, dtype, device) = 
+        match dtype with 
+        | Float32 -> torchFloat32.Full(shape, value, device)
+        | Float64 -> torchFloat64.Full(shape, value, device)
+        | Int8 -> torchInt8.Full(shape, value, device)
+        | Byte -> torchByte.Full(shape, value, device)
+        | Int16 -> torchInt16.Full(shape, value, device)
+        | Int32 -> torchInt32.Full(shape, value, device)
+        | Int64 -> torchInt64.Full(shape, value, device)
+        | Bool -> torchBool.Full(shape, value, device)
 
-    inherit TorchStatics<int16, int16>(Dtype.Int16, int16, 
-        (fun v -> ShortTensor.From(v)), 
-        (fun (data, shape) -> ShortTensor.From(data, shape)), 
-        0s, 1s,
-        (fun (shape, device) -> ShortTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> ShortTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> ShortTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Int16), 
-        (fun _ -> opNotSupported "RandomNormal" Dtype.Int16), 
-        (fun (shape, low, high, device) -> ShortTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int16 low).ToScalar())), 
-        System.Convert.ToInt16, 
-        TorchScalar.op_Implicit)
+    override _.Random(shape:int[], dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.Random(shape, device)
+        | Float64 -> torchFloat64.Random(shape, device)
+        | Int8 -> torchInt8.Random(shape, device)
+        | Byte -> torchByte.Random(shape, device)
+        | Int16 -> torchInt16.Random(shape, device)
+        | Int32 -> torchInt32.Random(shape, device)
+        | Int64 -> torchInt64.Random(shape, device)
+        | Bool -> torchBool.Random(shape, device)
 
-type TorchInt32Statics() = 
+    override _.RandomNormal(shape:int[], dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.RandomNormal(shape, device)
+        | Float64 -> torchFloat64.RandomNormal(shape, device)
+        | Int8 -> torchInt8.RandomNormal(shape, device)
+        | Byte -> torchByte.RandomNormal(shape, device)
+        | Int16 -> torchInt16.RandomNormal(shape, device)
+        | Int32 -> torchInt32.RandomNormal(shape, device)
+        | Int64 -> torchInt64.RandomNormal(shape, device)
+        | Bool -> torchBool.RandomNormal(shape, device)
 
-    inherit TorchStatics<int32, int32>(Dtype.Int32, int32, 
-        (fun v -> IntTensor.From(v)), 
-        IntTensor.From, 
-        0, 1,
-        (fun (shape, device) -> IntTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> IntTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> IntTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Int32), 
-        (fun _ -> opNotSupported "RandomNormal" Dtype.Int32), 
-        (fun (shape, low, high, device) -> IntTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int32 low).ToScalar())), 
-        System.Convert.ToInt32, 
-        TorchScalar.op_Implicit)
+    override _.RandomInt(shape:int[], low:int, high:int, dtype, device) = 
+        match dtype with 
+        | Float32 -> torchFloat32.RandomInt(shape, low, high, device)
+        | Float64 -> torchFloat64.RandomInt(shape, low, high, device)
+        | Int8 -> torchInt8.RandomInt(shape, low, high, device)
+        | Byte -> torchByte.RandomInt(shape, low, high, device)
+        | Int16 -> torchInt16.RandomInt(shape, low, high, device)
+        | Int32 -> torchInt32.RandomInt(shape, low, high, device)
+        | Int64 -> torchInt64.RandomInt(shape, low, high, device)
+        | Bool -> torchBool.RandomInt(shape, low, high, device)
 
-type TorchInt64Statics() = 
-
-    inherit TorchStatics<int64, int64>(Dtype.Int64, int64, 
-        (fun v -> LongTensor.From(v)), 
-        (fun (data, shape) -> LongTensor.From(data, shape)), 
-        0L, 1L,
-        (fun (shape, device) -> LongTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> LongTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> LongTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Int64), 
-        (fun _ -> opNotSupported "RandomNormal" Dtype.Int64), 
-        (fun (shape, low, high, device) -> LongTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((int64 low).ToScalar())), 
-        System.Convert.ToInt64, 
-        TorchScalar.op_Implicit)
-
-type TorchBoolStatics() = 
-
-    inherit TorchStatics<bool, bool>(Dtype.Bool, id, 
-        (fun v -> BoolTensor.From(v)), 
-        (fun (data, shape) -> BoolTensor.From(data, shape)), 
-        false, true,
-        (fun (shape, device) -> BoolTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> BoolTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> BoolTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Bool), 
-        (fun _ -> opNotSupported "RandomNormal"  Dtype.Bool), 
-        (fun (shape, low, high, device) -> BoolTensor.RandomIntegers(min 2L (int64 (high-low)), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((low > 0).ToScalar())), 
-        System.Convert.ToBoolean, 
-        TorchScalar.op_Implicit)
-
-type TorchByteStatics() = 
-
-    inherit TorchStatics<byte, byte>(Dtype.Byte, id, 
-        (fun v -> ByteTensor.From(v)), 
-        (fun (data, shape) -> ByteTensor.From(data, shape)), 
-        0uy, 1uy,
-        (fun (shape, device) -> ByteTensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> ByteTensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun (shape, device) -> ByteTensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
-        (fun _ -> opNotSupported "Random" Dtype.Byte), 
-        (fun _ -> opNotSupported "RandomNormal"  Dtype.Byte), 
-        (fun (shape, low, high, device) -> ByteTensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((byte low).ToScalar())), 
-        System.Convert.ToByte, 
-        TorchScalar.op_Implicit)
+    override _.CreateFromFlatArray(values:Array, shape, dtype, device) =
+        match dtype with 
+        | Float32 -> torchFloat32.CreateFromFlatArray(values, shape, device)
+        | Float64 -> torchFloat64.CreateFromFlatArray(values, shape, device)
+        | Int8 -> torchInt8.CreateFromFlatArray(values, shape, device)
+        | Byte -> torchByte.CreateFromFlatArray(values, shape, device)
+        | Int16 -> torchInt16.CreateFromFlatArray(values, shape, device)
+        | Int32 -> torchInt32.CreateFromFlatArray(values, shape, device)
+        | Int64 -> torchInt64.CreateFromFlatArray(values, shape, device)
+        | Bool -> torchBool.CreateFromFlatArray(values, shape, device)
