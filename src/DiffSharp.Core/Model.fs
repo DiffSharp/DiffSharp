@@ -274,7 +274,7 @@ type Weight() =
         w * s
 
     /// <summary>TBD</summary>
-    static member uniform(shape:int[], k:float) =
+    static member uniform(shape:Shape, k:float) =
         -k + dsharp.rand(shape) * 2*k
 
 
