@@ -27,7 +27,7 @@ type TestData () =
         let mnist = MNIST(folder, urls=urls, train=false) // MNIST test data
         let mnistLength = mnist.length
         let mnistLengthCorrect = 10000
-        Assert.AreEqual(mnistLengthCorrect, mnistLength)
+        Assert.CheckEqual(mnistLengthCorrect, mnistLength)
 
         let batchSize = 16
         let dataloader = mnist.loader(batchSize=batchSize)
@@ -37,8 +37,8 @@ type TestData () =
         let xShapeCorrect = [|batchSize; 1; 28; 28|]
         let yShape = y.shape
         let yShapeCorrect = [|batchSize|]
-        Assert.AreEqual(xShapeCorrect, xShape)
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(xShapeCorrect, xShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestTensorDataset () =
@@ -49,7 +49,7 @@ type TestData () =
         let datasetLength = dataset.length
         let datasetLengthCorrect = n
 
-        Assert.AreEqual(datasetLengthCorrect, datasetLength)
+        Assert.CheckEqual(datasetLengthCorrect, datasetLength)
 
         let batchSize = 16
         let dataloader = dataset.loader(batchSize=batchSize)
@@ -59,8 +59,8 @@ type TestData () =
         let xShapeCorrect = [|batchSize; din|]
         let yShape = y.shape
         let yShapeCorrect = [|batchSize; dout|]
-        Assert.AreEqual(xShapeCorrect, xShape)
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(xShapeCorrect, xShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestDataLoaderMove () =
@@ -79,9 +79,9 @@ type TestData () =
                     let ydtype, ydevice, ybackend = y.dtype, y.device, y.backend
                     let xdtypeCorrect, xdeviceCorrect, xbackendCorrect = combo2.dtype, combo2.device, combo2.backend
                     let ydtypeCorrect, ydeviceCorrect, ybackendCorrect = combo3.dtype, combo3.device, combo3.backend
-                    Assert.AreEqual(xdtypeCorrect, xdtype)
-                    Assert.AreEqual(xdeviceCorrect, xdevice)
-                    Assert.AreEqual(xbackendCorrect, xbackend)
-                    Assert.AreEqual(ydtypeCorrect, ydtype)
-                    Assert.AreEqual(ydeviceCorrect, ydevice)
-                    Assert.AreEqual(ybackendCorrect, ybackend)
+                    Assert.CheckEqual(xdtypeCorrect, xdtype)
+                    Assert.CheckEqual(xdeviceCorrect, xdevice)
+                    Assert.CheckEqual(xbackendCorrect, xbackend)
+                    Assert.CheckEqual(ydtypeCorrect, ydtype)
+                    Assert.CheckEqual(ydeviceCorrect, ydevice)
+                    Assert.CheckEqual(ybackendCorrect, ybackend)

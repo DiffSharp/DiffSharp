@@ -43,7 +43,7 @@ type TestModel () =
         d1.add("b", d1t2)
         let d1flat = d1.flatten()
         let d1flatCorrect = dsharp.cat([d1t1.value.flatten(); d1t2.value.flatten()])
-        Assert.AreEqual(d1flatCorrect, d1flat)
+        Assert.CheckEqual(d1flatCorrect, d1flat)
 
         let d2t1 = Parameter <| dsharp.randn([15;5])
         let d2t2 = Parameter <| dsharp.randn(4)
@@ -55,15 +55,15 @@ type TestModel () =
 
         let d3 = d2.unflattenToNew(d1flat)
         let d3flat = d3.flatten()
-        Assert.AreEqual(d1flatCorrect, d3flat)
+        Assert.CheckEqual(d1flatCorrect, d3flat)
 
     [<Test>]
     member _.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
-        Assert.AreEqual(516, net.nparameters)
+        Assert.CheckEqual(516, net.nparameters)
 
         let net2 = ModelStyle1b()
-        Assert.AreEqual(1663, net2.nparameters)
+        Assert.CheckEqual(1663, net2.nparameters)
 
     [<Test>]
     member _.TestModelCreationStyle2 () =
@@ -74,7 +74,7 @@ type TestModel () =
                     >> fc1.forward
                     >> dsharp.relu
                     >> fc2.forward)
-        Assert.AreEqual(682, net.nparameters)
+        Assert.CheckEqual(682, net.nparameters)
 
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
@@ -85,37 +85,37 @@ type TestModel () =
                     >> dsharp.relu
                     >> fc2.forward
                     >> dsharp.mul p.value)
-        Assert.AreEqual(683, net2.nparameters)
+        Assert.CheckEqual(683, net2.nparameters)
 
     [<Test>]
     member _.TestModelCreationStyle3 () =
         let net = dsharp.view [-1; 10] --> Linear(10, 32) --> dsharp.relu --> Linear(32, 10)
-        Assert.AreEqual(682, net.nparameters)        
+        Assert.CheckEqual(682, net.nparameters)        
 
     [<Test>]
     member _.TestModelUsageStyle1 () =
         let net = ModelStyle1a()
         let x = dsharp.randn([1; 10])
         let y = net.forward x |> dsharp.sin
-        Assert.AreEqual([1;20], y.shape)
+        Assert.CheckEqual([| 1;20 |], y.shape)
 
     [<Test>]
     member _.TestModelUsageStyle2 () =
         let net = ModelStyle1a()
         let x = dsharp.randn([1; 10])
         let y = x --> net --> dsharp.sin
-        Assert.AreEqual([1;20], y.shape)
+        Assert.CheckEqual([| 1;20 |], y.shape)
 
     [<Test>]
     member _.TestModelCompose () =
         let net1 = ModelStyle1a()
         let net2 = ModelStyle1b()
         let net3 = Model.compose net1 net2
-        Assert.AreEqual(516 + 1663, net3.nparameters)
+        Assert.CheckEqual(516 + 1663, net3.nparameters)
 
         let x = dsharp.randn([5;10])
         let y = net3.forward(x)
-        Assert.AreEqual([5;30], y.shape)
+        Assert.CheckEqual([|5;30|], y.shape)
 
     [<Test>]
     member _.TestModelParametersDiff () =
@@ -151,7 +151,7 @@ type TestModel () =
         let p = net.parameters
         let x = dsharp.randn([1;10])
         let y = f x p
-        Assert.AreEqual([1;20], y.shape)
+        Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardCompose () =
@@ -160,7 +160,7 @@ type TestModel () =
         let p = net.parameters
         let x = dsharp.randn([1;10])
         let y = f x p
-        Assert.AreEqual([1;20], y.shape)
+        Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardLoss () =
@@ -170,7 +170,7 @@ type TestModel () =
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
         let y = f x t p
-        Assert.AreEqual([], y.shape)
+        Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
     member _.TestModelSaveLoadParameters () =
@@ -185,12 +185,12 @@ type TestModel () =
 
         net2.loadParameters(fileName)
         let p2 = net2.parameters
-        Assert.AreEqual(p1, p2)
+        Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
         let y1 = x --> net1
         let y2 = x --> net2
-        Assert.AreEqual(y1, y2)
+        Assert.CheckEqual(y1, y2)
 
     [<Test>]
     member _.TestModelSaveLoad () =
@@ -201,12 +201,12 @@ type TestModel () =
 
         let net2 = Model.load(fileName)
         let p2 = net2.parameters
-        Assert.AreEqual(p1, p2)
+        Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
         let y1 = x --> net1
         let y2 = x --> net2
-        Assert.AreEqual(y1, y2)
+        Assert.CheckEqual(y1, y2)
 
     [<Test>]
     member _.TestModelMove () =
@@ -214,15 +214,15 @@ type TestModel () =
         for combo1 in Combos.FloatingPoint do
             dsharp.config(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
-            Assert.AreEqual(combo1.dtype, net.parameters.dtype)
-            Assert.AreEqual(combo1.device, net.parameters.device)
-            Assert.AreEqual(combo1.backend, net.parameters.backend)
+            Assert.CheckEqual(combo1.dtype, net.parameters.dtype)
+            Assert.CheckEqual(combo1.device, net.parameters.device)
+            Assert.CheckEqual(combo1.backend, net.parameters.backend)
             for combo2 in Combos.FloatingPoint do
                 // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 net.move(combo2.dtype, combo2.device, combo2.backend)
-                Assert.AreEqual(combo2.dtype, net.parameters.dtype)
-                Assert.AreEqual(combo2.device, net.parameters.device)
-                Assert.AreEqual(combo2.backend, net.parameters.backend)
+                Assert.CheckEqual(combo2.dtype, net.parameters.dtype)
+                Assert.CheckEqual(combo2.device, net.parameters.device)
+                Assert.CheckEqual(combo2.backend, net.parameters.backend)
         dsharp.config(confBackup)
 
     [<Test>]
@@ -232,32 +232,32 @@ type TestModel () =
 
         let net2 = net1.clone()
         let p2 = net2.parameters
-        Assert.AreEqual(p1, p2)
+        Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
         let y1 = x --> net1
         let y2 = x --> net2
-        Assert.AreEqual(y1, y2)
+        Assert.CheckEqual(y1, y2)
 
     [<Test>]
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
-        Assert.AreEqual(Mode.Train, m.mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
 
         m.eval()
-        Assert.AreEqual(Mode.Eval, m.mode)
-        Assert.AreEqual(Mode.Eval, m.allModels.[0].mode)
-        Assert.AreEqual(Mode.Eval, m.allModels.[1].mode)
-        Assert.AreEqual(Mode.Eval, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.mode)
+        Assert.CheckEqual(Mode.Eval, m.allModels.[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.allModels.[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.allModels.[2].mode)
 
         m.train()
-        Assert.AreEqual(Mode.Train, m.mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.AreEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
 
     [<Test>]
     member _.TestModelLinear () =
@@ -334,14 +334,14 @@ type TestModel () =
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|5; 4; 14|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
         let x = dsharp.randn([3; 3; 12])
         let m = ConvTranspose1d(3, 5, 2, dilation=5)
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|3; 5; 17|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestModelConvTranspose2d () =
@@ -350,14 +350,14 @@ type TestModel () =
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|3; 5; 14; 8|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
         let x = dsharp.randn([2; 3; 12; 6])
         let m = ConvTranspose2d(3, 1, 5, stride=2)
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|2; 1; 27; 15|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestModelConvTranspose3d () =
@@ -366,14 +366,14 @@ type TestModel () =
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|2; 2; 14; 8; 8|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
         let x = dsharp.randn([2; 3; 12; 6; 6])
         let m = ConvTranspose3d(3, 2, 2, padding=1)
         let y = x --> m
         let yShape = y.shape
         let yShapeCorrect = [|2; 2; 11; 5; 5|]
-        Assert.AreEqual(yShapeCorrect, yShape)
+        Assert.CheckEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestModelDropout () =
@@ -382,10 +382,10 @@ type TestModel () =
         
         m.train()
         let xtrain = x --> m
-        Assert.AreEqual(x.zerosLike(), xtrain)
+        Assert.CheckEqual(x.zerosLike(), xtrain)
         m.eval()
         let xeval = x --> m
-        Assert.AreEqual(x, xeval)
+        Assert.CheckEqual(x, xeval)
 
     [<Test>]
     member _.TestModelDropout2d () =
@@ -394,10 +394,10 @@ type TestModel () =
         
         m.train()
         let xtrain = x --> m
-        Assert.AreEqual(x.zerosLike(), xtrain)
+        Assert.CheckEqual(x.zerosLike(), xtrain)
         m.eval()
         let xeval = x --> m
-        Assert.AreEqual(x, xeval)
+        Assert.CheckEqual(x, xeval)
 
     [<Test>]
     member _.TestModelDropout3d () =
@@ -406,10 +406,10 @@ type TestModel () =
         
         m.train()
         let xtrain = x --> m
-        Assert.AreEqual(x.zerosLike(), xtrain)
+        Assert.CheckEqual(x.zerosLike(), xtrain)
         m.eval()
         let xeval = x --> m
-        Assert.AreEqual(x, xeval)
+        Assert.CheckEqual(x, xeval)
 
     [<Test>]
     member _.TestModelBatchNorm1d () =
