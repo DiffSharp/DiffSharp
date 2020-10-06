@@ -72,6 +72,12 @@ module Seq =
     let hasDuplicates l =
         duplicates l |> List.isEmpty |> not
 
+    /// Like Seq.toArray but does not clone the array if the input is already an array
+    let inline toArrayQuick (xs: seq<'T>) =
+        match xs with
+        | :? ('T[]) as arr -> arr
+        | _ -> Seq.toArray xs
+
 /// Contains extensions related to .NET dictionaries. 
 module Dictionary =
 
@@ -145,7 +151,6 @@ module ExtensionAutoOpens =
     /// Value of log(10).
     let log10Val = log 10.
 
-
     /// Indents all lines of the given string by the given number of spaces.
     let indentNewLines (str:String) numSpaces =
         let mutable ret = ""
@@ -196,3 +201,7 @@ module ExtensionAutoOpens =
         | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
         | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
         | _ -> failwith "arrayND - nyi for dim > 4"
+
+    /// Print the given value to the console using the '%A' printf format specifier
+    let print x = printfn "%A" x 
+

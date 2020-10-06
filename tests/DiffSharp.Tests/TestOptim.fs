@@ -2,6 +2,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.Compose
 open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Optim

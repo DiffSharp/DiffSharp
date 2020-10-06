@@ -1,94 +1,5 @@
 ﻿namespace DiffSharp
 
-/// <summary>
-///   Represents the type of a device. 
-/// </summary>
-///
-/// <remarks>
-///   The numeric values used are as for LibTorch.
-/// </remarks>
-///
-/// <namespacedoc>
-///   <summary>Contains fundamental types for the tensor programming model, including Tensor, Shape and dsharp.</summary>
-/// </namespacedoc>
-type DeviceType =
-    | CPU = 0
-    | CUDA = 1 // CUDA.
-    | MKLDNN = 2 // Reserved for explicit MKLDNN
-    | OPENGL = 3 // OpenGL
-    | OPENCL = 4 // OpenCL
-    | IDEEP = 5 // IDEEP.
-    | HIP = 6 // AMD HIP
-    | FPGA = 7 // FPGA
-    | MSNPU = 8 // MSNPU
-    | XLA = 9 // XLA / TPU
-
-
-/// Represents a device specification.
-[<Struct>]
-type Device =
-    | Device of DeviceType * int
-    member x.DeviceType = (let (Device(a,_)) = x in a)
-    member x.DeviceIndex = (let (Device(_,b)) = x in b)
-    static member CPU = Device(DeviceType.CPU, -1)
-    static member GPU = Device(DeviceType.CUDA, 0)
-
-    member internal x.Code = (int x.DeviceType <<< 4) + x.DeviceIndex
-
-    member internal x.Name =
-       (match x.DeviceType with
-        | DeviceType.CPU -> "cpu"
-        | DeviceType.CUDA -> "cuda"
-        | DeviceType.MKLDNN -> "mkldnn"
-        | DeviceType.OPENGL -> "opengl"
-        | DeviceType.OPENCL -> "opencl"
-        | DeviceType.IDEEP -> "ideep"
-        | DeviceType.HIP -> "hip"
-        | DeviceType.FPGA -> "fpga"
-        | DeviceType.MSNPU -> "msnpu"
-        | DeviceType.XLA -> "xla"
-        | _ -> failwith "unknown device type") + string x.DeviceIndex
-
-/// Contains functions and settings related to device specifications.
-module Device = 
-
-    /// Get or set the default device used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
-    let mutable Default : Device = Device.CPU
-
-/// Represents a backend for DiffSharp tensors
-[<RequireQualifiedAccess>]
-type Backend =
-    /// The reference backend 
-    | Reference
-    /// The LibTorch backend 
-    | Torch
-    /// Reserved for future use
-    | Other of name: string * code: int
-
-    member internal x.Code = 
-        match x with 
-        | Reference -> 0x000
-        | Torch -> 0x0100
-        | Other (_name, code) -> (code + 3) <<< 8
-
-    /// Get the name of the backend
-    member x.Name = 
-        match x with 
-        | Reference -> "Reference"
-        | Torch -> "Torch"
-        | Other (name, _) -> name
-
-/// Contains functions and settings related to backend specifications.
-module Backend = 
-    let internal count = ref 0
-    let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Backend>()
-
-    /// Register a new backend
-    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
-
-    /// Get or set the default backend used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
-    let mutable Default = Backend.Reference
-
 /// Represents a storage type for elements of a tensor
 [<Struct>]
 type Dtype =
@@ -109,18 +20,6 @@ type Dtype =
     | Int64
     /// Store elements as booleans
     | Bool
-
-    member internal x.Code =
-        match x with
-        //| Float16 -> 0x10000
-        | Float32 -> 0x20000
-        | Float64 -> 0x30000
-        | Int8 -> 0x40000
-        | Byte -> 0x50000
-        | Int16 -> 0x60000
-        | Int32 -> 0x70000
-        | Int64 -> 0x80000
-        | Bool -> 0x90000
 
     member internal x.Name =
         match x with
@@ -202,7 +101,7 @@ module Dtype =
         elif ty.Equals(typeof<bool>) then Dtype.Bool
         else failwithf "unknown type '%A' used as tensor type" ty
 
-    /// Get or set the default element type used when creating tensors.  Note, use <c>dsharp.config(...)</c> instead.
+    /// Get or set the default element type used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32
 
 /// Contains global functions and settings related to tensor element types, used when writing backends.

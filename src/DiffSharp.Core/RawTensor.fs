@@ -21,28 +21,31 @@ type BackendStatics() =
     abstract Seed: seed:int -> unit
 
     /// Gets the scalar 0 tensor for the given device
-    abstract Zero: device: Device -> RawTensor
+    abstract Zero: dtype: Dtype * device: Device -> RawTensor
+
+    /// Gets a tensor filled with arbitrary values for the given shape and device
+    abstract Empty: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with zeros for the given shape and device
-    abstract Zeros: shape:int[] * device: Device -> RawTensor
+    abstract Zeros: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets the scalar 1 tensor for the given device
-    abstract One: device: Device -> RawTensor
+    abstract One: dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with ones for the given shape and device
-    abstract Ones: shape:int[] * device: Device -> RawTensor
+    abstract Ones: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with the given value for the given shape and device
-    abstract Full: shape:int[] * value: obj * device: Device -> RawTensor
+    abstract Full: shape:Shape * value: obj * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with random values for the given shape and device
-    abstract Random: shape:int[] * device: Device -> RawTensor
+    abstract Random: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with random values from the normal distribution for the given shape and device
-    abstract RandomNormal: shape:int[] * device: Device -> RawTensor
+    abstract RandomNormal: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with random integers from the given range for the given shape and device
-    abstract RandomInt: shape:int[] * low:int * high:int * device: Device -> RawTensor
+    abstract RandomInt: shape:Shape * low:int * high:int * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets the devices supported by this backend
     abstract GetDevices: ?deviceType: DeviceType -> Device list
@@ -60,14 +63,13 @@ type BackendStatics() =
 
     /// Create a tensor of appropriate dtype from a scalar or array of appropriate values.
     /// A backend type is delivered consistent with in-memory data - a type for dtype Int32 gets int32 data etc.
-    abstract CreateFromFlatArray: data: System.Array * shape: int[] * device: Device -> RawTensor
+    abstract CreateFromFlatArray: data: System.Array * shape: Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Get the backend implementation for the given tensor element type and backend.
-    static member Get(?dtype: Dtype, ?backend: Backend) =
+    static member Get(?backend: Backend) =
         // Note we re-examing the default backends etc. each time we create a root tensor.
-        let dtype = defaultArg dtype Dtype.Default
         let backend = defaultArg backend Backend.Default
-        let code = dtype.Code + backend.Code
+        let code = backend.Code
         match last with 
         | Some (code2, v) when code = code2 -> v
         | _ ->
@@ -81,7 +83,7 @@ type BackendStatics() =
                     let asm = 
                         try System.Reflection.Assembly.Load(fullName)
                         with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                    let typeName = sprintf "DiffSharp.Backends.%s.%s%sStatics" backend.Name backend.Name dtype.Name
+                    let typeName = sprintf "DiffSharp.Backends.%s.%sBackendStatics" backend.Name backend.Name
                     let theType = asm.GetType(typeName)
                     if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
                     let obj = 
@@ -105,7 +107,7 @@ type BackendStatics() =
 type RawTensor() =
 
     /// Gets the shape of the tensor
-    abstract member Shape : int[]
+    abstract member Shape : Shape
 
     /// Gets the dimensionality of the tensor
     abstract member Dim : int
@@ -125,62 +127,81 @@ type RawTensor() =
     /// Gets the backend for the tensor
     abstract member Backend : Backend
 
+    /// Gets a handle to the underlying representation of the the tensor. For example, if the Torch
+    /// backend is used this will be the corresponding TorchSharp TorchTensor.
+    abstract member Handle : obj
+
     override t.ToString() = t.GetString()
     
+    /// Gets a tensor containing arbitrary values for the given shape and configuration
+    static member Empty(shape:Shape, ?dtype, ?device, ?backend) = 
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
+        let device = defaultArg device Device.Default
+        statics.Empty(shape, dtype, device)
+
     /// Gets the scalar zero tensor for the given configuration
     static member Zero(?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.Zero(device)
+        statics.Zero(dtype, device)
 
     /// Gets the zero tensor for the given shape and configuration
-    static member Zeros(shape, ?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member Zeros(shape:Shape, ?dtype, ?device, ?backend) = 
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.Zeros(shape, device)
+        statics.Zeros(shape, dtype, device)
 
     /// Gets the scalar 1 tensor for the given configuration
     static member One(?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.One(device)
+        statics.One(dtype, device)
 
     /// Gets a tensor filled with 1 values for the given shape and configuration
-    static member Ones(shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member Ones(shape:Shape, ?dtype, ?device, ?backend) =
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.Ones(shape, device)
+        statics.Ones(shape, dtype, device)
 
     /// Gets a tensor filled with the given value for the given shape and configuration
-    static member Full(shape, value, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member Full(shape:Shape, value, ?dtype, ?device, ?backend) =
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.Full(shape, value, device)
+        statics.Full(shape, value, dtype, device)
 
     /// Gets a tensor filled with random values for the given shape and configuration
-    static member Random(shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member Random(shape:Shape, ?dtype, ?device, ?backend) =
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.Random(shape, device)
+        statics.Random(shape, dtype, device)
 
     /// Gets a tensor filled with random values from the normal distribution for the given shape and configuration
-    static member RandomNormal(shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member RandomNormal(shape:Shape, ?dtype, ?device, ?backend) =
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.RandomNormal(shape, device)
+        statics.RandomNormal(shape, dtype, device)
 
     /// Gets a tensor filled with random integer values from the given range for the given shape and configuration
-    static member RandomInt(shape, low, high, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?dtype=dtype, ?backend=backend)
+    static member RandomInt(shape:Shape, low, high, ?dtype, ?device, ?backend) =
+        let statics = BackendStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
-        statics.RandomInt(shape|>Seq.toArray, low, high, device)
+        statics.RandomInt(shape, low, high, dtype, device)
 
     /// <summary>
     ///   Gets a tensor filled with values drawn from the given .NET object.
     /// </summary>
     ///
     /// <remarks>
-    ///  The value may be a scalar, an array, or an array of tupled objects.  If the <c>dtype</c> is not specified
+    ///  The value may be a scalar, an array, or an array of tupled objects. If the <c>dtype</c> is not specified
     ///  then it is inferred from the .NET type of the object.
     /// </remarks>
     static member Create(values: obj, ?dtype, ?device, ?backend) =
@@ -220,15 +241,20 @@ type RawTensor() =
                 let a,s = DataConverter.dataOfValuesForFloat32 values 
                 (a :> Array), s, Dtype.Float32
 
-        let statics = BackendStatics.Get(dtype=dtype, ?backend=backend)
+        let statics = BackendStatics.Get(?backend=backend)
         let device = defaultArg device Device.Default
 
-        statics.CreateFromFlatArray(data, shape, device)
+        statics.CreateFromFlatArray(data, shape, dtype, device)
 
     /// Gets a tensor filled with values drawn from the given .NET object for the
     /// given configuration settings, defaulting to the configuration settings of the object tensor.
     member t.CreateLike(values: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Create(values, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
+
+    /// Gets a tensor filled with arbitrary values for the given shape and configuration settings,
+    /// defaulting to the configuration settings of the object tensor
+    member t.EmptyLike(shape: Shape, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        RawTensor.Empty(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a zero tensor for the given configuration settings, defaulting to the configuration settings of the object tensor
     member t.ZeroLike(?dtype: Dtype, ?device: Device, ?backend: Backend) =
@@ -236,7 +262,7 @@ type RawTensor() =
 
     /// Gets a tensor filled with zero values for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.ZerosLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.ZerosLike(shape: Shape, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Zeros(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a scalar one tensor for the given configuration settings, defaulting to the configuration settings of the object tensor
@@ -245,34 +271,34 @@ type RawTensor() =
 
     /// Gets a tensor filled with one values for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.OnesLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.OnesLike(shape: Shape, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Ones(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with the given scalar value for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.FullLike(shape: int[], value: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.FullLike(shape: Shape, value: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Full(shape, value, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with random values for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.RandomLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.RandomLike(shape: Shape, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Random(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with random values from a normal distribution for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.RandomNormalLike(shape: int[], ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.RandomNormalLike(shape: Shape, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.RandomNormal(shape=shape, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with random integer values from the given range for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.RandomIntLike(shape: int[], low:int, high:int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.RandomIntLike(shape: Shape, low:int, high:int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Clone the underlying storage of the tensor.
     abstract member Clone : unit -> RawTensor
 
     /// Expand the shape of the tensor.
-    abstract member Expand: newShape: int[] -> RawTensor
+    abstract member Expand: newShape: Shape -> RawTensor
 
     /// Stack the given tensors along the given dimension
     abstract member StackTs: tensors: RawTensor[] * dim:int -> RawTensor
@@ -292,7 +318,7 @@ type RawTensor() =
     /// <summary> Get a slice of the given tensor.</summary>
     ///
     /// <param name="fullBounds">
-    ///  The indexes are an Nx3 array.   The first row is the start bounds, the second row is
+    ///  The indexes are an Nx3 array.  The first row is the start bounds, the second row is
     ///  the end bounds, the third is 1/0 indicating dimension removal.
     /// </param>
     abstract member GetSlice: fullBounds: int[,] -> RawTensor
@@ -309,7 +335,7 @@ type RawTensor() =
     /// Returns a tensor moved to the given device.
     abstract member MoveTo: device: Device -> RawTensor
 
-    /// Returns a hash of the contents of the tensor.  This operation may cause the
+    /// Returns a hash of the contents of the tensor. This operation may cause the
     /// tensor to be moved to the CPU, and its entire contents iterated.
     abstract member ComputeHash: unit -> int
 
@@ -469,7 +495,7 @@ type RawTensor() =
     abstract member UndilateT: dilations: int[] -> RawTensor
 
     /// Returns the tensor with the same values viewed as a different shape
-    abstract member ViewT: shape: int[] -> RawTensor
+    abstract member ViewT: shape: Shape -> RawTensor
 
     /// Returns the element-wise sign of the tensor
     abstract member SignT: unit -> RawTensor
@@ -562,7 +588,7 @@ type RawTensor() =
         | 0 -> printVal (t.ToScalar())
         | _ ->
             let sb = System.Text.StringBuilder()
-            let rec print (shape:int[]) externalCoords = 
+            let rec print (shape:Shape) externalCoords = 
                 if shape.Length = 1 then
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
