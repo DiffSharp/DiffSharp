@@ -5,6 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
+    <Compile Include="Backend.fs" />
+    <Compile Include="Device.fs" />
     <Compile Include="Dtype.fs" />
     <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
