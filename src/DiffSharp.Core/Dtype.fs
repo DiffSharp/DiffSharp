@@ -33,19 +33,6 @@ type Dtype =
         | Int64 -> "Int64"
         | Bool -> "Bool"
 
-    /// Get the .NET type that corresponds to this type when data is transferred to .NET
-    member x.AsType () =
-        match x with
-        //| Float16 -> typeof<single>
-        | Float32 -> typeof<single>
-        | Float64 -> typeof<double>
-        | Int8 -> typeof<int8>
-        | Byte -> typeof<byte>
-        | Int16 -> typeof<int16>
-        | Int32 -> typeof<int32>
-        | Int64 -> typeof<int64>
-        | Bool -> typeof<bool>
-
     /// Gets the natural result of the Sum(), SumToSize() and Sum(dim) operation on this dtype
     member t.SummationType =
         match t with

@@ -199,3 +199,5 @@ module ExtensionAutoOpens =
     /// Print the given value to the console using the '%A' printf format specifier
     let print x = printfn "%A" x 
 
+[<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
+do()
