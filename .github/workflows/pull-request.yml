@@ -23,8 +23,6 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-restore --verbosity normal
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+      run: dotnet test --configuration Release --no-restore --verbosity normal
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict --property Configuration=Release
