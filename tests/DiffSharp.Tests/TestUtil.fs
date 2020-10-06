@@ -175,3 +175,7 @@ module TestUtils =
     let isInvalidOp f = Assert.Throws<InvalidOperationException>(TestDelegate(fun () -> f() |> ignore)) |> ignore
     let isAnyException f = Assert.Catch(TestDelegate(fun () -> f() |> ignore)) |> ignore
 
+    type Assert with 
+
+        /// Like Assert.AreEqual bute requires theat the actual and expected are the same type
+        static member CheckEqual (expected: 'T, actual: 'T) = Assert.AreEqual(box expected, box actual)

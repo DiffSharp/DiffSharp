@@ -64,25 +64,25 @@ type TestDiffSharp () =
     member this.TestZero () =
         let t = dsharp.zero()
         let tCorrect = dsharp.tensor(0)
-        Assert.AreEqual(tCorrect, t)
+        Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestZeros () =
         let t = dsharp.zeros([2;3])
         let tCorrect = dsharp.tensor([[0,0,0],[0,0,0]])
-        Assert.AreEqual(tCorrect, t)
+        Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestOne () =
         let t = dsharp.one()
         let tCorrect = dsharp.tensor(1)
-        Assert.AreEqual(tCorrect, t)
+        Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestOnes () =
         let t = dsharp.ones([2;3])
         let tCorrect = dsharp.tensor([[1,1,1],[1,1,1]])
-        Assert.AreEqual(tCorrect, t)
+        Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestRand () =
@@ -114,9 +114,9 @@ type TestDiffSharp () =
         let t2Correct = dsharp.tensor([1.,2.,3.])
         let t3 = dsharp.arange(startVal=1., endVal=2.5, step=0.5)
         let t3Correct = dsharp.tensor([1.,1.5,2.])
-        Assert.AreEqual(t1Correct, t1)
-        Assert.AreEqual(t2Correct, t2)
-        Assert.AreEqual(t3Correct, t3)
+        Assert.CheckEqual(t1Correct, t1)
+        Assert.CheckEqual(t2Correct, t2)
+        Assert.CheckEqual(t3Correct, t3)
 
 
     [<Test>]
@@ -128,7 +128,7 @@ type TestDiffSharp () =
             let t = combo.randint(0,10,[25])
             dsharp.seed(123)
             let t2 = combo.randint(0,10,[25])
-            Assert.AreEqual(t, t2)
+            Assert.CheckEqual(t, t2)
         dsharp.config(confBackup)
 
     [<Test>]
@@ -140,10 +140,10 @@ type TestDiffSharp () =
         let nd2 = dsharp.numdiff 1e-5 fscalarvect3 x
         let fxCorrect = fscalarvect3 x
         let dCorrect = fscalarvect3Diff x
-        Assert.AreEqual(fxCorrect, fx)
-        Assert.AreEqual(fxCorrect, nfx)
-        Assert.AreEqual(dCorrect, d)
-        Assert.AreEqual(dCorrect, d2)
+        Assert.CheckEqual(fxCorrect, fx)
+        Assert.CheckEqual(fxCorrect, nfx)
+        Assert.CheckEqual(dCorrect, d)
+        Assert.CheckEqual(dCorrect, d2)
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))
 
@@ -156,10 +156,10 @@ type TestDiffSharp () =
         let nd2 = dsharp.numdiff2 1e-2 fscalarvect3 x
         let fxCorrect = fscalarvect3 x
         let dCorrect = fscalarvect3Diff2 x
-        Assert.AreEqual(fxCorrect, fx)
-        Assert.AreEqual(fxCorrect, nfx)
-        Assert.AreEqual(dCorrect, d)
-        Assert.AreEqual(dCorrect, d2)
+        Assert.CheckEqual(fxCorrect, fx)
+        Assert.CheckEqual(fxCorrect, nfx)
+        Assert.CheckEqual(dCorrect, d)
+        Assert.CheckEqual(dCorrect, d2)
         Assert.True(dCorrect.allclose(nd, 0.1))
         Assert.True(dCorrect.allclose(nd2, 0.1))
 
@@ -170,9 +170,9 @@ type TestDiffSharp () =
         let d2 = dsharp.diffn 3 fscalarvect3 x
         let fxCorrect = fscalarvect3 x
         let dCorrect = fscalarvect3Diff3 x
-        Assert.AreEqual(fxCorrect, fx)
-        Assert.AreEqual(dCorrect, d)
-        Assert.AreEqual(dCorrect, d2)
+        Assert.CheckEqual(fxCorrect, fx)
+        Assert.CheckEqual(dCorrect, d)
+        Assert.CheckEqual(dCorrect, d2)
 
     [<Test>]
     member this.TestGrad () =
@@ -187,14 +187,14 @@ type TestDiffSharp () =
         let ng4 = dsharp.numg 1e-6 rosenbrock x
         let fxCorrect = rosenbrock x
         let gCorrect = rosenbrockGrad x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(gCorrect, g1)
-        Assert.AreEqual(gCorrect, g2)
-        Assert.AreEqual(gCorrect, g3)
-        Assert.AreEqual(gCorrect, g4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(gCorrect, g1)
+        Assert.CheckEqual(gCorrect, g2)
+        Assert.CheckEqual(gCorrect, g3)
+        Assert.CheckEqual(gCorrect, g4)
         Assert.True(gCorrect.allclose(ng1, 0.1))
         Assert.True(gCorrect.allclose(ng2, 0.1))
         Assert.True(gCorrect.allclose(ng3, 0.1))
@@ -213,14 +213,14 @@ type TestDiffSharp () =
         let ng4 = dsharp.numg 1e-3 fscalarscalar x
         let fxCorrect = fscalarscalar x
         let gCorrect = fscalarscalarDiff x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(gCorrect, g1)
-        Assert.AreEqual(gCorrect, g2)
-        Assert.AreEqual(gCorrect, g3)
-        Assert.AreEqual(gCorrect, g4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(gCorrect, g1)
+        Assert.CheckEqual(gCorrect, g2)
+        Assert.CheckEqual(gCorrect, g3)
+        Assert.CheckEqual(gCorrect, g4)
         Assert.True(gCorrect.allclose(ng1, 0.1))
         Assert.True(gCorrect.allclose(ng2, 0.1))
         Assert.True(gCorrect.allclose(ng3, 0.1))
@@ -240,14 +240,14 @@ type TestDiffSharp () =
         let ngv4 = dsharp.numgvp 1e-5 rosenbrock x v
         let fxCorrect = rosenbrock x
         let gvCorrect = dsharp.dot(rosenbrockGrad x,  v)
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(gvCorrect, gv1)
-        Assert.AreEqual(gvCorrect, gv2)
-        Assert.AreEqual(gvCorrect, gv3)
-        Assert.AreEqual(gvCorrect, gv4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(gvCorrect, gv1)
+        Assert.CheckEqual(gvCorrect, gv2)
+        Assert.CheckEqual(gvCorrect, gv3)
+        Assert.CheckEqual(gvCorrect, gv4)
         Assert.True(gvCorrect.allclose(ngv1, 0.1))
         Assert.True(gvCorrect.allclose(ngv2, 0.1))
         Assert.True(gvCorrect.allclose(ngv3, 0.1))
@@ -267,14 +267,14 @@ type TestDiffSharp () =
         let njv4 = dsharp.numjvp 1e-3 fvect3vect2 x v
         let fxCorrect = fvect3vect2 x
         let jvCorrect = dsharp.matmul(fvect3vect2Jacobian x,  v.view([-1;1])).view(-1)
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(jvCorrect, jv1)
-        Assert.AreEqual(jvCorrect, jv2)
-        Assert.AreEqual(jvCorrect, jv3)
-        Assert.AreEqual(jvCorrect, jv4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(jvCorrect, jv1)
+        Assert.CheckEqual(jvCorrect, jv2)
+        Assert.CheckEqual(jvCorrect, jv3)
+        Assert.CheckEqual(jvCorrect, jv4)
         Assert.True(jvCorrect.allclose(njv1, 0.1))
         Assert.True(jvCorrect.allclose(njv2, 0.1))
         Assert.True(jvCorrect.allclose(njv3, 0.1))
@@ -288,9 +288,9 @@ type TestDiffSharp () =
         let jTv2 = dsharp.jacobianTv fvect3vect2 x v
         let fxCorrect = fvect3vect2 x
         let jTvCorrect = dsharp.matmul(v.view([1;-1]), fvect3vect2Jacobian x).view(-1)
-        Assert.AreEqual(fxCorrect, fx)
-        Assert.AreEqual(jTvCorrect, jTv)
-        Assert.AreEqual(jTvCorrect, jTv2)
+        Assert.CheckEqual(fxCorrect, fx)
+        Assert.CheckEqual(jTvCorrect, jTv)
+        Assert.CheckEqual(jTvCorrect, jTv2)
 
     [<Test>]
     member this.TestJacobian () =
@@ -305,14 +305,14 @@ type TestDiffSharp () =
         let nj4 = dsharp.numj 1e-4 fvect2vect2 x
         let fxCorrect = fvect2vect2 x
         let jCorrect = fvect2vect2Jacobian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(jCorrect, j1)
-        Assert.AreEqual(jCorrect, j2)
-        Assert.AreEqual(jCorrect, j3)
-        Assert.AreEqual(jCorrect, j4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(jCorrect, j1)
+        Assert.CheckEqual(jCorrect, j2)
+        Assert.CheckEqual(jCorrect, j3)
+        Assert.CheckEqual(jCorrect, j4)
         Assert.True(jCorrect.allclose(nj1, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj2, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj3, 0.1, 0.1))
@@ -329,14 +329,14 @@ type TestDiffSharp () =
         let nj4 = dsharp.numj 1e-4 fvect3vect2 x
         let fxCorrect = fvect3vect2 x
         let jCorrect = fvect3vect2Jacobian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(jCorrect, j1)
-        Assert.AreEqual(jCorrect, j2)
-        Assert.AreEqual(jCorrect, j3)
-        Assert.AreEqual(jCorrect, j4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(jCorrect, j1)
+        Assert.CheckEqual(jCorrect, j2)
+        Assert.CheckEqual(jCorrect, j3)
+        Assert.CheckEqual(jCorrect, j4)
         Assert.True(jCorrect.allclose(nj1, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj2, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj3, 0.1, 0.1))
@@ -353,14 +353,14 @@ type TestDiffSharp () =
         let nj4 = dsharp.numj 1e-4 fvect3vect3 x
         let fxCorrect = fvect3vect3 x
         let jCorrect = fvect3vect3Jacobian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(jCorrect, j1)
-        Assert.AreEqual(jCorrect, j2)
-        Assert.AreEqual(jCorrect, j3)
-        Assert.AreEqual(jCorrect, j4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(jCorrect, j1)
+        Assert.CheckEqual(jCorrect, j2)
+        Assert.CheckEqual(jCorrect, j3)
+        Assert.CheckEqual(jCorrect, j4)
         Assert.True(jCorrect.allclose(nj1, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj2, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj3, 0.1, 0.1))
@@ -377,14 +377,14 @@ type TestDiffSharp () =
         let nj4 = dsharp.numj 1e-4 fvect3vect4 x
         let fxCorrect = fvect3vect4 x
         let jCorrect = fvect3vect4Jacobian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(jCorrect, j1)
-        Assert.AreEqual(jCorrect, j2)
-        Assert.AreEqual(jCorrect, j3)
-        Assert.AreEqual(jCorrect, j4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(jCorrect, j1)
+        Assert.CheckEqual(jCorrect, j2)
+        Assert.CheckEqual(jCorrect, j3)
+        Assert.CheckEqual(jCorrect, j4)
         Assert.True(jCorrect.allclose(nj1, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj2, 0.1, 0.1))
         Assert.True(jCorrect.allclose(nj3, 0.1, 0.1))
@@ -401,16 +401,16 @@ type TestDiffSharp () =
         let fxCorrect = rosenbrock x
         let gvCorrect = dsharp.dot(rosenbrockGrad x,  v)        
         let hvCorrect = dsharp.matmul(rosenbrockHessian x,  v.view([-1;1])).view(-1)
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(gvCorrect, gv1)
-        Assert.AreEqual(gvCorrect, gv2)
-        Assert.AreEqual(gvCorrect, gv3)
-        Assert.AreEqual(gvCorrect, gv4)
-        Assert.AreEqual(hvCorrect, hv1)
-        Assert.AreEqual(hvCorrect, hv2)
-        Assert.AreEqual(hvCorrect, hv3)
-        Assert.AreEqual(hvCorrect, hv4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(gvCorrect, gv1)
+        Assert.CheckEqual(gvCorrect, gv2)
+        Assert.CheckEqual(gvCorrect, gv3)
+        Assert.CheckEqual(gvCorrect, gv4)
+        Assert.CheckEqual(hvCorrect, hv1)
+        Assert.CheckEqual(hvCorrect, hv2)
+        Assert.CheckEqual(hvCorrect, hv3)
+        Assert.CheckEqual(hvCorrect, hv4)
 
     [<Test>]
     member this.TestGradhessian () =
@@ -426,18 +426,18 @@ type TestDiffSharp () =
         let fxCorrect = rosenbrock x
         let gCorrect = rosenbrockGrad x
         let hCorrect = rosenbrockHessian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(gCorrect, g1)
-        Assert.AreEqual(gCorrect, g2)
-        Assert.AreEqual(gCorrect, g3)
-        Assert.AreEqual(gCorrect, g4)
-        Assert.AreEqual(hCorrect, h1)
-        Assert.AreEqual(hCorrect, h2)
-        Assert.AreEqual(hCorrect, h3)
-        Assert.AreEqual(hCorrect, h4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(gCorrect, g1)
+        Assert.CheckEqual(gCorrect, g2)
+        Assert.CheckEqual(gCorrect, g3)
+        Assert.CheckEqual(gCorrect, g4)
+        Assert.CheckEqual(hCorrect, h1)
+        Assert.CheckEqual(hCorrect, h2)
+        Assert.CheckEqual(hCorrect, h3)
+        Assert.CheckEqual(hCorrect, h4)
         Assert.True(gCorrect.allclose(ng1, 0.1))
         Assert.True(gCorrect.allclose(ng2, 0.1))
         Assert.True(gCorrect.allclose(ng3, 0.1))
@@ -461,14 +461,14 @@ type TestDiffSharp () =
         let nhv4 = dsharp.numhvp 1e-3 rosenbrock x v
         let fxCorrect = rosenbrock x
         let hvCorrect = dsharp.matmul(rosenbrockHessian x,  v.view([-1;1])).view(-1)
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(hvCorrect, hv1)
-        Assert.AreEqual(hvCorrect, hv2)
-        Assert.AreEqual(hvCorrect, hv3)
-        Assert.AreEqual(hvCorrect, hv4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(hvCorrect, hv1)
+        Assert.CheckEqual(hvCorrect, hv2)
+        Assert.CheckEqual(hvCorrect, hv3)
+        Assert.CheckEqual(hvCorrect, hv4)
         Assert.True(hvCorrect.allclose(nhv1, 0.1))
         Assert.True(hvCorrect.allclose(nhv2, 0.1))
         Assert.True(hvCorrect.allclose(nhv3, 0.1))
@@ -487,14 +487,14 @@ type TestDiffSharp () =
         let nh4 = dsharp.numh 1e-3 rosenbrock x
         let fxCorrect = rosenbrock x
         let hCorrect = rosenbrockHessian x
-        Assert.AreEqual(fxCorrect, fx1)
-        Assert.AreEqual(fxCorrect, nfx1)
-        Assert.AreEqual(fxCorrect, fx2)
-        Assert.AreEqual(fxCorrect, nfx2)
-        Assert.AreEqual(hCorrect, h1)
-        Assert.AreEqual(hCorrect, h2)
-        Assert.AreEqual(hCorrect, h3)
-        Assert.AreEqual(hCorrect, h4)
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(hCorrect, h1)
+        Assert.CheckEqual(hCorrect, h2)
+        Assert.CheckEqual(hCorrect, h3)
+        Assert.CheckEqual(hCorrect, h4)
         Assert.True(hCorrect.allclose(nh1, 0.1))
         Assert.True(hCorrect.allclose(nh2, 0.1))
         Assert.True(hCorrect.allclose(nh3, 0.1))
@@ -509,10 +509,10 @@ type TestDiffSharp () =
         let nl2 = dsharp.numlaplacian 1e-3 rosenbrock x
         let fxCorrect = rosenbrock x
         let lCorrect = (rosenbrockHessian x).trace()
-        Assert.AreEqual(fxCorrect, fx)
-        Assert.AreEqual(fxCorrect, nfx)
-        Assert.AreEqual(lCorrect, l)
-        Assert.AreEqual(lCorrect, l2)
+        Assert.CheckEqual(fxCorrect, fx)
+        Assert.CheckEqual(fxCorrect, nfx)
+        Assert.CheckEqual(lCorrect, l)
+        Assert.CheckEqual(lCorrect, l2)
         Assert.True(lCorrect.allclose(nl, 0.1))
         Assert.True(lCorrect.allclose(nl2, 0.1))
 
@@ -576,45 +576,45 @@ type TestDiffSharp () =
         // Default reference backend with "GPU" (faked)
         let device = Device.Default
         dsharp.config(device=Device.GPU)
-        Assert.AreEqual(Device.GPU, Device.Default)
+        Assert.CheckEqual(Device.GPU, Device.Default)
         dsharp.config(device=device)
 
         // Torch with default backend (CPU)
         let backend = Backend.Default
         dsharp.config(backend=Backend.Torch)
-        Assert.AreEqual(Backend.Torch, Backend.Default)
+        Assert.CheckEqual(Backend.Torch, Backend.Default)
         dsharp.config(backend=backend)
 
         // Default reference backend with "int32"
         let dtype = Dtype.Default
         dsharp.config(dtype=Dtype.Int32)
-        Assert.AreEqual(Dtype.Int32, Dtype.Default)
+        Assert.CheckEqual(Dtype.Int32, Dtype.Default)
         dsharp.config(dtype=dtype)
 
     [<Test>]
     member _.TestDevices () =
         // Get devices for default reference backend
         let defaultReferenceBackendDevices = dsharp.devices()
-        Assert.AreEqual([Device.CPU], defaultReferenceBackendDevices)
+        Assert.CheckEqual([Device.CPU], defaultReferenceBackendDevices)
 
         // Get devices for explicitly specified reference backend
         let explicitReferenceBackendDevices = dsharp.devices(backend=Backend.Reference)
-        Assert.AreEqual([Device.CPU], explicitReferenceBackendDevices)
+        Assert.CheckEqual([Device.CPU], explicitReferenceBackendDevices)
 
         // Get CPU devices for explicitly specified reference backend
         let explicitReferenceBackendCPUDevices = dsharp.devices(backend=Backend.Reference, deviceType=DeviceType.CPU)
-        Assert.AreEqual([Device.CPU], explicitReferenceBackendCPUDevices)
+        Assert.CheckEqual([Device.CPU], explicitReferenceBackendCPUDevices)
 
         // Get devices for explicitly specified Torch backend
         let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
         Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
         let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
-        Assert.AreEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
+        Assert.CheckEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
 
         let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
         Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
         let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
-        Assert.AreEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
+        Assert.CheckEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
 
     [<Test>]
     member _.TestIsDeviceTypeSupported () =
@@ -627,7 +627,7 @@ type TestDiffSharp () =
 
         let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
         let deviceSupported = dsharp.isDeviceTypeSupported(DeviceType.CUDA, Backend.Torch)
-        Assert.AreEqual(cudaAvailable, deviceSupported)
+        Assert.CheckEqual(cudaAvailable, deviceSupported)
 
     [<Test>]
     member _.TestTensorAPIStyles () =
@@ -645,5 +645,5 @@ type TestDiffSharp () =
         dsharp.seed(0)
         let y3 = x |> dsharp.dropout 0.2 |> dsharp.leakyRelu 0.1 |> dsharp.sum 1
 
-        Assert.AreEqual(y1, y2)
-        Assert.AreEqual(y1, y3)
+        Assert.CheckEqual(y1, y2)
+        Assert.CheckEqual(y1, y3)
