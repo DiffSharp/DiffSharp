@@ -3,11 +3,7 @@ namespace DiffSharp
 open DiffSharp.Backends
 open DiffSharp.Util
 
-
-
-
 /// Tensor operations
-
 type dsharp =
 
     /// <summary>
@@ -26,7 +22,7 @@ type dsharp =
     static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Seeds all backends with the given random seed, or a new seed based on the current time if no seed is specified.</summary>
-    static member seed(?seed:int) = BackendStatics.Seed(?seed=seed)
+    static member seed(?seed:int) = BackendTensorStatics.Seed(?seed=seed)
 
     /// <summary>Indicates if an object is a tensor</summary>
     static member isTensor(value:obj) = value :? Tensor
@@ -507,13 +503,13 @@ type dsharp =
     static member config((dtype,device,backend)) = dsharp.config(dtype, device, backend)
 
     /// <summary>TBD</summary>
-    static member devices(?deviceType, ?backend) = BackendStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+    static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
 
     /// <summary>TBD</summary>
-    static member isDeviceTypeSupported(deviceType, ?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
+    static member isDeviceTypeSupported(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
 
     /// <summary>TBD</summary>
-    static member isCudaSupported(?backend) = BackendStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
+    static member isCudaSupported(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
 
 
 // Differentiable methods mirroring F# collection modules

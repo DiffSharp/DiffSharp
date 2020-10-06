@@ -12,10 +12,10 @@ open DiffSharp.Util
 ///   <summary>Contains types and functionality related to backend implementations for DiffSharp.</summary>
 /// </namespacedoc>
 [<AbstractClass>]
-type BackendStatics() = 
+type BackendTensorStatics() = 
     // cache for most recently accessed backend
     static let mutable last = None
-    static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, BackendStatics>()
+    static let backends = System.Collections.Concurrent.ConcurrentDictionary<int, BackendTensorStatics>()
 
     /// Sets the seed for the default random number generator of the backend
     abstract Seed: seed:int -> unit
@@ -83,13 +83,13 @@ type BackendStatics() =
                     let asm = 
                         try System.Reflection.Assembly.Load(fullName)
                         with e ->  failwithf "Couldn't find assembly '%s', error = %s" fullName (e.ToString())
-                    let typeName = sprintf "DiffSharp.Backends.%s.%sBackendStatics" backend.Name backend.Name
+                    let typeName = sprintf "DiffSharp.Backends.%s.%sBackendTensorStatics" backend.Name backend.Name
                     let theType = asm.GetType(typeName)
                     if isNull theType then failwithf "Couldn't find type '%s' in assembly '%s'" typeName fullName
                     let obj = 
                         match System.Activator.CreateInstance(theType) with
-                        | :? BackendStatics as obj -> obj
-                        | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement BackendStatics" typeName fullName
+                        | :? BackendTensorStatics as obj -> obj
+                        | _ -> failwithf "Found the type '%s' in assembly '%s' but it didn't implement BackendTensorStatics" typeName fullName
                     obj
                     ) 
             last <- Some (code, res)
@@ -135,63 +135,63 @@ type RawTensor() =
     
     /// Gets a tensor containing arbitrary values for the given shape and configuration
     static member Empty(shape:Shape, ?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Empty(shape, dtype, device)
 
     /// Gets the scalar zero tensor for the given configuration
     static member Zero(?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Zero(dtype, device)
 
     /// Gets the zero tensor for the given shape and configuration
     static member Zeros(shape:Shape, ?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Zeros(shape, dtype, device)
 
     /// Gets the scalar 1 tensor for the given configuration
     static member One(?dtype, ?device, ?backend) = 
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.One(dtype, device)
 
     /// Gets a tensor filled with 1 values for the given shape and configuration
     static member Ones(shape:Shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Ones(shape, dtype, device)
 
     /// Gets a tensor filled with the given value for the given shape and configuration
     static member Full(shape:Shape, value, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Full(shape, value, dtype, device)
 
     /// Gets a tensor filled with random values for the given shape and configuration
     static member Random(shape:Shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.Random(shape, dtype, device)
 
     /// Gets a tensor filled with random values from the normal distribution for the given shape and configuration
     static member RandomNormal(shape:Shape, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.RandomNormal(shape, dtype, device)
 
     /// Gets a tensor filled with random integer values from the given range for the given shape and configuration
     static member RandomInt(shape:Shape, low, high, ?dtype, ?device, ?backend) =
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let dtype = defaultArg dtype Dtype.Default
         let device = defaultArg device Device.Default
         statics.RandomInt(shape, low, high, dtype, device)
@@ -241,7 +241,7 @@ type RawTensor() =
                 let a,s = DataConverter.dataOfValuesForFloat32 values 
                 (a :> Array), s, Dtype.Float32
 
-        let statics = BackendStatics.Get(?backend=backend)
+        let statics = BackendTensorStatics.Get(?backend=backend)
         let device = defaultArg device Device.Default
 
         statics.CreateFromFlatArray(data, shape, dtype, device)

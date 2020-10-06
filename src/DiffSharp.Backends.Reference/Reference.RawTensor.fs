@@ -1525,12 +1525,12 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
 
 #if TEST_DUPLICATE_BACKEND
-type TestDuplicateBackendStatics() = 
+type TestDuplicateBackendTensorStatics() = 
 #else
-type ReferenceBackendStatics() = 
+type ReferenceBackendTensorStatics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit BackendTensorStatics()
 
     override _.GetDevices(deviceType) =
         match deviceType with 
