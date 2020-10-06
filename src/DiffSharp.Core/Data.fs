@@ -1,6 +1,7 @@
 namespace rec DiffSharp.Data
 
 open DiffSharp
+open DiffSharp.Compose
 open DiffSharp.Util
 // open System
 open System.Net

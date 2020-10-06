@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <Compile Include="TestUtil.fs" />
+    <Compile Include="TestCombo.fs" />
+    <Compile Include="TestCombos.fs" />
     <Compile Include="TestTensor.fs" />
     <Compile Include="TestDiffSharp.fs" />
     <Compile Include="TestDerivatives.fs" />

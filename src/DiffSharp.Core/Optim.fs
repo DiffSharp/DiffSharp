@@ -1,5 +1,6 @@
 namespace rec DiffSharp.Optim
 open DiffSharp
+open DiffSharp.Shorten
 open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Util

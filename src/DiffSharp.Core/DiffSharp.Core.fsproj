@@ -5,16 +5,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
+    <Compile Include="Backend.fs" />
+    <Compile Include="Device.fs" />
     <Compile Include="Dtype.fs" />
     <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="RawTensor.fs" />
     <Compile Include="Tensor.fs" />
     <Compile Include="DiffSharp.fs" />
+    <Compile Include="DiffSharp.Compose.fs" />
+    <Compile Include="DiffSharp.Shorten.fs" />
+    <Compile Include="DiffSharp.Numerical.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Optim.fs" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+  <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />
   </ItemGroup>
 </Project>
