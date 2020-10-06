@@ -446,7 +446,7 @@ module rec Shape =
 
     /// Checks if the given shape is appropriate for a view operation.
     let checkCanView (shape1: Shape) (shape2: Shape) =
-        if length shape1 <> length shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+        if nelement shape1 <> nelement shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
 
     /// Checks if the given shape is appropriate for a flatten operation.
     let checkCanFlatten (shape: Shape) (startDim: int) (endDim: int) =
@@ -556,7 +556,7 @@ module rec Shape =
         elif numUnspecified = 0 then
             shape
         else
-            let divisor = shape |> Array.filter ((<>) -1) |> length
+            let divisor = shape |> Array.filter ((<>) -1) |> Shape.nelement
             if nelement % divisor <> 0 then failwithf "Cannot complete shape %A to have %A elements" shape nelement
             let missing = nelement / divisor
             [|for d in shape do if d = -1 then yield missing else yield d|]
