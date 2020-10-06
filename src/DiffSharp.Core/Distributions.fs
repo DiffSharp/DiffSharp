@@ -68,7 +68,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.batchShape = d.mean.shape
 
     /// <summary>TBD</summary>
-    override d.eventShape = [||]
+    override d.eventShape = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = mean
@@ -107,7 +107,7 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.batchShape = low.shape
 
     /// <summary>TBD</summary>
-    override d.eventShape = [||]
+    override d.eventShape = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = (low + high) / 2.
@@ -149,7 +149,7 @@ type Bernoulli(?probs:Tensor, ?logits:Tensor) =
     override d.batchShape = d.probs.shape
 
     /// <summary>TBD</summary>
-    override d.eventShape = [||]
+    override d.eventShape = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = d.probs
@@ -188,10 +188,10 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
     member d.logits = _logits.cast(_dtype)
 
     /// <summary>TBD</summary>
-    override d.batchShape = if d.probs.dim = 1 then [||] else [|d.probs.shape.[0]|]
+    override d.batchShape = if d.probs.dim = 1 then Shape.scalar else [|d.probs.shape.[0]|]
 
     /// <summary>TBD</summary>
-    override d.eventShape = [||]
+    override d.eventShape = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = dsharp.onesLike(d.probs) * System.Double.NaN
