@@ -3,7 +3,6 @@
 open DiffSharp.Backends
 open DiffSharp.Util
 open System
-open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
