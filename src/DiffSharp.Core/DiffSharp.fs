@@ -1,3 +1,4 @@
+﻿namespace DiffSharp
 namespace DiffSharp
 
 open DiffSharp.Backends
@@ -19,7 +20,12 @@ type dsharp =
     /// <remarks>
     ///  The data is converted from arrays, sequences, lists and tuples of primitive values to a tensor whose shape is inferred from the data.
     /// </remarks>
-    static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Seeds all backends with the given random seed, or a new seed based on the current time if no seed is specified.</summary>
     static member seed(?seed:int) = BackendTensorStatics.Seed(?seed=seed)
@@ -38,45 +44,96 @@ type dsharp =
     ///
     /// <param name="fileName">The file from which to load the tensor.</param>
     /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
-    /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
-    /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
+    /// <param name="device">The device of the resulting tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The device of the resulting tensor. Default: if None, uses Backend.Default.</param>
     ///
     /// <remarks>
     ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
     ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
     ///    in the process of reloading.
     /// </remarks>
-    static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration</summary>
-    static member empty(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Empty(shape|>Seq.toArrayQuick, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member empty(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Empty(shape|>Seq.toArrayQuick, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given length, element type and configuration</summary>
-    static member empty(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Empty([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member empty(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Empty([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
-    static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration</summary>
-    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Zeros(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given length, element type and configuration</summary>
-    static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Get the scalar '1' tensor for the given configuration</summary>
-    static member one(?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member one(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration</summary>
-    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Ones(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with '1' values for the given element type and configuration</summary>
-    static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration</summary>
-    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with <paramref name="value" />, for the given element type and configuration</summary>
-    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="value">The scalar giving the the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
 
     /// <summary>
     /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
@@ -86,91 +143,251 @@ type dsharp =
     /// <remarks>
     ///  Non-integer steps may be subject to floating point rounding errors when comparing against end.
     /// </remarks>
-    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
+    /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
+    /// with values from the interval [start, end) taken with common difference step beginning from start.
+    /// </summary>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
+    /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+
+    /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
+    /// <param name="rows">The number of rows</param>
+    /// <param name="cols">The number of columns with default being n</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor.eye(rows=rows, ?cols=cols, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Returns a one-hot tensor, with one location set to 1, and all others 0.</summary>
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="hot">The location to set to 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = 
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
+
+    /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Random(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.RandomNormal(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
+    /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
+    /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.RandomInt(shape|>Shape.create, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
+    /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
+    /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
+    /// <param name="probs">The input tensor containing probabilities.</param>
+    /// <param name="numSamples">The number of samples to draw.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member multinomial(probs:Tensor, numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
+    /// <param name="probs">The input tensor of probability values for the Bernoulli distribution.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member bernoulli(probs:Tensor, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        probs.bernoulli(?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
+    static member dropout(input:Tensor, ?p:double) = input.dropout(?p=p)
 
     /// <summary>TBD</summary>
-    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    /// <param name="input">The input tensor.</param>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
+    static member dropout2d(input:Tensor, ?p:double) = input.dropout2d(?p=p)
 
     /// <summary>TBD</summary>
-    static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.eye(rows=rows, ?cols=cols, ?dtype=dtype, ?device=device, ?backend=backend)
+    /// <param name="input">The input tensor.</param>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
+    static member dropout3d(input:Tensor, ?p:double) = input.dropout3d(?p=p)
 
     /// <summary>TBD</summary>
-    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member zerosLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+        input.zerosLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member onesLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+        input.onesLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="value">The scalar giving the the initial values for the tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member fullLike(input:Tensor, value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+        input.fullLike(value, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
+    /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member arangeLike(input:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
+    /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member arangeLike(input:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt(shape|>Shape.create, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="length">The length of the returned tensor.</param>
+    /// <param name="hot">The location to set to 1.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member onehotLike(input:Tensor, length:int, hot:int, ?dtype, ?device, ?backend) =
+        input.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member randLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+            input.randLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member randnLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+        input.randnLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Returns a tensor with the same shape as Tensor input filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
+    /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
+    /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member randintLike(input:Tensor, low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) =
+        input.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member zeroLike(input:Tensor, ?dtype, ?device, ?backend) =
+        input.zeroLike(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member multinomial(probs:Tensor, numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member oneLike(input:Tensor, ?dtype, ?device, ?backend) =
+        input.oneLike(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member bernoulli(probs:Tensor, ?dtype:Dtype, ?device:Device, ?backend:Backend) = probs.bernoulli(?dtype=dtype, ?device=device, ?backend=backend)
+    /// <param name="input">The input tensor.</param>
+    static member nelement(input:Tensor) = input.nelement
 
     /// <summary>TBD</summary>
-    static member dropout(a:Tensor, ?p:double) = a.dropout(?p=p)
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="value">The .NET object giving the the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member like(input:Tensor, value:obj, ?dtype, ?device, ?backend) =
+        input.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member dropout2d(a:Tensor, ?p:double) = a.dropout2d(?p=p)
-
-    /// <summary>TBD</summary>
-    static member dropout3d(a:Tensor, ?p:double) = a.dropout3d(?p=p)
-
-    /// <summary>TBD</summary>
-    static member zerosLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.zerosLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member onesLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.onesLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member fullLike(a:Tensor, value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.fullLike(value, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member arangeLike(a:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member arangeLike(a:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member onehotLike(a:Tensor, length:int, hot:int, ?dtype, ?device, ?backend) = a.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member randLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member randnLike(a:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randnLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member randintLike(a:Tensor, low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = a.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member zeroLike(a:Tensor, ?dtype, ?device, ?backend) = a.zeroLike(?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member oneLike(a:Tensor, ?dtype, ?device, ?backend) = a.oneLike(?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member nelement(a:Tensor) = a.nelement
-
-    /// <summary>TBD</summary>
-    static member like(a:Tensor, value:obj, ?dtype, ?device, ?backend) = a.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member clone(a:Tensor) = a.clone()
+    /// <param name="input">The input tensor.</param>
+    static member clone(input:Tensor) = input.clone()
 
     /// <summary>TBD</summary>
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
@@ -185,28 +402,35 @@ type dsharp =
     static member ge(a:Tensor, b:Tensor) = a.ge(b)
 
     /// <summary>TBD</summary>
-    static member isinf(a:Tensor) = a.isinf()
+    /// <param name="input">The input tensor.</param>
+    static member isinf(input:Tensor) = input.isinf()
 
     /// <summary>TBD</summary>
-    static member isnan(a:Tensor) = a.isnan()
+    /// <param name="input">The input tensor.</param>
+    static member isnan(input:Tensor) = input.isnan()
 
     /// <summary>TBD</summary>
-    static member hasinf(a:Tensor) = a.hasinf()
+    /// <param name="input">The input tensor.</param>
+    static member hasinf(input:Tensor) = input.hasinf()
 
     /// <summary>TBD</summary>
-    static member hasnan(a:Tensor) = a.hasnan()
+    /// <param name="input">The input tensor.</param>
+    static member hasnan(input:Tensor) = input.hasnan()
 
     /// <summary>TBD</summary>
-    static member argmax(a:Tensor) = a.argmax()
+    /// <param name="input">The input tensor.</param>
+    static member argmax(input:Tensor) = input.argmax()
 
     /// <summary>TBD</summary>
-    static member argmin(a:Tensor) = a.argmin()
+    /// <param name="input">The input tensor.</param>
+    static member argmin(input:Tensor) = input.argmin()
 
     /// <summary>TBD</summary>
-    static member max(a:Tensor) = a.max()
+    /// <param name="input">The input tensor.</param>
+    static member max(input:Tensor) = input.max()
 
     /// <summary>TBD</summary>
-    static member min(a:Tensor) = a.min()
+    static member min(input:Tensor) = input.min()
 
     /// <summary>TBD</summary>
     static member max(a:Tensor, b:Tensor) = a.max(b)
@@ -214,38 +438,61 @@ type dsharp =
     /// <summary>TBD</summary>
     static member min(a:Tensor, b:Tensor) = a.min(b)
 
-    /// <summary>TBD</summary>
-    static member clamp(a:Tensor, ?low:scalar, ?high:scalar) = a.clamp(?low=low, ?high=high)
+    /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="low">The lower-bound of the range to be clamped to.</param>
+    /// <param name="high">The upper-bound of the range to be clamped to.</param>
+    static member clamp(input:Tensor, ?low:scalar, ?high:scalar) = input.clamp(?low=low, ?high=high)
 
     /// <summary>TBD</summary>
-    static member normalize(a:Tensor) = a.normalize()
+    /// <param name="input">The input tensor.</param>
+    static member normalize(input:Tensor) = input.normalize()
 
     /// <summary>TBD</summary>
-    static member standardize(a:Tensor) = a.standardize()
+    /// <param name="input">The input tensor.</param>
+    static member standardize(input:Tensor) = input.standardize()
+
+    /// <summary>
+    ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
+    ///  The argument offset controls which diagonal to consider.
+    /// </summary>
+    /// <param name="input">The input tensor. Must be at least 2-dimensional.</param>
+    /// <param name="offset">Which diagonal to consider. Default: 0.</param>
+    /// <param name="dim1">The first dimension with respect to which to take diagonal. Default: 0..</param>
+    /// <param name="dim2">The second dimension with respect to which to take diagonal. Default: 1.</param>
+    static member diagonal(input:Tensor, ?offset:int, ?dim1:int, ?dim2:int) =
+        input.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
 
     /// <summary>TBD</summary>
-    static member diagonal(a:Tensor, ?offset:int, ?dim1:int, ?dim2:int) = a.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
+    /// <param name="input">The input tensor.</param>
+    static member trace(input:Tensor) = input.trace()
 
-    /// <summary>TBD</summary>
-    static member trace(a:Tensor) = a.trace()
+    /// <summary>Returns a new view of the input tensor with singleton dimensions expanded to a larger size</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    static member expand(input:Tensor, shape:seq<int>) = input.expand(shape)
 
-    /// <summary>TBD</summary>
-    static member expand(a:Tensor, shape:seq<int>) = a.expand(shape)
-
-    /// <summary>TBD</summary>
-    static member expandAs(a:Tensor, b:Tensor) = a.expandAs(b)
+    /// <summary>Expand the input tensor to the same size as other tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="other">The result tensor has the same size as other.</param>
+    static member expandAs(input:Tensor, other:Tensor) = input.expandAs(other)
 
     /// <summary>TBD</summary>
     static member stack(tensors:seq<Tensor>, ?dim:int) = Tensor.stack(tensors, ?dim=dim)
 
     /// <summary>TBD</summary>
-    static member unstack(a:Tensor, ?dim:int) = a.unstack(?dim=dim)
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to remove.</param>
+    static member unstack(input:Tensor, ?dim:int) = input.unstack(?dim=dim)
 
     /// <summary>TBD</summary>
     static member cat(tensors:seq<Tensor>, ?dim:int) = Tensor.cat(tensors, ?dim=dim)
 
-    /// <summary>TBD</summary>
-    static member split(a:Tensor, sizes:seq<int>, ?dim:int) = a.split(sizes, ?dim=dim)
+    /// <summary>Splits the tensor into chunks. The tensor will be split into sizes.Length chunks each with a corresponding size in the given dimension.</summary>
+    /// <param name="input">The tensor to split.</param>
+    /// <param name="sizes">The size of a single chunk or list of sizes for each chunk.</param>
+    /// <param name="dim">The dimension along which to split the tensor.</param>
+    static member split(input:Tensor, sizes:seq<int>, ?dim:int) = input.split(sizes, ?dim=dim)
 
     /// <summary>TBD</summary>
     static member add(a:Tensor, b:Tensor) = a.add(b)
@@ -269,225 +516,503 @@ type dsharp =
     static member dot(a:Tensor, b:Tensor) = a.dot(b)
 
     /// <summary>TBD</summary>
-    static member neg(a:Tensor) = a.neg()
+    /// <param name="input">The input tensor.</param>
+    static member neg(input:Tensor) = input.neg()
+
+    /// <summary>Returns the sum of all elements in the input tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    static member sum(input:Tensor) = input.sum()
+
+    /// <summary>Returns the sum of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
+    /// <remarks>
+    ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member sum(input:Tensor, dim:int, ?keepDim:bool) = input.sum(dim, ?keepDim=keepDim)
+
+    /// <summary>Returns the mean value of all elements in the input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member mean(input:Tensor) = input.mean()
+
+    /// <summary>Returns the mean value of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
+    /// <remarks>
+    ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member mean(input:Tensor, dim:int, ?keepDim:bool) = input.mean(dim, ?keepDim=keepDim)
 
     /// <summary>TBD</summary>
-    static member sum(a:Tensor) = a.sum()
+    /// <remarks>
+    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
+    static member variance(input:Tensor, ?unbiased:bool) = input.variance(?unbiased=unbiased)
 
     /// <summary>TBD</summary>
-    static member sum(a:Tensor, dim:int, ?keepDim:bool) = a.sum(dim, ?keepDim=keepDim)
+    /// <remarks>
+    ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
+    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
+    static member variance(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
-    static member mean(a:Tensor) = a.mean()
+    /// <remarks>
+    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
+    static member stddev(input:Tensor, ?unbiased:bool) = input.stddev(?unbiased=unbiased)
 
     /// <summary>TBD</summary>
-    static member mean(a:Tensor, dim:int, ?keepDim:bool) = a.mean(dim, ?keepDim=keepDim)
+    /// <remarks>
+    ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
+    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
+    static member stddev(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+
+    /// <summary>Gathers values along an axis specified by dim.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
+    static member gather(input:Tensor, dim:int, indices:Tensor) = input.gather(dim, indices)
+
+    /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim0">The first dimension to be transposed.</param>
+    /// <param name="dim1">The second dimension to be transposed.</param>
+    static member transpose(input:Tensor, dim0:int, dim1:int) = input.transpose(dim0, dim1)
+
+    /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member transpose(input:Tensor) = input.transpose()
+
+    /// <summary>Returns a tensor with all the dimensions of input of size 1 removed.</summary>
+    /// <remarks>If the tensor has a batch dimension of size 1, then squeeze(input) will also remove the batch dimension, which can lead to unexpected errors.</remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">If given, the input will be squeezed only in this dimension.</param>
+    static member squeeze(input:Tensor, ?dim:int) = input.squeeze(?dim=dim)
+
+    /// <summary>Returns a new tensor with a dimension of size one inserted at the specified position</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The index at which to insert the singleton dimension.</param>
+    static member unsqueeze(input:Tensor, dim:int) = input.unsqueeze(dim)
+
+    /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dims">The axis to flip on.</param>
+    static member flip(input:Tensor, dims:seq<int>) = input.flip(dims)
+
+    /// <summary>Dilate the tensor in using the given dilations in each corresponding dimension.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dilations">The dilations to use.</param>
+    static member dilate(input:Tensor, dilations:seq<int>) = input.dilate(dilations)
+
+    /// <summary>Reverse the dilation of the tensor in using the given dilations in each corresponding dimension.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dilations">The dilations to use.</param>
+    static member undilate(input:Tensor, dilations:seq<int>) = input.undilate(dilations)
+
+    /// <summary>Repeat elements of a tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension along which to repeat values.</param>
+    /// <param name="times">The number of repetitions for each element.</param>
+    static member repeat(input:Tensor, dim:int, times:int) = input.repeat(dim, times)
+
+    /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.</remarks>
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    static member view(input:Tensor, shape:seq<int>) = input.view(shape)
+
+    /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.</remarks>
+    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <param name="shape">The desired shape of returned tensor.</param>
+    static member view(input:Tensor, shape:int) = input.view(shape)
+
+    /// <summary>View this tensor as the same size as other.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="other">The result tensor has the same size as other.</param>
+    static member viewAs(input:Tensor, other:Tensor) = input.viewAs(other)
+
+    /// <summary>Flattens a contiguous range of dims in a tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="startDim">The first dim to flatten.</param>
+    /// <param name="endDim">The last dim to flatten.</param>
+    static member flatten(input:Tensor, ?startDim:int, ?endDim:int) = input.flatten(?startDim=startDim, ?endDim=endDim)
+
+    /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member sign(input:Tensor) = input.sign()
+
+    /// <summary>Returns a new tensor with the floor of the elements of input, the largest integer less than or equal to each element.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member floor(input:Tensor) = input.floor()
+
+    /// <summary>Returns a new tensor with the ceil of the elements of input, the smallest integer greater than or equal to each element.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member ceil(input:Tensor) = input.ceil()
+
+    /// <summary>Returns a new tensor with each of the elements of input rounded to the closest integer.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member round(input:Tensor) = input.round()
+
+    /// <summary>Computes the element-wise absolute value of the given input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member abs(input:Tensor) = input.abs()
+
+    /// <summary>Applies the rectified linear unit function element-wise.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member relu(input:Tensor) = input.relu()
+
+    /// <summary>Applies the leaky rectified linear unit function element-wise</summary>
+    /// <remarks>\[\text{LeakyReLU}(x) = \max(0, x) + \text{negative\_slope} * \min(0, x)\]</remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="negativeSlope">Controls the angle of the negative slope. Default: 0.01.</param>
+    static member leakyRelu(input:Tensor, ?negativeSlope:float) = input.leakyRelu(?negativeSlope=negativeSlope)
+
+    /// <summary>Applies the sigmoid element-wise function</summary>
+    /// <remarks>\[\text{Sigmoid}(x) = \frac{1}{1 + \exp(-x)}\]</remarks>
+    /// <param name="input">The input tensor.</param>
+    static member sigmoid(input:Tensor) = input.sigmoid()
+
+    /// <summary>Applies the softplus function element-wise.</summary>
+    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
+    /// <param name="input">The input tensor.</param>
+    static member softplus(input:Tensor) = input.softplus()
 
     /// <summary>TBD</summary>
-    static member variance(a:Tensor, ?unbiased:bool) = a.variance(?unbiased=unbiased)
+    /// <param name="input">The input tensor.</param>
+    static member exp(input:Tensor) = input.exp()
 
-    /// <summary>TBD</summary>
-    static member variance(a:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    /// <summary>Returns a new tensor with the natural logarithm of the elements of input.</summary>
+    /// <remarks> \[y_{i} = \log_{e} (x_{i})\]</remarks>
+    /// <param name="input">The input tensor.</param>
+    static member log(input:Tensor) = input.log()
 
-    /// <summary>TBD</summary>
-    static member stddev(a:Tensor, ?unbiased:bool) = a.stddev(?unbiased=unbiased)
+    /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
+    /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
+    /// <param name="input">The input tensor.</param>
+    static member log10(input:Tensor) = input.log10()
 
-    /// <summary>TBD</summary>
-    static member stddev(a:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = a.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    /// <summary>Returns a new tensor with the square-root of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member sqrt(input:Tensor) = input.sqrt()
 
-    /// <summary>TBD</summary>
-    static member gather(a:Tensor, dim:int, indices:Tensor) = a.gather(dim, indices)
+    /// <summary>Returns a new tensor with the sine of the elements of input</summary>
+    /// <param name="input">The input tensor.</param>
+    static member sin(input:Tensor) = input.sin()
 
-    /// <summary>TBD</summary>
-    static member transpose(a:Tensor, dim0:int, dim1:int) = a.transpose(dim0, dim1)
+    /// <summary>Returns a new tensor with the cosine of the elements of input</summary>
+    /// <param name="input">The input tensor.</param>
+    static member cos(input:Tensor) = input.cos()
 
-    /// <summary>TBD</summary>
-    static member transpose(a:Tensor) = a.transpose()
+    /// <summary>Returns a new tensor with the tangent of the elements of input</summary>
+    /// <param name="input">The input tensor.</param>
+    static member tan(input:Tensor) = input.tan()
 
-    /// <summary>TBD</summary>
-    static member squeeze(a:Tensor, ?dim:int) = a.squeeze(?dim=dim)
+    /// <summary>Returns a new tensor with the hyperbolic sine of the elements of input.</summary>
+    static member sinh(input:Tensor) = input.sinh()
 
-    /// <summary>TBD</summary>
-    static member unsqueeze(a:Tensor, dim:int) = a.unsqueeze(dim)
+    /// <summary>Returns a new tensor with the hyperbolic cosine of the elements of input.</summary>
+    static member cosh(input:Tensor) = input.cosh()
 
-    /// <summary>TBD</summary>
-    static member flip(a:Tensor, dims:seq<int>) = a.flip(dims)
+    /// <summary>Returns a new tensor with the hyperbolic tangent of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member tanh(input:Tensor) = input.tanh()
 
-    /// <summary>TBD</summary>
-    static member dilate(a:Tensor, dilations:seq<int>) = a.dilate(dilations)
+    /// <summary>Returns a new tensor with the arcsine of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member asin(input:Tensor) = input.asin()
 
-    /// <summary>TBD</summary>
-    static member undilate(a:Tensor, dilations:seq<int>) = a.undilate(dilations)
-
-    /// <summary>TBD</summary>
-    static member repeat(a:Tensor, dim:int, times:int) = a.repeat(dim, times)
-
-    /// <summary>TBD</summary>
-    static member view(a:Tensor, shape:seq<int>) = a.view(shape)
-
-    /// <summary>TBD</summary>
-    static member view(a:Tensor, shape:int) = a.view(shape)
-
-    /// <summary>TBD</summary>
-    static member viewAs(a:Tensor, b:Tensor) = a.viewAs(b)
-
-    /// <summary>TBD</summary>
-    static member flatten(a:Tensor, ?startDim:int, ?endDim:int) = a.flatten(?startDim=startDim, ?endDim=endDim)
-
-    /// <summary>TBD</summary>
-    static member sign(a:Tensor) = a.sign()
-
-    /// <summary>TBD</summary>
-    static member floor(a:Tensor) = a.floor()
-
-    /// <summary>TBD</summary>
-    static member ceil(a:Tensor) = a.ceil()
-
-    /// <summary>TBD</summary>
-    static member round(a:Tensor) = a.round()
-
-    /// <summary>TBD</summary>
-    static member abs(a:Tensor) = a.abs()
-
-    /// <summary>TBD</summary>
-    static member relu(a:Tensor) = a.relu()
-
-    /// <summary>TBD</summary>
-    static member leakyRelu(a:Tensor, ?negativeSlope:float) = a.leakyRelu(?negativeSlope=negativeSlope)
-
-    /// <summary>TBD</summary>
-    static member sigmoid(a:Tensor) = a.sigmoid()
-
-    /// <summary>TBD</summary>
-    static member softplus(a:Tensor) = a.softplus()
-
-    /// <summary>TBD</summary>
-    static member exp(a:Tensor) = a.exp()
-
-    /// <summary>TBD</summary>
-    static member log(a:Tensor) = a.log()
-
-    /// <summary>TBD</summary>
-    static member log10(a:Tensor) = a.log10()
-
-    /// <summary>TBD</summary>
-    static member sqrt(a:Tensor) = a.sqrt()
-
-    /// <summary>TBD</summary>
-    static member sin(a:Tensor) = a.sin()
-
-    /// <summary>TBD</summary>
-    static member cos(a:Tensor) = a.cos()
-
-    /// <summary>TBD</summary>
-    static member tan(a:Tensor) = a.tan()
-
-    /// <summary>TBD</summary>
-    static member sinh(a:Tensor) = a.sinh()
-
-    /// <summary>TBD</summary>
-    static member cosh(a:Tensor) = a.cosh()
-
-    /// <summary>TBD</summary>
-    static member tanh(a:Tensor) = a.tanh()
-
-    /// <summary>TBD</summary>
-    static member asin(a:Tensor) = a.asin()
-
-    /// <summary>TBD</summary>
-    static member acos(a:Tensor) = a.acos()
+    /// <summary>Returns a new tensor with the arccosine of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member acos(input:Tensor) = input.acos()
     
-    /// <summary>TBD</summary>
-    static member atan(a:Tensor) = a.atan()
+    /// <summary>Returns a new tensor with the arctangent of the elements of input.</summary>
+    /// <param name="input">The input tensor.</param>
+    static member atan(input:Tensor) = input.atan()
+
+    /// <summary>Applies a softmax function.</summary>
+    /// <remarks>Softmax is defined as: \text{Softmax}(x_{i}) = \frac{\exp(x_i)}{\sum_j \exp(x_j)}.</remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">A dimension along which softmax will be computed.</param>
+    static member softmax(input:Tensor, dim:int) = input.softmax(dim)
+
+    /// <summary>Applies a softmax followed by a logarithm.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">A dimension along which softmax will be computed.</param>
+    static member logsoftmax(input:Tensor, dim:int) = input.logsoftmax(dim)
+
+    /// <summary>Applies a logsumexp followed by a logarithm.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member logsumexp(input:Tensor, dim:int, ?keepDim:bool) = input.logsumexp(dim, ?keepDim=keepDim)
+
+    /// <summary>Creates a criterion that measures the mean squared error (squared L2 norm) between each element in the input and the target.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
+    static member mseLoss(input:Tensor, target:Tensor, ?reduction:string) =
+        input.mseLoss(target, ?reduction=reduction)
+
+    /// <summary>Creates a criterion that measures the Binary Cross Entropy between the target and the output</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
+    static member bceLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) =
+        input.bceLoss(target, ?weight=weight, ?reduction=reduction)
+
+    /// <summary>The negative log likelihood loss.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A optional manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
+    static member nllLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) =
+        input.nllLoss(target, ?weight=weight, ?reduction=reduction)
+
+    /// <summary>This criterion combines logsoftmax and nllLoss in a single function</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A optional manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
+    static member crossEntropyLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) =
+        input.crossEntropyLoss(target, ?weight=weight, ?reduction=reduction)
+
+    /// <summary>Applies a 1D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    static member maxpool1d(input:Tensor, kernelSize:int, ?stride:int, ?padding:int) =
+        input.maxpool1d(kernelSize, ?stride=stride, ?padding=padding)
+
+    /// <summary>Applies a 1D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    static member maxpool1di(input:Tensor, kernelSize:int, ?stride:int, ?padding:int) =
+        input.maxpool1di(kernelSize, ?stride=stride, ?padding=padding)
+
+    /// <summary>Applies a 2D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    static member maxpool2d(input:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
+        input.maxpool2d(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
+
+    /// <summary>Applies a 2D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    static member maxpool2di(input:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
+        input.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
+
+    /// <summary>Applies a 3D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    static member maxpool3d(input:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
+        input.maxpool3d(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
+
+    /// <summary>Applies a 3D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    static member maxpool3di(input:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
+        input.maxpool3di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
+
+    /// <summary>Computes a partial inverse of maxpool1di</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="indices">The indices selected by maxpool1di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
+    static member maxunpool1d(input:Tensor, indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:seq<int>) =
+        input.maxunpool1d(indices, kernelSize, ?stride=stride, ?padding=padding, ?outputSize=outputSize)
+
+    /// <summary>Computes a partial inverse of maxpool2di</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="indices">The indices selected by maxpool2di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
+    static member maxunpool2d(input:Tensor, indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
+        input.maxunpool2d(indices, ?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings, ?outputSize=outputSize)
+
+    /// <summary>Computes a partial inverse of maxpool3di</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="indices">The indices selected by maxpool3di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
+    static member maxunpool3d(input:Tensor, indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
+        input.maxunpool3d(indices, ?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings, ?outputSize=outputSize)
+
+    /// <summary>Applies a 1D convolution over an input signal composed of several input planes</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit paddings on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    static member conv1d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+        input.conv1d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation)
+
+    /// <summary>Applies a 2D convolution over an input signal composed of several input planes</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    static member conv2d(input:Tensor, weight:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+        input.conv2d(weight, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+
+    /// <summary>Applies a 3D convolution over an input signal composed of several input planes</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    static member conv3d(input:Tensor, weight:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+        input.conv3d(weight, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+
+    /// <summary>Applies a 1D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    static member convTranspose1d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
+        input.convTranspose1d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
+
+    /// <summary>Applies a 2D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
+    static member convTranspose2d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        input.convTranspose2d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+
+    /// <summary>Applies a 3D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="weight">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
+    static member convTranspose3d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        input.convTranspose3d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+
+    /// <summary>Add zero padding to each side of a tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    static member pad(input:Tensor, paddings:seq<int>) = input.pad(paddings)
+
+    /// <summary>Convert tensor to an image tensor with shape Channels x Height x Width</summary>
+    /// <remarks>If the input tensor has 4 dimensions, then make a single image grid.</remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="pixelMin">The minimum pixel value.</param>
+    /// <param name="pixelMax">The maximum pixel value.</param>
+    /// <param name="normalize">If True, shift the image to the range (0, 1), by the min and max values specified by range.</param>
+    /// <param name="gridCols">Number of columns of images in the grid.</param>
+    static member toImage(input:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
+        input.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
+
+    /// <summary>Convert tensor to a grayscale image tensor and return a string representation approximating grayscale values</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="pixelMin">The minimum pixel value.</param>
+    /// <param name="pixelMax">The maximum pixel value.</param>
+    /// <param name="normalize">If True, shift the image to the range (0, 1), by the min and max values specified by range.</param>
+    /// <param name="gridCols">Number of columns of images in the grid.</param>
+    /// <param name="asciiPalette">The ASCII pallette to use.</param>
+    static member toImageString(input:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) =
+        input.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
 
     /// <summary>TBD</summary>
+    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>Save a given Tensor into an image file.</summary>
+    /// <remarks>If the input tensor has 4 dimensions, then make a single image grid.</remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="fileName">The name of the file to save to.</param>
+    /// <param name="pixelMin">The minimum pixel value.</param>
+    /// <param name="pixelMax">The maximum pixel value.</param>
+    /// <param name="normalize">If True, shift the image to the range (0, 1), by the min and max values specified by range.</param>
+    /// <param name="gridCols">Number of columns of images in the grid.</param>
+    static member saveImage(input:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
+        input.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
 
     /// <summary>TBD</summary>
-    static member softmax(a:Tensor, dim:int) = a.softmax(dim)
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor.</param>
+    static member cast(input:Tensor, dtype:Dtype) = input.cast(dtype)
 
     /// <summary>TBD</summary>
-    static member logsoftmax(a:Tensor, dim:int) = a.logsoftmax(dim)
-
-    /// <summary>TBD</summary>
-    static member logsumexp(a:Tensor, dim:int, ?keepDim:bool) = a.logsumexp(dim, ?keepDim=keepDim)
-
-    /// <summary>TBD</summary>
-    static member mseLoss(input:Tensor, target:Tensor, ?reduction:string) = input.mseLoss(target, ?reduction=reduction)
-
-    /// <summary>TBD</summary>
-    static member bceLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.bceLoss(target, ?weight=weight, ?reduction=reduction)
-
-    /// <summary>TBD</summary>
-    static member nllLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.nllLoss(target, ?weight=weight, ?reduction=reduction)
-
-    /// <summary>TBD</summary>
-    static member crossEntropyLoss(input:Tensor, target:Tensor, ?weight:Tensor, ?reduction:string) = input.crossEntropyLoss(target, ?weight=weight, ?reduction=reduction)
-
-    /// <summary>TBD</summary>
-    static member maxpool1d(a:Tensor, kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1d(kernelSize, ?stride=stride, ?padding=padding)
-
-    /// <summary>TBD</summary>
-    static member maxpool1di(a:Tensor, kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding)
-
-    /// <summary>TBD</summary>
-    static member maxpool2d(a:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2d(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
-
-    /// <summary>TBD</summary>
-    static member maxpool2di(a:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
-
-    /// <summary>TBD</summary>
-    static member maxpool3d(a:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool3d(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
-
-    /// <summary>TBD</summary>
-    static member maxpool3di(a:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool3di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings)
-
-    /// <summary>TBD</summary>
-    static member maxunpool1d(a:Tensor, indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:seq<int>) = a.maxunpool1d(indices, kernelSize, ?stride=stride, ?padding=padding, ?outputSize=outputSize)
-
-    /// <summary>TBD</summary>
-    static member maxunpool2d(a:Tensor, indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) = a.maxunpool2d(indices, ?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings, ?outputSize=outputSize)
-
-    /// <summary>TBD</summary>
-    static member maxunpool3d(a:Tensor, indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) = a.maxunpool3d(indices, ?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings, ?outputSize=outputSize)
-
-    /// <summary>TBD</summary>
-    static member conv1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int) = a.conv1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation)
-
-    /// <summary>TBD</summary>
-    static member conv2d(a:Tensor, b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = a.conv2d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-
-    /// <summary>TBD</summary>
-    static member conv3d(a:Tensor, b:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) = a.conv3d(b, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-
-    /// <summary>TBD</summary>
-    static member convTranspose1d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) = a.convTranspose1d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
-
-    /// <summary>TBD</summary>
-    static member convTranspose2d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) = a.convTranspose2d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
-
-    /// <summary>TBD</summary>
-    static member convTranspose3d(a:Tensor, b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) = a.convTranspose3d(b, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
-
-    /// <summary>TBD</summary>
-    static member pad(a:Tensor, paddings:seq<int>) = a.pad(paddings)
-
-    /// <summary>TBD</summary>
-    static member toImage(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) = a.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
-
-    /// <summary>TBD</summary>
-    static member toImageString(a:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) = a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
-
-    /// <summary>TBD</summary>
-    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) = Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>TBD</summary>
-    static member saveImage(a:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) = a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
-
-    /// <summary>TBD</summary>
-    static member cast(a:Tensor, dtype:Dtype) = a.cast(dtype)
-
-    /// <summary>TBD</summary>
-    static member move(a:Tensor, ?dtype, ?device, ?backend) = a.move(?dtype=dtype, ?device=device, ?backend=backend)
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
+    static member move(input:Tensor, ?dtype, ?device, ?backend) =
+        input.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
     static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
@@ -529,6 +1054,8 @@ type dsharp with
     static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> dsharp.tensor
 
     /// <summary>TBD</summary>
+    /// <param name="count">The number of elements in the tensor.</param>
+    /// <param name="value">The initial value for each element of the tensor.</param>
     static member create (count:int) (value:'a) = Array.create count value |> dsharp.tensor
 
     /// <summary>TBD</summary>
