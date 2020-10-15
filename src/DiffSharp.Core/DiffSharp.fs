@@ -238,11 +238,12 @@ type dsharp =
     /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="probs">The input tensor containing probabilities.</param>
     /// <param name="numSamples">The number of samples to draw.</param>
+    /// <param name="normalize">Indicates where the probabilities should first be normalized by their sum.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member multinomial(probs:Tensor, numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member multinomial(probs:Tensor, numSamples:int, ?normalize:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        probs.multinomial(numSamples, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
     /// <param name="probs">The input tensor of probability values for the Bernoulli distribution.</param>
@@ -257,12 +258,12 @@ type dsharp =
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout(input:Tensor, ?p:double) = input.dropout(?p=p)
 
-    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
+    /// <summary>Randomly zero out entire channels (a channel is a 2D feature map, e.g., the jj -th channel of the ii -th sample in the batched input is a 2D tensor \text{input}[i, j]input[i,j] ). Each channel will be zeroed out independently on every forward call with probability p using samples from a Bernoulli distribution</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout2d(input:Tensor, ?p:double) = input.dropout2d(?p=p)
 
-    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
+    /// <summary>Randomly zero out entire channels (a channel is a 3D feature map, e.g., the jj -th channel of the ii -th sample in the batched input is a 3D tensor \text{input}[i, j]input[i,j] ). Each channel will be zeroed out independently on every forward call with probability p using samples from a Bernoulli distribution.</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout3d(input:Tensor, ?p:double) = input.dropout3d(?p=p)
@@ -677,18 +678,34 @@ type dsharp =
     static member repeat(input:Tensor, dim:int, times:int) = input.repeat(dim, times)
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
-    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.</remarks>
-    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
     /// <param name="shape">The desired shape of returned tensor.</param>
     static member view(input:Tensor, shape:seq<int>) = input.view(shape)
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
-    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.</remarks>
-    /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
     /// <param name="shape">The desired shape of returned tensor.</param>
     static member view(input:Tensor, shape:int) = input.view(shape)
 
     /// <summary>View this tensor as the same size as other.</summary>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="other">The result tensor has the same size as other.</param>
     static member viewAs(input:Tensor, other:Tensor) = input.viewAs(other)
@@ -700,23 +717,27 @@ type dsharp =
     static member flatten(input:Tensor, ?startDim:int, ?endDim:int) = input.flatten(?startDim=startDim, ?endDim=endDim)
 
     /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     /// <param name="input">The input tensor.</param>
     static member sign(input:Tensor) = input.sign()
 
     /// <summary>Returns a new tensor with the floor of the elements of input, the largest integer less than or equal to each element.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     /// <param name="input">The input tensor.</param>
     static member floor(input:Tensor) = input.floor()
 
     /// <summary>Returns a new tensor with the ceil of the elements of input, the smallest integer greater than or equal to each element.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     /// <param name="input">The input tensor.</param>
     static member ceil(input:Tensor) = input.ceil()
 
     /// <summary>Returns a new tensor with each of the elements of input rounded to the closest integer.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     /// <param name="input">The input tensor.</param>
     static member round(input:Tensor) = input.round()
 
     /// <summary>Computes the element-wise absolute value of the given input tensor.</summary>
-    /// <param name="input">The input tensor.</param>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     static member abs(input:Tensor) = input.abs()
 
     /// <summary>Applies the rectified linear unit function element-wise.</summary>
@@ -937,50 +958,50 @@ type dsharp =
 
     /// <summary>Applies a 1D convolution over an input signal composed of several input planes</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit paddings on both sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
-    static member conv1d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
-        input.conv1d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation)
+    static member conv1d(input:Tensor, filters:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+        input.conv1d(filters, ?stride=stride, ?padding=padding, ?dilation=dilation)
 
     /// <summary>Applies a 2D convolution over an input signal composed of several input planes</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
     /// <param name="strides">The strides of the convolving kernel.</param>
     /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
     /// <param name="dilations">The spacings between kernel elements.</param>
-    static member conv2d(input:Tensor, weight:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
-        input.conv2d(weight, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+    static member conv2d(input:Tensor, filters:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+        input.conv2d(filters, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
 
     /// <summary>Applies a 3D convolution over an input signal composed of several input planes</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
     /// <param name="strides">The strides of the convolving kernel.</param>
     /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
     /// <param name="dilations">The spacings between kernel elements.</param>
-    static member conv3d(input:Tensor, weight:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
-        input.conv3d(weight, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+    static member conv3d(input:Tensor, filters:Tensor, ?stride:int, ?strides:seq<int>, ?padding:int, ?paddings:seq<int>, ?dilation:int, ?dilations:seq<int>) =
+        input.conv3d(filters, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
 
     /// <summary>Applies a 1D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit padding on both sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
     /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
-    static member convTranspose1d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
-        input.convTranspose1d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
+    static member convTranspose1d(input:Tensor, filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
+        input.convTranspose1d(filters, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
 
     /// <summary>Applies a 2D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit padding on both sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
@@ -989,12 +1010,12 @@ type dsharp =
     /// <param name="dilations">The spacings between kernel elements.</param>
     /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
     /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
-    static member convTranspose2d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
-        input.convTranspose2d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+    static member convTranspose2d(input:Tensor, filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        input.convTranspose2d(filters, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
 
     /// <summary>Applies a 3D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
     /// <param name="input">The input tensor.</param>
-    /// <param name="weight">The filters.</param>
+    /// <param name="filters">The filters.</param>
     /// <param name="stride">The stride of the convolving kernel.</param>
     /// <param name="padding">The implicit padding on both sides of the input.</param>
     /// <param name="dilation">The spacing between kernel elements.</param>
@@ -1003,8 +1024,8 @@ type dsharp =
     /// <param name="dilations">The spacings between kernel elements.</param>
     /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
     /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
-    static member convTranspose3d(input:Tensor, weight:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
-        input.convTranspose3d(weight, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+    static member convTranspose3d(input:Tensor, filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        input.convTranspose3d(filters, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
 
     /// <summary>Add zero padding to each side of a tensor</summary>
     /// <param name="input">The input tensor.</param>
