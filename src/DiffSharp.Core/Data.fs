@@ -8,6 +8,11 @@ open System.Net
 open System.IO
 open System.IO.Compression
 
+/// <namespacedoc>
+///   <summary>Contains data sets and components related to data loading.</summary>
+/// </namespacedoc>
+///
+/// <summary>Represents a data set that can load images in batches.</summary>
 [<AbstractClass>]
 type Dataset() =
     abstract member length: int

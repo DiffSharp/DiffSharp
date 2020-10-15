@@ -9,7 +9,7 @@ type Shape = int[]
 module rec Shape =
 
     /// Gets the total number of elements in the shape.
-    let length (shape: Shape) =
+    let nelement (shape: Shape) =
         if shape.Length = 0 then 1
         else Array.reduce (*) shape
 
@@ -297,7 +297,7 @@ module rec Shape =
         let inputSize = shape.[2]
         let inputLengthAfterPadding = inputSize + 2*padding
         if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
-        let outputSize = int (floor (float (inputSize + 2*padding - kernelSize)/(float stride))) + 1
+        let outputSize = int (floor (float (inputLengthAfterPadding - kernelSize)/(float stride))) + 1
         let outputShape = [|batchSize; channels; outputSize|]
         batchSize, channels, inputSize, outputSize, outputShape
 
@@ -321,8 +321,8 @@ module rec Shape =
         let inputWidthAfterPadding = inputWidth + 2*paddings.[1]
         if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
         if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
-        let outputHeight = int (floor (float (inputHeight + 2*paddings.[0] - kernelHeight)/(float strides.[0]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*paddings.[1] - kernelWidth)/(float strides.[1]))) + 1
+        let outputHeight = int (floor (float (inputHeightAfterPadding - kernelHeight)/(float strides.[0]))) + 1
+        let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[1]))) + 1
         let outputShape = [|batchSize; channels; outputHeight; outputWidth|]
         (batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape)
 
@@ -350,9 +350,9 @@ module rec Shape =
         if kernelSize.[0] > inputDepthAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputDepthAfterPadding (%A)" kernelSize.[0] inputDepthAfterPadding
         if kernelSize.[1] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[1] inputHeightAfterPadding
         if kernelSize.[2] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
-        let outputDepth = int (floor (float (inputDepth + 2*paddings.[0] - kernelDepth)/(float strides.[0]))) + 1
-        let outputHeight = int (floor (float (inputHeight + 2*paddings.[1] - kernelHeight)/(float strides.[1]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*paddings.[2] - kernelWidth)/(float strides.[2]))) + 1
+        let outputDepth = int (floor (float (inputDepthAfterPadding - kernelDepth)/(float strides.[0]))) + 1
+        let outputHeight = int (floor (float (inputHeightAfterPadding - kernelHeight)/(float strides.[1]))) + 1
+        let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[2]))) + 1
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
 
@@ -446,7 +446,7 @@ module rec Shape =
 
     /// Checks if the given shape is appropriate for a view operation.
     let checkCanView (shape1: Shape) (shape2: Shape) =
-        if length shape1 <> length shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+        if nelement shape1 <> nelement shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
 
     /// Checks if the given shape is appropriate for a flatten operation.
     let checkCanFlatten (shape: Shape) (startDim: int) (endDim: int) =
@@ -559,7 +559,7 @@ module rec Shape =
         elif numUnspecified = 0 then
             shape
         else
-            let divisor = shape |> Array.filter ((<>) -1) |> length
+            let divisor = shape |> Array.filter ((<>) -1) |> Shape.nelement
             if nelement % divisor <> 0 then failwithf "Cannot complete shape %A to have %A elements" shape nelement
             let missing = nelement / divisor
             [|for d in shape do if d = -1 then yield missing else yield d|]
@@ -581,7 +581,7 @@ module rec Shape =
 module ShapeAutoOpens =
 
     /// Gets the total number of elements in a shape.
-    let shapeLength (shape: Shape) = Shape.length shape
+    let shapeLength (shape: Shape) = Shape.nelement shape
 
     /// Converts the array of three-position bounds specifications to a location.
     let boundsToLocation (bounds: int[,]) =
@@ -592,7 +592,7 @@ module ShapeAutoOpens =
         [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|]
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
-    let mirrorCoordinates (coordinates: int[]) (shape: Shape) (mirrorDims: int[]) =
+    let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =
         if coordinates.Length <> shape.Length then failwithf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
         let result = Array.copy coordinates
         for d=0 to coordinates.Length-1 do
@@ -605,13 +605,13 @@ module ShapeAutoOpens =
         Array.map2 (*) coordinates dilations
 
     /// Checks if the given index is valid in the context of the given shape.
-    let checkValidIndex (shape: Shape) (index: int[]) =
+    let checkValidIndex (shape: int[]) (index: int[]) =
         if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
         let valid = Array.forall2 (fun s i -> i < s) shape index
         if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
 
     /// Converts the given index to a flat index in the context of the given shape.
-    let indexToFlatIndex (shape: Shape) (index: int[]) =
+    let indexToFlatIndex (shape: int[]) (index: int[]) =
         checkValidIndex shape index
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
@@ -620,7 +620,7 @@ module ShapeAutoOpens =
         flatIndex
 
     /// Converts the given flat index to an index in the context of the given shape.
-    let flatIndexToIndex (shape: Shape) (flatIndex: int) =
+    let flatIndexToIndex (shape: int[]) (flatIndex: int) =
         let dim = shape.Length
         let nelement = shapeLength shape
         let index = Array.create dim 0

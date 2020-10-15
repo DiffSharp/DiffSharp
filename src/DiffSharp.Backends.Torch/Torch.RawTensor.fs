@@ -972,8 +972,8 @@ type TorchByteTensorOps() =
         System.Convert.ToByte, 
         TorchScalar.op_Implicit)
 
-type TorchBackendStatics() =
-    inherit BackendStatics()
+type TorchBackendTensorStatics() =
+    inherit BackendTensorStatics()
 
     let torchFloat32 = TorchFloat32TensorOps()
     let torchFloat64 = TorchFloat64TensorOps()

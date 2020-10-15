@@ -6,8 +6,12 @@ open DiffSharp.Data
 open DiffSharp.Util
 
 
+/// <namespacedoc>
+///   <summary>Contains types and functionality related to optimizing tensor models and functions.</summary>
+/// </namespacedoc>
+///
+/// <summary>Represents an optimizer.</summary>
 [<AbstractClass>]
-/// <summary>TBD</summary>
 type Optimizer(model:Model) =
 
     /// <summary>TBD</summary>
