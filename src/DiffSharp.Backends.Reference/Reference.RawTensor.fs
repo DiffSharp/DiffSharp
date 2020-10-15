@@ -117,13 +117,14 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
         t.MakeLike(result, newShape)
 
     override t.ToValues() =
+        let shape = t.Shape
         match t.Dim with
         | 0 -> box values.[0]
-        | 1 -> upcast Array.init t.Shape.[0] (fun i -> t.[i])
-        | 2 -> upcast Array2D.init t.Shape.[0] t.Shape.[1] (fun i j -> t.[i, j])
-        | 3 -> upcast Array3D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] (fun i j k -> t.[i, j, k])
-        | 4 -> upcast Array4D.init t.Shape.[0] t.Shape.[1] t.Shape.[2] t.Shape.[3] (fun i j k l -> t.[i, j, k, l])
-        | _ -> arrayND t.Shape (fun idxs -> t.[idxs])
+        | 1 -> upcast Array.init shape.[0] (fun i -> t.[i])
+        | 2 -> upcast Array2D.init shape.[0] shape.[1] (fun i j -> t.[i, j])
+        | 3 -> upcast Array3D.init shape.[0] shape.[1] shape.[2] (fun i j k -> t.[i, j, k])
+        | 4 -> upcast Array4D.init shape.[0] shape.[1] shape.[2] shape.[3] (fun i j k l -> t.[i, j, k, l])
+        | _ -> arrayND shape (fun idxs -> t.[idxs])
 
     override _.StackTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
@@ -334,12 +335,12 @@ module internal RawTensorCPU =
     /// Get the scalar "0" tensor for a CPU tensor type
     let inline Zero () : (^T[] * Shape) =
         let values = [|zero< ^T > |]
-        (values, [| |])
+        (values, Shape.scalar)
 
     /// Get the scalar "1" tensor for a CPU tensor type
     let inline One() : (^T[] * Shape) =
         let values = [| one< ^T > |]
-        (values, [| |])
+        (values, Shape.scalar)
     
     /// Get the "0" tensor for a CPU tensor type of the given shape
     let inline Zeros(shape:Shape)  : (^T[] * Shape) =
@@ -753,7 +754,7 @@ module internal RawTensorCPU =
         (result, t.Shape)
 
     let inline SumT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
-        if Array.isEmpty t.Values then ([|zero< ^T >|], [||]) else // Return a zero-valued scalar tensor if summing a zero-sized tensor (not holding any value). This is mirroring the behavior in PyTorch 1.5.1.
+        if Array.isEmpty t.Values then ([|zero< ^T >|], Shape.scalar) else // Return a zero-valued scalar tensor if summing a zero-sized tensor (not holding any value). This is mirroring the behavior in PyTorch 1.5.1.
         let result = Array.reduce (+) t.Values
         ([|result|], [||])
     
@@ -1513,8 +1514,8 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
-    static member Zero(device) = ([| false |], [||]) |> createOn device
-    static member One(device) = ([| true |], [||]) |> createOn device
+    static member Zero(device) = ([| false |], Shape.scalar) |> createOn device
+    static member One(device) = ([| true |], Shape.scalar) |> createOn device
     static member Zeros(shape:Shape, device) = (Array.zeroCreate (shapeLength shape), shape) |> createOn device
     static member Empty(shape:Shape, device) = (Array.zeroCreate (shapeLength shape), shape) |> createOn device
     static member Ones(shape:Shape, device) = (Array.create (shapeLength shape) true, shape) |> createOn device
@@ -1525,12 +1526,12 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
 
 #if TEST_DUPLICATE_BACKEND
-type TestDuplicateBackendStatics() = 
+type TestDuplicateBackendTensorStatics() = 
 #else
-type ReferenceBackendStatics() = 
+type ReferenceBackendTensorStatics() = 
 #endif
 
-    inherit BackendStatics()
+    inherit BackendTensorStatics()
 
     override _.GetDevices(deviceType) =
         match deviceType with 
