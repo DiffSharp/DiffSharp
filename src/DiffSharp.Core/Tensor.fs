@@ -997,7 +997,7 @@ type Tensor =
     /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
     static member (-) (a:scalar, b:Tensor) = b.scalarLike(a) - b
 
-    /// <summary>Subtracts each element of the object tensor from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    /// <summary>Subtracts each element of the object tensor from the corresponding element of the self tensor. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.sub(b:Tensor) = a - b
 
@@ -1188,11 +1188,11 @@ type Tensor =
     /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
 
-    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <summary>Raises each element of the self tensor to the power of each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.pow(b:Tensor) = a ** b
 
-    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     member a.pow(b) = a ** a.scalarLike(b)
 
     /// <summary>TBD</summary>
@@ -1299,7 +1299,7 @@ type Tensor =
 
     /// <summary>Returns the variance of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
-    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(?unbiased:bool) = 
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
@@ -1312,7 +1312,7 @@ type Tensor =
     /// </remarks>
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
-    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
          // TODO: this is the naive algorithm, can be improved for better numerical stability
         let keepDim = defaultArg keepDim false
@@ -1342,12 +1342,12 @@ type Tensor =
     /// </remarks>
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
-    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
-    /// <param name="unbiased ">Whether to use the unbiased estimation or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>TBD</summary>
