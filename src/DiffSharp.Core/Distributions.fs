@@ -17,8 +17,12 @@ module internal Utils =
         elif logits.dim = 0 then logits.exp() else dsharp.softmax(logits, -1)
 
 
+/// <namespacedoc>
+///   <summary>Contains types and functionality related to probabilitity distributions.</summary>
+/// </namespacedoc>
+///
+/// <summary>Represents a distribution.</summary>
 [<AbstractClass>]
-/// <summary>TBD</summary>
 type Distribution<'T>() =
 
     /// <summary>TBD</summary>
