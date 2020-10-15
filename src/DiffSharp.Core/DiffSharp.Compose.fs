@@ -8,7 +8,17 @@ module DiffSharp.Compose
 // static member sub(b:Tensor) = fun (a:Tensor) -> a.sub(b)
 
 type dsharp with
-    /// <summary>TBD</summary>
+    /// <summary>Returns a tensor where each row contains <paramref name="numSamples"/> indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
+    /// <param name="numSamples">Number of samples to draw</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    /// <remarks>
+    /// Indices are ordered from left to right according to when each was sampled (first samples are placed in first column).
+    /// 
+    /// If input is a vector, out is a vector of size num_samples.
+    /// 
+    /// If input is a matrix with m rows, the result is an matrix of shape (m × numSamples)
+    /// </remarks>
     static member multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (probs:Tensor) -> probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
