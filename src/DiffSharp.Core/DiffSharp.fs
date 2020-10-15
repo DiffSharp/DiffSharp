@@ -257,17 +257,17 @@ type dsharp =
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout(input:Tensor, ?p:double) = input.dropout(?p=p)
 
-    /// <summary>TBD</summary>
+    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout2d(input:Tensor, ?p:double) = input.dropout2d(?p=p)
 
-    /// <summary>TBD</summary>
+    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     static member dropout3d(input:Tensor, ?p:double) = input.dropout3d(?p=p)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor filled with '0' values with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
@@ -276,7 +276,7 @@ type dsharp =
     static member zerosLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
         input.zerosLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor filled with '1' values with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
@@ -285,7 +285,7 @@ type dsharp =
     static member onesLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
         input.onesLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor filled with the given scalar value with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="value">The scalar giving the the initial values for the tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
@@ -295,7 +295,10 @@ type dsharp =
     static member fullLike(input:Tensor, value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) =
         input.fullLike(value, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// A version of dsharp.arange with characteristics based on the input tensor.
+    /// </summary>
+    /// 
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
@@ -306,7 +309,10 @@ type dsharp =
     static member arangeLike(input:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// A version of dsharp.arange with characteristics based on the input tensor.
+    /// </summary>
+    /// 
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
@@ -317,7 +323,10 @@ type dsharp =
     static member arangeLike(input:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// A version of dsharp.onehot with characteristics based on the input tensor.
+    /// </summary>
+    /// 
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="length">The length of the returned tensor.</param>
     /// <param name="hot">The location to set to 1.</param>
@@ -327,7 +336,7 @@ type dsharp =
     static member onehotLike(input:Tensor, length:int, hot:int, ?dtype, ?device, ?backend) =
         input.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
+    /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1) with characteristics based on the input tensor</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
@@ -336,7 +345,7 @@ type dsharp =
     static member randLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
             input.randLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
+    /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution) with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
@@ -345,7 +354,7 @@ type dsharp =
     static member randnLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
         input.randnLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>Returns a tensor with the same shape as Tensor input filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
+    /// <summary>Returns a tensor with the same shape as Tensor input filled with random integers generated uniformly between low (inclusive) and high (exclusive) with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
     /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
@@ -356,7 +365,7 @@ type dsharp =
     static member randintLike(input:Tensor, low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) =
         input.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the '0' scalar tensor with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
@@ -364,7 +373,7 @@ type dsharp =
     static member zeroLike(input:Tensor, ?dtype, ?device, ?backend) =
         input.zeroLike(?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the '0' scalar tensor with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
@@ -372,11 +381,11 @@ type dsharp =
     static member oneLike(input:Tensor, ?dtype, ?device, ?backend) =
         input.oneLike(?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the total number of elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member nelement(input:Tensor) = input.nelement
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor based on the given .NET value with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="value">The .NET object giving the the initial values for the tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
@@ -385,57 +394,76 @@ type dsharp =
     static member like(input:Tensor, value:obj, ?dtype, ?device, ?backend) =
         input.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the same characteristics and storage cloned.</summary>
     /// <param name="input">The input tensor.</param>
     static member clone(input:Tensor) = input.clone()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean tensor for the element-wise less-than comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member lt(a:Tensor, b:Tensor) = a.lt(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean tensor for the element-wise greater-than comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member gt(a:Tensor, b:Tensor) = a.gt(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return a boolean tensor for the element-wise less-than-or-equal comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member le(a:Tensor, b:Tensor) = a.le(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean tensor for the element-wise greater-than-or-equal comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member ge(a:Tensor, b:Tensor) = a.ge(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is an infinity value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isinf(input:Tensor) = input.isinf()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is a NaN (not-a-number) value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isnan(input:Tensor) = input.isnan()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean indicating if any element of the tensor is infinite.</summary>
     /// <param name="input">The input tensor.</param>
     static member hasinf(input:Tensor) = input.hasinf()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a boolean indicating if any element of the tensor is a not-a-number (NaN) value.</summary>
     /// <param name="input">The input tensor.</param>
     static member hasnan(input:Tensor) = input.hasnan()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the indices of the maximum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member argmax(input:Tensor) = input.argmax()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the indices of the minimum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member argmin(input:Tensor) = input.argmin()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the maximum value of all elements in the input tensor</summary>
     /// <param name="input">The input tensor.</param>
     static member max(input:Tensor) = input.max()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the minimum value of all elements in the input tensor</summary>
+/// <param name="input">The input tensor.</param>
     static member min(input:Tensor) = input.min()
 
-    /// <summary>TBD</summary>
+    /// <summary>Each element of the tensor input is compared with the corresponding element of the tensor other and an element-wise maximum is taken.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member max(a:Tensor, b:Tensor) = a.max(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Each element of the tensor input is compared with the corresponding element of the tensor other and an element-wise minimum is taken.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member min(a:Tensor, b:Tensor) = a.min(b)
 
     /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
@@ -463,7 +491,7 @@ type dsharp =
     static member diagonal(input:Tensor, ?offset:int, ?dim1:int, ?dim2:int) =
         input.diagonal(?offset=offset, ?dim1=dim1, ?dim2=dim2)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of the elements of the diagonal of the input 2-D matrix</summary>
     /// <param name="input">The input tensor.</param>
     static member trace(input:Tensor) = input.trace()
 
@@ -477,15 +505,20 @@ type dsharp =
     /// <param name="other">The result tensor has the same size as other.</param>
     static member expandAs(input:Tensor, other:Tensor) = input.expandAs(other)
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates sequence of tensors along a new dimension</summary>
+    /// <remarks>All tensors need to be of the same size.</remarks>
+    /// <param name="tensors">The sequence of tensors to concatenate.</param>
+    /// <param name="dim">The dimension to insert. Has to be between 0 and the number of dimensions of concatenated tensors (inclusive).</param>
     static member stack(tensors:seq<Tensor>, ?dim:int) = Tensor.stack(tensors, ?dim=dim)
 
-    /// <summary>TBD</summary>
+    /// <summary>Removes a tensor dimension</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="dim">The dimension to remove.</param>
     static member unstack(input:Tensor, ?dim:int) = input.unstack(?dim=dim)
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates the given sequence of seq tensors in the given dimension. All tensors must either have the same shape (except in the concatenating dimension) or be empty.</summary>
+    /// <param name="tensors">The sequence of tensors to concatenate.</param>
+    /// <param name="dim">The the dimension over which the tensors are concatenated.</param>
     static member cat(tensors:seq<Tensor>, ?dim:int) = Tensor.cat(tensors, ?dim=dim)
 
     /// <summary>Splits the tensor into chunks. The tensor will be split into sizes.Length chunks each with a corresponding size in the given dimension.</summary>
@@ -494,28 +527,40 @@ type dsharp =
     /// <param name="dim">The dimension along which to split the tensor.</param>
     static member split(input:Tensor, sizes:seq<int>, ?dim:int) = input.split(sizes, ?dim=dim)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise addition of the two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member add(a:Tensor, b:Tensor) = a.add(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise subtraction of the two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member sub(a:Tensor, b:Tensor) = a.sub(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise multiplication of the two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member mul(a:Tensor, b:Tensor) = a.mul(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise division of the two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member div(a:Tensor, b:Tensor) = a.div(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise exponentiation of the two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member pow(a:Tensor, b:Tensor) = a.pow(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Matrix product of two tensors.</summary>
     static member matmul(a:Tensor, b:Tensor) = a.matmul(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes the dot product (inner product) of two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member dot(a:Tensor, b:Tensor) = a.dot(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the element-wise negation of the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member neg(input:Tensor) = input.neg()
 
@@ -545,7 +590,7 @@ type dsharp =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     static member mean(input:Tensor, dim:int, ?keepDim:bool) = input.mean(dim, ?keepDim=keepDim)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the variance of all elements in the input tensor.</summary>
     /// <remarks>
     ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
     /// </remarks>
@@ -553,7 +598,7 @@ type dsharp =
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     static member variance(input:Tensor, ?unbiased:bool) = input.variance(?unbiased=unbiased)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the variance of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
     ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
     ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
@@ -564,18 +609,18 @@ type dsharp =
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     static member variance(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>
-    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    ///  If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     static member stddev(input:Tensor, ?unbiased:bool) = input.stddev(?unbiased=unbiased)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
     ///  If keepdim is true, the output tensor is of the same size as input except in the dimension(s) dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 (or len(dim)) fewer dimension(s).
-    ///  If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
+    ///  If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="dim">The dimension to reduce.</param>
@@ -694,7 +739,7 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     static member softplus(input:Tensor) = input.softplus()
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the exp function element-wise.</summary>
     /// <param name="input">The input tensor.</param>
     static member exp(input:Tensor) = input.exp()
 
@@ -986,7 +1031,12 @@ type dsharp =
     static member toImageString(input:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) =
         input.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
 
-    /// <summary>TBD</summary>
+    /// <summary>Load an image file as a tensor.</summary>
+    /// <param name="fileName">The file name of the image to load.</param>
+    /// <param name="normalize">If True, shift the image to the range (0, 1).</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
 
@@ -1001,12 +1051,14 @@ type dsharp =
     static member saveImage(input:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
         input.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
 
-    /// <summary>TBD</summary>
+    /// <summary>Convert the tensor to one with the given element type.</summary>
+    /// <remarks>If the element type is unchanged the input tensor will be returned.</remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor.</param>
     static member cast(input:Tensor, dtype:Dtype) = input.cast(dtype)
 
-    /// <summary>TBD</summary>
+    /// <summary>Move the tensor to a difference device, backend and/or change its element type.</summary>
+    /// <remarks>If the characteristics are unchanged the input tensor will be returned.</remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
@@ -1014,26 +1066,37 @@ type dsharp =
     static member move(input:Tensor, ?dtype, ?device, ?backend) =
         input.move(?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Configure the default element type, device and/or backend.</summary>
+    /// <param name="dtype">The new default element type.</param>
+    /// <param name="device">The new default device.</param>
+    /// <param name="backend">The new default backend.</param>
     static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         device |> Option.iter (fun d -> Device.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
         dsharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the current default element type, device and backend.</summary>
     static member config() = Dtype.Default, Device.Default, Backend.Default
 
-    /// <summary>TBD</summary>
-    static member config((dtype,device,backend)) = dsharp.config(dtype, device, backend)
+    /// <summary>Configure the default element type, device and/or backend.</summary>
+    /// <param name="configuration">A tuple of the new default element type, default device and default backend.</param>
+    static member config(configuration: (Dtype * Device * Backend)) =
+        let (dtype,device,backend) = configuration
+        dsharp.config(dtype, device, backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Return the list of available devices.</summary>
+    /// <param name="deviceType">If given, only return devices for this device type.</param>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
 
-    /// <summary>TBD</summary>
+    /// <summary>Indicates if the given device type is supported.</summary>
+    /// <param name="deviceType">The requested device type.</param>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member isDeviceTypeSupported(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
 
-    /// <summary>TBD</summary>
+    /// <summary>Indicates if CUDA is supported.</summary>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member isCudaSupported(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
 
 
@@ -1041,33 +1104,54 @@ type dsharp =
 // TODO: implement more differentiable higher-order functions and corresponding unit tests for their derivatives
 type dsharp with
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 1D tensor using the given initializer for each element.</summary>
+    /// <param name="count">The length of the tensor.</param>
+    /// <param name="initializer">The function used to initialize each element.</param>
     static member init (count:int) (initializer:int->'a) = Array.init count initializer |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 2D tensor using the given initializer for each element.</summary>
+    /// <param name="length1">The length of the tensor in the first dimension.</param>
+    /// <param name="length2">The length of the tensor in the second dimension.</param>
+    /// <param name="initializer">The function used to initialize each element.</param>
     static member init2d (length1:int) (length2:int) (initializer:int->int->'a) = Array2D.init length1 length2 initializer |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 3D tensor using the given initializer for each element.</summary>
+    /// <param name="length1">The length of the tensor in the 1st dimension.</param>
+    /// <param name="length2">The length of the tensor in the 2nd dimension.</param>
+    /// <param name="length3">The length of the tensor in the 3rd dimension.</param>
+    /// <param name="initializer">The function used to initialize each element.</param>
     static member init3d (length1:int) (length2:int) (length3:int) (initializer:int->int->int->'a) = Array3D.init length1 length2 length3 initializer |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 4D tensor using the given initializer for each element.</summary>
+    /// <param name="length1">The length of the tensor in the 1st dimension.</param>
+    /// <param name="length2">The length of the tensor in the 2nd dimension.</param>
+    /// <param name="length3">The length of the tensor in the 3rd dimension.</param>
+    /// <param name="length4">The length of the tensor in the 4th dimension.</param>
+    /// <param name="initializer">The function used to initialize each element.</param>
     static member init4d (length1:int) (length2:int) (length3:int) (length4:int) (initializer:int->int->int->int->'a) = Array4D.init length1 length2 length3 length4 initializer |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 1D tensor using the given value for each element.</summary>
     /// <param name="count">The number of elements in the tensor.</param>
     /// <param name="value">The initial value for each element of the tensor.</param>
     static member create (count:int) (value:'a) = Array.create count value |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Create a new 1D tensor using '0' as value for each element.</summary>
+    /// <param name="count">The number of elements in the tensor.</param>
     static member zeroCreate (count:int) = Array.zeroCreate count |> dsharp.tensor
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all elements of the input tensor.</summary>
+    /// <param name="mapping">The function is passed the index of each element. The function to apply to each element of the tensor.</param>
+    /// <param name="tensor">The input tensor.</param>
     static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
         let tflat = tensor.view(-1)
         let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
         dsharp.stack(items).view(tensor.shape)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all corresponding elements of two input tensors.</summary>
+    /// <remarks>The function is passed the index of each element. The shapes of the two tensors must be identical.</remarks>
+    /// <param name="mapping">The function to apply to each element of the tensor.</param>
+    /// <param name="tensor1">The first input tensor.</param>
+    /// <param name="tensor2">The second input tensor.</param>
     static member mapi2 (mapping:int[]->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
         let tflat1 = tensor1.view(-1)
@@ -1075,7 +1159,12 @@ type dsharp with
         let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
         dsharp.stack(items).view(tensor1.shape)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all corresponding elements of three input tensors.</summary>
+    /// <remarks>The function is passed the index of each element. The shapes of the three tensors must be identical.</remarks>
+    /// <param name="mapping">The function to apply to each element of the tensor.</param>
+    /// <param name="tensor1">The first input tensor.</param>
+    /// <param name="tensor2">The second input tensor.</param>
+    /// <param name="tensor3">The third input tensor.</param>
     static member mapi3 (mapping:int[]->Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
         if (tensor1.shape <> tensor2.shape) || (tensor2.shape <> tensor3.shape) then failwithf "Expecting tensor1.shape (%A), tensor2.shape (%A), tensor3.shape (%A) to be the same" tensor1.shape tensor2.shape tensor3.shape
         let tflat1 = tensor1.view(-1)
@@ -1084,57 +1173,80 @@ type dsharp with
         let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i] tflat3.[i])
         dsharp.stack(items).view(tensor1.shape)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all elements of the input tensor.</summary>
+    /// <param name="mapping">The function to apply to each element of the tensor.</param>
+    /// <param name="tensor">The input tensor.</param>
     static member map (mapping:Tensor->Tensor) (tensor:Tensor) = tensor |> dsharp.mapi (fun _ v -> mapping v)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all corresponding elements of two input tensors.</summary>
+    /// <remarks>The shapes of the two tensors must be identical.</remarks>
+    /// <param name="mapping">The function to apply to each element of the tensor.</param>
+    /// <param name="tensor1">The first input tensor.</param>
+    /// <param name="tensor2">The second input tensor.</param>
     static member map2 (mapping:Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) = dsharp.mapi2 (fun _ v1 v2 -> mapping v1 v2) tensor1 tensor2
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor by mapping a function over all corresponding elements of three input tensors.</summary>
+    /// <remarks>The shapes of the three tensors must be identical.</remarks>
+    /// <param name="mapping">The function to apply to each element of the tensor.</param>
+    /// <param name="tensor1">The first input tensor.</param>
+    /// <param name="tensor2">The second input tensor.</param>
+    /// <param name="tensor3">The third input tensor.</param>
     static member map3 (mapping:Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) = dsharp.mapi3 (fun _ v1 v2 v3 -> mapping v1 v2 v3) tensor1 tensor2 tensor3
 
 
 // Functional automatic differentiation API
 type dsharp with
 
-    /// <summary>TBD</summary>
+    /// <summary>Increase the global nesting level for automatic differentiation.</summary>
     static member nest() = GlobalNestingLevel.Next() |> ignore
 
-    /// <summary>TBD</summary>
+    /// <summary>Set the global nesting level for automatic differentiation.</summary>
+    /// <param name="level">The new nesting level.</param>
     static member nest(level) = GlobalNestingLevel.Set(level)
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the global nesting level for automatic differentiation.</summary>
     static member nestLevel() = GlobalNestingLevel.Current
 
-    /// <summary>TBD</summary>
+    /// <summary>Reset the global nesting level for automatic differentiation to zero.</summary>
     static member nestReset() = GlobalNestingLevel.Reset()
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the primal value of the tensor.</summary>
     static member primal (tensor:Tensor) = tensor.primal
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the derivative value of the tensor.</summary>
     static member derivative (tensor:Tensor) = tensor.derivative
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the primal and derivative values of the tensor.</summary>
     static member primalDerivative (tensor:Tensor) = tensor.primal, tensor.derivative
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor suitable for calculating the forward-mode derivative at the given level tag.</summary>
+    /// <param name="tag">The level tag.</param>
+    /// <param name="derivative">The derivative of the input.</param>
+    /// <param name="tensor">The input.</param>
     static member forwardDiff (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produce a new tensor suitable for calculating the reverse-mode derivative at the given level tag.</summary>
+    /// <param name="tag">The level tag.</param>
+    /// <param name="tensor">The output tensor.</param>
     static member reverseDiff (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
 
-    /// <summary>TBD</summary>
+    /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
+    /// <param name="tensor">The output tensor.</param>
     static member reverseReset (tensor:Tensor) = tensor.reverseReset(true)
 
-    /// <summary>TBD</summary>
+    /// <summary>Push the given value as part of the reverse-mode computation at the given output tensor.</summary>
+    /// <param name="value">The value to apply.</param>
+    /// <param name="tensor">The output tensor.</param>
     static member reversePush (value:Tensor) (tensor:Tensor) = tensor.reversePush(value)
 
-    /// <summary>TBD</summary>
+    /// <summary>Compute the reverse-mode derivative at the given output tensor.</summary>
+    /// <param name="value">The value to apply.</param>
+    /// <param name="tensor">The output tensor.</param>
     static member reverse (value:Tensor) (tensor:Tensor) = tensor.reverse(value)
 
     /// <summary>TBD</summary>
-    static member evalForwardDiff f x v = x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> dsharp.primalDerivative
+    static member evalForwardDiff f x v =
+        x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v |> f |> dsharp.primalDerivative
 
     /// <summary>TBD</summary>
     static member evalReverseDiff f x =
