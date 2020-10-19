@@ -1,4 +1,3 @@
-﻿namespace DiffSharp
 namespace DiffSharp
 
 open DiffSharp.Backends
