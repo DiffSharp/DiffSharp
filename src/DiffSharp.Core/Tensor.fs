@@ -1194,7 +1194,12 @@ type Tensor =
     /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     member a.pow(b) = a ** a.scalarLike(b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Produces the matrix product of the tensor with the provided <paramref name="b"/> tensor.</summary>
+    /// <param name="b">The tensor to multiply with.</param>
+    /// <remarks>
+    ///   The tensors should be matrices (2D) and the number of columns of the tensor must match the number of rows on the <c>b</c> tensor.
+    /// <remarks>
+    /// <returns>The result of the matrix multiplication</a>
     member a.matmul (b:Tensor) =
         Shape.checkCanMatmul a.shape b.shape
         let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
@@ -1207,8 +1212,11 @@ type Tensor =
         let dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>Computes the dot product (inner product) of two tensors.</summary>
-    /// <remarks>This function does not broadcast.</remarks>
+    /// <summary>Computes the dot product (inner product) of two vector (1d-tensors).</summary>
+    /// <param name="b">The vector to multiply this tensor by (1d-tensor).</param>
+    /// <remarks>This function does not broadcast and expects this tensor to be a vector (1d-tensor).   
+    /// The tensors must have the same number of elements.
+    /// </remarks>
     member a.dot(b:Tensor) =
         Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
