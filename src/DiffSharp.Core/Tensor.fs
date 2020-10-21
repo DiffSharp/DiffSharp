@@ -1198,7 +1198,7 @@ type Tensor =
     /// <param name="b">The tensor to multiply with.</param>
     /// <remarks>
     ///   The tensors should be matrices (2D) and the number of columns of the tensor must match the number of rows on the <c>b</c> tensor.
-    /// <remarks>
+    /// </remarks>
     /// <returns>The result of the matrix multiplication</returns>
     member a.matmul (b:Tensor) =
         Shape.checkCanMatmul a.shape b.shape
