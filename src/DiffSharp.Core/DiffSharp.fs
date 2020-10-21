@@ -1293,7 +1293,7 @@ type dsharp with
     /// <summary>TBD</summary>
     /// <param name="x">TBD</param>
     /// <param name="v">TBD</param>
-    /// <remarks>The <c>x</c> and <c>v</c> tensors shoudl have the same number of elements.</remarks>
+    /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fjacobianv f (x:Tensor) (v:Tensor) = 
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = dsharp.evalForwardDiff f x v
@@ -1306,7 +1306,7 @@ type dsharp with
     /// <summary>TBD</summary>
     /// <param name="x">TBD</param>
     /// <param name="v">TBD</param>
-    /// <remarks>The <c>x</c> and <c>v</c> tensors shoudl have the same number of elements.</remarks>
+    /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fgradv f (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = dsharp.evalForwardDiff f x v
