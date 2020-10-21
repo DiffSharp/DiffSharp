@@ -1199,7 +1199,7 @@ type Tensor =
     /// <remarks>
     ///   The tensors should be matrices (2D) and the number of columns of the tensor must match the number of rows on the <c>b</c> tensor.
     /// <remarks>
-    /// <returns>The result of the matrix multiplication</a>
+    /// <returns>The result of the matrix multiplication</returns>
     member a.matmul (b:Tensor) =
         Shape.checkCanMatmul a.shape b.shape
         let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
