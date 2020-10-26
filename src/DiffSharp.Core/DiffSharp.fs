@@ -1,4 +1,3 @@
-﻿namespace DiffSharp
 namespace DiffSharp
 
 open DiffSharp.Backends
@@ -473,11 +472,11 @@ type dsharp =
     /// <param name="high">The upper-bound of the range to be clamped to.</param>
     static member clamp(input:Tensor, ?low:scalar, ?high:scalar) = input.clamp(?low=low, ?high=high)
 
-    /// <summary>TBD</summary>
+    /// <summary>Normalizes a vector so all the values are between zero and one (min-max scaling to 0..1).</summary>
     /// <param name="input">The input tensor.</param>
     static member normalize(input:Tensor) = input.normalize()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the tensor after standardization (z-score normalization)</summary>
     /// <param name="input">The input tensor.</param>
     static member standardize(input:Tensor) = input.standardize()
 
@@ -1292,6 +1291,9 @@ type dsharp with
                 |] |> Array.rev |> Array.append [|fx|]
 
     /// <summary>TBD</summary>
+    /// <param name="x">TBD</param>
+    /// <param name="v">TBD</param>
+    /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fjacobianv f (x:Tensor) (v:Tensor) = 
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = dsharp.evalForwardDiff f x v
@@ -1302,6 +1304,9 @@ type dsharp with
     static member jacobianv f x v = dsharp.fjacobianv f x v |> snd
 
     /// <summary>TBD</summary>
+    /// <param name="x">TBD</param>
+    /// <param name="v">TBD</param>
+    /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fgradv f (x:Tensor) (v:Tensor) =
         if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
         let fx, d = dsharp.evalForwardDiff f x v
@@ -1338,14 +1343,20 @@ type dsharp with
     /// <summary>TBD</summary>
     static member diff2 f x = dsharp.diffn 2 f x
 
-    /// <summary>TBD</summary>
+    /// <summary>Original value and transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`</summary>
+    /// <param name="f">vector-to-vector function</param>
+    /// <param name="x">Point at which the function <c>f</c> will be evaluated, it must have a single dimension.</param>
+    /// <param name="v">Vector</param>
     static member fjacobianTv f x (v:Tensor) =
         let fx, r = dsharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         if fx.nelement <> v.nelement then failwithf "(f x) and v must have the same number of elements"
         fx, r v
 
-    /// <summary>TBD</summary>
+    /// <summary>Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`</summary>
+    /// <param name="f">vector-to-vector function</param>
+    /// <param name="x">Point at which the function <c>f</c> will be evaluated, it must have a single dimension.</param>
+    /// <param name="v">Vector</param>
     static member jacobianTv f x v = dsharp.fjacobianTv f x v |> snd
 
     /// <summary>TBD</summary>
