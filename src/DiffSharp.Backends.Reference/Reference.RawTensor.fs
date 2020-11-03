@@ -929,6 +929,7 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1014,6 +1015,7 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1096,6 +1098,7 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1178,6 +1181,7 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1260,6 +1264,7 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1342,6 +1347,7 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1428,6 +1434,7 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1509,6 +1516,7 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.ToMutableTensorUnsafe() = ReferenceRawMutableTensor(t) :> RawMutableTensor
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = ([| false |], Shape.scalar) |> createOn device
@@ -1585,6 +1593,7 @@ type ReferenceRawMutableTensor(initial: RawTensor) =
     override _.ToTensor() = 
         closed <- true; 
         t
+
 
 #if TEST_DUPLICATE_BACKEND
 type TestDuplicateBackendTensorStatics() = 

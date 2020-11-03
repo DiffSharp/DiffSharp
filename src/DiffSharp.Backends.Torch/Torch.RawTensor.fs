@@ -768,6 +768,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         | Dtype.IntegralOrBool -> opNotSupported "AtanT" dtype
         | _ ->  t.MakeLike(tt.Atan())
 
+    override t.ToMutableTensorUnsafe() = 
+        TorchRawMutableTensor(tt, shape, dtype, t.Device) :> RawMutableTensor
+
     new (info: System.Runtime.Serialization.SerializationInfo, _context: System.Runtime.Serialization.StreamingContext) =
         let dtype = info.GetValue("dtype", typeof<Dtype>) :?> Dtype
         let shape = info.GetValue("shape", typeof<Shape>) :?> Shape
