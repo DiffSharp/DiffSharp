@@ -1522,7 +1522,6 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     static member RandomInt(shape:Shape, low:int, high:int, device) = RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> createOn device
     static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
 
-
 type ReferenceRawMutableTensor(initial: RawTensor) =
     inherit RawMutableTensor()
     let mutable closed = false
@@ -1579,6 +1578,9 @@ type ReferenceRawMutableTensor(initial: RawTensor) =
     override _.AcosT() = checkClosed(); t <- t.AcosT()
     override _.AtanT() = checkClosed(); t <- t.AtanT()
     override _.Ones() = checkClosed(); t <- t.OnesLike(t.Shape)
+    override _.Random() = checkClosed(); t <- t.RandomLike(t.Shape) 
+    override _.RandomNormal() = checkClosed(); t <- t.RandomNormalLike(t.Shape)
+    override _.RandomInt(low, high) = checkClosed(); t <- t.RandomIntLike(t.Shape, low, high)
     override _.Zeros() = checkClosed(); t <- t.ZerosLike(t.Shape)
     override _.ToTensor() = 
         closed <- true; 

@@ -787,5 +787,14 @@ type RawMutableTensor() =
     /// Modifies the tensor by setting all values to zero
     abstract member Zeros: unit -> unit
 
+    /// Modifies the tensor by setting it to random values taken from a uniform distribution in [0, 1).
+    abstract Random: unit -> unit
+
+    /// Modifies the tensor by setting all values taken from a normal distribution with mean 0 and variance 1.
+    abstract RandomNormal: unit -> unit
+
+    /// Gets a tensor filled with random integers from the given range 
+    abstract RandomInt: low:int * high:int -> unit
+
     /// Uses this mutable register to build an immutable tensor. The mutable tensor may not subsequenly be modified.
     abstract member ToTensor: unit -> RawTensor
