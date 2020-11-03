@@ -25,35 +25,34 @@ module internal Utils =
 [<AbstractClass>]
 type Distribution<'T>() =
 
-    /// <summary>TBD</summary>
-    abstract member sample: unit -> 'T
+    /// <summary>Samples the distribution</summary>
+    abstract sample: unit -> 'T
 
-    /// <summary>TBD</summary>
-    abstract member logprob: 'T -> Tensor
+    /// <summary>Returns the log-probability of the distribution</summary>
+    abstract logprob: 'T -> Tensor
 
 
 [<AbstractClass>]
-/// <summary>TBD</summary>
+/// <summary>Represents a distribution where sampling returns a tensor</summary>
 type TensorDistribution() =
     inherit Distribution<Tensor>()
 
-    /// <summary>TBD</summary>
+    /// <summary>Samples the distribution mutliple times</summary>
     member d.sample(numSamples:int) = Array.init numSamples (fun _ -> d.sample()) |> dsharp.stack
 
-    /// <summary>TBD</summary>
-    abstract member batchShape: Shape
+    abstract batchShape: Shape
 
     /// <summary>TBD</summary>
-    abstract member eventShape: Shape
+    abstract eventShape: Shape
 
     /// <summary>TBD</summary>
-    abstract member mean: Tensor
+    abstract mean: Tensor
 
     /// <summary>TBD</summary>
-    abstract member stddev: Tensor
+    abstract stddev: Tensor
 
     /// <summary>TBD</summary>
-    abstract member variance: Tensor
+    abstract variance: Tensor
 
     default d.stddev = d.variance.sqrt()
     default d.variance = d.stddev * d.stddev
@@ -62,7 +61,7 @@ type TensorDistribution() =
     member d.prob(value) = d.logprob(value).exp()
 
 
-/// <summary>TBD</summary>
+/// <summary>Represents a normal distribution with the given mean and standard deviation with the mean and standard deviation drawn fom the given tensors.</summary>
 type Normal(mean:Tensor, stddev:Tensor) =
     inherit TensorDistribution()
     do if mean.shape <> stddev.shape then failwithf "Expecting mean and standard deviation with same shape, received %A, %A" mean.shape stddev.shape
@@ -92,7 +91,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
     override d.ToString() = sprintf "Normal(mean:%A, stddev:%A)" d.mean d.stddev
 
 
-/// <summary>TBD</summary>
+/// <summary>Represents a uniform distribution with low and high values drawn from the given tensors.</summary>
 type Uniform(low:Tensor, high:Tensor) =
     inherit TensorDistribution()
     do if low.shape <> high.shape then failwithf "Expecting low and high with same shape, received %A, %A" low.shape high.shape
@@ -133,7 +132,7 @@ type Uniform(low:Tensor, high:Tensor) =
     override d.ToString() = sprintf "Uniform(low:%A, high:%A)" d.low d.high
 
 
-/// <summary>TBD</summary>
+/// <summary>Represents a Bernoulli distribution.</summary>
 type Bernoulli(?probs:Tensor, ?logits:Tensor) =
     inherit TensorDistribution()
     let _probs, _logits, _dtype =
@@ -174,7 +173,7 @@ type Bernoulli(?probs:Tensor, ?logits:Tensor) =
     override d.ToString() = sprintf "Bernoulli(probs:%A)" d.probs
 
 
-/// <summary>TBD</summary>
+/// <summary>Represents a Categorial distribution.</summary>
 type Categorical(?probs:Tensor, ?logits:Tensor) =
     inherit TensorDistribution()
     let _probs, _logits, _dtype =
@@ -217,11 +216,10 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
             let lp = Array.init d.batchShape.[0] (fun i -> _logits.[i, is.[i]]) |> dsharp.stack
             lp.cast(_dtype)
 
-    /// <summary>TBD</summary>
     override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
 
 
-/// <summary>TBD</summary>
+/// <summary>Represents an Empirical distribution.</summary>
 type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor, ?combineDuplicates:bool) =
     inherit Distribution<'T>()
     let _categorical, _weighted =
@@ -369,6 +367,5 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
 
     /// <summary>TBD</summary>
 
-    /// <summary>TBD</summary>
     override d.ToString() = sprintf "Empirical(length:%A)" d.length
 

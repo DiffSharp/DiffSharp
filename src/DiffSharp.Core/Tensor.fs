@@ -1253,8 +1253,11 @@ type Tensor =
             let bExpanded = b.expand(bNewShape)
             aExpanded.matmul(bExpanded)
 
-    /// <summary>Computes the dot product (inner product) of two tensors.</summary>
-    /// <remarks>This function does not broadcast.</remarks>
+    /// <summary>Computes the dot product (inner product) of two vector (1d-tensors).</summary>
+    /// <param name="b">The vector to multiply this tensor by (1d-tensor).</param>
+    /// <remarks>This function does not broadcast and expects this tensor to be a vector (1d-tensor).   
+    /// The tensors must have the same number of elements.
+    /// </remarks>
     member a.dot(b:Tensor) =
         Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
