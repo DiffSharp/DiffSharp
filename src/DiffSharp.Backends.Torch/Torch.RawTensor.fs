@@ -1012,7 +1012,6 @@ type TorchRawMutableTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: 
     override t.Device = Device(t.DeviceType, tt.DeviceIndex)
     override _.Backend = Backend.Torch
     override _.Handle = box tt
-
     override _.ClampT(low, high) = checkClosed(); tt <- tt.Clamp(low.TorchTensor.Item(), high.TorchTensor.Item()) // TODO - next version of TorchSharp will have in place version of this
     override _.LtTT(t2) = checkClosed(); tt.LtInPlace(t2.TorchTensor) |> ignore
     override _.GtTT(t2) = checkClosed(); tt.GtInPlace(t2.TorchTensor) |> ignore
@@ -1023,7 +1022,19 @@ type TorchRawMutableTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: 
     override _.AddTT(t2) = checkClosed(); tt.AddInPlace(t2.TorchTensor) |> ignore
     override _.AddTT0(t2) = checkClosed(); tt.AddInPlace(t2.TorchTensor) |> ignore
     override _.AddT2T1(t2) = checkClosed(); tt.AddInPlace(t2.TorchTensor) |> ignore
-    override _.AddTTSlice(location, t2) = checkClosed(); tt.AddTTSlice(location, t2.TorchTensor)
+    override t1.AddTTSlice(location, t2) = 
+        Shape.checkCanAddSlice t1.Shape location t2.Shape
+        let shape1 = t1.Shape
+        let shape2 = t2.Shape
+        let expandedShape2 = Shape.unsqueezeAs shape2 shape1
+        let t2Expanded = t2.TorchTensor.Expand(toTorchShape expandedShape2)
+        let mutable t1Slice = tt // will share memory with res
+        for d in 0 .. location.Length - 1 do 
+            let len2 = expandedShape2.[d]
+            if location.[d] <> 0 || len2 <> shape1.[d] then 
+                t1Slice <- t1Slice.Narrow(int64 d, int64 location.[d], int64 len2)
+        t1Slice.AddInPlace(t2Expanded) |> ignore
+
     override _.SubTT(t2) = checkClosed(); tt.SubInPlace(t2.TorchTensor) |> ignore
     override _.SubTT0(t2) = checkClosed(); tt.SubInPlace(t2.TorchTensor) |> ignore
     override _.MulTT(t2) = checkClosed(); tt.MulInPlace(t2.TorchTensor) |> ignore
@@ -1055,8 +1066,8 @@ type TorchRawMutableTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: 
     override _.AsinT() = checkClosed(); tt.AsinInPlace() |> ignore
     override _.AcosT() = checkClosed(); tt.AcosInPlace() |> ignore
     override _.AtanT() = checkClosed(); tt.AtanInPlace() |> ignore
-    override t.Ones() = checkClosed(); tt <- t.OnesLike(t.Shape)
-    override t.Zeros() = checkClosed(); tt <- t.ZerosLike(t.Shape)
+    override t.Ones() = checkClosed(); tt <- (RawTensor.Ones(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+    override t.Zeros() = checkClosed(); tt <- (RawTensor.Zeros(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
     override t.ToTensor() = 
         closed <- true; 
         TorchRawTensor(tt, shape, dtype, t.Device) :> RawTensor
