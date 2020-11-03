@@ -25,6 +25,9 @@ type BackendTensorStatics() =
     /// Gets a tensor filled with arbitrary values for the given shape and device
     abstract Empty: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
+    /// Gets a mutable tensor filled with arbitrary for the given shape and device
+    abstract EmptyMutable: shape:Shape * dtype: Dtype * device: Device -> RawMutableTensor
+
     /// Gets a tensor filled with zeros for the given shape and device
     abstract Zeros: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
@@ -69,7 +72,7 @@ type BackendTensorStatics() =
         hook.Get(?backend=backend)
 
 /// <summary>
-///   Represents a raw (i.e. non-differentiable) tensor implemented by a DiffSharp backend.
+///   Represents a raw (i.e. non-differentiable immutable) tensor implemented by a DiffSharp backend.
 /// </summary>
 ///
 /// <remarks>
@@ -611,3 +614,178 @@ type RawTensor() =
             | :? System.Array as a -> a
             | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
 
+/// <summary>
+///   Represents a raw (i.e. non-differentiable mutable) tensor implemented by a DiffSharp backend.
+/// </summary>
+///
+/// <remarks>
+///  Each backend will provide one of more .NET implementations of this type, which may in turn
+///  wrap handles to native implementations.
+/// </remarks>
+
+[<AbstractClass>]
+type RawMutableTensor() =
+
+    /// Gets the shape of the tensor
+    abstract member Shape : Shape
+
+    /// Gets the dimensionality of the tensor
+    abstract member Dim : int
+
+    /// Gets the number of elements in the tensor
+    abstract member Nelement : int
+
+    /// Gets the element storage type for the tensor
+    abstract member Dtype : Dtype
+
+    /// Gets the device for the tensor
+    abstract member Device : Device
+
+    /// Gets the device type for the tensor
+    abstract member DeviceType : DeviceType
+
+    /// Gets the backend for the tensor
+    abstract member Backend : Backend
+
+    /// Gets a handle to the underlying representation of the the tensor. For example, if the Torch
+    /// backend is used this will be the corresponding TorchSharp TorchTensor.
+    abstract member Handle : obj
+
+    /// Modifies the tensor by taking a boolean tensor with values constrained by the corresponding elements in the low/high tensors.
+    abstract member ClampT: low: RawTensor * high: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member LtTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member GtTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member LeTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member GeTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member EqTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract member NeqTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise addition of the two tensors
+    abstract member AddTT : RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise addition of two scalars
+    abstract member AddTT0 : RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise addition of the matrix and vector tensors
+    abstract member AddT2T1: RawTensor -> unit
+
+    /// Adds a slice of <c>t2</c> at the given location to the tensor
+    abstract member AddTTSlice: location: int[] * t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise subtraction of two tensors
+    abstract member SubTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise subtraction of the tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract member SubTT0: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise multiplication of two tensors
+    abstract member MulTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise multiplication of a tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract member MulTT0: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise division of two tensors
+    abstract member DivTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise division of a tensor by a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract member DivTT0: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise exponentiation of two tensors
+    abstract member PowTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise exponentiation of a tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract member PowTT0: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the matrix multiplication of two tensors
+    abstract member MatMulTT: t2: RawTensor -> unit
+
+    /// Modifies the tensor by taking the element-wise negation of the tensor
+    abstract member NegT : unit -> unit
+
+    /// Modifies the tensor by taking the element-wise sign of the tensor
+    abstract member SignT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise integer floor of the tensor
+    abstract member FloorT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise integer ceiling of the tensor
+    abstract member CeilT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise rounding of the tensor
+    abstract member RoundT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise absolute value of the tensor
+    abstract member AbsT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise ReLU of the tensor
+    abstract member ReluT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise softplus of the tensor
+    abstract member SoftplusT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise sigmoid of the tensor
+    abstract member SigmoidT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise natural exponentiation of the tensor
+    abstract member ExpT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise natural logarithm of the tensor
+    abstract member LogT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise base10 logarithm of the tensor
+    abstract member Log10T: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise square root of the tensor
+    abstract member SqrtT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise sine of the tensor
+    abstract member SinT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise cosine of the tensor
+    abstract member CosT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise tangent of the tensor
+    abstract member TanT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise sinh of the tensor
+    abstract member SinhT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise cosh of the tensor
+    abstract member CoshT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise tanh of the tensor
+    abstract member TanhT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise asin of the tensor
+    abstract member AsinT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise cos of the tensor
+    abstract member AcosT: unit -> unit
+
+    /// Modifies the tensor by taking the element-wise atan of the tensor
+    abstract member AtanT: unit -> unit
+
+    /// Modifies the tensor by setting all values to one
+    abstract member Ones: unit -> unit
+
+    /// Modifies the tensor by setting all values to zero
+    abstract member Zeros: unit -> unit
+
+    /// Uses this mutable register to build an immutable tensor. The mutable tensor may not subsequenly be modified.
+    abstract member ToTensor: unit -> RawTensor

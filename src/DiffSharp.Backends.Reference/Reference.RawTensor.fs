@@ -1522,6 +1522,68 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     static member RandomInt(shape:Shape, low:int, high:int, device) = RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> createOn device
     static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
 
+
+type ReferenceRawMutableTensor(initial: RawTensor) =
+    inherit RawMutableTensor()
+    let mutable closed = false
+    let mutable t = initial
+    let checkClosed() = if closed then failwith "the tensor can't be mutated" 
+    override _.Shape = t.Shape 
+    override _.Dim = t.Dim
+    override _.Nelement = t.Nelement
+    override _.Dtype = t.Dtype
+    override _.Device = t.Device
+    override _.DeviceType = t.DeviceType
+    override _.Backend = t.Backend
+    override _.Handle = t.Handle
+    override _.ClampT(low, high) = checkClosed(); t <- t.ClampT(low, high)
+    override _.LtTT(t2) = checkClosed(); t <- t.LtTT(t2)
+    override _.GtTT(t2) = checkClosed(); t <- t.GtTT(t2)
+    override _.LeTT(t2) = checkClosed(); t <- t.LeTT(t2)
+    override _.GeTT(t2) = checkClosed(); t <- t.GeTT(t2)
+    override _.EqTT(t2) = checkClosed(); t <- t.EqTT(t2)
+    override _.NeqTT(t2) = checkClosed(); t <- t.NeqTT(t2)
+    override _.AddTT(t2) = checkClosed(); t <- t.AddTT(t2)
+    override _.AddTT0(t2) = checkClosed(); t <- t.AddTT0(t2)
+    override _.AddT2T1(t2) = checkClosed(); t <- t.AddT2T1(t2)
+    override _.AddTTSlice(location, t2) = checkClosed(); t <- t.AddTTSlice(location, t2)
+    override _.SubTT(t2) = checkClosed(); t <- t.SubTT(t2)
+    override _.SubTT0(t2) = checkClosed(); t <- t.SubTT0(t2)
+    override _.MulTT(t2) = checkClosed(); t <- t.MulTT(t2)
+    override _.MulTT0(t2) = checkClosed(); t <- t.MulTT0(t2)
+    override _.DivTT(t2) = checkClosed(); t <- t.DivTT(t2)
+    override _.DivTT0(t2) = checkClosed(); t <- t.DivTT0(t2)
+    override _.PowTT(t2) = checkClosed(); t <- t.PowTT(t2)
+    override _.PowTT0(t2) = checkClosed(); t <- t.PowTT0(t2)
+    override _.MatMulTT(t2) = checkClosed(); t <- t.MatMulTT(t2)
+    override _.NegT() = checkClosed(); t <- t.NegT()
+    override _.SignT() = checkClosed(); t <- t.SignT()
+    override _.FloorT() = checkClosed(); t <- t.FloorT()
+    override _.CeilT() = checkClosed(); t <- t.CeilT()
+    override _.RoundT() = checkClosed(); t <- t.RoundT()
+    override _.AbsT() = checkClosed(); t <- t.AbsT()
+    override _.ReluT() = checkClosed(); t <- t.ReluT()
+    override _.SoftplusT() = checkClosed(); t <- t.SoftplusT()
+    override _.SigmoidT() = checkClosed(); t <- t.SigmoidT()
+    override _.ExpT() = checkClosed(); t <- t.ExpT()
+    override _.LogT() = checkClosed(); t <- t.LogT()
+    override _.Log10T() = checkClosed(); t <- t.Log10T()
+    override _.SqrtT() = checkClosed(); t <- t.SqrtT()
+    override _.SinT() = checkClosed(); t <- t.SinT()
+    override _.CosT() = checkClosed(); t <- t.CosT()
+    override _.TanT() = checkClosed(); t <- t.TanT()
+    override _.SinhT() = checkClosed(); t <- t.SinhT()
+    override _.CoshT() = checkClosed(); t <- t.CoshT()
+    override _.TanhT() = checkClosed(); t <- t.TanhT()
+    override _.AsinT() = checkClosed(); t <- t.AsinT()
+    override _.AcosT() = checkClosed(); t <- t.AcosT()
+    override _.AtanT() = checkClosed(); t <- t.AtanT()
+    override _.Ones() = checkClosed(); t <- t.OnesLike(t.Shape)
+    override _.Zeros() = checkClosed(); t <- t.ZerosLike(t.Shape)
+    override _.ToTensor() = 
+        closed <- true; 
+        t
+
 #if TEST_DUPLICATE_BACKEND
 type TestDuplicateBackendTensorStatics() = 
 #else
@@ -1639,3 +1701,6 @@ type ReferenceBackendTensorStatics() =
         | Int32 -> RawTensorInt32.CreateFromFlatArray(values, shape, device)
         | Int64 -> RawTensorInt64.CreateFromFlatArray(values, shape, device)
         | Bool -> RawTensorBool.CreateFromFlatArray(values, shape, device)
+
+    override t.EmptyMutable(shape:Shape, dtype, device) =
+        ReferenceRawMutableTensor(t.Empty(shape, dtype, device)) :> _
