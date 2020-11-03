@@ -408,7 +408,7 @@ type RawTensor() =
     abstract member PowTT0: t2: RawTensor -> RawTensor
 
     /// Returns the matrix multiplication of two tensors
-    abstract member MatMulT2T2: t2: RawTensor -> RawTensor
+    abstract member MatMulTT: t2: RawTensor -> RawTensor
 
     /// Returns the 1D maxpool of a tensor and its chosen maximum indices
     abstract member MaxPool1D: kernelSize: int * stride: int * padding: int -> RawTensor * RawTensor

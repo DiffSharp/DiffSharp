@@ -1194,23 +1194,64 @@ type Tensor =
     /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     member a.pow(b) = a ** a.scalarLike(b)
 
-    /// <summary>Produces the matrix product of the tensor with the provided <paramref name="b"/> tensor.</summary>
-    /// <param name="b">The tensor to multiply with.</param>
+    /// <summary>Matrix product of two tensors.</summary>
+    ///
     /// <remarks>
-    ///   The tensors should be matrices (2D) and the number of columns of the tensor must match the number of rows on the <c>b</c> tensor.
+    /// <para>
+    /// The behavior depends on the dimensionality of the tensors as follows:
+    /// </para>
+    /// 
+    /// <para>
+    /// If both tensors are 1-dimensional, the dot product (scalar) is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If both arguments are 2-dimensional, the matrix-matrix product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If the first argument is 1-dimensional and the second argument is 2-dimensional, a 1 is prepended to its dimension for the purpose of the matrix multiply. After the matrix multiply, the prepended dimension is removed.
+    /// </para>
+    /// 
+    /// <para>
+    ///  If the first argument is 2-dimensional and the second argument is 1-dimensional, the matrix-vector product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    ///  If both arguments are at least 1-dimensional and at least one argument is N-dimensional (where N > 2), then a 
+    ///  batched matrix multiply is returned. If the first argument is 1-dimensional, a 1 is prepended to its dimension for the
+    ///  purpose of the batched matrix multiply and removed after. If the second argument is 1-dimensional, a 1 is appended to
+    ///  its dimension for the purpose of the batched matrix multiple and removed after. The non-matrix (i.e. batch) dimensions
+    ///  are broadcasted (and thus must be broadcastable). For example, if input is a (j \times 1 \times n \times m)(j×1×n×m)
+    ///  tensor and other is a (k \times m \times p)(k×m×p) tensor, out will be an (j \times k \times n \times p)(j×k×n×p)
+    ///  tensor.
+    /// </para>
     /// </remarks>
-    /// <returns>The result of the matrix multiplication</returns>
-    member a.matmul (b:Tensor) =
-        Shape.checkCanMatmul a.shape b.shape
-        let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
-        let fTensor(a:Tensor,b) = a.matmul(b)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
-        let dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
-        let dfTensorRevTT(a,b) = MatMulT2T2(a,b)
-        let dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
-        let dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
-        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+
+    member a.matmul (b:Tensor) : Tensor =
+        if a.dim = 1 && b.dim = 1 then a.dot(b) 
+        // Increase to at least 2x2
+        elif a.dim = 1 && b.dim > 1 then a.unsqueeze(0).matmul(b).squeeze(b.dim-2)
+        elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(a.dim-1)
+        else
+        let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
+        if aBatchPart = bBatchPart then
+            let fRaw(a:RawTensor,b) = a.MatMulTT(b)
+            let fTensor(a:Tensor,b) = a.matmul(b)
+            let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
+            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+            let dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
+            let dfTensorRevTT(a,b) = MatMulTT(a,b)
+            let dfTensorRevTC(a,b) = MatMulTTConst(a,b)
+            let dfTensorRevCT(a,b) = MatMulTConstT(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        else
+            let newBatchPart = Shape.broadcast2 aBatchPart bBatchPart
+            let aNewShape = Array.append newBatchPart aMatrixPart
+            let bNewShape = Array.append newBatchPart bMatrixPart
+            let aExpanded = a.expand(aNewShape)
+            let bExpanded = b.expand(bNewShape)
+            aExpanded.matmul(bExpanded)
 
     /// <summary>Computes the dot product (inner product) of two vector (1d-tensors).</summary>
     /// <param name="b">The vector to multiply this tensor by (1d-tensor).</param>
@@ -1490,7 +1531,7 @@ type Tensor =
 
     /// <summary>Returns a new tensor with a dimension of size one inserted at the specified position</summary>
     /// <param name="dim">The index at which to insert the singleton dimension.</param>
-    member a.unsqueeze(dim:int) =
+    member a.unsqueeze(dim:int) : Tensor =
         let fRaw(a:RawTensor) = a.UnsqueezeT(dim)
         let fTensor(a:Tensor) = a.unsqueeze(dim)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
@@ -2678,9 +2719,9 @@ type Tensor =
                         | PowTT0(a,b) -> reset (a::b::tt)
                         | PowTT0Const(a,_) -> reset (a::tt)
                         | PowTConstT0(_,b) -> reset (b::tt)
-                        | MatMulT2T2(a,b) -> reset (a::b::tt)
-                        | MatMulT2T2Const(a,_) -> reset (a::tt)
-                        | MatMulT2ConstT2(_,b) -> reset (b::tt)
+                        | MatMulTT(a,b) -> reset (a::b::tt)
+                        | MatMulTTConst(a,_) -> reset (a::tt)
+                        | MatMulTConstT(_,b) -> reset (b::tt)
                         | MaxPool1DT(a,_,_) -> reset (a::tt)
                         | MaxPool2DT(a,_,_) -> reset (a::tt)
                         | MaxPool3DT(a,_,_) -> reset (a::tt)
@@ -2799,9 +2840,9 @@ type Tensor =
                         | PowTT0(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: ((t.derivative * (a.primal ** b.primal) * log a.primal).sum(), b) :: tt)
                         | PowTT0Const(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT0(a,b) -> push (((t.derivative * (a ** b.primal) * log a).sum(), b) :: tt)
-                        | MatMulT2T2(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
-                        | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
-                        | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
+                        | MatMulTT(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose(0,1).matmul(t.derivative), b) :: tt)
+                        | MatMulTTConst(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
+                        | MatMulTConstT(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
                         | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
                         | MaxPool2DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
                         | MaxPool3DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
@@ -2956,9 +2997,9 @@ and TensorOp =
     | PowTT0Const of Tensor * Tensor
     | PowTConstT0 of Tensor * Tensor
 
-    | MatMulT2T2 of Tensor * Tensor
-    | MatMulT2T2Const of Tensor * Tensor
-    | MatMulT2ConstT2 of Tensor * Tensor
+    | MatMulTT of Tensor * Tensor
+    | MatMulTTConst of Tensor * Tensor
+    | MatMulTConstT of Tensor * Tensor
 
     | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor

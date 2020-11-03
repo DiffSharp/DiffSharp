@@ -523,11 +523,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let result = tt.Pow(t2v)
         t1.MakeLike(result)
 
-    override t1.MatMulT2T2(t2) = 
+    override t1.MatMulTT(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "MatMulT2T2" dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "MatMulTT" dtype t2.Dtype
         | _ ->  
-        Shape.checkCanMatmul t1.Shape t2.Shape
+        let _, _ = Shape.checkCanMatmul t1.Shape t2.Shape
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
             match t1.DeviceType, dtype with 
