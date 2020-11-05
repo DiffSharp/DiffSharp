@@ -322,7 +322,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
 
     override t.SetMutable() = isMutable <- true
     override t.IsMutable = isMutable
-    member t.SetValues(tmp: RawTensor) = checkMutable(); values <- (tmp :?> RawTensorCPU<'T>).Values; t
+    member t.SetValues(tmp: RawTensor) = checkMutable(); values <- (tmp :?> RawTensorCPU<'T>).Values
     override t.ClampInPlace(low, high) = t.SetValues <| t.ClampT(low, high)
     override t.LtInPlace(t2) = t.SetValues <| t.LtTT(t2)
     override t.GtInPlace(t2) = t.SetValues <| t.GtTT(t2)
