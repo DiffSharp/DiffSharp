@@ -1,4 +1,4 @@
-﻿namespace DiffSharp
+﻿namespace rec DiffSharp
 
 open DiffSharp.Backends
 open DiffSharp.Util
@@ -19,31 +19,56 @@ type scalar = IConvertible
 ///    let t = dsharp.tensor([[1.; -1.]; [1.; -1.]])
 ///  </code>
 /// </example>
-[<CustomEquality; CustomComparison>]
-type Tensor = 
-    internal 
-    | Tensor of primalRaw:RawTensor
-    | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
-    | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
+type internal _Tensor0(primalRaw: RawTensor) =
+    inherit Tensor()
+    member val _primalRaw = primalRaw with get, set
+
+type internal _TensorF(primal: Tensor, derivative: Tensor, nestingTag: uint32) =
+    inherit Tensor()
+    member val _primal  = primal with get, set
+    member val _derivative = derivative with get, set
+    member val _nestingTag = nestingTag with get, set
+
+type internal _TensorR(primal: Tensor, derivative: Tensor, parentOp: TensorOp, fanout: uint32, nestingTag: uint32) =
+    inherit Tensor()
+    member val _primal  = primal with get, set
+    member val _derivative = derivative with get, set
+    member val _parentOp = parentOp with get, set
+    member val _fanout = fanout with get, set
+    member val _nestingTag = nestingTag with get, set
+
+[<AutoOpen>]
+module internal TensorHelpers =
+    let inline Tensor0(t) = new _Tensor0(t) :> Tensor
+    let inline TensorF(primal: Tensor, derivative: Tensor, nestingTag: uint32) = new _TensorF(primal, derivative, nestingTag) :> Tensor
+    let inline TensorR(primal: Tensor, derivative: Tensor, parentOp: TensorOp, fanout: uint32, nestingTag: uint32) = new _TensorR(primal, derivative, parentOp, fanout, nestingTag) :> Tensor
+    let (|Tensor0|TensorF|TensorR|) (t: Tensor) =
+        match t with
+        | :? _Tensor0 as t -> Tensor0 t._primalRaw
+        | :? _TensorF as t -> TensorF(t._primal, t._derivative, t._nestingTag)
+        | :? _TensorR as t -> TensorR(t._primal, t._derivative, t._parentOp, t._fanout, t._nestingTag)
+        | _ -> failwith "unreachable"
+
+type Tensor() = 
 
     /// Gets the value of the tensor ignoring its first derivative
     member t.primal =
         match t with
-        | Tensor(_) -> t
+        | Tensor0(_) -> t
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
     /// Gets the value of the tensor ignoring all its derivatives
     member t.primalDeep =
         match t with
-        | Tensor(_) -> t
+        | Tensor0(_) -> t
         | TensorF(tp,_,_) -> tp.primalDeep
         | TensorR(tp,_,_,_,_) -> tp.primalDeep
 
     /// Gets the raw value of the tensor ignoring all its derivatives
     member t.primalRaw =
         match t with
-        | Tensor(tp) -> tp
+        | Tensor0(tp) -> tp
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
@@ -51,7 +76,7 @@ type Tensor =
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
-        | Tensor(tp) -> Tensor(tp.Cast(dtype))
+        | Tensor0(tp) -> Tensor0(tp.Cast(dtype))
         | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
         | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
 
@@ -65,10 +90,10 @@ type Tensor =
 
         if t.backend = backend then t else
         match t with
-        | Tensor(tp) -> 
+        | Tensor0(tp) -> 
             let tpflat = tp.ViewT([|tp.Nelement|]) //
             let tpflatValues = tpflat.ToValues()
-            Tensor(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
+            Tensor0(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
@@ -76,7 +101,7 @@ type Tensor =
     member t.move(device: Device) =
         if t.device = device then t else
         match t with
-        | Tensor(tp) -> Tensor(tp.MoveTo(device))
+        | Tensor0(tp) -> Tensor0(tp.MoveTo(device))
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
@@ -144,7 +169,7 @@ type Tensor =
     member t.depth =
         let rec depth x d =
             match x with
-            | Tensor(_) -> d
+            | Tensor0(_) -> d
             | TensorF(tp,_,_) -> depth tp (d + 1)
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
@@ -152,7 +177,7 @@ type Tensor =
     /// Gets the parent operation of a tensor used in reverse-mode differentiation
     member t.parentOp =
         match t with
-        | Tensor(_) -> failwith "Cannot get parent operation of constant Tensor"
+        | Tensor0(_) -> failwith "Cannot get parent operation of constant Tensor"
         | TensorF(_)-> failwith "Cannot get parent operation of TensorF"
         | TensorR(_,_,o,_,_) -> o
 
@@ -160,39 +185,37 @@ type Tensor =
     member t.derivative
         with get() =
             match t with
-            | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+            | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
             | TensorF(_,td,_) -> td
-            | TensorR(_,td,_,_,_) -> !td
-        and set(value) =
-            match t with
-            | Tensor(_) -> failwith "Cannot set derivative of constant Tensor"
-            | TensorF(_) -> failwith "Cannot set derivative of TensorF"
-            | TensorR(_,td,_,_,_) -> td := value
+            | TensorR(_,td,_,_,_) -> td
+        //and set(value) =
+        //    match t with
+        //    | Tensor0(_) -> failwith "Cannot set derivative of constant Tensor"
+        //    | TensorF(_) -> failwith "Cannot set derivative of TensorF"
+        //    | TensorR(_,td,_,_,_) -> td := value
 
     member t.derivativeDeep =
         match t with
-        | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+        | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> 
             match td with
-            | Tensor(_) -> td
+            | Tensor0(_) -> td
             | _ -> td.derivativeDeep
         | TensorR(_,td,_,_,_) -> 
-            match !td with
-            | Tensor(_) -> !td
-            | _ -> (!td).derivativeDeep
+            match td with
+            | Tensor0(_) -> td
+            | _ -> td.derivativeDeep
 
     /// Gets the fanout of a tensor used in reverse-mode differentiation
     member t.fanout
         with get() =
             match t with
-            | Tensor(_) -> failwith "Cannot get fanout of constant Tensor"
-            | TensorF(_) -> failwith "Cannot get fanout of TensorF"
-            | TensorR(_,_,_,f,_) -> !f
+            | :? _TensorR as tr -> tr._fanout 
+            | _ -> failwith "Cannot get fanout"
         and set(value) =
             match t with
-            | Tensor(_) -> failwith "Cannot set fanout of constant Tensor"
-            | TensorF(_) -> failwith "Cannot set fanout of TensorF"
-            | TensorR(_,_,_,f,_) -> f := value
+            | :? _TensorR as tr -> tr._fanout <- value
+            | _ -> failwith "Cannot set fanout"
 
     /// <summary>
     ///  Returns the input tensor with added support for forward-mode automatic differentiation.
@@ -217,7 +240,57 @@ type Tensor =
     /// </remarks>
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
+        t.reverseOp(NewT, tag=tag)
+
+    member internal t.setMutable() =
+        match t with
+        | Tensor0 v -> v.SetMutable()
+        | TensorF(t1,t2,_) -> t1.setMutable(); t2.setMutable()
+        | TensorR(t1,t2,_,_,_) -> t1.setMutable(); t2.setMutable()
+
+    member internal t.zerosInPlace() =
+        match t with
+        | Tensor0 v -> v.ZerosInPlace()
+        | TensorF(t1,t2,_) -> failwith "adjoints should not have nesting"
+        | TensorR(t1,t2,_,_,_) -> failwith "adjoints should not have nesting"
+
+    // member internal a.addInPlace(b) =
+    //     match a, b with
+    //     | Tensor0(ap),           Tensor0(bp)                      -> ap.AddInPlace(bp)
+    //     | _, _ -> 
+    //         let fTensor(a,b) = a + b
+    //         let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
+    //         let dfTensorFwdTC(cp,ap,ad) = ad
+    //         let dfTensorFwdCT(cp,bp,bd) = bd
+    //         let dfTensorRevTT(a,b) = AddTT(a,b)
+    //         let dfTensorRevTC(a,b) = AddTTConst(a)
+    //         let dfTensorRevCT(a,b) = AddTTConst(b)
+    //     Tensor0(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+    //     | Tensor0(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
+    //     | TensorF(ap,ad,at),    Tensor0(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+    //     | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
+    //     | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+    //     | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+    //     | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
+    //     | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+    //     | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
+    //     | TensorR(ap,_,_,_,at), Tensor0(_)                       -> let cp = fTensor(ap,b)  in cp.reverseOp(dfTensorRevTC(a,b), at)
+    //     | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
+    //     | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in cp.reverseOp(dfTensorRevTC(a,b), at)
+    //     | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
+    //     | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in cp.reverseOp(dfTensorRevTT(a,b), at)
+    //     | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in cp.reverseOp(dfTensorRevTC(a,b), at)
+    //     | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
+    //     | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
+    //     | Tensor0 v1, Tensor v2 -> v1.AddInPlace(t2)
+    //     | TensorF(t1,t2,_) -> failwith "adjoints should not have nesting"
+    //     | TensorR(t1,t2,_,_,_) -> failwith "adjoints should not have nesting"
+
+    member internal t.reverseOp(op, shape, ?tag: uint32) =
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        let initial : Tensor = t.zerosLike(shape)
+        initial.setMutable()
+        TensorR(t, initial, op, 0u, tag)
 
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep
@@ -237,7 +310,7 @@ type Tensor =
     /// Indicates if a tensor includes support for forward or reverse-mode differentiation
     member t.isNoDiff() =
         match t with
-        | Tensor(_) -> true
+        | Tensor0(_) -> true
         | _ -> false
 
     /// Gets the shape of the tensor
@@ -258,13 +331,13 @@ type Tensor =
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
-        | Tensor(_),  Tensor(_)  -> true
-        | Tensor(_),  TensorF(_) -> false
-        | Tensor(_),  TensorR(_) -> false
-        | TensorF(_), Tensor(_)  -> false
+        | Tensor0(_),  Tensor0(_)  -> true
+        | Tensor0(_),  TensorF(_) -> false
+        | Tensor0(_),  TensorR(_) -> false
+        | TensorF(_), Tensor0(_)  -> false
         | TensorF(_), TensorF(_) -> true
         | TensorF(_), TensorR(_) -> false
-        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), Tensor0(_)  -> false
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
@@ -315,7 +388,7 @@ type Tensor =
     /// Returns a string summarising the tensor
     member t.summary() =
         match t with
-        | Tensor(_) -> sprintf "Tensor %A" t.shape
+        | Tensor0(_) -> sprintf "Tensor %A" t.shape
         | TensorF(_) -> sprintf "TensorF %A" t.shape
         | TensorR(_,_,o,_,_) -> 
             let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
@@ -331,7 +404,7 @@ type Tensor =
             | :? Tensor as t ->
                 p <- p |> List.append [t]
                 match t with
-                | Tensor(_) -> sprintf "Tensor %A" t.shape
+                | Tensor0(_) -> sprintf "Tensor %A" t.shape
                 | TensorF(_) -> sprintf "TensorF %A" t.shape
                 | TensorR(_,_,o,_,_) -> 
                     let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
@@ -371,10 +444,10 @@ type Tensor =
             | _ -> failwith "Cannot compare Tensor with another type"
 
     /// Get the scalar zero tensor for the current configuration
-    static member Zero = Tensor(RawTensor.Zero())
+    static member Zero = Tensor0(RawTensor.Zero())
 
     /// Get the scalar one tensor for the current configuration
-    static member One = Tensor(RawTensor.One())
+    static member One = Tensor0(RawTensor.One())
 
     /// Convert a scalar tensor to a float32 value
     static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
@@ -430,19 +503,19 @@ type Tensor =
     /// shape and configuration of the input tensor.
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor filled with the given scalar value for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
     member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
@@ -453,28 +526,28 @@ type Tensor =
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with random values drawn from the standard normal distribution, for the
 
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with random integer values drawn from the given range, for the
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a scalar '0' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.zeroLike(?dtype, ?device, ?backend) : Tensor = Tensor0(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a scalar '1' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.oneLike(?dtype, ?device, ?backend) = Tensor0(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
@@ -498,10 +571,10 @@ type Tensor =
     ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
     ///  the element type and configuration of the input tensor.
     /// </summary>
-    member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.like(value, ?dtype, ?device, ?backend) = Tensor0(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with underlying storage copied.
-    member a.clone() = Tensor(a.primalRaw.Clone())
+    member a.clone() = Tensor0(a.primalRaw.Clone())
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
@@ -510,22 +583,22 @@ type Tensor =
         a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Computes element-wise (\a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
+    member a.lt(b:Tensor) = Tensor0(a.primalRaw.LtTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
+    member a.gt(b:Tensor) = Tensor0(a.primalRaw.GtTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &lt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
+    member a.le(b:Tensor) =Tensor0(a.primalRaw.LeTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
+    member a.ge(b:Tensor) = Tensor0(a.primalRaw.GeTT(b.primalRaw))
 
     /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
-    member a.isinf() = Tensor(a.primalRaw.IsInfT())
+    member a.isinf() = Tensor0(a.primalRaw.IsInfT())
 
     /// <summary>Returns a new tensor with boolean elements representing if each element is NaN or not. Complex values are considered NaN when either their real and/or imaginary part is NaN.</summary>
-    member a.isnan() = Tensor(a.primalRaw.IsNaNT())
+    member a.isnan() = Tensor0(a.primalRaw.IsNaNT())
 
     /// Gets if any value in the tensor is +/- INF.
     member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
@@ -613,14 +686,14 @@ type Tensor =
             let newShape = Shape.completeExpand a.shape newShape  // Handles -1 semantics
             Shape.checkCanExpand a.shape newShape
             match a with
-            | Tensor(ap) -> Tensor(ap.Expand(newShape))
+            | Tensor0(ap) -> Tensor0(ap.Expand(newShape))
             | TensorF(ap,ad,at) ->
                 let cp = ap.expand(newShape)
                 let cd = ad.expand(newShape)
                 TensorF(cp,cd,at)
             | TensorR(ap,_,_,_,at) ->
                 let cp = ap.expand(newShape)
-                TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
+                cp.reverseOp(ExpandT(a), at)
 
     /// <summary>Expand this tensor to the same size as the other.</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
@@ -740,9 +813,9 @@ type Tensor =
             fullBounds.[i, j] <- v)
         // printfn "t.GetSlice fullBounds\n %A" fullBounds
         match t with
-        | Tensor(ap) -> Tensor(ap.GetSlice(fullBounds))
+        | Tensor0(ap) -> Tensor0(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
-        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> ap.GetSlice(fullBounds).reverseOp(SliceT(t, fullBounds), at)
 
     /// <summary>Get the item at the given index as a scalar tensor.</summary>
     member t.Item
@@ -761,9 +834,9 @@ type Tensor =
         | Some (array, shape) -> 
             let array = array |> Array.map float32
             let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+            Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         | None ->
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+            Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
@@ -784,7 +857,7 @@ type Tensor =
         let shapes = tensors |> Array.map (fun t -> t.shape)
         Shape.checkCanStack shapes dim |> ignore
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | Tensor0(ap) -> Tensor0(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
@@ -792,7 +865,7 @@ type Tensor =
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let cp = Tensor.stack(ap,dim=dim)
-            TensorR(cp, ref (cp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
+            cp.reverseOp(StackTs(tensors, dim), at)
 
     /// <summary>Removes a tensor dimension.</summary>
     /// <param name="dim">The dimension to remove, defaults to 0.</param>
@@ -801,9 +874,9 @@ type Tensor =
         let dim = defaultArg dim 0 
         Shape.checkCanUnstack a.shape |> ignore
         match a with
-        | Tensor(ap) -> ap.UnstackT(dim) |> Array.map Tensor
+        | Tensor0(ap) -> ap.UnstackT(dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
+        | TensorR(ap,_,_,_,at) -> ap.unstack(dim) |> Array.mapi (fun i p -> p.reverseOp(UnstackT(a, dim, i), at)) 
 
     /// <summary>Concatenates the given sequence of seq tensors in the given dimension.</summary>
     /// <remarks>All tensors must either have the same shape (except in the concatenating dimension) or be empty.</remarks>
@@ -814,7 +887,7 @@ type Tensor =
         let tensors = tensors |> Seq.toArray
         // TODO: check if all Tensors are of the same nesting variety (Tensor, TensorF, or TensorR), have the same nesting tag, and have the same dtype, device, backend
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | Tensor0(ap) -> Tensor0(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
@@ -822,7 +895,7 @@ type Tensor =
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let cp = Tensor.cat(ap, dim=dim)
-            TensorR(cp, ref (cp.zeroLike()), CatTs(tensors, dim), ref 0u, at)
+            cp.reverseOp(CatTs(tensors, dim), at)
 
     /// <summary>Splits the tensor into chunks. Each chunk is a view of the original tensor.</summary>
     /// <param name="sizes">List of sizes for each chunk</param>
@@ -831,38 +904,38 @@ type Tensor =
         let dim = defaultArg dim 0
         let sizes = sizes |> Seq.toArray
         match a with
-        | Tensor(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map Tensor
+        | Tensor0(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
+        | TensorR(ap,_,_,_,at) -> ap.split(sizes, dim=dim) |> Array.mapi (fun i p -> p.reverseOp(SplitT(a, sizes, dim, i), at)) 
 
     /// <summary>Pipeline the tensor into a function.</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
     static member inline internal OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
-        | Tensor(ap)           -> Tensor(fRaw(ap))
+        | Tensor0(ap)           -> Tensor0(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
-        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in cp.reverseOp(dfTensorRev(a), at)
 
     static member inline internal OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
-        | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
-        | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorF(ap,ad,at),    Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+        | Tensor0(ap),           Tensor0(bp)                      -> Tensor0(fRaw(ap, bp))
+        | Tensor0(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+        | Tensor0(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
+        | TensorF(ap,ad,at),    Tensor0(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
-        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
+        | TensorR(ap,_,_,_,at), Tensor0(_)                       -> let cp = fTensor(ap,b)  in cp.reverseOp(dfTensorRevTC(a,b), at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
-        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in cp.reverseOp(dfTensorRevTC(a,b), at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
-        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, ref (a.zeroLike()), dfTensorRevTT(a,b), ref 0u, at)
-        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
-        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in cp.reverseOp(dfTensorRevTT(a,b), at)
+        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in cp.reverseOp(dfTensorRevTC(a,b), at)
+        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in cp.reverseOp(dfTensorRevCT(a,b), bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1656,9 +1729,9 @@ type Tensor =
             let hh = highTensor.expand(a.shape)
             1 - (a.lt(ll) + a.gt(hh)).cast(a.dtype)
         match a with
-        | Tensor(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor(result), mask
+        | Tensor0(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor0(result), mask
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
-        | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
+        | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in result.reverseOp(ClampT(a, mask), at), mask
 
     /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
     /// <param name="low">The lower-bound of the range to be clamped to.</param>
@@ -2065,9 +2138,9 @@ type Tensor =
         let padding = defaultArg padding 0
         Shape.checkCanMaxpool1d a.dtype a.shape kernelSize stride padding  |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in result.reverseOp(MaxPool1DT(a, indices, kernelSize), at), indices
 
     /// <summary>Applies a 1D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2125,9 +2198,9 @@ type Tensor =
             | _ -> [|0; 0|]
         Shape.checkCanMaxpool2d a.dtype a.shape kernelSizes strides paddings  |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in result.reverseOp(MaxPool2DT(a, indices, kernelSizes), at), indices
 
     /// <summary>Applies a 2D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2208,9 +2281,9 @@ type Tensor =
             | _ -> [|0; 0; 0|]
         Shape.checkCanMaxpool3d a.dtype a.shape kernelSizes strides paddings |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)           -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool3DT(a, indices, kernelSizes), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in result.reverseOp(MaxPool3DT(a, indices, kernelSizes), at), indices
 
     /// <summary>Applies a 3D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2675,7 +2748,7 @@ type Tensor =
             | t :: tt ->
                 match t with
                 | TensorR(_,_,o,_,_) ->
-                    if zeroDerivatives then t.derivative <- t.zeroLike()
+                    if zeroDerivatives then t.derivative.zerosInPlace() // <- t.zeroLike()
                     t.fanout <- t.fanout + 1u
                     if t.fanout = 1u then
                         match o with
@@ -2796,7 +2869,7 @@ type Tensor =
                 | TensorR(_,_,o,_,_) ->
                     // if t.derivative.hasnan() || t.derivative.hasinf() then failwithf "t.derivative has nan, inf, or -inf\n%A\n%A" t.derivative t.derivative.shape
                     // if v.hasnan() || v.hasinf() then failwithf "v has nan, inf, or -inf\n%A\n%A\n%s" v v.shape (snd (t.parents()))
-                    t.derivative <- t.derivative + v
+                    t.derivative.addInPlace(v)
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
                         match o with
@@ -2884,7 +2957,7 @@ type Tensor =
                             push (List.append (Array.zip (t.derivative.unstack(dim)) a |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), t.derivative.unsqueeze(dim))
+                            a.derivative.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then i else 0), t.derivative.unsqueeze(dim))
                             push ((a.zeroLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
@@ -2892,7 +2965,7 @@ type Tensor =
                         | SplitT(a,sizes,dim,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             let locs = (0,sizes) ||> Array.scan (+)
-                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
+                            a.derivative.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
                             push ((a.zeroLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
                             // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
@@ -2906,7 +2979,7 @@ type Tensor =
                                 let j = iflat.[i].toScalar() :?> int
                                 let loc = flatIndexToIndex a.shape i
                                 loc.[dim] <- j
-                                a.derivative <- a.derivative.addSlice(loc, t)
+                                a.derivative.addSliceInPlace(loc, t)
                             push ((a.zeroLike(), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push ((t.derivative.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
@@ -2918,9 +2991,9 @@ type Tensor =
                         | ViewT(a,aShape) -> push (((t.derivative.view(aShape)), a) :: tt)
                         | ClampT(a, mask) -> push ((t.derivative * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
-                            // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
+                            // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor0(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
+                            a.derivative.addSliceInPlace(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
                             push ((a.zeroLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push ((t.derivative, a) :: tt)
