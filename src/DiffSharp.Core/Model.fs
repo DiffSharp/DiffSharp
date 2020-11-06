@@ -10,9 +10,13 @@ open System.Collections.Generic
 ///
 /// <summary>Represents a parameter in a model.</summary>
 /// <remarks>A parameter is a mutable register holding a tensor.</remarks>
-type Parameter =
-    val mutable value:Tensor
-    new(value) = {value=value}
+type Parameter(value:Tensor) =
+
+    do 
+      if value.isMutable then failwith "the parameter tensor is already mutable and is already being used in another parameter"
+      value.setMutable() |> ignore
+
+    member val value = value with get, set
 
     /// <summary>TBD</summary>
     member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
@@ -51,7 +55,7 @@ type ParameterDict() =
     member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.copy() = d.map(fun (t:Tensor) -> t)
+    member d.copy() = d.map(fun (t:Tensor) -> t.clone())
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =

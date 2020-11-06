@@ -18,10 +18,10 @@ type Optimizer(model:Model) =
     member val model = model
 
     /// <summary>TBD</summary>
-    member o.step() = model.parametersDict.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member o.step() = model.parametersDict.iter(fun (n, p) -> o.updateRule n p.value)
 
     /// <summary>TBD</summary>
-    abstract member updateRule: string -> Tensor -> Tensor
+    abstract member updateRule: string -> Tensor -> unit
 
 
 /// <summary>TBD</summary>
@@ -35,10 +35,11 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
 
     /// <summary>TBD</summary>
     override o.updateRule name t = 
+        assert t.isMutable // t is a parameter in a model
         let mutable d = t.derivative
         let t = if reversible then t else t.primal
         match weightDecay with
-        | Some wd -> d <- d.add(t.primal * wd)
+        | Some wd -> d.addInPlace(t.primal * wd)
         | None -> ()
         match momentum with
         | Some mom ->
@@ -48,10 +49,10 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             let mb = momBuffer.[name]
             let mb = mb.mul(mom).add(d)
             momBuffer.[name] <- mb
-            if nesterov then d <- d.add(mb*mom)
+            if nesterov then d.addInPlace(mb*mom)
             else d <- mb
         | None -> ()   
-        t - lr * d
+        t.addInPlace(-lr * d)
 
 
 /// <summary>TBD</summary>
@@ -68,10 +69,11 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
 
     /// <summary>TBD</summary>
     override o.updateRule name t =
+        assert t.isMutable // t is a parameter in a model
         let mutable d = t.derivative
         let t = if reversible then t else t.primal
         match weightDecay with
-        | Some wd -> d <- d.add(t.primal * wd)
+        | Some wd -> d.addInPlace(t.primal * wd)
         | None -> ()
         if stateStep = 0 then
             stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
@@ -85,7 +87,7 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
         let stepSize = lr / biasCorrection1
-        t - stepSize * (expAvg/denom)
+        t.addInPlace(-stepSize * (expAvg/denom))
 
 
 /// <summary>TBD</summary>
