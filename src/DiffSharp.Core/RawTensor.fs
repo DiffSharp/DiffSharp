@@ -286,7 +286,7 @@ type RawTensor() =
     abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
 
     /// Get a textual representation of the tensors
-    abstract member GetString: extra: string -> string
+    abstract GetString: extra: string -> string
     
     /// <summary> Get a slice of the given tensor.</summary>
     ///

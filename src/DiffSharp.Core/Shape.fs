@@ -589,7 +589,16 @@ module ShapeAutoOpens =
 
     /// Converts the array of three-position bounds specifications to a shape.
     let boundsToShape (bounds: int[,]) =
-        [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|]
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             if bounds.[i, 2] = 0 || len > 1 then 
+                 yield len |]
+
+    /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
+    let boundsToShapeNoSqueeze (bounds: int[,]) =
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             yield len|]
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
     let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =
