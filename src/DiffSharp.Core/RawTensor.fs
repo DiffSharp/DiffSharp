@@ -80,29 +80,29 @@ type BackendTensorStatics() =
 type RawTensor() =
 
     /// Gets the shape of the tensor
-    abstract member Shape : Shape
+    abstract Shape : Shape
 
     /// Gets the dimensionality of the tensor
-    abstract member Dim : int
+    abstract Dim : int
 
     /// Gets the number of elements in the tensor
-    abstract member Nelement : int
+    abstract Nelement : int
 
     /// Gets the element storage type for the tensor
-    abstract member Dtype : Dtype
+    abstract Dtype : Dtype
 
     /// Gets the device for the tensor
-    abstract member Device : Device
+    abstract Device : Device
 
     /// Gets the device type for the tensor
-    abstract member DeviceType : DeviceType
+    abstract DeviceType : DeviceType
 
     /// Gets the backend for the tensor
-    abstract member Backend : Backend
+    abstract Backend : Backend
 
     /// Gets a handle to the underlying representation of the the tensor. For example, if the Torch
     /// backend is used this will be the corresponding TorchSharp TorchTensor.
-    abstract member Handle : obj
+    abstract Handle : obj
 
     override t.ToString() = t.GetString("")
     
@@ -268,25 +268,25 @@ type RawTensor() =
         RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Clone the underlying storage of the tensor.
-    abstract member Clone : unit -> RawTensor
+    abstract Clone : unit -> RawTensor
 
     /// Expand the shape of the tensor.
-    abstract member Expand: newShape: Shape -> RawTensor
+    abstract Expand: newShape: Shape -> RawTensor
 
     /// Stack the given tensors along the given dimension
-    abstract member StackTs: tensors: RawTensor[] * dim:int -> RawTensor
+    abstract StackTs: tensors: RawTensor[] * dim:int -> RawTensor
 
     /// Unstack the given tensors along the given dimension
-    abstract member UnstackT: dim:int -> RawTensor[]
+    abstract UnstackT: dim:int -> RawTensor[]
 
     /// Concatenate the given tensors along the given dimension
-    abstract member CatTs: tensors: RawTensor[] * dim: int -> RawTensor
+    abstract CatTs: tensors: RawTensor[] * dim: int -> RawTensor
 
     /// Split the given tensors along the given dimensions
-    abstract member SplitT: sizes: int[] * dim: int -> RawTensor[]
+    abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
 
     /// Get a textual representation of the tensors
-    abstract member GetString: extra: string -> string
+    abstract GetString: extra: string -> string
     
     /// <summary> Get a slice of the given tensor.</summary>
     ///
@@ -294,244 +294,244 @@ type RawTensor() =
     ///  The indexes are an Nx3 array.  The first row is the start bounds, the second row is
     ///  the end bounds, the third is 1/0 indicating dimension removal.
     /// </param>
-    abstract member GetSlice: fullBounds: int[,] -> RawTensor
+    abstract GetSlice: fullBounds: int[,] -> RawTensor
 
     /// Get a .NET object for all the values in the tensor
-    abstract member ToValues: unit -> obj
+    abstract ToValues: unit -> obj
 
     /// Compare two tensors for equality
-    abstract member Equals: t2: RawTensor -> bool
+    abstract Equals: t2: RawTensor -> bool
 
     /// Returns a tensor where the elements have each been cast to the given tensor element storage type.
-    abstract member Cast: dtype: Dtype -> RawTensor
+    abstract Cast: dtype: Dtype -> RawTensor
 
     /// Returns a tensor moved to the given device.
-    abstract member MoveTo: device: Device -> RawTensor
+    abstract MoveTo: device: Device -> RawTensor
 
     /// Returns a hash of the contents of the tensor. This operation may cause the
     /// tensor to be moved to the CPU, and its entire contents iterated.
-    abstract member ComputeHash: unit -> int
+    abstract ComputeHash: unit -> int
 
     /// Indicates if the two tensors have the same shape and element type, and all corresponding values
     /// are equal up to the given tolerances.
-    abstract member AllClose: t2: RawTensor * relativeTolerance: float * absoluteTolerance: float -> bool
+    abstract AllClose: t2: RawTensor * relativeTolerance: float * absoluteTolerance: float -> bool
 
     /// Returns a boolean tensor with values constrained by the corresponding elements in the low/high tensors.
-    abstract member ClampT: low: RawTensor * high: RawTensor -> RawTensor
+    abstract ClampT: low: RawTensor * high: RawTensor -> RawTensor
 
     /// Returns a boolean tensor selecting the given indices from the given dimension and stacking those in the order specified.
-    abstract member GatherT: dim: int * indices: RawTensor -> RawTensor
+    abstract GatherT: dim: int * indices: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member LtTT: t2: RawTensor -> RawTensor
+    abstract LtTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member GtTT: t2: RawTensor -> RawTensor
+    abstract GtTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member LeTT: t2: RawTensor -> RawTensor
+    abstract LeTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member GeTT: t2: RawTensor -> RawTensor
+    abstract GeTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member EqTT: t2: RawTensor -> RawTensor
+    abstract EqTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
-    abstract member NeqTT: t2: RawTensor -> RawTensor
+    abstract NeqTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is an infinity value
-    abstract member IsInfT : unit -> RawTensor
+    abstract IsInfT : unit -> RawTensor
 
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is a NaN value
-    abstract member IsNaNT : unit -> RawTensor
+    abstract IsNaNT : unit -> RawTensor
 
     /// Gets a .NET object representing the value of the tensor at the given indexes
-    abstract member GetItem : [<System.ParamArray>] indexes: int[] -> obj 
+    abstract GetItem : [<System.ParamArray>] indexes: int[] -> obj 
 
     /// Gets the index of a maximum value of the tensor
-    abstract member MaxIndexT : unit -> int[]
+    abstract MaxIndexT : unit -> int[]
 
     /// Gets the index of a minimum value of the tensor
-    abstract member MinIndexT : unit -> int[]
+    abstract MinIndexT : unit -> int[]
 
     /// Returns the element-wise addition of the two tensors
-    abstract member AddTT : RawTensor -> RawTensor
+    abstract AddTT : RawTensor -> RawTensor
 
     /// Returns the element-wise addition of two scalars
-    abstract member AddTT0 : RawTensor -> RawTensor
+    abstract AddTT0 : RawTensor -> RawTensor
 
     /// Returns the element-wise addition of the matrix and vector tensors
-    abstract member AddT2T1: RawTensor -> RawTensor
+    abstract AddT2T1: RawTensor -> RawTensor
 
     /// Adds a slice of <c>t2</c> at the given location to the tensor
-    abstract member AddTTSlice: location: int[] * t2: RawTensor -> RawTensor
+    abstract AddTTSlice: location: int[] * t2: RawTensor -> RawTensor
 
     /// Returns the element-wise subtraction of two tensors
-    abstract member SubTT: t2: RawTensor -> RawTensor
+    abstract SubTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise subtraction of the scalar and a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member SubT0T: t2: RawTensor -> RawTensor
+    abstract SubT0T: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise subtraction of the tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member SubTT0: t2: RawTensor -> RawTensor
+    abstract SubTT0: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise multiplication of two tensors
-    abstract member MulTT: t2: RawTensor -> RawTensor
+    abstract MulTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise multiplication of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member MulTT0: t2: RawTensor -> RawTensor
+    abstract MulTT0: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise division of two tensors
-    abstract member DivTT: t2: RawTensor -> RawTensor
+    abstract DivTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise division of a scalar by a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member DivT0T: t2: RawTensor -> RawTensor
+    abstract DivT0T: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise division of a tensor by a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member DivTT0: t2: RawTensor -> RawTensor
+    abstract DivTT0: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise exponentiation of two tensors
-    abstract member PowTT: t2: RawTensor -> RawTensor
+    abstract PowTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise exponentiation of a scalar and a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member PowT0T: t2: RawTensor -> RawTensor
+    abstract PowT0T: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise exponentiation of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract member PowTT0: t2: RawTensor -> RawTensor
+    abstract PowTT0: t2: RawTensor -> RawTensor
 
     /// Returns the matrix multiplication of two tensors
-    abstract member MatMulTT: t2: RawTensor -> RawTensor
+    abstract MatMulTT: t2: RawTensor -> RawTensor
 
     /// Returns the 1D maxpool of a tensor and its chosen maximum indices
-    abstract member MaxPool1D: kernelSize: int * stride: int * padding: int -> RawTensor * RawTensor
+    abstract MaxPool1D: kernelSize: int * stride: int * padding: int -> RawTensor * RawTensor
 
     /// Returns the 2D maxpool of a tensor and its chosen maximum indices
-    abstract member MaxPool2D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
+    abstract MaxPool2D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
 
     /// Returns the 3D maxpool of a tensor and its chosen maximum indices
-    abstract member MaxPool3D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
+    abstract MaxPool3D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
 
     /// Returns the 1D maxunpool of a tensor using the given indices for locations of maximums
-    abstract member MaxUnpool1D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool1D: indices: RawTensor * outputSize: int[] -> RawTensor
 
     /// Returns the 2D maxunpool of a tensor using the given indices for locations of maximums
-    abstract member MaxUnpool2D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool2D: indices: RawTensor * outputSize: int[] -> RawTensor
 
     /// Returns the 3D maxunpool of a tensor using the given indices for locations of maximums
-    abstract member MaxUnpool3D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool3D: indices: RawTensor * outputSize: int[] -> RawTensor
 
     /// Returns the 1D convolution of the tensor
-    abstract member Conv1D: kernel: RawTensor * stride: int * padding: int -> RawTensor
+    abstract Conv1D: kernel: RawTensor * stride: int * padding: int -> RawTensor
 
     /// Returns the 2D convolution of the tensor
-    abstract member Conv2D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
+    abstract Conv2D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
 
     /// Returns the 3D convolution of the tensor
-    abstract member Conv3D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
+    abstract Conv3D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
 
     /// Returns the element-wise negation of the tensor
-    abstract member NegT : unit -> RawTensor
+    abstract NegT : unit -> RawTensor
 
     /// Returns the scalar tensor for the summation of all elements in the tensor 
-    abstract member SumT : ?resultType: Dtype -> RawTensor
+    abstract SumT : ?resultType: Dtype -> RawTensor
 
     /// Returns a vector representing the summation of each the matrix along the first dimension 
-    abstract member SumT2Dim0 : unit -> RawTensor
+    abstract SumT2Dim0 : unit -> RawTensor
 
     /// Returns the transpose of the tensor between the given dimensions
-    abstract member TransposeT: dim0: int * dim1: int -> RawTensor
+    abstract TransposeT: dim0: int * dim1: int -> RawTensor
 
     /// Returns the transpose of a 2D tensor
-    abstract member TransposeT2: unit -> RawTensor
+    abstract TransposeT2: unit -> RawTensor
 
     /// Returns the tensor with the same values and the given dimension removed. The given dimension must be of size 1.
-    abstract member SqueezeT: dim: int -> RawTensor
+    abstract SqueezeT: dim: int -> RawTensor
 
     /// Returns the tensor with the same values and a dimension of size 1 inserted before the given dimension.
-    abstract member UnsqueezeT: dim: int -> RawTensor
+    abstract UnsqueezeT: dim: int -> RawTensor
 
     /// Returns the flip of the tensor along the given dimensions 
-    abstract member FlipT: dims: int[] -> RawTensor
+    abstract FlipT: dims: int[] -> RawTensor
 
     /// Returns the dilation of the tensor using the given dilations parameters
-    abstract member DilateT: dilations: int[] -> RawTensor
+    abstract DilateT: dilations: int[] -> RawTensor
 
     /// Returns the reverse of the dilation of the tensor using the given dilations parameters
-    abstract member UndilateT: dilations: int[] -> RawTensor
+    abstract UndilateT: dilations: int[] -> RawTensor
 
     /// Returns the tensor with the same values viewed as a different shape
-    abstract member ViewT: shape: Shape -> RawTensor
+    abstract ViewT: shape: Shape -> RawTensor
 
     /// Returns the element-wise sign of the tensor
-    abstract member SignT: unit -> RawTensor
+    abstract SignT: unit -> RawTensor
 
     /// Returns the element-wise integer floor of the tensor
-    abstract member FloorT: unit -> RawTensor
+    abstract FloorT: unit -> RawTensor
 
     /// Returns the element-wise integer ceiling of the tensor
-    abstract member CeilT: unit -> RawTensor
+    abstract CeilT: unit -> RawTensor
 
     /// Returns the element-wise rounding of the tensor
-    abstract member RoundT: unit -> RawTensor
+    abstract RoundT: unit -> RawTensor
 
     /// Returns the element-wise absolute value of the tensor
-    abstract member AbsT: unit -> RawTensor
+    abstract AbsT: unit -> RawTensor
 
     /// Returns the element-wise ReLU of the tensor
-    abstract member ReluT: unit -> RawTensor
+    abstract ReluT: unit -> RawTensor
 
     /// Returns the element-wise softplus of the tensor
-    abstract member SoftplusT: unit -> RawTensor
+    abstract SoftplusT: unit -> RawTensor
 
     /// Returns the element-wise sigmoid of the tensor
-    abstract member SigmoidT: unit -> RawTensor
+    abstract SigmoidT: unit -> RawTensor
 
     /// Returns the element-wise natural exponentiation of the tensor
-    abstract member ExpT: unit -> RawTensor
+    abstract ExpT: unit -> RawTensor
 
     /// Returns the element-wise natural logarithm of the tensor
-    abstract member LogT: unit -> RawTensor
+    abstract LogT: unit -> RawTensor
 
     /// Returns the element-wise base10 logarithm of the tensor
-    abstract member Log10T: unit -> RawTensor
+    abstract Log10T: unit -> RawTensor
 
     /// Returns the element-wise square root of the tensor
-    abstract member SqrtT: unit -> RawTensor
+    abstract SqrtT: unit -> RawTensor
 
     /// Returns the element-wise sine of the tensor
-    abstract member SinT: unit -> RawTensor
+    abstract SinT: unit -> RawTensor
 
     /// Returns the element-wise cosine of the tensor
-    abstract member CosT: unit -> RawTensor
+    abstract CosT: unit -> RawTensor
 
     /// Returns the element-wise tangent of the tensor
-    abstract member TanT: unit -> RawTensor
+    abstract TanT: unit -> RawTensor
 
     /// Returns the element-wise sinh of the tensor
-    abstract member SinhT: unit -> RawTensor
+    abstract SinhT: unit -> RawTensor
 
     /// Returns the element-wise cosh of the tensor
-    abstract member CoshT: unit -> RawTensor
+    abstract CoshT: unit -> RawTensor
 
     /// Returns the element-wise tanh of the tensor
-    abstract member TanhT: unit -> RawTensor
+    abstract TanhT: unit -> RawTensor
 
     /// Returns the element-wise asin of the tensor
-    abstract member AsinT: unit -> RawTensor
+    abstract AsinT: unit -> RawTensor
 
     /// Returns the element-wise cos of the tensor
-    abstract member AcosT: unit -> RawTensor
+    abstract AcosT: unit -> RawTensor
 
     /// Returns the element-wise atan of the tensor
-    abstract member AtanT: unit -> RawTensor
+    abstract AtanT: unit -> RawTensor
 
     default t.IsInfT() =
         match t.Dtype with 
