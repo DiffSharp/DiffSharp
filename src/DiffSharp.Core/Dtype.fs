@@ -39,6 +39,8 @@ type Dtype =
         | Bool | Byte | Int8 | Int16 | Int32 | Int64 -> Dtype.Int64
         | dt -> dt
 
+    override x.ToString() = x.Name
+
 /// Contains functions and settings related to tensor element types
 module Dtype =
     /// Matches all floating point tensor element types

@@ -48,6 +48,8 @@ type Device =
         | DeviceType.XLA -> "xla"
         | _ -> failwith "unknown device type") + string x.DeviceIndex
 
+    override x.ToString() = x.Name
+
 /// Contains functions and settings related to device specifications.
 module Device = 
 
