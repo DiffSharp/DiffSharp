@@ -24,7 +24,6 @@ type internal TensorData =
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
     | TensorR of primal:Tensor * derivative:(* mutable *)Tensor  * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
-
 [<AutoOpen>]
 module internal TensorDataUtils = 
     let Tensor0(primalRaw: RawTensor) =
@@ -299,13 +298,13 @@ type Tensor internal (data: TensorData) =
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1.data, t2.data with
-        | Tensor0(_),  Tensor0(_)  -> true
-        | Tensor0(_),  TensorF(_) -> false
-        | Tensor0(_),  TensorR(_) -> false
-        | TensorF(_), Tensor0(_)  -> false
+        | Tensor0(_), Tensor0(_) -> true
+        | Tensor0(_), TensorF(_) -> false
+        | Tensor0(_), TensorR(_) -> false
+        | TensorF(_), Tensor0(_) -> false
         | TensorF(_), TensorF(_) -> true
         | TensorF(_), TensorR(_) -> false
-        | TensorR(_), Tensor0(_)  -> false
+        | TensorR(_), Tensor0(_) -> false
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
@@ -396,8 +395,8 @@ type Tensor internal (data: TensorData) =
 
     override t.ToString() = 
         let rec fmt extra (t: Tensor) =
-            match t with
-            | Tensor(p) -> p.GetString(extra)
+            match t.data with
+            | Tensor0(p) -> p.GetString(extra)
             | TensorF(tp,_,_) -> fmt (extra + ", fwd") tp
             | TensorR(tp,_,_,_,_) -> fmt (extra + ", rev") tp
         fmt "" t
@@ -904,17 +903,17 @@ type Tensor internal (data: TensorData) =
 
     static member inline internal OpBinary(a:Tensor, b:Tensor, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a.data, b.data with
-        | Tensor0(ap),           Tensor0(bp)                      -> Tensor0(fRaw(ap, bp))
-        | Tensor0(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor0(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, dfTensorRevCT(a,b), bt)
-        | TensorF(ap,ad,at),    Tensor0(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+        | Tensor0(ap),          Tensor0(bp)                     -> Tensor0(fRaw(ap, bp))
+        | Tensor0(_),           TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+        | Tensor0(_),           TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, dfTensorRevCT(a,b), bt)
+        | TensorF(ap,ad,at),    Tensor0(_)                      -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, dfTensorRevCT(a,b), bt)
-        | TensorR(ap,_,_,_,at), Tensor0(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, dfTensorRevTC(a,b), at)
+        | TensorR(ap,_,_,_,at), Tensor0(_)                      -> let cp = fTensor(ap,b)  in TensorR(cp, dfTensorRevTC(a,b), at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
         | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, dfTensorRevTC(a,b), at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
@@ -1753,7 +1752,7 @@ type Tensor internal (data: TensorData) =
             let hh = highTensor.expand(a.shape)
             1 - (a.lt(ll) + a.gt(hh)).cast(a.dtype)
         match a.data with
-        | Tensor0(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor0(result), mask
+        | Tensor0(ap)          -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor0(result), mask
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
         | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ClampT(a, mask), at), mask
 
@@ -2176,7 +2175,7 @@ type Tensor internal (data: TensorData) =
         let padding = defaultArg padding 0
         Shape.checkCanMaxpool1d a.dtype a.shape kernelSize stride padding |> ignore
         match a.data with
-        | Tensor0(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor0(result), Tensor0(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, MaxPool1DT(a, indices, kernelSize), at), indices
 
@@ -2236,7 +2235,7 @@ type Tensor internal (data: TensorData) =
             | _ -> [|0; 0|]
         Shape.checkCanMaxpool2d a.dtype a.shape kernelSizes strides paddings |> ignore
         match a.data with
-        | Tensor0(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, MaxPool2DT(a, indices, kernelSizes), at), indices
 
@@ -2319,7 +2318,7 @@ type Tensor internal (data: TensorData) =
             | _ -> [|0; 0; 0|]
         Shape.checkCanMaxpool3d a.dtype a.shape kernelSizes strides paddings |> ignore
         match a.data with
-        | Tensor0(ap)           -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, MaxPool3DT(a, indices, kernelSizes), at), indices
 
@@ -2900,7 +2899,7 @@ type Tensor internal (data: TensorData) =
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
 #if DEBUG
-           if v.shape <> t.derivative.shape then failwith "shapes on push"
+           assert (v.shape = t.derivative.shape)
 #endif
            (v,t)
         let rec push (ts:(Tensor*Tensor) list) =
@@ -2914,6 +2913,7 @@ type Tensor internal (data: TensorData) =
                     td.addInPlace(v)
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
+                        let td = t.derivative
                         match o with
                         | AddTT(a,b) -> push (check(td, a) :: check(td, b) :: tt)
                         | AddTTConst(a) -> push (check(td, a) :: tt)
@@ -3033,11 +3033,7 @@ type Tensor internal (data: TensorData) =
                         | ViewT(a,aShape) -> push (check((td.view(aShape)), a) :: tt)
                         | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
-                            // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor0(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
-                            //if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            let location = boundsToLocation bounds
-                            let subShape = boundsToShapeNoSqueeze bounds
-                            a.derivative.addSliceInPlace(location, td.view(subShape))
+                            a.derivative.addSliceInPlace(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
                             push (check(a.zerosLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push (check(td, a) :: check(td.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push (check(td, a) :: tt)
