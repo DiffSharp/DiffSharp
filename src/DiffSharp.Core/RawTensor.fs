@@ -104,7 +104,7 @@ type RawTensor() =
     /// backend is used this will be the corresponding TorchSharp TorchTensor.
     abstract Handle : obj
 
-    override t.ToString() = t.GetString()
+    override t.ToString() = t.GetString("")
     
     /// Gets a tensor containing arbitrary values for the given shape and configuration
     static member Empty(shape:Shape, ?dtype, ?device, ?backend) = 
@@ -286,7 +286,7 @@ type RawTensor() =
     abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
 
     /// Get a textual representation of the tensors
-    abstract GetString: unit -> string
+    abstract member GetString: extra: string -> string
     
     /// <summary> Get a slice of the given tensor.</summary>
     ///
@@ -543,7 +543,7 @@ type RawTensor() =
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 
-    default t.GetString() =
+    default t.GetString(extra: string) =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         let printVal (x:obj) = 
            match x with 
@@ -557,10 +557,12 @@ type RawTensor() =
            | :? bool as v -> if v then "true" else "false"
            | _ -> sprintf "%A" x
 
+        let sb = System.Text.StringBuilder()
+        sb.Append("tensor(") |> ignore
         match t.Dim with
-        | 0 -> printVal (t.ToScalar())
+        | 0 -> 
+            sb.Append(printVal (t.ToScalar())) |> ignore
         | _ ->
-            let sb = System.Text.StringBuilder()
             let rec print (shape:Shape) externalCoords = 
                 if shape.Length = 1 then
                     sb.Append("[") |> ignore
@@ -574,14 +576,25 @@ type RawTensor() =
                 else
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
-                    let prefix2 = sprintf ", %s%s" (String.replicate (max 1 (shape.Length-1)) "\n") (String.replicate (externalCoords.Length+1) " ")
+                    let prefix2 = sprintf ",%s%s" (String.replicate (max 1 (shape.Length-1)) "\n       ") (String.replicate (externalCoords.Length+1) " ")
                     for i=0 to shape.[0]-1 do
                         sb.Append(prefix) |> ignore
                         print shape.[1..] (Array.append externalCoords [|i|])
                         prefix <- prefix2
                     sb.Append("]") |> ignore
             print t.Shape [||]
-            sb.ToString()
+        if t.Dtype <> Dtype.Default then
+            sb.Append ",dtype=" |> ignore
+            sb.Append (t.Dtype.ToString()) |> ignore
+        if t.Device <> Device.Default then
+            sb.Append ",device=" |> ignore
+            sb.Append (t.Device.ToString()) |> ignore
+        if t.Backend <> Backend.Default then
+            sb.Append ",backend=" |> ignore
+            sb.Append (t.Backend.ToString()) |> ignore
+        sb.Append(extra) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
 
     override x.Equals(yobj: obj) = 
         match yobj with

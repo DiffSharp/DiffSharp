@@ -777,11 +777,28 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
-            let t0StringCorrect = sprintf "Tensor 2%s" suffix
-            let t1StringCorrect = sprintf "Tensor [[2%s], \n [2%s]]" suffix suffix
-            let t2StringCorrect = sprintf "Tensor [[[2%s, 2%s]]]" suffix suffix
-            let t3StringCorrect = sprintf "Tensor [[1%s, 2%s], \n [3%s, 4%s]]" suffix suffix suffix suffix
-            let t4StringCorrect = sprintf "Tensor [[[[1%s]]]]" suffix
+            let dtypeText = 
+                if combo.dtype = Dtype.Default then
+                    ""
+                else
+                    sprintf ",dtype=%s" (combo.dtype.ToString())
+            let deviceText = 
+                if combo.device = Device.Default then
+                    ""
+                else
+                    sprintf ",device=%s" (combo.device.ToString())
+            let backendText = 
+                if combo.backend = Backend.Default then
+                    ""
+                else
+                    sprintf ",backend=%s" (combo.backend.ToString())
+
+            let extraText = dtypeText + deviceText + backendText
+            let t0StringCorrect = sprintf "tensor(2%s%s)" suffix extraText
+            let t1StringCorrect = sprintf "tensor([[2%s],\n        [2%s]]%s)" suffix suffix extraText
+            let t2StringCorrect = sprintf "tensor([[[2%s, 2%s]]]%s)" suffix suffix extraText
+            let t3StringCorrect = sprintf "tensor([[1%s, 2%s],\n        [3%s, 4%s]]%s)" suffix suffix suffix suffix extraText
+            let t4StringCorrect = sprintf "tensor([[[[1%s]]]]%s)" suffix extraText
             Assert.CheckEqual(t0StringCorrect, t0String)
             Assert.CheckEqual(t1StringCorrect, t1String)
             Assert.CheckEqual(t2StringCorrect, t2String)
@@ -790,12 +807,12 @@ type TestTensor () =
 
         let t0Bool = dsharp.tensor([ 0.5; 1.0 ], dtype=Dtype.Bool)
         let t0BoolToString = t0Bool.ToString()
-        let t0BoolToStringCorrect = sprintf "Tensor [false, true]" 
+        let t0BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
         Assert.CheckEqual(t0BoolToString, t0BoolToStringCorrect)
 
         let t1Bool = dsharp.tensor([ false; true ], dtype=Dtype.Bool)
         let t1BoolToString = t1Bool.ToString()
-        let t1BoolToStringCorrect = sprintf "Tensor [false, true]" 
+        let t1BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
         Assert.CheckEqual(t1BoolToString, t1BoolToStringCorrect)
 
     [<Test>]
