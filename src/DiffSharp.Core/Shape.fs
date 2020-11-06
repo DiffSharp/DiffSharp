@@ -524,7 +524,7 @@ module rec Shape =
 
     /// Converts the given location to a three-element bounds array in the context of the given shape.
     let locationToBounds (shape: Shape) (location: int[]) =
-        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
+        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 0)
 
     /// Computes the shape that results from a flatten operation.
     let flatten (startDim: int) (endDim: int) (shape: Shape) =
@@ -595,7 +595,16 @@ module ShapeAutoOpens =
 
     /// Converts the array of three-position bounds specifications to a shape.
     let boundsToShape (bounds: int[,]) =
-        [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|]
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             if bounds.[i, 2] = 0 || len > 1 then 
+                 yield len |]
+
+    /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
+    let boundsToShapeNoSqueeze (bounds: int[,]) =
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             yield len|]
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
     let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =
