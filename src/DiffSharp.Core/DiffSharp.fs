@@ -1285,7 +1285,7 @@ type dsharp with
                 x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
             let mutable fx = f x
             [|for _ in 0..n-1 do
-                let d = fx.derivativeDeep()
+                let d = fx.derivativeDeep
                 fx <- fx.primal
                 d
                 |] |> Array.rev |> Array.append [|fx|]

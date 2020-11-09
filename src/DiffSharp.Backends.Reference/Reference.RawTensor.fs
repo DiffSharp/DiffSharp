@@ -201,12 +201,15 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
             t.MakeLike(rvalues, outShape))
 
     override t.TransposeT(dim0, dim1) =
-        let outputShape = Shape.checkCanTranspose t.Shape dim0 dim1
+        Shape.checkCanTranspose t.Shape dim0 dim1
         if dim0 = dim1 then
             let result = Array.copy t.Values
             t.MakeLike(result, t.Shape)
         else
-            let result = t.ZerosLike(outputShape) :?> RawTensorCPU<'T>
+            let shape = Array.copy t.Shape
+            shape.[dim0] <- t.Shape.[dim1]
+            shape.[dim1] <- t.Shape.[dim0]
+            let result = t.ZerosLike(shape) :?> RawTensorCPU<'T>
             let rec transpose (shape:Shape) externalCoords = 
                 if shape.Length = 1 then
                     for i=0 to shape.[0]-1 do
@@ -222,18 +225,18 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
             upcast result
 
     override t.TransposeT2() =
-        let outputShape = Shape.checkCanTranspose2d t.Shape
+        Shape.checkCanTranspose2d t.Dim
         let tcols = t.Shape.[1]
-        let result = Array.initFlat2D t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
-        t.MakeLike(result, outputShape)
+        let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
+        t.CreateLike(result)
 
     override t.SqueezeT(dim) =
-        let result = Array.copy t.Values // TODO: only need to copy if mutable 
+        let result = Array.copy t.Values
         t.MakeLike(result, Shape.squeeze dim t.Shape)
 
     override t.UnsqueezeT(dim) =
         let outputShape = Shape.checkCanUnsqueeze dim t.Shape
-        let result = Array.copy t.Values // TODO: only need to copy if mutable 
+        let result = Array.copy t.Values
         t.MakeLike(result, outputShape)
 
     override t.FlipT(dims:int[]) =
@@ -254,11 +257,11 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
             upcast result
 
     override t.DilateT(dilations:int[]) =
-        let outputShape = Shape.checkCanDilate t.Shape dilations
+        Shape.checkCanDilate t.Dim dilations
         match t.Dim with
         | 0 -> t.Clone()
         | _ ->
-            let result = t.ZerosLike(outputShape) :?> RawTensorCPU<'T>
+            let result = t.ZerosLike(Shape.dilated t.Shape dilations) :?> RawTensorCPU<'T>
             let rec dilate (shape:Shape) externalCoords = 
                 if shape.Length = 1 then
                     for i=0 to shape.[0]-1 do
@@ -583,12 +586,13 @@ module internal RawTensorCPU =
         (result, t1.Shape)
 
     let inline MatMulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * Shape) =
-        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart), newShape = Shape.checkCanMatmul t1.Shape t2.Shape
+        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
         if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
         let t1rows, t1cols = t1MatrixPart.[0], t1MatrixPart.[1]
         let t2rows, t2cols = t2MatrixPart.[0], t2MatrixPart.[1]
         let t1value = t1.Values
         let t2value = (t2 :?> RawTensorCPU< ^T >).Values        
+        let newShape = Array.append t1BatchPart [| t1rows; t2cols |]
         let nb = shapeLength t1BatchPart
         let values = Array.initFlat3D nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
         (values, newShape)

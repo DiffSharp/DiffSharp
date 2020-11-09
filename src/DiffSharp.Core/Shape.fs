@@ -82,6 +82,13 @@ module rec Shape =
         let outputShape = Array.append shape1 shape2
         shape1, shape2, outputShape
 
+    /// Checks if the given shapes are appropriate for a transpose operation and returns information related to the resulting shape.
+    let computeTranspose2d (shape: Shape) =
+        let nrows = shape.[0]
+        let ncols = shape.[1]
+        let outputShape = [| ncols; nrows |]
+        outputShape
+
     /// Checks if the two device types are equal.
     let checkDeviceTypes (deviceType1: DeviceType) (deviceType2: DeviceType) =
         if deviceType1 <> deviceType2 then failwithf "Expecting input device types %A and %A to be the same" deviceType1 deviceType2
@@ -410,18 +417,9 @@ module rec Shape =
     let checkCanTranspose (shape: Shape) (dim0: int) (dim1: int) =
         if dim0 < 0 || dim0 >= shape.Length then failwithf "Expecting 0 <= dim0 (%A) < shape.Length (%A)" dim0 shape.Length
         if dim1 < 0 || dim1 >= shape.Length then failwithf "Expecting 0 <= dim1 (%A) < shape.Length (%A)" dim1 shape.Length
-        let outputShape = Array.copy shape
-        outputShape.[dim0] <- shape.[dim1]
-        outputShape.[dim1] <- shape.[dim0]
-        outputShape
 
-    /// Checks if the given shape is appropriate for a transpose operation.
-    let checkCanTranspose2d (shape: Shape) =
-        if shape.Length <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
-        let outputShape = Array.copy shape
-        outputShape.[0] <- shape.[1]
-        outputShape.[1] <- shape.[0]
-        outputShape
+    let checkCanTranspose2d (dim: int) =
+        if dim <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
 
     /// Checks if the given shape is appropriate for a flip operation.
     let checkCanFlip (dim: int) (dims: int[]) =
@@ -434,12 +432,9 @@ module rec Shape =
         if shape.[dim] <> 1 then failwithf "Expecting Tensor's shape (%A) at dim (%A) to be 1" shape dim
 
     /// Checks if the given shape is appropriate for a dilate operation.
-    let checkCanDilate (shape: Shape) (dilations: int[]) =
-        let dim = shape.Length
+    let checkCanDilate (dim: int) (dilations: int[]) =
         if dilations.Length <> dim then failwithf "Expecting dilations (dilation to use in each dimension) of same length with Tensor's dimensions, received %A, %A" dilations.Length dim
         if (Array.min dilations) < 1 then failwithf "Expecting dilations (dilation to use in each dimension) >= 1 where 1 represents no dilation, received %A" dilations
-        let outputShape = Shape.dilated shape dilations
-        outputShape
 
     /// Checks if the given shape is appropriate for a gather operation.
     let checkCanGather (shape: Shape) (dim: int) (indicesShape: Shape) (indicesDtype:Dtype) =
@@ -469,9 +464,7 @@ module rec Shape =
         let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
         let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
         if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
-        let newBatchPart = Shape.broadcast2 aBatchPart bBatchPart
-        let newShape = Array.append newBatchPart [| aMatrixPart.[0]; bMatrixPart.[1] |]
-        (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart), newShape
+        (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart)
 
     /// Checks if the given shape is appropriate for a dot product operation.
     let checkCanDot (shape1: Shape) (shape2: Shape) =

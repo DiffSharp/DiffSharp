@@ -53,7 +53,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
-        t.addInPlace(-lr * d)
+        treg.addInPlace(-lr * d)
 
 
 /// <summary>TBD</summary>

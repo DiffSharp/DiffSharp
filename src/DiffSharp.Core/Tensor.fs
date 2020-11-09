@@ -184,40 +184,38 @@ type Tensor internal (data: TensorData) =
         | TensorR(_,_,o,_,_) -> o
 
     /// Gets or sets the derivative of a tensor used in differentiation
-    member t.derivativeReg =
+    member t.revDerivativeReg =
         match t.data with
         | Tensor0(_) -> failwith "Cannot get derivative register of constant Tensor"
-        | TensorF(_,td,_) -> failwith "Cannot get derivative of forward Tensor"
-        | TensorR(_,td,_,_,_) -> td
+        | TensorF _ -> failwith "Cannot get derivative of forward Tensor"
+        | TensorR(_,tdreg,_,_,_) -> tdreg
 
     /// Gets or sets the derivative of a tensor used in differentiation
     member t.derivative = 
         match t.data with
         | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> td
-        | TensorR(_,td,_,_,_) ->
-            let tdv = td.borrow()
-            if tdv.isMutable then tdv.clone() else tdv
+        | TensorR(_,tdreg,_,_,_) -> tdreg.copyout()
 
     /// Borrow the derivative of a tensor used in differentiation
     member t.derivativeBorrow() = 
         match t.data with
         | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> td
-        | TensorR(_,td,_,_,_) -> td.borrow()
+        | TensorR(_,tdreg,_,_,_) -> tdreg.borrow()
 
-    member t.derivativeDeep() =
+    member t.derivativeDeep =
         match t.data with
         | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> 
             match td.data with
             | Tensor0(_) -> td
-            | _ -> td.derivativeDeep()
-        | TensorR(_,td,_,_,_) -> 
-            let tdv = td.borrow()
+            | _ -> td.derivativeDeep
+        | TensorR(_,tdreg,_,_,_) -> 
+            let tdv = tdreg.borrow()
             match tdv.data with
-            | Tensor0(_) -> tdv.clone()
-            | _ -> tdv.derivativeDeep()
+            | Tensor0(_) -> tdreg.copyout()
+            | _ -> tdv.derivativeDeep
 
     /// Gets the fanout of a tensor used in reverse-mode differentiation
     member t.fanout
@@ -862,7 +860,7 @@ type Tensor internal (data: TensorData) =
     /// <returns>Returns an array of all slices along a given dimension.</returns>
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
-        Shape.checkCanUnstack a.shape dim |> ignore
+        Shape.checkCanUnstack a.shape |> ignore
         match a.data with
         | Tensor0(ap) -> ap.UnstackT(dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
@@ -875,8 +873,6 @@ type Tensor internal (data: TensorData) =
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        let shapes = tensors |> Array.map (fun t -> t.shape)
-        Shape.checkCanCat shapes dim |> ignore
         // TODO: check if all Tensors are of the same nesting variety (Tensor, TensorF, or TensorR), have the same nesting tag, and have the same dtype, device, backend
         match tensors.[0].data with
         | Tensor0(ap) -> Tensor0(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
@@ -895,7 +891,6 @@ type Tensor internal (data: TensorData) =
     member a.split (sizes: seq<int>, ?dim: int) =
         let dim = defaultArg dim 0
         let sizes = sizes |> Seq.toArray
-        Shape.checkCanSplit a.shape sizes dim |> ignore
         match a.data with
         | Tensor0(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
@@ -1391,7 +1386,7 @@ type Tensor internal (data: TensorData) =
         elif a.dim = 1 && b.dim > 1 then a.unsqueeze(0).matmul(b).squeeze(b.dim-2)
         elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(a.dim-1)
         else
-        let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart), _newShape = Shape.checkCanMatmul a.shape b.shape
+        let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
         if aBatchPart = bBatchPart then
             let fRaw(a:RawTensor,b) = a.MatMulTT(b)
             let fTensor(a:Tensor,b) = a.matmul(b)
@@ -1668,7 +1663,7 @@ type Tensor internal (data: TensorData) =
 
     /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
     member a.transpose() =
-        let outputShape = Shape.checkCanTranspose2d a.shape
+        Shape.checkCanTranspose2d a.dim
         let fRaw(a:RawTensor) = a.TransposeT2()
         let fTensor(a:Tensor) = a.transpose()
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
@@ -1713,7 +1708,7 @@ type Tensor internal (data: TensorData) =
     /// <param name="dilations">The dilations to use.</param>
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
-        let outputShape = Shape.checkCanDilate a.shape dilations
+        Shape.checkCanDilate a.dim dilations
         let fRaw(a:RawTensor) = a.DilateT(dilations)
         let fTensor(a:Tensor) = a.dilate(dilations)
         let dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
@@ -2436,7 +2431,7 @@ type Tensor internal (data: TensorData) =
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
-        Shape.checkCanConv1d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape stride padding dilation  |> ignore
+        Shape.checkCanConv1d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape stride padding dilation |> ignore
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
@@ -2657,7 +2652,6 @@ type Tensor internal (data: TensorData) =
 
         let _, _, _, _, outputShape =
             Shape.checkCanConvTranspose2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
-        Shape.checkCanConvTranspose2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
@@ -2828,7 +2822,7 @@ type Tensor internal (data: TensorData) =
         t.reversePush(value)
         // We're done with mutating all the derivatives
         if lastPass then 
-            t.reverseIter (fun (t: Tensor) -> t.derivativeReg.setImmutable() |> ignore)
+            t.reverseIter (fun (t: Tensor) -> t.revDerivativeReg.setImmutable() |> ignore)
 
     /// <summary>See <c>reverse</c></summary>
     member inline t.backward(value) = t.reverse(value)
@@ -2836,10 +2830,10 @@ type Tensor internal (data: TensorData) =
     /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
     member t.reverseReset(firstPass:bool) = 
         t.reverseIter (fun (t: Tensor) -> 
-            //t.derivativeReg.borrow().setMutable() |> ignore
+            //t.revDerivativeReg.borrow().setMutable() |> ignore
             if firstPass then
-                t.derivativeReg.set (t.zerosLike())
-                //t.derivativeReg.borrow().zerosInPlace() // <- t.zeroLike()
+                t.revDerivativeReg.set (t.zerosLike())
+                //t.revDerivativeReg.borrow().zerosInPlace() // <- t.zeroLike()
             t.fanout <- t.fanout + 1u)
 
     member t.reverseIter (f: Tensor -> unit) =
@@ -2966,9 +2960,9 @@ type Tensor internal (data: TensorData) =
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
 #if INPLACE_REGISTERS && DEBUG
-           assert t.derivativeReg.borrow().isMutable
+           assert t.revDerivativeReg.borrow().isMutable
 #endif
-           assert (v.shape = t.derivativeReg.borrow().shape)
+           assert (v.shape = t.revDerivativeReg.borrow().shape)
            (v,t)
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with
@@ -3075,7 +3069,7 @@ type Tensor internal (data: TensorData) =
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
                             //if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
+                            a.revDerivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
                             push (check(a.zerosLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
@@ -3083,7 +3077,7 @@ type Tensor internal (data: TensorData) =
                         | SplitT(a,sizes,dim,i) -> 
                             //if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             let locs = (0,sizes) ||> Array.scan (+)
-                            a.derivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
+                            a.revDerivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
                             push (check(a.zerosLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
                             // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
@@ -3097,7 +3091,7 @@ type Tensor internal (data: TensorData) =
                                 let j = iflat.[i].toScalar() :?> int
                                 let loc = flatIndexToIndex a.shape i
                                 loc.[dim] <- j
-                                a.derivativeReg.addSliceInPlace(loc, t)
+                                a.revDerivativeReg.addSliceInPlace(loc, t)
                             push (check(a.zerosLike(), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
@@ -3109,7 +3103,7 @@ type Tensor internal (data: TensorData) =
                         | ViewT(a,aShape) -> push (check((td.view(aShape)), a) :: tt)
                         | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
-                            a.derivativeReg.addSliceInPlace(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
+                            a.revDerivativeReg.addSliceInPlace(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
                             push (check(a.zerosLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push (check(td, a) :: check(td.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push (check(td, a) :: tt)
@@ -3266,7 +3260,7 @@ and TensorRegister =
     new (initial: Tensor) = { v = initial.setMutable() }
     val mutable v : Tensor
 #if INPLACE_REGISTERS
-    member t.copyout() = t.v.clone()
+    member t.copyout() = if t.v.isMutable then t.v.copyout() else t.v
     member t.set(v) = 
         v.setMutable()
         t.v <- v

@@ -263,14 +263,16 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             t.MakeLike(rvalues, shape=outShape))
 
     override t.TransposeT(dim0, dim1) =
-        let outputShape = Shape.checkCanTranspose t.Shape dim0 dim1
+        Shape.checkCanTranspose t.Shape dim0 dim1
         let result = tt.Transpose(int64 dim0, int64 dim1)
-        t.MakeLike(result, shape=outputShape)
+        let shape = result.Shape |> Array.map int32
+        t.MakeLike(result, shape=shape)
 
     override t.TransposeT2() =
-        let outputShape = Shape.checkCanTranspose2d t.Shape
+        Shape.checkCanTranspose2d t.Dim
+        let newShape = Shape.computeTranspose2d t.Shape
         let result = tt.T()
-        t.MakeLike(result, shape=outputShape)
+        t.MakeLike(result, shape=newShape)
 
     override t.SqueezeT(dim) = 
         let shape = t.Shape
@@ -298,7 +300,8 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         t.MakeLike(result)
 
     override t.DilateT(dilations:int[]) = 
-        let outputShape = Shape.checkCanDilate t.Shape dilations
+        Shape.checkCanDilate t.Dim dilations
+        let outputShape = Shape.dilated t.Shape dilations
         let dims = dilations.Length
         let mutable res = tt
         for i=0 to dims-1 do
@@ -527,7 +530,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         match dtype with 
         | Dtype.Bool -> opNotSupported2 "MatMulTT" dtype t2.Dtype
         | _ ->  
-        let _, _, newShape = Shape.checkCanMatmul t1.Shape t2.Shape
+        let _, _ = Shape.checkCanMatmul t1.Shape t2.Shape
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
             match t1.DeviceType, dtype with 
@@ -537,7 +540,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
                 tt1.Mm(tt2).Round().ToType(toTorchType dtype) 
             | _ ->
                 tt.Mm(t2.TorchTensor)
-        t1.MakeLike(result, newShape)
+        t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
 
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape =
