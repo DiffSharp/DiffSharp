@@ -11,7 +11,7 @@ open System.Collections.Generic
 /// <summary>Represents a parameter in a model.</summary>
 /// <remarks>A parameter is a mutable register holding a tensor.</remarks>
 type Parameter(value:Tensor) =
-    let reg = TensorRegister(value.clone())
+    let reg = TensorRegister(value)
     //do 
     //  if value.isMutable then failwith "the parameter tensor is already mutable and is already being used in another parameter"
     //  value.setMutable() |> ignore
