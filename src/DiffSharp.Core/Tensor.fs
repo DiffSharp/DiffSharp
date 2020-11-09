@@ -2848,7 +2848,7 @@ type Tensor internal (data: TensorData) =
     /// <param name="value">The value to apply.</param>
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
-#if INPLACE_REGISTERS && DEBUG
+#if INPLACE_TENSOR_MUTATION && DEBUG
            assert t.revDerivativeReg.borrow().isMutable
            assert (v.shape = t.revDerivativeReg.borrow().shape)
 #endif
@@ -3023,7 +3023,7 @@ type Tensor internal (data: TensorData) =
                 | _ -> push tt
         push [(value, t)]
 
-#if INPLACE_REGISTERS
+#if INPLACE_TENSOR_MUTATION
     member internal t.setMutable() : Tensor =
         match t.data with
         | Tensor0 v -> v.SetMutable()
@@ -3253,12 +3253,12 @@ and InPlaceAdditiveTensorOp =
     | InPlaceAddSliceT of Tensor * int[] 
 
 and TensorRegister =
-#if INPLACE_REGISTERS
+#if INPLACE_TENSOR_MUTATION
     new (initial: Tensor) = { v = initial.setMutable() }
     val mutable v : Tensor
-    member t.copyout() = if t.v.isMutable then t.v.copyout() else t.v
+    member t.copyout() = if t.v.isMutable then t.v.clone() else t.v
     member t.set(v) = 
-        v.setMutable()
+        v.setMutable() |> ignore
         t.v <- v
     member t.borrow() : Tensor = t.v
     member t.setImmutable() = t.v.setImmutable()

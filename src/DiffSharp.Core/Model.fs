@@ -304,8 +304,10 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.matmul(value, w.borrow())
-        if bias then f + b.borrow() else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.matmul(value, w)
+        if bias then f + b else f
 
 
 /// <summary>A model that applies a 1D convolution over an input signal composed of several input planes</summary>
@@ -322,8 +324,10 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv1d(value, w.borrow(), ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv1d(value, w, ?stride=stride, ?padding=padding, ?dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
 /// <summary>A model that applies a 2D convolution over an input signal composed of several input planes</summary>
@@ -346,8 +350,10 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv2d(value, w.borrow(), ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv2d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
 
 /// <summary>A model that applies a 3D convolution over an input signal composed of several input planes</summary>
@@ -370,8 +376,10 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv3d(value, w.borrow(), ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv3d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
 
 /// <summary>A model that applies a 1D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -388,8 +396,10 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose1d(value, w.borrow(), ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose1d(value, w, ?stride=stride, ?padding=padding, ?dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
 /// <summary>A model that applies a 2D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -412,8 +422,10 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose2d(value, w.borrow(), ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose2d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
 
 /// <summary>A model that applies a 3D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -436,8 +448,10 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose3d(value, w.borrow(), ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.borrow().expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose3d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
 
 /// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.</summary>

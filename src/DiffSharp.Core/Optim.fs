@@ -38,7 +38,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
         let t = treg.borrow()
         //printfn "t = %O" t
         let mutable d = t.derivativeBorrow()
-        treg.set (if reversible then t else t.primal)
+        let t = if reversible then t else t.primal
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
@@ -53,7 +53,8 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
-        treg.subInPlace(lr * d)
+        // TODO: in some cases this can be in-place on 'treg', e.g. reversible=true
+        treg.set (t - lr * d)
 
 
 /// <summary>TBD</summary>
@@ -72,7 +73,7 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
     override o.updateRule name treg =
         let t = treg.borrow()
         let mutable d = t.derivativeBorrow()
-        treg.set (if reversible then t else t.primal)
+        let t = if reversible then t else t.primal
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
@@ -88,7 +89,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
         let stepSize = lr / biasCorrection1
-        treg.subInPlace(stepSize * (expAvg/denom))
+        // TODO: in some cases this can be in-place on 'treg', e.g. reversible=true
+        treg.set (t - stepSize * (expAvg/denom))
 
 
 /// <summary>TBD</summary>

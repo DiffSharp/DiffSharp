@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DefineConstants>INPLACE_TENSOR_MUTATION</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
