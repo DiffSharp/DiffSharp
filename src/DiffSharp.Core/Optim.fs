@@ -70,7 +70,6 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
 
     /// <summary>TBD</summary>
     override o.updateRule name treg =
-        //assert t.isMutable // t is a parameter in a model
         let t = treg.borrow()
         let mutable d = t.derivativeBorrow()
         let t = if reversible then t else t.primal
