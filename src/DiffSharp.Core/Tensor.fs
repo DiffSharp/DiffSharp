@@ -1546,7 +1546,7 @@ type Tensor internal (data: TensorData) =
     member a.transpose(dim0:int, dim1:int) =
         let dim0 = Shape.completeDim a.dim dim0  // Handles -1 semantics
         let dim1 = Shape.completeDim a.dim dim1  // Handles -1 semantics
-        let outputShape = Shape.checkCanTranspose a.shape dim0 dim1
+        Shape.checkCanTranspose a.shape dim0 dim1
         if dim0 = dim1 then
             a
         else
@@ -2350,11 +2350,11 @@ type Tensor internal (data: TensorData) =
         let mutable cderivative = cderivative
         if stride > 1 then
             cderivative <- cderivative.dilate([|1;1;stride|])
-        let mutable aderivative = a.zeroLike()
-        let mutable bderivative = b.zeroLike()
+        let mutable aderivative = a.zerosLike()
+        let mutable bderivative = b.zerosLike()
         if not aConst then
             // propagate to a
-            aderivative <- a.zerosLike()
+            //aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2|])
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
@@ -2366,10 +2366,9 @@ type Tensor internal (data: TensorData) =
                     ad <- ad.GetSlice(adBounds)
                     ad <- ad.view([|batchSize; inputChannels; inputLength|])
                 aderivative <- aderivative + ad
-            
         if not bConst then
             // propagate to b
-            bderivative <- b.zerosLike()
+            //bderivative <- b.zerosLike()
             for n=0 to batchSize-1 do
                 let aa = a.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
                 let d = cderivative.[n]
@@ -2721,7 +2720,7 @@ type Tensor internal (data: TensorData) =
     member t.reverseReset(firstPass:bool) = 
         t.reverseIter (fun (t: Tensor) -> 
             //t.revDerivativeReg.borrow().setMutable() |> ignore
-            if firstPass then
+            if firstPass && t.fanout = 0u then
                 t.revDerivativeReg.set (t.zerosLike())
                 //t.revDerivativeReg.borrow().zerosInPlace() // <- t.zeroLike()
             t.fanout <- t.fanout + 1u)
@@ -3263,7 +3262,8 @@ and TensorRegister =
         t.v <- v
     member t.borrow() : Tensor = t.v
     member t.setImmutable() = t.v.setImmutable()
-    member t.addInPlace(b) = t.borrow().addInPlace(b)
+    member t.subInPlace(b:Tensor) = t.borrow().addInPlace(-b)
+    member t.addInPlace(b:Tensor) = t.borrow().addInPlace(b)
     member t.addSliceInPlace(loc, b) = t.borrow().addSliceInPlace(loc, b)
 #else
     new (initial: Tensor) = { v = initial }
@@ -3272,6 +3272,7 @@ and TensorRegister =
     member t.set(v) = t.v <- v
     member t.borrow() : Tensor = t.v
     member t.setImmutable() = ()
+    member t.subInPlace(b) = t.v <- t.v.sub(b)
     member t.addInPlace(b) = t.v <- t.v.add(b)
     member t.addSliceInPlace(loc, b) = t.v <- t.v.addSlice(loc, b)
 #endif

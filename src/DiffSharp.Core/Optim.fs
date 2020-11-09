@@ -45,7 +45,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.parametersDict.map(fun (t:Parameter) -> t.copyout().derivative)
+                momBuffer <- model.parametersDict.map(fun (t:Parameter) -> t.borrow().derivative)
                 momInit <- true
             let mb = momBuffer.borrow(name)
             let mb = mb.mul(mom).add(d)
@@ -53,7 +53,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
-        treg.addInPlace(-lr * d)
+        treg.subInPlace(lr * d)
 
 
 /// <summary>TBD</summary>
@@ -88,7 +88,7 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
         let stepSize = lr / biasCorrection1
-        treg.addInPlace(-stepSize * (expAvg/denom))
+        treg.subInPlace(stepSize * (expAvg/denom))
 
 
 /// <summary>TBD</summary>
