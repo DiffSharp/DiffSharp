@@ -23,6 +23,7 @@ type dsharp =
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    /// <remarks>The fastest creation technique is a one dimensional array matching the desired dtype. Then use 'view' to reshape.</remarks>
     static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
 

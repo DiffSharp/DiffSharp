@@ -4,9 +4,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- <DIFFSHARP_TESTGPU>true</DIFFSHARP_TESTGPU> -->
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="BasicTensorOpsPerf.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -17,7 +19,21 @@
   <ItemGroup>
     <!-- <ProjectReference Include="..\..\bundles\DiffSharp-cpu\DiffSharp-cpu.fsproj" /> -->
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+  </ItemGroup>
+
+  <!-- Choose the appropriate version of libtorch for our current OS and environment -->
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
+    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
+    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
 </Project>
