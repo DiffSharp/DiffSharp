@@ -624,8 +624,12 @@ type RawTensor() =
             | :? System.Array as a -> a
             | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
 
+    /// Finishing using a uniquely owned mutable tensor as mutable and make immutable.
+    abstract SetImmutable: unit -> unit
+
     /// A backdoor to switch this tensor to be usable as a mutable tensor. You should have a unique handle to
-    /// this tensor for the entire time it is being used as a mutable tensor.
+    /// this tensor for the entire time it is being used as a mutable tensor and there should be no aliases
+    /// to this tensor.s
     abstract SetMutable: unit -> unit
 
     abstract IsMutable: bool

@@ -22,7 +22,7 @@ type scalar = IConvertible
 type internal TensorData =
     | Tensor0 of primalRaw:RawTensor
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
-    | TensorR of primal:Tensor * derivative:(* mutable *)Tensor  * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
+    | TensorR of primal:Tensor * derivative:TensorRegister  * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
 [<AutoOpen>]
 module internal TensorDataUtils = 
@@ -36,8 +36,8 @@ module internal TensorDataUtils =
         Tensor(TensorFData(primal, derivative, nestingTag))
 
     let TensorRData(primal: Tensor, op, tag: uint32) =
-        let initial = primal.zerosLike().setMutable()
-        TensorData.TensorR(primal, initial, op, ref 0u, tag)
+        let reg = TensorRegister(primal.zerosLike())
+        TensorData.TensorR(primal, reg, op, ref 0u, tag)
 
     let TensorR(primal: Tensor, op, tag: uint32) =
         Tensor(TensorRData(primal, op, tag))
@@ -184,29 +184,40 @@ type Tensor internal (data: TensorData) =
         | TensorR(_,_,o,_,_) -> o
 
     /// Gets or sets the derivative of a tensor used in differentiation
-    member t.derivative
-        with get() =
-            match t.data with
-            | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
-            | TensorF(_,td,_) -> td
-            | TensorR(_,td,_,_,_) -> td
-        and set(value) =
-            match t.data with
-            | Tensor0(_) -> failwith "Cannot set derivative of constant Tensor"
-            | TensorF(_) -> failwith "Cannot set derivative of TensorF"
-            | TensorR(_,td,_,_,_) -> td.mutate value
+    member t.derivativeReg =
+        match t.data with
+        | Tensor0(_) -> failwith "Cannot get derivative register of constant Tensor"
+        | TensorF(_,td,_) -> failwith "Cannot get derivative of forward Tensor"
+        | TensorR(_,td,_,_,_) -> td
 
-    member t.derivativeDeep =
+    /// Gets or sets the derivative of a tensor used in differentiation
+    member t.derivative = 
+        match t.data with
+        | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
+        | TensorF(_,td,_) -> td
+        | TensorR(_,td,_,_,_) ->
+            let tdv = td.borrow()
+            if tdv.isMutable then tdv.clone() else tdv
+
+    /// Borrow the derivative of a tensor used in differentiation
+    member t.derivativeBorrow() = 
+        match t.data with
+        | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
+        | TensorF(_,td,_) -> td
+        | TensorR(_,td,_,_,_) -> td.borrow()
+
+    member t.derivativeDeep() =
         match t.data with
         | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> 
             match td.data with
             | Tensor0(_) -> td
-            | _ -> td.derivativeDeep
+            | _ -> td.derivativeDeep()
         | TensorR(_,td,_,_,_) -> 
-            match td.data with
-            | Tensor0(_) -> td
-            | _ -> td.derivativeDeep
+            let tdv = td.borrow()
+            match tdv.data with
+            | Tensor0(_) -> tdv.clone()
+            | _ -> tdv.derivativeDeep()
 
     /// Gets the fanout of a tensor used in reverse-mode differentiation
     member t.fanout
@@ -253,11 +264,15 @@ type Tensor internal (data: TensorData) =
         | TensorR(t1,t2,_,_,_) -> t1.setMutable() |> ignore
         t
 
-    member internal t.zerosInPlace() =
+    member internal t.setImmutable() : Tensor =
         match t.data with
-        | Tensor0 v -> v.ZerosInPlace()
-        | TensorF(t1,t2,_) -> failwith "adjoints should not have nesting"
-        | TensorR(t1,t2,_,_,_) -> failwith "adjoints should not have nesting"
+        | Tensor0 v -> v.SetImmutable()
+        | TensorF(t1,t2,_) -> t1.setImmutable() |> ignore; t2.setImmutable() |> ignore
+        | TensorR(t1,t2,_,_,_) -> t1.setImmutable() |> ignore
+        t
+    member internal t.zerosInPlace() =
+        t.primalRaw.ZerosInPlace(); 
+        t.mutate (Tensor0(t.primalRaw))
 
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep
@@ -895,11 +910,11 @@ type Tensor internal (data: TensorData) =
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
         | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, dfTensorRev(a), at)
 
-    static member inline internal OpUnaryInPlace(a: Tensor, fRaw, fTensor, dfTensorFwd, dfTensorRev) : unit =
-        match a.data with
-        | Tensor0(ap)          -> fRaw(ap)
-        | TensorF(ap,ad,at)    -> fTensor(ap); let cp = Tensor(a.data) in TensorF(cp, dfTensorFwd(cp,ap,ad), at) |> a.mutate
-        | TensorR(ap,_,_,_,at) -> fTensor(ap); let cp = Tensor(a.data) in TensorR(cp, dfTensorRev(a), at) |> a.mutate
+    //static member inline internal OpUnaryInPlace(a: Tensor, fRaw, fTensor, dfTensorFwd, dfTensorRev) : unit =
+    //    match a.data with
+    //    | Tensor0(ap)          -> fRaw(ap)
+    //    | TensorF(ap,ad,at)    -> fTensor(ap); let cp = Tensor(a.data) in TensorF(cp, dfTensorFwd(cp,ap,ad), at) |> a.mutate
+    //    | TensorR(ap,_,_,_,at) -> fTensor(ap); let cp = Tensor(a.data) in TensorR(cp, dfTensorRev(a), at) |> a.mutate
 
     static member inline internal OpBinary(a:Tensor, b:Tensor, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a.data, b.data with
@@ -920,28 +935,6 @@ type Tensor internal (data: TensorData) =
         | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let cp = fTensor(ap,bp) in TensorR(cp, dfTensorRevTT(a,b), at)
         | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorR(cp, dfTensorRevTC(a,b), at)
         | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, dfTensorRevCT(a,b), bt)
-        | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
-
-    /// TODO this needs very very careful checking
-    static member inline internal OpBinaryInPlace(a:Tensor, b:Tensor, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT: (Tensor * Tensor * Tensor -> Tensor), dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) : unit =
-        match a.data, b.data with
-        | Tensor0(ap),           Tensor0(bp)                     -> fRaw(ap, bp)
-        | Tensor0(_),            TensorF(bp,bd,bt)               -> fTensor(a,bp); let cp = Tensor(a.data) in TensorF(cp, dfTensorFwdCT(cp,bp,bd).clone(), bt).setMutable() |> a.mutate
-        | Tensor0(_),            TensorR(bp,_,_,_,bt)            -> fTensor(a,bp); let cp = Tensor(a.data) in TensorR(cp, dfTensorRevCT(a,b), bt).setMutable() |> a.mutate
-        | TensorF(ap,ad,at),    Tensor0(_)                       -> fTensor(ap,b); let cp = Tensor(ap.data) in dfTensorFwdTC(cp,ap,ad)
-        | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> fTensor(ap,bp); let cp = Tensor(ap.data) in dfTensorFwdTT(cp,ap,ad,bp,bd)
-        | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> fTensor(ap,b); let cp = Tensor(ap.data) in dfTensorFwdTC(cp,ap,ad)
-        | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> fTensor(a,bp); let cp = Tensor(a.data) in TensorF(cp, dfTensorFwdCT(cp,bp,bd).clone(), bt).setMutable() |> a.mutate
-        | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
-        | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> fTensor(ap,b); let cp = Tensor(ap.data) in dfTensorFwdTC(cp,ap,ad)
-        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> fTensor(a,bp); let cp = Tensor(a.data) in TensorR(cp, dfTensorRevCT(a,b), bt).setMutable() |> a.mutate
-        | TensorR(ap,_,_,_,at), Tensor0(_)                       -> fTensor(ap,b); let cp = Tensor(ap.data) in TensorR(cp, dfTensorRevTC(a,b), at).setMutable() |> a.mutate
-        | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
-        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> fTensor(ap, b); let cp = Tensor(ap.data) in TensorR(cp, dfTensorRevTC(a,b), at).setMutable() |> a.mutate
-        | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> fTensor(a,bp); let cp = Tensor(a.data) in TensorF(cp, dfTensorFwdCT(cp, bp, bd).clone(), bt).setMutable() |> a.mutate
-        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> fTensor(ap,bp); let cp = Tensor(ap.data) in TensorR(cp, dfTensorRevTT(a,b), at).setMutable() |> a.mutate
-        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> fTensor(ap,b); let cp = Tensor(ap.data) in TensorR(cp, dfTensorRevTC(a,b), at).setMutable() |> a.mutate
-        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> fTensor(a,bp); let cp = Tensor(a.data) in TensorR(cp, dfTensorRevCT(a,b), bt).setMutable() |> a.mutate
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1023,17 +1016,90 @@ type Tensor internal (data: TensorData) =
     /// <summary>Each element of the object tensor is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     member a.add(b:scalar) = a + a.scalarLike(b)
 
+    // currently used only for accumulating additive operations for functions which are separable e.g
+    //   d(x + y) = dx + dy
+    static member 
+#if !DEBUG
+        inline 
+#endif
+           internal OpBinaryAdditiveInPlace(a: Tensor, b: Tensor, fRaw, fTensor, dfTensorFwdT, dfTensorRevT) : unit =
+        let addop b = 
+            match a.data with 
+            | TensorR(ap,d,op,fan,tag) -> 
+                let bs = 
+                    match op with 
+                    | NewT -> []
+                    | InPlaceAdditiveOpsTT bs -> bs
+                    | _ -> failwithf "unexpected - can only accumulate additions in reverse mode InPlaceAdditiveOpsTT register, op = %A" op //dfTensorRevTT(a,b)
+                a.data <- TensorData.TensorR(ap,d,InPlaceAdditiveOpsTT (dfTensorRevT b::bs),fan,tag) 
+            | d -> 
+                failwithf "unexpected - can only accumulate additions in reverse mode InPlaceAdditiveOpsTT register, a.data = %A" d //dfTensorRevTT(a,b)
+
+        // The operation changes the tensor in place to be a TensorF
+        let convToF (bp,bd,bt) =
+            fTensor(a, bp)
+            let ad = a.zerosLike().setMutable()// prep the derivative
+            dfTensorFwdT (ad, bd)
+            TensorF(Tensor(a.data), ad, bt) |> a.mutate
+
+        // The operation changes the tensor in place to be a TensorR
+        let convToR (bp,b,bt) =
+            fTensor(a, bp)
+            TensorR(Tensor(a.data), InPlaceAdditiveOpsTT [dfTensorRevT b], bt).setMutable() |> a.mutate
+
+        match a.data with 
+        | TensorR(_,_,_,_,at) -> 
+            match a.data with 
+            | TensorR(_,_,_,_,at) -> printfn "h"
+            | _ -> ()
+        | _ -> ()
+
+        match b.data with 
+        | TensorR(_,_,_,_,at) -> 
+            match b.data with 
+            | TensorR(_,_,_,_,at) -> printfn "h"
+            | _ -> ()
+        | _ -> ()
+
+        match a.data, b.data with
+        | Tensor0(ap),          Tensor0(bp)                     -> fRaw(ap,bp)
+        | Tensor0(_),           TensorR(bp,_,_,_,bt)            -> convToR (bp,b,bt)
+        | TensorF(ap,_ad,_at),  Tensor0(_)                      -> fTensor(ap, b)
+        | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> fTensor(ap, bp); dfTensorFwdT(ad, bd)
+        | TensorF(ap,_ad,at),   TensorF(_,_,bt)      when at>bt -> fTensor(ap, b)
+        | Tensor0(_),           TensorF(bp,bd,bt)               -> convToF(bp,bd,bt)
+        | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> convToF(bp,bd,bt)
+        | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> convToF(bp,bd,bt)
+        | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
+        | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> fTensor(ap, b)
+        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> convToR(bp,b,bt)
+        | TensorR(ap,_,_,_,at), Tensor0(_)                      -> fTensor(ap, b)
+        | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
+        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> fTensor(ap, b)
+        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> fTensor(ap, bp); addop b
+        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> fTensor(ap, b)
+        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> convToR(bp,b,bt)
+        | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
+
     // Note, currently no broadcasting for this
     member internal a.addInPlace(b: Tensor) : unit =
+        assert a.isMutable
         let fRaw(a:RawTensor,b) = a.AddInPlace(b)
         let fTensor(a:Tensor,b) = a.addInPlace(b)
-        let dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addInPlace(bd)
-        let dfTensorFwdTC(cp,ap,ad) = ()
-        let dfTensorFwdCT(cp,bp,bd) = bd
-        let dfTensorRevTT(a,b) = AddTT(a,b)
-        let dfTensorRevTC(a,b) = AddTTConst(a)
-        let dfTensorRevCT(a,b) = AddTTConst(b)
-        Tensor.OpBinaryInPlace(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        let dfTensorFwdT(ad:Tensor, bd:Tensor) = ad.addInPlace(bd)
+        let dfTensorRevT(b) = InPlaceAddT(b)
+        Tensor.OpBinaryAdditiveInPlace(a, b, fRaw, fTensor, dfTensorFwdT, dfTensorRevT)
+
+    /// <summary>Add the given tensor as a slice at the given location.</summary>
+    member a.addSliceInPlace(location:seq<int>, b:Tensor) =
+        assert a.isMutable
+        let location = location |> Seq.toArray
+        Shape.checkCanAddSlice a.shape location b.shape
+        let fRaw(a:RawTensor,b) = a.AddSliceInPlace(location, b)
+        let fTensor(a:Tensor,b) = a.addSliceInPlace(location, b)
+        let dfTensorFwdT(ad:Tensor, bd:Tensor) = ad.addSliceInPlace(location, bd)
+        let dfTensorRevT(b) = InPlaceAddSliceT(b, location)
+        Tensor.OpBinaryAdditiveInPlace(a, b, fRaw, fTensor, dfTensorFwdT, dfTensorRevT)
 
     /// <summary>Subtracts each element of the tensor <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -2010,20 +2076,6 @@ type Tensor internal (data: TensorData) =
         let dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>Add the given tensor as a slice at the given location.</summary>
-    member a.addSliceInPlace(location:seq<int>, b:Tensor) =
-        let location = location |> Seq.toArray
-        Shape.checkCanAddSlice a.shape location b.shape
-        let fRaw(a:RawTensor,b) = a.AddSliceInPlace(location, b)
-        let fTensor(a:Tensor,b) = a.addSliceInPlace(location, b)
-        let dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSliceInPlace(location, bd)
-        let dfTensorFwdTC(cp,ap,ad) = ()
-        let dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
-        let dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
-        let dfTensorRevTC(a,b) = AddTTConstSlice(a)
-        let dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
-        Tensor.OpBinaryInPlace(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-
     /// <summary>Applies a softmax function.</summary>
     /// <remarks>Softmax is defined as: \text{Softmax}(x_{i}) = \frac{\exp(x_i)}{\sum_j \exp(x_j)}.</remarks>
     /// <param name="dim">A dimension along which softmax will be computed.</param>
@@ -2765,30 +2817,45 @@ type Tensor internal (data: TensorData) =
 
     /// <summary>Compute the reverse-mode derivative at the given output tensor.</summary>
     /// <param name="value">The value to apply.</param>
-    /// <param name="zeroDerivatives">Indicates whether the derivatives should be zeroed or not.</param>
-    member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
+    /// <param name="firstPass">Indicates whether the derivatives should be zeroed or not.</param>
+    /// <param name="lastPass">Indicates whether the derivatives should be made immutable.</param>
+    member t.reverse(?value:Tensor, ?firstPass:bool, ?lastPass:bool) =
         let value = defaultArg value (t.onesLike())
-        let zeroDerivatives = defaultArg zeroDerivatives true
+        let firstPass = defaultArg firstPass true
+        let lastPass = defaultArg lastPass true
         if value.shape <> t.shape then failwithf "Expecting value.shape (%A) and t.shape (%A) to be the same" value.shape t.shape
-        t.reverseReset(zeroDerivatives)
+        t.reverseReset(firstPass)
         t.reversePush(value)
+        // We're done with mutating all the derivatives
+        if lastPass then 
+            t.reverseIter (fun (t: Tensor) -> t.derivativeReg.setImmutable() |> ignore)
 
     /// <summary>See <c>reverse</c></summary>
     member inline t.backward(value) = t.reverse(value)
 
     /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
-    member t.reverseReset(zeroDerivatives:bool) =
+    member t.reverseReset(firstPass:bool) = 
+        t.reverseIter (fun (t: Tensor) -> 
+            //t.derivativeReg.borrow().setMutable() |> ignore
+            if firstPass then
+                t.derivativeReg.set (t.zerosLike())
+                //t.derivativeReg.borrow().zerosInPlace() // <- t.zeroLike()
+            t.fanout <- t.fanout + 1u)
+
+    member t.reverseIter (f: Tensor -> unit) =
+        let visited = System.Collections.Generic.Dictionary<_,_>(HashIdentity.Reference)
         let rec reset (ts: Tensor list) =
             match ts with
             | [] -> ()
             | t :: tt ->
                 match t.data with
                 | TensorR(_,_,o,_,_) ->
-                    if zeroDerivatives then t.derivative.zerosInPlace() // <- t.zeroLike()
-                    t.fanout <- t.fanout + 1u
-                    if t.fanout = 1u then
+                    f t
+                    if not (visited.ContainsKey(t)) then
+                        visited.Add(t, 0)
                         match o with
                         | AddTT(a,b) -> reset (a::b::tt)
+                        | InPlaceAdditiveOpsTT(bs) -> reset (List.append (bs |> List.map (function InPlaceAddT(t) -> t | InPlaceAddSliceT(t,_) -> t)) tt)
                         | AddTTConst(a) -> reset (a::tt)
                         | AddTT0(a,b) -> reset (a::b::tt)
                         | AddTT0Const(a) -> reset (a::tt)
@@ -2898,24 +2965,33 @@ type Tensor internal (data: TensorData) =
     /// <param name="value">The value to apply.</param>
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
-#if DEBUG
-           assert (v.shape = t.derivative.shape)
+#if INPLACE_REGISTERS && DEBUG
+           assert t.derivativeReg.borrow().isMutable
 #endif
+           assert (v.shape = t.derivativeReg.borrow().shape)
            (v,t)
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with
             | [] -> ()
             | (v, t) :: tt ->
                 match t.data with
-                | TensorR(_,td,o,_,_) ->
+                | TensorR(_,tdreg,o,_,_) ->
                     // if t.derivative.hasnan() || t.derivative.hasinf() then failwithf "t.derivative has nan, inf, or -inf\n%A\n%A" t.derivative t.derivative.shape
                     // if v.hasnan() || v.hasinf() then failwithf "v has nan, inf, or -inf\n%A\n%A\n%s" v v.shape (snd (t.parents()))
-                    td.addInPlace(v)
+                    tdreg.addInPlace(v)
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
-                        let td = t.derivative
+                        // Here we borrow the mutable reverse accumulator for the duration of the push and share it out 
+                        // since we have finished accumulating it
+                        let td = tdreg.borrow()
                         match o with
                         | AddTT(a,b) -> push (check(td, a) :: check(td, b) :: tt)
+                        | InPlaceAdditiveOpsTT(bs) -> 
+                            let pairs = 
+                               bs |> List.map (function 
+                                  | InPlaceAddT b -> check(td, b)
+                                  | InPlaceAddSliceT(b,location) -> check(td.GetSlice(Shape.locationToBounds b.shape location), b))
+                            push (List.append pairs tt)
                         | AddTTConst(a) -> push (check(td, a) :: tt)
                         | AddTT0(a,b) -> push (check(td, a) :: check(td.sum(), b) :: tt)
                         | AddTT0Const(a) -> push (check(td, a) :: tt)
@@ -2999,7 +3075,7 @@ type Tensor internal (data: TensorData) =
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
                             //if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
+                            a.derivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
                             push (check(a.zerosLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
@@ -3007,7 +3083,7 @@ type Tensor internal (data: TensorData) =
                         | SplitT(a,sizes,dim,i) -> 
                             //if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             let locs = (0,sizes) ||> Array.scan (+)
-                            a.derivative.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
+                            a.derivativeReg.addSliceInPlace(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
                             push (check(a.zerosLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
                             // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
@@ -3021,7 +3097,7 @@ type Tensor internal (data: TensorData) =
                                 let j = iflat.[i].toScalar() :?> int
                                 let loc = flatIndexToIndex a.shape i
                                 loc.[dim] <- j
-                                a.derivative.addSliceInPlace(loc, t)
+                                a.derivativeReg.addSliceInPlace(loc, t)
                             push (check(a.zerosLike(), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
@@ -3033,7 +3109,7 @@ type Tensor internal (data: TensorData) =
                         | ViewT(a,aShape) -> push (check((td.view(aShape)), a) :: tt)
                         | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
-                            a.derivative.addSliceInPlace(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
+                            a.derivativeReg.addSliceInPlace(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
                             push (check(a.zerosLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push (check(td, a) :: check(td.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
                         | AddTTConstSlice(a) -> push (check(td, a) :: tt)
@@ -3066,6 +3142,7 @@ type Tensor internal (data: TensorData) =
 
 and TensorOp =
     | AddTT of Tensor * Tensor
+    | InPlaceAdditiveOpsTT of InPlaceAdditiveTensorOp list
     | AddTTConst of Tensor
     | AddTT0 of Tensor * Tensor
     | AddTT0Const of Tensor
@@ -3180,3 +3257,30 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
+
+and InPlaceAdditiveTensorOp =
+    | InPlaceAddT of Tensor
+    | InPlaceAddSliceT of Tensor * int[] 
+
+and TensorRegister =
+    new (initial: Tensor) = { v = initial.setMutable() }
+    val mutable v : Tensor
+#if INPLACE_REGISTERS
+    member t.copyout() = t.v.clone()
+    member t.set(v) = 
+        v.setMutable()
+        t.v <- v
+    member t.borrow() : Tensor = t.v
+    member t.setImmutable() = t.v.setImmutable()
+    member t.addInPlace(b) = t.borrow().addInPlace(b)
+    member t.addSliceInPlace(loc, b) = t.borrow().addSliceInPlace(loc, b)
+#else
+    member t.copyout() = t.v
+    member t.set(v) = t.v <- v
+    member t.borrow() : Tensor = t.v
+    member t.setImmutable() = ()
+    member t.addInPlace(b) = t.v <- t.v.add(b)
+    member t.addSliceInPlace(loc, b) = t.v <- t.v.addSlice(loc, b)
+#endif
+
+

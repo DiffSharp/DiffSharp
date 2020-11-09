@@ -7578,9 +7578,9 @@ type TestDerivatives () =
             let revzaCorrect = combo.tensor([1.; 2.])
             let revzbCorrect = combo.tensor([3.; 4.])
             let revzcCorrect = combo.tensor([5.; 6.])
-            revza.reverse(combo.tensor([10.; 20.]))
-            revzb.reverse(combo.tensor([30.; 40.]), zeroDerivatives=false)
-            revzc.reverse(combo.tensor([50.; 60.]), zeroDerivatives=false)
+            revza.reverse(combo.tensor([10.; 20.]), firstPass=true, lastPass=false)
+            revzb.reverse(combo.tensor([30.; 40.]), firstPass=false, lastPass=false)
+            revzc.reverse(combo.tensor([50.; 60.]), firstPass=false, lastPass=true)
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
@@ -7615,8 +7615,8 @@ type TestDerivatives () =
             let revzb = revz.[1]
             let revzaCorrect = combo.tensor([1.; 3.; 5.])
             let revzbCorrect = combo.tensor([2.; 4.; 6.])
-            revza.reverse(combo.tensor([10.; 30.; 50.]))
-            revzb.reverse(combo.tensor([20.; 40.; 60.]), zeroDerivatives=false)
+            revza.reverse(combo.tensor([10.; 30.; 50.]), firstPass=true, lastPass=false)
+            revzb.reverse(combo.tensor([20.; 40.; 60.]), firstPass=false, lastPass=true)
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([[10.;20.];[30.;40.];[50.;60.]])
 
@@ -7685,9 +7685,9 @@ type TestDerivatives () =
             let revzaCorrect = combo.tensor([1.])
             let revzbCorrect = combo.tensor([2.;3.; 4.])
             let revzcCorrect = combo.tensor([5.; 6.])
-            revza.reverse(combo.tensor([10.]))
-            revzb.reverse(combo.tensor([20.;30.; 40.]), zeroDerivatives=false)
-            revzc.reverse(combo.tensor([50.; 60.]), zeroDerivatives=false)
+            revza.reverse(combo.tensor([10.]), firstPass=true, lastPass=false)
+            revzb.reverse(combo.tensor([20.;30.; 40.]), firstPass=false, lastPass=false)
+            revzc.reverse(combo.tensor([50.; 60.]), firstPass=false, lastPass=true)
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([10.;20.;30.;40.;50.;60.])
 

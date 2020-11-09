@@ -928,6 +928,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     // TODO - next version of TorchSharp will have in place version of this
     override t.RandomIntInPlace(low, high) = checkMutable(); tt <- (RawTensor.RandomInt(shape, low, high, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
 
+    override t.SetImmutable() = isMutable <- false
     override t.SetMutable() = isMutable <- true
 
     override t.IsMutable = isMutable
