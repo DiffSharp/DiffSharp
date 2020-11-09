@@ -9,7 +9,7 @@ open System.Collections.Generic
 /// </namespacedoc>
 ///
 /// <summary>Represents a parameter in a model.</summary>
-/// <remarks>A parameter is a mutable register holding a tensor.</remarks>
+/// <remarks>A parameter is a mutable register holding a tensor. The initial tensor is transferred-in. </remarks>
 type Parameter(value:Tensor) =
     let reg = TensorRegister(value)
     //do 
@@ -17,21 +17,26 @@ type Parameter(value:Tensor) =
     //  value.setMutable() |> ignore
 
     member p.borrow() = reg.borrow()
-    member p.getReg() = reg
-    member p.set(v) = reg.set(v)
+
+    member p.getTensorRegister() = reg
+    
+    /// Set the value of the parameter, transferring ownership of the tensor and making it the new mutable
+    /// contents of the parameter
+    member p.transferin(v) = reg.transferin(v)
+
     member p.copyout() = reg.copyout()
 
     /// <summary>TBD</summary>
-    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = reg.set (p.borrow().forwardDiff(derivative, ?tag=tag))
+    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = reg.transferin (p.borrow().forwardDiff(derivative, ?tag=tag))
 
     /// <summary>TBD</summary>
-    member p.reverseDiff(?tag:uint32) = reg.set (p.borrow().reverseDiff(?tag=tag))
+    member p.reverseDiff(?tag:uint32) = reg.transferin (p.borrow().reverseDiff(?tag=tag))
 
     /// <summary>TBD</summary>
-    member p.noDiff() = reg.set (p.borrow().noDiff())
+    member p.noDiff() = reg.transferin (p.borrow().noDiff())
 
     /// <summary>TBD</summary>
-    member p.move(?dtype, ?device, ?backend) = reg.set (p.borrow().move(?dtype=dtype, ?device=device, ?backend=backend))
+    member p.move(?dtype, ?device, ?backend) = reg.transferin (p.borrow().move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" (reg.borrow()).shape (reg.borrow())
@@ -46,7 +51,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.copyout(key) = d.values.[key].copyout()
     member d.borrow(key) = d.values.[key].borrow()
-    member d.set(key, v) = d.values.[key].set(v)
+    member d.transferin(key, v) = d.values.[key].transferin(v)
 
     /// <summary>TBD</summary>
     member d.add(name, parameter) = d.values.Add(name, parameter)
@@ -73,7 +78,7 @@ type ParameterDict() =
     member d.map(f:Parameter->Tensor) = d.map(fun (n,p) -> n, f p)
 
     /// <summary>TBD</summary>
-    member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.set (parameters.copyout(n)))
+    member d.transferin(parameters:ParameterDict) = d.iter(fun (n, p) -> p.transferin (parameters.borrow(n)))
 
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
@@ -118,7 +123,7 @@ type ParameterDict() =
         let mutable i = 0
         let keys = Dictionary.copyKeys d.values
         for n in keys do
-            d.set (n, ts.[i])
+            d.transferin (n, ts.[i])
             i <- i+1
 
     /// <summary>TBD</summary>
@@ -169,7 +174,7 @@ type Model() =
     /// <summary>TBD</summary>
     member m.parametersDict
         with get () = m.ParametersDict
-        and set parameters = m.ParametersDict.set(parameters)
+        and set parameters = m.ParametersDict.transferin(parameters)
 
     /// <summary>TBD</summary>
     member m.parameters
@@ -542,13 +547,13 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         let batchVariance = if reversible then batchVariance else batchVariance.primal
         let mean = _mean.borrow()
         let variance = _variance.borrow()
-        _mean.set <| (1 - momentum) * mean + momentum * batchMean
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.set <| (1 - momentum) * variance + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
@@ -639,13 +644,13 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         let batchVariance = if reversible then batchVariance else batchVariance.primal
         let mean = _mean.borrow()
         let variance = _variance.borrow()
-        _mean.set <| (1 - momentum) * mean + momentum * batchMean
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.set <| (1 - momentum) * variance + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
@@ -720,13 +725,13 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         let batchVariance = if reversible then batchVariance else batchVariance.primal
         let mean = _mean.borrow()
         let variance = _variance.borrow()
-        _mean.set <| (1 - momentum) * mean + momentum * batchMean
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.set <| (1 - momentum) * variance + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures

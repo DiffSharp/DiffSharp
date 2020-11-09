@@ -2721,7 +2721,7 @@ type Tensor internal (data: TensorData) =
         t.reverseIter (fun (t: Tensor) -> 
             //t.revDerivativeReg.borrow().setMutable() |> ignore
             if firstPass && t.fanout = 0u then
-                t.revDerivativeReg.set (t.zerosLike())
+                t.revDerivativeReg.transferin (t.zerosLike())
                 //t.revDerivativeReg.borrow().zerosInPlace() // <- t.zeroLike()
             t.fanout <- t.fanout + 1u)
 
@@ -2738,7 +2738,6 @@ type Tensor internal (data: TensorData) =
                         visited.Add(fan, 0)
                         match o with
                         | AddTT(a,b) -> reset (a::b::tt)
-                        | InPlaceAdditiveOpsTT(bs) -> reset (List.append (bs |> List.map (function InPlaceAddT(t) -> t | InPlaceAddSliceT(t,_) -> t)) tt)
                         | AddTTConst(a) -> reset (a::tt)
                         | AddTT0(a,b) -> reset (a::b::tt)
                         | AddTT0Const(a) -> reset (a::tt)
@@ -2840,6 +2839,15 @@ type Tensor internal (data: TensorData) =
                         | AcosT(a) -> reset (a::tt)
                         | AtanT(a) -> reset (a::tt)
                         | NewT -> reset tt
+#if INPLACE_TENSOR_MUTATION
+                        | InPlaceAdditiveOpsTT(bs) ->
+                            let btt = 
+                                bs |> List.map (function 
+                                    | InPlaceAddT(t) -> t 
+                                    | InPlaceSubT(t) -> t
+                                    | InPlaceAddSliceT(t,_) -> t)
+                            reset (List.append btt tt)
+#endif
                     else reset tt
                 | _ -> reset tt
         reset [t]
@@ -2869,12 +2877,6 @@ type Tensor internal (data: TensorData) =
                         let td = tdreg.borrow()
                         match o with
                         | AddTT(a,b) -> push (check(td, a) :: check(td, b) :: tt)
-                        | InPlaceAdditiveOpsTT(bs) -> 
-                            let pairs = 
-                               bs |> List.map (function 
-                                  | InPlaceAddT b -> check(td, b)
-                                  | InPlaceAddSliceT(b,location) -> check(td.GetSlice(Shape.locationToBounds b.shape location), b))
-                            push (List.append pairs tt)
                         | AddTTConst(a) -> push (check(td, a) :: tt)
                         | AddTT0(a,b) -> push (check(td, a) :: check(td.sum(), b) :: tt)
                         | AddTT0Const(a) -> push (check(td, a) :: tt)
@@ -3019,6 +3021,15 @@ type Tensor internal (data: TensorData) =
                         | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
                         | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
+#if INPLACE_TENSOR_MUTATION
+                        | InPlaceAdditiveOpsTT(bs) -> 
+                            let pairs = 
+                               bs |> List.map (function 
+                                  | InPlaceAddT b -> check(td, b)
+                                  | InPlaceSubT b -> check(-td, b)
+                                  | InPlaceAddSliceT(b,location) -> check(td.GetSlice(Shape.locationToBounds b.shape location), b))
+                            push (List.append pairs tt)
+#endif
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -3109,13 +3120,22 @@ type Tensor internal (data: TensorData) =
         | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> convToR(bp,b,bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
-    // Note, currently no broadcasting for this
+    // Note, no broadcasting for this
     member internal a.addInPlace(b: Tensor) : unit =
         assert a.isMutable
         let fRaw(a:RawTensor,b) = a.AddInPlace(b)
         let fTensor(a:Tensor,b) = a.addInPlace(b)
         let dfTensorFwdT(ad:Tensor, bd:Tensor) = ad.addInPlace(bd)
         let dfTensorRevT(b) = InPlaceAddT(b)
+        Tensor.OpBinaryAdditiveInPlace(a, b, fRaw, fTensor, dfTensorFwdT, dfTensorRevT)
+
+    // Note, no broadcasting for this
+    member internal a.subInPlace(b: Tensor) : unit =
+        assert a.isMutable
+        let fRaw(a:RawTensor,b) = a.SubInPlace(b)
+        let fTensor(a:Tensor,b) = a.subInPlace(b)
+        let dfTensorFwdT(ad:Tensor, bd:Tensor) = ad.subInPlace(bd)
+        let dfTensorRevT(b) = InPlaceSubT(b)
         Tensor.OpBinaryAdditiveInPlace(a, b, fRaw, fTensor, dfTensorFwdT, dfTensorRevT)
 
     /// <summary>Add the given tensor as a slice at the given location.</summary>
@@ -3132,7 +3152,9 @@ type Tensor internal (data: TensorData) =
 
 and TensorOp =
     | AddTT of Tensor * Tensor
+#if INPLACE_TENSOR_MUTATION
     | InPlaceAdditiveOpsTT of InPlaceAdditiveTensorOp list
+#endif
     | AddTTConst of Tensor
     | AddTT0 of Tensor * Tensor
     | AddTT0Const of Tensor
@@ -3248,28 +3270,45 @@ and TensorOp =
     | AtanT of Tensor
     | NewT
 
+#if INPLACE_TENSOR_MUTATION
 and InPlaceAdditiveTensorOp =
     | InPlaceAddT of Tensor
+    | InPlaceSubT of Tensor
     | InPlaceAddSliceT of Tensor * int[] 
 
 and TensorRegister =
-#if INPLACE_TENSOR_MUTATION
     new (initial: Tensor) = { v = initial.setMutable() }
     val mutable v : Tensor
+
+    /// Get the value of the register, cloning if the register tensor is in-place mutable.
     member t.copyout() = if t.v.isMutable then t.v.clone() else t.v
-    member t.set(v) = 
+
+    /// Set the value of the register, transferring ownership of the tensor and making it the new mutable
+    /// contents of the parameter
+    member t.transferin(v) = 
         v.setMutable() |> ignore
         t.v <- v
+    
+    /// Borrow the tensor from the register, without cloning it.  The tensor can be used locally.
     member t.borrow() : Tensor = t.v
+    
+    /// Set the contents of the tensor register to immutable, so it can be copied out without cloning
     member t.setImmutable() = t.v.setImmutable()
-    member t.subInPlace(b:Tensor) = t.borrow().addInPlace(-b)
+
+    /// Subtract the tensor in place
+    member t.subInPlace(b:Tensor) = t.borrow().subInPlace(b)
+
+    /// Add the tensor in place
     member t.addInPlace(b:Tensor) = t.borrow().addInPlace(b)
+
+    /// Add a slice to the tensor in place
     member t.addSliceInPlace(loc, b) = t.borrow().addSliceInPlace(loc, b)
 #else
+and TensorRegister =
     new (initial: Tensor) = { v = initial }
     val mutable v : Tensor
     member t.copyout() = t.v
-    member t.set(v) = t.v <- v
+    member t.transferin(v) = t.v <- v
     member t.borrow() : Tensor = t.v
     member t.setImmutable() = ()
     member t.subInPlace(b) = t.v <- t.v.sub(b)

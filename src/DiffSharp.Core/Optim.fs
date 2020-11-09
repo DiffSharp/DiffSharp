@@ -18,7 +18,7 @@ type Optimizer(model:Model) =
     member val model = model
 
     /// <summary>TBD</summary>
-    member o.step() = model.parametersDict.iter(fun (n, p) -> o.updateRule n (p.getReg()))
+    member o.step() = model.parametersDict.iter(fun (n, p) -> o.updateRule n (p.getTensorRegister()))
 
     /// <summary>TBD</summary>
     abstract member updateRule: string -> TensorRegister -> unit
@@ -49,12 +49,12 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
                 momInit <- true
             let mb = momBuffer.borrow(name)
             let mb = mb.mul(mom).add(d)
-            momBuffer.set (name, mb)
+            momBuffer.transferin (name, mb)
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
         // TODO: in some cases this can be in-place on 'treg', e.g. reversible=true
-        treg.set (t - lr * d)
+        treg.transferin (t - lr * d)
 
 
 /// <summary>TBD</summary>
@@ -83,14 +83,14 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         stateStep <- stateStep + 1
         let expAvg = stateExpAvg.borrow(name).mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.borrow(name).mul(beta2).add(d*d*(1.-beta2))
-        stateExpAvg.set (name, expAvg)
-        stateExpAvgSq.set(name, expAvgSq)
+        stateExpAvg.transferin (name, expAvg)
+        stateExpAvgSq.transferin(name, expAvgSq)
         let biasCorrection1 = 1. - beta1 ** stateStep
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
         let stepSize = lr / biasCorrection1
         // TODO: in some cases this can be in-place on 'treg', e.g. reversible=true
-        treg.set (t - stepSize * (expAvg/denom))
+        treg.transferin (t - stepSize * (expAvg/denom))
 
 
 /// <summary>TBD</summary>
