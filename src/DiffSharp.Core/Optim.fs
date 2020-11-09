@@ -36,7 +36,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
     /// <summary>TBD</summary>
     override o.updateRule name treg = 
         let t = treg.borrow()
-        printfn "t = %O" t
+        //printfn "t = %O" t
         let mutable d = t.derivativeBorrow()
         let t = if reversible then t else t.primal
         match weightDecay with
@@ -45,7 +45,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
+                momBuffer <- model.parametersDict.map(fun (t:Parameter) -> t.copyout().derivative)
                 momInit <- true
             let mb = momBuffer.borrow(name)
             let mb = mb.mul(mom).add(d)
@@ -78,8 +78,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
         if stateStep = 0 then
-            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvg <- model.parametersDict.map(fun (t:Parameter) -> t.borrow().zerosLike())
+            stateExpAvgSq <- model.parametersDict.map(fun (t:Parameter) -> t.borrow().zerosLike())
         stateStep <- stateStep + 1
         let expAvg = stateExpAvg.borrow(name).mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.borrow(name).mul(beta2).add(d*d*(1.-beta2))

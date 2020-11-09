@@ -418,6 +418,7 @@ module rec Shape =
         if dim0 < 0 || dim0 >= shape.Length then failwithf "Expecting 0 <= dim0 (%A) < shape.Length (%A)" dim0 shape.Length
         if dim1 < 0 || dim1 >= shape.Length then failwithf "Expecting 0 <= dim1 (%A) < shape.Length (%A)" dim1 shape.Length
 
+    /// Checks if the given shape is appropriate for a transpose operation.
     let checkCanTranspose2d (dim: int) =
         if dim <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
 
@@ -517,7 +518,7 @@ module rec Shape =
 
     /// Converts the given location to a three-element bounds array in the context of the given shape.
     let locationToBounds (shape: Shape) (location: int[]) =
-        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 0)
+        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
 
     /// Computes the shape that results from a flatten operation.
     let flatten (startDim: int) (endDim: int) (shape: Shape) =

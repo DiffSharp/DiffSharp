@@ -628,8 +628,7 @@ type RawTensor() =
     abstract SetImmutable: unit -> unit
 
     /// A backdoor to switch this tensor to be usable as a mutable tensor. You should have a unique handle to
-    /// this tensor for the entire time it is being used as a mutable tensor and there should be no aliases
-    /// to this tensor.s
+    /// this tensor for the entire time it is being used as a mutable tensor.
     abstract SetMutable: unit -> unit
 
     abstract IsMutable: bool

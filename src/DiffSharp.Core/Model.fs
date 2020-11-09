@@ -58,7 +58,7 @@ type ParameterDict() =
     member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.copy() = d.map(fun (t:Tensor) -> t.clone())
+    member d.copy() = d.map(fun (t:Parameter) -> t.copyout())
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
@@ -67,10 +67,10 @@ type ParameterDict() =
         ret
 
     /// <summary>TBD</summary>
-    member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.borrow()) in nn, Parameter(tt))
+    member d.map(f:string*Parameter->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p) in nn, Parameter(tt))
 
     /// <summary>TBD</summary>
-    member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
+    member d.map(f:Parameter->Tensor) = d.map(fun (n,p) -> n, f p)
 
     /// <summary>TBD</summary>
     member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.set (parameters.copyout(n)))
@@ -95,10 +95,10 @@ type ParameterDict() =
     member d.move(?dtype, ?device, ?backend) = d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
-    member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
+    member d.primal with get() = d.map(fun (t:Parameter)->t.copyout().primal)
 
     /// <summary>TBD</summary>
-    member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
+    member d.derivative with get() = d.map(fun (t:Parameter)->t.copyout().derivative)
 
     /// <summary>TBD</summary>
     member d.nelement with get() = [|for t in d.values.Values do t.borrow().nelement|] |> Array.sum
