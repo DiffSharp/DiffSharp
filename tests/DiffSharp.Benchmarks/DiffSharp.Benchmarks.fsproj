@@ -4,7 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
-    <!-- <DIFFSHARP_TESTGPU>true</DIFFSHARP_TESTGPU> -->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="pythonnet_netstandard_py38_win" Version="2.5.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -41,7 +41,8 @@ module Helpers =
 
 [<ShortRunJob>]
 [<MarkdownExporterAttribute.GitHub; AsciiDocExporter; HtmlExporter; CsvExporter; RPlotExporter>]
-[<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)>]
+[<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByMethod)>]
+[<CategoriesColumn>]
 type BasicTensorOps() = 
 
     let mutable dtype = Unchecked.defaultof<Dtype>
@@ -78,8 +79,8 @@ type BasicTensorOps() =
             rawData <- Array.map float32 [| 1 .. perf.tensorSize |]
             t <- dsharp.tensor [| 1 .. perf.tensorSize |]
             let matSize = int(sqrt(float perf.tensorSize))
-            tvec <- dsharp.rand [| matSize |]
-            tmat <- dsharp.rand [| matSize; matSize |]
+            tvec <- dsharp.randint (1, 10, [| matSize |])
+            tmat <- dsharp.randint (1, 10, [| matSize; matSize |])
             t0 <- dsharp.tensor 1.1
             rawt <- t.primalRaw
             rawtvec <- tvec.primalRaw
@@ -110,6 +111,7 @@ type BasicTensorOps() =
     member val public tensorLayer = "" with get, set
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.fromCpuData() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -130,6 +132,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.zeros() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -143,6 +146,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.ones() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -156,6 +160,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.rand() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -170,6 +175,7 @@ type BasicTensorOps() =
 
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.randn() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -183,6 +189,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res  <- dsharp.randn([| perf.tensorSize |])
 
     [<Benchmark>]
+    [<BenchmarkCategory("Creation")>]
     member perf.randint() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -196,6 +203,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res  <- dsharp.randint(0, 10, [| perf.tensorSize |])
 
     [<Benchmark>]
+    [<BenchmarkCategory("LinAlg")>]
     member perf.matmul() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -218,6 +226,7 @@ type BasicTensorOps() =
     //         res2 <- Ext.THSTorch_get_and_reset_last_err()
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addition() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -231,6 +240,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t + t
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addScalar() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -244,6 +254,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t + t0
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addWithAlpha() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -257,6 +268,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t.add(t0.mul(t0))
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addWithAlphaInPlace() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -270,6 +282,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t.add(t0.mul(t0)) // NO CORRESPONDING INPLACE YET 
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addScalarWithAlpha() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -283,6 +296,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t.add(t0.mul(t0))
 
     [<Benchmark>]
+    [<BenchmarkCategory("Addition")>]
     member perf.addScalarWithAlphaInPlace() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -296,6 +310,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t.add(t0.mul(t0))
 
     [<Benchmark>]
+    [<BenchmarkCategory("Multiply")>]
     member perf.mul() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -309,6 +324,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t + t
 
     [<Benchmark>]
+    [<BenchmarkCategory("Multiply")>]
     member perf.mulInPlace() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -322,6 +338,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t * t // NO CORRESPONDING INPLACE YET 
 
     [<Benchmark>]
+    [<BenchmarkCategory("Multiply")>]
     member perf.mulScalar() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -335,6 +352,7 @@ type BasicTensorOps() =
             for _ in 1 .. n do res <- t + t
 
     [<Benchmark>]
+    [<BenchmarkCategory("Multiply")>]
     member perf.mulScalarInPlace() = 
         let n = perf.configure() 
         match perf.tensorLayer with 
@@ -343,7 +361,7 @@ type BasicTensorOps() =
                for _ in 1 .. n do res4 <- tt.MulInPlace(tt0)
             else failwith "n/a"
         | Layer_RawTensor -> 
-            for _ in 1 .. n do res3 <- rawt.MulTT0(rawt) // NO CORRESPONDING INPLACE YET 
+            for _ in 1 .. n do res3 <- rawt.MulTT(rawt) // NO CORRESPONDING INPLACE YET 
         | _ (* "3 - Tensor" *) -> 
             for _ in 1 .. n do res <- t * t0 // NO CORRESPONDING INPLACE YET 
 

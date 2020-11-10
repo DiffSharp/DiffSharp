@@ -7,6 +7,7 @@
     <FSharpCoreVersion>4.7.2</FSharpCoreVersion>
     <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
+    <DIFFSHARP_TESTGPU Condition="'$(COMPUTERNAME)' == 'MSRC-3617253'">true</DIFFSHARP_TESTGPU>
 
     <!-- TorchSharp local build packages -->
     <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
