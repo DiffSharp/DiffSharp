@@ -906,7 +906,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
     override _.SinhInPlace() = checkMutable(); tt.SinhInPlace() |> ignore
 
-    override _.CoshInPlace() = checkMutable(); tt.CosInPlaceh() |> ignore
+    override _.CoshInPlace() = checkMutable(); tt.CoshInPlace() |> ignore
 
     override _.TanhInPlace() = checkMutable(); tt.TanhInPlace() |> ignore
 
