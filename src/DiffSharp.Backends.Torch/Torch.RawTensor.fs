@@ -80,6 +80,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
     let device = () // make sure 'device' isn't accessed in a member and stored as a field
 #endif
+    let mutable tt = tt
+    let mutable isMutable = false
+    let checkMutable() = if not isMutable then failwith "the tensor can't be mutated" 
     do ignore device
 
     override _.Shape = shape
@@ -812,6 +815,126 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             info.AddValue("shape", t.Shape)
             info.AddValue("data", tCpu.ToRawData())
 
+
+    override _.ClampInPlace(low, high) = 
+        // TODO - next version of TorchSharp will have in place version of this
+        checkMutable()
+        tt <- tt.Clamp(low.TorchTensor.Item(), high.TorchTensor.Item())
+
+    override _.LtInPlace(t2) = checkMutable(); tt.LtInPlace(t2.TorchTensor) |> ignore
+
+    override _.GtInPlace(t2) = checkMutable(); tt.GtInPlace(t2.TorchTensor) |> ignore
+
+    override _.LeInPlace(t2) = checkMutable(); tt.LeInPlace(t2.TorchTensor) |> ignore
+
+    override _.GeInPlace(t2) = checkMutable(); tt.GeInPlace(t2.TorchTensor) |> ignore
+
+    override _.EqInPlace(t2) = checkMutable(); tt.EqInPlace(t2.TorchTensor) |> ignore
+
+    override _.NeqInPlace(t2) = checkMutable(); tt.NeInPlace(t2.TorchTensor) |> ignore
+
+    override _.AddInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
+
+    override _.AddScalarInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
+
+    override _.AddMatrixVecInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
+
+    // TODO - it feels like this should be faster
+    override t1.AddSliceInPlace(location, t2) = 
+        checkMutable()
+        Shape.checkCanAddSlice t1.Shape location t2.Shape
+        let shape1 = t1.Shape
+        let shape2 = t2.Shape
+        let expandedShape2 = Shape.unsqueezeAs shape2 shape1
+        let t2Expanded = t2.TorchTensor.Expand(toTorchShape expandedShape2)
+        let mutable t1Slice = tt // will share memory with res
+        for d in 0 .. location.Length - 1 do 
+            let len2 = expandedShape2.[d]
+            if location.[d] <> 0 || len2 <> shape1.[d] then 
+                t1Slice <- t1Slice.Narrow(int64 d, int64 location.[d], int64 len2)
+        t1Slice.AddInPlace(t2Expanded) |> ignore
+
+    override _.SubInPlace(t2) = checkMutable(); tt.SubInPlace(t2.TorchTensor) |> ignore
+
+    override _.SubScalarInPlace(t2) = checkMutable(); tt.SubInPlace(t2.TorchTensor) |> ignore
+
+    override _.MulInPlace(t2) = checkMutable(); tt.MulInPlace(t2.TorchTensor) |> ignore
+
+    override _.MulScalarInPlace(t2) = checkMutable(); tt.MulInPlace(t2.TorchTensor) |> ignore
+
+    override _.DivInPlace(t2) = checkMutable(); tt.DivInPlace(t2.TorchTensor) |> ignore
+
+    override _.DivScalarInPlace(t2) = checkMutable(); tt.DivInPlace(t2.TorchTensor) |> ignore
+
+    override _.PowInPlace(t2) = checkMutable(); tt.PowInPlace(t2.TorchTensor) |> ignore
+
+    override _.PowScalarInPlace(t2) = checkMutable(); tt.PowInPlace(t2.TorchTensor) |> ignore
+
+    override _.MatMulInPlace(t2) = checkMutable(); tt <- tt.MatMul(t2.TorchTensor) 
+
+    override _.NegInPlace() = checkMutable(); tt.NegInPlace() |> ignore
+
+    override _.SignInPlace() = checkMutable(); tt.SignInPlace() |> ignore
+
+    override _.FloorInPlace() = checkMutable(); tt.FloorInPlace() |> ignore
+
+    override _.CeilInPlace() = checkMutable(); tt.CeilInPlace() |> ignore
+
+    override _.RoundInPlace() = checkMutable(); tt.RoundInPlace() |> ignore
+
+    override _.AbsInPlace() = checkMutable(); tt.AbsInPlace() |> ignore
+
+    override _.ReluInPlace() = checkMutable(); tt.ReluInPlace() |> ignore
+
+    override _.SoftplusInPlace() = checkMutable(); tt <- tt.Softplus() 
+
+    override _.SigmoidInPlace() = checkMutable(); tt <- tt.Sigmoid() 
+
+    override _.ExpInPlace() = checkMutable(); tt <- tt.Exp()
+
+    override _.LogInPlace() = checkMutable(); tt.LogInPlace() |> ignore
+
+    override _.Log10InPlace() = checkMutable(); tt.Log10InPlace() |> ignore
+
+    override _.SqrtInPlace() = checkMutable(); tt.SqrtInPlace() |> ignore
+
+    override _.SinInPlace() = checkMutable(); tt.SinInPlace() |> ignore
+
+    override _.CosInPlace() = checkMutable(); tt.CosInPlace() |> ignore
+
+    override _.TanInPlace() = checkMutable(); tt.TanInPlace() |> ignore
+
+    override _.SinhInPlace() = checkMutable(); tt.SinhInPlace() |> ignore
+
+    override _.CoshInPlace() = checkMutable(); tt.CosInPlaceh() |> ignore
+
+    override _.TanhInPlace() = checkMutable(); tt.TanhInPlace() |> ignore
+
+    override _.AsinInPlace() = checkMutable(); tt.AsinInPlace() |> ignore
+
+    override _.AcosInPlace() = checkMutable(); tt.AcosInPlace() |> ignore
+
+    override _.AtanInPlace() = checkMutable(); tt.AtanInPlace() |> ignore
+
+    // TODO - next version of TorchSharp will have in place version of this
+    override t.OnesInPlace() = checkMutable(); tt <- (RawTensor.Ones(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+
+    // TODO - next version of TorchSharp will have in place version of this
+    override t.ZerosInPlace() = checkMutable(); tt <- (RawTensor.Zeros(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+
+    // TODO - next version of TorchSharp will have in place version of this
+    override t.RandomInPlace() = checkMutable(); tt <- (RawTensor.Random(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+
+    // TODO - next version of TorchSharp will have in place version of this
+    override t.RandomNormalInPlace() = checkMutable(); tt <- (RawTensor.RandomNormal(shape, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+
+    // TODO - next version of TorchSharp will have in place version of this
+    override t.RandomIntInPlace(low, high) = checkMutable(); tt <- (RawTensor.RandomInt(shape, low, high, dtype, t.Device, Backend.Torch) :?> TorchRawTensor).TorchTensor
+
+    override t.SetMutable() = isMutable <- true
+
+    override t.IsMutable = isMutable
+
 /// The parameterized implementation of the static ops. Use a generic class to
 /// make sure we get the correlation with .NET types correct and systematic
 type TorchTensorOps<'T, 'T2>
@@ -1137,3 +1260,4 @@ type TorchBackendTensorStatics() =
         | Int32 -> torchInt32.CreateFromFlatArray(values, shape, device)
         | Int64 -> torchInt64.CreateFromFlatArray(values, shape, device)
         | Bool -> torchBool.CreateFromFlatArray(values, shape, device)
+

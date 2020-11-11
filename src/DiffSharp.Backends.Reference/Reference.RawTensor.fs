@@ -22,6 +22,9 @@ module internal Utils =
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
     inherit RawTensor()
 
+    let mutable values = values
+    let mutable isMutable = false
+    let checkMutable() = if not isMutable then failwith "the tensor can't be mutated" 
     override _.Shape = shape
     override _.Dim = shape.Length
     override _.Nelement = shapeLength shape
@@ -316,6 +319,57 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
             RawTensor.Create(tflat.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device).ViewT(t.Shape)
 
     override t.MoveTo(device: Device) = t.MakeLike(values, shape, device=device)
+
+    override t.SetMutable() = isMutable <- true
+    override t.IsMutable = isMutable
+    member t.SetValues(tmp: RawTensor) = checkMutable(); values <- (tmp :?> RawTensorCPU<'T>).Values
+    override t.ClampInPlace(low, high) = t.SetValues <| t.ClampT(low, high)
+    override t.LtInPlace(t2) = t.SetValues <| t.LtTT(t2)
+    override t.GtInPlace(t2) = t.SetValues <| t.GtTT(t2)
+    override t.LeInPlace(t2) = t.SetValues <| t.LeTT(t2)
+    override t.GeInPlace(t2) = t.SetValues <| t.GeTT(t2)
+    override t.EqInPlace(t2) = t.SetValues <| t.EqTT(t2)
+    override t.NeqInPlace(t2) = t.SetValues <| t.NeqTT(t2)
+    override t.AddInPlace(t2) = t.SetValues <| t.AddTT(t2)
+    override t.AddScalarInPlace(t2) = t.SetValues <| t.AddTT0(t2)
+    override t.AddMatrixVecInPlace(t2) = t.SetValues <| t.AddT2T1(t2)
+    override t.AddSliceInPlace(location, t2) = t.SetValues <| t.AddTTSlice(location, t2)
+    override t.SubInPlace(t2) = t.SetValues <| t.SubTT(t2)
+    override t.SubScalarInPlace(t2) = t.SetValues <| t.SubTT0(t2)
+    override t.MulInPlace(t2) = t.SetValues <| t.MulTT(t2)
+    override t.MulScalarInPlace(t2) = t.SetValues <| t.MulTT0(t2)
+    override t.DivInPlace(t2) = t.SetValues <| t.DivTT(t2)
+    override t.DivScalarInPlace(t2) = t.SetValues <| t.DivTT0(t2)
+    override t.PowInPlace(t2) = t.SetValues <| t.PowTT(t2)
+    override t.PowScalarInPlace(t2) = t.SetValues <| t.PowTT0(t2)
+    override t.MatMulInPlace(t2) = t.SetValues <| t.MatMulTT(t2)
+    override t.NegInPlace() = t.SetValues <| t.NegT()
+    override t.SignInPlace() = t.SetValues <| t.SignT()
+    override t.FloorInPlace() = t.SetValues <| t.FloorT()
+    override t.CeilInPlace() = t.SetValues <| t.CeilT()
+    override t.RoundInPlace() = t.SetValues <| t.RoundT()
+    override t.AbsInPlace() = t.SetValues <| t.AbsT()
+    override t.ReluInPlace() = t.SetValues <| t.ReluT()
+    override t.SoftplusInPlace() = t.SetValues <| t.SoftplusT()
+    override t.SigmoidInPlace() = t.SetValues <| t.SigmoidT()
+    override t.ExpInPlace() = t.SetValues <| t.ExpT()
+    override t.LogInPlace() = t.SetValues <| t.LogT()
+    override t.Log10InPlace() = t.SetValues <| t.Log10T()
+    override t.SqrtInPlace() = t.SetValues <| t.SqrtT()
+    override t.SinInPlace() = t.SetValues <| t.SinT()
+    override t.CosInPlace() = t.SetValues <| t.CosT()
+    override t.TanInPlace() = t.SetValues <| t.TanT()
+    override t.SinhInPlace() = t.SetValues <| t.SinhT()
+    override t.CoshInPlace() = t.SetValues <| t.CoshT()
+    override t.TanhInPlace() = t.SetValues <| t.TanhT()
+    override t.AsinInPlace() = t.SetValues <| t.AsinT()
+    override t.AcosInPlace() = t.SetValues <| t.AcosT()
+    override t.AtanInPlace() = t.SetValues <| t.AtanT()
+    override t.OnesInPlace() = t.SetValues <| t.OnesLike(t.Shape)
+    override t.RandomInPlace() = t.SetValues <| t.RandomLike(t.Shape) 
+    override t.RandomNormalInPlace() = t.SetValues <| t.RandomNormalLike(t.Shape)
+    override t.RandomIntInPlace(low, high) = t.SetValues <| t.RandomIntLike(t.Shape, low, high)
+    override t.ZerosInPlace() = t.SetValues <| t.ZerosLike(t.Shape)
 
 // Defines the math-dependent operations for `RawTensorCPU<T>` types
 // using generic inline code. Each implementing type (e.g. RawTensorFloat32) instantiates
@@ -1639,3 +1693,4 @@ type ReferenceBackendTensorStatics() =
         | Int32 -> RawTensorInt32.CreateFromFlatArray(values, shape, device)
         | Int64 -> RawTensorInt64.CreateFromFlatArray(values, shape, device)
         | Bool -> RawTensorBool.CreateFromFlatArray(values, shape, device)
+

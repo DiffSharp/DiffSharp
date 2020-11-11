@@ -69,7 +69,7 @@ type BackendTensorStatics() =
         hook.Get(?backend=backend)
 
 /// <summary>
-///   Represents a raw (i.e. non-differentiable) tensor implemented by a DiffSharp backend.
+///   Represents a raw (i.e. non-differentiable immutable) tensor implemented by a DiffSharp backend.
 /// </summary>
 ///
 /// <remarks>
@@ -629,4 +629,155 @@ type RawTensor() =
             match t.ToValues() with 
             | :? System.Array as a -> a
             | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
+
+    /// A backdoor to switch this tensor to be usable as a mutable tensor. You should have a unique handle to
+    /// this tensor for the entire time it is being used as a mutable tensor.
+    abstract SetMutable: unit -> unit
+
+    abstract IsMutable: bool
+
+    /// Modifies the tensor by with values constrained by the corresponding elements in the low/high tensors.
+    abstract ClampInPlace: low: RawTensor * high: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract LtInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract GtInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract LeInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract GeInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract EqInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by comparing each element pairwise with the corresponding element in <c>t2</c>
+    abstract NeqInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise addition of the two tensors
+    abstract AddInPlace: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise addition of two scalars
+    abstract AddScalarInPlace: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise addition of the matrix and vector tensors
+    abstract AddMatrixVecInPlace: RawTensor -> unit
+
+    /// Adds a slice of <c>t2</c> at the given location to the tensor
+    abstract AddSliceInPlace: location: int[] * t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise subtraction of two tensors
+    abstract SubInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise subtraction of the tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract SubScalarInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise multiplication of two tensors
+    abstract MulInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise multiplication of a tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract MulScalarInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise division of two tensors
+    abstract DivInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise division of a tensor by a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract DivScalarInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise exponentiation of two tensors
+    abstract PowInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise exponentiation of a tensor and a scalar, where the scalar is logically
+    /// broadcast to the same shape as the tensor
+    abstract PowScalarInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the matrix multiplication of two tensors
+    abstract MatMulInPlace: t2: RawTensor -> unit
+
+    /// Modifies the tensor by the element-wise negation of the tensor
+    abstract NegInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise sign of the tensor
+    abstract SignInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise integer floor of the tensor
+    abstract FloorInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise integer ceiling of the tensor
+    abstract CeilInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise rounding of the tensor
+    abstract RoundInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise absolute value of the tensor
+    abstract AbsInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise ReLU of the tensor
+    abstract ReluInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise softplus of the tensor
+    abstract SoftplusInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise sigmoid of the tensor
+    abstract SigmoidInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise natural exponentiation of the tensor
+    abstract ExpInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise natural logarithm of the tensor
+    abstract LogInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise base10 logarithm of the tensor
+    abstract Log10InPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise square root of the tensor
+    abstract SqrtInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise sine of the tensor
+    abstract SinInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise cosine of the tensor
+    abstract CosInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise tangent of the tensor
+    abstract TanInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise sinh of the tensor
+    abstract SinhInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise cosh of the tensor
+    abstract CoshInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise tanh of the tensor
+    abstract TanhInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise asin of the tensor
+    abstract AsinInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise cos of the tensor
+    abstract AcosInPlace: unit -> unit
+
+    /// Modifies the tensor by the element-wise atan of the tensor
+    abstract AtanInPlace: unit -> unit
+
+    /// Modifies the tensor by setting all values to one
+    abstract OnesInPlace: unit -> unit
+
+    /// Modifies the tensor by setting all values to zero
+    abstract ZerosInPlace: unit -> unit
+
+    /// Modifies the tensor by setting it to random values taken from a uniform distribution in [0, 1).
+    abstract RandomInPlace: unit -> unit
+
+    /// Modifies the tensor by setting all values taken from a normal distribution with mean 0 and variance 1.
+    abstract RandomNormalInPlace: unit -> unit
+
+    /// Gets a tensor filled with random integers from the given range 
+    abstract RandomIntInPlace: low:int * high:int -> unit
 
