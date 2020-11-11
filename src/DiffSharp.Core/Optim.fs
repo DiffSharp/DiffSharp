@@ -215,7 +215,7 @@ type optim =
                 if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
                     let duration = System.DateTime.Now - start
                     let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
-                    printf "%s%s | %3d | %d | %d/%d | %e %s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix
+                    printfn "%s%s | %3d | %d | %d/%d | %e %s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix
                 lPrev <- lScalar
                 not stop
             ) |> Seq.iter ignore

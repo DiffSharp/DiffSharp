@@ -22,6 +22,9 @@ module internal Utils =
 type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
     inherit RawTensor()
 
+    let mutable values = values
+    let mutable isMutable = false
+    let checkMutable() = if not isMutable then failwith "the tensor can't be mutated" 
     override _.Shape = shape
     override _.Dim = shape.Length
     override _.Nelement = shapeLength shape
@@ -317,6 +320,57 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
 
     override t.MoveTo(device: Device) = t.MakeLike(values, shape, device=device)
 
+    override t.SetMutable() = isMutable <- true
+    override t.IsMutable = isMutable
+    member t.SetValues(tmp: RawTensor) = checkMutable(); values <- (tmp :?> RawTensorCPU<'T>).Values
+    override t.ClampInPlace(low, high) = t.SetValues <| t.ClampT(low, high)
+    override t.LtInPlace(t2) = t.SetValues <| t.LtTT(t2)
+    override t.GtInPlace(t2) = t.SetValues <| t.GtTT(t2)
+    override t.LeInPlace(t2) = t.SetValues <| t.LeTT(t2)
+    override t.GeInPlace(t2) = t.SetValues <| t.GeTT(t2)
+    override t.EqInPlace(t2) = t.SetValues <| t.EqTT(t2)
+    override t.NeqInPlace(t2) = t.SetValues <| t.NeqTT(t2)
+    override t.AddInPlace(t2) = t.SetValues <| t.AddTT(t2)
+    override t.AddScalarInPlace(t2) = t.SetValues <| t.AddTT0(t2)
+    override t.AddMatrixVecInPlace(t2) = t.SetValues <| t.AddT2T1(t2)
+    override t.AddSliceInPlace(location, t2) = t.SetValues <| t.AddTTSlice(location, t2)
+    override t.SubInPlace(t2) = t.SetValues <| t.SubTT(t2)
+    override t.SubScalarInPlace(t2) = t.SetValues <| t.SubTT0(t2)
+    override t.MulInPlace(t2) = t.SetValues <| t.MulTT(t2)
+    override t.MulScalarInPlace(t2) = t.SetValues <| t.MulTT0(t2)
+    override t.DivInPlace(t2) = t.SetValues <| t.DivTT(t2)
+    override t.DivScalarInPlace(t2) = t.SetValues <| t.DivTT0(t2)
+    override t.PowInPlace(t2) = t.SetValues <| t.PowTT(t2)
+    override t.PowScalarInPlace(t2) = t.SetValues <| t.PowTT0(t2)
+    override t.MatMulInPlace(t2) = t.SetValues <| t.MatMulTT(t2)
+    override t.NegInPlace() = t.SetValues <| t.NegT()
+    override t.SignInPlace() = t.SetValues <| t.SignT()
+    override t.FloorInPlace() = t.SetValues <| t.FloorT()
+    override t.CeilInPlace() = t.SetValues <| t.CeilT()
+    override t.RoundInPlace() = t.SetValues <| t.RoundT()
+    override t.AbsInPlace() = t.SetValues <| t.AbsT()
+    override t.ReluInPlace() = t.SetValues <| t.ReluT()
+    override t.SoftplusInPlace() = t.SetValues <| t.SoftplusT()
+    override t.SigmoidInPlace() = t.SetValues <| t.SigmoidT()
+    override t.ExpInPlace() = t.SetValues <| t.ExpT()
+    override t.LogInPlace() = t.SetValues <| t.LogT()
+    override t.Log10InPlace() = t.SetValues <| t.Log10T()
+    override t.SqrtInPlace() = t.SetValues <| t.SqrtT()
+    override t.SinInPlace() = t.SetValues <| t.SinT()
+    override t.CosInPlace() = t.SetValues <| t.CosT()
+    override t.TanInPlace() = t.SetValues <| t.TanT()
+    override t.SinhInPlace() = t.SetValues <| t.SinhT()
+    override t.CoshInPlace() = t.SetValues <| t.CoshT()
+    override t.TanhInPlace() = t.SetValues <| t.TanhT()
+    override t.AsinInPlace() = t.SetValues <| t.AsinT()
+    override t.AcosInPlace() = t.SetValues <| t.AcosT()
+    override t.AtanInPlace() = t.SetValues <| t.AtanT()
+    override t.OnesInPlace() = t.SetValues <| t.OnesLike(t.Shape)
+    override t.RandomInPlace() = t.SetValues <| t.RandomLike(t.Shape) 
+    override t.RandomNormalInPlace() = t.SetValues <| t.RandomNormalLike(t.Shape)
+    override t.RandomIntInPlace(low, high) = t.SetValues <| t.RandomIntLike(t.Shape, low, high)
+    override t.ZerosInPlace() = t.SetValues <| t.ZerosLike(t.Shape)
+
 // Defines the math-dependent operations for `RawTensorCPU<T>` types
 // using generic inline code. Each implementing type (e.g. RawTensorFloat32) instantiates
 // inlines these at concrete types.
@@ -344,7 +398,7 @@ module internal RawTensorCPU =
     
     /// Get the "0" tensor for a CPU tensor type of the given shape
     let inline Zeros(shape:Shape)  : (^T[] * Shape) =
-        let values = Array.create (shapeLength shape) zero< ^T >
+        let values = Array.zeroCreate (shapeLength shape) 
         (values, shape)
 
     /// Get the "0" tensor for a CPU tensor type of the given shape
@@ -530,20 +584,17 @@ module internal RawTensorCPU =
         let result = Array.map (fun t -> t ** t2value) t1value
         (result, t1.Shape)
 
-    let inline MatMulT2T2(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * Shape) =
-        Shape.checkCanMatmul t1.Shape t2.Shape
-        let t1rows, t1cols = t1.Shape.[0], t1.Shape.[1]
-        let t2rows, t2cols = t2.Shape.[0], t2.Shape.[1]
+    let inline MatMulTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * Shape) =
+        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
+        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
+        let t1rows, t1cols = t1MatrixPart.[0], t1MatrixPart.[1]
+        let t2rows, t2cols = t2MatrixPart.[0], t2MatrixPart.[1]
         let t1value = t1.Values
-        let t2value = t2.GetTypedValues()        
-        let result = Array.zeroCreate (t1rows*t2cols) 
-        for i in 0 .. t1rows - 1 do
-            for j in 0 .. t2cols - 1 do
-                let mutable acc = zero
-                for k in 0..t2rows-1 do 
-                    acc <- acc + t1value.[i*t1cols + k] * t2value.[k*t2cols + j]
-                result.[i*t2cols + j] <- acc
-        (result,[| t1rows; t2cols |])
+        let t2value = (t2 :?> RawTensorCPU< ^T >).Values        
+        let newShape = Array.append t1BatchPart [| t1rows; t2cols |]
+        let nb = shapeLength t1BatchPart
+        let values = Array.initFlat3D nb t1rows t2cols (fun b i j -> Array.sumBy (fun k -> t1value.[b*t1cols*t1rows + i*t1cols + k] * t2value.[b*t2cols*t2rows + k*t2cols + j]) [|0..(t2rows-1)|] )
+        (values, newShape)
     
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
@@ -895,7 +946,7 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
     override t1.PowT0T(t2) = RawTensorCPU.PowT0T(t1, t2) |> create
     override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -980,7 +1031,7 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
     override t1.PowT0T(t2) = RawTensorCPU.PowT0T(t1, t2) |> create
     override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1061,7 +1112,7 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
     override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1143,7 +1194,7 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
     override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1225,7 +1276,7 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
     override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1307,7 +1358,7 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
     override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1389,7 +1440,7 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
     override t1.DivT0T(t2) = RawTensorCPU.DivT0T(t1, t2) |> create
     override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2) |> create
-    override t1.MatMulT2T2(t2) = RawTensorCPU.MatMulT2T2(t1, t2) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
     override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
     override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
@@ -1478,7 +1529,7 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t1.DivTT(t2) = opNotSupported2 "DivTT" t1.Dtype t2.Dtype
     override t1.DivT0T(t2) = opNotSupported2 "DivT0T" t1.Dtype t2.Dtype
     override t1.DivTT0(t2) = opNotSupported2 "DivTT0" t1.Dtype t2.Dtype
-    override t1.MatMulT2T2(t2) = opNotSupported2 "MatMulT2T2" t1.Dtype t2.Dtype
+    override t1.MatMulTT(t2) = opNotSupported2 "MatMulTT" t1.Dtype t2.Dtype
     override t1.MaxPool1D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool1D" t1.Dtype
     override t1.MaxPool2D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool2D" t1.Dtype
     override t1.MaxPool3D(_kernelSize, _stride, _padding) = opNotSupported "MaxPool3D" t1.Dtype
@@ -1642,3 +1693,4 @@ type ReferenceBackendTensorStatics() =
         | Int32 -> RawTensorInt32.CreateFromFlatArray(values, shape, device)
         | Int64 -> RawTensorInt64.CreateFromFlatArray(values, shape, device)
         | Bool -> RawTensorBool.CreateFromFlatArray(values, shape, device)
+

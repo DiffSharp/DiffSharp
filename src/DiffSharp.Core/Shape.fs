@@ -459,10 +459,13 @@ module rec Shape =
         if not (contains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
         if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
 
-    /// Checks if the given shape is appropriate for a matmul operation.
-    let checkCanMatmul (shape1: Shape) (shape2: Shape) =
-        if shape1.Length <> 2 || shape2.Length <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
-        if shape1.[1] <> shape2.[0] then failwithf "Cannot multiply Tensors with shapes %A, %A" shape1 shape2
+    /// Check if the given shape is appropriate for a matmul operation.
+    let checkCanMatmul (shape1:int[]) (shape2:int[]) =
+        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+        let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
+        let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
+        if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
+        (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart)
 
     /// Checks if the given shape is appropriate for a dot product operation.
     let checkCanDot (shape1: Shape) (shape2: Shape) =
@@ -586,7 +589,16 @@ module ShapeAutoOpens =
 
     /// Converts the array of three-position bounds specifications to a shape.
     let boundsToShape (bounds: int[,]) =
-        [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|]
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             if bounds.[i, 2] = 0 || len > 1 then 
+                 yield len |]
+
+    /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
+    let boundsToShapeNoSqueeze (bounds: int[,]) =
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             yield len|]
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
     let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =

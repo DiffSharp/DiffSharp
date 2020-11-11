@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DiffSharp.Benchmarks.BasicTensorOps.BasicTensorOps-20201109-220628</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.17134.1792 (1803/April2018Update/Redstone4)
+Intel Xeon CPU E5-1620 0 3.60GHz, 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.1.403
+  [Host]   : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT DEBUG
+  ShortRun : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
+</code></pre>
+<pre><code>Job=ShortRun  IterationCount=3  LaunchCount=1  
+WarmupCount=3  
+</code></pre>
+
+<table>
+<thead><tr><th>             Method</th><th>tensorSize</th><th>dtype</th><th>device</th><th>backend</th><th>tlayer</th><th>     Mean</th><th>     Error</th><th> StdDev</th>
+</tr>
+</thead><tbody><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>333,626.60 &mu;s</td><td>515,083.638 &mu;s</td><td>28,233.472 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>166,712.80 &mu;s</td><td>188,305.408 &mu;s</td><td>10,321.655 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>65.83 &mu;s</td><td>13.731 &mu;s</td><td>0.753 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>684,334.40 &mu;s</td><td>287,232.271 &mu;s</td><td>15,744.170 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>419,278.40 &mu;s</td><td>74,071.099 &mu;s</td><td>4,060.087 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>105,972.35 &mu;s</td><td>46,074.675 &mu;s</td><td>2,525.508 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>3,066.42 &mu;s</td><td>2,320.035 &mu;s</td><td>127.169 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,778.77 &mu;s</td><td>918.062 &mu;s</td><td>50.322 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>136.57 &mu;s</td><td>49.796 &mu;s</td><td>2.729 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>5,956.59 &mu;s</td><td>1,019.806 &mu;s</td><td>55.899 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>4,725.26 &mu;s</td><td>1,039.631 &mu;s</td><td>56.986 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>957.18 &mu;s</td><td>224.528 &mu;s</td><td>12.307 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>3,001.69 &mu;s</td><td>2,646.741 &mu;s</td><td>145.077 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,837.78 &mu;s</td><td>683.574 &mu;s</td><td>37.469 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,422.97 &mu;s</td><td>1,402.331 &mu;s</td><td>76.867 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>1,228.71 &mu;s</td><td>1,949.395 &mu;s</td><td>106.853 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>1,149.49 &mu;s</td><td>265.173 &mu;s</td><td>14.535 &mu;s</td>
+</tr><tr><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>25.72 &mu;s</td><td>7.484 &mu;s</td><td>0.410 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>233,924.57 &mu;s</td><td>38,116.353 &mu;s</td><td>2,089.286 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>235,335.70 &mu;s</td><td>100,755.382 &mu;s</td><td>5,522.742 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>65.51 &mu;s</td><td>38.631 &mu;s</td><td>2.118 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>841,048.03 &mu;s</td><td>824,758.078 &mu;s</td><td>45,207.773 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>671,280.57 &mu;s</td><td>380,020.381 &mu;s</td><td>20,830.199 &mu;s</td>
+</tr><tr><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>654,681.93 &mu;s</td><td>112,095.838 &mu;s</td><td>6,144.351 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>163.14 &mu;s</td><td>4.288 &mu;s</td><td>0.235 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>165.33 &mu;s</td><td>52.359 &mu;s</td><td>2.870 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>137.34 &mu;s</td><td>38.872 &mu;s</td><td>2.131 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>562.73 &mu;s</td><td>185.202 &mu;s</td><td>10.152 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>576.99 &mu;s</td><td>75.357 &mu;s</td><td>4.131 &mu;s</td>
+</tr><tr><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>527.60 &mu;s</td><td>286.136 &mu;s</td><td>15.684 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,367.84 &mu;s</td><td>592.103 &mu;s</td><td>32.455 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,333.49 &mu;s</td><td>709.681 &mu;s</td><td>38.900 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,313.88 &mu;s</td><td>142.122 &mu;s</td><td>7.790 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>16.69 &mu;s</td><td>0.600 &mu;s</td><td>0.033 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>17.08 &mu;s</td><td>4.505 &mu;s</td><td>0.247 &mu;s</td>
+</tr><tr><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>15.25 &mu;s</td><td>3.782 &mu;s</td><td>0.207 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>3,556,068.33 &mu;s</td><td>670,224.785 &mu;s</td><td>36,737.282 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>3,583,032.43 &mu;s</td><td>1,021,917.589 &mu;s</td><td>56,014.751 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>65.94 &mu;s</td><td>18.448 &mu;s</td><td>1.011 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>2,183,681.43 &mu;s</td><td>92,431.998 &mu;s</td><td>5,066.510 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>2,203,336.53 &mu;s</td><td>544,670.817 &mu;s</td><td>29,855.245 &mu;s</td>
+</tr><tr><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>2,190,876.87 &mu;s</td><td>433,892.218 &mu;s</td><td>23,783.097 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>374.40 &mu;s</td><td>111.335 &mu;s</td><td>6.103 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>367.01 &mu;s</td><td>64.297 &mu;s</td><td>3.524 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>132.91 &mu;s</td><td>17.901 &mu;s</td><td>0.981 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>592.63 &mu;s</td><td>362.572 &mu;s</td><td>19.874 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>595.93 &mu;s</td><td>263.447 &mu;s</td><td>14.440 &mu;s</td>
+</tr><tr><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>552.89 &mu;s</td><td>72.730 &mu;s</td><td>3.987 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,377.90 &mu;s</td><td>201.393 &mu;s</td><td>11.039 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,338.02 &mu;s</td><td>171.557 &mu;s</td><td>9.404 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,277.64 &mu;s</td><td>514.214 &mu;s</td><td>28.186 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>14.99 &mu;s</td><td>4.733 &mu;s</td><td>0.259 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>14.44 &mu;s</td><td>1.715 &mu;s</td><td>0.094 &mu;s</td>
+</tr><tr><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>13.86 &mu;s</td><td>1.119 &mu;s</td><td>0.061 &mu;s</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>57,057.47 &mu;s</td><td>9,364.470 &mu;s</td><td>513.298 &mu;s</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>66.31 &mu;s</td><td>32.546 &mu;s</td><td>1.784 &mu;s</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>336,729.30 &mu;s</td><td>69,672.648 &mu;s</td><td>3,818.993 &mu;s</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>72,718.17 &mu;s</td><td>72,824.263 &mu;s</td><td>3,991.744 &mu;s</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>5,755.53 &mu;s</td><td>1,919.874 &mu;s</td><td>105.235 &mu;s</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>135.21 &mu;s</td><td>31.432 &mu;s</td><td>1.723 &mu;s</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>2,868.20 &mu;s</td><td>412.456 &mu;s</td><td>22.608 &mu;s</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>628.76 &mu;s</td><td>454.251 &mu;s</td><td>24.899 &mu;s</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>6,739.88 &mu;s</td><td>283.718 &mu;s</td><td>15.552 &mu;s</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,371.93 &mu;s</td><td>225.211 &mu;s</td><td>12.345 &mu;s</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>315.50 &mu;s</td><td>1,590.441 &mu;s</td><td>87.177 &mu;s</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>matmul</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>56.44 &mu;s</td><td>30.753 &mu;s</td><td>1.686 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>16,272.11 &mu;s</td><td>2,344.387 &mu;s</td><td>128.504 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,366.23 &mu;s</td><td>148.490 &mu;s</td><td>8.139 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>65.80 &mu;s</td><td>8.880 &mu;s</td><td>0.487 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>115,989.73 &mu;s</td><td>242,822.886 &mu;s</td><td>13,309.942 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>62,017.27 &mu;s</td><td>9,165.561 &mu;s</td><td>502.395 &mu;s</td>
+</tr><tr><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>55,170.67 &mu;s</td><td>19,859.649 &mu;s</td><td>1,088.574 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>996.01 &mu;s</td><td>141.404 &mu;s</td><td>7.751 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>764.52 &mu;s</td><td>216.839 &mu;s</td><td>11.886 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>139.06 &mu;s</td><td>29.843 &mu;s</td><td>1.636 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>1,842.30 &mu;s</td><td>852.755 &mu;s</td><td>46.742 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>1,533.88 &mu;s</td><td>703.420 &mu;s</td><td>38.557 &mu;s</td>
+</tr><tr><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>1,410.13 &mu;s</td><td>40.421 &mu;s</td><td>2.216 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>3,304.84 &mu;s</td><td>3,190.497 &mu;s</td><td>174.882 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>3,115.26 &mu;s</td><td>1,674.015 &mu;s</td><td>91.758 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,397.92 &mu;s</td><td>95.010 &mu;s</td><td>5.208 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>882.38 &mu;s</td><td>163.199 &mu;s</td><td>8.946 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>836.35 &mu;s</td><td>128.501 &mu;s</td><td>7.044 &mu;s</td>
+</tr><tr><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>830.73 &mu;s</td><td>108.604 &mu;s</td><td>5.953 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>15,923.12 &mu;s</td><td>5,339.620 &mu;s</td><td>292.683 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>907.39 &mu;s</td><td>456.194 &mu;s</td><td>25.006 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>104.83 &mu;s</td><td>293.359 &mu;s</td><td>16.080 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>256,379.20 &mu;s</td><td>88,383.152 &mu;s</td><td>4,844.579 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>182,961.27 &mu;s</td><td>24,439.819 &mu;s</td><td>1,339.629 &mu;s</td>
+</tr><tr><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>148,599.67 &mu;s</td><td>11,653.893 &mu;s</td><td>638.789 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>544.12 &mu;s</td><td>200.435 &mu;s</td><td>10.987 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>399.58 &mu;s</td><td>162.817 &mu;s</td><td>8.925 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>139.33 &mu;s</td><td>16.592 &mu;s</td><td>0.909 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>3,114.69 &mu;s</td><td>173.131 &mu;s</td><td>9.490 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>2,558.02 &mu;s</td><td>255.041 &mu;s</td><td>13.980 &mu;s</td>
+</tr><tr><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>2,359.01 &mu;s</td><td>973.752 &mu;s</td><td>53.375 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,742.91 &mu;s</td><td>841.516 &mu;s</td><td>46.126 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,893.10 &mu;s</td><td>2,395.738 &mu;s</td><td>131.318 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,309.75 &mu;s</td><td>565.934 &mu;s</td><td>31.021 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>958.88 &mu;s</td><td>197.755 &mu;s</td><td>10.840 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>915.42 &mu;s</td><td>98.566 &mu;s</td><td>5.403 &mu;s</td>
+</tr><tr><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>893.60 &mu;s</td><td>120.595 &mu;s</td><td>6.610 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>29,758.33 &mu;s</td><td>13,281.385 &mu;s</td><td>727.998 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,262.59 &mu;s</td><td>477.888 &mu;s</td><td>26.195 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>91.43 &mu;s</td><td>171.698 &mu;s</td><td>9.411 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>382,841.60 &mu;s</td><td>192,043.104 &mu;s</td><td>10,526.531 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>254,272.97 &mu;s</td><td>142,723.921 &mu;s</td><td>7,823.180 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>50,404.14 &mu;s</td><td>10,909.626 &mu;s</td><td>597.993 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>633.28 &mu;s</td><td>162.123 &mu;s</td><td>8.887 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,100.56 &mu;s</td><td>345.155 &mu;s</td><td>18.919 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>133.78 &mu;s</td><td>18.374 &mu;s</td><td>1.007 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>4,196.76 &mu;s</td><td>1,531.861 &mu;s</td><td>83.966 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>4,102.10 &mu;s</td><td>1,022.634 &mu;s</td><td>56.054 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>1,443.89 &mu;s</td><td>374.308 &mu;s</td><td>20.517 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,899.00 &mu;s</td><td>2,654.535 &mu;s</td><td>145.504 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>3,501.77 &mu;s</td><td>2,864.696 &mu;s</td><td>157.024 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,354.48 &mu;s</td><td>331.946 &mu;s</td><td>18.195 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>1,009.49 &mu;s</td><td>81.607 &mu;s</td><td>4.473 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>1,616.67 &mu;s</td><td>274.731 &mu;s</td><td>15.059 &mu;s</td>
+</tr><tr><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>825.24 &mu;s</td><td>283.504 &mu;s</td><td>15.540 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>26,559.82 &mu;s</td><td>7,634.800 &mu;s</td><td>418.489 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,293.11 &mu;s</td><td>1,070.167 &mu;s</td><td>58.659 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>90.45 &mu;s</td><td>133.624 &mu;s</td><td>7.324 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>384,477.27 &mu;s</td><td>65,209.291 &mu;s</td><td>3,574.341 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>254,272.87 &mu;s</td><td>76,980.263 &mu;s</td><td>4,219.548 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>24,489.62 &mu;s</td><td>15,941.734 &mu;s</td><td>873.820 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>629.38 &mu;s</td><td>95.764 &mu;s</td><td>5.249 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,012.49 &mu;s</td><td>69.768 &mu;s</td><td>3.824 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>137.26 &mu;s</td><td>4.778 &mu;s</td><td>0.262 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>4,124.89 &mu;s</td><td>444.193 &mu;s</td><td>24.348 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>3,991.70 &mu;s</td><td>1,811.548 &mu;s</td><td>99.297 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>627.23 &mu;s</td><td>184.295 &mu;s</td><td>10.102 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,676.70 &mu;s</td><td>338.558 &mu;s</td><td>18.557 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>3,668.83 &mu;s</td><td>6,719.361 &mu;s</td><td>368.311 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,319.44 &mu;s</td><td>490.682 &mu;s</td><td>26.896 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>728.87 &mu;s</td><td>1,278.449 &mu;s</td><td>70.076 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>1,634.35 &mu;s</td><td>287.292 &mu;s</td><td>15.747 &mu;s</td>
+</tr><tr><td>addWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>421.73 &mu;s</td><td>100.565 &mu;s</td><td>5.512 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>26,473.72 &mu;s</td><td>9,551.541 &mu;s</td><td>523.552 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,435.75 &mu;s</td><td>84.680 &mu;s</td><td>4.642 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>69.17 &mu;s</td><td>34.805 &mu;s</td><td>1.908 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>385,832.93 &mu;s</td><td>116,259.833 &mu;s</td><td>6,372.594 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>353,122.40 &mu;s</td><td>82,085.539 &mu;s</td><td>4,499.385 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>148,287.03 &mu;s</td><td>38,367.519 &mu;s</td><td>2,103.053 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>615.63 &mu;s</td><td>100.581 &mu;s</td><td>5.513 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>395.76 &mu;s</td><td>43.691 &mu;s</td><td>2.395 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>134.97 &mu;s</td><td>19.921 &mu;s</td><td>1.092 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>4,104.67 &mu;s</td><td>1,755.674 &mu;s</td><td>96.234 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>4,142.93 &mu;s</td><td>1,107.433 &mu;s</td><td>60.702 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>2,335.77 &mu;s</td><td>85.249 &mu;s</td><td>4.673 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,968.62 &mu;s</td><td>4,849.410 &mu;s</td><td>265.813 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,904.87 &mu;s</td><td>1,287.081 &mu;s</td><td>70.549 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,347.17 &mu;s</td><td>61.062 &mu;s</td><td>3.347 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>1,002.32 &mu;s</td><td>122.174 &mu;s</td><td>6.697 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>988.76 &mu;s</td><td>228.891 &mu;s</td><td>12.546 &mu;s</td>
+</tr><tr><td>addScalarWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>895.86 &mu;s</td><td>114.751 &mu;s</td><td>6.290 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>25,745.67 &mu;s</td><td>1,490.502 &mu;s</td><td>81.699 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>1,404.81 &mu;s</td><td>245.630 &mu;s</td><td>13.464 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>66.72 &mu;s</td><td>33.116 &mu;s</td><td>1.815 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>374,957.07 &mu;s</td><td>135,650.865 &mu;s</td><td>7,435.482 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>354,494.10 &mu;s</td><td>121,140.756 &mu;s</td><td>6,640.134 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>126,307.47 &mu;s</td><td>50,272.380 &mu;s</td><td>2,755.599 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>672.33 &mu;s</td><td>172.952 &mu;s</td><td>9.480 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>400.13 &mu;s</td><td>111.200 &mu;s</td><td>6.095 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>136.93 &mu;s</td><td>28.794 &mu;s</td><td>1.578 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>4,239.82 &mu;s</td><td>1,350.527 &mu;s</td><td>74.027 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>3,928.05 &mu;s</td><td>634.591 &mu;s</td><td>34.784 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>1,486.05 &mu;s</td><td>549.824 &mu;s</td><td>30.138 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>dsharp</td><td>2,964.23 &mu;s</td><td>5,696.559 &mu;s</td><td>312.248 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>raw</td><td>2,784.85 &mu;s</td><td>1,271.345 &mu;s</td><td>69.687 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>reference</td><td>torchsharp</td><td>2,381.58 &mu;s</td><td>828.830 &mu;s</td><td>45.431 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>dsharp</td><td>1,008.04 &mu;s</td><td>124.976 &mu;s</td><td>6.850 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>raw</td><td>1,010.92 &mu;s</td><td>209.290 &mu;s</td><td>11.472 &mu;s</td>
+</tr><tr><td>addScalarWithAlphaInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>torch</td><td>torchsharp</td><td>480.10 &mu;s</td><td>75.208 &mu;s</td><td>4.122 &mu;s</td>
+</tr></tbody></table>
+</body>
+</html>

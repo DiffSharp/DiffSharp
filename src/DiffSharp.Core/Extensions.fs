@@ -40,6 +40,12 @@ module Array =
         else
             counts |> Array.ofSeq |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
 
+    // Create a 2D array using a flat representation
+    let initFlat2D i j f = Array.init (i*j) (fun ij -> f (ij/j) (ij%j))
+
+    // Create a 3D array using a flat representation
+    let initFlat3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
+
 /// Contains extensions to the F# Seq module. 
 module Seq =
 

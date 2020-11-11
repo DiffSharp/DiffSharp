@@ -248,6 +248,18 @@ type TestTensor () =
         Assert.CheckEqual(t4ValuesCorrect, t4.toArray() :?> float32[,,,])
 
     [<Test>]
+    member this.TestTensorCreateFromTensor4 () =
+        let t4Values = [[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]
+        let t4 = dsharp.tensor(t4Values)
+        let t4ShapeCorrect = [|1; 1; 1; 2|]
+        let t4DimCorrect = 4
+        let t4ValuesCorrect = array4D (List.map (List.map (List.map (List.map float32))) t4Values)
+
+        Assert.AreEqual(t4ShapeCorrect, t4.shape)
+        Assert.AreEqual(t4DimCorrect, t4.dim)
+        Assert.AreEqual(t4ValuesCorrect, t4.toArray())
+
+    [<Test>]
     member _.TestTensorToArray () =
         for combo in Combos.All do 
             let a = array2D [[1.; 2.]; [3.; 4.]]
@@ -765,11 +777,28 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
-            let t0StringCorrect = sprintf "Tensor 2%s" suffix
-            let t1StringCorrect = sprintf "Tensor [[2%s], \n [2%s]]" suffix suffix
-            let t2StringCorrect = sprintf "Tensor [[[2%s, 2%s]]]" suffix suffix
-            let t3StringCorrect = sprintf "Tensor [[1%s, 2%s], \n [3%s, 4%s]]" suffix suffix suffix suffix
-            let t4StringCorrect = sprintf "Tensor [[[[1%s]]]]" suffix
+            let dtypeText = 
+                if combo.dtype = Dtype.Default then
+                    ""
+                else
+                    sprintf ",dtype=%s" (combo.dtype.ToString())
+            let deviceText = 
+                if combo.device = Device.Default then
+                    ""
+                else
+                    sprintf ",device=%s" (combo.device.ToString())
+            let backendText = 
+                if combo.backend = Backend.Default then
+                    ""
+                else
+                    sprintf ",backend=%s" (combo.backend.ToString())
+
+            let extraText = dtypeText + deviceText + backendText
+            let t0StringCorrect = sprintf "tensor(2%s%s)" suffix extraText
+            let t1StringCorrect = sprintf "tensor([[2%s],\n        [2%s]]%s)" suffix suffix extraText
+            let t2StringCorrect = sprintf "tensor([[[2%s, 2%s]]]%s)" suffix suffix extraText
+            let t3StringCorrect = sprintf "tensor([[1%s, 2%s],\n        [3%s, 4%s]]%s)" suffix suffix suffix suffix extraText
+            let t4StringCorrect = sprintf "tensor([[[[1%s]]]]%s)" suffix extraText
             Assert.CheckEqual(t0StringCorrect, t0String)
             Assert.CheckEqual(t1StringCorrect, t1String)
             Assert.CheckEqual(t2StringCorrect, t2String)
@@ -778,12 +807,12 @@ type TestTensor () =
 
         let t0Bool = dsharp.tensor([ 0.5; 1.0 ], dtype=Dtype.Bool)
         let t0BoolToString = t0Bool.ToString()
-        let t0BoolToStringCorrect = sprintf "Tensor [false, true]" 
+        let t0BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
         Assert.CheckEqual(t0BoolToString, t0BoolToStringCorrect)
 
         let t1Bool = dsharp.tensor([ false; true ], dtype=Dtype.Bool)
         let t1BoolToString = t1Bool.ToString()
-        let t1BoolToStringCorrect = sprintf "Tensor [false, true]" 
+        let t1BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
         Assert.CheckEqual(t1BoolToString, t1BoolToStringCorrect)
 
     [<Test>]
@@ -1952,6 +1981,157 @@ type TestTensor () =
             Assert.CheckEqual(t1aCorrect, t1a)
 
     [<Test>]
+    member _.TestTensorMatMul11 () =
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        let t2 = dsharp.tensor([5.1067; 7.4633; 3.6027; 9.0070; 7.3012])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.dot(t2)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorMatMul12 () =
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.expand([1;5]).matmul(t2).squeeze(0)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorMatMul13 () =
+        // 5 --> 1x5 --> 3x1x5 (batching expansion)
+        let t1 = dsharp.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
+        
+        // 3x5x2 (batch dimension is 3)
+        let t2 = dsharp.tensor([[[5.1067; 0.0681];
+                                 [7.4633; 3.6027];
+                                 [9.0070; 7.3012];
+                                 [2.6639; 2.8728];
+                                 [7.9229; 2.3695]];
+                                [[1.1067; 0.0681];
+                                 [2.4633; 3.6027];
+                                 [3.0070; 7.3012];
+                                 [4.6639; 2.8728];
+                                 [5.9229; 2.3695]];
+                                [[7.1067; 0.0681];
+                                 [8.4633; 3.6027];
+                                 [7.0070; 7.3012];
+                                 [8.6639; 2.8728];
+                                 [7.9229; 2.3695]]])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.expand([3;1;5]).matmul(t2).squeeze(1)
+
+        Assert.AreEqual([|3;2|], t3.shape)
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorMatMul21 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]])
+        let t2 = dsharp.tensor([0.0681; 3.6027; 7.3012; 2.8728; 2.3695])
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.matmul(t2.unsqueeze(1)).squeeze(1)
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorMatMul31 () =
+        //2 x 2 x 5
+        let t1 = dsharp.tensor([[[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                 [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]];
+                                [[9.0766; 4.3030; 2.1732; 8.9448; 1.1028];
+                                 [3.1067; 5.4633; 3.6027; 9.0070; 7.3012]]])
+        
+        // 5 --> 5x1 (matmul expand) -> 2x5x1 (batch expand)
+        let t2 = dsharp.tensor([0.0681; 3.6027; 7.3012; 2.8728; 2.3695])
+        // 2x2x5 * 2x5x1 --> 2x2x1 --> 2x2 (reverse matmul expand)
+        let t3 = t1.matmul(t2)
+        let t3Correct = t1.matmul(t2.unsqueeze(1)).squeeze(2)
+
+        Assert.AreEqual([|2;2|], t3.shape)
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member _.TestTensorMatMul33 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.expand([| 6;3;5 |])
+        let t2Expanded = t2.expand([| 6;5;2 |])
+        let t3Unexpanded = t1.matmul(t2)
+        let t3 = t1Expanded.matmul(t2Expanded)
+        let t3Correct = t3Unexpanded.expand([| 6;3;2 |])
+
+        Assert.True(t3.allclose(t3Correct, 0.001))
+
+    [<Test>]
+    member this.TestTensorMatMul44 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.expand([| 2;6;3;5 |])
+        let t2Expanded = t2.expand([| 2;6;5;2 |])
+        let t3Unexpanded = t1.matmul(t2)
+        let t3 = t1Expanded.matmul(t2Expanded)
+        let t3Correct = t3Unexpanded.expand([| 2;6;3;2 |])
+
+        Assert.True(t3.allclose(t3Correct, 0.0001))
+
+    [<Test>]
+    member this.TestTensorMatMulBroadcast1 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.expand([| 3;5 |])
+        let t2Expanded = t2.expand([| 2;6;5;2 |])
+        let t3Unexpanded = t1.matmul(t2)
+        let t3 = t1Expanded.matmul(t2Expanded)
+        let t3Correct = t3Unexpanded.expand([| 2;6;3;2 |])
+
+        Assert.True(t3.allclose(t3Correct, 0.00001))
+
+    [<Test>]
+    member this.TestTensorMatMulBroadcast2 () =
+        let t1 = dsharp.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
+                                [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
+                                [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
+        let t2 = dsharp.tensor([[5.1067; 0.0681];
+                                [7.4633; 3.6027];
+                                [9.0070; 7.3012];
+                                [2.6639; 2.8728];
+                                [7.9229; 2.3695]])
+
+        let t1Expanded = t1.expand([| 2;6;3;5 |])
+        let t2Expanded = t2.expand([| 2;1;5;2 |])
+        let t3Unexpanded = t1.matmul(t2)
+        let t3 = t1Expanded.matmul(t2Expanded)
+        let t3Correct = t3Unexpanded.expand([| 2;6;3;2 |])
+
+        Assert.True(t3.allclose(t3Correct, 0.00001))
+
     member _.TestTensorMaxPool1D () =
         for combo in Combos.FloatingPoint do
             let t = combo.tensor([[[-2.1704, -1.1558,  2.5995,  1.3858, -1.3157, -0.3179,  0.9593,  -2.1432,  0.7169, -1.7999],
@@ -4373,7 +4553,6 @@ type TestTensor () =
             Assert.CheckEqual(t1Transpose.dtype, combo.dtype)
             Assert.CheckEqual(t2TransposeTranspose.dtype, combo.dtype)
 
-    [<Test>]
     member _.TestTensorSignT () =
         // Test all signed types
         for combo in Combos.SignedIntegralAndFloatingPoint do 
