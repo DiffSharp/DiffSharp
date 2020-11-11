@@ -1,0 +1,211 @@
+``` ini
+
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.17134.1792 (1803/April2018Update/Redstone4)
+Intel Xeon CPU E5-1620 0 3.60GHz, 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.1.403
+  [Host]   : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT DEBUG
+  ShortRun : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
+
+Job=ShortRun  IterationCount=3  LaunchCount=1  
+WarmupCount=3  
+
+```
+|                    Method | tensorSize |   dtype | device |   backend |     tlayer |            Mean |            Error |        StdDev |
+|-------------------------- |----------- |-------- |------- |---------- |----------- |----------------:|-----------------:|--------------:|
+|               **fromCpuData** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |   **333,626.60 μs** |   **515,083.638 μs** | **28,233.472 μs** |
+|               **fromCpuData** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |   **166,712.80 μs** |   **188,305.408 μs** | **10,321.655 μs** |
+|               **fromCpuData** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **65.83 μs** |        **13.731 μs** |      **0.753 μs** |
+|               **fromCpuData** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **684,334.40 μs** |   **287,232.271 μs** | **15,744.170 μs** |
+|               **fromCpuData** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **419,278.40 μs** |    **74,071.099 μs** |  **4,060.087 μs** |
+|               **fromCpuData** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |   **105,972.35 μs** |    **46,074.675 μs** |  **2,525.508 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |     **3,066.42 μs** |     **2,320.035 μs** |    **127.169 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |     **1,778.77 μs** |       **918.062 μs** |     **50.322 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **136.57 μs** |        **49.796 μs** |      **2.729 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **5,956.59 μs** |     **1,019.806 μs** |     **55.899 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **4,725.26 μs** |     **1,039.631 μs** |     **56.986 μs** |
+|               **fromCpuData** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **957.18 μs** |       **224.528 μs** |     **12.307 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **3,001.69 μs** |     **2,646.741 μs** |    **145.077 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,837.78 μs** |       **683.574 μs** |     **37.469 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,422.97 μs** |     **1,402.331 μs** |     **76.867 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **1,228.71 μs** |     **1,949.395 μs** |    **106.853 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |     **1,149.49 μs** |       **265.173 μs** |     **14.535 μs** |
+|               **fromCpuData** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |        **25.72 μs** |         **7.484 μs** |      **0.410 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|                     **zeros** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |   **233,924.57 μs** |    **38,116.353 μs** |  **2,089.286 μs** |
+|                     **zeros** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |   **235,335.70 μs** |   **100,755.382 μs** |  **5,522.742 μs** |
+|                     **zeros** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **65.51 μs** |        **38.631 μs** |      **2.118 μs** |
+|                     **zeros** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **841,048.03 μs** |   **824,758.078 μs** | **45,207.773 μs** |
+|                     **zeros** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **671,280.57 μs** |   **380,020.381 μs** | **20,830.199 μs** |
+|                     **zeros** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |   **654,681.93 μs** |   **112,095.838 μs** |  **6,144.351 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **163.14 μs** |         **4.288 μs** |      **0.235 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **165.33 μs** |        **52.359 μs** |      **2.870 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **137.34 μs** |        **38.872 μs** |      **2.131 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **562.73 μs** |       **185.202 μs** |     **10.152 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |       **576.99 μs** |        **75.357 μs** |      **4.131 μs** |
+|                     **zeros** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **527.60 μs** |       **286.136 μs** |     **15.684 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,367.84 μs** |       **592.103 μs** |     **32.455 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,333.49 μs** |       **709.681 μs** |     **38.900 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,313.88 μs** |       **142.122 μs** |      **7.790 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |        **16.69 μs** |         **0.600 μs** |      **0.033 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |        **17.08 μs** |         **4.505 μs** |      **0.247 μs** |
+|                     **zeros** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |        **15.25 μs** |         **3.782 μs** |      **0.207 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|                      **rand** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** | **3,556,068.33 μs** |   **670,224.785 μs** | **36,737.282 μs** |
+|                      **rand** |         **16** | **float32** |    **cpu** | **reference** |        **raw** | **3,583,032.43 μs** | **1,021,917.589 μs** | **56,014.751 μs** |
+|                      **rand** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **65.94 μs** |        **18.448 μs** |      **1.011 μs** |
+|                      **rand** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** | **2,183,681.43 μs** |    **92,431.998 μs** |  **5,066.510 μs** |
+|                      **rand** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** | **2,203,336.53 μs** |   **544,670.817 μs** | **29,855.245 μs** |
+|                      **rand** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** | **2,190,876.87 μs** |   **433,892.218 μs** | **23,783.097 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **374.40 μs** |       **111.335 μs** |      **6.103 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **367.01 μs** |        **64.297 μs** |      **3.524 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **132.91 μs** |        **17.901 μs** |      **0.981 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **592.63 μs** |       **362.572 μs** |     **19.874 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |       **595.93 μs** |       **263.447 μs** |     **14.440 μs** |
+|                      **rand** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **552.89 μs** |        **72.730 μs** |      **3.987 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,377.90 μs** |       **201.393 μs** |     **11.039 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,338.02 μs** |       **171.557 μs** |      **9.404 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,277.64 μs** |       **514.214 μs** |     **28.186 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |        **14.99 μs** |         **4.733 μs** |      **0.259 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |        **14.44 μs** |         **1.715 μs** |      **0.094 μs** |
+|                      **rand** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |        **13.86 μs** |         **1.119 μs** |      **0.061 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|                    **matmul** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **57,057.47 μs** |     **9,364.470 μs** |    **513.298 μs** |
+|                    **matmul** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **66.31 μs** |        **32.546 μs** |      **1.784 μs** |
+|                    **matmul** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **336,729.30 μs** |    **69,672.648 μs** |  **3,818.993 μs** |
+|                    **matmul** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |    **72,718.17 μs** |    **72,824.263 μs** |  **3,991.744 μs** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |     **5,755.53 μs** |     **1,919.874 μs** |    **105.235 μs** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **135.21 μs** |        **31.432 μs** |      **1.723 μs** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **2,868.20 μs** |       **412.456 μs** |     **22.608 μs** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **628.76 μs** |       **454.251 μs** |     **24.899 μs** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **6,739.88 μs** |       **283.718 μs** |     **15.552 μs** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,371.93 μs** |       **225.211 μs** |     **12.345 μs** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **315.50 μs** |     **1,590.441 μs** |     **87.177 μs** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |              **NA** |               **NA** |            **NA** |
+|                    **matmul** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |        **56.44 μs** |        **30.753 μs** |      **1.686 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|                  **addition** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **16,272.11 μs** |     **2,344.387 μs** |    **128.504 μs** |
+|                  **addition** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |     **1,366.23 μs** |       **148.490 μs** |      **8.139 μs** |
+|                  **addition** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **65.80 μs** |         **8.880 μs** |      **0.487 μs** |
+|                  **addition** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **115,989.73 μs** |   **242,822.886 μs** | **13,309.942 μs** |
+|                  **addition** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |    **62,017.27 μs** |     **9,165.561 μs** |    **502.395 μs** |
+|                  **addition** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |    **55,170.67 μs** |    **19,859.649 μs** |  **1,088.574 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **996.01 μs** |       **141.404 μs** |      **7.751 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **764.52 μs** |       **216.839 μs** |     **11.886 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **139.06 μs** |        **29.843 μs** |      **1.636 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **1,842.30 μs** |       **852.755 μs** |     **46.742 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **1,533.88 μs** |       **703.420 μs** |     **38.557 μs** |
+|                  **addition** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |     **1,410.13 μs** |        **40.421 μs** |      **2.216 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **3,304.84 μs** |     **3,190.497 μs** |    **174.882 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **3,115.26 μs** |     **1,674.015 μs** |     **91.758 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,397.92 μs** |        **95.010 μs** |      **5.208 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **882.38 μs** |       **163.199 μs** |      **8.946 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |       **836.35 μs** |       **128.501 μs** |      **7.044 μs** |
+|                  **addition** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **830.73 μs** |       **108.604 μs** |      **5.953 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|                 **addScalar** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **15,923.12 μs** |     **5,339.620 μs** |    **292.683 μs** |
+|                 **addScalar** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |       **907.39 μs** |       **456.194 μs** |     **25.006 μs** |
+|                 **addScalar** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |       **104.83 μs** |       **293.359 μs** |     **16.080 μs** |
+|                 **addScalar** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **256,379.20 μs** |    **88,383.152 μs** |  **4,844.579 μs** |
+|                 **addScalar** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **182,961.27 μs** |    **24,439.819 μs** |  **1,339.629 μs** |
+|                 **addScalar** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |   **148,599.67 μs** |    **11,653.893 μs** |    **638.789 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **544.12 μs** |       **200.435 μs** |     **10.987 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **399.58 μs** |       **162.817 μs** |      **8.925 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **139.33 μs** |        **16.592 μs** |      **0.909 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **3,114.69 μs** |       **173.131 μs** |      **9.490 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **2,558.02 μs** |       **255.041 μs** |     **13.980 μs** |
+|                 **addScalar** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |     **2,359.01 μs** |       **973.752 μs** |     **53.375 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,742.91 μs** |       **841.516 μs** |     **46.126 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,893.10 μs** |     **2,395.738 μs** |    **131.318 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,309.75 μs** |       **565.934 μs** |     **31.021 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **958.88 μs** |       **197.755 μs** |     **10.840 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |       **915.42 μs** |        **98.566 μs** |      **5.403 μs** |
+|                 **addScalar** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **893.60 μs** |       **120.595 μs** |      **6.610 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **29,758.33 μs** |    **13,281.385 μs** |    **727.998 μs** |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |     **2,262.59 μs** |       **477.888 μs** |     **26.195 μs** |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **91.43 μs** |       **171.698 μs** |      **9.411 μs** |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **382,841.60 μs** |   **192,043.104 μs** | **10,526.531 μs** |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **254,272.97 μs** |   **142,723.921 μs** |  **7,823.180 μs** |
+|              **addWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |    **50,404.14 μs** |    **10,909.626 μs** |    **597.993 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **633.28 μs** |       **162.123 μs** |      **8.887 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |     **1,100.56 μs** |       **345.155 μs** |     **18.919 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **133.78 μs** |        **18.374 μs** |      **1.007 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **4,196.76 μs** |     **1,531.861 μs** |     **83.966 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **4,102.10 μs** |     **1,022.634 μs** |     **56.054 μs** |
+|              **addWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |     **1,443.89 μs** |       **374.308 μs** |     **20.517 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,899.00 μs** |     **2,654.535 μs** |    **145.504 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **3,501.77 μs** |     **2,864.696 μs** |    **157.024 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,354.48 μs** |       **331.946 μs** |     **18.195 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **1,009.49 μs** |        **81.607 μs** |      **4.473 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |     **1,616.67 μs** |       **274.731 μs** |     **15.059 μs** |
+|              **addWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **825.24 μs** |       **283.504 μs** |     **15.540 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **26,559.82 μs** |     **7,634.800 μs** |    **418.489 μs** |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |     **2,293.11 μs** |     **1,070.167 μs** |     **58.659 μs** |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **90.45 μs** |       **133.624 μs** |      **7.324 μs** |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **384,477.27 μs** |    **65,209.291 μs** |  **3,574.341 μs** |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **254,272.87 μs** |    **76,980.263 μs** |  **4,219.548 μs** |
+|       **addWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |    **24,489.62 μs** |    **15,941.734 μs** |    **873.820 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **629.38 μs** |        **95.764 μs** |      **5.249 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |     **1,012.49 μs** |        **69.768 μs** |      **3.824 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **137.26 μs** |         **4.778 μs** |      **0.262 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **4,124.89 μs** |       **444.193 μs** |     **24.348 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **3,991.70 μs** |     **1,811.548 μs** |     **99.297 μs** |
+|       **addWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **627.23 μs** |       **184.295 μs** |     **10.102 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,676.70 μs** |       **338.558 μs** |     **18.557 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **3,668.83 μs** |     **6,719.361 μs** |    **368.311 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,319.44 μs** |       **490.682 μs** |     **26.896 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |       **728.87 μs** |     **1,278.449 μs** |     **70.076 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |     **1,634.35 μs** |       **287.292 μs** |     **15.747 μs** |
+|       **addWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **421.73 μs** |       **100.565 μs** |      **5.512 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **26,473.72 μs** |     **9,551.541 μs** |    **523.552 μs** |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |     **1,435.75 μs** |        **84.680 μs** |      **4.642 μs** |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **69.17 μs** |        **34.805 μs** |      **1.908 μs** |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **385,832.93 μs** |   **116,259.833 μs** |  **6,372.594 μs** |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **353,122.40 μs** |    **82,085.539 μs** |  **4,499.385 μs** |
+|        **addScalarWithAlpha** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |   **148,287.03 μs** |    **38,367.519 μs** |  **2,103.053 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **615.63 μs** |       **100.581 μs** |      **5.513 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **395.76 μs** |        **43.691 μs** |      **2.395 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **134.97 μs** |        **19.921 μs** |      **1.092 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **4,104.67 μs** |     **1,755.674 μs** |     **96.234 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **4,142.93 μs** |     **1,107.433 μs** |     **60.702 μs** |
+|        **addScalarWithAlpha** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |     **2,335.77 μs** |        **85.249 μs** |      **4.673 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,968.62 μs** |     **4,849.410 μs** |    **265.813 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,904.87 μs** |     **1,287.081 μs** |     **70.549 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,347.17 μs** |        **61.062 μs** |      **3.347 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **1,002.32 μs** |       **122.174 μs** |      **6.697 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |       **988.76 μs** |       **228.891 μs** |     **12.546 μs** |
+|        **addScalarWithAlpha** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **895.86 μs** |       **114.751 μs** |      **6.290 μs** |
+|                           |            |         |        |           |            |                 |                  |               |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** |     **dsharp** |    **25,745.67 μs** |     **1,490.502 μs** |     **81.699 μs** |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** |        **raw** |     **1,404.81 μs** |       **245.630 μs** |     **13.464 μs** |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** | **reference** | **torchsharp** |        **66.72 μs** |        **33.116 μs** |      **1.815 μs** |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** |     **dsharp** |   **374,957.07 μs** |   **135,650.865 μs** |  **7,435.482 μs** |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** |        **raw** |   **354,494.10 μs** |   **121,140.756 μs** |  **6,640.134 μs** |
+| **addScalarWithAlphaInPlace** |         **16** | **float32** |    **cpu** |     **torch** | **torchsharp** |   **126,307.47 μs** |    **50,272.380 μs** |  **2,755.599 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** |     **dsharp** |       **672.33 μs** |       **172.952 μs** |      **9.480 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** |        **raw** |       **400.13 μs** |       **111.200 μs** |      **6.095 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** | **reference** | **torchsharp** |       **136.93 μs** |        **28.794 μs** |      **1.578 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **4,239.82 μs** |     **1,350.527 μs** |     **74.027 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** |        **raw** |     **3,928.05 μs** |       **634.591 μs** |     **34.784 μs** |
+| **addScalarWithAlphaInPlace** |       **2048** | **float32** |    **cpu** |     **torch** | **torchsharp** |     **1,486.05 μs** |       **549.824 μs** |     **30.138 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** |     **dsharp** |     **2,964.23 μs** |     **5,696.559 μs** |    **312.248 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** |        **raw** |     **2,784.85 μs** |     **1,271.345 μs** |     **69.687 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** | **reference** | **torchsharp** |     **2,381.58 μs** |       **828.830 μs** |     **45.431 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** |     **dsharp** |     **1,008.04 μs** |       **124.976 μs** |      **6.850 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** |        **raw** |     **1,010.92 μs** |       **209.290 μs** |     **11.472 μs** |
+| **addScalarWithAlphaInPlace** |      **65536** | **float32** |    **cpu** |     **torch** | **torchsharp** |       **480.10 μs** |        **75.208 μs** |      **4.122 μs** |
+
+Benchmarks with issues:
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=16, dtype=float32, device=cpu, backend=reference, tlayer=raw]
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=16, dtype=float32, device=cpu, backend=torch, tlayer=raw]
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=2048, dtype=float32, device=cpu, backend=reference, tlayer=raw]
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=2048, dtype=float32, device=cpu, backend=torch, tlayer=raw]
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=65536, dtype=float32, device=cpu, backend=reference, tlayer=raw]
+  BasicTensorOps.matmul: ShortRun(IterationCount=3, LaunchCount=1, WarmupCount=3) [tensorSize=65536, dtype=float32, device=cpu, backend=torch, tlayer=raw]
