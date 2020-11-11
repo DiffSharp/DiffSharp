@@ -3,7 +3,6 @@
   <PropertyGroup>
     <!-- configure these manually -->
     <DIFFSHARP_TESTGPU>false</DIFFSHARP_TESTGPU>
-    <UPDATEPYTHON>true</UPDATEPYTHON>
     <TINY>true</TINY>
   </PropertyGroup>
 
@@ -12,41 +11,39 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants Condition="'$(TINY)' == 'true'">$(DefineConstants);TINY</DefineConstants>
-    <DefineConstants Condition="'$(UPDATEPYTHON)' == 'true'">$(DefineConstants);UPDATEPYTHON</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Helpers.fs" />
+    <Compile Include="PerfMatrix.fs" />
     <Compile Include="BasicTensorOpsPerf.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-    <PackageReference Include="pythonnet_netstandard_py38_win" Version="2.5.1" Condition="'$(UPDATEPYTHON)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
     
     <!-- note, python torch can't easily co-habitate with TorchSHarp torch due to conflicting native binaries -->
-    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" Condition="'$(UPDATEPYTHON)' != 'true'" />
-    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" Condition="'$(UPDATEPYTHON)' != 'true'" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
   <!-- Choose the appropriate version of libtorch for our current OS and environment -->
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
-    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" Condition="'$(UPDATEPYTHON)' != 'true'" />
+    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
-    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" Condition="'$(UPDATEPYTHON)' != 'true'" />
+    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
-    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" Condition="'$(UPDATEPYTHON)' != 'true'" />
+    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
 </Project>

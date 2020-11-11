@@ -7,7 +7,6 @@
 
 namespace DiffSharp.Benchmarks
 
-#if !UPDATEPYTHON
 open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Configs
 
@@ -16,13 +15,7 @@ open DiffSharp.Benchmarks
 
 open System
 open System.Threading
-open BenchmarkDotNet.Columns
-open BenchmarkDotNet.Running
-open BenchmarkDotNet.Order
 open DiffSharp.Backends
-open DiffSharp.Data
-open DiffSharp.Model
-open DiffSharp.Optim
 open TorchSharp
 open TorchSharp.Tensor
 
@@ -90,12 +83,12 @@ type BasicTensorOps() =
             ttmat <- match rawtmat.Handle with :? TorchSharp.Tensor.TorchTensor as tt -> tt | _ -> Unchecked.defaultof<_>
             tt0 <- TorchSharp.TorchScalar.op_Implicit(1)
         | _ -> ()
-        N/perf.tensorSize
+        perf.workloadSize/perf.tensorSize
 
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON fromCpuData
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(524) else failwith "no time available" // PYTHON fromCpuData
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
@@ -129,14 +122,14 @@ type BasicTensorOps() =
         let n = perf.configure(Backend.Reference) 
         for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 
-#if TINY
+#if !TINY
     //--------------------------------------------------------------
     // zeros
 
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON zeros
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(507) else failwith "no time available" // PYTHON zeros
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
@@ -176,7 +169,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON ones
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(506) else failwith "no time available" // PYTHON ones
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
@@ -253,7 +246,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
     member perf.addition_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON addition
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(506) else failwith "no time available" // PYTHON addition
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
@@ -496,64 +489,5 @@ type Training() =
         ()
 
 *)
-
-
-#else
-open BenchmarkDotNet.Attributes
-open BenchmarkDotNet.Configs
-open DiffSharp.Benchmarks
-
-[<ShortRunJob>]
-[<MarkdownExporterAttribute.GitHub; AsciiDocExporter; HtmlExporter; CsvExporter; RPlotExporter>]
-[<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)>]
-[<CategoriesColumn; BaselineColumn>]
-type BasicTensorOps() = 
-
-    inherit BasicTensorTestMatrix()
-
-    // The tests here must match the ones above
-    [<Benchmark; BenchmarkCategory("fromCpuData")>]
-    member perf.fromCpuData_PyTorch() = 
-        let n = perf.numIterations
-        execPython(sprintf """
-import torch
-for x in range(%d):
-    torch.tensor(range(%d), dtype=torch.%s, device="%s")
-""" n perf.tensorSize perf.dtypeName perf.deviceName )
-
-    [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_PyTorch() = 
-        let n = perf.numIterations
-        execPython(sprintf """
-import torch
-t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
-res = t
-for x in range(%d):
-    res = t + t")
-""" perf.tensorSize perf.dtypeName perf.deviceName n )
-
-    [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_PyTorch() = 
-        let n = perf.numIterations
-        execPython(sprintf """
-import torch
-res = torch.tensor(1)
-for x in range(%d):
-    res = torch.zeros(%d, dtype=torch.%s, device="%s")")
-"""  n perf.tensorSize perf.dtypeName perf.deviceName )
-
-    [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_PyTorch() = 
-        let n = perf.numIterations
-        execPython(sprintf """
-import torch
-res = torch.tensor(1)
-for x in range(%d):
-    res = torch.ones(%d, dtype=torch.%s, device="%s")")
-"""  n perf.tensorSize perf.dtypeName perf.deviceName )
-
-
-    static member ThisFile = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
-#endif
 
 

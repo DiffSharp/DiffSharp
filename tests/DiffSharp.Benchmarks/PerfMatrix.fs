@@ -5,27 +5,6 @@ open BenchmarkDotNet.Configs
 open BenchmarkDotNet.Columns
 open BenchmarkDotNet.Running
 open BenchmarkDotNet.Order
-open Python
-open Python.Runtime
-
-[<AutoOpen>]
-module PythonHelpers =
-    //#r "nuget: pythonnet_netstandard_py38_win"
-    open System
-    open Python.Runtime
-    let execPython(code) = 
-        // your mileage may differ
-        if Environment.GetEnvironmentVariable("COMPUTERNAME") = "MSRC-3617253" then
-            Environment.SetEnvironmentVariable("PYTHONHOME", @"C:\ProgramData\Anaconda3\", EnvironmentVariableTarget.User)
-        if Environment.GetEnvironmentVariable("PYTHONHOME") = null then failwith "expect PYTHONHOME to be set"
-        use gil = Py.GIL()
-        use scope = Py.CreateScope()
-        //scope.Exec("import torch")
-        scope.Exec(code) |> ignore
-//    execPython("""
-//for x in range(5):
-//    torch.tensor(range(5))
-//""")
 
 type BasicTensorTestMatrix() = 
 
