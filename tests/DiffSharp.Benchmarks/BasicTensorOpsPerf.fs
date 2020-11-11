@@ -1,29 +1,30 @@
-﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
+// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
 // Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 // Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
 // Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
 // Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
 // This code is licensed under the BSD license (see LICENSE file for details)
 
-namespace DiffSharp.Benchmarks.BasicTensorOps
+namespace DiffSharp.Benchmarks
+
+#if !UPDATEPYTHON
+open BenchmarkDotNet.Attributes
+open BenchmarkDotNet.Configs
+
+open DiffSharp
+open DiffSharp.Benchmarks
 
 open System
-open DiffSharp
+open System.Threading
+open BenchmarkDotNet.Columns
+open BenchmarkDotNet.Running
+open BenchmarkDotNet.Order
 open DiffSharp.Backends
 open DiffSharp.Data
 open DiffSharp.Model
 open DiffSharp.Optim
 open TorchSharp
 open TorchSharp.Tensor
-open BenchmarkDotNet.Attributes
-open BenchmarkDotNet.Columns
-open BenchmarkDotNet.Configs
-open BenchmarkDotNet.Running
-open BenchmarkDotNet.Order
-open Python
-open Python.Runtime
-
-
 
 /// For testing perf costs of the TorchSharp layer - going straght to the C++
 module Ext =
@@ -34,30 +35,12 @@ module Ext =
     [<DllImport("LibTorchSharp")>]
     extern IntPtr THSTensor_add(IntPtr tensor, IntPtr trg, IntPtr alpha);
 
-[<AutoOpen>]
-module PythonHelpers =
-    //#r "nuget: pythonnet_netstandard_py38_win"
-    open System
-    open Python.Runtime
-    let execPython(code) = 
-        // your mileage may differ
-        if Environment.GetEnvironmentVariable("COMPUTERNAME") = "MSRC-3617253" then
-            Environment.SetEnvironmentVariable("PYTHONHOME", @"C:\ProgramData\Anaconda3\", EnvironmentVariableTarget.User)
-        if Environment.GetEnvironmentVariable("PYTHONHOME") = null then failwith "expect PYTHONHOME to be set"
-        use gil = Py.GIL()
-        use scope = Py.CreateScope()
-        //scope.Exec("import torch")
-        scope.Exec(code) |> ignore
-//    execPython("""
-//for x in range(5):
-//    torch.tensor(range(5))
-//""")
-
 [<ShortRunJob>]
 [<MarkdownExporterAttribute.GitHub; AsciiDocExporter; HtmlExporter; CsvExporter; RPlotExporter>]
 [<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)>]
-[<CategoriesColumn>]
+[<CategoriesColumn; BaselineColumn>]
 type BasicTensorOps() = 
+    inherit BasicTensorTestMatrix()
 
     let mutable dtype = Unchecked.defaultof<Dtype>
     let mutable device = Unchecked.defaultof<Device>
@@ -75,12 +58,10 @@ type BasicTensorOps() =
     let mutable ttmat = Unchecked.defaultof<TorchTensor>
     let mutable tt0 = Unchecked.defaultof<TorchScalar>
     
-    let mutable rawDataPython = Unchecked.defaultof<_>
     // store results temporarily to make sure nothing gets optimised away
     let mutable res = Unchecked.defaultof<Tensor>
     let mutable res3 = Unchecked.defaultof<_>
     let mutable res4 = Unchecked.defaultof<_>
-    let N = pown 2 18
 
     member perf.configure(backend) = 
         match box tt with 
@@ -95,7 +76,6 @@ type BasicTensorOps() =
                 | Dtype.Float64 -> Array.map double [| 1 .. perf.tensorSize |] :> Array
                 | Dtype.Int32 -> Array.map int32 [| 1 .. perf.tensorSize |] :> Array
                 | _ -> failwith "unknown dtype in perf suite"
-            rawDataPython <- sprintf "range(%d)"  perf.tensorSize
             t <- dsharp.tensor [| 1 .. perf.tensorSize |]
             let matSize = int(sqrt(float perf.tensorSize))
             tvec <- dsharp.randint (1, 10, [| matSize |])
@@ -112,30 +92,12 @@ type BasicTensorOps() =
         | _ -> ()
         N/perf.tensorSize
 
-    [<Params (2048)>] 
-    //[<Params (1, 16, 2048, 65536)>] 
-    member val public tensorSize = 0 with get, set
-
-    [<Params ("float32")>] 
-    //[<Params ("int32", "float32", "float64")>] 
-    member val public dtypeName = "" with get, set
-
-    [<Params ("cpu")>] 
-    //[<Params ("cpu", "gpu")>] 
-    member val public deviceName = "" with get, set
-
-    //--------------------------------------------------------------
-#if PYTHON
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
-        let n = perf.configure(Backend.Reference) 
-        execPython(sprintf """
-import torch
-for x in range(%d):
-    torch.tensor(%s)
-""" n rawDataPython)
-#endif
-    [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
+        // This code gets injected, see Program.fs
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON fromCpuData
+
+    [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -167,12 +129,16 @@ for x in range(%d):
         let n = perf.configure(Backend.Reference) 
         for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 
+#if TINY
     //--------------------------------------------------------------
     // zeros
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
+    member perf.zeros_PyTorch() = 
+        // This code gets injected, see Program.fs
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON zeros
+
+    [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -207,9 +173,12 @@ for x in range(%d):
     //--------------------------------------------------------------
     // ones
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
+    member perf.ones_PyTorch() = 
+        // This code gets injected, see Program.fs
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON ones
+
+    [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -246,7 +215,7 @@ for x in range(%d):
 
     // TODO: add python here
 
-    [<Benchmark(Baseline=true); BenchmarkCategory("rand")>]
+    [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -281,9 +250,12 @@ for x in range(%d):
     //--------------------------------------------------------------
     // addition
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
+    member perf.addition_PyTorch() = 
+        // This code gets injected, see Program.fs
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(520) else failwith "no time available" // PYTHON addition
+
+    [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -315,7 +287,7 @@ for x in range(%d):
 
     // TODO: add python here
 
-    [<Benchmark(Baseline=true); BenchmarkCategory("addScalar")>]
+    [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -346,7 +318,7 @@ for x in range(%d):
 
     // TODO: add python here
 
-    [<Benchmark(Baseline=true); BenchmarkCategory("addWithAlpha")>]
+    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -377,7 +349,7 @@ for x in range(%d):
 
     // TODO: add python here
 
-    [<Benchmark(Baseline=true); BenchmarkCategory("addInPlace")>]
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -404,14 +376,12 @@ for x in range(%d):
         for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
 
 
-
-
     //--------------------------------------------------------------
     // matmul
 
     // TODO: add python here
 
-    [<Benchmark(Baseline=true); BenchmarkCategory("matmul")>]
+    [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_TorchSharp() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do 
@@ -436,6 +406,7 @@ for x in range(%d):
     member perf.matmul_Tensor_Torch() = 
         let n = perf.configure(Backend.Torch) 
         for _ in 1 .. n do res  <- tmat.matmul(tmat)
+#endif
 
     //[<Benchmark>]
     //member perf.sub_DiffSharp() = let n = perf.configure() in for _ in 1 .. n do res <- t + t
@@ -469,6 +440,7 @@ for x in range(%d):
 
     //[<Benchmark>]
     //member perf.gradSinSum() = let n = perf.configure() in for _ in 1 .. n do res <- dsharp.grad (fun t -> (sin t).sum()) t
+
 
 (*
 [<ShortRunJob>]
@@ -524,3 +496,64 @@ type Training() =
         ()
 
 *)
+
+
+#else
+open BenchmarkDotNet.Attributes
+open BenchmarkDotNet.Configs
+open DiffSharp.Benchmarks
+
+[<ShortRunJob>]
+[<MarkdownExporterAttribute.GitHub; AsciiDocExporter; HtmlExporter; CsvExporter; RPlotExporter>]
+[<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)>]
+[<CategoriesColumn; BaselineColumn>]
+type BasicTensorOps() = 
+
+    inherit BasicTensorTestMatrix()
+
+    // The tests here must match the ones above
+    [<Benchmark; BenchmarkCategory("fromCpuData")>]
+    member perf.fromCpuData_PyTorch() = 
+        let n = perf.numIterations
+        execPython(sprintf """
+import torch
+for x in range(%d):
+    torch.tensor(range(%d), dtype=torch.%s, device="%s")
+""" n perf.tensorSize perf.dtypeName perf.deviceName )
+
+    [<Benchmark; BenchmarkCategory("addition")>]
+    member perf.addition_PyTorch() = 
+        let n = perf.numIterations
+        execPython(sprintf """
+import torch
+t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
+res = t
+for x in range(%d):
+    res = t + t")
+""" perf.tensorSize perf.dtypeName perf.deviceName n )
+
+    [<Benchmark; BenchmarkCategory("zeros")>]
+    member perf.zeros_PyTorch() = 
+        let n = perf.numIterations
+        execPython(sprintf """
+import torch
+res = torch.tensor(1)
+for x in range(%d):
+    res = torch.zeros(%d, dtype=torch.%s, device="%s")")
+"""  n perf.tensorSize perf.dtypeName perf.deviceName )
+
+    [<Benchmark; BenchmarkCategory("ones")>]
+    member perf.ones_PyTorch() = 
+        let n = perf.numIterations
+        execPython(sprintf """
+import torch
+res = torch.tensor(1)
+for x in range(%d):
+    res = torch.ones(%d, dtype=torch.%s, device="%s")")
+"""  n perf.tensorSize perf.dtypeName perf.deviceName )
+
+
+    static member ThisFile = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
+#endif
+
+
