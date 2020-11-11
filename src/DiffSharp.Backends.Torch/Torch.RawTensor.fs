@@ -468,8 +468,8 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         (t2 :?> TorchRawTensor).MakeLike(result)
 
     override t1.SubTT0(t2) = 
-        let t2v = t2.TorchTensor.Item()
-        let result = tt.Sub(t2v)
+        //let t2v = t2.TorchTensor.Item()
+        let result = tt.Sub(t2.TorchTensor)
         t1.MakeLike(result)
 
     override t1.MulTT(t2) = 
@@ -477,8 +477,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         t1.MakeLike(result)
 
     override t1.MulTT0(t2) = 
-        let t2v = t2.TorchTensor.Item()
-        let result = tt.Mul(t2v)
+        match dtype with 
+        | Dtype.Bool -> opNotSupported2 "MulTT0" dtype t2.Dtype
+        | _ ->
+        //let t2v = t2.TorchTensor.Item()
+        let result = tt.Mul(t2.TorchTensor)
         t1.MakeLike(result)
 
     override t1.DivTT(t2) = 
@@ -486,22 +489,27 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
         let result = tt.Div(t2.TorchTensor)
+        // see https://github.com/DiffSharp/DiffSharp/issues/239
+        let result = if dtype.IsIntegral then result.ToType(ScalarType.Int).ToType(toTorchType dtype) else result
         t1.MakeLike(result)
 
     override t1.DivT0T(t2) =
         match dtype with 
         | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
-        let t1v = t1.TorchTensor.Item()
-        let result = t1v / t2.TorchTensor
+        let result = tt / t2.TorchTensor // will broadcast
+        // see https://github.com/DiffSharp/DiffSharp/issues/239
+        let result = if dtype.IsIntegral then result.ToType(ScalarType.Int).ToType(toTorchType dtype) else result
         (t2 :?> TorchRawTensor).MakeLike(result)
 
     override t1.DivTT0(t2) = 
         match dtype with 
-        | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
+        | Dtype.Bool -> opNotSupported2 "DivTT0" dtype t2.Dtype
         | _ ->
-        let t2v = t2.TorchTensor.Item()
-        let result = tt.Div(t2v)
+        //let t2v = t2.TorchTensor.Item()
+        let result = tt.Div(t2.TorchTensor)
+        // see https://github.com/DiffSharp/DiffSharp/issues/239
+        let result = if dtype.IsIntegral then result.ToType(toTorchType dtype) else result
         t1.MakeLike(result)
 
     override t1.PowTT(t2) =
@@ -962,7 +970,7 @@ type TorchTensorOps<'T, 'T2>
     member _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, device), shape, dtype, device) :> RawTensor
 
     member _.Full(shape:Shape, value:obj, device) =
-        let t = zeros(toTorchShape shape, device)
+        let t = empty(toTorchShape shape, device)
         t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
         TorchRawTensor(t, shape, dtype, device) :> RawTensor
 

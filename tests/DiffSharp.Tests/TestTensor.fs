@@ -609,7 +609,7 @@ type TestTensor () =
             Assert.CheckEqual(tshapeCorrect, tshape)
             Assert.CheckEqual(tdtypeCorrect, tdtype)
 
-        for combo in Combos.All do
+        for combo in Combos.IntegralAndFloatingPoint do
             let t = combo.tensor([])
 
             let tAdd = t + 2
