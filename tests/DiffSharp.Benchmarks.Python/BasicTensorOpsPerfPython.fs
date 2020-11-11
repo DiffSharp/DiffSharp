@@ -110,5 +110,17 @@ for x in range(%d):
 """  perf.tensorSize perf.dtypeName perf.deviceName n )
 
 
+    [<Benchmark; BenchmarkCategory("addScalar")>]
+    member perf.addScalar_PyTorch() = 
+        let n = perf.numIterations * 100 // very small
+        execPython(sprintf """
+import torch
+t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
+res = t
+for x in range(%d):
+    res = t + 1
+"""  perf.tensorSize perf.dtypeName perf.deviceName n )
+
+
 
 

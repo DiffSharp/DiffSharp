@@ -89,7 +89,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(141) else failwith "no time available yet" // PYTHON fromCpuData
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(144) else failwith "no time available" // PYTHON fromCpuData
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
@@ -130,7 +130,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(144) else failwith "no time available yet" // PYTHON zeros
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(145) else failwith "no time available" // PYTHON zeros
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
@@ -171,7 +171,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(140) else failwith "no time available yet" // PYTHON ones
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(135) else failwith "no time available" // PYTHON ones
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
@@ -211,7 +211,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("rand")>]
     member perf.rand_PyTorch() = 
         // This code gets injected, see Program.fs
-        failwith "no time available yet" // PYTHON rand
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(317) else failwith "no time available" // PYTHON rand
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
@@ -251,7 +251,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
     member perf.addition_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(85) else failwith "no time available yet" // PYTHON addition
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(83) else failwith "no time available" // PYTHON addition
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
@@ -320,7 +320,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_PyTorch() = 
         // This code gets injected, see Program.fs
-        failwith "no time available yet" // PYTHON addWithAlpha
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(60) else failwith "no time available" // PYTHON addWithAlpha
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_TorchSharp() = 
@@ -354,7 +354,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_PyTorch() = 
         // This code gets injected, see Program.fs
-        failwith "no time available yet" // PYTHON addInPlace
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(52) else failwith "no time available" // PYTHON addInPlace
 
     // TODO: add python here
 
@@ -392,7 +392,7 @@ type BasicTensorOps() =
     member perf.matmul_PyTorch() = 
         // This code gets injected, see Program.fs
         failwith "no time available yet" // PYTHON matmul
-    // TODO: add python here
+    // TODO: add python for this
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_TorchSharp() = 
