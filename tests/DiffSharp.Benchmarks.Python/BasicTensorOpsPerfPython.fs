@@ -39,25 +39,15 @@ type BasicTensorOps() =
     // The tests here must match the ones above
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
-        let n = perf.numIterations
+        let n = perf.numIterations * 10 // small
         execPython(sprintf """
 for x in range(%d):
     torch.tensor(range(%d), dtype=torch.%s, device="%s")
 """ n perf.tensorSize perf.dtypeName perf.deviceName )
 
-    [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_PyTorch() = 
-        let n = perf.numIterations
-        execPython(sprintf """
-t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
-res = t
-for x in range(%d):
-    res = t + t
-""" perf.tensorSize perf.dtypeName perf.deviceName n )
-
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
-        let n = perf.numIterations
+        let n = perf.numIterations * 100 // very small
         execPython(sprintf """
 res = torch.tensor(1)
 for x in range(%d):
@@ -66,13 +56,58 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
-        let n = perf.numIterations
+        let n = perf.numIterations * 100 // very small
         execPython(sprintf """
 import torch
 res = torch.tensor(1)
 for x in range(%d):
     res = torch.ones(%d, dtype=torch.%s, device="%s")
 """  n perf.tensorSize perf.dtypeName perf.deviceName )
+
+
+    [<Benchmark; BenchmarkCategory("rand")>]
+    member perf.rand_PyTorch() = 
+        let n = perf.numIterations * 100 // very small
+        execPython(sprintf """
+import torch
+res = torch.tensor(1)
+for x in range(%d):
+    res = torch.rand(%d, dtype=torch.%s, device="%s")
+"""  n perf.tensorSize perf.dtypeName perf.deviceName )
+
+
+    [<Benchmark; BenchmarkCategory("addition")>]
+    member perf.addition_PyTorch() = 
+        let n = perf.numIterations * 100 // very small
+        execPython(sprintf """
+t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
+res = t
+for x in range(%d):
+    res = t + t
+""" perf.tensorSize perf.dtypeName perf.deviceName n )
+
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_PyTorch() = 
+        let n = perf.numIterations * 100 // very small
+        execPython(sprintf """
+import torch
+t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
+res = t
+for x in range(%d):
+    res = t.add_(t)
+"""  perf.tensorSize perf.dtypeName perf.deviceName n )
+
+
+    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
+    member perf.addWithAlpha_PyTorch() = 
+        let n = perf.numIterations * 100 // very small
+        execPython(sprintf """
+import torch
+t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
+res = t
+for x in range(%d):
+    res = t.add_(t, alpha=3)
+"""  perf.tensorSize perf.dtypeName perf.deviceName n )
 
 
 

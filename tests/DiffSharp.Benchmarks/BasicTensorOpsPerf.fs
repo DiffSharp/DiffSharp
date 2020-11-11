@@ -85,14 +85,15 @@ type BasicTensorOps() =
         | _ -> ()
         perf.workloadSize/perf.tensorSize
 
+#if !TINY
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(524) else failwith "no time available" // PYTHON fromCpuData
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(141) else failwith "no time available yet" // PYTHON fromCpuData
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 10 // small
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -103,37 +104,37 @@ type BasicTensorOps() =
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
-    member perf.fromCpuData_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
-
-    [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 10 // small
         for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 10 // small
         for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
-    member perf.fromCpuData_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- dsharp.tensor(rawData)
+    member perf.fromCpuData_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference) * 10 // small
+        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
-#if !TINY
+    [<Benchmark; BenchmarkCategory("fromCpuData")>]
+    member perf.fromCpuData_Tensor_Reference() = 
+        let n = perf.configure(Backend.Reference) * 10 // small
+        for _ in 1 .. n do res  <- dsharp.tensor(rawData)
+#endif
+
     //--------------------------------------------------------------
     // zeros
 
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(507) else failwith "no time available" // PYTHON zeros
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(144) else failwith "no time available yet" // PYTHON zeros
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -144,36 +145,37 @@ type BasicTensorOps() =
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.zeros_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.zeros_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch) * 100 // very small
+        for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("zeros")>]
+    member perf.zeros_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference) * 100 // very small
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference) * 100 // very small
         for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
 
-    [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
-
+#if !TINY
     //--------------------------------------------------------------
     // ones
 
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(506) else failwith "no time available" // PYTHON ones
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(140) else failwith "no time available yet" // PYTHON ones
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -185,28 +187,31 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference) * 100 // very small
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference) * 100 // very small
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
     // rand
 
-    // TODO: add python here
+    [<Benchmark(Baseline=true); BenchmarkCategory("rand")>]
+    member perf.rand_PyTorch() = 
+        // This code gets injected, see Program.fs
+        failwith "no time available yet" // PYTHON rand
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
@@ -246,22 +251,22 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
     member perf.addition_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(506) else failwith "no time available" // PYTHON addition
+        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(85) else failwith "no time available yet" // PYTHON addition
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do 
             res4 <- tt.Add(tt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference) * 100 // very small
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
@@ -271,14 +276,17 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch) * 100 // very small
         for _ in 1 .. n do res  <- t + t
 
 
     //--------------------------------------------------------------
     // addScalar
 
-    // TODO: add python here
+    [<Benchmark(Baseline=true); BenchmarkCategory("addScalar")>]
+    member perf.addScalar_PyTorch() = 
+        // This code gets injected, see Program.fs
+        failwith "no time available yet" // PYTHON addScalar
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_TorchSharp() = 
@@ -309,7 +317,10 @@ type BasicTensorOps() =
     //--------------------------------------------------------------
     // addWithAlpha
 
-    // TODO: add python here
+    [<Benchmark(Baseline=true); BenchmarkCategory("addWithAlpha")>]
+    member perf.addWithAlpha_PyTorch() = 
+        // This code gets injected, see Program.fs
+        failwith "no time available yet" // PYTHON addWithAlpha
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_TorchSharp() = 
@@ -339,6 +350,11 @@ type BasicTensorOps() =
 
     //--------------------------------------------------------------
     // addInPlace
+
+    [<Benchmark(Baseline=true); BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_PyTorch() = 
+        // This code gets injected, see Program.fs
+        failwith "no time available yet" // PYTHON addInPlace
 
     // TODO: add python here
 
@@ -372,6 +388,10 @@ type BasicTensorOps() =
     //--------------------------------------------------------------
     // matmul
 
+    [<Benchmark(Baseline=true); BenchmarkCategory("matmul")>]
+    member perf.matmul_PyTorch() = 
+        // This code gets injected, see Program.fs
+        failwith "no time available yet" // PYTHON matmul
     // TODO: add python here
 
     [<Benchmark; BenchmarkCategory("matmul")>]

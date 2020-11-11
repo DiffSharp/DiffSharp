@@ -42,7 +42,7 @@ let main _ =
                     let dtypeName = case.Parameters.["dtypeName"] :?> string
                     let deviceName = case.Parameters.["deviceName"] :?> string 
                     // get the time in milliseconds
-                    let runtime = report.ResultStatistics.Mean / 1000.0 |> int64
+                    let runtime = report.ResultStatistics.Mean / 1000000.0 |> int64
                     sprintf "if perf.tensorSize = %d && perf.dtypeName = \"%s\" && perf.deviceName = \"%s\" then Thread.Sleep(%d) el" tensorSize dtypeName deviceName runtime ]
                |> String.concat ""
                |> fun s -> "        " + s + "se failwith \"no time available\" " + key
