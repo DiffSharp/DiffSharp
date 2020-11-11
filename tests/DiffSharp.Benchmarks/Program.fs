@@ -13,6 +13,7 @@ open DiffSharp.Benchmarks.BasicTensorOps
 
 [<EntryPoint>]
 let main _ = 
+
     let summary = BenchmarkRunner.Run<BasicTensorOps>()
     printfn "summary:"
     printfn "%s" (summary.ToString())

@@ -1292,6 +1292,7 @@ type dsharp with
                 |] |> Array.rev |> Array.append [|fx|]
 
     /// <summary>TBD</summary>
+    /// <param name="f">TBD</param>
     /// <param name="x">TBD</param>
     /// <param name="v">TBD</param>
     /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
@@ -1305,6 +1306,7 @@ type dsharp with
     static member jacobianv f x v = dsharp.fjacobianv f x v |> snd
 
     /// <summary>TBD</summary>
+    /// <param name="f">TBD</param>
     /// <param name="x">TBD</param>
     /// <param name="v">TBD</param>
     /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>

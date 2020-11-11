@@ -4,9 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DIFFSHARP_TESTGPU>false</DIFFSHARP_TESTGPU>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
