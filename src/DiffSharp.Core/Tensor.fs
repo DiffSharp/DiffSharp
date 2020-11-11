@@ -763,7 +763,22 @@ type Tensor =
     /// <summary>
     /// Creates a new tensor from the given data, using the given element type and configuration.
     /// </summary>
+    /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    /// <remarks>The fastest creation technique is a one dimensional array matching the desired dtype. Then use 'view' to reshape.</remarks>
     static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        // Fast paths to create directly from 1D array matching the dtype
+        match value, defaultArg dtype Dtype.Default with
+        | (:? (int32[]) as arr), Dtype.Int32 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (single[]) as arr), Dtype.Float32 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (double[]) as arr), Dtype.Float64 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (byte[]) as arr), Dtype.Byte -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int8[]) as arr), Dtype.Int8 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int16[]) as arr), Dtype.Int16 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int64[]) as arr), Dtype.Int64 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | _ -> 
         let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
         | Some (array, shape) -> 

@@ -344,7 +344,7 @@ module internal RawTensorCPU =
     
     /// Get the "0" tensor for a CPU tensor type of the given shape
     let inline Zeros(shape:Shape)  : (^T[] * Shape) =
-        let values = Array.create (shapeLength shape) zero< ^T >
+        let values = Array.zeroCreate (shapeLength shape) 
         (values, shape)
 
     /// Get the "0" tensor for a CPU tensor type of the given shape
