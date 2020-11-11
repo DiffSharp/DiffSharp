@@ -219,6 +219,12 @@ type RawTensor() =
 
         statics.CreateFromFlatArray(data, shape, dtype2, device)
 
+    static member CreateFromFlatArray(values: Array, shape:Shape, ?dtype, ?device, ?backend) =
+        let statics = BackendTensorStatics.Get(?backend=backend)
+        let dtype = defaultArg dtype Dtype.Default
+        let device = defaultArg device Device .Default
+        statics.CreateFromFlatArray(values, shape, dtype, device)
+
     /// Gets a tensor filled with values drawn from the given .NET object for the
     /// given configuration settings, defaulting to the configuration settings of the object tensor.
     member t.CreateLike(values: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =

@@ -9,7 +9,20 @@ open System
 open DiffSharp
 open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
+open DiffSharp.Benchmarks.BasicTensorOps
 
+[<EntryPoint>]
+let main _ = 
+
+    let summary = BenchmarkRunner.Run<BasicTensorOps>()
+    printfn "summary:"
+    printfn "%s" (summary.ToString())
+    //let summary2 = BenchmarkRunner.Run<Training>()
+    //printfn "summary2:"
+    //printfn "%s" (summary2.ToString())
+    0
+
+(*
 [<ShortRunJob>]
 type TensorSize_VectorAdd() = 
     let N = pown 2 18
@@ -175,3 +188,4 @@ module Analysis =
 
     let fits6 = fit [ 242_813.0; 30_931.0; 4_596.0; 1_080.0; 676.0; 737.0; 770.2 ] 
 
+*)
