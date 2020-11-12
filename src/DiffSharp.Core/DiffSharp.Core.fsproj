@@ -10,6 +10,7 @@
     <Compile Include="Dtype.fs" />
     <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
+    <Compile Include="Scalar.fs" />
     <Compile Include="RawTensor.fs" />
     <Compile Include="Tensor.fs" />
     <Compile Include="Tensor.Slicing.fs" />
