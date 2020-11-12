@@ -89,7 +89,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(145) else failwith "no time available" // PYTHON fromCpuData
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(528) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(3459) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(535) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(3515) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(504) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(3502) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(29) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(52) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(29) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(57) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(22) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(45) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(30) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(32) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(30) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(32) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(24) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(25) else failwith "no time available" // PYTHON fromCpuData
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
@@ -130,7 +130,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(149) else failwith "no time available" // PYTHON zeros
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1645) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(5047) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(1652) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(5145) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(1616) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(5051) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(15) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(39) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(18) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(39) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(14) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(37) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(2) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(1) else failwith "no time available" // PYTHON zeros
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
@@ -171,7 +171,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(138) else failwith "no time available" // PYTHON ones
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1669) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(5078) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(1659) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(5033) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(1597) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(4971) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(14) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(38) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(16) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(39) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(14) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(40) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(2) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(1) else failwith "no time available" // PYTHON ones
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
@@ -186,23 +186,23 @@ type BasicTensorOps() =
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 10)
-        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
-
-    [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 10)
+    member perf.ones_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 10)
+    member perf.ones_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
+        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("ones")>]
+    member perf.ones_Tensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
@@ -211,11 +211,11 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("rand")>]
     member perf.rand_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(326) else failwith "no time available" // PYTHON rand
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1981) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(5406) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(1971) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(5364) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(31) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(40) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(56) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(42) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(18) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(1) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(39) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(1) else failwith "no time available" // PYTHON rand
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -226,23 +226,23 @@ type BasicTensorOps() =
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.rand_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+    member perf.rand_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("rand")>]
+    member perf.rand_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
-        for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
-
-    [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
@@ -251,7 +251,7 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
     member perf.addition_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(86) else failwith "no time available" // PYTHON addition
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(742) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(3229) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(754) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(3145) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(714) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(3260) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(9) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(25) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(12) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(24) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(9) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(25) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(7) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(10) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(6) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(4) else failwith "no time available" // PYTHON addition
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
@@ -260,23 +260,23 @@ type BasicTensorOps() =
             res4 <- tt.Add(tt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 10)
-        for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
-
-    [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.addition_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res  <- t + t
 
     [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 10)
+    member perf.addition_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
+        for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
+
+    [<Benchmark; BenchmarkCategory("addition")>]
+    member perf.addition_Tensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res  <- t + t
 
 
@@ -286,32 +286,32 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addScalar")>]
     member perf.addScalar_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(185) else failwith "no time available" // PYTHON addScalar
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(1938) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(4212) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(1966) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(4186) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(1863) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(4333) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(19) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(33) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(23) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(32) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(18) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(32) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(7) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(10) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(7) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(4) else failwith "no time available" // PYTHON addScalar
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_TorchSharp() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- tt.Add(tt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
-    member perf.addScalar_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.addScalar_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
-    member perf.addScalar_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+    member perf.addScalar_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res  <- t + t0
+
+    [<Benchmark; BenchmarkCategory("addScalar")>]
+    member perf.addScalar_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
-        for _ in 1 .. n do res  <- t + t0
-
-    [<Benchmark; BenchmarkCategory("addScalar")>]
-    member perf.addScalar_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res  <- t + t0
 
     //--------------------------------------------------------------
@@ -320,32 +320,32 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(62) else failwith "no time available" // PYTHON addWithAlpha
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(530) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(1873) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(482) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(1782) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(485) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(1804) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(6) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(14) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(8) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(14) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(6) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(17) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(6) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(4) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(9) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(4) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(3) else failwith "no time available" // PYTHON addWithAlpha
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_TorchSharp() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- tt.Add(tt, tt0)
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.addWithAlpha_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+    member perf.addWithAlpha_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
+
+    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
+    member perf.addWithAlpha_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
-        for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
-
-    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
 
     //--------------------------------------------------------------
@@ -354,34 +354,34 @@ type BasicTensorOps() =
     [<Benchmark(Baseline=true); BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_PyTorch() = 
         // This code gets injected, see Program.fs
-        if perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(51) else failwith "no time available" // PYTHON addInPlace
+        if perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(409) elif perf.tensorSize = 16 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(1643) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(385) elif perf.tensorSize = 16 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(1600) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(383) elif perf.tensorSize = 16 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(1613) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(5) elif perf.tensorSize = 2048 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(13) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(7) elif perf.tensorSize = 2048 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(13) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(5) elif perf.tensorSize = 2048 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(12) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cpu" then Thread.Sleep(6) elif perf.tensorSize = 65536 && perf.dtypeName = "float32" && perf.deviceName = "cuda" then Thread.Sleep(4) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cpu" then Thread.Sleep(8) elif perf.tensorSize = 65536 && perf.dtypeName = "float64" && perf.deviceName = "cuda" then Thread.Sleep(4) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cpu" then Thread.Sleep(5) elif perf.tensorSize = 65536 && perf.dtypeName = "int32" && perf.deviceName = "cuda" then Thread.Sleep(3) else failwith "no time available" // PYTHON addInPlace
 
     // TODO: add python here
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_TorchSharp() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- tt.AddInPlace(tt)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
-    member perf.addInPlace_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.addInPlace_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
-    member perf.addInPlace_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+    member perf.addInPlace_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
+
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
-        for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
-
-    [<Benchmark; BenchmarkCategory("addInPlace")>]
-    member perf.addInPlace_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
 
 
@@ -401,13 +401,18 @@ type BasicTensorOps() =
             res4 <- ttmat.MatMul(ttmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference, 1) 
+    member perf.matmul_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_RawTensor_Torch() = 
+    member perf.matmul_Tensor_Torch() = 
         let n = perf.configure(Backend.Torch, 1) 
+        for _ in 1 .. n do res  <- tmat.matmul(tmat)
+
+    [<Benchmark; BenchmarkCategory("matmul")>]
+    member perf.matmul_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
@@ -415,10 +420,6 @@ type BasicTensorOps() =
         let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- tmat.matmul(tmat)
 
-    [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch, 1) 
-        for _ in 1 .. n do res  <- tmat.matmul(tmat)
 #endif
 
     //[<Benchmark>]
