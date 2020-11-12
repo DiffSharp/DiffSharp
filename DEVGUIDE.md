@@ -97,6 +97,12 @@ To update Python benchmarks on your machine (note, writes back results into sour
 
     dotnet run --project tests\DiffSharp.Benchmarks.Python\DiffSharp.Benchmarks.Python.fsproj -c Release
 
+This takes a while to run.
+
 To run benchmarks:
 
     dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release
+
+To filter etc., see `--help`
+
+    dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release --filter "*matmul*"

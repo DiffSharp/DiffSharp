@@ -14,13 +14,6 @@ open BenchmarkDotNet.Characteristics
 open DiffSharp.Benchmarks
 
 [<EntryPoint>]
-let main _ = 
-
-    let summary = BenchmarkRunner.Run<BasicTensorOps>()
-    printfn "summary:"
-    printfn "%s" (summary.ToString())
-
-    //let summary2 = BenchmarkRunner.Run<Training>()
-    //printfn "summary2:"
-    //printfn "%s" (summary2.ToString())
+let main args = 
+    let _summary = BenchmarkSwitcher.FromAssembly(System.Reflection.Assembly.GetExecutingAssembly()).Run(args)
     0

@@ -25,6 +25,17 @@ module internal Utils =
         | Dtype.Float32 -> ScalarType.Float
         | Dtype.Float64 -> ScalarType.Double
 
+    let toTorchScalar (x: scalar) =
+        match x with 
+        | :? single as x -> TorchScalar.op_Implicit x
+        | :? double as x -> TorchScalar.op_Implicit x
+        | :? int32 as x -> TorchScalar.op_Implicit x
+        | :? int64 as x -> TorchScalar.op_Implicit x
+        | :? int8 as x -> TorchScalar.op_Implicit x
+        | :? uint8 as x -> TorchScalar.op_Implicit x
+        | :? int16 as x -> TorchScalar.op_Implicit x
+        | _ -> failwithf "unknown scalar type '%A'" x
+
     let fromTorchType ttype =
         match ttype with 
         | ScalarType.Bool -> Dtype.Bool
@@ -427,8 +438,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         | Dtype.Bool -> t.Cast(Dtype.Int8).MinIndexT() // TODO: could likely be improved
         | _ -> t.NegT().MaxIndexT()
 
-    override t1.AddTT(t2) =
-        let result = tt.Add(t2.TorchTensor) 
+    override t1.AddTT(t2, alpha) =
+        let result = 
+            match alpha with 
+            | Some v -> tt.Add(t2.TorchTensor, toTorchScalar v)
+            | None -> tt.Add(t2.TorchTensor)
         t1.MakeLike(result)
 
     override t1.AddTT0(t2) =
@@ -841,13 +855,17 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
     override _.NeqInPlace(t2) = checkMutable(); tt.NeInPlace(t2.TorchTensor) |> ignore
 
-    override _.AddInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
+    override _.AddInPlace(t2, alpha) =
+        checkMutable()
+        match alpha with 
+        | Some v -> tt.AddInPlace(t2.TorchTensor, toTorchScalar v) |> ignore
+        | None -> tt.AddInPlace(t2.TorchTensor) |> ignore
 
     override _.AddScalarInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
 
     override _.AddMatrixVecInPlace(t2) = checkMutable(); tt.AddInPlace(t2.TorchTensor) |> ignore
 
-    // TODO - it feels like this should be faster
+    // TODO - this should be faster
     override t1.AddSliceInPlace(location, t2) = 
         checkMutable()
         Shape.checkCanAddSlice t1.Shape location t2.Shape

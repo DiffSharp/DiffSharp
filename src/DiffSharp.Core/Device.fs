@@ -1,5 +1,7 @@
 ﻿namespace DiffSharp
 
+type scalar = System.IConvertible
+
 /// <summary>
 ///   Represents the type of a device. 
 /// </summary>

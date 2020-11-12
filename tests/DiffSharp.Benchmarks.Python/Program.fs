@@ -10,14 +10,13 @@ open BenchmarkDotNet.Running
 open DiffSharp.Benchmarks.Python
 
 [<EntryPoint>]
-let main _ = 
+let main args = 
 
-    let summary = BenchmarkRunner.Run<BasicTensorOps>()
-    printfn "summary:"
-    printfn "%s" (summary.ToString())
+    let summaries = BenchmarkSwitcher.FromAssembly(System.Reflection.Assembly.GetExecutingAssembly()).Run(args)
 
     let lines = 
-        [ for case in summary.BenchmarksCases do
+        [ for summary in summaries do
+           for case in summary.BenchmarksCases do
             if case.Descriptor.Categories.Length > 0 then
                 let report = summary.[case]
                 let tensorSize = case.Parameters.["tensorSize"] :?> int

@@ -6,8 +6,6 @@ open System
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
-type scalar = IConvertible
-
 /// <summary>
 ///   Represents a multi-dimensional data type containing elements of a single data type.
 /// </summary>
@@ -1084,7 +1082,7 @@ type Tensor =
 
     /// <summary>Multiplies each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    member a.mul(b) = a * a.scalarLike(b)
+    member a.mul(b: scalar) = a * a.scalarLike(b)
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1199,7 +1197,7 @@ type Tensor =
     static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
 
     /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
+    static member Pow (a:Tensor, b: scalar) = a ** a.scalarLike(b)
 
     /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
@@ -1215,7 +1213,7 @@ type Tensor =
     member a.pow(b:Tensor) = a ** b
 
     /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    member a.pow(b) = a ** a.scalarLike(b)
+    member a.pow(b: scalar) = a ** a.scalarLike(b)
 
     /// <summary>Matrix product of two tensors.</summary>
     ///
