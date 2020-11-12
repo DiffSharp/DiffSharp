@@ -317,10 +317,10 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorFull () =
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t1a = combo.full([2;3], 2.5)
-            let t1b = combo.ones([2;3]) * 2.5
-            let t2a = combo.full([], 2.5)
-            let t2b = combo.ones([]) * 2.5
+            let t1a = combo.full([2;3], 2)
+            let t1b = combo.ones([2;3]) * 2
+            let t2a = combo.full([], 2)
+            let t2b = combo.ones([]) * 2
             Assert.CheckEqual(t1a, t1b)
             Assert.CheckEqual(t2a, t2b)
 
@@ -1291,14 +1291,14 @@ type TestTensor () =
     member _.TestTensorAddTTScalarBroadcasting () =
         // Test scalar broadcasting 
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t3 = combo.tensor([1.; 2.]) + 5.f
-            let t3Correct = combo.tensor([6.; 7.])
+            let t3 = combo.tensor([1; 2]) + 5
+            let t3Correct = combo.tensor([6; 7])
 
-            let t4 = combo.tensor([1.; 2.]) + 5.
-            let t4Correct = combo.tensor([6.; 7.])
+            let t4 = combo.tensor([1; 2]) + 5
+            let t4Correct = combo.tensor([6; 7])
 
-            let t5 = combo.tensor([1.; 2.]) + 5
-            let t5Correct = combo.tensor([6.; 7.])
+            let t5 = combo.tensor([1; 2]) + 5
+            let t5Correct = combo.tensor([6; 7])
 
             Assert.CheckEqual(t3Correct, t3)
             Assert.CheckEqual(t4Correct, t4)
@@ -1639,20 +1639,20 @@ type TestTensor () =
 
         // Test scalar broadcast
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t3 = combo.tensor([1.; 2.]) - 5.f
-            let t3Correct = combo.tensor([-4.; -3.])
+            let t3 = combo.tensor([1; 2]) - 5
+            let t3Correct = combo.tensor([-4; -3])
 
             Assert.CheckEqual(t3Correct, t3)
             Assert.CheckEqual(t3.dtype, combo.dtype)
 
-            let t4 = 5. - combo.tensor([1.; 2.])
-            let t4Correct = combo.tensor([4.; 3.])
+            let t4 = 5 - combo.tensor([1; 2])
+            let t4Correct = combo.tensor([4; 3])
 
             Assert.CheckEqual(t4Correct, t4)
             Assert.CheckEqual(t4.dtype, combo.dtype)
 
-            let t5 = combo.tensor([1.; 2.]) - 5
-            let t5Correct = combo.tensor([-4.; -3.])
+            let t5 = combo.tensor([1; 2]) - 5
+            let t5Correct = combo.tensor([-4; -3])
 
             Assert.CheckEqual(t5Correct, t5)
             Assert.CheckEqual(t5.dtype, combo.dtype)
@@ -1689,7 +1689,7 @@ type TestTensor () =
                 Assert.CheckEqual(t2.dtype, dtypeRes)
 
         // Test scalar broadcasting 
-        for combo in Combos.IntegralAndFloatingPoint do 
+        for combo in Combos.FloatingPoint do 
             let t3 = combo.tensor([1.; 2.]) * 5.f
             let t3Correct = combo.tensor([5.; 10.])
 
@@ -1701,6 +1701,27 @@ type TestTensor () =
             Assert.CheckEqual(t4Correct, t4)
             Assert.CheckEqual(t3.dtype, combo.dtype)
             Assert.CheckEqual(t4.dtype, combo.dtype)
+
+        for combo in Combos.Integral do 
+            let t3 = combo.tensor([1; 2]) * 5
+            let t3Correct = combo.tensor([5; 10])
+
+            Assert.CheckEqual(t3Correct, t3)
+            Assert.CheckEqual(t3.dtype, combo.dtype)
+
+            let t4 = 5 * combo.tensor([1; 2])
+            let t4Correct = combo.tensor([5; 10])
+
+            Assert.CheckEqual(t4Correct, t4)
+            Assert.CheckEqual(t4.dtype, combo.dtype)
+
+            // Multiplying integer tensors by a floating point number always
+            // results in float32. THis is the same behaviour as Torch
+            let t5 = 5.0 * combo.tensor([1; 2])
+            let t5Correct = combo.tensor([5; 10], dtype=Dtype.Float32)
+
+            Assert.CheckEqual(t5Correct, t5)
+            Assert.CheckEqual(t5.dtype, Dtype.Float32)
 
         // Bool tensors support multiplication giving bool tensor
         //
@@ -6201,7 +6222,8 @@ type TestTensor () =
             Assert.True(t3s3p2Correct.allclose(t3s3p2, 0.01))
             Assert.True(t3d2Correct.allclose(t3d2, 0.01))
             Assert.True(t3p2d3Correct.allclose(t3p2d3, 0.01))
-            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01))
+            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
+            printfn "done"
 
     [<Test>]
     member _.TestTensorConvTranspose2D () =
@@ -6955,7 +6977,7 @@ type TestTensor () =
             Assert.True(t3s23p32Correct.allclose(t3s23p32, 0.01))
             Assert.True(t3p1d2Correct.allclose(t3p1d2, 0.01))
             Assert.True(t3p22d23Correct.allclose(t3p22d23, 0.01))
-            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01))
+            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
 
     [<Test>]
     member _.TestTensorConvTranspose3D () =

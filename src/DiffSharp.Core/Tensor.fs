@@ -914,14 +914,12 @@ type Tensor =
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (+) (a:Tensor, b: scalar) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "+" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast + bCast
-        else
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast + bCast
+        | ValueNone ->
             let fRaw(a:RawTensor) = a.AddTT0(b)
             let fTensor(a) = a + b
             let dfTensorFwd(cp,ap,ad) = ad
@@ -966,14 +964,12 @@ type Tensor =
 
     /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
     static member (-) (a:Tensor, b:scalar) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "-" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast - bCast
-        else
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast - bCast
+        | ValueNone ->
             let fRaw(a:RawTensor) = a.SubTT0(b)
             let fTensor(a) = a - b
             let dfTensorFwd(cp,ap,ad) = ad
@@ -982,14 +978,12 @@ type Tensor =
 
     /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
     static member (-) (a:scalar, b:Tensor) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "*" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast * bCast
-        else
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
             let fRaw(b:RawTensor) = b.SubFromT0T(a)
             let fTensor(b) = a - b
             let dfTensorFwd(cp,bp,bd) = -bd
@@ -1031,14 +1025,12 @@ type Tensor =
 
     /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (*) (a:Tensor, b:scalar) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "*" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast * bCast
-        else
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
             let fRaw(a:RawTensor) = a.MulTT0(b)
             let fTensor(a) = a * b
             let dfTensorFwd(cp,ap,ad) = ad * b
@@ -1084,14 +1076,12 @@ type Tensor =
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:Tensor, b:scalar) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "/" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast / bCast
-        else
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
             let fRaw(a:RawTensor) = a.DivTT0(b)
             let fTensor(a) = a / b
             let dfTensorFwd(cp,ap,ad) = ad / b
@@ -1100,14 +1090,12 @@ type Tensor =
 
     /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:scalar, b:Tensor) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "/" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                aCast / bCast
-        else
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
             let fRaw(b:RawTensor) = b.DivFromT0T(a)
             let fTensor(b) = a / b
             let dfTensorFwd(cp,bp,bd) = -bd * cp / bp
@@ -1147,14 +1135,12 @@ type Tensor =
             Tensor.Pow(aExpanded, bExpanded)
 
     static member internal powImpl (a:Tensor, b:scalar) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "powImpl" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                Tensor.powImpl(aCast, bCast)
-        else
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
             let fRaw(a:RawTensor) = a.PowTT0(b)
             let fTensor(a) = Tensor.powImpl (a, b)
             let dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
@@ -1162,14 +1148,12 @@ type Tensor =
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     static member internal powImpl (a:scalar, b:Tensor) =
-        if a.dtype <> b.dtype then
-            match Dtype.widen a.dtype b.dtype with
-            | None -> opNotSupported "powImpl" a.dtype b.dtype 
-            | Some tnew ->
-                let aCast = a.cast(tnew)
-                let bCast = b.cast(tnew)
-                Tensor.powImpl(aCast, bCast)
-        else
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
             let fRaw(b:RawTensor) = b.PowFromT0T(a)
             let fTensor(b) = Tensor.powImpl (a, b)
             let dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()

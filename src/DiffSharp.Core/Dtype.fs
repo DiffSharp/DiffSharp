@@ -102,6 +102,8 @@ module Dtype =
             | Bool, Bool -> Some Bool
             | Int8, Byte | Byte, Int8  -> None
 
+
+
     /// Convert System.Type to Dtype
     let ofType (ty: System.Type) =
         if ty.Equals(typeof<int32>) then Dtype.Int32

@@ -22,18 +22,18 @@ module Combos =
 
     // Use these to experiment in your local branch
     //let backends = [ Backend.Reference ]
-    //let backends = [ Backend.Torch ]
+    let backends = [ Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Torch; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Reference; Backend.Torch ]
     //let backends = [ Backend.Reference; Backend.Register("TestDuplicate") ]
     //let backends = [ Backend.Register("TestDuplicate") ]
     //let getDevices _ = [ Device.CPU ]
-    //let getDevices _ = [ Device.GPU ]
+    let getDevices _ = [ Device.GPU ]
     
     //Use this in committed code
-    let backends = [ Backend.Reference; Backend.Torch ]
-    let getDevices (deviceType: DeviceType option, backend: Backend option) =
-        dsharp.devices(?deviceType=deviceType, ?backend=backend)
+    //let backends = [ Backend.Reference; Backend.Torch ]
+    //let getDevices (deviceType: DeviceType option, backend: Backend option) =
+    //    dsharp.devices(?deviceType=deviceType, ?backend=backend)
 
     let makeCombos dtypes =
         [ for backend in backends do
