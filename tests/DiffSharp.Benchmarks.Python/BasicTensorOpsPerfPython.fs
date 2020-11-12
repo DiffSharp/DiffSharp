@@ -39,7 +39,7 @@ type BasicTensorOps() =
     // The tests here must match the ones above
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_PyTorch() = 
-        let n = perf.numIterations * 10 // small
+        let n = perf.numIterations(2)
         execPython(sprintf """
 for x in range(%d):
     torch.tensor(range(%d), dtype=torch.%s, device="%s")
@@ -47,7 +47,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 res = torch.tensor(1)
 for x in range(%d):
@@ -56,7 +56,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 import torch
 res = torch.tensor(1)
@@ -67,7 +67,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 import torch
 res = torch.tensor(1)
@@ -78,7 +78,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
 res = t
@@ -88,7 +88,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 import torch
 t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
@@ -100,7 +100,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 import torch
 t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
@@ -112,7 +112,7 @@ for x in range(%d):
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_PyTorch() = 
-        let n = perf.numIterations * 100 // very small
+        let n = perf.numIterations(10)
         execPython(sprintf """
 import torch
 t = torch.tensor(range(%d), dtype=torch.%s, device="%s")

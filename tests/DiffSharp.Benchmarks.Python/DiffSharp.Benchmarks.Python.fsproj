@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- configure these manually -->
     <DIFFSHARP_TESTGPU>false</DIFFSHARP_TESTGPU>
-    <TINY>true</TINY>
+    <TINY>false</TINY>
   </PropertyGroup>
 
   <PropertyGroup>

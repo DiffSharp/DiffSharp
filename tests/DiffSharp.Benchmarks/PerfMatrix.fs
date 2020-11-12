@@ -13,7 +13,7 @@ type BasicTensorTestMatrix() =
 #if TINY
     [<Params (2048)>] 
 #else
-    [<Params (1, 16, 2048, 65536)>] 
+    [<Params (16, 2048, 65536)>] 
 #endif
     member val public tensorSize = 0 with get, set
 
@@ -31,6 +31,5 @@ type BasicTensorTestMatrix() =
 #endif
     member val public deviceName = "" with get, set
 
-
-    member perf.numIterations = perf.workloadSize/perf.tensorSize
+    member perf.numIterations(factor) = factor * perf.workloadSize / perf.tensorSize
     member perf.caseId = sprintf "tensorSize=%d,dtypeName=%s,deviceName=%s" perf.tensorSize perf.dtypeName perf.deviceName

@@ -56,7 +56,7 @@ type BasicTensorOps() =
     let mutable res3 = Unchecked.defaultof<_>
     let mutable res4 = Unchecked.defaultof<_>
 
-    member perf.configure(backend) = 
+    member perf.configure(backend, factor) = 
         match box tt with 
         | null -> 
             dtype <- (match perf.dtypeName with "int32" -> Dtype.Int32 | "float32" -> Dtype.Float32 | _ -> Dtype.Float64)
@@ -83,7 +83,7 @@ type BasicTensorOps() =
             ttmat <- match rawtmat.Handle with :? TorchSharp.Tensor.TorchTensor as tt -> tt | _ -> Unchecked.defaultof<_>
             tt0 <- TorchSharp.TorchScalar.op_Implicit(1)
         | _ -> ()
-        perf.workloadSize/perf.tensorSize
+        perf.numIterations(factor)
 
 #if !TINY
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
@@ -93,7 +93,7 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) * 10 // small
+        let n = perf.configure(Backend.Torch, 2)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -105,22 +105,22 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 10 // small
+        let n = perf.configure(Backend.Torch, 2)
         for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 10 // small
+        let n = perf.configure(Backend.Torch, 2)
         for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 10 // small
+        let n = perf.configure(Backend.Reference, 2)
         for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 10 // small
+        let n = perf.configure(Backend.Reference, 2)
         for _ in 1 .. n do res  <- dsharp.tensor(rawData)
 #endif
 
@@ -134,7 +134,7 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -146,22 +146,22 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 100 // very small
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 100 // very small
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
 
 #if !TINY
@@ -175,7 +175,7 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -187,22 +187,22 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 100 // very small
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 100 // very small
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
@@ -215,7 +215,7 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -227,22 +227,22 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
@@ -255,28 +255,28 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- tt.Add(tt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) * 100 // very small
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- t + t
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) * 100 // very small
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res  <- t + t
 
 
@@ -290,28 +290,28 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- tt.Add(tt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- t + t0
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res  <- t + t0
 
     //--------------------------------------------------------------
@@ -324,28 +324,28 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- tt.Add(tt, tt0)
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
 
     //--------------------------------------------------------------
@@ -360,28 +360,28 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- tt.AddInPlace(tt)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
 
 
@@ -396,28 +396,28 @@ type BasicTensorOps() =
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- ttmat.MatMul(ttmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res  <- tmat.matmul(tmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res  <- tmat.matmul(tmat)
 #endif
 
@@ -458,23 +458,6 @@ type BasicTensorOps() =
 (*
 [<ShortRunJob>]
 type Training() = 
-
-    member perf.configure() = 
-        let dtype = (match perf.dtype with "int32" -> Dtype.Int32 | "float32" -> Dtype.Float32 | _ -> Dtype.Float64)
-        let backend = if perf.backend = "Backend.Torch" then Backend.Torch else Backend.Reference
-        let device = if perf.device = "cpu" then Device.CPU else Device.GPU
-        if not (dsharp.isDeviceTypeSupported(device.DeviceType, backend)) then failwith "device not supported"
-        dsharp.config(dtype=dtype,backend=backend,device=device)
-
-    [<Params ("float32")>] 
-    //[<Params ("float32", "float64")>] 
-    member val public dtype = "" with get, set
-
-    [<Params ("cpu")>] //[<Params ("cpu", "gpu")>] 
-    member val public device = "" with get, set
-
-    [<Params ("Backend.Torch", "Backend.Reference")>] 
-    member val public backend = "" with get, set
 
     [<Params (64, 256)>] 
     member val public n = 0 with get, set
