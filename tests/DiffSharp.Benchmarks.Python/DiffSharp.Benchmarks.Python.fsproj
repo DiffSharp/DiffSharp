@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\DiffSHarp.Benchmarks\PerfMatrix.fs" />
+    <Compile Include="..\DiffSharp.Benchmarks\PerfMatrix.fs" />
     <Compile Include="BasicTensorOpsPerfPython.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
