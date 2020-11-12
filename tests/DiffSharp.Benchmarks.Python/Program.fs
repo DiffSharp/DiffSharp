@@ -16,44 +16,20 @@ let main _ =
     printfn "summary:"
     printfn "%s" (summary.ToString())
 
-    // Get the Python times and write them back in to the program text
-    // Python torch can't easily cohabitate with DiffSharp torch in the same process
-    // due to multiple copies of native LibTorch DLLs being loaded
-    let targetFile = Path.Combine(__SOURCE_DIRECTORY__, "..", "DiffSharp.Benchmarks", "BasicTensorOpsPerf.fs")
-    let mutable contents = File.ReadAllLines(targetFile)
-    let groups = 
-        summary.BenchmarksCases 
-        |> Seq.filter (fun case -> case.Descriptor.Categories.Length = 1) 
-        |> Seq.filter (fun case -> summary.[case].Success) 
-        |>  Seq.groupBy(fun case -> case.Descriptor.Categories |> Array.tryHead)
+    let lines = 
+        [ for case in summary.BenchmarksCases do
+            if case.Descriptor.Categories.Length > 0 then
+                let report = summary.[case]
+                let tensorSize = case.Parameters.["tensorSize"] :?> int
+                let dtypeName = case.Parameters.["dtypeName"] :?> string
+                let deviceName = case.Parameters.["deviceName"] :?> string 
+                // get the time in milliseconds
+                let runtime = report.ResultStatistics.Mean / 1000000.0 |> int64
+                let nm = case.Descriptor.Categories.[0]
+                let key = nm + string tensorSize + dtypeName + deviceName
+                sprintf "%s,%d" key runtime 
+        ]
 
-    for (category, cases) in groups do
-       printfn "category = %A" category
-       match category with 
-       | None -> ()
-       | Some cat -> 
-           let key = "// PYTHON " + cat
-           let newPythonLineText = 
-               [ for case in cases do 
-                    let report = summary.[case]
-                    for p in case.Parameters.Items do
-                        printfn " %s --> %O" p.Name p.Value
-                    let tensorSize = case.Parameters.["tensorSize"] :?> int
-                    let dtypeName = case.Parameters.["dtypeName"] :?> string
-                    let deviceName = case.Parameters.["deviceName"] :?> string 
-                    // get the time in milliseconds
-                    let runtime = report.ResultStatistics.Mean / 1000000.0 |> int64
-                    sprintf "if perf.tensorSize = %d && perf.dtypeName = \"%s\" && perf.deviceName = \"%s\" then Thread.Sleep(%d) el" tensorSize dtypeName deviceName runtime ]
-               |> String.concat ""
-               |> fun s -> "        " + s + "se failwith \"no time available\" " + key
-
-           printfn "looking for %s...." key
-           contents <- 
-               contents |> Array.map (fun line ->
-                   if line.Contains(key) then
-                       printfn "found %s, new text = %s" key newPythonLineText
-                       newPythonLineText else line)
-
-    File.WriteAllLines(targetFile, contents)
+    File.WriteAllLines(Path.Combine(__SOURCE_DIRECTORY__, "results.csv"), lines)
 
     0

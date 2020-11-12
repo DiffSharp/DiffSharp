@@ -45,6 +45,7 @@ for x in range(%d):
     torch.tensor(range(%d), dtype=torch.%s, device="%s")
 """ n perf.tensorSize perf.dtypeName perf.deviceName )
 
+#if !TINY
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_PyTorch() = 
         let n = perf.numIterations(10)
@@ -106,9 +107,8 @@ import torch
 t = torch.tensor(range(%d), dtype=torch.%s, device="%s")
 res = t
 for x in range(%d):
-    res = t.add_(t, alpha=3)
+    res = t.add(t, alpha=3)
 """  perf.tensorSize perf.dtypeName perf.deviceName n )
-
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_PyTorch() = 
@@ -122,5 +122,5 @@ for x in range(%d):
 """  perf.tensorSize perf.dtypeName perf.deviceName n )
 
 
-
+#endif
 

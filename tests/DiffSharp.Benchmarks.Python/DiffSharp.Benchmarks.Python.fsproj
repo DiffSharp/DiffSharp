@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <!-- configure these manually -->
-    <DIFFSHARP_TESTGPU>false</DIFFSHARP_TESTGPU>
     <TINY>false</TINY>
   </PropertyGroup>
 
