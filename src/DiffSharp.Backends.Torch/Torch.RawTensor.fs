@@ -34,6 +34,7 @@ module internal Utils =
         | :? int8 as x -> TorchScalar.op_Implicit x
         | :? uint8 as x -> TorchScalar.op_Implicit x
         | :? int16 as x -> TorchScalar.op_Implicit x
+        | :? bool as x -> TorchScalar.op_Implicit x
         | _ -> failwithf "unknown scalar type '%A'" x
 
     let fromTorchType ttype =
@@ -506,10 +507,10 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         | Dtype.Bool -> opNotSupported "DivT0T" dtype
         | _ ->
         let t1 = t2.FullLike(Shape.scalar, t1)
-        let result = t1.DivTT(t2)
+        let result = t1.TorchTensor.Div(t2.TorchTensor)
         // see https://github.com/DiffSharp/DiffSharp/issues/239
-        let result2 = if dtype.IsIntegral then result.Cast(Dtype.Int32).Cast(dtype) else result
-        result2
+        let result = if dtype.IsIntegral then result.ToType(ScalarType.Int).ToType(toTorchType dtype) else result
+        t2.MakeLike(result)
 
     override t1.DivTT0(t2) = 
         match dtype with 

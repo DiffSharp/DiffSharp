@@ -914,11 +914,19 @@ type Tensor =
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (+) (a:Tensor, b: scalar) =
-        let fRaw(a:RawTensor) = a.AddTT0(b)
-        let fTensor(a) = a + b
-        let dfTensorFwd(cp,ap,ad) = ad
-        let dfTensorRev(a) = AddTT0Const(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "+" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast + bCast
+        else
+            let fRaw(a:RawTensor) = a.AddTT0(b)
+            let fTensor(a) = a + b
+            let dfTensorFwd(cp,ap,ad) = ad
+            let dfTensorRev(a) = AddTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>The scalar <paramref name="a" /> is added to each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (+) (a: scalar, b:Tensor) = b + a
@@ -958,19 +966,35 @@ type Tensor =
 
     /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
     static member (-) (a:Tensor, b:scalar) =
-        let fRaw(a:RawTensor) = a.SubTT0(b)
-        let fTensor(a) = a - b
-        let dfTensorFwd(cp,ap,ad) = ad
-        let dfTensorRev(a) = SubTT0Const(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "-" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast - bCast
+        else
+            let fRaw(a:RawTensor) = a.SubTT0(b)
+            let fTensor(a) = a - b
+            let dfTensorFwd(cp,ap,ad) = ad
+            let dfTensorRev(a) = SubTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
     static member (-) (a:scalar, b:Tensor) =
-        let fRaw(b:RawTensor) = b.SubFromT0T(a)
-        let fTensor(b) = a - b
-        let dfTensorFwd(cp,bp,bd) = -bd
-        let dfTensorRev(b) = SubT0ConstT(b)
-        Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "*" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast * bCast
+        else
+            let fRaw(b:RawTensor) = b.SubFromT0T(a)
+            let fTensor(b) = a - b
+            let dfTensorFwd(cp,bp,bd) = -bd
+            let dfTensorRev(b) = SubT0ConstT(b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the object tensor from the corresponding element of the self tensor. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1007,11 +1031,19 @@ type Tensor =
 
     /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (*) (a:Tensor, b:scalar) =
-        let fRaw(a:RawTensor) = a.MulTT0(b)
-        let fTensor(a) = a * b
-        let dfTensorFwd(cp,ap,ad) = ad * b
-        let dfTensorRev(a) = MulTT0Const(a,b)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "*" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast * bCast
+        else
+            let fRaw(a:RawTensor) = a.MulTT0(b)
+            let fTensor(a) = a * b
+            let dfTensorFwd(cp,ap,ad) = ad * b
+            let dfTensorRev(a) = MulTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Multiplies the scalar <paramref name="a" /> by each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (*) (a:scalar, b:Tensor) = b * a
@@ -1052,19 +1084,35 @@ type Tensor =
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:Tensor, b:scalar) =
-        let fRaw(a:RawTensor) = a.DivTT0(b)
-        let fTensor(a) = a / b
-        let dfTensorFwd(cp,ap,ad) = ad / b
-        let dfTensorRev(a) = DivTT0Const(a,b)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "/" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast / bCast
+        else
+            let fRaw(a:RawTensor) = a.DivTT0(b)
+            let fTensor(a) = a / b
+            let dfTensorFwd(cp,ap,ad) = ad / b
+            let dfTensorRev(a) = DivTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:scalar, b:Tensor) =
-        let fRaw(b:RawTensor) = b.DivFromT0T(a)
-        let fTensor(b) = a / b
-        let dfTensorFwd(cp,bp,bd) = -bd * cp / bp
-        let dfTensorRev(b) = DivT0ConstT(a,b)
-        Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "/" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast / bCast
+        else
+            let fRaw(b:RawTensor) = b.DivFromT0T(a)
+            let fTensor(b) = a / b
+            let dfTensorFwd(cp,bp,bd) = -bd * cp / bp
+            let dfTensorRev(b) = DivT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1099,18 +1147,34 @@ type Tensor =
             Tensor.Pow(aExpanded, bExpanded)
 
     static member internal powImpl (a:Tensor, b:scalar) =
-        let fRaw(a:RawTensor) = a.PowTT0(b)
-        let fTensor(a) = Tensor.powImpl (a, b)
-        let dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
-        let dfTensorRev(a) = PowTT0Const(a,b)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "powImpl" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                Tensor.powImpl(aCast, bCast)
+        else
+            let fRaw(a:RawTensor) = a.PowTT0(b)
+            let fTensor(a) = Tensor.powImpl (a, b)
+            let dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
+            let dfTensorRev(a) = PowTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     static member internal powImpl (a:scalar, b:Tensor) =
-        let fRaw(b:RawTensor) = b.PowFromT0T(a)
-        let fTensor(b) = Tensor.powImpl (a, b)
-        let dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
-        let dfTensorRev(b) = PowT0ConstT(a,b)
-        Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "powImpl" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                Tensor.powImpl(aCast, bCast)
+        else
+            let fRaw(b:RawTensor) = b.PowFromT0T(a)
+            let fTensor(b) = Tensor.powImpl (a, b)
+            let dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
+            let dfTensorRev(b) = PowT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
