@@ -1,29 +1,24 @@
-﻿// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
+// This file is part of DiffSharp: Differentiable Functional Programming - https://diffsharp.github.io
 // Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 // Copyright (c) 2017-     Microsoft Research, Cambridge, UK (Don Syme <dsyme@microsoft.com>)
 // Copyright (c) 2014-     National University of Ireland Maynooth (Barak A. Pearlmutter <barak@pearlmutter.net>)
 // Copyright (c) 2014-2016 National University of Ireland Maynooth (Atilim Gunes Baydin)
 // This code is licensed under the BSD license (see LICENSE file for details)
 
-namespace DiffSharp.Benchmarks.BasicTensorOps
+namespace DiffSharp.Benchmarks
+
+open BenchmarkDotNet.Attributes
+open BenchmarkDotNet.Configs
+
+open DiffSharp
+open DiffSharp.Benchmarks
 
 open System
-open DiffSharp
+open System.IO
+open System.Threading
 open DiffSharp.Backends
-open DiffSharp.Data
-open DiffSharp.Model
-open DiffSharp.Optim
 open TorchSharp
 open TorchSharp.Tensor
-open BenchmarkDotNet.Attributes
-open BenchmarkDotNet.Columns
-open BenchmarkDotNet.Configs
-open BenchmarkDotNet.Running
-open BenchmarkDotNet.Order
-open Python
-open Python.Runtime
-
-
 
 /// For testing perf costs of the TorchSharp layer - going straght to the C++
 module Ext =
@@ -34,30 +29,27 @@ module Ext =
     [<DllImport("LibTorchSharp")>]
     extern IntPtr THSTensor_add(IntPtr tensor, IntPtr trg, IntPtr alpha);
 
-[<AutoOpen>]
-module PythonHelpers =
-    //#r "nuget: pythonnet_netstandard_py38_win"
-    open System
-    open Python.Runtime
-    let execPython(code) = 
-        // your mileage may differ
-        if Environment.GetEnvironmentVariable("COMPUTERNAME") = "MSRC-3617253" then
-            Environment.SetEnvironmentVariable("PYTHONHOME", @"C:\ProgramData\Anaconda3\", EnvironmentVariableTarget.User)
-        if Environment.GetEnvironmentVariable("PYTHONHOME") = null then failwith "expect PYTHONHOME to be set"
-        use gil = Py.GIL()
-        use scope = Py.CreateScope()
-        //scope.Exec("import torch")
-        scope.Exec(code) |> ignore
-//    execPython("""
-//for x in range(5):
-//    torch.tensor(range(5))
-//""")
+module PythonResults =
+    let pythonResults = 
+        let pyFile = Path.Combine(__SOURCE_DIRECTORY__, "..", "DiffSharp.Benchmarks.Python", "results.csv")
+        if File.Exists(pyFile) then  
+            let lines = File.ReadAllLines(pyFile)
+            dict [ for line in lines do 
+                       let c = line.LastIndexOf("," )
+                       if c <> -1 then 
+                           let res = line.[0..c-1], int line.[c+1..] 
+                           printfn "%A" res
+                           res]
+        else 
+            printfn "*** No python results found at '%s', have you run DiffSharp.Benchmarks.Python?" pyFile
+            dict [ ]
 
 [<ShortRunJob>]
 [<MarkdownExporterAttribute.GitHub; AsciiDocExporter; HtmlExporter; CsvExporter; RPlotExporter>]
 [<GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)>]
-[<CategoriesColumn>]
+[<CategoriesColumn; BaselineColumn>]
 type BasicTensorOps() = 
+    inherit BasicTensorTestMatrix()
 
     let mutable dtype = Unchecked.defaultof<Dtype>
     let mutable device = Unchecked.defaultof<Device>
@@ -66,23 +58,32 @@ type BasicTensorOps() =
     let mutable tvec = Unchecked.defaultof<Tensor>
     let mutable tmat = Unchecked.defaultof<Tensor>
     let mutable t0 = Unchecked.defaultof<Tensor>
+    let mutable s0 = Unchecked.defaultof<scalar>
     let mutable rawt = Unchecked.defaultof<RawTensor>
     let mutable rawtvec = Unchecked.defaultof<RawTensor>
     let mutable rawtmat = Unchecked.defaultof<RawTensor>
     let mutable rawt0 = Unchecked.defaultof<RawTensor>
+    let mutable raws = Unchecked.defaultof<scalar>
     let mutable tt = Unchecked.defaultof<TorchTensor>
     let mutable ttvec = Unchecked.defaultof<TorchTensor>
     let mutable ttmat = Unchecked.defaultof<TorchTensor>
-    let mutable tt0 = Unchecked.defaultof<TorchScalar>
+    let mutable ts = Unchecked.defaultof<TorchScalar>
     
-    let mutable rawDataPython = Unchecked.defaultof<_>
     // store results temporarily to make sure nothing gets optimised away
     let mutable res = Unchecked.defaultof<Tensor>
     let mutable res3 = Unchecked.defaultof<_>
     let mutable res4 = Unchecked.defaultof<_>
-    let N = pown 2 18
 
-    member perf.configure(backend) = 
+    member perf.simulatePythonResult(nm) =
+        // Note, this string allocation and dictionary lookup can affect result
+        let key = nm + string perf.tensorSize + perf.dtypeName + perf.deviceName
+        if PythonResults.pythonResults.ContainsKey(key) then
+            let time = PythonResults.pythonResults.[key]
+            Thread.Sleep(time)
+        else  
+            failwithf "key '%s' not found in python results, have you run DiffSharp.Benchmarks.Python?" key
+
+    member perf.configure(backend, factor) = 
         match box tt with 
         | null -> 
             dtype <- (match perf.dtypeName with "int32" -> Dtype.Int32 | "float32" -> Dtype.Float32 | _ -> Dtype.Float64)
@@ -95,49 +96,31 @@ type BasicTensorOps() =
                 | Dtype.Float64 -> Array.map double [| 1 .. perf.tensorSize |] :> Array
                 | Dtype.Int32 -> Array.map int32 [| 1 .. perf.tensorSize |] :> Array
                 | _ -> failwith "unknown dtype in perf suite"
-            rawDataPython <- sprintf "range(%d)"  perf.tensorSize
             t <- dsharp.tensor [| 1 .. perf.tensorSize |]
             let matSize = int(sqrt(float perf.tensorSize))
             tvec <- dsharp.randint (1, 10, [| matSize |])
             tmat <- dsharp.randint (1, 10, [| matSize; matSize |])
+            s0 <- dsharp.tensor 1.1
             t0 <- dsharp.tensor 1.1
             rawt <- t.primalRaw
             rawtvec <- tvec.primalRaw
             rawtmat <- tmat.primalRaw
             rawt0 <- t0.primalRaw
+            raws <- 3
+            s0 <- 3
             tt <- match rawt.Handle with :? TorchSharp.Tensor.TorchTensor as tt -> tt | _ -> Unchecked.defaultof<_>
             ttvec <- match rawtvec.Handle with :? TorchSharp.Tensor.TorchTensor as tt -> tt | _ -> Unchecked.defaultof<_>
             ttmat <- match rawtmat.Handle with :? TorchSharp.Tensor.TorchTensor as tt -> tt | _ -> Unchecked.defaultof<_>
-            tt0 <- TorchSharp.TorchScalar.op_Implicit(1)
+            ts <- TorchSharp.TorchScalar.op_Implicit(3)
         | _ -> ()
-        N/perf.tensorSize
+        perf.numIterations(factor)
 
-    [<Params (2048)>] 
-    //[<Params (1, 16, 2048, 65536)>] 
-    member val public tensorSize = 0 with get, set
-
-    [<Params ("float32")>] 
-    //[<Params ("int32", "float32", "float64")>] 
-    member val public dtypeName = "" with get, set
-
-    [<Params ("cpu")>] 
-    //[<Params ("cpu", "gpu")>] 
-    member val public deviceName = "" with get, set
-
-    //--------------------------------------------------------------
-#if PYTHON
     [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
-    member perf.fromCpuData_PyTorch() = 
-        let n = perf.configure(Backend.Reference) 
-        execPython(sprintf """
-import torch
-for x in range(%d):
-    torch.tensor(%s)
-""" n rawDataPython)
-#endif
-    [<Benchmark(Baseline=true); BenchmarkCategory("fromCpuData")>]
+    member perf.fromCpuData_PyTorch() = perf.simulatePythonResult("fromCpuData")
+
+    [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 2)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -148,33 +131,35 @@ for x in range(%d):
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
-    member perf.fromCpuData_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
-
-    [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 2)
         for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- dsharp.tensor(rawData)
+        let n = perf.configure(Backend.Torch, 2)
+        for _ in 1 .. n do res <- dsharp.tensor(rawData)
+
+    [<Benchmark; BenchmarkCategory("fromCpuData")>]
+    member perf.fromCpuData_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 2)
+        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- dsharp.tensor(rawData)
+        let n = perf.configure(Backend.Reference, 2)
+        for _ in 1 .. n do res <- dsharp.tensor(rawData)
 
+#if !TINY
     //--------------------------------------------------------------
     // zeros
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("zeros")>]
+    member perf.zeros_PyTorch() =  perf.simulatePythonResult("zeros")
+
+    [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -185,33 +170,34 @@ for x in range(%d):
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.zeros_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.zeros_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
+        for _ in 1 .. n do res <- dsharp.zeros( [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("zeros")>]
+    member perf.zeros_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
-
-    [<Benchmark; BenchmarkCategory("zeros")>]
-    member perf.zeros_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- dsharp.zeros( [| perf.tensorSize |])
+        let n = perf.configure(Backend.Reference, 10)
+        for _ in 1 .. n do res <- dsharp.zeros( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
     // ones
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("ones")>]
+    member perf.ones_PyTorch() = perf.simulatePythonResult("ones")
+
+    [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -222,33 +208,34 @@ for x in range(%d):
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.ones_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.ones_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
+        for _ in 1 .. n do res <- dsharp.ones( [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("ones")>]
+    member perf.ones_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
-
-    [<Benchmark; BenchmarkCategory("ones")>]
-    member perf.ones_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- dsharp.ones( [| perf.tensorSize |])
+        let n = perf.configure(Backend.Reference, 10)
+        for _ in 1 .. n do res <- dsharp.ones( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
     // rand
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("rand")>]
+    member perf.rand_PyTorch() = perf.simulatePythonResult("rand")
+
+    [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
@@ -259,183 +246,189 @@ for x in range(%d):
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.rand_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.rand_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res <- dsharp.rand( [| perf.tensorSize |])
+
+    [<Benchmark; BenchmarkCategory("rand")>]
+    member perf.rand_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
-
-    [<Benchmark; BenchmarkCategory("rand")>]
-    member perf.rand_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- dsharp.rand( [| perf.tensorSize |])
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res <- dsharp.rand( [| perf.tensorSize |])
 
     //--------------------------------------------------------------
     // addition
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("addition")>]
+    member perf.addition_PyTorch() = perf.simulatePythonResult("addition")
+
+    [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
             res4 <- tt.Add(tt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.addition_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.addition_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10)
+        for _ in 1 .. n do res <- t + t
+
+    [<Benchmark; BenchmarkCategory("addition")>]
+    member perf.addition_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10)
         for _ in 1 .. n do res3 <- rawt.AddTT(rawt)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- t + t
-
-    [<Benchmark; BenchmarkCategory("addition")>]
-    member perf.addition_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- t + t
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res <- t + t
 
 
     //--------------------------------------------------------------
     // addScalar
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("addScalar")>]
-    member perf.addScalar_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do 
-            res4 <- tt.Add(tt0)
+    member perf.addScalar_PyTorch() = perf.simulatePythonResult("addScalar")
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
-    member perf.addScalar_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
+    member perf.addScalar_TorchSharp() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do 
+            res4 <- tt.Add(ts)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
+
+    [<Benchmark; BenchmarkCategory("addScalar")>]
+    member perf.addScalar_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res <- t + t0
+
+    [<Benchmark; BenchmarkCategory("addScalar")>]
+    member perf.addScalar_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
         for _ in 1 .. n do res3 <- rawt.AddTT0(rawt0)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- t + t0
-
-    [<Benchmark; BenchmarkCategory("addScalar")>]
-    member perf.addScalar_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- t + t0
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res <- t + t0
 
     //--------------------------------------------------------------
     // addWithAlpha
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do 
-            res4 <- tt.Add(tt, tt0)
+    member perf.addWithAlpha_PyTorch() = perf.simulatePythonResult("addWithAlpha")
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
+    member perf.addWithAlpha_TorchSharp() = 
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do 
+            res4 <- tt.Add(tt, alpha=ts)
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res3 <- rawt.AddTT(rawt.MulTT0(rawt0)) // TODO: no optimised routine in RawTensor as yet
-
-    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
-    member perf.addWithAlpha_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res3 <- rawt.AddTT(rawt, alpha=raws)
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res <- t.add(t.mul(s0)) // TODO: no optimised routine in Tensor as yet
+
+    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
+    member perf.addWithAlpha_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res3 <- rawt.AddTT(rawt, alpha=raws)
+
+    [<Benchmark; BenchmarkCategory("addWithAlpha")>]
+    member perf.addWithAlpha_Tensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res <- t.add(t.mul(t0)) // TODO: no optimised routine in Tensor as yet
 
     //--------------------------------------------------------------
     // addInPlace
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_PyTorch() = perf.simulatePythonResult("addInPlace")
+
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
             res4 <- tt.AddInPlace(tt)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
-    member perf.addInPlace_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
-
-    [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res3 <- rawt.AddTT(rawt) // TODO: no optimised routine in RawTensor as yet
-
-    [<Benchmark; BenchmarkCategory("addInPlace")>]
-    member perf.addInPlace_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
+        let n = perf.configure(Backend.Torch, 10) 
+        res3 <- rawt.Clone()
+        for _ in 1 .. n do res3.AddInPlace(rawt)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- t + t // TODO: no optimised routine in RawTensor as yet
+        let n = perf.configure(Backend.Torch, 10) 
+        for _ in 1 .. n do res <- t + t // TODO: no optimised routine in RawTensor as yet
 
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
+        res3 <- rawt.Clone()
+        for _ in 1 .. n do res3.AddInPlace(rawt)
 
-
+    [<Benchmark; BenchmarkCategory("addInPlace")>]
+    member perf.addInPlace_Tensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 10) 
+        for _ in 1 .. n do res <- t + t // TODO: no optimised routine in RawTensor as yet
 
     //--------------------------------------------------------------
     // matmul
 
-    // TODO: add python here
-
     [<Benchmark(Baseline=true); BenchmarkCategory("matmul")>]
+    member perf.matmul_PyTorch() : unit = perf.simulatePythonResult("matmul")
+
+    [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_TorchSharp() = 
-        let n = perf.configure(Backend.Torch) 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
             res4 <- ttmat.MatMul(ttmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_RawTensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
+    member perf.matmul_RawTensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_RawTensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
+    member perf.matmul_Tensor_Torch() = 
+        let n = perf.configure(Backend.Torch, 1) 
+        for _ in 1 .. n do res <- tmat.matmul(tmat)
+
+    [<Benchmark; BenchmarkCategory("matmul")>]
+    member perf.matmul_RawTensor_Reference() = 
+        let n = perf.configure(Backend.Reference, 1) 
         for _ in 1 .. n do res3 <- rawtmat.MatMulTT(rawtmat)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_Tensor_Reference() = 
-        let n = perf.configure(Backend.Reference) 
-        for _ in 1 .. n do res  <- tmat.matmul(tmat)
+        let n = perf.configure(Backend.Reference, 1) 
+        for _ in 1 .. n do res <- tmat.matmul(tmat)
 
-    [<Benchmark; BenchmarkCategory("matmul")>]
-    member perf.matmul_Tensor_Torch() = 
-        let n = perf.configure(Backend.Torch) 
-        for _ in 1 .. n do res  <- tmat.matmul(tmat)
+#endif
 
     //[<Benchmark>]
     //member perf.sub_DiffSharp() = let n = perf.configure() in for _ in 1 .. n do res <- t + t
@@ -470,26 +463,10 @@ for x in range(%d):
     //[<Benchmark>]
     //member perf.gradSinSum() = let n = perf.configure() in for _ in 1 .. n do res <- dsharp.grad (fun t -> (sin t).sum()) t
 
+
 (*
 [<ShortRunJob>]
 type Training() = 
-
-    member perf.configure() = 
-        let dtype = (match perf.dtype with "int32" -> Dtype.Int32 | "float32" -> Dtype.Float32 | _ -> Dtype.Float64)
-        let backend = if perf.backend = "Backend.Torch" then Backend.Torch else Backend.Reference
-        let device = if perf.device = "cpu" then Device.CPU else Device.GPU
-        if not (dsharp.isDeviceTypeSupported(device.DeviceType, backend)) then failwith "device not supported"
-        dsharp.config(dtype=dtype,backend=backend,device=device)
-
-    [<Params ("float32")>] 
-    //[<Params ("float32", "float64")>] 
-    member val public dtype = "" with get, set
-
-    [<Params ("cpu")>] //[<Params ("cpu", "gpu")>] 
-    member val public device = "" with get, set
-
-    [<Params ("Backend.Torch", "Backend.Reference")>] 
-    member val public backend = "" with get, set
 
     [<Params (64, 256)>] 
     member val public n = 0 with get, set
@@ -524,3 +501,5 @@ type Training() =
         ()
 
 *)
+
+

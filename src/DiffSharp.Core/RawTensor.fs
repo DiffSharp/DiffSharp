@@ -362,7 +362,7 @@ type RawTensor() =
     abstract MinIndexT : unit -> int[]
 
     /// Returns the element-wise addition of the two tensors
-    abstract AddTT : RawTensor -> RawTensor
+    abstract AddTT : RawTensor * ?alpha: scalar -> RawTensor
 
     /// Returns the element-wise addition of two scalars
     abstract AddTT0 : RawTensor -> RawTensor
@@ -658,7 +658,7 @@ type RawTensor() =
     abstract NeqInPlace: t2: RawTensor -> unit
 
     /// Modifies the tensor by the element-wise addition of the two tensors
-    abstract AddInPlace: RawTensor -> unit
+    abstract AddInPlace: RawTensor * ?alpha: scalar -> unit
 
     /// Modifies the tensor by the element-wise addition of two scalars
     abstract AddScalarInPlace: RawTensor -> unit
