@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DiffSharp.Benchmarks.Python.BasicTensorOps-20201112-010111</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.17134.1792 (1803/April2018Update/Redstone4)
+Intel Xeon CPU E5-1620 0 3.60GHz, 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=5.0.100
+  [Host]     : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT DEBUG
+  DefaultJob : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>        Method</th><th>Categories</th><th>tensorSize</th><th>dtypeName</th><th>deviceName</th><th>  Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Baseline</th>
+</tr>
+</thead><tbody><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>float32</td><td>cpu</td><td>528.251 ms</td><td>7.1480 ms</td><td>7.0203 ms</td><td>528.263 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>float32</td><td>cuda</td><td>3,459.289 ms</td><td>68.1239 ms</td><td>108.0517 ms</td><td>3,423.512 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>float64</td><td>cpu</td><td>535.892 ms</td><td>6.3468 ms</td><td>5.9368 ms</td><td>536.885 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>float64</td><td>cuda</td><td>3,515.693 ms</td><td>67.8496 ms</td><td>118.8331 ms</td><td>3,471.741 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>int32</td><td>cpu</td><td>504.074 ms</td><td>9.7049 ms</td><td>17.5000 ms</td><td>497.700 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>16</td><td>int32</td><td>cuda</td><td>3,502.036 ms</td><td>69.3749 ms</td><td>130.3029 ms</td><td>3,435.864 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>float32</td><td>cpu</td><td>29.163 ms</td><td>0.5684 ms</td><td>0.5582 ms</td><td>29.037 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>float32</td><td>cuda</td><td>52.264 ms</td><td>0.5889 ms</td><td>0.6546 ms</td><td>52.211 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>float64</td><td>cpu</td><td>29.226 ms</td><td>0.4542 ms</td><td>0.4249 ms</td><td>29.350 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>float64</td><td>cuda</td><td>57.338 ms</td><td>1.6136 ms</td><td>4.7578 ms</td><td>54.610 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>int32</td><td>cpu</td><td>22.228 ms</td><td>0.2746 ms</td><td>0.2434 ms</td><td>22.168 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>2048</td><td>int32</td><td>cuda</td><td>45.845 ms</td><td>0.4198 ms</td><td>0.3927 ms</td><td>45.844 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>float32</td><td>cpu</td><td>30.638 ms</td><td>0.3532 ms</td><td>0.3131 ms</td><td>30.523 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>float32</td><td>cuda</td><td>32.691 ms</td><td>0.3489 ms</td><td>0.3093 ms</td><td>32.793 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>float64</td><td>cpu</td><td>30.983 ms</td><td>0.3030 ms</td><td>0.2686 ms</td><td>31.042 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>float64</td><td>cuda</td><td>32.538 ms</td><td>0.2320 ms</td><td>0.2056 ms</td><td>32.518 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>int32</td><td>cpu</td><td>24.413 ms</td><td>0.4826 ms</td><td>0.6275 ms</td><td>24.289 ms</td><td>No</td>
+</tr><tr><td>fromCpuData_PyTorch</td><td>fromCpuData</td><td>65536</td><td>int32</td><td>cuda</td><td>25.957 ms</td><td>0.3758 ms</td><td>0.3332 ms</td><td>26.033 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>float32</td><td>cpu</td><td>1,645.760 ms</td><td>28.3134 ms</td><td>35.8074 ms</td><td>1,632.159 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>float32</td><td>cuda</td><td>5,047.589 ms</td><td>53.2548 ms</td><td>41.5779 ms</td><td>5,028.865 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>float64</td><td>cpu</td><td>1,652.755 ms</td><td>16.3041 ms</td><td>12.7292 ms</td><td>1,652.044 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>float64</td><td>cuda</td><td>5,145.732 ms</td><td>97.4609 ms</td><td>112.2361 ms</td><td>5,124.099 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>int32</td><td>cpu</td><td>1,616.289 ms</td><td>14.5062 ms</td><td>12.1133 ms</td><td>1,611.865 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>16</td><td>int32</td><td>cuda</td><td>5,051.074 ms</td><td>99.2790 ms</td><td>154.5655 ms</td><td>4,998.708 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>float32</td><td>cpu</td><td>15.593 ms</td><td>0.1425 ms</td><td>0.1333 ms</td><td>15.596 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>float32</td><td>cuda</td><td>39.707 ms</td><td>0.5796 ms</td><td>0.6675 ms</td><td>39.532 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>float64</td><td>cpu</td><td>18.210 ms</td><td>0.3358 ms</td><td>0.5517 ms</td><td>17.986 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>float64</td><td>cuda</td><td>39.146 ms</td><td>0.5106 ms</td><td>0.4526 ms</td><td>39.040 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>int32</td><td>cpu</td><td>14.603 ms</td><td>0.2878 ms</td><td>0.3199 ms</td><td>14.462 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>2048</td><td>int32</td><td>cuda</td><td>37.855 ms</td><td>0.1490 ms</td><td>0.1321 ms</td><td>37.860 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>float32</td><td>cpu</td><td>1.951 ms</td><td>0.1071 ms</td><td>0.3142 ms</td><td>1.851 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>float32</td><td>cuda</td><td>1.444 ms</td><td>0.0287 ms</td><td>0.0648 ms</td><td>1.428 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>float64</td><td>cpu</td><td>2.791 ms</td><td>0.1252 ms</td><td>0.3691 ms</td><td>2.808 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>float64</td><td>cuda</td><td>1.385 ms</td><td>0.0256 ms</td><td>0.0449 ms</td><td>1.368 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>int32</td><td>cpu</td><td>1.771 ms</td><td>0.0676 ms</td><td>0.1908 ms</td><td>1.721 ms</td><td>No</td>
+</tr><tr><td>zeros_PyTorch</td><td>zeros</td><td>65536</td><td>int32</td><td>cuda</td><td>1.429 ms</td><td>0.0284 ms</td><td>0.0801 ms</td><td>1.418 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>float32</td><td>cpu</td><td>1,669.590 ms</td><td>29.0277 ms</td><td>65.5203 ms</td><td>1,643.129 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>float32</td><td>cuda</td><td>5,078.890 ms</td><td>101.1625 ms</td><td>197.3096 ms</td><td>4,997.626 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>float64</td><td>cpu</td><td>1,659.131 ms</td><td>17.2865 ms</td><td>14.4351 ms</td><td>1,654.546 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>float64</td><td>cuda</td><td>5,033.843 ms</td><td>93.6214 ms</td><td>82.9929 ms</td><td>5,010.243 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>int32</td><td>cpu</td><td>1,597.712 ms</td><td>24.0062 ms</td><td>28.5776 ms</td><td>1,592.619 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>16</td><td>int32</td><td>cuda</td><td>4,971.522 ms</td><td>92.3508 ms</td><td>146.4781 ms</td><td>4,930.065 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>float32</td><td>cpu</td><td>14.113 ms</td><td>0.0806 ms</td><td>0.0715 ms</td><td>14.117 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>float32</td><td>cuda</td><td>38.468 ms</td><td>0.2790 ms</td><td>0.2178 ms</td><td>38.410 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>float64</td><td>cpu</td><td>16.665 ms</td><td>0.3153 ms</td><td>0.2950 ms</td><td>16.567 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>float64</td><td>cuda</td><td>39.385 ms</td><td>0.4292 ms</td><td>0.3805 ms</td><td>39.491 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>int32</td><td>cpu</td><td>14.154 ms</td><td>0.2742 ms</td><td>0.2565 ms</td><td>14.074 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>2048</td><td>int32</td><td>cuda</td><td>40.657 ms</td><td>0.5858 ms</td><td>0.5193 ms</td><td>40.520 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>float32</td><td>cpu</td><td>1.899 ms</td><td>0.1003 ms</td><td>0.2893 ms</td><td>1.813 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>float32</td><td>cuda</td><td>1.381 ms</td><td>0.0276 ms</td><td>0.0577 ms</td><td>1.361 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>float64</td><td>cpu</td><td>2.795 ms</td><td>0.1454 ms</td><td>0.4263 ms</td><td>2.736 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>float64</td><td>cuda</td><td>1.391 ms</td><td>0.0276 ms</td><td>0.0639 ms</td><td>1.369 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>int32</td><td>cpu</td><td>1.869 ms</td><td>0.1266 ms</td><td>0.3653 ms</td><td>1.716 ms</td><td>No</td>
+</tr><tr><td>ones_PyTorch</td><td>ones</td><td>65536</td><td>int32</td><td>cuda</td><td>1.384 ms</td><td>0.0275 ms</td><td>0.0643 ms</td><td>1.370 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>float32</td><td>cpu</td><td>1,981.077 ms</td><td>39.2000 ms</td><td>99.0635 ms</td><td>1,933.657 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>float32</td><td>cuda</td><td>5,406.589 ms</td><td>93.0025 ms</td><td>133.3814 ms</td><td>5,361.649 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>float64</td><td>cpu</td><td>1,971.714 ms</td><td>39.0232 ms</td><td>68.3460 ms</td><td>1,937.530 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>float64</td><td>cuda</td><td>5,364.707 ms</td><td>103.9160 ms</td><td>123.7046 ms</td><td>5,378.001 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>int32</td><td>cpu</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>16</td><td>int32</td><td>cuda</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>float32</td><td>cpu</td><td>32.000 ms</td><td>0.3424 ms</td><td>0.3202 ms</td><td>31.968 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>float32</td><td>cuda</td><td>40.783 ms</td><td>0.6180 ms</td><td>0.5478 ms</td><td>40.983 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>float64</td><td>cpu</td><td>56.496 ms</td><td>0.9911 ms</td><td>0.9270 ms</td><td>56.503 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>float64</td><td>cuda</td><td>42.946 ms</td><td>0.7812 ms</td><td>0.6523 ms</td><td>42.723 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>int32</td><td>cpu</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>2048</td><td>int32</td><td>cuda</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>float32</td><td>cpu</td><td>18.470 ms</td><td>0.1712 ms</td><td>0.1602 ms</td><td>18.506 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>float32</td><td>cuda</td><td>1.432 ms</td><td>0.0277 ms</td><td>0.0406 ms</td><td>1.420 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>float64</td><td>cpu</td><td>39.024 ms</td><td>0.2519 ms</td><td>0.2233 ms</td><td>38.972 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>float64</td><td>cuda</td><td>1.480 ms</td><td>0.0280 ms</td><td>0.0392 ms</td><td>1.478 ms</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>int32</td><td>cpu</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>rand_PyTorch</td><td>rand</td><td>65536</td><td>int32</td><td>cuda</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>float32</td><td>cpu</td><td>742.510 ms</td><td>12.4315 ms</td><td>11.6284 ms</td><td>741.321 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>float32</td><td>cuda</td><td>3,229.725 ms</td><td>62.8968 ms</td><td>69.9096 ms</td><td>3,209.733 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>float64</td><td>cpu</td><td>754.081 ms</td><td>8.0423 ms</td><td>7.5228 ms</td><td>755.628 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>float64</td><td>cuda</td><td>3,145.584 ms</td><td>60.0503 ms</td><td>61.6672 ms</td><td>3,121.837 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>int32</td><td>cpu</td><td>714.067 ms</td><td>5.5989 ms</td><td>5.2372 ms</td><td>714.155 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>16</td><td>int32</td><td>cuda</td><td>3,260.667 ms</td><td>60.6064 ms</td><td>78.8055 ms</td><td>3,231.562 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>float32</td><td>cpu</td><td>9.307 ms</td><td>0.1852 ms</td><td>0.4879 ms</td><td>9.193 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>float32</td><td>cuda</td><td>25.150 ms</td><td>0.4066 ms</td><td>0.3994 ms</td><td>25.102 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>float64</td><td>cpu</td><td>12.750 ms</td><td>0.2497 ms</td><td>0.4438 ms</td><td>12.780 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>float64</td><td>cuda</td><td>24.604 ms</td><td>0.2859 ms</td><td>0.2674 ms</td><td>24.567 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>int32</td><td>cpu</td><td>9.266 ms</td><td>0.1837 ms</td><td>0.3451 ms</td><td>9.123 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>2048</td><td>int32</td><td>cuda</td><td>25.396 ms</td><td>0.7400 ms</td><td>2.1701 ms</td><td>24.280 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>float32</td><td>cpu</td><td>7.553 ms</td><td>0.3445 ms</td><td>0.9429 ms</td><td>7.462 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>float32</td><td>cuda</td><td>5.195 ms</td><td>0.1026 ms</td><td>0.1714 ms</td><td>5.199 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>float64</td><td>cpu</td><td>10.074 ms</td><td>0.8095 ms</td><td>2.3868 ms</td><td>9.759 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>float64</td><td>cuda</td><td>5.403 ms</td><td>0.1024 ms</td><td>0.2289 ms</td><td>5.406 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>int32</td><td>cpu</td><td>6.305 ms</td><td>0.3180 ms</td><td>0.8866 ms</td><td>6.300 ms</td><td>No</td>
+</tr><tr><td>addition_PyTorch</td><td>addition</td><td>65536</td><td>int32</td><td>cuda</td><td>4.393 ms</td><td>0.1014 ms</td><td>0.2908 ms</td><td>4.347 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>float32</td><td>cpu</td><td>409.598 ms</td><td>2.2956 ms</td><td>1.9169 ms</td><td>409.986 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>float32</td><td>cuda</td><td>1,643.912 ms</td><td>13.8597 ms</td><td>11.5735 ms</td><td>1,639.398 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>float64</td><td>cpu</td><td>385.327 ms</td><td>4.4139 ms</td><td>3.6858 ms</td><td>385.888 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>float64</td><td>cuda</td><td>1,600.520 ms</td><td>19.7346 ms</td><td>16.4793 ms</td><td>1,599.511 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>int32</td><td>cpu</td><td>383.271 ms</td><td>4.0174 ms</td><td>3.5613 ms</td><td>382.039 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>16</td><td>int32</td><td>cuda</td><td>1,613.522 ms</td><td>31.8994 ms</td><td>32.7583 ms</td><td>1,602.715 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>float32</td><td>cpu</td><td>5.516 ms</td><td>0.1036 ms</td><td>0.0865 ms</td><td>5.493 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>float32</td><td>cuda</td><td>13.091 ms</td><td>0.2013 ms</td><td>0.1784 ms</td><td>13.081 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>float64</td><td>cpu</td><td>7.582 ms</td><td>0.1511 ms</td><td>0.1965 ms</td><td>7.507 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>float64</td><td>cuda</td><td>13.340 ms</td><td>0.2572 ms</td><td>0.3434 ms</td><td>13.321 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>int32</td><td>cpu</td><td>5.523 ms</td><td>0.0779 ms</td><td>0.0650 ms</td><td>5.527 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>2048</td><td>int32</td><td>cuda</td><td>12.789 ms</td><td>0.2411 ms</td><td>0.2476 ms</td><td>12.714 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>float32</td><td>cpu</td><td>6.895 ms</td><td>0.3885 ms</td><td>1.0635 ms</td><td>6.739 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>float32</td><td>cuda</td><td>4.988 ms</td><td>0.0990 ms</td><td>0.2676 ms</td><td>4.922 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>float64</td><td>cpu</td><td>8.604 ms</td><td>0.4917 ms</td><td>1.3789 ms</td><td>8.934 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>float64</td><td>cuda</td><td>4.887 ms</td><td>0.0962 ms</td><td>0.1710 ms</td><td>4.843 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>int32</td><td>cpu</td><td>5.706 ms</td><td>0.3159 ms</td><td>0.8807 ms</td><td>5.769 ms</td><td>No</td>
+</tr><tr><td>addInPlace_PyTorch</td><td>addInPlace</td><td>65536</td><td>int32</td><td>cuda</td><td>3.919 ms</td><td>0.0770 ms</td><td>0.1502 ms</td><td>3.929 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>float32</td><td>cpu</td><td>530.222 ms</td><td>3.0549 ms</td><td>2.5510 ms</td><td>530.745 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>float32</td><td>cuda</td><td>1,873.067 ms</td><td>28.0883 ms</td><td>23.4550 ms</td><td>1,869.784 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>float64</td><td>cpu</td><td>482.067 ms</td><td>6.8547 ms</td><td>6.0765 ms</td><td>480.838 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>float64</td><td>cuda</td><td>1,782.789 ms</td><td>15.0738 ms</td><td>14.1000 ms</td><td>1,781.665 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>int32</td><td>cpu</td><td>485.122 ms</td><td>8.1637 ms</td><td>7.6364 ms</td><td>484.073 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>16</td><td>int32</td><td>cuda</td><td>1,804.856 ms</td><td>17.7728 ms</td><td>14.8411 ms</td><td>1,804.852 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cpu</td><td>6.270 ms</td><td>0.0828 ms</td><td>0.0691 ms</td><td>6.259 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>float32</td><td>cuda</td><td>14.842 ms</td><td>0.1932 ms</td><td>0.1807 ms</td><td>14.848 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>float64</td><td>cpu</td><td>8.908 ms</td><td>0.1770 ms</td><td>0.3146 ms</td><td>8.995 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>float64</td><td>cuda</td><td>14.301 ms</td><td>0.2444 ms</td><td>0.2286 ms</td><td>14.250 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>int32</td><td>cpu</td><td>6.392 ms</td><td>0.0855 ms</td><td>0.0985 ms</td><td>6.381 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>2048</td><td>int32</td><td>cuda</td><td>17.897 ms</td><td>0.2732 ms</td><td>0.2555 ms</td><td>17.899 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cpu</td><td>6.972 ms</td><td>0.3282 ms</td><td>0.8872 ms</td><td>6.907 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>float32</td><td>cuda</td><td>4.879 ms</td><td>0.0974 ms</td><td>0.1968 ms</td><td>4.873 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>float64</td><td>cpu</td><td>9.230 ms</td><td>0.7637 ms</td><td>2.2398 ms</td><td>9.007 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>float64</td><td>cuda</td><td>4.933 ms</td><td>0.0972 ms</td><td>0.1872 ms</td><td>4.913 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>int32</td><td>cpu</td><td>5.541 ms</td><td>0.2620 ms</td><td>0.7347 ms</td><td>5.558 ms</td><td>No</td>
+</tr><tr><td>addWithAlpha_PyTorch</td><td>addWithAlpha</td><td>65536</td><td>int32</td><td>cuda</td><td>3.981 ms</td><td>0.0790 ms</td><td>0.2190 ms</td><td>3.939 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>float32</td><td>cpu</td><td>1,938.403 ms</td><td>16.2285 ms</td><td>15.1802 ms</td><td>1,939.982 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>float32</td><td>cuda</td><td>4,212.287 ms</td><td>82.0461 ms</td><td>132.4891 ms</td><td>4,179.452 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>float64</td><td>cpu</td><td>1,966.137 ms</td><td>39.1755 ms</td><td>49.5445 ms</td><td>1,949.195 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>float64</td><td>cuda</td><td>4,186.714 ms</td><td>81.4232 ms</td><td>87.1219 ms</td><td>4,162.382 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>int32</td><td>cpu</td><td>1,863.798 ms</td><td>30.4151 ms</td><td>28.4503 ms</td><td>1,855.691 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>16</td><td>int32</td><td>cuda</td><td>4,333.180 ms</td><td>82.6515 ms</td><td>107.4702 ms</td><td>4,285.018 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>float32</td><td>cpu</td><td>19.365 ms</td><td>0.2832 ms</td><td>0.2649 ms</td><td>19.361 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>float32</td><td>cuda</td><td>33.306 ms</td><td>0.3753 ms</td><td>0.3511 ms</td><td>33.394 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>float64</td><td>cpu</td><td>23.412 ms</td><td>0.2590 ms</td><td>0.2296 ms</td><td>23.387 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>float64</td><td>cuda</td><td>32.836 ms</td><td>0.1855 ms</td><td>0.1735 ms</td><td>32.841 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>int32</td><td>cpu</td><td>18.673 ms</td><td>0.2286 ms</td><td>0.2026 ms</td><td>18.639 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>2048</td><td>int32</td><td>cuda</td><td>32.789 ms</td><td>0.2587 ms</td><td>0.2420 ms</td><td>32.731 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>float32</td><td>cpu</td><td>7.565 ms</td><td>0.3478 ms</td><td>0.9810 ms</td><td>7.455 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>float32</td><td>cuda</td><td>5.397 ms</td><td>0.1072 ms</td><td>0.1792 ms</td><td>5.389 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>float64</td><td>cpu</td><td>10.924 ms</td><td>0.8420 ms</td><td>2.4695 ms</td><td>10.788 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>float64</td><td>cuda</td><td>5.528 ms</td><td>0.1083 ms</td><td>0.1809 ms</td><td>5.527 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>int32</td><td>cpu</td><td>7.417 ms</td><td>0.5242 ms</td><td>1.5292 ms</td><td>7.018 ms</td><td>No</td>
+</tr><tr><td>addScalar_PyTorch</td><td>addScalar</td><td>65536</td><td>int32</td><td>cuda</td><td>4.664 ms</td><td>0.0932 ms</td><td>0.2520 ms</td><td>4.627 ms</td><td>No</td>
+</tr></tbody></table>
+</body>
+</html>
