@@ -10,7 +10,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants Condition="'$(TINY)' == 'true'">$(DefineConstants);TINY</DefineConstants>
-    <DIFFSHARP_TESTGPU Condition="'$(TINY)' != true">false</DIFFSHARP_TESTGPU>
+    <DIFFSHARP_TESTGPU Condition="'$(TINY)' == 'true'">false</DIFFSHARP_TESTGPU>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 

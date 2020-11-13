@@ -95,14 +95,12 @@ to get figures in one report.  There are better ways to do this.
 
 To update Python benchmarks on your machine (note, writes back results into source code)
 
-    dotnet run --project tests\DiffSharp.Benchmarks.Python\DiffSharp.Benchmarks.Python.fsproj -c Release
+    dotnet run --project tests\DiffSharp.Benchmarks.Python\DiffSharp.Benchmarks.Python.fsproj -c Release --filter "*"
 
 This takes a while to run.
 
 To run benchmarks:
 
-    dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release
+    dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release --filter "*"
 
 To filter etc., see `--help`
-
-    dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release --filter "*matmul*"
