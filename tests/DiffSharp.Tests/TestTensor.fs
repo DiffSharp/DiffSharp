@@ -449,6 +449,35 @@ type TestTensor () =
             Assert.CheckEqual(tboolCorrect, tbool)
 
     [<Test>]
+    member _.TestTensorConvertViaIConvertible () =
+        for combo in Combos.IntegralAndFloatingPoint do
+            let v = 2.
+            let t = combo.tensor(v)
+            let tsingle = Convert.ToSingle t
+            let tdouble = Convert.ToDouble t
+            let tint16 = Convert.ToInt16 t
+            let tint32 = Convert.ToInt32 t
+            let tint64 = Convert.ToInt64 t
+            let tsingleCorrect = Convert.ToSingle v
+            let tdoubleCorrect = Convert.ToDouble v
+            let tint16Correct = Convert.ToInt16 v
+            let tint32Correct = Convert.ToInt32 v
+            let tint64Correct = Convert.ToInt64 v
+            Assert.CheckEqual(tsingleCorrect, tsingle)
+            Assert.CheckEqual(tdoubleCorrect, tdouble)
+            Assert.CheckEqual(tint16Correct, tint16)
+            Assert.CheckEqual(tint32Correct, tint32)
+            Assert.CheckEqual(tint64Correct, tint64)
+
+            let t2 = combo.full([4], t) // You can use a scalar tensor as a scalar and the types are used correctly
+            let t2Correct = combo.tensor([2.; 2.; 2.; 2. ])
+            Assert.CheckEqual(t2, t2Correct)
+
+            let t3 = t2 + (t :> scalar)  // You can use a scalar tensor as a scalar and the types are used correctly
+            let t3Correct = combo.tensor([4.; 4.; 4.; 4. ])
+            Assert.CheckEqual(t3, t3Correct)
+
+    [<Test>]
     member _.TestTensorOnehot () =
         for combo in Combos.All do 
             let t0 = combo.onehot(3, 0)

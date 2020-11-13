@@ -439,6 +439,35 @@ type Tensor internal (data: TensorData) =
     /// Convert a scalar tensor to a boolean value
     static member op_Explicit(tensor:Tensor):bool = tensor.toScalar().toBool()
 
+    interface System.IConvertible with
+        override t.GetTypeCode() =
+            match t.dtype with 
+            | Dtype.Byte -> TypeCode.Byte
+            | Dtype.Int8 -> TypeCode.SByte
+            | Dtype.Int16 -> TypeCode.Int16
+            | Dtype.Int32 -> TypeCode.Int32
+            | Dtype.Int64 -> TypeCode.Int64
+            | Dtype.Float32 -> TypeCode.Single
+            | Dtype.Float64 -> TypeCode.Double
+            | Dtype.Bool -> TypeCode.Boolean
+
+        override t.ToSingle(fmt) = t.toScalar().ToSingle(fmt)
+        override t.ToDouble(fmt) = t.toScalar().ToDouble(fmt)
+        override t.ToByte(fmt) = t.toScalar().ToByte(fmt)
+        override t.ToSByte(fmt) = t.toScalar().ToSByte(fmt)
+        override t.ToInt16(fmt) = t.toScalar().ToInt16(fmt)
+        override t.ToInt32(fmt) = t.toScalar().ToInt32(fmt)
+        override t.ToInt64(fmt) = t.toScalar().ToInt64(fmt)
+        override t.ToBoolean(fmt) = t.toScalar().ToBoolean(fmt)
+        override t.ToChar(fmt) = t.toScalar().ToChar(fmt)
+        override t.ToDateTime(fmt) = t.toScalar().ToDateTime(fmt)
+        override t.ToDecimal(fmt) = t.toScalar().ToDecimal(fmt)
+        override t.ToString(fmt) = t.toScalar().ToString(fmt)
+        override t.ToType(ty, fmt) = t.toScalar().ToType(ty, fmt)
+        override t.ToUInt16(fmt) = t.toScalar().ToUInt16(fmt)
+        override t.ToUInt32(fmt) = t.toScalar().ToUInt32(fmt)
+        override t.ToUInt64(fmt) = t.toScalar().ToUInt64(fmt)
+
     /// Convert a scalar tensor to a float32 value
     member t.toSingle() = t.toScalar().toSingle()
 
