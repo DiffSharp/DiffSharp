@@ -41,19 +41,43 @@ type Dtype =
 
     override x.ToString() = x.Name
 
+/// Contains global functions and settings related to tensor element types, used when writing backends.
+[<AutoOpen>]
+module DtypeAutoOpens =
+
+    type Dtype with
+        /// Matches all floating point tensor element types
+        member x.IsFloatingPoint =
+            match x with
+            | Float32 | Float64 -> true
+            | _ -> false
+
+        /// Matches all integral tensor element types
+        member x.IsIntegral =
+            match x with
+            | Byte | Int8 | Int16 | Int32 | Int64 -> true
+            | _ -> false
+
+    /// Raise an exception indicating the given operation is not supported for the given tensor element type.
+    let opNotSupported msg (dtype: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg dtype)
+
+    /// Raise an exception indicating the given operation is not supported for the given tensor device type.
+    let opNotSupportedOnDeviceType msg (dtype: Dtype) (deviceType: DeviceType) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A on device type %A" msg dtype deviceType)
+
+    /// Raise an exception indicating the given binary operation is not supported for the two given tensor element types.
+    let opNotSupported2 msg (dtype1: Dtype) (dtype2: Dtype) =
+        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg dtype1 dtype2)
+
 /// Contains functions and settings related to tensor element types
 module Dtype =
+
     /// Matches all floating point tensor element types
-    let (|FloatingPoint|_|) x =
-        match x with
-        | Float32 | Float64 -> Some()
-        | _ -> None
+    let (|FloatingPoint|_|) (x: Dtype) = if x.IsFloatingPoint then Some() else None
 
     /// Matches all integral tensor element types
-    let (|Integral|_|) x =
-        match x with
-        | Byte | Int8 | Int16 | Int32 | Int64 -> Some()
-        | _ -> None
+    let (|Integral|_|) (x: Dtype) = if x.IsIntegral then Some() else None
 
     /// Matches all integral or boolean tensor element types
     let (|IntegralOrBool|_|) x =
@@ -78,6 +102,8 @@ module Dtype =
             | Bool, Bool -> Some Bool
             | Int8, Byte | Byte, Int8  -> None
 
+
+
     /// Convert System.Type to Dtype
     let ofType (ty: System.Type) =
         if ty.Equals(typeof<int32>) then Dtype.Int32
@@ -92,20 +118,4 @@ module Dtype =
 
     /// Get or set the default element type used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32
-
-/// Contains global functions and settings related to tensor element types, used when writing backends.
-[<AutoOpen>]
-module DtypeAutoOpens =
-
-    /// Raise an exception indicating the given operation is not supported for the given tensor element type.
-    let opNotSupported msg (dtype: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A" msg dtype)
-
-    /// Raise an exception indicating the given operation is not supported for the given tensor device type.
-    let opNotSupportedOnDeviceType msg (dtype: Dtype) (deviceType: DeviceType) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type %A on device type %A" msg dtype deviceType)
-
-    /// Raise an exception indicating the given binary operation is not supported for the two given tensor element types.
-    let opNotSupported2 msg (dtype1: Dtype) (dtype2: Dtype) =
-        invalidOp (sprintf "operation '%s' not permitted on tensors of type (%A, %A)" msg dtype1 dtype2)
 

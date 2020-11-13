@@ -317,10 +317,10 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorFull () =
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t1a = combo.full([2;3], 2.5)
-            let t1b = combo.ones([2;3]) * 2.5
-            let t2a = combo.full([], 2.5)
-            let t2b = combo.ones([]) * 2.5
+            let t1a = combo.full([2;3], 2)
+            let t1b = combo.ones([2;3]) * 2
+            let t2a = combo.full([], 2)
+            let t2b = combo.ones([]) * 2
             Assert.CheckEqual(t1a, t1b)
             Assert.CheckEqual(t2a, t2b)
 
@@ -425,11 +425,11 @@ type TestTensor () =
         for combo in Combos.IntegralAndFloatingPoint do
             let v = 2.
             let t = combo.tensor(v)
-            let tsingle = t |> Convert.ToSingle
-            let tdouble = t |> Convert.ToDouble
-            let tint16 = t |> Convert.ToInt16
-            let tint32 = t |> Convert.ToInt32
-            let tint64 = t |> Convert.ToInt64
+            let tsingle = t.toSingle()
+            let tdouble = t.toDouble()
+            let tint16 = t.toInt16()
+            let tint32 = t.toInt32()
+            let tint64 = t.toInt64()
             let tsingleCorrect = single v
             let tdoubleCorrect = double v
             let tint16Correct = int16 v
@@ -444,7 +444,7 @@ type TestTensor () =
         for combo in Combos.Bool do
             let v = true
             let t = combo.tensor(v)
-            let tbool = t |> Convert.ToBoolean
+            let tbool = t.toBool()
             let tboolCorrect = v
             Assert.CheckEqual(tboolCorrect, tbool)
 
@@ -466,38 +466,38 @@ type TestTensor () =
     member _.TestTensorGetItemOnPrimal () =
       for combo in Combos.IntegralAndFloatingPoint do 
         let t0 = combo.tensor(2.)
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+        Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([2., 3., 4., 5., 6.])
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t1.primalRaw.GetItem(0)))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t1.primalRaw.GetItem(1)))
-        Assert.CheckEqual(4.0, System.Convert.ToDouble (t1.primalRaw.GetItem(2)))
-        Assert.CheckEqual(5.0, System.Convert.ToDouble (t1.primalRaw.GetItem(3)))
-        Assert.CheckEqual(6.0, System.Convert.ToDouble (t1.primalRaw.GetItem(4)))
+        Assert.CheckEqual(2.0, t1.primalRaw.GetItem(0).toDouble())
+        Assert.CheckEqual(3.0, t1.primalRaw.GetItem(1).toDouble())
+        Assert.CheckEqual(4.0, t1.primalRaw.GetItem(2).toDouble())
+        Assert.CheckEqual(5.0, t1.primalRaw.GetItem(3).toDouble())
+        Assert.CheckEqual(6.0, t1.primalRaw.GetItem(4).toDouble())
 
         let t2 = combo.tensor([[2.]; [3.]])
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t2.primalRaw.GetItem(0, 0)))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t2.primalRaw.GetItem(1, 0)))
+        Assert.CheckEqual(2.0, t2.primalRaw.GetItem(0, 0).toDouble())
+        Assert.CheckEqual(3.0, t2.primalRaw.GetItem(1, 0).toDouble())
 
         let t2b = combo.tensor([[1.;2.]; [3.;4.]])
-        Assert.CheckEqual(1.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(0, 0)))
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(0, 1)))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(1, 0)))
-        Assert.CheckEqual(4.0, System.Convert.ToDouble (t2b.primalRaw.GetItem(1, 1)))
+        Assert.CheckEqual(1.0, t2b.primalRaw.GetItem(0, 0).toDouble())
+        Assert.CheckEqual(2.0, t2b.primalRaw.GetItem(0, 1).toDouble())
+        Assert.CheckEqual(3.0, t2b.primalRaw.GetItem(1, 0).toDouble())
+        Assert.CheckEqual(4.0, t2b.primalRaw.GetItem(1, 1).toDouble())
 
         let t3 = combo.tensor([[[2.; 3.]]])
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t3.primalRaw.GetItem(0, 0, 0)))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t3.primalRaw.GetItem(0, 0, 1)))
+        Assert.CheckEqual(2.0, t3.primalRaw.GetItem(0, 0, 0).toDouble())
+        Assert.CheckEqual(3.0, t3.primalRaw.GetItem(0, 0, 1).toDouble())
 
         let t4 = combo.tensor([[[[1.]]]])
-        Assert.CheckEqual(1.0, System.Convert.ToDouble (t4.primalRaw.GetItem(0, 0, 0, 0)))
+        Assert.CheckEqual(1.0, t4.primalRaw.GetItem(0, 0, 0, 0).toDouble())
 
     [<Test>]
     // Test the underlying GetItem on the RawPrimal, useful when testing backends
     member _.TestTensorGetSliceOnPrimal () =
       for combo in Combos.IntegralAndFloatingPoint do 
         let t0 = combo.tensor(2.)
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+        Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([ 0 .. 10 ])
         let t1slice1 = t1.primalRaw.GetSlice(array2D [ [ 3; 4; 0 ] ])
@@ -546,34 +546,34 @@ type TestTensor () =
     member _.TestTensorIndexItemAsScalarTensor () =
       for combo in Combos.IntegralAndFloatingPoint do 
         let t0 = combo.tensor(2.)
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t0.toScalar()))
+        Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([2., 3., 4., 5., 6.])
         let t1_0 = t1.[0]
         let t1_1 = t1.[1]
-        let t1_0_s = t1_0.toScalar()
-        let t1_1_s = t1_1.toScalar()
-        Assert.CheckEqual(2.0, System.Convert.ToDouble t1_0_s)
-        Assert.CheckEqual(3.0, System.Convert.ToDouble t1_1_s)
-        Assert.CheckEqual(4.0, System.Convert.ToDouble (t1.[2].toScalar()))
-        Assert.CheckEqual(5.0, System.Convert.ToDouble (t1.[3].toScalar()))
+        let t1_0_s = t1_0.toDouble()
+        let t1_1_s = t1_1.toDouble()
+        Assert.CheckEqual(2.0, t1_0_s)
+        Assert.CheckEqual(3.0, t1_1_s)
+        Assert.CheckEqual(4.0, (t1.[2].toDouble()))
+        Assert.CheckEqual(5.0, (t1.[3].toDouble()))
 
         let t2 = combo.tensor([[2.]; [3.]])
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t2.[0,0].toScalar()))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t2.[1,0].toScalar()))
+        Assert.CheckEqual(2.0, (t2.[0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t2.[1,0].toDouble()))
 
         let t2b = combo.tensor([[1.;2.]; [3.;4.]])
-        Assert.CheckEqual(1.0, System.Convert.ToDouble (t2b.[0,0].toScalar()))
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t2b.[0,1].toScalar()))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t2b.[1,0].toScalar()))
-        Assert.CheckEqual(4.0, System.Convert.ToDouble (t2b.[1,1].toScalar()))
+        Assert.CheckEqual(1.0, (t2b.[0,0].toDouble()))
+        Assert.CheckEqual(2.0, (t2b.[0,1].toDouble()))
+        Assert.CheckEqual(3.0, (t2b.[1,0].toDouble()))
+        Assert.CheckEqual(4.0, (t2b.[1,1].toDouble()))
 
         let t3 = combo.tensor([[[2.; 3.]]])
-        Assert.CheckEqual(2.0, System.Convert.ToDouble (t3.[0,0,0].toScalar()))
-        Assert.CheckEqual(3.0, System.Convert.ToDouble (t3.[0,0,1].toScalar()))
+        Assert.CheckEqual(2.0, (t3.[0,0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t3.[0,0,1].toDouble()))
 
         let t4 = combo.tensor([[[[1.]]]])
-        Assert.CheckEqual(1.0, System.Convert.ToDouble (t4.[0,0,0,0].toScalar()))
+        Assert.CheckEqual(1.0, (t4.[0,0,0,0].toDouble()))
 
     [<Test>]
     member _.TestTensorArange () =
@@ -609,7 +609,7 @@ type TestTensor () =
             Assert.CheckEqual(tshapeCorrect, tshape)
             Assert.CheckEqual(tdtypeCorrect, tdtype)
 
-        for combo in Combos.All do
+        for combo in Combos.IntegralAndFloatingPoint do
             let t = combo.tensor([])
 
             let tAdd = t + 2
@@ -1291,14 +1291,14 @@ type TestTensor () =
     member _.TestTensorAddTTScalarBroadcasting () =
         // Test scalar broadcasting 
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t3 = combo.tensor([1.; 2.]) + 5.f
-            let t3Correct = combo.tensor([6.; 7.])
+            let t3 = combo.tensor([1; 2]) + 5
+            let t3Correct = combo.tensor([6; 7])
 
-            let t4 = combo.tensor([1.; 2.]) + 5.
-            let t4Correct = combo.tensor([6.; 7.])
+            let t4 = combo.tensor([1; 2]) + 5
+            let t4Correct = combo.tensor([6; 7])
 
-            let t5 = combo.tensor([1.; 2.]) + 5
-            let t5Correct = combo.tensor([6.; 7.])
+            let t5 = combo.tensor([1; 2]) + 5
+            let t5Correct = combo.tensor([6; 7])
 
             Assert.CheckEqual(t3Correct, t3)
             Assert.CheckEqual(t4Correct, t4)
@@ -1639,20 +1639,20 @@ type TestTensor () =
 
         // Test scalar broadcast
         for combo in Combos.IntegralAndFloatingPoint do 
-            let t3 = combo.tensor([1.; 2.]) - 5.f
-            let t3Correct = combo.tensor([-4.; -3.])
+            let t3 = combo.tensor([1; 2]) - 5
+            let t3Correct = combo.tensor([-4; -3])
 
             Assert.CheckEqual(t3Correct, t3)
             Assert.CheckEqual(t3.dtype, combo.dtype)
 
-            let t4 = 5. - combo.tensor([1.; 2.])
-            let t4Correct = combo.tensor([4.; 3.])
+            let t4 = 5 - combo.tensor([1; 2])
+            let t4Correct = combo.tensor([4; 3])
 
             Assert.CheckEqual(t4Correct, t4)
             Assert.CheckEqual(t4.dtype, combo.dtype)
 
-            let t5 = combo.tensor([1.; 2.]) - 5
-            let t5Correct = combo.tensor([-4.; -3.])
+            let t5 = combo.tensor([1; 2]) - 5
+            let t5Correct = combo.tensor([-4; -3])
 
             Assert.CheckEqual(t5Correct, t5)
             Assert.CheckEqual(t5.dtype, combo.dtype)
@@ -1689,7 +1689,7 @@ type TestTensor () =
                 Assert.CheckEqual(t2.dtype, dtypeRes)
 
         // Test scalar broadcasting 
-        for combo in Combos.IntegralAndFloatingPoint do 
+        for combo in Combos.FloatingPoint do 
             let t3 = combo.tensor([1.; 2.]) * 5.f
             let t3Correct = combo.tensor([5.; 10.])
 
@@ -1701,6 +1701,27 @@ type TestTensor () =
             Assert.CheckEqual(t4Correct, t4)
             Assert.CheckEqual(t3.dtype, combo.dtype)
             Assert.CheckEqual(t4.dtype, combo.dtype)
+
+        for combo in Combos.Integral do 
+            let t3 = combo.tensor([1; 2]) * 5
+            let t3Correct = combo.tensor([5; 10])
+
+            Assert.CheckEqual(t3Correct, t3)
+            Assert.CheckEqual(t3.dtype, combo.dtype)
+
+            let t4 = 5 * combo.tensor([1; 2])
+            let t4Correct = combo.tensor([5; 10])
+
+            Assert.CheckEqual(t4Correct, t4)
+            Assert.CheckEqual(t4.dtype, combo.dtype)
+
+            // Multiplying integer tensors by a floating point number always
+            // results in float32. THis is the same behaviour as Torch
+            let t5 = 5.0 * combo.tensor([1; 2])
+            let t5Correct = combo.tensor([5; 10], dtype=Dtype.Float32)
+
+            Assert.CheckEqual(t5Correct, t5)
+            Assert.CheckEqual(t5.dtype, Dtype.Float32)
 
         // Bool tensors support multiplication giving bool tensor
         //
@@ -6201,7 +6222,8 @@ type TestTensor () =
             Assert.True(t3s3p2Correct.allclose(t3s3p2, 0.01))
             Assert.True(t3d2Correct.allclose(t3d2, 0.01))
             Assert.True(t3p2d3Correct.allclose(t3p2d3, 0.01))
-            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01))
+            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
+            printfn "done"
 
     [<Test>]
     member _.TestTensorConvTranspose2D () =
@@ -6955,7 +6977,7 @@ type TestTensor () =
             Assert.True(t3s23p32Correct.allclose(t3s23p32, 0.01))
             Assert.True(t3p1d2Correct.allclose(t3p1d2, 0.01))
             Assert.True(t3p22d23Correct.allclose(t3p22d23, 0.01))
-            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01))
+            Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
 
     [<Test>]
     member _.TestTensorConvTranspose3D () =
