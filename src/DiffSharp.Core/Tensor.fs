@@ -457,7 +457,7 @@ type Tensor =
 
     /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
+    member a.scalarLike(scalar:scalar, ?dtype, ?device, ?backend) = 
         a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the

@@ -135,6 +135,14 @@ type dsharp =
     static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
 
+    /// <summary>Returns a new scalar tensor with the value <paramref name="value" />, for the given element type and configuration</summary>
+    /// <param name="value">The scalar giving the the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member scalar(value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.full(Shape.scalar, value, ?dtype=dtype, ?device=device, ?backend=backend)
+
     /// <summary>
     /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
     /// with values from the interval [start, end) taken with common difference step beginning from start.
