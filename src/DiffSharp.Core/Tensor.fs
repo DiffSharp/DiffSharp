@@ -6,8 +6,6 @@ open System
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
 
-type scalar = IConvertible
-
 /// <summary>
 ///   Represents a multi-dimensional data type containing elements of a single data type.
 /// </summary>
@@ -418,47 +416,52 @@ type Tensor internal (data: TensorData) =
     static member One = Tensor0(RawTensor.One())
 
     /// Convert a scalar tensor to a float32 value
-    static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+    static member op_Explicit(tensor:Tensor):single = tensor.toScalar().toSingle()
 
     /// Convert a scalar tensor to a float64 value
-    static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+    static member op_Explicit(tensor:Tensor):double = tensor.toScalar().toDouble()
 
     /// Convert a scalar tensor to a byte value
-    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar().toByte()
 
     /// Convert a scalar tensor to a signed byte value
-    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
+    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar().toSByte()
 
     /// Convert a scalar tensor to an int16 value
-    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar().toInt16()
 
     /// Convert a scalar tensor to an int32 value
-    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar().toInt32()
 
     /// Convert a scalar tensor to an int64 value
-    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar().toInt64()
 
     /// Convert a scalar tensor to a boolean value
-    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
+    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar().toBool()
 
-    interface System.IConvertible with
-        override t.GetTypeCode() = TypeCode.Object
-        override t.ToSingle(_) = Tensor.op_Explicit(t)
-        override t.ToDouble(_) = Tensor.op_Explicit(t)
-        override t.ToByte(_) = Tensor.op_Explicit(t)
-        override t.ToSByte(_) = Tensor.op_Explicit(t)
-        override t.ToInt16(_) = Tensor.op_Explicit(t)
-        override t.ToInt32(_) = Tensor.op_Explicit(t)
-        override t.ToInt64(_) = Tensor.op_Explicit(t)
-        override t.ToBoolean(_) = Tensor.op_Explicit(t)
-        override t.ToChar(_) = failwithf "Cannot convert Tensor to Char"
-        override t.ToDateTime(_) = failwithf "Cannot convert Tensor to DateTime"
-        override t.ToDecimal(_) = failwithf "Cannot convert Tensor to Decimal"
-        override t.ToString(_) = failwithf "Cannot convert Tensor to String"
-        override t.ToType(_,_) = failwithf "Cannot convert Tensor to Type"
-        override t.ToUInt16(_) = failwithf "Cannot convert Tensor to UInt16"
-        override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
-        override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
+    /// Convert a scalar tensor to a float32 value
+    member t.toSingle() = t.toScalar().toSingle()
+
+    /// Convert a scalar tensor to a float64 value
+    member t.toDouble() = t.toScalar().toDouble()
+
+    /// Convert a scalar tensor to a byte value
+    member t.toByte() = t.toScalar().toByte()
+
+    /// Convert a scalar tensor to a signed byte value
+    member t.toSByte() = t.toScalar().toSByte()
+
+    /// Convert a scalar tensor to an int16 value
+    member t.toInt16() = t.toScalar().toInt16()
+
+    /// Convert a scalar tensor to an int32 value
+    member t.toInt32() = t.toScalar().toInt32()
+
+    /// Convert a scalar tensor to an int64 value
+    member t.toInt64() = t.toScalar().toInt64()
+
+    /// Convert a scalar tensor to a boolean value
+    member t.toBool() = t.toScalar().toBool()
 
     /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
     /// given tolerances.
@@ -487,7 +490,7 @@ type Tensor internal (data: TensorData) =
 
     /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
+    member a.scalarLike(scalar:scalar, ?dtype, ?device, ?backend) = 
         a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the
@@ -947,46 +950,6 @@ type Tensor internal (data: TensorData) =
             let dfTensorRevTC(a,b) = AddTTConst(a)
             let dfTensorRevCT(a,b) = AddTTConst(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a,b:RawTensor) = b.AddTT0(a)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.expand(b.shape)
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddTT0(b,a)
-            let dfTensorRevTC(a,b) = AddTConstT0(a)
-            let dfTensorRevCT(a,b) = AddTT0Const(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.AddTT0(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd:Tensor) = bd.expand(a.shape)
-            let dfTensorRevTT(a,b) = AddTT0(a,b)
-            let dfTensorRevTC(a,b) = AddTT0Const(a)
-            let dfTensorRevCT(a,b) = AddTConstT0(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 2 && b.dim = 1 && a.shape.[1] = b.shape.[0] then
-            let fRaw(a:RawTensor,b) = a.AddT2T1(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = cp.zerosLike() + bd
-            let dfTensorRevTT(a,b) = AddT2T1(a,b)
-            let dfTensorRevTC(a,b) = AddT2T1Const(a)
-            let dfTensorRevCT(a,b) = AddT2ConstT1(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 1 && b.dim = 2 && a.shape.[0] = b.shape.[1] then
-            let fRaw(a,b:RawTensor) = b.AddT2T1(a)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp:Tensor,ap,ad) = ad + cp.zerosLike()
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddT2T1(b,a)
-            let dfTensorRevTC(a,b) = AddT2ConstT1(a)
-            let dfTensorRevCT(a,b) = AddT2T1Const(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
@@ -994,17 +957,28 @@ type Tensor internal (data: TensorData) =
             aExpanded + bExpanded
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (+) (a:Tensor, b: scalar) = a + a.scalarLike(b)
+    static member (+) (a:Tensor, b: scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast + bCast
+        | ValueNone ->
+            let fRaw(a:RawTensor) = a.AddTT0(b)
+            let fTensor(a) = a + b
+            let dfTensorFwd(cp,ap,ad) = ad
+            let dfTensorRev(a) = AddTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>The scalar <paramref name="a" /> is added to each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (+) (a: scalar, b:Tensor) = b.scalarLike(a) + b
+    static member (+) (a: scalar, b:Tensor) = b + a
 
     /// <summary>Each element of the object tensor is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.add(b:Tensor) = a + b
 
     /// <summary>Each element of the object tensor is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    member a.add(b:scalar) = a + a.scalarLike(b)
+    member a.add(b:scalar) = a + b
 
     /// <summary>Subtracts each element of the tensor <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1026,26 +1000,6 @@ type Tensor internal (data: TensorData) =
             let dfTensorRevTC(a,b) = SubTTConst(a)
             let dfTensorRevCT(a,b) = SubTConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.SubT0T(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.expand(b.shape)
-            let dfTensorFwdCT(cp,bp,bd) = -bd
-            let dfTensorRevTT(a,b) = SubT0T(a,b)
-            let dfTensorRevTC(a,b) = SubT0TConst(a)
-            let dfTensorRevCT(a,b) = SubT0ConstT(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.SubTT0(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd:Tensor) = (-bd).expand(a.shape)
-            let dfTensorRevTT(a,b) = SubTT0(a,b)
-            let dfTensorRevTC(a,b) = SubTT0Const(a)
-            let dfTensorRevCT(a,b) = SubTConstT0(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
@@ -1053,17 +1007,39 @@ type Tensor internal (data: TensorData) =
             aExpanded - bExpanded
 
     /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
-    static member (-) (a:Tensor, b:scalar) = a - a.scalarLike(b)
+    static member (-) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast - bCast
+        | ValueNone ->
+            let fRaw(a:RawTensor) = a.SubTT0(b)
+            let fTensor(a) = a - b
+            let dfTensorFwd(cp,ap,ad) = ad
+            let dfTensorRev(a) = SubTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
-    static member (-) (a:scalar, b:Tensor) = b.scalarLike(a) - b
+    static member (-) (a:scalar, b:Tensor) =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
+            let fRaw(b:RawTensor) = b.SubFromT0T(a)
+            let fTensor(b) = a - b
+            let dfTensorFwd(cp,bp,bd) = -bd
+            let dfTensorRev(b) = SubT0ConstT(b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the object tensor from the corresponding element of the self tensor. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.sub(b:Tensor) = a - b
 
     /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the object tensor. The resulting tensor is returned.</summary>
-    member a.sub(b:scalar) = a - a.scalarLike(b)
+    member a.sub(b:scalar) = a - b
 
     /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1085,26 +1061,6 @@ type Tensor internal (data: TensorData) =
             let dfTensorRevTC(a,b) = MulTTConst(a,b)
             let dfTensorRevCT(a,b) = MulTTConst(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a,b:RawTensor) = b.MulTT0(a)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT0(b,a)
-            let dfTensorRevTC(a,b) = MulTConstT0(b,a)
-            let dfTensorRevCT(a,b) = MulTT0Const(b,a)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.MulTT0(b)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT0(a,b)
-            let dfTensorRevTC(a,b) = MulTT0Const(a,b)
-            let dfTensorRevCT(a,b) = MulTConstT0(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
@@ -1112,10 +1068,21 @@ type Tensor internal (data: TensorData) =
             aExpanded * bExpanded
 
     /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (*) (a:Tensor, b:scalar) = a * a.scalarLike(b)
+    static member (*) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
+            let fRaw(a:RawTensor) = a.MulTT0(b)
+            let fTensor(a) = a * b
+            let dfTensorFwd(cp,ap,ad) = ad * b
+            let dfTensorRev(a) = MulTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Multiplies the scalar <paramref name="a" /> by each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (*) (a:scalar, b:Tensor) = b.scalarLike(a) * b
+    static member (*) (a:scalar, b:Tensor) = b * a
 
     /// <summary>Multiplies each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1123,7 +1090,7 @@ type Tensor internal (data: TensorData) =
 
     /// <summary>Multiplies each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    member a.mul(b) = a * a.scalarLike(b)
+    member a.mul(b: scalar) = a * b
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1145,26 +1112,6 @@ type Tensor internal (data: TensorData) =
             let dfTensorRevTC(a,b) = DivTTConst(a,b)
             let dfTensorRevCT(a,b) = DivTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.DivT0T(b)
-            let fTensor(a,b) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivT0T(a,b)
-            let dfTensorRevTC(a,b) = DivT0TConst(a,b)
-            let dfTensorRevCT(a,b) = DivT0ConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.DivTT0(b)
-            let fTensor(a:Tensor,b:Tensor) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivTT0(a,b)
-            let dfTensorRevTC(a,b) = DivTT0Const(a,b)
-            let dfTensorRevCT(a,b) = DivTConstT0(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
@@ -1172,10 +1119,32 @@ type Tensor internal (data: TensorData) =
             aExpanded / bExpanded
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (/) (a:Tensor, b:scalar) = a / a.scalarLike(b)
+    static member (/) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
+            let fRaw(a:RawTensor) = a.DivTT0(b)
+            let fTensor(a) = a / b
+            let dfTensorFwd(cp,ap,ad) = ad / b
+            let dfTensorRev(a) = DivTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (/) (a:scalar, b:Tensor) = b.scalarLike(a) / b
+    static member (/) (a:scalar, b:Tensor) =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
+            let fRaw(b:RawTensor) = b.DivFromT0T(a)
+            let fTensor(b) = a / b
+            let dfTensorFwd(cp,bp,bd) = -bd * cp / bp
+            let dfTensorRev(b) = DivT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -1183,11 +1152,9 @@ type Tensor internal (data: TensorData) =
 
     /// <summary>Divides each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    member a.div(b:scalar) = a / a.scalarLike(b)
+    member a.div(b:scalar) = a / b
 
-    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    static member Pow (a:Tensor, b:Tensor) =
+    static member internal powImpl (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "Pow" a.dtype b.dtype 
@@ -1205,56 +1172,66 @@ type Tensor internal (data: TensorData) =
             let dfTensorRevTC(a,b) = PowTTConst(a,b)
             let dfTensorRevCT(a,b) = PowTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.PowT0T(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowT0T(a,b)
-            let dfTensorRevTC(a,b) = PowT0TConst(a,b)
-            let dfTensorRevCT(a,b) = PowT0ConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.PowTT0(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowTT0(a,b)
-            let dfTensorRevTC(a,b) = PowTT0Const(a,b)
-            let dfTensorRevCT(a,b) = PowTConstT0(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
             let aExpanded = a.expand(newShape)
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
-    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:Tensor, b:float) = a ** a.scalarLike(b)
+    static member internal powImpl (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
+            let fRaw(a:RawTensor) = a.PowTT0(b)
+            let fTensor(a) = Tensor.powImpl (a, b)
+            let dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
+            let dfTensorRev(a) = PowTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    static member internal powImpl (a:scalar, b:Tensor) =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
+            let fRaw(b:RawTensor) = b.PowFromT0T(a)
+            let fTensor(b) = Tensor.powImpl (a, b)
+            let dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
+            let dfTensorRev(b) = PowT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    static member Pow (a:Tensor, b:Tensor) = Tensor.powImpl(a, b)
 
     /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
+    static member Pow (a:Tensor, b: scalar) = Tensor.powImpl(a, b)
 
     /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
+    static member Pow (a:Tensor, b:float) = Tensor.powImpl(a, (b :> scalar))
+
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:Tensor, b:int) = Tensor.powImpl(a, (b :> scalar))
 
     /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
+    static member Pow (a:scalar, b:Tensor) = Tensor.powImpl(a, b)
 
     /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a:int, b:Tensor) = b.scalarLike(a) ** b
+    static member Pow (a:float, b:Tensor) = Tensor.powImpl((a :> scalar), b)
 
     /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
+    static member Pow (a:int, b:Tensor) = Tensor.powImpl((a :> scalar), b)
 
     /// <summary>Raises each element of the self tensor to the power of each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    member a.pow(b:Tensor) = a ** b
+    member a.pow(b:Tensor) = Tensor.powImpl(a, b)
 
     /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    member a.pow(b) = a ** a.scalarLike(b)
+    member a.pow(b: scalar) = Tensor.powImpl(a, b)
 
     /// <summary>Matrix product of two tensors.</summary>
     ///
@@ -2756,19 +2733,12 @@ type Tensor internal (data: TensorData) =
                         | AddTTConst(a) -> reset (a::tt)
                         | AddTT0(a,b) -> reset (a::b::tt)
                         | AddTT0Const(a) -> reset (a::tt)
-                        | AddTConstT0(b) -> reset (b::tt)
-                        | AddT2T1(a,b) -> reset (a::b::tt)
-                        | AddT2T1Const(a) -> reset (a::tt)
-                        | AddT2ConstT1(b) -> reset (b::tt)
                         | SubTT(a,b) -> reset (a::b::tt)
                         | SubTTConst(a) -> reset (a::tt)
                         | SubTConstT(b) -> reset (b::tt)
-                        | SubT0T(a,b) -> reset (a::b::tt)
-                        | SubT0TConst(a) -> reset (a::tt)
-                        | SubT0ConstT(b) -> reset (b::tt)
                         | SubTT0(a,b) -> reset (a::b::tt)
                         | SubTT0Const(a) -> reset (a::tt)
-                        | SubTConstT0(b) -> reset (b::tt)
+                        | SubT0ConstT(b) -> reset (b::tt)
                         | MulTT(a,b) -> reset (a::b::tt)
                         | MulTTConst(a,_) -> reset (a::tt)
                         | MulTT0(a,b) -> reset (a::b::tt)
@@ -2778,20 +2748,14 @@ type Tensor internal (data: TensorData) =
                         | DivTTConst(a,_) -> reset (a::tt)
                         | DivTConstT(_,b) -> reset (b::tt)
                         | DivT0T(a,b) -> reset (a::b::tt)
-                        | DivT0TConst(a,_) -> reset (a::tt)
                         | DivT0ConstT(_,b) -> reset (b::tt)
                         | DivTT0(a,b) -> reset (a::b::tt)
                         | DivTT0Const(a,_) -> reset (a::tt)
-                        | DivTConstT0(_,b) -> reset (b::tt)
                         | PowTT(a,b) -> reset (a::b::tt)
                         | PowTTConst(a,_) -> reset (a::tt)
                         | PowTConstT(_,b) -> reset (b::tt)
-                        | PowT0T(a,b) -> reset (a::b::tt)
-                        | PowT0TConst(a,_) -> reset (a::tt)
                         | PowT0ConstT(_,b) -> reset (b::tt)
-                        | PowTT0(a,b) -> reset (a::b::tt)
                         | PowTT0Const(a,_) -> reset (a::tt)
-                        | PowTConstT0(_,b) -> reset (b::tt)
                         | MatMulTT(a,b) -> reset (a::b::tt)
                         | MatMulTTConst(a,_) -> reset (a::tt)
                         | MatMulTConstT(_,b) -> reset (b::tt)
@@ -2895,19 +2859,12 @@ type Tensor internal (data: TensorData) =
                         | AddTTConst(a) -> push (check(td, a) :: tt)
                         | AddTT0(a,b) -> push (check(td, a) :: check(td.sum(), b) :: tt)
                         | AddTT0Const(a) -> push (check(td, a) :: tt)
-                        | AddTConstT0(b) -> push (check(td.sum(), b) :: tt)
-                        | AddT2T1(a,b) -> push (check(td, a) :: check(td.sumT2Dim0(), b) :: tt)
-                        | AddT2T1Const(a) -> push (check(td, a) :: tt)
-                        | AddT2ConstT1(b) -> push (check(td.sumT2Dim0(), b) :: tt)
                         | SubTT(a,b) -> push (check(td, a) :: check(-td, b) :: tt)
                         | SubTTConst(a) -> push (check(td, a) :: tt)
                         | SubTConstT(b) -> push (check(-td, b) :: tt)
-                        | SubT0T(a,b) -> push (check(td.sum(), a) :: check(-td, b) :: tt)
-                        | SubT0TConst(a) -> push (check(td.sum(), a) :: tt)
-                        | SubT0ConstT(b) -> push (check(-td, b) :: tt)
                         | SubTT0(a,b) -> push (check(td, a) :: check(-td.sum(), b) :: tt)
                         | SubTT0Const(a) -> push (check(td, a) :: tt)
-                        | SubTConstT0(b) -> push (check(-td.sum(), b) :: tt)      
+                        | SubT0ConstT(b) -> push (check(-td, b) :: tt)
                         | MulTT(a,b) -> push (check(td * b.primal, a) :: check(td * a.primal, b) :: tt)
                         | MulTTConst(a,b) -> push (check(td * b, a) :: tt)
                         | MulTT0(a,b) -> push (check(td * b.primal, a) :: check((td * a.primal).sum(), b) :: tt)
@@ -2917,20 +2874,14 @@ type Tensor internal (data: TensorData) =
                         | DivTTConst(a,b) -> push (check(td / b, a) :: tt)
                         | DivTConstT(a,b) -> push (check((td * (-a / (b.primal * b.primal))), b) :: tt)
                         | DivT0T(a,b) -> push (check((td / b.primal).sum(), a) :: check((td * (-a.primal / (b.primal * b.primal))), b) :: tt)
-                        | DivT0TConst(a,b) -> push (check((td / b).sum(), a) :: tt)
-                        | DivT0ConstT(a,b) -> push (check((td * (-a / (b.primal * b.primal))), b) :: tt)
+                        | DivT0ConstT(a,b) -> push (check((td * (a.neg() / (b.primal * b.primal))), b) :: tt)
                         | DivTT0(a,b) -> push (check(td / b.primal, a) :: check((td * (-a.primal / (b.primal * b.primal))).sum(), b) :: tt)
                         | DivTT0Const(a,b) -> push (check(td / b, a) :: tt)
-                        | DivTConstT0(a,b) -> push (check((td * (-a / (b.primal * b.primal))).sum(), b) :: tt)
                         | PowTT(a,b) -> push (check(td * (a.primal ** (b.primal - 1.)) * b.primal, a) :: check(td * (a.primal ** b.primal) * log a.primal, b) :: tt)
                         | PowTTConst(a,b) -> push (check(td * (a.primal ** (b - 1.)) * b, a) :: tt)
                         | PowTConstT(a,b) -> push (check(td * (a ** b.primal) * log a, b) :: tt)
-                        | PowT0T(a,b) -> push (check((td * (a.primal ** (b.primal - 1.)) * b.primal).sum(), a) :: check(td * (a.primal ** b.primal) * log a.primal, b) :: tt)
-                        | PowT0TConst(a,b) -> push (check((td * (a.primal ** (b - 1.)) * b).sum(), a) :: tt)
-                        | PowT0ConstT(a,b) -> push (check(td * (a ** b.primal) * log a, b) :: tt)
-                        | PowTT0(a,b) -> push (check(td * (a.primal ** (b.primal - 1.)) * b.primal, a) :: check((td * (a.primal ** b.primal) * log a.primal).sum(), b) :: tt)
-                        | PowTT0Const(a,b) -> push (check(td * (a.primal ** (b - 1.)) * b, a) :: tt)
-                        | PowTConstT0(a,b) -> push (check((td * (a ** b.primal) * log a).sum(), b) :: tt)
+                        | PowT0ConstT(a,b) -> push (check(td * (Tensor.Pow(a, b.primal)) * a.log(), b) :: tt)
+                        | PowTT0Const(a,b) -> push (check(td * (a.primal ** (b.sub(1.))) * b, a) :: tt)
                         | MatMulTT(a,b) -> push (check(td.matmul(b.primal.transpose()), a) :: check(a.primal.transpose(0,1).matmul(td), b) :: tt)
                         | MatMulTTConst(a,b) -> push (check(td.matmul(b.transpose()), a) :: tt)
                         | MatMulTConstT(a,b) -> push (check(a.transpose().matmul(td), b) :: tt)
@@ -3173,46 +3124,33 @@ and TensorOp =
     | AddTTConst of Tensor
     | AddTT0 of Tensor * Tensor
     | AddTT0Const of Tensor
-    | AddTConstT0 of Tensor
-    | AddT2T1 of Tensor * Tensor
-    | AddT2T1Const of Tensor
-    | AddT2ConstT1 of Tensor
     
     | SubTT of Tensor * Tensor
     | SubTTConst of Tensor
     | SubTConstT of Tensor
-    | SubT0T of Tensor * Tensor
-    | SubT0TConst of Tensor
-    | SubT0ConstT of Tensor
     | SubTT0 of Tensor * Tensor
     | SubTT0Const of Tensor
-    | SubTConstT0 of Tensor
+    | SubT0ConstT of Tensor
 
     | MulTT of Tensor * Tensor
     | MulTTConst of Tensor * Tensor
     | MulTT0 of Tensor * Tensor
-    | MulTT0Const of Tensor * Tensor
+    | MulTT0Const of Tensor * scalar
     | MulTConstT0 of Tensor * Tensor
 
     | DivTT of Tensor * Tensor
     | DivTTConst of Tensor * Tensor
     | DivTConstT of Tensor * Tensor
     | DivT0T of Tensor * Tensor
-    | DivT0TConst of Tensor * Tensor
-    | DivT0ConstT of Tensor * Tensor
+    | DivT0ConstT of scalar * Tensor
     | DivTT0 of Tensor * Tensor
-    | DivTT0Const of Tensor * Tensor
-    | DivTConstT0 of Tensor * Tensor
+    | DivTT0Const of Tensor * scalar
 
     | PowTT of Tensor * Tensor
     | PowTTConst of Tensor * Tensor
     | PowTConstT of Tensor * Tensor
-    | PowT0T of Tensor * Tensor
-    | PowT0TConst of Tensor * Tensor
-    | PowT0ConstT of Tensor * Tensor
-    | PowTT0 of Tensor * Tensor
-    | PowTT0Const of Tensor * Tensor
-    | PowTConstT0 of Tensor * Tensor
+    | PowT0ConstT of scalar * Tensor
+    | PowTT0Const of Tensor * scalar
 
     | MatMulTT of Tensor * Tensor
     | MatMulTTConst of Tensor * Tensor
