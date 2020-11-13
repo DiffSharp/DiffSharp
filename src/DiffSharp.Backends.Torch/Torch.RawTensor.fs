@@ -194,14 +194,14 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
         let obj = 
             match dtype with 
-            | Dtype.Bool -> box (item.DataItem<bool>())
-            | Dtype.Byte -> box (item.DataItem<byte>())
-            | Dtype.Int8 -> box (item.DataItem<int8>())
-            | Dtype.Int16 -> box (item.DataItem<int16>())
-            | Dtype.Int32 -> box (item.DataItem<int32>())
-            | Dtype.Int64 -> box (item.DataItem<int64>())
-            | Dtype.Float32 -> box (item.DataItem<float32>())
-            | Dtype.Float64 -> box (item.DataItem<double>())
+            | Dtype.Bool -> item.DataItem<bool>() :> scalar
+            | Dtype.Byte -> item.DataItem<byte>() :> scalar
+            | Dtype.Int8 -> item.DataItem<int8>() :> scalar
+            | Dtype.Int16 -> item.DataItem<int16>() :> scalar
+            | Dtype.Int32 -> item.DataItem<int32>() :> scalar
+            | Dtype.Int64 -> item.DataItem<int64>() :> scalar
+            | Dtype.Float32 -> item.DataItem<float32>() :> scalar
+            | Dtype.Float64 -> item.DataItem<double>() :> scalar
         obj
 
     member t.ToValuesTyped<'T, 'T2>(conv) : obj =
@@ -209,7 +209,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let tt = torchMoveTo tt Device.CPU
 
         match t.Shape with
-        | [|  |] -> t.GetItem()
+        | [|  |] -> t.GetItem() |> box
         | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt.[int64 i].DataItem<'T2>() |> conv)
         | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt.[int64 i, int64 j].DataItem<'T2>() |> conv)
         | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt.[int64 i, int64 j, int64 k].DataItem<'T2>() |> conv)

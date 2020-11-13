@@ -19,7 +19,7 @@ module internal Utils =
 /// This is the base class for all RawTensorXyz tuypes.
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
-type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
+type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
     inherit RawTensor()
 
     let mutable values = values
@@ -47,7 +47,7 @@ type RawTensorCPU<'T when 'T : equality>(values: 'T[], shape: Shape, dtype: Dtyp
     member internal t.FlatIndexToIndex(flatIndex:int) =
         flatIndexToIndex t.Shape flatIndex
 
-    override t.GetItem(indexes) = box t.[indexes]
+    override t.GetItem(indexes) = t.[indexes]  :> scalar
 
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =

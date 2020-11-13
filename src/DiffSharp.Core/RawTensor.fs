@@ -353,7 +353,7 @@ type RawTensor() =
     abstract IsNaNT: unit -> RawTensor
 
     /// Gets a .NET object representing the value of the tensor at the given indexes
-    abstract GetItem: [<System.ParamArray>] indexes: int[] -> obj 
+    abstract GetItem: [<System.ParamArray>] indexes: int[] -> scalar
 
     /// Gets the index of a maximum value of the tensor
     abstract MaxIndexT: unit -> int[]
