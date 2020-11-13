@@ -969,7 +969,7 @@ type TorchTensorOps<'T, 'T2>
         random: TorchShape  * Device -> TorchTensor,
         randomN: TorchShape  * Device -> TorchTensor,
         randomIntegers: TorchShape * int * int * Device -> TorchTensor,
-        valueFromObj: obj -> 'T,
+        valueFromScalar: scalar -> 'T,
         scalarFromConvValue: 'T2 -> TorchScalar) = 
 
     member _.Zero(device) = TorchRawTensor(torchMoveTo (fromScalar (conv zero)) device, Shape.scalar, dtype, device) :> RawTensor 
@@ -981,9 +981,9 @@ type TorchTensorOps<'T, 'T2>
     member _.RandomNormal(shape:Shape, device) = TorchRawTensor(randomN(toTorchShape shape, device), shape, dtype, device) :> RawTensor
     member _.RandomInt(shape, low, high, device) = TorchRawTensor(randomIntegers(toTorchShape shape, low, high, device), shape, dtype, device) :> RawTensor
 
-    member _.Full(shape:Shape, value:obj, device) =
+    member _.Full(shape:Shape, value:scalar, device) =
         let t = empty(toTorchShape shape, device)
-        t.FillInPlace(scalarFromConvValue (conv (valueFromObj value))) |> ignore
+        t.FillInPlace(scalarFromConvValue (conv (valueFromScalar value))) |> ignore
         TorchRawTensor(t, shape, dtype, device) :> RawTensor
 
     member _.CreateFromFlatArray(values:Array, shape:Shape, device:Device) : RawTensor =
@@ -1227,7 +1227,7 @@ type TorchBackendTensorStatics() =
         | Int64 -> torchInt64.Ones(shape, device)
         | Bool -> torchBool.Ones(shape, device)
 
-    override _.Full(shape:Shape, value:obj, dtype, device) =
+    override _.Full(shape:Shape, value:scalar, dtype, device) =
         match dtype with 
         | Float32 -> torchFloat32.Full(shape, value, device)
         | Float64 -> torchFloat64.Full(shape, value, device)

@@ -119,11 +119,11 @@ type dsharp =
 
     /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
+    /// <param name="value">The scalar used to form the initial values for the tensor.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member full(shape:seq<int>, value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    static member full(shape:seq<int>, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         Tensor0(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with <paramref name="value" />, for the given element type and configuration</summary>

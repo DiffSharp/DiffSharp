@@ -35,7 +35,7 @@ type BackendTensorStatics() =
     abstract Ones: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with the given value for the given shape and device
-    abstract Full: shape:Shape * value: obj * dtype: Dtype * device: Device -> RawTensor
+    abstract Full: shape:Shape * value: scalar * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with random values for the given shape and device
     abstract Random: shape:Shape * dtype: Dtype * device: Device -> RawTensor
@@ -255,7 +255,7 @@ type RawTensor() =
 
     /// Gets a tensor filled with the given scalar value for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.FullLike(shape: Shape, value: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.FullLike(shape: Shape, value: scalar, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Full(shape, value, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with random values for the given shape and configuration settings,
@@ -615,13 +615,13 @@ type RawTensor() =
     /// Returns a .NET object for the value of a scalar tensor
     member t.ToScalar() =
         match t.Dim with
-        | 0 -> t.ToValues()
-        | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
+        | 0 -> (t.ToValues() :?> scalar)
+        | _ -> failwithf "Cannot convert %Ad tensor to scalar" t.Dim
 
     /// Returns a .NET array object for the values of a non-scalar tensor
     member t.ToArray() =
         match t.Dim with
-        | 0 -> failwithf "Cannot convert scalar Tensor to array"
+        | 0 -> failwithf "Cannot convert scalar tensor to array"
         | _ ->
             match t.ToValues() with 
             | :? System.Array as a -> a

@@ -383,47 +383,52 @@ type Tensor =
     static member One = Tensor0(RawTensor.One())
 
     /// Convert a scalar tensor to a float32 value
-    static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+    static member op_Explicit(tensor:Tensor):single = tensor.toScalar().toSingle()
 
     /// Convert a scalar tensor to a float64 value
-    static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+    static member op_Explicit(tensor:Tensor):double = tensor.toScalar().toDouble()
 
     /// Convert a scalar tensor to a byte value
-    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar().toByte()
 
     /// Convert a scalar tensor to a signed byte value
-    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
+    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar().toSByte()
 
     /// Convert a scalar tensor to an int16 value
-    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar().toInt16()
 
     /// Convert a scalar tensor to an int32 value
-    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar().toInt32()
 
     /// Convert a scalar tensor to an int64 value
-    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar().toInt64()
 
     /// Convert a scalar tensor to a boolean value
-    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
+    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar().toBool()
 
-    interface System.IConvertible with
-        override t.GetTypeCode() = TypeCode.Object
-        override t.ToSingle(_) = Tensor.op_Explicit(t)
-        override t.ToDouble(_) = Tensor.op_Explicit(t)
-        override t.ToByte(_) = Tensor.op_Explicit(t)
-        override t.ToSByte(_) = Tensor.op_Explicit(t)
-        override t.ToInt16(_) = Tensor.op_Explicit(t)
-        override t.ToInt32(_) = Tensor.op_Explicit(t)
-        override t.ToInt64(_) = Tensor.op_Explicit(t)
-        override t.ToBoolean(_) = Tensor.op_Explicit(t)
-        override t.ToChar(_) = failwithf "Cannot convert Tensor to Char"
-        override t.ToDateTime(_) = failwithf "Cannot convert Tensor to DateTime"
-        override t.ToDecimal(_) = failwithf "Cannot convert Tensor to Decimal"
-        override t.ToString(_) = failwithf "Cannot convert Tensor to String"
-        override t.ToType(_,_) = failwithf "Cannot convert Tensor to Type"
-        override t.ToUInt16(_) = failwithf "Cannot convert Tensor to UInt16"
-        override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
-        override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
+    /// Convert a scalar tensor to a float32 value
+    member t.toSingle() = t.toScalar().toSingle()
+
+    /// Convert a scalar tensor to a float64 value
+    member t.toDouble() = t.toScalar().toDouble()
+
+    /// Convert a scalar tensor to a byte value
+    member t.toByte() = t.toScalar().toByte()
+
+    /// Convert a scalar tensor to a signed byte value
+    member t.toSByte() = t.toScalar().toSByte()
+
+    /// Convert a scalar tensor to an int16 value
+    member t.toInt16() = t.toScalar().toInt16()
+
+    /// Convert a scalar tensor to an int32 value
+    member t.toInt32() = t.toScalar().toInt32()
+
+    /// Convert a scalar tensor to an int64 value
+    member t.toInt64() = t.toScalar().toInt64()
+
+    /// Convert a scalar tensor to a boolean value
+    member t.toBool() = t.toScalar().toBool()
 
     /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
     /// given tolerances.
