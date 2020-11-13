@@ -42,7 +42,7 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.full(shape:seq<int>, value, ?device, ?backend, ?dtype) =
         dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
-    member _.full(length:int, value, ?device, ?backend, ?dtype) =
+    member _.full(length:int, value:scalar, ?device, ?backend, ?dtype) =
         dsharp.full(length, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.ones(shape:seq<int>, ?device, ?backend, ?dtype) =

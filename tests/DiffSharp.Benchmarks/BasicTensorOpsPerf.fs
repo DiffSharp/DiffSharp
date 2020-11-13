@@ -117,10 +117,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> IntTensor.From(rawData :?> int32[])
-                | Dtype.Int64 -> LongTensor.From(rawData :?> int64[])
-                | Dtype.Float32 -> FloatTensor.From(rawData :?> single[])
-                | Dtype.Float64 -> DoubleTensor.From(rawData :?> double[])
+                | Dtype.Int32 -> Int32Tensor.From(rawData :?> int32[])
+                | Dtype.Int64 -> Int64Tensor.From(rawData :?> int64[])
+                | Dtype.Float32 -> Float32Tensor.From(rawData :?> single[])
+                | Dtype.Float64 -> Float64Tensor.From(rawData :?> double[])
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
@@ -156,10 +156,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> IntTensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> LongTensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> DoubleTensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> FloatTensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("zeros")>]
@@ -194,10 +194,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> IntTensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> LongTensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> DoubleTensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> FloatTensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("ones")>]
@@ -232,10 +232,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> IntTensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> LongTensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> DoubleTensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> FloatTensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("rand")>]
