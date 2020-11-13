@@ -26,16 +26,16 @@ module internal Utils =
         | Dtype.Float64 -> ScalarType.Double
 
     let toTorchScalar (x: scalar) =
-        match x with 
-        | :? single as x -> TorchScalar.op_Implicit x
-        | :? double as x -> TorchScalar.op_Implicit x
-        | :? int32 as x -> TorchScalar.op_Implicit x
-        | :? int64 as x -> TorchScalar.op_Implicit x
-        | :? int8 as x -> TorchScalar.op_Implicit x
-        | :? uint8 as x -> TorchScalar.op_Implicit x
-        | :? int16 as x -> TorchScalar.op_Implicit x
-        | :? bool as x -> TorchScalar.op_Implicit x
-        | _ -> failwithf "unknown scalar type '%A'" x
+        match x.GetTypeCode() with 
+        | TypeCode.Single -> TorchScalar.op_Implicit (x.toSingle())
+        | TypeCode.Double -> TorchScalar.op_Implicit (x.toDouble())
+        | TypeCode.Int32 -> TorchScalar.op_Implicit (x.toInt32())
+        | TypeCode.Int64 -> TorchScalar.op_Implicit (x.toInt64())
+        | TypeCode.Byte -> TorchScalar.op_Implicit (x.toByte())
+        | TypeCode.SByte -> TorchScalar.op_Implicit (x.toSByte())
+        | TypeCode.Int16 -> TorchScalar.op_Implicit (x.toInt16())
+        | TypeCode.Boolean -> TorchScalar.op_Implicit (x.toBool())
+        | t -> failwithf "unknown scalar type '%A'" t
 
     let fromTorchType ttype =
         match ttype with 
