@@ -35,7 +35,7 @@ type BackendTensorStatics() =
     abstract Ones: shape:Shape * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with the given value for the given shape and device
-    abstract Full: shape:Shape * value: obj * dtype: Dtype * device: Device -> RawTensor
+    abstract Full: shape:Shape * value: scalar * dtype: Dtype * device: Device -> RawTensor
 
     /// Gets a tensor filled with random values for the given shape and device
     abstract Random: shape:Shape * dtype: Dtype * device: Device -> RawTensor
@@ -80,29 +80,29 @@ type BackendTensorStatics() =
 type RawTensor() =
 
     /// Gets the shape of the tensor
-    abstract Shape : Shape
+    abstract Shape: Shape
 
     /// Gets the dimensionality of the tensor
-    abstract Dim : int
+    abstract Dim: int
 
     /// Gets the number of elements in the tensor
-    abstract Nelement : int
+    abstract Nelement: int
 
     /// Gets the element storage type for the tensor
-    abstract Dtype : Dtype
+    abstract Dtype: Dtype
 
     /// Gets the device for the tensor
-    abstract Device : Device
+    abstract Device: Device
 
     /// Gets the device type for the tensor
-    abstract DeviceType : DeviceType
+    abstract DeviceType: DeviceType
 
     /// Gets the backend for the tensor
-    abstract Backend : Backend
+    abstract Backend: Backend
 
     /// Gets a handle to the underlying representation of the the tensor. For example, if the Torch
     /// backend is used this will be the corresponding TorchSharp TorchTensor.
-    abstract Handle : obj
+    abstract Handle: obj
 
     override t.ToString() = t.GetString("")
     
@@ -255,7 +255,7 @@ type RawTensor() =
 
     /// Gets a tensor filled with the given scalar value for the given shape and configuration settings,
     /// defaulting to the configuration settings of the object tensor
-    member t.FullLike(shape: Shape, value: obj, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+    member t.FullLike(shape: Shape, value: scalar, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
         RawTensor.Full(shape, value, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Gets a tensor filled with random values for the given shape and configuration settings,
@@ -274,7 +274,7 @@ type RawTensor() =
         RawTensor.RandomInt(shape=shape, low=low, high=high, dtype=defaultArg dtype t.Dtype, device=defaultArg device t.Device, backend=defaultArg backend t.Backend)
 
     /// Clone the underlying storage of the tensor.
-    abstract Clone : unit -> RawTensor
+    abstract Clone: unit -> RawTensor
 
     /// Expand the shape of the tensor.
     abstract Expand: newShape: Shape -> RawTensor
@@ -347,28 +347,25 @@ type RawTensor() =
     abstract NeqTT: t2: RawTensor -> RawTensor
 
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is an infinity value
-    abstract IsInfT : unit -> RawTensor
+    abstract IsInfT: unit -> RawTensor
 
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is a NaN value
-    abstract IsNaNT : unit -> RawTensor
+    abstract IsNaNT: unit -> RawTensor
 
     /// Gets a .NET object representing the value of the tensor at the given indexes
-    abstract GetItem : [<System.ParamArray>] indexes: int[] -> obj 
+    abstract GetItem: [<System.ParamArray>] indexes: int[] -> scalar
 
     /// Gets the index of a maximum value of the tensor
-    abstract MaxIndexT : unit -> int[]
+    abstract MaxIndexT: unit -> int[]
 
     /// Gets the index of a minimum value of the tensor
-    abstract MinIndexT : unit -> int[]
+    abstract MinIndexT: unit -> int[]
 
     /// Returns the element-wise addition of the two tensors
-    abstract AddTT : RawTensor * ?alpha: scalar -> RawTensor
+    abstract AddTT: RawTensor * ?alpha: scalar -> RawTensor
 
-    /// Returns the element-wise addition of two scalars
-    abstract AddTT0 : RawTensor -> RawTensor
-
-    /// Returns the element-wise addition of the matrix and vector tensors
-    abstract AddT2T1: RawTensor -> RawTensor
+    /// Returns the element-wise addition of a tensor and a scalar
+    abstract AddTT0: b: scalar * ?alpha: scalar -> RawTensor
 
     /// Adds a slice of <c>t2</c> at the given location to the tensor
     abstract AddTTSlice: location: int[] * t2: RawTensor -> RawTensor
@@ -378,40 +375,40 @@ type RawTensor() =
 
     /// Returns the element-wise subtraction of the scalar and a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract SubT0T: t2: RawTensor -> RawTensor
+    abstract SubFromT0T: t1: scalar -> RawTensor
 
     /// Returns the element-wise subtraction of the tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract SubTT0: t2: RawTensor -> RawTensor
+    abstract SubTT0: t2: scalar -> RawTensor
 
     /// Returns the element-wise multiplication of two tensors
     abstract MulTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise multiplication of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract MulTT0: t2: RawTensor -> RawTensor
+    abstract MulTT0: t2: scalar -> RawTensor
 
     /// Returns the element-wise division of two tensors
     abstract DivTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise division of a scalar by a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract DivT0T: t2: RawTensor -> RawTensor
+    abstract DivFromT0T: t1: scalar -> RawTensor
 
     /// Returns the element-wise division of a tensor by a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract DivTT0: t2: RawTensor -> RawTensor
+    abstract DivTT0: t2: scalar -> RawTensor
 
     /// Returns the element-wise exponentiation of two tensors
     abstract PowTT: t2: RawTensor -> RawTensor
 
     /// Returns the element-wise exponentiation of a scalar and a tensor, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract PowT0T: t2: RawTensor -> RawTensor
+    abstract PowFromT0T: t1: scalar -> RawTensor
 
     /// Returns the element-wise exponentiation of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract PowTT0: t2: RawTensor -> RawTensor
+    abstract PowTT0: t2: scalar -> RawTensor
 
     /// Returns the matrix multiplication of two tensors
     abstract MatMulTT: t2: RawTensor -> RawTensor
@@ -444,13 +441,13 @@ type RawTensor() =
     abstract Conv3D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
 
     /// Returns the element-wise negation of the tensor
-    abstract NegT : unit -> RawTensor
+    abstract NegT: unit -> RawTensor
 
     /// Returns the scalar tensor for the summation of all elements in the tensor 
-    abstract SumT : ?resultType: Dtype -> RawTensor
+    abstract SumT: ?resultType: Dtype -> RawTensor
 
     /// Returns a vector representing the summation of each the matrix along the first dimension 
-    abstract SumT2Dim0 : unit -> RawTensor
+    abstract SumT2Dim0: unit -> RawTensor
 
     /// Returns the transpose of the tensor between the given dimensions
     abstract TransposeT: dim0: int * dim1: int -> RawTensor
@@ -618,13 +615,13 @@ type RawTensor() =
     /// Returns a .NET object for the value of a scalar tensor
     member t.ToScalar() =
         match t.Dim with
-        | 0 -> t.ToValues()
-        | _ -> failwithf "Cannot convert %Ad Tensor to scalar" t.Dim
+        | 0 -> (t.ToValues() :?> scalar)
+        | _ -> failwithf "Cannot convert %Ad tensor to scalar" t.Dim
 
     /// Returns a .NET array object for the values of a non-scalar tensor
     member t.ToArray() =
         match t.Dim with
-        | 0 -> failwithf "Cannot convert scalar Tensor to array"
+        | 0 -> failwithf "Cannot convert scalar tensor to array"
         | _ ->
             match t.ToValues() with 
             | :? System.Array as a -> a
@@ -661,10 +658,7 @@ type RawTensor() =
     abstract AddInPlace: RawTensor * ?alpha: scalar -> unit
 
     /// Modifies the tensor by the element-wise addition of two scalars
-    abstract AddScalarInPlace: RawTensor -> unit
-
-    /// Modifies the tensor by the element-wise addition of the matrix and vector tensors
-    abstract AddMatrixVecInPlace: RawTensor -> unit
+    abstract AddScalarInPlace: b: scalar -> unit
 
     /// Adds a slice of <c>t2</c> at the given location to the tensor
     abstract AddSliceInPlace: location: int[] * t2: RawTensor -> unit
@@ -674,28 +668,28 @@ type RawTensor() =
 
     /// Modifies the tensor by the element-wise subtraction of the tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract SubScalarInPlace: t2: RawTensor -> unit
+    abstract SubScalarInPlace: b: scalar -> unit
 
     /// Modifies the tensor by the element-wise multiplication of two tensors
     abstract MulInPlace: t2: RawTensor -> unit
 
     /// Modifies the tensor by the element-wise multiplication of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract MulScalarInPlace: t2: RawTensor -> unit
+    abstract MulScalarInPlace: b: scalar -> unit
 
     /// Modifies the tensor by the element-wise division of two tensors
     abstract DivInPlace: t2: RawTensor -> unit
 
     /// Modifies the tensor by the element-wise division of a tensor by a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract DivScalarInPlace: t2: RawTensor -> unit
+    abstract DivScalarInPlace: t2: scalar  -> unit
 
     /// Modifies the tensor by the element-wise exponentiation of two tensors
     abstract PowInPlace: t2: RawTensor -> unit
 
     /// Modifies the tensor by the element-wise exponentiation of a tensor and a scalar, where the scalar is logically
     /// broadcast to the same shape as the tensor
-    abstract PowScalarInPlace: t2: RawTensor -> unit
+    abstract PowScalarInPlace: t2: scalar -> unit
 
     /// Modifies the tensor by the matrix multiplication of two tensors
     abstract MatMulInPlace: t2: RawTensor -> unit
