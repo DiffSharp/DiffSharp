@@ -548,17 +548,17 @@ type RawTensor() =
 
     default t.GetString(extra: string) =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
-        let printVal (x:obj) = 
-           match x with 
-           | :? single as v -> sprintf "%f" v
-           | :? double as v -> sprintf "%f" v
-           | :? byte as v -> sprintf "%d" v
-           | :? int8 as v -> sprintf "%d" v
-           | :? int16 as v -> sprintf "%d" v
-           | :? int32 as v -> sprintf "%d" v
-           | :? int64 as v -> sprintf "%d" v
-           | :? bool as v -> if v then "true" else "false"
-           | _ -> sprintf "%A" x
+        let printVal (x:scalar) = 
+            match x.GetTypeCode() with 
+            | TypeCode.Single -> sprintf "%f" (x.toSingle())
+            | TypeCode.Double -> sprintf "%f" (x.toDouble())
+            | TypeCode.Int32 -> sprintf "%d" (x.toInt32())
+            | TypeCode.Int64 -> sprintf "%d" (x.toInt64())
+            | TypeCode.Byte -> sprintf "%d" (x.toByte())
+            | TypeCode.SByte -> sprintf "%d" (x.toSByte())
+            | TypeCode.Int16 -> sprintf "%d" (x.toInt16())
+            | TypeCode.Boolean -> if (x.toBool()) then "true" else "false"
+            | _ -> x.ToString()
 
         let sb = System.Text.StringBuilder()
         sb.Append("tensor(") |> ignore
