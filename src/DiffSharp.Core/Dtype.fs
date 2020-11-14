@@ -4,9 +4,11 @@
 [<Struct>]
 type Dtype =
     /// Store elements as 16-bit floating point numbers (bfloat16 variation)
-    | BFloat16
+    | [<Experimental("Support for bfloat16 is experimental. For the reference backend, float32 representations are used. For the Torch backend, numerous operations give exceptions, you should use float32 alternatives instead and convert the tensors.")>] 
+      BFloat16
     /// Store elements as 16-bit floating point numbers
-    | Float16
+    | [<Experimental("Support for float16 is experimental. For the reference backend, float32 representations are used. For the Torch backend, numerous operations give exceptions, you should use float32 alternatives instead and convert the tensors.")>]
+      Float16
     /// Store elements as 32-bit floating point numbers
     | Float32
     /// Store elements as 64-bit floating point numbers
