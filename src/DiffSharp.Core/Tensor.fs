@@ -137,6 +137,12 @@ type Tensor internal (data: TensorData) =
     /// Returns a new tensor with each element converted to type int64
     member t.int64() = t.cast(Dtype.Int64)
 
+    /// Returns a new tensor with each element converted to type float16
+    member t.float16() = t.cast(Dtype.Float16)
+
+    /// Returns a new tensor with each element converted to type bfloat16
+    member t.bfloat16() = t.cast(Dtype.BFloat16)
+
     /// Returns a new tensor with each element converted to type float32
     member t.float32() = t.cast(Dtype.Float32)
 
@@ -450,6 +456,8 @@ type Tensor internal (data: TensorData) =
             | Dtype.Float32 -> TypeCode.Single
             | Dtype.Float64 -> TypeCode.Double
             | Dtype.Bool -> TypeCode.Boolean
+            | Dtype.BFloat16 -> TypeCode.Single
+            | Dtype.Float16 -> TypeCode.Single
 
         override t.ToSingle(fmt) = t.toScalar().ToSingle(fmt)
         override t.ToDouble(fmt) = t.toScalar().ToDouble(fmt)
@@ -848,7 +856,7 @@ type Tensor internal (data: TensorData) =
         match res with
         | Some (array, shape) -> 
             let array = array |> Array.map float32
-            let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
+            let value = ArrayND.init shape (fun ii -> array.[indexToFlatIndex shape ii])
             Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         | None ->
             Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
@@ -1484,6 +1492,8 @@ type Tensor internal (data: TensorData) =
         if probs.dim = 1 then
             let p = 
                 match probs.dtype with
+                | Dtype.Float16
+                | Dtype.BFloat16
                 | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
@@ -1491,9 +1501,11 @@ type Tensor internal (data: TensorData) =
         else
             let p = 
                 match probs.dtype with
+                | Dtype.BFloat16
+                | Dtype.Float16
                 | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[,]
-                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+                | _ -> failwithf "Expecting probs to be floating point, received %A" probs.dtype
             Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
 
     /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
@@ -1502,7 +1514,7 @@ type Tensor internal (data: TensorData) =
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     member probs.bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
-        if not (probs.dtype = Dtype.Float32 || probs.dtype = Dtype.Float64) then failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+        if not probs.dtype.IsFloatingPoint then failwithf "Expecting probs to be floating point, received %A" probs.dtype
         let dtype = defaultArg dtype probs.dtype
         let device = defaultArg device probs.device
         let backend = defaultArg backend probs.backend

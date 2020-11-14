@@ -22,6 +22,8 @@ module internal Utils =
         | Dtype.Int16 -> ScalarType.Int16
         | Dtype.Int32 -> ScalarType.Int32
         | Dtype.Int64 -> ScalarType.Int64
+        | Dtype.Float16 -> ScalarType.Float16
+        | Dtype.BFloat16 -> ScalarType.BFloat16
         | Dtype.Float32 -> ScalarType.Float32
         | Dtype.Float64 -> ScalarType.Float64
 
@@ -109,10 +111,17 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)
 
-    member x.TorchTensor = tt
+    member _.TorchTensor = tt
 
     override t.GetSlice(fullBounds:int[,]) =
         let newShape = Shape.checkCanGetSlice t.Shape fullBounds
+        // For float16 and bfloat16, switch to float32 then cast back, LibTorch 1.7.0 says "index_select" not implemented for 'Half'
+        let tt =
+            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
+                tt.ToType(ScalarType.Float32)
+            else
+                tt
+
         let mutable res = tt
         let mutable dim = 0 
         for i=0 to (fullBounds.GetLength(0) - 1) do
@@ -126,13 +135,18 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
             else
                 dim <- dim + 1
+        let res = 
+            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
+                res.ToType(toTorchType dtype)
+            else
+                res
         t.MakeLike(tt=res, shape=newShape)
 
     override t.Clone() =
         t.MakeLike(tt.Clone())
 
     override t.ComputeHash() = 
-        // Torch Tensors must be CPU before DataItem can be accessed
+        // Torch Tensors must be CPU before Data can be accessed
         let tt = torchMoveTo tt Device.CPU
 
         let shape = t.Shape
@@ -163,6 +177,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             let data = tt.Data<int64>()
             for i in 0 .. n-1 do
                  res <- combineHashes res (int32 data.[i])
+        | Dtype.Float16 ->
+            for i in 0 .. n-1 do
+                 res <- combineHashes res (hash (tt.ReadCpuFloat16(int64 i)))
+        | Dtype.BFloat16 ->
+            for i in 0 .. n-1 do
+                 res <- combineHashes res (hash (tt.ReadCpuBFloat16(int64 i)))
         | Dtype.Float32 ->
             let data = tt.Data<single>()
             for i in 0 .. n-1 do
@@ -176,59 +196,44 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     override t.Expand(newShape) =
         t.MakeLike(tt.Expand(toTorchShape newShape), shape=newShape)
 
-    override t.GetItem(indexes) = 
+    override _.ToScalar() : scalar =
+        match dtype with 
+        | Dtype.Bool -> tt.ToBoolean() :> scalar
+        | Dtype.Byte -> tt.ToByte() :> scalar
+        | Dtype.Int8 -> tt.ToSByte() :> scalar
+        | Dtype.Int16 -> tt.ToInt16() :> scalar
+        | Dtype.Int32 -> tt.ToInt32() :> scalar
+        | Dtype.Int64 -> tt.ToInt64() :> scalar
+        | Dtype.Float16 -> tt.ToSingle() :> scalar
+        | Dtype.BFloat16 -> tt.ToSingle() :> scalar
+        | Dtype.Float32 -> tt.ToSingle() :> scalar
+        | Dtype.Float64 -> tt.ToDouble() :> scalar
 
-        let item = 
-            match indexes with 
-            | [| |] -> tt
-            | [| i0 |] -> tt.[int64 i0]
-            | [| i0; i1 |] -> tt.[int64 i0, int64 i1]
-            | [| i0; i1; i2 |] -> tt.[int64 i0, int64 i1, int64 i2]
-            | [| i0; i1; i2; i3 |] -> tt.[int64 i0, int64 i1, int64 i2, int64 i3]
-            | _ -> 
-                let shape = t.Shape
-                tt.View(toTorchShape [|shapeLength shape|]).[int64 (indexToFlatIndex shape indexes)]
-
-        // Torch Tensors must be CPU before DataItem can be accessed
-        let item = torchMoveTo item Device.CPU
-
-        let obj = 
-            match dtype with 
-            | Dtype.Bool -> item.DataItem<bool>() :> scalar
-            | Dtype.Byte -> item.DataItem<byte>() :> scalar
-            | Dtype.Int8 -> item.DataItem<int8>() :> scalar
-            | Dtype.Int16 -> item.DataItem<int16>() :> scalar
-            | Dtype.Int32 -> item.DataItem<int32>() :> scalar
-            | Dtype.Int64 -> item.DataItem<int64>() :> scalar
-            | Dtype.Float32 -> item.DataItem<float32>() :> scalar
-            | Dtype.Float64 -> item.DataItem<double>() :> scalar
-        obj
-
-    member t.ToValuesTyped<'T, 'T2>(conv) : obj =
-        // Torch Tensors must be CPU before DataItem can be accessed
+    member t.ToValuesTyped<'T>(conv: TorchTensor -> 'T) : obj =
+        // Move the tensors to CPU for efficiency since we're accessing all the data anyway
         let tt = torchMoveTo tt Device.CPU
-
         match t.Shape with
-        | [|  |] -> t.GetItem() |> box
-        | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt.[int64 i].DataItem<'T2>() |> conv)
-        | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt.[int64 i, int64 j].DataItem<'T2>() |> conv)
-        | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt.[int64 i, int64 j, int64 k].DataItem<'T2>() |> conv)
-        | [| d0; d1; d2; d3 |]  -> upcast Array4D.init<'T> d0 d1 d2 d3 (fun i j k l -> tt.[int64 i, int64 j, int64 k, int64 l].DataItem<'T2>() |> conv)
+        | [|  |] -> tt.ToScalar() |> box
+        | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt.[int64 i] |> conv)
+        | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt.[int64 i, int64 j] |> conv)
+        | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt.[int64 i, int64 j, int64 k] |> conv)
+        | [| d0; d1; d2; d3 |]  -> upcast Array4D.init<'T> d0 d1 d2 d3 (fun i j k l -> tt.[int64 i, int64 j, int64 k, int64 l] |> conv)
         | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override t.ToValues() =
-        
         match dtype with 
-        | Dtype.Bool -> t.ToValuesTyped<bool, bool>(id)
-        | Dtype.Byte -> t.ToValuesTyped<byte, byte>(id)
-        | Dtype.Int8 -> t.ToValuesTyped<sbyte, sbyte>(sbyte)
-        | Dtype.Int16 -> t.ToValuesTyped<int16, int16>(id)
-        | Dtype.Int32 -> t.ToValuesTyped<int32, int32>(id)
-        | Dtype.Int64 -> t.ToValuesTyped<int64, int64>(id)
-        | Dtype.Float32 -> t.ToValuesTyped<float32, float32>(id)
-        | Dtype.Float64 -> t.ToValuesTyped<double, double>(id)
+        | Dtype.Bool -> t.ToValuesTyped<bool>(fun s -> s.ToBoolean())
+        | Dtype.Byte -> t.ToValuesTyped<byte>(fun s -> s.ToByte())
+        | Dtype.Int8 -> t.ToValuesTyped<sbyte>(fun s -> s.ToSByte())
+        | Dtype.Int16 -> t.ToValuesTyped<int16>(fun s -> s.ToInt16())
+        | Dtype.Int32 -> t.ToValuesTyped<int32>(fun s -> s.ToInt32())
+        | Dtype.Int64 -> t.ToValuesTyped<int64>(fun s -> s.ToInt64())
+        | Dtype.Float16 -> t.ToValuesTyped<float32>(fun s -> s.ToSingle())
+        | Dtype.BFloat16 -> t.ToValuesTyped<float32>(fun s -> s.ToSingle())
+        | Dtype.Float32 -> t.ToValuesTyped<float32>(fun s -> s.ToSingle())
+        | Dtype.Float64 -> t.ToValuesTyped<double>(fun s -> s.ToDouble())
 
-    member _.ToRawData<'T>() : 'T[] =
+    member private _.ToRawDataViaDirectAccess<'T>() : 'T[] =
         // Torch Tensors must be CPU before raw data can be accessed
         let tt2 = torchMoveTo tt Device.CPU
 
@@ -238,16 +243,24 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             res.[i] <- data.[i]
         res
 
-    member t.ToRawData() =
+    member t.ToRawData() : Array =
         match dtype with 
-        | Dtype.Bool -> t.ToRawData<bool>() |> box
-        | Dtype.Byte -> t.ToRawData<byte>() |> box
-        | Dtype.Int8 -> t.ToRawData<sbyte>() |> box
-        | Dtype.Int16 -> t.ToRawData<int16>() |> box
-        | Dtype.Int32 -> t.ToRawData<int32>() |> box
-        | Dtype.Int64 -> t.ToRawData<int64>() |> box
-        | Dtype.Float32 -> t.ToRawData<float32>() |> box
-        | Dtype.Float64 -> t.ToRawData<double>() |> box
+        | Dtype.Bool -> t.ToRawDataViaDirectAccess<bool>() :> _
+        | Dtype.Byte -> t.ToRawDataViaDirectAccess<byte>() :> _
+        | Dtype.Int8 -> t.ToRawDataViaDirectAccess<sbyte>() :> _
+        | Dtype.Int16 -> t.ToRawDataViaDirectAccess<int16>() :> _
+        | Dtype.Int32 -> t.ToRawDataViaDirectAccess<int32>() :> _
+        | Dtype.Int64 -> t.ToRawDataViaDirectAccess<int64>() :> _
+        | Dtype.Float32 -> t.ToRawDataViaDirectAccess<float32>() :> _
+        | Dtype.Float64 -> t.ToRawDataViaDirectAccess<double>() :> _
+        | Dtype.Float16 -> 
+            // Move the tensors to CPU for efficiency since we're accessing all the data anyway
+            let tt2 = torchMoveTo tt Device.CPU
+            Array.init<float32> (int32 tt2.NumberOfElements) (int64 >> tt2.ReadCpuFloat16) :> _
+        | Dtype.BFloat16 -> 
+            // Move the tensors to CPU for efficiency since we're accessing all the data anyway
+            let tt2 = torchMoveTo tt Device.CPU
+            Array.init<float32> (int32 tt2.NumberOfElements) (int64 >> tt2.ReadCpuBFloat16) :> _
 
     override _.StackTs(tensors, dim) =
         let tts, shapes = tensors |> Array.map (fun t -> (t :?> TorchRawTensor).TorchTensor, t.Shape) |> Array.unzip
@@ -307,6 +320,8 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let result =
             if dtype = Dtype.Bool then 
                 tt.ToType(ScalarType.Byte).Flip(int64s dims).ToType(ScalarType.Bool)
+            elif dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
+                tt.ToType(ScalarType.Float32).Flip(int64s dims).ToType(toTorchType dtype)
             else
                 tt.Flip(int64s dims)
         t.MakeLike(result)
@@ -344,7 +359,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
         // NOTE: DiffSharp currently expects indices as an Int32 tensor, Torch wants Int64
         let indices = indices.Cast(Dtype.Int64)
-        let res = t.TorchTensor.Gather(int64 dim, indices.TorchTensor)
+        let res = 
+            // LibTorch Gather on float16/bfloat16 gives : method_name not implemented for 'BFloat16'
+            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
+                tt.ToType(ScalarType.Float32).Gather(int64 dim, indices.TorchTensor).ToType(toTorchType dtype)
+            else
+                t.TorchTensor.Gather(int64 dim, indices.TorchTensor)
         t.MakeLike(res, indices.Shape)
 
     override t.ViewT(shape:Shape) =
@@ -377,6 +397,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         if dtype = t2.Dtype then
             match dtype with 
             | Dtype.IntegralOrBool -> t.Equals(t2)
+            | Dtype.Float16 | Dtype.BFloat16 -> 
+               // Need because LibTorch 1.7.0 says "isfinite" not implemented for 'BFloat16'
+               tt.ToType(ScalarType.Float32).AllClose(t2.TorchTensor.ToType(ScalarType.Float32), relativeTolerance, absoluteTolerance)
             | _ -> tt.AllClose(t2.TorchTensor, relativeTolerance, absoluteTolerance)
         else 
             opNotSupported2 "Equals" dtype t2.Dtype
@@ -411,6 +434,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
     override t.MaxIndexT() = 
 
+        // LibTorch 1.7.0: Max on float16/bfloat16 causes grief
+        let tt = 
+            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16 then 
+                tt.ToType(ScalarType.Float32)
+            else
+                tt
         let res = Array.zeroCreate<int64> t.Dim
         let idxs = Array.zeroCreate t.Dim
         let mutable values = tt
@@ -421,15 +450,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         for i = 0 to t.Dim - 1 do 
             let idx = idxs.[i]
 
-            // Torch Tensors must be CPU before DataItem can be accessed
-            let idx = torchMoveTo idx Device.CPU
-
             res.[i] <- 
                 match i with 
-                | 0 -> idx.DataItem<int64>()
-                | 1 -> idx.[res.[0]].DataItem<int64>() 
-                | 2 -> idx.[res.[0], res.[1]].DataItem<int64>() 
-                | 3 -> idx.[res.[0], res.[1], res.[2]].DataItem<int64>() 
+                | 0 -> idx.ToInt64()
+                | 1 -> idx.[res.[0]].ToInt64() 
+                | 2 -> idx.[res.[0], res.[1]].ToInt64() 
+                | 3 -> idx.[res.[0], res.[1], res.[2]].ToInt64() 
                 | _ -> failwith "MaxIndexT > 4d nyi for torch"
         res |> Array.map int32
 
@@ -818,6 +844,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             | Dtype.Float64 -> 
                 let data = info.GetValue("data", typeof<double[]>)  :?> double[]
                 Float64Tensor.From (data, toTorchShape shape) 
+            | Dtype.Float16 -> 
+                let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
+                Float16Tensor.From (data, toTorchShape shape) 
+            | Dtype.BFloat16 -> 
+                let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
+                BFloat16Tensor.From (data, toTorchShape shape) 
 
         TorchRawTensor(tt, shape, dtype, Device.CPU)
 
@@ -1116,9 +1148,42 @@ type TorchByteTensorOps() =
         System.Convert.ToByte, 
         TorchScalar.op_Implicit)
 
+type TorchFloat16TensorOps() = 
+
+    inherit TorchTensorOps<single, single>(Dtype.Float16, id, 
+        (fun v -> Float16Tensor.From(v)), 
+        (fun (data, shape) -> Float16Tensor.From(data, shape)), 
+        0.0f, 1.0f, 
+        (fun (shape, device) -> Float16Tensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> Float16Tensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> Float16Tensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> Float16Tensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> Float16Tensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, low, high, device) -> Float16Tensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((float low).ToScalar())), 
+        System.Convert.ToSingle, 
+        TorchScalar.op_Implicit)
+
+
+type TorchBFloat16TensorOps() = 
+
+    inherit TorchTensorOps<single, single>(Dtype.BFloat16, id, 
+        (fun v -> BFloat16Tensor.From(v)), 
+        (fun (data, shape) -> BFloat16Tensor.From(data, shape)), 
+        0.0f, 1.0f, 
+        (fun (shape, device) -> BFloat16Tensor.Empty(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BFloat16Tensor.Zeros(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BFloat16Tensor.Ones(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BFloat16Tensor.Random(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, device) -> BFloat16Tensor.RandomN(shape, device.TorchDeviceType, device.DeviceIndex)), 
+        (fun (shape, low, high, device) -> BFloat16Tensor.RandomIntegers(int64 (high-low), shape, device.TorchDeviceType, device.DeviceIndex).AddInPlace((float low).ToScalar())), 
+        System.Convert.ToSingle, 
+        TorchScalar.op_Implicit)
+
 type TorchBackendTensorStatics() =
     inherit BackendTensorStatics()
 
+    let torchFloat16 = TorchFloat16TensorOps()
+    let torchBFloat16 = TorchBFloat16TensorOps()
     let torchFloat32 = TorchFloat32TensorOps()
     let torchFloat64 = TorchFloat64TensorOps()
     let torchInt8 = TorchInt8TensorOps()
@@ -1175,6 +1240,8 @@ type TorchBackendTensorStatics() =
 
     override _.Zero(dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Zero(device)
+        | BFloat16 -> torchBFloat16.Zero(device)
         | Float32 -> torchFloat32.Zero(device)
         | Float64 -> torchFloat64.Zero(device)
         | Int8 -> torchInt8.Zero(device)
@@ -1186,6 +1253,8 @@ type TorchBackendTensorStatics() =
 
     override _.One(dtype, device) = 
         match dtype with 
+        | Float16 -> torchFloat16.One(device)
+        | BFloat16 -> torchBFloat16.One(device)
         | Float32 -> torchFloat32.One(device)
         | Float64 -> torchFloat64.One(device)
         | Int8 -> torchInt8.One(device)
@@ -1197,6 +1266,8 @@ type TorchBackendTensorStatics() =
 
     override _.Zeros(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Zeros(shape, device)
+        | BFloat16 -> torchBFloat16.Zeros(shape, device)
         | Float32 -> torchFloat32.Zeros(shape, device)
         | Float64 -> torchFloat64.Zeros(shape, device)
         | Int8 -> torchInt8.Zeros(shape, device)
@@ -1208,6 +1279,8 @@ type TorchBackendTensorStatics() =
 
     override _.Empty(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Empty(shape, device)
+        | BFloat16 -> torchBFloat16.Empty(shape, device)
         | Float32 -> torchFloat32.Empty(shape, device)
         | Float64 -> torchFloat64.Empty(shape, device)
         | Int8 -> torchInt8.Empty(shape, device)
@@ -1219,6 +1292,8 @@ type TorchBackendTensorStatics() =
 
     override _.Ones(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Ones(shape, device)
+        | BFloat16 -> torchBFloat16.Ones(shape, device)
         | Float32 -> torchFloat32.Ones(shape, device)
         | Float64 -> torchFloat64.Ones(shape, device)
         | Int8 -> torchInt8.Ones(shape, device)
@@ -1230,6 +1305,8 @@ type TorchBackendTensorStatics() =
 
     override _.Full(shape:Shape, value:scalar, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Full(shape, value, device)
+        | BFloat16 -> torchBFloat16.Full(shape, value, device)
         | Float32 -> torchFloat32.Full(shape, value, device)
         | Float64 -> torchFloat64.Full(shape, value, device)
         | Int8 -> torchInt8.Full(shape, value, device)
@@ -1241,6 +1318,8 @@ type TorchBackendTensorStatics() =
 
     override _.Random(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.Random(shape, device)
+        | BFloat16 -> torchBFloat16.Random(shape, device)
         | Float32 -> torchFloat32.Random(shape, device)
         | Float64 -> torchFloat64.Random(shape, device)
         | Int8 -> torchInt8.Random(shape, device)
@@ -1252,6 +1331,8 @@ type TorchBackendTensorStatics() =
 
     override _.RandomNormal(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.RandomNormal(shape, device)
+        | BFloat16 -> torchBFloat16.RandomNormal(shape, device)
         | Float32 -> torchFloat32.RandomNormal(shape, device)
         | Float64 -> torchFloat64.RandomNormal(shape, device)
         | Int8 -> torchInt8.RandomNormal(shape, device)
@@ -1263,6 +1344,8 @@ type TorchBackendTensorStatics() =
 
     override _.RandomInt(shape:Shape, low:int, high:int, dtype, device) = 
         match dtype with 
+        | Float16 -> torchFloat16.RandomInt(shape, low, high, device)
+        | BFloat16 -> torchBFloat16.RandomInt(shape, low, high, device)
         | Float32 -> torchFloat32.RandomInt(shape, low, high, device)
         | Float64 -> torchFloat64.RandomInt(shape, low, high, device)
         | Int8 -> torchInt8.RandomInt(shape, low, high, device)
@@ -1274,6 +1357,8 @@ type TorchBackendTensorStatics() =
 
     override _.CreateFromFlatArray(values:Array, shape, dtype, device) =
         match dtype with 
+        | Float16 -> torchFloat16.CreateFromFlatArray(values, shape, device)
+        | BFloat16 -> torchBFloat16.CreateFromFlatArray(values, shape, device)
         | Float32 -> torchFloat32.CreateFromFlatArray(values, shape, device)
         | Float64 -> torchFloat64.CreateFromFlatArray(values, shape, device)
         | Int8 -> torchInt8.CreateFromFlatArray(values, shape, device)

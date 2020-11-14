@@ -3,7 +3,12 @@
 /// Represents a storage type for elements of a tensor
 [<Struct>]
 type Dtype =
-    //| Float16
+    /// Store elements as 16-bit floating point numbers (bfloat16 variation)
+    | [<Experimental("Support for bfloat16 is experimental. For the reference backend, float32 representations are used. For the Torch backend, numerous operations give exceptions, you should use float32 alternatives instead and convert the tensors.")>] 
+      BFloat16
+    /// Store elements as 16-bit floating point numbers
+    | [<Experimental("Support for float16 is experimental. For the reference backend, float32 representations are used. For the Torch backend, numerous operations give exceptions, you should use float32 alternatives instead and convert the tensors.")>]
+      Float16
     /// Store elements as 32-bit floating point numbers
     | Float32
     /// Store elements as 64-bit floating point numbers
@@ -23,7 +28,8 @@ type Dtype =
 
     member internal x.Name =
         match x with
-        //| Float16 -> "Float16"
+        | BFloat16 -> "BFloat16"
+        | Float16 -> "Float16"
         | Float32 -> "Float32"
         | Float64 -> "Float64"
         | Int8 -> "Int8"
@@ -49,7 +55,7 @@ module DtypeAutoOpens =
         /// Matches all floating point tensor element types
         member x.IsFloatingPoint =
             match x with
-            | Float32 | Float64 -> true
+            | Float16 | BFloat16 | Float32 | Float64 -> true
             | _ -> false
 
         /// Matches all integral tensor element types
@@ -92,6 +98,8 @@ module Dtype =
             match dtype1, dtype2 with 
             | Float64, _ | _, Float64 -> Some Float64
             | Float32, _ | _, Float32 -> Some Float32
+            | BFloat16, _ | _, BFloat16 -> Some BFloat16
+            | Float16, _ | _, Float16 -> Some Float16
             | Int64, _ | _, Int64 -> Some Int64
             | Int32, _ | _, Int32 -> Some Int32
             | Int16, _ | _, Int16 -> Some Int16
@@ -101,20 +109,6 @@ module Dtype =
             | Byte, Byte -> Some Byte
             | Bool, Bool -> Some Bool
             | Int8, Byte | Byte, Int8  -> None
-
-
-
-    /// Convert System.Type to Dtype
-    let ofType (ty: System.Type) =
-        if ty.Equals(typeof<int32>) then Dtype.Int32
-        elif ty.Equals(typeof<double>) then Dtype.Float64
-        elif ty.Equals(typeof<single>) then Dtype.Float32
-        elif ty.Equals(typeof<int64>) then Dtype.Int64
-        elif ty.Equals(typeof<int16>) then Dtype.Int16
-        elif ty.Equals(typeof<int8>) then Dtype.Int8
-        elif ty.Equals(typeof<byte>) then Dtype.Byte
-        elif ty.Equals(typeof<bool>) then Dtype.Bool
-        else failwithf "unknown type '%A' used as tensor type" ty
 
     /// Get or set the default element type used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32

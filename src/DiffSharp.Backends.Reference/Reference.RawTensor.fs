@@ -47,8 +47,6 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
     member internal t.FlatIndexToIndex(flatIndex:int) =
         flatIndexToIndex t.Shape flatIndex
 
-    override t.GetItem(indexes) = t.[indexes]  :> scalar
-
     member t.Item
         with get ([<System.ParamArray>] index:int[]) =
             // printfn "rawtensor shape %A item index %A" t.Shape index
@@ -127,7 +125,7 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         | 2 -> upcast Array2D.init shape.[0] shape.[1] (fun i j -> t.[i, j])
         | 3 -> upcast Array3D.init shape.[0] shape.[1] shape.[2] (fun i j k -> t.[i, j, k])
         | 4 -> upcast Array4D.init shape.[0] shape.[1] shape.[2] shape.[3] (fun i j k l -> t.[i, j, k, l])
-        | _ -> arrayND shape (fun idxs -> t.[idxs])
+        | _ -> ArrayND.init shape (fun idxs -> t.[idxs])
 
     override _.StackTs(tensors, dim) =
         let values, shapes = tensors |> Array.map (fun t -> t.GetTypedValues(), t.Shape) |> Array.unzip
@@ -414,6 +412,8 @@ module internal RawTensorCPU =
         | _ -> invalidArg "value" (sprintf "Data unsuitable for RawTensorCPU of type %A" typeof< ^T >)
 
     let inline Equals(t1: RawTensorCPU< ^T >, t2: RawTensor) = 
+        if t1.Dtype <> t2.Dtype then 
+            opNotSupported2 "Equals" t1.Dtype t2.Dtype
         match t2 with
         | :? RawTensorCPU< ^T > as t2 -> t1.Shape = t2.Shape && t1.Values = t2.Values
         | _ -> invalidOp <| sprintf "Cannot compare RawTensors t1 (Shape=%A, Dtype=%A, Device=%A, Backend=%A) and t2 (Shape=%A, Dtype=%A, Device=%A, Backend=%A)" t1.Shape t1.Dtype t1.Device t1.Backend t2.Shape t2.Dtype t2.Device t2.Backend
@@ -1586,6 +1586,182 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     static member RandomInt(shape:Shape, low:int, high:int, device) = RawTensorCPU.RandomInt System.Convert.ToBoolean shape low high |> createOn device
     static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
 
+/// The concrete implementation of RawTensor for Float16 data.
+type RawTensorFloat16(values: float32[], shape:Shape, device) =
+    inherit RawTensorCPU<float32>(values, shape, Dtype.Float16, device)
+    let create(values, shape) : RawTensor = upcast RawTensorFloat16(values, shape, device)
+    let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device) 
+    static let createOn device (values, shape) : RawTensor = upcast RawTensorFloat16(values, shape, device)
+
+    override t.MakeLike(values, shape, newDevice) = upcast RawTensorFloat16(values, shape, defaultArg newDevice device)
+    override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
+    override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
+    override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
+    override t1.EqTT(t2) = RawTensorCPU.EqTT(t1, t2) |> createBool
+    override t1.NeqTT(t2) = RawTensorCPU.NeqTT(t1, t2) |> createBool
+    override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
+    override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
+    override t1.AddTT(t2, alpha) =
+        let alpha = match alpha with Some v -> v.toSingle() | None -> RawTensorCPU.one
+        RawTensorCPU.AddTT(t1, t2, alpha) |> create
+    override t1.AddTT0(t2, alpha) =
+        let alpha = match alpha with Some v -> v.toSingle() | None -> RawTensorCPU.one
+        RawTensorCPU.AddTT0(t1, t2.toSingle(), alpha) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice((+), t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorCPU.SubTT(t1, t2) |> create
+    override t2.SubFromT0T(t1) = RawTensorCPU.SubT0T(t1.toSingle(), t2) |> create
+    override t1.SubTT0(t2) = RawTensorCPU.SubTT0(t1, t2.toSingle()) |> create
+    override t1.MulTT(t2) = RawTensorCPU.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorCPU.MulTT0(t1, t2.toSingle()) |> create
+    override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
+    override t2.DivFromT0T(t1) = RawTensorCPU.DivT0T(t1.toSingle(), t2) |> create
+    override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2.toSingle()) |> create
+    override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
+    override t2.PowFromT0T(t1) = RawTensorCPU.PowT0T(t1.toSingle(), t2) |> create
+    override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2.toSingle()) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
+    override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
+    override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) =
+        let res = RawTensorCPU.SumT(t) |> create
+        match resultType with 
+        | None -> res
+        | Some dtype -> res.Cast(dtype)
+    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
+    override t.FloorT() = RawTensorCPU.FloorT(t) |> create
+    override t.CeilT() = RawTensorCPU.CeilT(t) |> create
+    override t.RoundT() = RawTensorCPU.RoundT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
+    override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
+    override t.ExpT() = RawTensorCPU.ExpT(t) |> create
+    override t.LogT() = RawTensorCPU.LogT(t) |> create
+    override t.Log10T() = RawTensorCPU.Log10T(t) |> create
+    override t.SqrtT() = RawTensorCPU.SqrtT(t) |> create
+    override t.SinT() = RawTensorCPU.SinT(t) |> create
+    override t.CosT() = RawTensorCPU.CosT(t) |> create
+    override t.TanT() = RawTensorCPU.TanT(t) |> create
+    override t.SinhT() = RawTensorCPU.SinhT(t) |> create
+    override t.CoshT() = RawTensorCPU.CoshT(t) |> create
+    override t.TanhT() = RawTensorCPU.TanhT(t) |> create
+    override t.AsinT() = RawTensorCPU.AsinT(t) |> create
+    override t.AcosT() = RawTensorCPU.AcosT(t) |> create
+    override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+
+    static member Seed(seed) = Random.Seed(seed)
+    static member Zero(device) = RawTensorCPU.Zero() |> createOn device
+    static member One(device) = RawTensorCPU.One() |> createOn device
+    static member Zeros(shape:Shape, device) = RawTensorCPU.Zeros(shape) |> createOn device
+    static member Empty(shape:Shape, device) = RawTensorCPU.Empty(shape) |> createOn device
+    static member Ones(shape:Shape, device) = RawTensorCPU.Ones(shape) |> createOn device
+    static member Full(shape:Shape, value:scalar, device) = RawTensorCPU.Full (shape, value.toSingle()) |> createOn device
+    static member Random(shape:Shape, device) = RawTensorCPU.Random float32 shape |> createOn device
+    static member RandomNormal(shape:Shape, device) = RawTensorCPU.RandomNormal float32 shape |> createOn device
+    static member RandomInt(shape:Shape, low:int, high:int, device) = RawTensorCPU.RandomInt float32 shape low high |> createOn device
+    static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
+
+/// The concrete implementation of RawTensor for Float16 data.
+type RawTensorBFloat16(values: float32[], shape:Shape, device) =
+    inherit RawTensorCPU<float32>(values, shape, Dtype.BFloat16, device)
+    let create(values, shape) : RawTensor = upcast RawTensorBFloat16(values, shape, device)
+    let createBool(values, shape) : RawTensor = upcast RawTensorBool(values, shape, device) 
+    static let createOn device (values, shape) : RawTensor = upcast RawTensorBFloat16(values, shape, device)
+
+    override t.MakeLike(values, shape, newDevice) = upcast RawTensorBFloat16(values, shape, defaultArg newDevice device)
+    override t1.Equals(t2:RawTensor) = RawTensorCPU.Equals(t1, t2)
+    override t1.AllClose(t2:RawTensor, relativeTolerance, absoluteTolerance) = RawTensorCPU.AllClose(t1, t2, float32 relativeTolerance, float32 absoluteTolerance)
+    override t.ClampT(low, high) = RawTensorCPU.ClampT(t, low, high) |> create
+    override t.SoftplusT() = RawTensorCPU.SoftplusT(t) |> create
+    override t1.LtTT(t2) = RawTensorCPU.LtTT(t1, t2) |> createBool
+    override t1.GtTT(t2) = RawTensorCPU.GtTT(t1, t2) |> createBool
+    override t1.LeTT(t2) = RawTensorCPU.LeTT(t1, t2) |> createBool
+    override t1.GeTT(t2) = RawTensorCPU.GeTT(t1, t2) |> createBool
+    override t1.EqTT(t2) = RawTensorCPU.EqTT(t1, t2) |> createBool
+    override t1.NeqTT(t2) = RawTensorCPU.NeqTT(t1, t2) |> createBool
+    override t.MaxIndexT() = RawTensorCPU.MaxIndexT(t)
+    override t.MinIndexT() = RawTensorCPU.MinIndexT(t)
+    override t1.AddTT(t2, alpha) =
+        let alpha = match alpha with Some v -> v.toSingle() | None -> RawTensorCPU.one
+        RawTensorCPU.AddTT(t1, t2, alpha) |> create
+    override t1.AddTT0(t2, alpha) =
+        let alpha = match alpha with Some v -> v.toSingle() | None -> RawTensorCPU.one
+        RawTensorCPU.AddTT0(t1, t2.toSingle(), alpha) |> create
+    override t1.AddTTSlice(location:int[], t2) = RawTensorCPU.AddTTSlice((+), t1, location, t2) |> create
+    override t1.SubTT(t2) = RawTensorCPU.SubTT(t1, t2) |> create
+    override t2.SubFromT0T(t1) = RawTensorCPU.SubT0T(t1.toSingle(), t2) |> create
+    override t1.SubTT0(t2) = RawTensorCPU.SubTT0(t1, t2.toSingle()) |> create
+    override t1.MulTT(t2) = RawTensorCPU.MulTT(t1, t2) |> create
+    override t1.MulTT0(t2) = RawTensorCPU.MulTT0(t1, t2.toSingle()) |> create
+    override t1.DivTT(t2) = RawTensorCPU.DivTT(t1, t2) |> create
+    override t2.DivFromT0T(t1) = RawTensorCPU.DivT0T(t1.toSingle(), t2) |> create
+    override t1.DivTT0(t2) = RawTensorCPU.DivTT0(t1, t2.toSingle()) |> create
+    override t1.PowTT(t2) = RawTensorCPU.PowTT(t1, t2) |> create
+    override t2.PowFromT0T(t1) = RawTensorCPU.PowT0T(t1.toSingle(), t2) |> create
+    override t1.PowTT0(t2) = RawTensorCPU.PowTT0(t1, t2.toSingle()) |> create
+    override t1.MatMulTT(t2) = RawTensorCPU.MatMulTT(t1, t2) |> create
+    override t1.MaxPool1D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool1D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool2D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool2D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxPool3D(kernelSize, stride, padding) = let result, indices = RawTensorCPU.MaxPool3D(t1, kernelSize, stride, padding) in result :> _, indices :> _
+    override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
+    override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
+    override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
+    override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
+    override t.SumT(resultType) =
+        let res = RawTensorCPU.SumT(t) |> create
+        match resultType with 
+        | None -> res
+        | Some dtype -> res.Cast(dtype)
+    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
+    override t.FloorT() = RawTensorCPU.FloorT(t) |> create
+    override t.CeilT() = RawTensorCPU.CeilT(t) |> create
+    override t.RoundT() = RawTensorCPU.RoundT(t) |> create
+    override t.AbsT() = RawTensorCPU.AbsT abs t |> create
+    override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
+    override t.ExpT() = RawTensorCPU.ExpT(t) |> create
+    override t.LogT() = RawTensorCPU.LogT(t) |> create
+    override t.Log10T() = RawTensorCPU.Log10T(t) |> create
+    override t.SqrtT() = RawTensorCPU.SqrtT(t) |> create
+    override t.SinT() = RawTensorCPU.SinT(t) |> create
+    override t.CosT() = RawTensorCPU.CosT(t) |> create
+    override t.TanT() = RawTensorCPU.TanT(t) |> create
+    override t.SinhT() = RawTensorCPU.SinhT(t) |> create
+    override t.CoshT() = RawTensorCPU.CoshT(t) |> create
+    override t.TanhT() = RawTensorCPU.TanhT(t) |> create
+    override t.AsinT() = RawTensorCPU.AsinT(t) |> create
+    override t.AcosT() = RawTensorCPU.AcosT(t) |> create
+    override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+
+    static member Seed(seed) = Random.Seed(seed)
+    static member Zero(device) = RawTensorCPU.Zero() |> createOn device
+    static member One(device) = RawTensorCPU.One() |> createOn device
+    static member Zeros(shape:Shape, device) = RawTensorCPU.Zeros(shape) |> createOn device
+    static member Empty(shape:Shape, device) = RawTensorCPU.Empty(shape) |> createOn device
+    static member Ones(shape:Shape, device) = RawTensorCPU.Ones(shape) |> createOn device
+    static member Full(shape:Shape, value:scalar, device) = RawTensorCPU.Full (shape, value.toSingle()) |> createOn device
+    static member Random(shape:Shape, device) = RawTensorCPU.Random float32 shape |> createOn device
+    static member RandomNormal(shape:Shape, device) = RawTensorCPU.RandomNormal float32 shape |> createOn device
+    static member RandomInt(shape:Shape, low:int, high:int, device) = RawTensorCPU.RandomInt float32 shape low high |> createOn device
+    static member CreateFromFlatArray(values:Array, shape, device) = RawTensorCPU.CreateFromFlatArray (values, shape) |> createOn device
+
 #if TEST_DUPLICATE_BACKEND
 type TestDuplicateBackendTensorStatics() = 
 #else
@@ -1605,6 +1781,8 @@ type ReferenceBackendTensorStatics() =
     override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.Zero(device)
+        | BFloat16 -> RawTensorBFloat16.Zero(device)
         | Float32 -> RawTensorFloat32.Zero(device)
         | Float64 -> RawTensorFloat64.Zero(device)
         | Int8 -> RawTensorInt8.Zero(device)
@@ -1615,6 +1793,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Zero(device)
     override _.One(dtype, device) = 
         match dtype with 
+        | Float16 -> RawTensorFloat16.One(device)
+        | BFloat16 -> RawTensorBFloat16.One(device)
         | Float32 -> RawTensorFloat32.One(device)
         | Float64 -> RawTensorFloat64.One(device)
         | Int8 -> RawTensorInt8.One(device)
@@ -1625,6 +1805,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.One(device)
     override _.Zeros(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.Zeros(shape, device)
+        | BFloat16 -> RawTensorBFloat16.Zeros(shape, device)
         | Float32 -> RawTensorFloat32.Zeros(shape, device)
         | Float64 -> RawTensorFloat64.Zeros(shape, device)
         | Int8 -> RawTensorInt8.Zeros(shape, device)
@@ -1635,6 +1817,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Zeros(shape, device)
     override _.Empty(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.Empty(shape, device)
+        | BFloat16 -> RawTensorBFloat16.Empty(shape, device)
         | Float32 -> RawTensorFloat32.Empty(shape, device)
         | Float64 -> RawTensorFloat64.Empty(shape, device)
         | Int8 -> RawTensorInt8.Empty(shape, device)
@@ -1645,6 +1829,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Empty(shape, device)
     override _.Ones(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.Ones(shape, device)
+        | BFloat16 -> RawTensorBFloat16.Ones(shape, device)
         | Float32 -> RawTensorFloat32.Ones(shape, device)
         | Float64 -> RawTensorFloat64.Ones(shape, device)
         | Int8 -> RawTensorInt8.Ones(shape, device)
@@ -1655,6 +1841,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Ones(shape, device)
     override _.Full(shape:Shape, value:scalar, dtype, device) = 
         match dtype with 
+        | Float16 -> RawTensorFloat16.Full(shape, value, device)
+        | BFloat16 -> RawTensorBFloat16.Full(shape, value, device)
         | Float32 -> RawTensorFloat32.Full(shape, value, device)
         | Float64 -> RawTensorFloat64.Full(shape, value, device)
         | Int8 -> RawTensorInt8.Full(shape, value, device)
@@ -1665,6 +1853,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Full(shape, value, device)
     override _.Random(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.Random(shape, device)
+        | BFloat16 -> RawTensorBFloat16.Random(shape, device)
         | Float32 -> RawTensorFloat32.Random(shape, device)
         | Float64 -> RawTensorFloat64.Random(shape, device)
         | Int8 -> RawTensorInt8.Random(shape, device)
@@ -1675,6 +1865,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.Random(shape, device)
     override _.RandomNormal(shape:Shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.RandomNormal(shape, device)
+        | BFloat16 -> RawTensorBFloat16.RandomNormal(shape, device)
         | Float32 -> RawTensorFloat32.RandomNormal(shape, device)
         | Float64 -> RawTensorFloat64.RandomNormal(shape, device)
         | Int8 -> RawTensorInt8.RandomNormal(shape, device)
@@ -1685,6 +1877,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.RandomNormal(shape, device)
     override _.RandomInt(shape:Shape, low:int, high:int, dtype, device) = 
         match dtype with 
+        | Float16 -> RawTensorFloat16.RandomInt(shape, low, high, device)
+        | BFloat16 -> RawTensorBFloat16.RandomInt(shape, low, high, device)
         | Float32 -> RawTensorFloat32.RandomInt(shape, low, high, device)
         | Float64 -> RawTensorFloat64.RandomInt(shape, low, high, device)
         | Int8 -> RawTensorInt8.RandomInt(shape, low, high, device)
@@ -1695,6 +1889,8 @@ type ReferenceBackendTensorStatics() =
         | Bool -> RawTensorBool.RandomInt(shape, low, high, device)
     override _.CreateFromFlatArray(values:Array, shape, dtype, device) =
         match dtype with 
+        | Float16 -> RawTensorFloat16.CreateFromFlatArray(values, shape, device)
+        | BFloat16 -> RawTensorBFloat16.CreateFromFlatArray(values, shape, device)
         | Float32 -> RawTensorFloat32.CreateFromFlatArray(values, shape, device)
         | Float64 -> RawTensorFloat64.CreateFromFlatArray(values, shape, device)
         | Int8 -> RawTensorInt8.CreateFromFlatArray(values, shape, device)

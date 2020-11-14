@@ -121,15 +121,13 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
-        let confBackup = dsharp.config()
         for combo in Combos.All do
-            dsharp.config(combo.dtype, combo.device, combo.backend)
+            use _holder = dsharp.useConfig(combo.dtype, combo.device, combo.backend)
             dsharp.seed(123)
             let t = combo.randint(0,10,[25])
             dsharp.seed(123)
             let t2 = combo.randint(0,10,[25])
             Assert.CheckEqual(t, t2)
-        dsharp.config(confBackup)
 
     [<Test>]
     member this.TestDiff () =

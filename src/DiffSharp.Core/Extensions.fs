@@ -46,6 +46,27 @@ module Array =
     // Create a 3D array using a flat representation
     let initFlat3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
 
+module ArrayND = 
+    /// Initializes an array with a given shape and initializer function.
+    let init (shape: int[]) (f: int[] -> 'T) : obj =
+        match shape with 
+        | [| |] -> f [| |]  :> _
+        | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) :> _
+        | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) :> _
+        | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) :> _
+        | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) :> _
+        | _ -> failwith "ArrayND.init - nyi for dim > 4"
+
+    /// Initializes an array with a given shape and initializer function.
+    let zeroCreate (shape: int[]) : Array =
+        match shape with 
+        | [| |] -> [| |] :> _
+        | [| d0 |] -> Array.zeroCreate d0 :> _
+        | [| d0; d1 |] -> Array2D.zeroCreate d0 d1 :> _
+        | [| d0; d1; d2 |] -> Array3D.zeroCreate d0 d1 d2 :> _
+        | [| d0; d1; d2; d3 |] -> Array4D.zeroCreate d0 d1 d2 d3 :> _
+        | _ -> failwith "ArrayND.zeroCreate - nyi for dim > 4"
+
 /// Contains extensions to the F# Seq module. 
 module Seq =
 
@@ -192,18 +213,9 @@ module ExtensionAutoOpens =
                 invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
         Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
 
-    /// Initializes an array with a given shape and initializer function.
-    let arrayND (shape: int[]) f =
-        match shape with 
-        | [| |] -> f [| |] |> box
-        | [| d0 |] -> Array.init d0 (fun i -> f [| i |]) |> box
-        | [| d0; d1 |] -> Array2D.init d0 d1 (fun i1 i2 -> f [| i1; i2 |]) |> box
-        | [| d0; d1; d2 |] -> Array3D.init d0 d1 d2 (fun i1 i2 i3 -> f [| i1; i2; i3 |]) |> box
-        | [| d0; d1; d2; d3 |] -> Array4D.init d0 d1 d2 d3 (fun i1 i2 i3 i4 -> f [| i1; i2; i3; i4 |]) |> box
-        | _ -> failwith "arrayND - nyi for dim > 4"
-
     /// Print the given value to the console using the '%A' printf format specifier
     let print x = printfn "%A" x 
+
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
 do()
