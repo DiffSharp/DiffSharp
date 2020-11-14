@@ -35,6 +35,8 @@ module ScalarExtensions =
 
         member inline x.cast(dtype) =
             match dtype with 
+            | Dtype.Float16 -> x.toSingle() :> scalar
+            | Dtype.BFloat16 -> x.toSingle() :> scalar
             | Dtype.Float32 -> x.toSingle() :> scalar
             | Dtype.Float64 -> x.toDouble() :> scalar
             | Dtype.Int8 -> x.toSByte() :> scalar

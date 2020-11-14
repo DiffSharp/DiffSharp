@@ -1,6 +1,7 @@
 namespace Tests
 
 open System
+open DiffSharp
 open NUnit.Framework
 
 [<AutoOpen>]
@@ -13,3 +14,14 @@ module TestUtils =
 
         /// Like Assert.AreEqual bute requires theat the actual and expected are the same type
         static member CheckEqual (expected: 'T, actual: 'T) = Assert.AreEqual(box expected, box actual)
+
+    type dsharp with
+        /// <summary>Locally use the given default configuration, returning an IDisposable to revert to the previous configuration.</summary>
+        /// <param name="dtype">The new default element type.</param>
+        /// <param name="device">The new default device.</param>
+        /// <param name="backend">The new default backend.</param>
+        static member useConfig(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
+            let prevConfig = dsharp.config()
+            dsharp.config(?dtype=dtype, ?device=device, ?backend=backend)
+            { new System.IDisposable with member _.Dispose() = dsharp.config(prevConfig) }
+

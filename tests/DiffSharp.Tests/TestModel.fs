@@ -210,20 +210,18 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelMove () =
-        let confBackup = dsharp.config()
-        for combo1 in Combos.FloatingPoint do
-            dsharp.config(combo1.dtype, combo1.device, combo1.backend)
+        for combo1 in Combos.FloatingPointExcept16s do
+            use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
             Assert.CheckEqual(combo1.dtype, net.parameters.dtype)
             Assert.CheckEqual(combo1.device, net.parameters.device)
             Assert.CheckEqual(combo1.backend, net.parameters.backend)
-            for combo2 in Combos.FloatingPoint do
+            for combo2 in Combos.FloatingPointExcept16s do
                 // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 net.move(combo2.dtype, combo2.device, combo2.backend)
                 Assert.CheckEqual(combo2.dtype, net.parameters.dtype)
                 Assert.CheckEqual(combo2.device, net.parameters.device)
                 Assert.CheckEqual(combo2.backend, net.parameters.backend)
-        dsharp.config(confBackup)
 
     [<Test>]
     member _.TestModelClone () =
