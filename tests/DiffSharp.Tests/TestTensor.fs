@@ -621,7 +621,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorZeroSize () =
-        for combo in Combos.All do
+        for combo in Combos.AllMinus16s do
             let t = combo.tensor([])
             let tshape = t.shape
             let tshapeCorrect = [|0|]
@@ -638,7 +638,7 @@ type TestTensor () =
             Assert.CheckEqual(tshapeCorrect, tshape)
             Assert.CheckEqual(tdtypeCorrect, tdtype)
 
-        for combo in Combos.IntegralAndFloatingPoint do
+        for combo in Combos.IntegralAndFloatingPointMinus16s do
             let t = combo.tensor([])
 
             let tAdd = t + 2
@@ -657,7 +657,7 @@ type TestTensor () =
             let tCloneCorrect = t
             Assert.CheckEqual(tCloneCorrect, tClone)
 
-        for combo in Combos.IntegralAndFloatingPoint do
+        for combo in Combos.IntegralAndFloatingPointMinus16s do
             let t = combo.tensor([])
 
             let tSub = t - 2
@@ -680,7 +680,7 @@ type TestTensor () =
             let tSignCorrect = t
             Assert.CheckEqual(tSignCorrect, tSign)
 
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t = combo.tensor([])
 
             let tPow = t ** 2
@@ -740,7 +740,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorBernoulli () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let p1 = combo.tensor([0.1,0.5,0.9])
             let b1 = dsharp.bernoulli(p1.expand([2500;3]))
             let b1mean = b1.mean(dim=0)
@@ -765,7 +765,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorDropout2d () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             for p in [0.; 0.2; 0.8; 1.] do
                 let t = combo.ones([100;100;8;8])
                 let d = dsharp.dropout2d(t, p)
@@ -775,7 +775,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorDropout3d () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             for p in [0.; 0.2; 0.8; 1.] do
                 let t = combo.ones([100;100;8;8;8])
                 let d = dsharp.dropout3d(t, p)
@@ -804,6 +804,8 @@ type TestTensor () =
                 | Int16 -> ""
                 | Int32 -> ""
                 | Int64 -> ""
+                | Float16
+                | BFloat16
                 | Float32 -> ".000000"
                 | Float64 -> ".000000"
             let dtypeText = 
@@ -1250,7 +1252,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorRandnLike() =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.tensor([1.; 2.; 3.; 4.])
             let i = t.randnLike([2])
             Assert.CheckEqual(i.shape, [|2|])
@@ -1352,7 +1354,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorAddTT_BroadcastingSystematic () =
-      for combo in Combos.IntegralAndFloatingPoint do 
+      for combo in Combos.IntegralAndFloatingPointMinus16s do 
 
         // Check all broadcasts into 2x2
         // 2x2 * 1  (broadcast --> 2x2)
@@ -1392,7 +1394,7 @@ type TestTensor () =
 
         let t7Results, t7CommuteResults = 
             [| for shape in t7Shapes do 
-                  let t7b = combo.tensor(arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t7b = combo.tensor(ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
                   let t7 = t7a + t7b
                   let t7Commute = t7b + t7a
                   yield (t7b, t7), (t7b, t7Commute) |]
@@ -1766,7 +1768,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMulTT_BroadcastSystematic () =
-      for combo in Combos.FloatingPoint do 
+      for combo in Combos.FloatingPointMinus16s do 
         // 2x2 * 1  (broadcast --> 2x2)
         // 2x2 * 2  (broadcast --> 2x2)
         // 2x2 * 2x1  (broadcast --> 2x2)
@@ -1806,7 +1808,7 @@ type TestTensor () =
 
         let t6Results, t6CommuteResults = 
             [| for shape in t6Shapes do 
-                  let t6b = combo.tensor( arrayND shape (fun is -> double (Array.sum is) + 2.0))
+                  let t6b = combo.tensor(ArrayND.init shape (fun is -> double (Array.sum is) + 2.0))
                   let t6 = t6a * t6b
                   let t6Commute = t6b * t6a
                   yield (t6b, t6 ), (t6b, t6Commute ) |]
@@ -1887,7 +1889,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorPowTT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([1.; 2.]) ** combo.tensor([3.; 4.])
             let t1Correct = combo.tensor([1.; 16.])
 
@@ -1919,7 +1921,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMulT2T2 () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                    [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                    [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
@@ -1960,7 +1962,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorDot () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([8.0766, 3.3030, -2.1732, 8.9448, 1.1028])
             let t2 = combo.tensor([5.1067, -0.0681, 7.4633, -3.6027, 9.0070])
             let t3 = dsharp.dot(t1, t2)
@@ -2252,7 +2254,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxPool2D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t = combo.tensor([[[[ 0.7372,  0.7090,  0.9216,  0.3363,  1.0141, -0.7642,  0.3801, -0.9568],
                                       [-0.3520, -1.2336,  1.8489,  0.9929, -0.8138,  0.0978, -1.3206, -1.5434],
                                       [ 0.6883, -0.2346,  0.1735,  0.6695, -1.9122,  1.1338, -0.1248,  0.2164],
@@ -2432,7 +2434,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxPool3D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t = combo.tensor([[[[ 0.4633,  0.9173,  0.4568, -1.7660, -0.1077],
                                        [-2.1112,  1.5542,  0.5720, -1.0952, -1.8144],
                                        [ 0.3505, -0.9843, -2.5655, -0.9835,  1.2303],
@@ -2636,7 +2638,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxUnpool1D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let tk3 = combo.tensor([[[ 2.5995,  1.3858,  0.9593],
                                       [ 0.4564,  0.4587,  1.1539]],
                              
@@ -2723,7 +2725,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxUnpool2D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let tk3 = combo.tensor([[[[1.8489, 1.1338],
                                               [0.6819, 1.6331]],
 
@@ -3003,7 +3005,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxUnpool3D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let tk2 = combo.tensor([[[[1.5542, 0.5720],
                                         [1.5415, 1.3066]],
                              
@@ -3378,7 +3380,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConv1D () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([[[0.3460; 0.4414; 0.2384; 0.7905; 0.2267];
                                     [0.5161; 0.9032; 0.6741; 0.6492; 0.8576];
                                     [0.3373; 0.0863; 0.8137; 0.2649; 0.7125];
@@ -3555,7 +3557,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConv2D () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([[[[ 10.7072,  -5.0993,   3.6884,   2.0982],
                                      [ -6.4356,   0.6351,  -2.3156,  -1.3384],
                                      [ -5.1846,   0.6805, -14.1961,   0.8657],
@@ -3898,7 +3900,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConv3D () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                        [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                        [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
@@ -4296,7 +4298,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSumDimBackwards () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.randn([2;2;2])
             let tsum_3 = t.sum(-3)
             let tsum_2 = t.sum(-2)
@@ -4311,7 +4313,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMeanDimBackwards () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.randn([2;2;2])
             let tmean_3 = t.mean(-3)
             let tmean_2 = t.mean(-2)
@@ -4326,7 +4328,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorVarianceDimBackwards () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.randn([2;2;2])
             let tvariance_3 = t.variance(-3)
             let tvariance_2 = t.variance(-2)
@@ -4393,7 +4395,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorStddev () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.tensor([[[0.3787;0.7515;0.2252;0.3416];
                 [0.6078;0.4742;0.7844;0.0967];
                 [0.1416;0.1559;0.6452;0.1417]];
@@ -4449,7 +4451,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorVariance () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             (* Python:
             import torch
             input = torch.tensor([[[0.3787,0.7515,0.2252,0.3416],[0.6078,0.4742,0.7844,0.0967],[0.1416,0.1559,0.6452,0.1417]],[[0.0848,0.4156,0.5542,0.4166],[0.5187,0.0520,0.4763,0.1509],[0.4767,0.8096,0.1729,0.6671]]])
@@ -4632,7 +4634,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorFloorT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Floor = t1.floor()
             let t1FloorCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
@@ -4645,7 +4647,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCeilT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Ceil = t1.ceil()
             let t1CeilCorrect = combo.tensor([1.; 1.; 1.; 1.; 1.])
@@ -4658,7 +4660,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorRoundT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Round = t1.round()
             let t1RoundCorrect = combo.tensor([1.; 0.; 0.; 1.; 1.])
@@ -4695,7 +4697,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorReluT () =
-        for combo in Combos.SignedIntegralAndFloatingPoint do 
+        for combo in Combos.SignedIntegralAndFloatingPointMinus16s do 
             let t1 = combo.tensor([-1.; -2.; 0.; 3.; 10.])
             let t1Relu = t1.relu()
             let t1ReluCorrect = combo.tensor([0.; 0.; 0.; 3.; 10.])
@@ -4721,7 +4723,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSigmoidT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Sigmoid = t1.sigmoid()
             let t1SigmoidCorrect = combo.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
@@ -4734,7 +4736,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSoftplusT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05])
             let t1Softplus = t1.softplus()
             let t1SoftplusCorrect = combo.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
@@ -4747,7 +4749,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorExpT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9139; -0.5907;  1.9422; -0.7763; -0.3274])
             let t1Exp = t1.exp()
             let t1ExpCorrect = combo.tensor([2.4940; 0.5539; 6.9742; 0.4601; 0.7208])
@@ -4760,7 +4762,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorLogT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
             let t1Log = t1.log()
             let t1LogCorrect = combo.tensor([-2.0516; -0.5426; -0.4301; -0.9727; -0.9100])
@@ -4773,7 +4775,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorLog10T () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
             let t1Log10 = t1.log10()
             let t1Log10Correct = combo.tensor([-0.8911; -0.2357; -0.1868; -0.4224; -0.3952])
@@ -4786,7 +4788,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSqrtT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Sqrt = t1.sqrt()
             let t1SqrtCorrect = combo.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
@@ -4799,7 +4801,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSinT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Sin = t1.sin()
             let t1SinCorrect = combo.tensor([-0.9828;  0.9991; -0.3698; -0.7510;  0.9491])
@@ -4812,7 +4814,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCosT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318])
             let t1Cos = t1.cos()
             let t1CosCorrect = combo.tensor([-0.1849;  0.0418; -0.9291;  0.6603;  0.3150])
@@ -4825,7 +4827,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorTanT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Tan = t1.tan()
             let t1TanCorrect = combo.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
@@ -4838,7 +4840,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSinhT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Sinh = t1.sinh()
             let t1SinhCorrect = combo.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
@@ -4851,7 +4853,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCoshT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Cosh = t1.cosh()
             let t1CoshCorrect = combo.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
@@ -4864,7 +4866,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorTanhT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439])
             let t1Tanh = t1.tanh()
             let t1TanhCorrect = combo.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
@@ -4877,7 +4879,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorAsinT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Asin = t1.asin()
             let t1AsinCorrect = combo.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
@@ -4890,7 +4892,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorAcosT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Acos = t1.acos()
             let t1AcosCorrect = combo.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
@@ -4903,7 +4905,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorAtanT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439])
             let t1Atan = t1.atan()
             let t1AtanCorrect = combo.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
@@ -5191,7 +5193,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorDilateT () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let tin1 = combo.tensor([1.;2.;3.])
             let t1 = tin1.dilate([|2|])
             let t1Correct = combo.tensor([1.;0.;2.;0.;3.])
@@ -5273,7 +5275,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorClampT () =
-        for combo in Combos.SignedIntegralAndFloatingPoint do 
+        for combo in Combos.SignedIntegralAndFloatingPointMinus16s do 
             let t = combo.tensor([-4,-3,-2,-1,0,1,2,3,4])
             let tClamped = dsharp.clamp(t, -2, 3)
             let tClampedCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
@@ -5483,7 +5485,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxBinary () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([[-4.9385; 12.6206; 10.1783];
                 [-2.9624; 17.6992;  2.2506];
                 [-2.3536;  8.0772; 13.5639]])
@@ -5517,7 +5519,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorSoftmax () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([2.7291; 0.0607; 0.8290])
             let t1Softmax0 = t1.softmax(0)
             let t1Softmax0Correct = combo.tensor([0.8204; 0.0569; 0.1227])
@@ -5611,7 +5613,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorLogsoftmax () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([2.7291, 0.0607, 0.8290])
             let t1Logsoftmax0 = t1.logsoftmax(0)
             let t1Logsoftmax0Correct = combo.tensor([-0.1980, -2.8664, -2.0981])
@@ -5697,7 +5699,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorLogsumexp () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1 = combo.tensor([2.7291, 0.0607, 0.8290])
             let t1Logsumexp0 = t1.logsumexp(0)
             let t1Logsumexp0Correct = combo.tensor(2.9271)
@@ -5793,7 +5795,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorNllLoss () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1a = combo.tensor([[0.15,0.85],[0.5,0.5],[0.8,0.2]]).log()
             let t1b = combo.tensor([0,1,1])
             let t1w = combo.tensor([-1.2,0.6])
@@ -5896,7 +5898,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCrossEntropyLoss () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1a = combo.tensor([[-0.6596,  0.3078, -0.2525, -0.2593, -0.2354],
                                         [ 0.4708,  0.6073,  1.5621, -1.4636,  0.9769],
                                         [ 0.5078,  0.0579,  1.0054,  0.3532,  1.1819],
@@ -5959,7 +5961,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorBceLoss () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t1a = combo.tensor([[0.6732, 0.3984, 0.1378, 0.4564, 0.0396],
                                     [0.7311, 0.6797, 0.8294, 0.8716, 0.5781],
                                     [0.6032, 0.0346, 0.3714, 0.7304, 0.0434]])
@@ -6013,7 +6015,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorStandardize () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t0 = combo.tensor(0.5)
             let t0s = t0.standardize()
             let t0sCorrect = combo.tensor(0.)
@@ -6067,11 +6069,11 @@ type TestTensor () =
             let t1 = combo.tensor([1,2,3])
             t1.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t1.[i], v))
             let t2 = combo.tensor([[1,2,3], [4,5,6]])
-            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2.[i], v))
+            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2.[i,*], v))
 
     [<Test>]
     member _.TestTensorFSharpCoreOps () =
-        for combo in Combos.FloatingPoint do 
+        for combo in Combos.FloatingPointMinus16s do 
             let t = combo.tensor([0.1; 0.2; 0.3])
             let add = t + t
             let addCorrect = t.add(t)
@@ -6171,7 +6173,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConvTranspose1D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t1 = combo.tensor([[[-1.2531,  0.9667,  0.2120, -1.2948,  0.4470,  1.3539],
                                     [-0.3736,  0.8294, -0.8978,  0.1512, -1.9213, -0.0488],
                                     [-0.6830,  0.0080, -0.1773, -1.7092, -0.0818, -0.2670]]])
@@ -6256,7 +6258,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConvTranspose2D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t1 = combo.tensor([[[[-2.0280, -7.4258, -1.1627, -3.6714],
                                        [ 3.1646, -2.0775,  1.1166, -3.1054],
                                        [-2.9795,  6.3719,  6.7753, -0.2423],
@@ -7010,7 +7012,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorConvTranspose3D () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointMinus16s do
             let t1 = combo.tensor([[[[ 0.9873,  2.7076, -0.9461],
                                        [-0.0808,  1.5441, -0.8709],
                                        [-0.8709,  0.3782,  2.0588]],

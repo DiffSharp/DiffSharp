@@ -205,6 +205,12 @@ type RawTensor() =
             | Some Dtype.Float32 ->
                 let a,s = DataConverter.dataOfValuesForFloat32 values
                 (a :> Array), s, Dtype.Float32
+            | Some Dtype.Float16 ->
+                let a,s = DataConverter.dataOfValuesForFloat32 values
+                (a :> Array), s, Dtype.Float16
+            | Some Dtype.BFloat16 ->
+                let a,s = DataConverter.dataOfValuesForFloat32 values
+                (a :> Array), s, Dtype.BFloat16
             | None ->
                 // Prefer Bool tensor if all bool
                 match values |> DataConverter.tryFlatArrayAndShape<bool> with
@@ -302,7 +308,16 @@ type RawTensor() =
     /// </param>
     abstract GetSlice: fullBounds: int[,] -> RawTensor
 
-    /// Get a .NET object for all the values in the tensor
+    /// Gets a .NET object representing the value of the tensor at the given indexes
+    abstract GetItem: [<ParamArray>] indexes: int[] -> scalar
+
+    /// Gets a .NET object representing the value of a scalar tensor 
+    abstract ToScalar: unit -> scalar
+
+    /// <summary>Get a .NET object for all the values in the tensor.</summary>
+    ///
+    /// <remarks>The runtime type of the returned object is either a .NET scalar
+    /// or array corresponding to the shape and element type of the tensor.</remarks>
     abstract ToValues: unit -> obj
 
     /// Compare two tensors for equality
@@ -351,9 +366,6 @@ type RawTensor() =
 
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is a NaN value
     abstract IsNaNT: unit -> RawTensor
-
-    /// Gets a .NET object representing the value of the tensor at the given indexes
-    abstract GetItem: [<System.ParamArray>] indexes: int[] -> scalar
 
     /// Gets the index of a maximum value of the tensor
     abstract MaxIndexT: unit -> int[]
@@ -612,8 +624,12 @@ type RawTensor() =
             | :? RawTensor as y -> Unchecked.compare (x.ToScalar()) (y.ToScalar())
             | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
 
+    default t.GetItem(indexes) =
+        let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then indexes.[i] else 1))
+        t0.ToScalar()
+
     /// Returns a .NET object for the value of a scalar tensor
-    member t.ToScalar() =
+    override t.ToScalar() =
         match t.Dim with
         | 0 -> (t.ToValues() :?> scalar)
         | _ -> failwithf "Cannot convert %Ad tensor to scalar" t.Dim

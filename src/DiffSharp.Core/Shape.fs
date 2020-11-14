@@ -583,6 +583,13 @@ module ShapeAutoOpens =
     /// Gets the total number of elements in a shape.
     let shapeLength (shape: Shape) = Shape.nelement shape
 
+    /// Checks if the full bounds is a scalar location
+    let boundsIsScalar (bounds: int[,]) =
+        let mutable res = true
+        for i=0 to bounds.GetLength(0) - 1 do 
+            res <- res && bounds.[i,2] = 1
+        res
+
     /// Converts the array of three-position bounds specifications to a location.
     let boundsToLocation (bounds: int[,]) =
         [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
