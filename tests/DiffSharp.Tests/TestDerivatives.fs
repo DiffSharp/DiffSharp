@@ -7986,7 +7986,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeClampT () =
-        for combo in Combos.SignedIntegralAndFloatingPointMinus16s do 
+        for combo in Combos.SignedIntegralAndFloatingPointExcept16s do 
             let fwdx = combo.tensor([-4,-3,-2,-1,0,1,2,3,4]).forwardDiff(combo.tensor([10, 20, 30, 40, 50, 60, 70, 80, 90]))
             let fwdz = fwdx.clamp(-2, 3)
             let fwdzCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
