@@ -89,6 +89,8 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
 
     member c.arrayCreator1D(arr: double[]) =
         match c.dtype with 
+        | Dtype.Float16 -> arr |> Array.map float32 :> Array
+        | Dtype.BFloat16 -> arr |> Array.map float32 :> Array
         | Dtype.Float32 -> arr |> Array.map float32 :> Array
         | Dtype.Float64 -> arr |> Array.map double :> Array
         | Dtype.Byte -> arr |> Array.map byte :> Array
@@ -100,6 +102,8 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
 
     member c.arrayCreator2D(arr: double[,]) : Array =
         match c.dtype with 
+        | Dtype.BFloat16 -> arr |> Array2D.map float32 :> Array
+        | Dtype.Float16 -> arr |> Array2D.map float32 :> Array
         | Dtype.Float32 -> arr |> Array2D.map float32 :> Array
         | Dtype.Float64 -> arr |> Array2D.map double :> Array
         | Dtype.Byte -> arr |> Array2D.map byte :> Array
