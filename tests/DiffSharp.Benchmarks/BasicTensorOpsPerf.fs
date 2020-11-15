@@ -371,6 +371,7 @@ type BasicTensorOps() =
     member perf.addInPlace_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10) 
         res3 <- rawTensor.Clone()
+        res3.SetMutable()
         for _ in 1 .. n do res3.AddInPlace(rawTensor)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
@@ -382,6 +383,7 @@ type BasicTensorOps() =
     member perf.addInPlace_RawTensor_Reference() = 
         let n = perf.configure(Backend.Reference, 10) 
         res3 <- rawTensor.Clone()
+        res3.SetMutable()
         for _ in 1 .. n do res3.AddInPlace(rawTensor)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
