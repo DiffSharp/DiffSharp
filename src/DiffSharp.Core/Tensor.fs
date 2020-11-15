@@ -901,13 +901,13 @@ type Tensor =
     /// <summary>Pipeline the tensor into a function.</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
-    static member inline internal OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
+    static member inline internal OpUnary(a, fRaw:RawTensor->RawTensor, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
         | Tensor0(ap)           -> Tensor0(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
         | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
 
-    static member inline internal OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
+    static member inline internal OpBinary(a, b, fRaw: RawTensor * RawTensor -> RawTensor, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
         | Tensor0(ap),          Tensor0(bp)                     -> Tensor0(fRaw(ap, bp))
         | Tensor0(_),           TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
@@ -930,7 +930,7 @@ type Tensor =
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    static member (+) (a:Tensor, b:Tensor) =
+    static member (+) (a:Tensor, b:Tensor) : Tensor =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "+" a.dtype b.dtype 
@@ -939,14 +939,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast + bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.AddTT(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddTT(a,b)
-            let dfTensorRevTC(a,b) = AddTTConst(a)
-            let dfTensorRevCT(a,b) = AddTTConst(b)
+            let inline fRaw(a:RawTensor,b) = a.AddTT(b)
+            let inline fTensor(a,b) = a + b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad + bd
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad) = ad
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = bd
+            let inline dfTensorRevTT(a,b) = AddTT(a,b)
+            let inline dfTensorRevTC(a,b:Tensor) = AddTTConst(a)
+            let inline dfTensorRevCT(a:Tensor,b) = AddTTConst(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -962,21 +962,21 @@ type Tensor =
             let bCast = b.cast(tnew)
             aCast + bCast
         | ValueNone ->
-            let fRaw(a:RawTensor) = a.AddTT0(b)
-            let fTensor(a) = a + b
-            let dfTensorFwd(cp,ap,ad) = ad
-            let dfTensorRev(a) = AddTT0Const(a)
+            let inline fRaw(a:RawTensor) = a.AddTT0(b)
+            let inline fTensor(a) = a + b
+            let inline dfTensorFwd(cp,ap,ad) = ad
+            let inline dfTensorRev(a) = AddTT0Const(a)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>The scalar <paramref name="a" /> is added to each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
-    static member (+) (a: scalar, b:Tensor) = b + a
+    static member (+) (a: scalar, b:Tensor) : Tensor = b + a
 
     /// <summary>Each element of the object tensor is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
-    member a.add(b:Tensor) = a + b
+    member a.add(b:Tensor) : Tensor = a + b
 
     /// <summary>Each element of the object tensor is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
-    member a.add(b:scalar) = a + b
+    member a.add(b:scalar) : Tensor = a + b
 
     /// <summary>Subtracts each element of the tensor <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
@@ -989,14 +989,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast - bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.SubTT(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd) = -bd
-            let dfTensorRevTT(a,b) = SubTT(a,b)
-            let dfTensorRevTC(a,b) = SubTTConst(a)
-            let dfTensorRevCT(a,b) = SubTConstT(b)
+            let inline fRaw(a:RawTensor,b) = a.SubTT(b)
+            let inline fTensor(a,b) = a - b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd
+            let inline dfTensorRevTT(a,b) = SubTT(a,b)
+            let inline dfTensorRevTC(a,b) = SubTTConst(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1012,24 +1012,24 @@ type Tensor =
             let bCast = b.cast(tnew)
             aCast - bCast
         | ValueNone ->
-            let fRaw(a:RawTensor) = a.SubTT0(b)
-            let fTensor(a) = a - b
-            let dfTensorFwd(cp,ap,ad) = ad
-            let dfTensorRev(a) = SubTT0Const(a)
+            let inline fRaw(a:RawTensor) = a.SubTT0(b)
+            let inline fTensor(a) = a - b
+            let inline dfTensorFwd(cp,ap,ad) = ad
+            let inline dfTensorRev(a) = SubTT0Const(a)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
-    static member (-) (a:scalar, b:Tensor) =
+    static member (-) (a:scalar, b:Tensor) : Tensor =
         match tryWidenScalar b.dtype a with
         | ValueSome tnew ->
             let aCast = a.cast(tnew)
             let bCast = b.cast(tnew)
             aCast * bCast
         | ValueNone ->
-            let fRaw(b:RawTensor) = b.SubFromT0T(a)
-            let fTensor(b) = a - b
-            let dfTensorFwd(cp,bp,bd) = -bd
-            let dfTensorRev(b) = SubT0ConstT(b)
+            let inline fRaw(b:RawTensor) = b.SubFromT0T(a)
+            let inline fTensor(b) = a - b
+            let inline dfTensorFwd(cp,bp,bd) = -bd
+            let inline dfTensorRev(b) = SubT0ConstT(b)
             Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Subtracts each element of the object tensor from the corresponding element of the self tensor. The resulting tensor is returned.</summary>
@@ -1050,14 +1050,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast * bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.MulTT(b)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT(a,b)
-            let dfTensorRevTC(a,b) = MulTTConst(a,b)
-            let dfTensorRevCT(a,b) = MulTTConst(b,a)
+            let inline fRaw(a:RawTensor,b) = a.MulTT(b)
+            let inline fTensor(a,b) = a * b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
+            let inline dfTensorRevTT(a,b) = MulTT(a,b)
+            let inline dfTensorRevTC(a,b) = MulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MulTTConst(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1073,10 +1073,10 @@ type Tensor =
             let bCast = b.cast(tnew)
             aCast * bCast
         | ValueNone ->
-            let fRaw(a:RawTensor) = a.MulTT0(b)
-            let fTensor(a) = a * b
-            let dfTensorFwd(cp,ap,ad) = ad * b
-            let dfTensorRev(a) = MulTT0Const(a,b)
+            let inline fRaw(a:RawTensor) = a.MulTT0(b)
+            let inline fTensor(a) = a * b
+            let inline dfTensorFwd(cp,ap,ad) = ad * b
+            let inline dfTensorRev(a) = MulTT0Const(a,b)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Multiplies the scalar <paramref name="a" /> by each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1101,14 +1101,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast / bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.DivTT(b)
-            let fTensor(a,b) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivTT(a,b)
-            let dfTensorRevTC(a,b) = DivTTConst(a,b)
-            let dfTensorRevCT(a,b) = DivTConstT(a,b)
+            let inline fRaw(a:RawTensor,b) = a.DivTT(b)
+            let inline fTensor(a,b) = a / b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
+            let inline dfTensorRevTT(a,b) = DivTT(a,b)
+            let inline dfTensorRevTC(a,b) = DivTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = DivTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1124,10 +1124,10 @@ type Tensor =
             let bCast = b.cast(tnew)
             aCast / bCast
         | ValueNone ->
-            let fRaw(a:RawTensor) = a.DivTT0(b)
-            let fTensor(a) = a / b
-            let dfTensorFwd(cp,ap,ad) = ad / b
-            let dfTensorRev(a) = DivTT0Const(a,b)
+            let inline fRaw(a:RawTensor) = a.DivTT0(b)
+            let inline fTensor(a) = a / b
+            let inline dfTensorFwd(cp,ap,ad) = ad / b
+            let inline dfTensorRev(a) = DivTT0Const(a,b)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1138,10 +1138,10 @@ type Tensor =
             let bCast = b.cast(tnew)
             aCast / bCast
         | ValueNone ->
-            let fRaw(b:RawTensor) = b.DivFromT0T(a)
-            let fTensor(b) = a / b
-            let dfTensorFwd(cp,bp,bd) = -bd * cp / bp
-            let dfTensorRev(b) = DivT0ConstT(a,b)
+            let inline fRaw(b:RawTensor) = b.DivFromT0T(a)
+            let inline fTensor(b) = a / b
+            let inline dfTensorFwd(cp,bp,bd) = -bd * cp / bp
+            let inline dfTensorRev(b) = DivT0ConstT(a,b)
             Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1161,14 +1161,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 Tensor.Pow (aCast, bCast)
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.PowTT(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowTT(a,b)
-            let dfTensorRevTC(a,b) = PowTTConst(a,b)
-            let dfTensorRevCT(a,b) = PowTConstT(a,b)
+            let inline fRaw(a:RawTensor,b) = a.PowTT(b)
+            let inline fTensor(a:Tensor,b:Tensor) = a ** b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
+            let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
+            let inline dfTensorRevTT(a,b) = PowTT(a,b)
+            let inline dfTensorRevTC(a,b) = PowTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = PowTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1183,10 +1183,10 @@ type Tensor =
             let bCast = b.cast(tnew)
             Tensor.powImpl(aCast, bCast)
         | ValueNone ->
-            let fRaw(a:RawTensor) = a.PowTT0(b)
-            let fTensor(a) = Tensor.powImpl (a, b)
-            let dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
-            let dfTensorRev(a) = PowTT0Const(a,b)
+            let inline fRaw(a:RawTensor) = a.PowTT0(b)
+            let inline fTensor(a) = Tensor.powImpl (a, b)
+            let inline dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
+            let inline dfTensorRev(a) = PowTT0Const(a,b)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     static member internal powImpl (a:scalar, b:Tensor) =
@@ -1196,10 +1196,10 @@ type Tensor =
             let bCast = b.cast(tnew)
             Tensor.powImpl(aCast, bCast)
         | ValueNone ->
-            let fRaw(b:RawTensor) = b.PowFromT0T(a)
-            let fTensor(b) = Tensor.powImpl (a, b)
-            let dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
-            let dfTensorRev(b) = PowT0ConstT(a,b)
+            let inline fRaw(b:RawTensor) = b.PowFromT0T(a)
+            let inline fTensor(b) = Tensor.powImpl (a, b)
+            let inline dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
+            let inline dfTensorRev(b) = PowT0ConstT(a,b)
             Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1273,14 +1273,14 @@ type Tensor =
         else
         let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
         if aBatchPart = bBatchPart then
-            let fRaw(a:RawTensor,b) = a.MatMulTT(b)
-            let fTensor(a:Tensor,b) = a.matmul(b)
-            let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
-            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
-            let dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
-            let dfTensorRevTT(a,b) = MatMulTT(a,b)
-            let dfTensorRevTC(a,b) = MatMulTTConst(a,b)
-            let dfTensorRevCT(a,b) = MatMulTConstT(a,b)
+            let inline fRaw(a:RawTensor,b) = a.MatMulTT(b)
+            let inline fTensor(a:Tensor,b) = a.matmul(b)
+            let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
+            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+            let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
+            let inline dfTensorRevTT(a,b) = MatMulTT(a,b)
+            let inline dfTensorRevTC(a,b) = MatMulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MatMulTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newBatchPart = Shape.broadcast2 aBatchPart bBatchPart
@@ -1303,10 +1303,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the negative of the elements of <paramref name="a" />.</summary>
     static member (~-) (a:Tensor) =
-        let fRaw(a:RawTensor) = a.NegT()
-        let fTensor(a) = -a
-        let dfTensorFwd(cp,ap,ad) = -ad
-        let dfTensorRev(a) = NegT(a)
+        let inline fRaw(a:RawTensor) = a.NegT()
+        let inline fTensor(a) = -a
+        let inline dfTensorFwd(cp,ap,ad) = -ad
+        let inline dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the negative of the elements of the object tensor.</summary>
@@ -1315,10 +1315,10 @@ type Tensor =
     /// <summary>Returns the sum of all elements in the input tensor.</summary>
     /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(?dtype: Dtype) =
-        let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
-        let fTensor(a:Tensor) = a.sum(?dtype=dtype)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
-        let dfTensorRev(a) = SumT(a)
+        let inline fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
+        let inline fTensor(a:Tensor) = a.sum(?dtype=dtype)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
+        let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns the sum of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
@@ -1528,10 +1528,10 @@ type Tensor =
 
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
     member internal a.sumT2Dim0() =
-        let fRaw(a:RawTensor) = a.SumT2Dim0()
-        let fTensor(a:Tensor) = a.sumT2Dim0()
-        let dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
-        let dfTensorRev(a) = SumT2Dim0(a)
+        let inline fRaw(a:RawTensor) = a.SumT2Dim0()
+        let inline fTensor(a:Tensor) = a.sumT2Dim0()
+        let inline dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
+        let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
     /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
@@ -1544,19 +1544,19 @@ type Tensor =
         if dim0 = dim1 then
             a
         else
-            let fRaw(a:RawTensor) = a.TransposeT(dim0, dim1)
-            let fTensor(a:Tensor) = a.transpose(dim0, dim1)
-            let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose(dim0, dim1)
-            let dfTensorRev(a) = TransposeT(a, dim0, dim1)
+            let inline fRaw(a:RawTensor) = a.TransposeT(dim0, dim1)
+            let inline fTensor(a:Tensor) = a.transpose(dim0, dim1)
+            let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose(dim0, dim1)
+            let inline dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
     member a.transpose() =
         Shape.checkCanTranspose2d a.dim
-        let fRaw(a:RawTensor) = a.TransposeT2()
-        let fTensor(a:Tensor) = a.transpose()
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
-        let dfTensorRev(a) = TransposeT2(a)
+        let inline fRaw(a:RawTensor) = a.TransposeT2()
+        let inline fTensor(a:Tensor) = a.transpose()
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
+        let inline dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a tensor with all the dimensions of input of size 1 removed.</summary>
@@ -1564,19 +1564,19 @@ type Tensor =
     /// <param name="dim">If given, the input will be squeezed only in this dimension.</param>
     member a.squeeze(?dim:int) =
         let dim = defaultArg dim -1
-        let fRaw(a:RawTensor) = a.SqueezeT(dim)
-        let fTensor(a:Tensor) = a.squeeze(dim)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.squeeze(dim)
-        let dfTensorRev(a) = SqueezeT(a)
+        let inline fRaw(a:RawTensor) = a.SqueezeT(dim)
+        let inline fTensor(a:Tensor) = a.squeeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.squeeze(dim)
+        let inline dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with a dimension of size one inserted at the specified position</summary>
     /// <param name="dim">The index at which to insert the singleton dimension.</param>
     member a.unsqueeze(dim:int) : Tensor =
-        let fRaw(a:RawTensor) = a.UnsqueezeT(dim)
-        let fTensor(a:Tensor) = a.unsqueeze(dim)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
-        let dfTensorRev(a) = UnsqueezeT(a)
+        let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
+        let inline fTensor(a:Tensor) = a.unsqueeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
+        let inline dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
@@ -1584,10 +1584,10 @@ type Tensor =
     member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
         Shape.checkCanFlip a.dim dims
-        let fRaw(a:RawTensor) = a.FlipT(dims)
-        let fTensor(a:Tensor) = a.flip(dims)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
-        let dfTensorRev(a) = FlipT(a, dims)
+        let inline fRaw(a:RawTensor) = a.FlipT(dims)
+        let inline fTensor(a:Tensor) = a.flip(dims)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
+        let inline dfTensorRev(a) = FlipT(a, dims)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Dilate the tensor in using the given dilations in each corresponding dimension.</summary>
@@ -1595,20 +1595,20 @@ type Tensor =
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         Shape.checkCanDilate a.dim dilations
-        let fRaw(a:RawTensor) = a.DilateT(dilations)
-        let fTensor(a:Tensor) = a.dilate(dilations)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
-        let dfTensorRev(a) = DilateT(a, dilations)
+        let inline fRaw(a:RawTensor) = a.DilateT(dilations)
+        let inline fTensor(a:Tensor) = a.dilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
+        let inline dfTensorRev(a) = DilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Reverse the dilation of the tensor in using the given dilations in each corresponding dimension.</summary>
     /// <param name="dilations">The dilations to use.</param>
     member a.undilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
-        let fRaw(a:RawTensor) = a.UndilateT(dilations)
-        let fTensor(a:Tensor) = a.undilate(dilations)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.undilate(dilations)
-        let dfTensorRev(a) = UndilateT(a, dilations)
+        let inline fRaw(a:RawTensor) = a.UndilateT(dilations)
+        let inline fTensor(a:Tensor) = a.undilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.undilate(dilations)
+        let inline dfTensorRev(a) = UndilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Repeat elements of a tensor</summary>
@@ -1630,10 +1630,10 @@ type Tensor =
     /// <param name="indices">The the indices of elements to gather.</param>
     member a.gather(dim:int, indices:Tensor) =
         Shape.checkCanGather a.shape dim indices.shape indices.dtype
-        let fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
-        let fTensor(a:Tensor) = a.gather(dim, indices)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
-        let dfTensorRev(a) = GatherT(a, dim, indices)
+        let inline fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
+        let inline fTensor(a:Tensor) = a.gather(dim, indices)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
+        let inline dfTensorRev(a) = GatherT(a, dim, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
@@ -1647,10 +1647,10 @@ type Tensor =
     member a.view(shape:seq<int>) =
         let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
         Shape.checkCanView a.shape shape
-        let fRaw(a:RawTensor) = a.ViewT(shape)
-        let fTensor(a:Tensor) = a.view(shape)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
-        let dfTensorRev(a) = ViewT(a, a.shape)
+        let inline fRaw(a:RawTensor) = a.ViewT(shape)
+        let inline fTensor(a:Tensor) = a.view(shape)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
+        let inline dfTensorRev(a) = ViewT(a, a.shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the same data as the object tensor but of a different shape.</summary>
@@ -1709,20 +1709,20 @@ type Tensor =
     /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.sign() =
-        let fRaw(a:RawTensor) = a.SignT()
-        let fTensor(a:Tensor) = a.sign()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = SignT(a)
+        let inline fRaw(a:RawTensor) = a.SignT()
+        let inline fTensor(a:Tensor) = a.sign()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     // static member Sign(a:Tensor) = a.sign() // not supported becaose FSharp.Core sign operator returns int
 
     /// <summary>Returns a new tensor with the floor of the elements of input, the largest integer less than or equal to each element.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.floor() =
-        let fRaw(a:RawTensor) = a.FloorT()
-        let fTensor(a:Tensor) = a.floor()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = FloorT(a)
+        let inline fRaw(a:RawTensor) = a.FloorT()
+        let inline fTensor(a:Tensor) = a.floor()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>floor</c>.</summary>
@@ -1731,10 +1731,10 @@ type Tensor =
     /// <summary>Returns a new tensor with the ceil of the elements of input, the smallest integer greater than or equal to each element.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.ceil() =
-        let fRaw(a:RawTensor) = a.CeilT()
-        let fTensor(a:Tensor) = a.ceil()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = CeilT(a)
+        let inline fRaw(a:RawTensor) = a.CeilT()
+        let inline fTensor(a:Tensor) = a.ceil()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>ceil</c>.</summary>
@@ -1743,10 +1743,10 @@ type Tensor =
     /// <summary>Returns a new tensor with each of the elements of input rounded to the closest integer.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.round() =
-        let fRaw(a:RawTensor) = a.RoundT()
-        let fTensor(a:Tensor) = a.round()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = RoundT(a)
+        let inline fRaw(a:RawTensor) = a.RoundT()
+        let inline fTensor(a:Tensor) = a.round()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>round</c>.</summary>
@@ -1754,21 +1754,21 @@ type Tensor =
 
     /// <summary>Computes the element-wise absolute value of the given input tensor.</summary>
     member a.abs() =
-        let fRaw(a:RawTensor) = a.AbsT()
-        let fTensor(a:Tensor) = a.abs()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
-        let dfTensorRev(a) = AbsT(a)
+        let inline fRaw(a:RawTensor) = a.AbsT()
+        let inline fTensor(a:Tensor) = a.abs()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
+        let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>abs</c>.</summary>
-    static member Abs(a:Tensor) = a.abs() // needed for FSharp.Core abs operator overload
+    static member Abs(a:Tensor) : Tensor = a.abs() // needed for FSharp.Core abs operator overload
 
     /// <summary>Applies the rectified linear unit function element-wise.</summary>
     member a.relu() =
-        let fRaw(a:RawTensor) = a.ReluT()
-        let fTensor(a:Tensor) = a.relu()
-        let dfTensorFwd(cp,ap:Tensor,ad:Tensor) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
-        let dfTensorRev(a) = ReluT(a)
+        let inline fRaw(a:RawTensor) = a.ReluT()
+        let inline fTensor(a:Tensor) = a.relu()
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
+        let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Applies the leaky rectified linear unit function element-wise</summary>
@@ -1781,18 +1781,18 @@ type Tensor =
     /// <summary>Applies the sigmoid element-wise function</summary>
     /// <remarks>\[\text{Sigmoid}(x) = \frac{1}{1 + \exp(-x)}\]</remarks>
     member a.sigmoid() =
-        let fRaw(a:RawTensor) = a.SigmoidT()
-        let fTensor(a:Tensor) = a.sigmoid()
-        let dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
-        let dfTensorRev(a) = SigmoidT(a)
+        let inline fRaw(a:RawTensor) = a.SigmoidT()
+        let inline fTensor(a:Tensor) = a.sigmoid()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
+        let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Applies the exp function element-wise.</summary>
     member a.exp() =
-        let fRaw(a:RawTensor) = a.ExpT()
-        let fTensor(a:Tensor) = a.exp()
-        let dfTensorFwd(cp,ap,ad) = ad * cp
-        let dfTensorRev(a) = ExpT(a)
+        let inline fRaw(a:RawTensor) = a.ExpT()
+        let inline fTensor(a:Tensor) = a.exp()
+        let inline dfTensorFwd(cp,ap,ad) = ad * cp
+        let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>exp</c>.</summary>
@@ -1801,10 +1801,10 @@ type Tensor =
     /// <summary>Returns a new tensor with the natural logarithm of the elements of input.</summary>
     /// <remarks> \[y_{i} = \log_{e} (x_{i})\]</remarks>
     member a.log() =
-        let fRaw(a:RawTensor) = a.LogT()
-        let fTensor(a:Tensor) = a.log()
-        let dfTensorFwd(cp,ap,ad) = ad / ap
-        let dfTensorRev(a) = LogT(a)
+        let inline fRaw(a:RawTensor) = a.LogT()
+        let inline fTensor(a:Tensor) = a.log()
+        let inline dfTensorFwd(cp,ap,ad) = ad / ap
+        let inline dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>log</c>.</summary>
@@ -1813,19 +1813,19 @@ type Tensor =
     /// <summary>Applies the softplus function element-wise.</summary>
     /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
     member a.softplus() =
-        let fRaw(a:RawTensor) = a.SoftplusT()
-        let fTensor(a:Tensor) = a.softplus()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
-        let dfTensorRev(a) = SoftplusT(a)
+        let inline fRaw(a:RawTensor) = a.SoftplusT()
+        let inline fTensor(a:Tensor) = a.softplus()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
+        let inline dfTensorRev(a) = SoftplusT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
     /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
     member a.log10() =
-        let fRaw(a:RawTensor) = a.Log10T()
-        let fTensor(a:Tensor) = a.log10()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
-        let dfTensorRev(a) = Log10T(a)
+        let inline fRaw(a:RawTensor) = a.Log10T()
+        let inline fTensor(a:Tensor) = a.log10()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
+        let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>log10</c>.</summary>
@@ -1833,10 +1833,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the square-root of the elements of input.</summary>
     member a.sqrt() =
-        let fRaw(a:RawTensor) = a.SqrtT()
-        let fTensor(a:Tensor) = a.sqrt()
-        let dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
-        let dfTensorRev(a) = SqrtT(a)
+        let inline fRaw(a:RawTensor) = a.SqrtT()
+        let inline fTensor(a:Tensor) = a.sqrt()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
+        let inline dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>sqrt</c>.</summary>
@@ -1844,10 +1844,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the sine of the elements of input</summary>
     member a.sin() =
-        let fRaw(a:RawTensor) = a.SinT()
-        let fTensor(a:Tensor) = a.sin()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
-        let dfTensorRev(a) = SinT(a)
+        let inline fRaw(a:RawTensor) = a.SinT()
+        let inline fTensor(a:Tensor) = a.sin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
+        let inline dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>sin</c>.</summary>
@@ -1855,10 +1855,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the cosine of the elements of input</summary>
     member a.cos() =
-        let fRaw(a:RawTensor) = a.CosT()
-        let fTensor(a:Tensor) = a.cos()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
-        let dfTensorRev(a) = CosT(a)
+        let inline fRaw(a:RawTensor) = a.CosT()
+        let inline fTensor(a:Tensor) = a.cos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
+        let inline dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>cos</c>.</summary>
@@ -1866,10 +1866,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the tangent of the elements of input</summary>
     member a.tan() =
-        let fRaw(a:RawTensor) = a.TanT()
-        let fTensor(a:Tensor) = a.tan()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
-        let dfTensorRev(a) = TanT(a)
+        let inline fRaw(a:RawTensor) = a.TanT()
+        let inline fTensor(a:Tensor) = a.tan()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
+        let inline dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>tan</c>.</summary>
@@ -1877,10 +1877,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the hyperbolic sine of the elements of input.</summary>
     member a.sinh() =
-        let fRaw(a:RawTensor) = a.SinhT()
-        let fTensor(a:Tensor) = a.sinh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
-        let dfTensorRev(a) = SinhT(a)
+        let inline fRaw(a:RawTensor) = a.SinhT()
+        let inline fTensor(a:Tensor) = a.sinh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
+        let inline dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>sinh</c>.</summary>
@@ -1888,10 +1888,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the hyperbolic cosine of the elements of input.</summary>
     member a.cosh() =
-        let fRaw(a:RawTensor) = a.CoshT()
-        let fTensor(a:Tensor) = a.cosh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
-        let dfTensorRev(a) = CoshT(a)
+        let inline fRaw(a:RawTensor) = a.CoshT()
+        let inline fTensor(a:Tensor) = a.cosh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
+        let inline dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>cosh</c>.</summary>
@@ -1899,10 +1899,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the hyperbolic tangent of the elements of input.</summary>
     member a.tanh() =
-        let fRaw(a:RawTensor) = a.TanhT()
-        let fTensor(a:Tensor) = a.tanh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
-        let dfTensorRev(a) = TanhT(a)
+        let inline fRaw(a:RawTensor) = a.TanhT()
+        let inline fTensor(a:Tensor) = a.tanh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
+        let inline dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>tanh</c>.</summary>
@@ -1910,10 +1910,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the arcsine of the elements of input.</summary>
     member a.asin() =
-        let fRaw(a:RawTensor) = a.AsinT()
-        let fTensor(a:Tensor) = a.asin()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
-        let dfTensorRev(a) = AsinT(a)
+        let inline fRaw(a:RawTensor) = a.AsinT()
+        let inline fTensor(a:Tensor) = a.asin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
+        let inline dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>asin</c>.</summary>
@@ -1921,10 +1921,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the arccosine of the elements of input.</summary>
     member a.acos() =
-        let fRaw(a:RawTensor) = a.AcosT()
-        let fTensor(a:Tensor) = a.acos()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
-        let dfTensorRev(a) = AcosT(a)
+        let inline fRaw(a:RawTensor) = a.AcosT()
+        let inline fTensor(a:Tensor) = a.acos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
+        let inline dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>acos</c>.</summary>
@@ -1932,10 +1932,10 @@ type Tensor =
 
     /// <summary>Returns a new tensor with the arctangent of the elements of input.</summary>
     member a.atan() =
-        let fRaw(a:RawTensor) = a.AtanT()
-        let fTensor(a:Tensor) = a.atan()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
-        let dfTensorRev(a) = AtanT(a)
+        let inline fRaw(a:RawTensor) = a.AtanT()
+        let inline fTensor(a:Tensor) = a.atan()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
+        let inline dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>atan</c>.</summary>
@@ -1945,14 +1945,14 @@ type Tensor =
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
         Shape.checkCanAddSlice a.shape location b.shape
-        let fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
-        let fTensor(a:Tensor,b) = a.addSlice(location, b)
-        let dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
-        let dfTensorFwdTC(cp,ap,ad) = ad
-        let dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
-        let dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
-        let dfTensorRevTC(a,b) = AddTTConstSlice(a)
-        let dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
+        let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
+        let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
+        let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
+        let inline dfTensorFwdTC(cp,ap,ad) = ad
+        let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
+        let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
+        let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
+        let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     /// <summary>Applies a softmax function.</summary>
@@ -2132,10 +2132,10 @@ type Tensor =
                 let inputSize = a.shape.[2]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputSize-1) * stride - 2*padding + kernelSize)|]
         Shape.checkCanMaxunpool1d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool1DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool1DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Applies a 2D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
@@ -2215,10 +2215,10 @@ type Tensor =
                 let inputWidth = a.shape.[3]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputHeight-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputWidth-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1])|]
         Shape.checkCanMaxunpool2d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool2DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool2DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Applies a 3D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
@@ -2299,10 +2299,10 @@ type Tensor =
                 let inputWidth = a.shape.[4]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputDepth-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputHeight-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1]); ((inputWidth-1) * strides.[2] - 2*paddings.[2] + kernelSizes.[2])|]
         Shape.checkCanMaxunpool3d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool3DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool3DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Applies a 1D convolution over an input signal composed of several input planes</summary>
@@ -2319,14 +2319,14 @@ type Tensor =
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
-        let fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
-        let fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
-        let dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
-        let dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
-        let dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
+        let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
+        let inline fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
+        let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
+        let inline dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
+        let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     // a: input, NxCxI (batchSize x inputChannels x inputLength)
@@ -2433,14 +2433,14 @@ type Tensor =
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
-        let fRaw(a:RawTensor,b) = a.Conv2D(b, strides, paddings)
-        let fTensor(a:Tensor,b) = a.conv2d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, strides=strides, paddings=paddings) + ap.conv2d(bd, strides=strides, paddings=paddings)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, strides=strides, paddings=paddings)
-        let dfTensorRevTT(a,b) = Conv2DTT(a,b, strides, paddings)
-        let dfTensorRevTC(a,b) = Conv2DTTConst(a,b, strides, paddings)
-        let dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
+        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, strides, paddings)
+        let inline fTensor(a:Tensor,b) = a.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, strides=strides, paddings=paddings) + ap.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, strides, paddings)
+        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, strides, paddings)
+        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
@@ -2578,14 +2578,14 @@ type Tensor =
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
-        let fRaw(a:RawTensor,b) = a.Conv3D(b, strides, paddings)
-        let fTensor(a:Tensor,b) = a.conv3d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv3d(bp, strides=strides, paddings=paddings) + ap.conv3d(bd, strides=strides, paddings=paddings)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv3d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv3d(bd, strides=strides, paddings=paddings)
-        let dfTensorRevTT(a,b) = Conv3DTT(a,b, strides, paddings)
-        let dfTensorRevTC(a,b) = Conv3DTTConst(a,b, strides, paddings)
-        let dfTensorRevCT(a,b) = Conv3DTConstT(a,b, strides, paddings)
+        let inline fRaw(a:RawTensor,b) = a.Conv3D(b, strides, paddings)
+        let inline fTensor(a:Tensor,b) = a.conv3d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv3d(bp, strides=strides, paddings=paddings) + ap.conv3d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv3d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv3d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorRevTT(a,b) = Conv3DTT(a,b, strides, paddings)
+        let inline dfTensorRevTC(a,b) = Conv3DTTConst(a,b, strides, paddings)
+        let inline dfTensorRevCT(a,b) = Conv3DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     // a: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
