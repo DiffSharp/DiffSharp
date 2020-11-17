@@ -1,10 +1,15 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace rec DiffSharp.Optim
+
 open DiffSharp
 open DiffSharp.Shorten
 open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Util
-
 
 /// <namespacedoc>
 ///   <summary>Contains types and functionality related to optimizing tensor models and functions.</summary>
