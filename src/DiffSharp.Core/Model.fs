@@ -145,7 +145,7 @@ type Mode =
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
-type Model() =
+type BaseModel() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -153,17 +153,17 @@ type Model() =
     member val ParametersDict = ParameterDict()
 
     /// <summary>TBD</summary>
-    member val SubModelsDict = Dictionary<string, Model>()
+    member val SubModelsDict = Dictionary<string, BaseModel>()
 
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:Model in m.allModels do model.mode <- Mode.Train
+        for model:BaseModel in m.allModels do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:Model in m.allModels do model.mode <- Mode.Eval
+        for model:BaseModel in m.allModels do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
     member m.parametersDict
@@ -190,10 +190,17 @@ type Model() =
             match (box p) with
             | :? Parameter as p -> 
                 m.parametersDict.add(n, p)
-            | :? Model as mm ->
+            | :? BaseModel as mm ->
                 m.SubModelsDict.Add(n, mm)
                 m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
-            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+            | :? (Parameter * string) as pn -> 
+                let (p,n) = pn
+                m.parametersDict.add(n, p)
+            | :? (BaseModel * string) as mmn -> 
+                let (mm,n) = mmn
+                m.SubModelsDict.Add(n, mm)
+                m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+            | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
 
     /// <summary>TBD</summary>
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
@@ -211,51 +218,6 @@ type Model() =
     member m.nparameters = m.parametersDict.nelement
 
     /// <summary>TBD</summary>
-    abstract member forward: Tensor -> Tensor
-
-    /// <summary>TBD</summary>
-    member m.forwardParameters (input:Tensor) (parameters:Tensor) =
-        m.parameters <- parameters
-        let f = m.forward(input) in m.noDiff(); f
-
-    /// <summary>TBD</summary>
-    member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
-        m.forwardParameters input parameters |> f
-
-    /// <summary>TBD</summary>
-    member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
-        m.forwardCompose (f target) input parameters
-
-    /// <summary>TBD</summary>
-    static member create ps f =
-        let model = { new Model() with override __.forward(x) = f x}
-        model.add(ps)
-        model
-
-    /// <summary>TBD</summary>
-    override m.ToString() =
-        let sb = System.Text.StringBuilder()
-        sb.Append("Model(\n") |> ignore
-        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
-        sb.Append(")") |> ignore
-        sb.ToString()
-
-    /// <summary>TBD</summary>
-    static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
-
-    /// <summary>TBD</summary>
-    static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
-
-    /// <summary>TBD</summary>
-    static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (t:Tensor, m:Model) = m.forward t
-
-    /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parameters.save(fileName)
 
     /// <summary>TBD</summary>
@@ -265,13 +227,66 @@ type Model() =
     member m.save(fileName) = saveBinary m fileName
 
     /// <summary>TBD</summary>
-    static member load(fileName):Model = loadBinary fileName
+    override m.ToString() =
+        let sb = System.Text.StringBuilder()
+        sb.Append("Model(\n") |> ignore
+        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
+
+
+[<AbstractClass>]
+type Model<'In, 'Out>() =
+    inherit BaseModel()
+
+    /// <summary>TBD</summary>
+    abstract member forward: 'In -> 'Out
+
+    /// <summary>TBD</summary>
+    static member create (ps: seq<obj>) (f: 'In -> 'Out) : Model<'In, 'Out> =
+        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
+        model.add(ps)
+        model
+
+    /// <summary>TBD</summary>
+    static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
+        Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
+
+    /// <summary>TBD</summary>
+    member m.forwardParameters (input:'In) (parameters:Tensor) =
+        m.parameters <- parameters
+        let f = m.forward(input) in m.noDiff(); f
+
+    /// <summary>TBD</summary>
+    member m.forwardCompose (f:'Out->'Out2) (input:'In) (parameters:Tensor) =
+        m.forwardParameters input parameters |> f
+
+    /// <summary>TBD</summary>
+    member m.forwardLoss (f:'In2->'Out->Tensor) (input:'In) (target:'In2) (parameters:Tensor) =
+        m.forwardCompose (f target) input parameters
+
+    /// <summary>TBD</summary>
+    static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
+    
+    /// <summary>TBD</summary>
+    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] (m.forward >> f)
+
+    /// <summary>TBD</summary>
+    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
+
+    /// <summary>TBD</summary>
+    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
+
+    /// <summary>TBD</summary>
+    static member load(fileName):Model<'In, 'Out> = loadBinary fileName
 
     /// <summary>TBD</summary>
     member m.clone() = 
         let fileName = System.IO.Path.GetTempFileName()
         m.save(fileName)
         Model.load(fileName)
+
+type Model = Model<Tensor, Tensor>
 
 /// <summary>Contains functionality related to generating initial paramerter weights.</summary>
 type Weight =
