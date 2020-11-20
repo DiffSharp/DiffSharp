@@ -25,7 +25,7 @@ jobs:
     - name: Install tool dependencies
       run: dotnet tool restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore --verbosity normal
     - name: Test
       run: dotnet test --configuration Release --no-restore --verbosity normal
     - name: Run fsdocs
