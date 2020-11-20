@@ -598,9 +598,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             // "conv1d for CUDA tensors only supports floating-point types."
             match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
-                tt.ToType(ScalarType.Float64).Conv1D(t2.TorchTensor.ToType(ScalarType.Float64), stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L)).Round().ToType(toTorchType dtype) 
+                tt.ToType(ScalarType.Float64).Conv1D(t2.TorchTensor.ToType(ScalarType.Float64), stride=int64 stride, padding=int64 padding, dilation=1L).Round().ToType(toTorchType dtype) 
             | _ ->
-                tt.Conv1D(t2.TorchTensor, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
+                tt.Conv1D(t2.TorchTensor, stride=int64 stride, padding=int64 padding, dilation=1L)
         t1.MakeLike(resultt, shape=outputShape)
 
     override t1.Conv2D(t2, strides, paddings) = // TODO: bias, dilation and groups
@@ -633,7 +633,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         match dtype with 
         | Dtype.Bool | Dtype.Integral -> opNotSupported "MaxPool1D" dtype
         | _ ->
-        let struct (resultt, indicest) = tt.MaxPool1DWithIndices(int64 kernelSize, stride=Nullable(int64 stride), padding=Nullable(int64 padding), dilation=Nullable(1L))
+        let struct (resultt, indicest) = tt.MaxPool1DWithIndices(int64 kernelSize, stride=int64 stride, padding=int64 padding, dilation=1L)
         // NOTE: DiffSharp currently expects indices as an Int32 tensor
         let indices = t1.MakeLike(indicest, shape=outputShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
         let result = t1.MakeLike(resultt, shape=outputShape)
@@ -701,7 +701,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         t1.MakeLike(resultt, shape=outputShape)
 
     override t.SumT2Dim0() =
-        let result = tt.Sum([| 0L |], ``type``= Nullable(tt.Type))
+        let result = tt.Sum([| 0L |], ``type``= tt.Type)
         let resultShape = [|t.Shape.[1]|]
         t.MakeLike(result, shape=resultShape)
 
@@ -819,6 +819,58 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         match dtype with 
         | Dtype.IntegralOrBool -> opNotSupported "AtanT" dtype
         | _ ->  t.MakeLike(tt.Atan())
+#if LATEST_TORCHSHARP
+    // Included to track new functionality available in TorchSharp
+    //
+    // These will be progressed to RawTensor and Tensor
+    member t.AdaptiveAvgPool1D(outputSize: int32) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "AdaptiveAvgPool1D" dtype
+        | _ ->  t.MakeLike(tt.AdaptiveAvgPool1D(int64 outputSize))
+
+    member t.AdaptiveAvgPool2D(outputSizes: int32[]) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "AdaptiveAvgPool2D" dtype
+        | _ ->  t.MakeLike(tt.AdaptiveAvgPool2D(int64s outputSizes))
+
+    member t.AdaptiveAvgPool3D(outputSizes: int32[]) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "AdaptiveAvgPool3D" dtype
+        | _ ->  t.MakeLike(tt.AdaptiveAvgPool3D(int64s outputSizes))
+
+    member t.AdaptiveAvgPool3DBackward(originalInput: RawTensor) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "AdaptiveAvgPool3DBackward" dtype
+        | _ ->  t.MakeLike(tt.AdaptiveAvgPool3Backward(originalInput.TorchTensor))
+
+    //member t.AvgPool1D(kernelSize: int32, stride: int32, padding: int32, ?ceil_mode: bool, ?count_include_pad: bool) =
+    //    //let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.checkCanAvgPool1d dtype t1.Shape kernelSize stride padding
+    //    match dtype with 
+    //    | Dtype.Bool -> opNotSupported "AvgPool1D" dtype
+    //    | _ ->
+    //    let _resultt = tt.AvgPool1D(int64 kernelSize, stride=int64 stride, padding=int64 padding, ?ceil_mode=ceil_mode, ?count_include_pad=count_include_pad)
+    //    failwith "tbd - outputShape"
+    //    //t.MakeLike(resultt, shape=outputShape)
+
+    //member t.AvgPool2D(kernelSizes: int32[], strides: int32[], paddings: int32[], ?ceil_mode: bool, ?count_include_pad: bool) =
+    //    failwith "tbd - TorchSharp signture being updated"
+        ////let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.checkCanAvgPool1d dtype t1.Shape kernelSize stride padding
+        //match dtype with 
+        //| Dtype.Bool -> opNotSupported "AvgPool2D" dtype
+        //| _ ->
+        //let _resultt = tt.AvgPool2D(int64s kernelSizes, stride=int64 stride, padding=int64 padding, ?ceil_mode=ceil_mode, ?count_include_pad=count_include_pad)
+        //failwith "tbd - outputShape"
+        ////t.MakeLike(resultt, shape=outputShape)
+
+    //member t.X(kernelSize: int32, stride: int32, padding: int32, ?ceil_mode: bool, ?count_include_pad: bool) =
+    //    //let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.checkCanAvgPool1d dtype t1.Shape kernelSize stride padding
+    //    match dtype with 
+    //    | Dtype.Bool -> opNotSupported "AvgPool1D" dtype
+    //    | _ ->
+    //    let _resultt = tt.BitwiseAnd(int64 kernelSize, stride=int64 stride, padding=int64 padding, ?ceil_mode=ceil_mode, ?count_include_pad=count_include_pad)
+    //    failwith "tbd - outputShape"
+    //    //t.MakeLike(resultt, shape=outputShape)
+#endif
 
     new (info: System.Runtime.Serialization.SerializationInfo, _context: System.Runtime.Serialization.StreamingContext) =
         let dtype = info.GetValue("dtype", typeof<Dtype>) :?> Dtype
