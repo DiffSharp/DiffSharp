@@ -8566,54 +8566,74 @@ type TestDerivatives () =
 module TestOps =
 
     type Tensor with
-        static member mulx (a, b) = 
+        static member mull (a, b) = 
             Tensor.Op
-                { new BinaryOp with 
-                    member _.Compute(a,b) = a.MulTT(b)
-                    member _.GradForward(a, ad, b, bd) = Tensor.mulx(ad, b) + Tensor.mulx(a, bd)
-                    member _.GradReverse(df, a, b) = (Tensor.mulx(df, b), Tensor.mulx(df, a)) }
+                { new BinaryOp() with 
+                    member _.ComputeRaw(a,b) = a.MulTT(b)
+                    // f(a,b)               = a*b
+                    // Jacobian             = [b; a]
+                    // Jacobian * [ad;bd].t = b*ad + a*bd
+                    member _.Forward(fab, a, ad, b, bd) = Tensor.mull(b, ad) + Tensor.mull(a, bd)
+                    // Jacobian             = [b; a]
+                    // Jacobian.t * td.t    = [b*td; a*td]
+                    member _.ReverseA(a, b, td) = Tensor.mull(b, td)
+                    member _.ReverseB(a, b, td) = Tensor.mull(a, td)
+                }
                 (a, b)
 
     type Tensor with
-        member a.sinx() = 
+        member a.sinn() = 
             Tensor.Op
-               { new UnaryOp with 
-                    member _.Compute(a) = a.SinT()
-                    member _.Grad(a,da) = da * a.cosx() }
+               { new UnaryOp() with 
+                    member _.ComputeRaw(a) = a.SinT()
+                    member _.Forward(fab,a,ad) = a.coss() * ad
+                    member _.Reverse(a,ad) = a.coss() * ad }
                a
 
-        member a.cosx() = 
+        member a.coss() = 
             Tensor.Op
-               { new UnaryOp with 
-                    member _.Compute(a) = a.CosT()
-                    member _.Grad(a,da) = -da * a.sinx() }
+               { new UnaryOp() with 
+                    member _.ComputeRaw(a) = a.CosT()
+                    member _.Forward(fa,a,ad) = -a.sinn() * ad 
+                    member _.Reverse(a,ad) = -a.sinn() * ad }
                 a
 
     type Tensor with
 
-        member a.powx(b) = 
+        member a.poww(b) = 
             Tensor.Op
-                { new BinaryOp with 
-                    member _.Compute(a,b) = a.PowTT(b)
-                    member _.GradForward(a, da, b, db) = (a ** (b - 1.)) * (da * b + a * db * log a)
-                    member _.GradReverse(df, a, b) = (df * (a ** (b - 1.)) * b), (df * (a ** b) * log a) }
+                { new BinaryOp() with 
+                    // f(a,b) = a^b
+                    // df(a,b)/da = b * a^(b-1)
+                    // df(a,b)/db = a^b * log(a)
+                    // J = [ df(a,b)/da ; df(a,b)/db ]
+                    // J * [da;db]
+                    //    = b * a^(b-1) * da + a^b * log(a) * db
+                    //    = a^(b-1) * (b * da + a * log(a) * db)
+                    // JTA = [ df(a,b)/da ; df(a,b)/db * db ]
+                    // JT * td
+                    member _.ComputeRaw(a,b) = a.PowTT(b)
+                    member _.Forward(fa, a, ad, b, ab) = (a ** (b - 1.)) * (b * ad + a * log a * ab)
+                    member _.ForwardA(fa, a, ad, b) = (a ** (b - 1.)) * b * ad
+                    member _.ForwardB(fa, a, b, bd) = fa * log a * bd
+                    member _.ReverseA(a, b, td) = (a ** (b - 1.)) * b * td
+                    member _.ReverseB(a, b, td) = (a ** b) * log a * td }
                 (a,b)
 
     type Tensor with
-        member a.conv1dx(b:Tensor, ?stride:int, ?padding:int) : Tensor = 
+        member a.conv1dd(b:Tensor, ?stride:int, ?padding:int) : Tensor = 
             let stride = defaultArg stride 1
             let padding = defaultArg padding 0
             Tensor.Op
-                { new BinaryOp with 
-                    member _.Compute(a,b) = a.Conv1D(b, stride, padding)
-                    member _.GradForward(a, da, b, db) = da.conv1dx(b, stride, padding) + a.conv1dx(db, stride, padding)
-                    member _.GradReverse(dfab, a, b) = 
-                        let batchSize = dfab.shape.[0]
-                        let outputChannels = dfab.shape.[1]
+                { new BinaryOp() with 
+                    member _.ComputeRaw(a,b) = a.Conv1D(b, stride, padding)
+                    member _.Forward(fab, a, ad, b, bd) = ad.conv1dd(b, stride, padding) + a.conv1dd(bd, stride, padding)
+                    member _.ReverseA(a, b, td) = 
+                        let batchSize = td.shape.[0]
+                        let outputChannels = td.shape.[1]
                         let inputChannels = a.shape.[1]
-                        let inputLength = a.shape.[2]
                         let kernelLength = b.shape.[2]
-                        let mutable tderivative = dfab
+                        let mutable tderivative = td
                         if stride > 1 then
                             tderivative <- tderivative.dilate([|1;1;stride|])
                         let bFlipped = b.flip([|2|])
@@ -8622,21 +8642,31 @@ module TestOps =
                             let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
                             let dBounds: int[,] = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; tderivative.shape.[2]-1; 1]]
                             let d = tderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                            let mutable c = d.conv1dx(b, padding=kernelLength-1)
+                            let mutable c = d.conv1dd(b, padding=kernelLength-1)
                             if padding > 0 then
                                 let cBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; c.shape.[2]-1-padding; 1]]
                                 c <- c.GetSlice(cBounds).view([|batchSize; inputChannels; -1|])
                             aderivative <- aderivative + c
+                        aderivative
 
+                    member _.ReverseB(a, b, td) = 
+                        let batchSize = td.shape.[0]
+                        let outputChannels = td.shape.[1]
+                        let inputChannels = a.shape.[1]
+                        let inputLength = a.shape.[2]
+                        let kernelLength = b.shape.[2]
+                        let mutable tderivative = td
+                        if stride > 1 then
+                            tderivative <- tderivative.dilate([|1;1;stride|])
                         let mutable bderivative = b.zerosLike()
                         for n=0 to batchSize-1 do
                             let aa = a.[n].view([|inputChannels; 1; inputLength|]) 
                             let d = tderivative.[n]
                             for k=0 to outputChannels-1 do
                                 let dd = d.[k].view([|1; 1; tderivative.shape.[2]|])
-                                let c = aa.conv1dx(dd, padding=padding).view([|1; inputChannels; kernelLength|])
+                                let c = aa.conv1dd(dd, padding=padding).view([|1; inputChannels; kernelLength|])
                                 bderivative <- bderivative.addSlice([|k; 0; 0|], c)
-                        (aderivative, bderivative) }
+                        bderivative }
                 (a,b)
 
 
@@ -8692,9 +8722,9 @@ module TestOps =
         Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
-    let ``test mulx extension``() = 
+    let ``test mull extension``() = 
         CompareBinaryOps 
-            (fun (a,b) -> Tensor.mulx(a, b))
+            (fun (a,b) -> Tensor.mull(a, b))
             (fun (a,b) -> a * b)
             [5.; 6.; 7.]
             [2.; 2.; 3.]
@@ -8703,20 +8733,31 @@ module TestOps =
             [5.; 15.; 25.]
 
     [<Test>]
-    let ``test sinx extension``() = 
+    let ``test sinn extension``() = 
         CompareUnaryOps 
-            (fun t -> t.sinx())
+            (fun t -> t.sinn())
             (fun t -> t.sin())
             [0.9473; 1.4891; 0.2015; 0.5818; 0.8439]
             [1.7164; 0.2905; 1.4872; 1.2580; 0.5778]
             [5.; 5.; 5.; 5.; -5.]
 
+    [<Test>]
+    let ``test poww extension``() = 
+        CompareBinaryOps 
+            (fun (t,u) -> t.poww(u))
+            (fun (t,u) -> t.pow(u))
+            [0.9473; 1.4891; 0.2015; 0.5818; 0.8439]
+            [0.9473; 1.4891; 0.2015; 0.5818; 0.8439]
+            [1.7164; 0.2905; 1.4872; 1.2580; 0.5778]
+            [1.7164; 0.2905; 1.4872; 1.2580; 0.5778]
+            [5.; 5.; 5.; 5.; 1.]
+
 
     [<Test>]
-    let ``test conv1dx extension``() = 
+    let ``test conv1dd extension``() = 
         CompareBinaryOps
             (fun (a,b) -> a.conv1d(b))
-            (fun (a,b) -> a.conv1dx(b))
+            (fun (a,b) -> a.conv1dd(b))
             [[[  0.1264;   5.3183;   6.6905; -10.6416];
               [ 13.8060;   4.5253;   2.8568;  -3.2037];
               [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
@@ -8759,7 +8800,7 @@ module TestOps =
     [<Test>]
     let TestDerivativePowTT () =
         CompareBinaryOps 
-            (fun (a,b) -> a.powx(b))
+            (fun (a,b) -> a.poww(b))
             (fun (a,b) -> a ** b)
             [5.; 6.; 7.]
             [2.; 2.; 3.]

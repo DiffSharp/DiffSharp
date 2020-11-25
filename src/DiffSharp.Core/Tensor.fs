@@ -2973,7 +2973,7 @@ type Tensor =
                         | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
                         | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
-                        | OpT(inps, gradients) -> push (List.zip (gradients t) inps @ tt)
+                        | OpT(inps, gradients) -> push (List.zip (gradients td) inps @ tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -3084,44 +3084,113 @@ and TensorOp =
     | OpT of inputs: Tensor list * gradients: ((* tangent *) Tensor -> (* input-grad *) Tensor list)
 
 /// Defines an extension implementing a unary function and its gradients
-type UnaryOp =
+[<AbstractClass>]
+type UnaryOp() =
 
-    /// Compute the function f(a)
-    abstract Compute: a: RawTensor -> RawTensor
+    /// <summary>Compute the function \(f(a)\) for raw tensors.</summary>
+    abstract ComputeRaw: a: RawTensor -> RawTensor
 
-    /// Compute d(fa)/dx given da/dx, for use in the forward phase
-    abstract Grad: a: Tensor * da: Tensor -> Tensor
+    /// <summary>Computes the Jacobian of \(f\) applied to \(ad)\).</summary>
+    ///
+    /// <param name="fa">\(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="a">The primal of \(a\). If \(f: InShape \rightarrow OutShape\) then this has shape \(InShape\).</param>
+    /// <param name="ad">The vector of input differentials for \(a\). If \(f: InShape \rightarrow OutShape\) then this has shape \(InShape\).</param>
+    ///
+    /// <remarks>
+    ///    Assume \(f: InShape \rightarrow OutShape\) and for simplicty assume each is a tensor flattened to a vector.
+    ///    Then \(a\) and \(ad\) have shape \(InShape\), the Jacobian of \(f\) is
+    ///    a matrix with shape \(OutShape \times InShape\) and the result of this method
+    ///    should have shape \(OutShape\).
+    /// </remarks>
+    abstract Forward: fa: Tensor * a: Tensor * ad: Tensor -> Tensor
+
+    /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
+    ///
+    /// <param name="a">The primal of \(a\). Shape is InShape.</param>
+    /// <param name="td">The adjoints of \f(a\). Shape is OutShape.</param>
+    /// <remarks>
+    ///    Assume \(f: InShape \rightarrow OutShape\) and for simplicty assume each is a tensor flattened to a vector.
+    ///    Then \(a\) has shape InShape, \(td\) has shape \(OutShape\), 
+    ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
+    ///    and the result of this method should have shape \(InShape\).
+    /// </remarks>
+    abstract Reverse: a: Tensor * td: Tensor -> Tensor
 
 /// Defines an extension implementing a binary function and its gradients
-type BinaryOp =
+[<AbstractClass>]
+type BinaryOp() =
     /// Compute the function on raw tensors
-    abstract Compute: a: RawTensor * b: RawTensor -> RawTensor
+    abstract ComputeRaw: a: RawTensor * b: RawTensor -> RawTensor
 
-    /// Compute d(fab), for use in the forward phase
-    abstract GradForward: a: Tensor * da: Tensor * b: Tensor * db: Tensor -> Tensor
+    /// <summary>Computes \(Jacobian(f)(ad,bd)\).</summary>
+    ///
+    /// <param name="fab">\(f\) applied to \(a\) and \(bp\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="a">The primal of \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
+    /// <param name="b">The primal of \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
+    /// <param name="ad">The vector of input differentials for \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
+    /// <param name="bd">The vector of input differentials for \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
+    ///
+    /// <remarks>
+    ///    Used in forward mode.
+    ///
+    ///    Assume \(f\) accepts input shapes \(InShape1 \times InShape2\) and outputs shape \(OutShape\).  For simplicty assume each is a tensor flattened to a vector.
+    ///    Then \(a\) and \(ad\) have shape InShape1, \(b\) and \(bd\) have shape InShape2, the Jacobian of \(f\) is
+    ///    a matrix with shape \(OutShape \times InShape1+InShape2\) and the result should have shape \(OutShape\).
+    /// </remarks>
+    abstract Forward: fab: Tensor * a: Tensor * ad: Tensor * b: Tensor * bd: Tensor -> Tensor
 
-    /// Compute the separated gradients of function, for use in the reverse phase
-    abstract GradReverse: dfab: Tensor * a: Tensor * b: Tensor -> Tensor * Tensor
+    /// <summary>Computes \(Jacobian(f)(ad,0)\).</summary>
+    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    abstract ForwardA: fab: Tensor * a: Tensor * ad: Tensor * b: Tensor -> Tensor
+    default op.ForwardA(fab, a, ad, b) = op.Forward(fab, a, ad, b, b.zerosLike())
+
+    /// <summary>Computes \(Jacobian(f)(0, bd)\).</summary>
+    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    abstract ForwardB: fab: Tensor * a:Tensor * b: Tensor * bd: Tensor -> Tensor
+    default op.ForwardB(fab, a, b, bd) = op.Forward(fab, a, a.zerosLike(), b, bd)
+
+    /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
+    ///
+    /// <param name="a">The primal of \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
+    /// <param name="b">The primal of \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
+    /// <param name="td">The adjoints of \f(a,b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    ///
+    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    /// <remarks>
+    ///    Used in reverse mode.
+    ///
+    ///    Assume \(f: InShape \rightarrow OutShape\) and for simplicty assume each is a tensor flattened to a vector.
+    ///    Then \(a\) has shape InShape, \(td\) has shape \(OutShape\), 
+    ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
+    ///    and the result of this method should have shape \(InShape\).
+    /// </remarks>
+    abstract Reverse: a: Tensor * b: Tensor * td: Tensor -> Tensor * Tensor
+    default op.Reverse(a, b, td) = op.ReverseA(a, b, td), op.ReverseB(a, b, td)
+
+    /// <summary>Computes the first "a" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
+    abstract ReverseA: a: Tensor * b: Tensor * td: Tensor -> Tensor
+
+    /// <summary>Computes the second "b" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
+    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    abstract ReverseB: a: Tensor * b: Tensor * td: Tensor -> Tensor
 
 type Tensor with
     static member Op(ext: UnaryOp) =
         (fun a -> 
-            Tensor.OpUnary(a, ext.Compute, Tensor.Op ext, 
-                // Note access to `fap` is lost, a slight inefficiency in cases like 'exp'
-                (fun (fap, a, da) -> ext.Grad(a, da)), 
-                (fun a -> OpT([a], (fun fa -> [ext.Grad (a.primal, fa.derivative)])))
+            Tensor.OpUnary(a, ext.ComputeRaw, Tensor.Op ext, 
+                (fun (fa, a, ad) -> ext.Forward(fa, a, ad)), 
+                (fun a -> OpT([a], (fun td -> [ext.Reverse (a.primal, td)])))
             ))
 
     static member Op(ext: BinaryOp) =
         (fun (a, b) -> 
-            Tensor.OpBinary(a, b, ext.Compute, Tensor.Op ext, 
-                // Note access to `_cp` is lost, a slight inefficiency in cases like 'pow'
-                (fun (_cp, ap, ad, bp, bd) -> ext.GradForward(ap, ad, bp, bd)), 
-                (fun (_cp, ap, ad) -> ext.GradForward(ap, ad, b, b.zerosLike())), 
-                (fun (_cp, bp, db) -> ext.GradForward(a, a.zerosLike(), bp, db)),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da, db = ext.GradReverse (fab.derivative, a.primal, b.primal) in [da; db]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let da, _db = ext.GradReverse (fab.derivative, a.primal, b) in [da]))),
-                (fun (a,b) -> OpT([a;b], (fun fab -> let _da, db = ext.GradReverse (fab.derivative, a, b.primal) in [db])))
+            Tensor.OpBinary(a, b, ext.ComputeRaw, Tensor.Op ext, 
+                (fun (fab, a, ad, b, bd) -> ext.Forward(fab, a, ad, b, bd)), 
+                (fun (fab, a, ad) -> ext.ForwardA(fab, a, ad, b)),
+                (fun (fab, b, db) -> ext.ForwardB(fab, a, b, db)),
+                (fun (a,b) -> OpT([a;b], (fun td -> let da, db = ext.Reverse (a.primal, b.primal, td) in [da; db]))),
+                (fun (a,b) -> OpT([a;b], (fun td -> let da = ext.ReverseA (a.primal, b, td) in [da]))),
+                (fun (a,b) -> OpT([a;b], (fun td -> let db = ext.ReverseB (a, b.primal, td) in [db])))
             ))
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
