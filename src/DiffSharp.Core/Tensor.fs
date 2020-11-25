@@ -315,7 +315,6 @@ type Tensor =
     /// Returns the tensor after standardization (z-score normalization)
     member t.standardize() =
         let stddev = t.stddev()
-        print stddev
         if stddev = t.zeroLike() || stddev.hasnan() then
             t.zerosLike()
         else
@@ -2151,24 +2150,7 @@ type Tensor =
     /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
     /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool2di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         Shape.checkCanMaxpool2d a.dtype a.shape kernelSizes strides paddings  |> ignore
         match a with
         | Tensor0(ap)          -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
@@ -2194,24 +2176,7 @@ type Tensor =
     /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     /// <param name="outputSize">The targeted output size.</param>
     member a.maxunpool2d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         let outputSize = 
             match outputSize with
             | Some o -> let o = o |> Array.ofSeq in if o.Length <> 4 then failwithf "Expecting outputSize to be 4-dimensional" else o
@@ -2234,24 +2199,7 @@ type Tensor =
     /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
     /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool3di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         Shape.checkCanMaxpool3d a.dtype a.shape kernelSizes strides paddings |> ignore
         match a with
         | Tensor0(ap)          -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
@@ -2277,24 +2225,7 @@ type Tensor =
     /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     /// <param name="outputSize">The targeted output size.</param>
     member a.maxunpool3d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         let outputSize = 
             match outputSize with
             | Some o -> let o = o |> Array.ofSeq in if o.Length <> 5 then failwithf "Expecting outputSize to be 5-dimensional" else o
@@ -2396,7 +2327,6 @@ type Tensor =
 
         let _, _, _, _, _, outputShape =
             Shape.checkCanConvTranspose1d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape stride padding dilation outputPadding
-        print outputShape
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1; 1; dilation|])
@@ -2416,24 +2346,7 @@ type Tensor =
     /// <param name="dilations">The spacings between kernel elements.</param>
     member a.conv2d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let b = filters
-        let strides = 
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> [|1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
-            | _ -> [|1; 1|]
+        let strides, paddings, dilations = Shape.resolve2dConvSizes stride strides padding paddings dilation dilations
         Shape.checkCanConv2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
@@ -2514,34 +2427,10 @@ type Tensor =
     /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
     member a.convTranspose2d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
         let b = filters
-        let strides = 
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> [|1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
-            | _ -> [|1; 1|]
-        let outputPaddings = 
-            match outputPadding, outputPaddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-
+        let strides, paddings, dilations = Shape.resolve2dConvSizes stride strides padding paddings dilation dilations
+        let outputPaddings = Shape.resolve2dConvOutputPadding outputPadding outputPaddings
         let _, _, _, _, outputShape =
             Shape.checkCanConvTranspose2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
-        print outputShape
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
@@ -2561,24 +2450,7 @@ type Tensor =
     /// <param name="dilations">The spacings between kernel elements.</param>
     member a.conv3d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
         let b = filters
-        let strides = 
-            match stride, strides with
-            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> [|1; 1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
-            | _ -> [|1; 1; 1|]
+        let strides, paddings, dilations = Shape.resolve3dConvSizes stride strides padding paddings dilation dilations
         Shape.checkCanConv3d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
@@ -2663,34 +2535,10 @@ type Tensor =
     /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
     member a.convTranspose3d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
         let b = filters
-        let strides = 
-            match stride, strides with
-            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> [|1; 1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
-            | _ -> [|1; 1; 1|]
-        let outputPaddings = 
-            match outputPadding, outputPaddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting outputPaddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-
+        let strides, paddings, dilations = Shape.resolve3dConvSizes stride strides padding paddings dilation dilations
+        let outputPaddings = Shape.resolve3dConvOutputPadding outputPadding outputPaddings
         let _, _, _, _, outputShape =
             Shape.checkCanConvTranspose3d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
-        print outputShape
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
