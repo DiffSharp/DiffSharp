@@ -1,4 +1,8 @@
-﻿namespace DiffSharp
+﻿// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+namespace DiffSharp
 
 open DiffSharp.Util
 
@@ -9,7 +13,7 @@ type Shape = int[]
 module rec Shape =
 
     /// Gets the total number of elements in the shape.
-    let length (shape: Shape) =
+    let nelement (shape: Shape) =
         if shape.Length = 0 then 1
         else Array.reduce (*) shape
 
@@ -45,6 +49,10 @@ module rec Shape =
                 else
                     yield len|]
         outputShape
+
+    /// Computes the shape that results from a dilation operation.
+    let dilated (shape: Shape) (dilations: int[]) =
+        Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
 
     /// Checks if the given shapes are appropriate for a concatenation operation and returns information related to the resulting shape.
     let checkCanCat (shapes: Shape[]) (dim: int) =
@@ -203,7 +211,7 @@ module rec Shape =
         let filtersChannels = shape2.[0]
         let kernelLength = shape2.[2]
         let kernelShape = [|kernelLength|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape [|dilation|]
+        let kernelShapeAfterDilation = dilated kernelShape [|dilation|]
         let kernelLength = kernelShapeAfterDilation.[0]
         if filtersChannels <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels filtersChannels
         let outputSize = stride * (inputLength - 1) + kernelLength - 2 * padding + outputPadding
@@ -233,7 +241,7 @@ module rec Shape =
         let kernelHeight = shape2.[2]
         let kernelWidth = shape2.[3]
         let kernelShape = [|kernelHeight; kernelWidth|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape dilations
+        let kernelShapeAfterDilation = dilated kernelShape dilations
         let kernelHeight = kernelShapeAfterDilation.[0]
         let kernelWidth = kernelShapeAfterDilation.[1]
         if filtersChannels <> inputChannels then failwithf "Input and filters have different number of channels: %A, %A" inputChannels filtersChannels
@@ -267,7 +275,7 @@ module rec Shape =
         let kernelHeight = shape2.[3]
         let kernelWidth = shape2.[4]
         let kernelShape = [|kernelDepth; kernelHeight; kernelWidth|]
-        let kernelShapeAfterDilation:int[] = dilated kernelShape dilations
+        let kernelShapeAfterDilation = dilated kernelShape dilations
         let kernelDepth = kernelShapeAfterDilation.[0]
         let kernelHeight = kernelShapeAfterDilation.[1]
         let kernelWidth = kernelShapeAfterDilation.[2]
@@ -293,7 +301,7 @@ module rec Shape =
         let inputSize = shape.[2]
         let inputLengthAfterPadding = inputSize + 2*padding
         if kernelSize > inputLengthAfterPadding then failwithf "Expecting kernelSize (%A) <= inputLengthAfterPadding (%A)" kernelSize inputLengthAfterPadding
-        let outputSize = int (floor (float (inputSize + 2*padding - kernelSize)/(float stride))) + 1
+        let outputSize = int (floor (float (inputLengthAfterPadding - kernelSize)/(float stride))) + 1
         let outputShape = [|batchSize; channels; outputSize|]
         batchSize, channels, inputSize, outputSize, outputShape
 
@@ -317,8 +325,8 @@ module rec Shape =
         let inputWidthAfterPadding = inputWidth + 2*paddings.[1]
         if kernelSize.[0] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[0] inputHeightAfterPadding
         if kernelSize.[1] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
-        let outputHeight = int (floor (float (inputHeight + 2*paddings.[0] - kernelHeight)/(float strides.[0]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*paddings.[1] - kernelWidth)/(float strides.[1]))) + 1
+        let outputHeight = int (floor (float (inputHeightAfterPadding - kernelHeight)/(float strides.[0]))) + 1
+        let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[1]))) + 1
         let outputShape = [|batchSize; channels; outputHeight; outputWidth|]
         (batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape)
 
@@ -346,9 +354,9 @@ module rec Shape =
         if kernelSize.[0] > inputDepthAfterPadding then failwithf "Expecting kernelSize.[0] (%A) <= inputDepthAfterPadding (%A)" kernelSize.[0] inputDepthAfterPadding
         if kernelSize.[1] > inputHeightAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputHeightAfterPadding (%A)" kernelSize.[1] inputHeightAfterPadding
         if kernelSize.[2] > inputWidthAfterPadding then failwithf "Expecting kernelSize.[1] (%A) <= inputWidthAfterPadding (%A)" kernelSize.[1] inputWidthAfterPadding
-        let outputDepth = int (floor (float (inputDepth + 2*paddings.[0] - kernelDepth)/(float strides.[0]))) + 1
-        let outputHeight = int (floor (float (inputHeight + 2*paddings.[1] - kernelHeight)/(float strides.[1]))) + 1
-        let outputWidth = int (floor (float (inputWidth + 2*paddings.[2] - kernelWidth)/(float strides.[2]))) + 1
+        let outputDepth = int (floor (float (inputDepthAfterPadding - kernelDepth)/(float strides.[0]))) + 1
+        let outputHeight = int (floor (float (inputHeightAfterPadding - kernelHeight)/(float strides.[1]))) + 1
+        let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[2]))) + 1
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
 
@@ -442,7 +450,7 @@ module rec Shape =
 
     /// Checks if the given shape is appropriate for a view operation.
     let checkCanView (shape1: Shape) (shape2: Shape) =
-        if length shape1 <> length shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
+        if nelement shape1 <> nelement shape2 then failwithf "Cannot view Tensor of shape %A as shape %A" shape1 shape2
 
     /// Checks if the given shape is appropriate for a flatten operation.
     let checkCanFlatten (shape: Shape) (startDim: int) (endDim: int) =
@@ -455,10 +463,13 @@ module rec Shape =
         if not (contains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
         if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
 
-    /// Checks if the given shape is appropriate for a matmul operation.
-    let checkCanMatmul (shape1: Shape) (shape2: Shape) =
-        if shape1.Length <> 2 || shape2.Length <> 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
-        if shape1.[1] <> shape2.[0] then failwithf "Cannot multiply Tensors with shapes %A, %A" shape1 shape2
+    /// Check if the given shape is appropriate for a matmul operation.
+    let checkCanMatmul (shape1:int[]) (shape2:int[]) =
+        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+        let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
+        let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
+        if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
+        (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart)
 
     /// Checks if the given shape is appropriate for a dot product operation.
     let checkCanDot (shape1: Shape) (shape2: Shape) =
@@ -535,10 +546,6 @@ module rec Shape =
     /// Finds the shape into which all the shapes can be expanded.
     let broadcastShapes (shapes: Shape[]) = Array.reduce broadcast2 shapes
 
-    /// Computes the shape that results from a dilation operation.
-    let dilated (shape: Shape) (dilations: int[]) =
-        Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
-
     // /// Computes the shape that results from a pairwise dilation operation.
     // let dilated2 (shape: Shape) (dilations: int[]) =
     //     Array.map2 (*) shape dilations
@@ -556,7 +563,7 @@ module rec Shape =
         elif numUnspecified = 0 then
             shape
         else
-            let divisor = shape |> Array.filter ((<>) -1) |> length
+            let divisor = shape |> Array.filter ((<>) -1) |> Shape.nelement
             if nelement % divisor <> 0 then failwithf "Cannot complete shape %A to have %A elements" shape nelement
             let missing = nelement / divisor
             [|for d in shape do if d = -1 then yield missing else yield d|]
@@ -574,11 +581,133 @@ module rec Shape =
 
     let inline create (xs: seq<int>) = Seq.toArrayQuick xs
 
+    let resolve2dKernelSizes kernelSize kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
+        | _ -> [|1; 1|]
+
+    let resolve3dKernelSizes kernelSize kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
+        | _ -> [|1; 1; 1|]
+
+    let resolve2dConvSizes stride strides padding paddings dilation dilations =
+        let strides = 
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
+            | _ -> [|1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d|]
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
+            | _ -> [|1; 1|]
+        strides, paddings, dilations
+
+    let resolve3dConvSizes stride strides padding paddings dilation dilations =
+        let strides = 
+            match stride, strides with
+            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> [|1; 1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d; d|]
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
+            | _ -> [|1; 1; 1|]
+        strides, paddings, dilations
+
+    let resolve2dConvOutputPadding outputPadding outputPaddings =
+        match outputPadding, outputPaddings with
+        | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+        | Some p, None -> [|p; p|]
+        | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
+        | _ -> [|0; 0|]
+
+    let resolve3dConvOutputPadding outputPadding outputPaddings =
+        match outputPadding, outputPaddings with
+        | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+        | Some p, None -> [|p; p; p|]
+        | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting outputPaddings to be 3-dimensional" else p
+        | _ -> [|0; 0; 0|]
+
+    let resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
+            | _ -> kernelSizes
+
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
+        kernelSizes, strides, paddings
+
+    let resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> kernelSizes
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        kernelSizes, strides, paddings
+
+
 [<AutoOpen>]
 module ShapeAutoOpens =
 
     /// Gets the total number of elements in a shape.
-    let shapeLength (shape: Shape) = Shape.length shape
+    let shapeLength (shape: Shape) = Shape.nelement shape
+
+    /// Checks if the full bounds is a scalar location
+    let boundsIsScalar (bounds: int[,]) =
+        let mutable res = true
+        for i=0 to bounds.GetLength(0) - 1 do 
+            res <- res && bounds.[i,2] = 1
+        res
 
     /// Converts the array of three-position bounds specifications to a location.
     let boundsToLocation (bounds: int[,]) =
@@ -586,10 +715,19 @@ module ShapeAutoOpens =
 
     /// Converts the array of three-position bounds specifications to a shape.
     let boundsToShape (bounds: int[,]) =
-        [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 1] - bounds.[i, 0] + 1|]
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             if bounds.[i, 2] = 0 || len > 1 then 
+                 yield len |]
+
+    /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
+    let boundsToShapeNoSqueeze (bounds: int[,]) =
+        [|for i=0 to bounds.GetLength(0) - 1 do 
+             let len = bounds.[i, 1] - bounds.[i, 0] + 1
+             yield len|]
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
-    let mirrorCoordinates (coordinates: int[]) (shape: Shape) (mirrorDims: int[]) =
+    let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =
         if coordinates.Length <> shape.Length then failwithf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length
         let result = Array.copy coordinates
         for d=0 to coordinates.Length-1 do
@@ -602,13 +740,13 @@ module ShapeAutoOpens =
         Array.map2 (*) coordinates dilations
 
     /// Checks if the given index is valid in the context of the given shape.
-    let checkValidIndex (shape: Shape) (index: int[]) =
+    let checkValidIndex (shape: int[]) (index: int[]) =
         if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
         let valid = Array.forall2 (fun s i -> i < s) shape index
         if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
 
     /// Converts the given index to a flat index in the context of the given shape.
-    let indexToFlatIndex (shape: Shape) (index: int[]) =
+    let indexToFlatIndex (shape: int[]) (index: int[]) =
         checkValidIndex shape index
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
@@ -617,7 +755,7 @@ module ShapeAutoOpens =
         flatIndex
 
     /// Converts the given flat index to an index in the context of the given shape.
-    let flatIndexToIndex (shape: Shape) (flatIndex: int) =
+    let flatIndexToIndex (shape: int[]) (flatIndex: int) =
         let dim = shape.Length
         let nelement = shapeLength shape
         let index = Array.create dim 0

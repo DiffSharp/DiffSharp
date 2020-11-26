@@ -17,6 +17,10 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
     - name: Install dependencies
       run: dotnet restore
     - name: Install tool dependencies
@@ -38,7 +42,7 @@ jobs:
     - name: Pack (DiffSharp-cuda-windows)
       run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-windows
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval
+      run: dotnet fsdocs build --eval --strict
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:

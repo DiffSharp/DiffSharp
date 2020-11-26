@@ -1,13 +1,22 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace rec DiffSharp.Optim
+
 open DiffSharp
 open DiffSharp.Shorten
 open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Util
 
-
+/// <namespacedoc>
+///   <summary>Contains types and functionality related to optimizing tensor models and functions.</summary>
+/// </namespacedoc>
+///
+/// <summary>Represents an optimizer.</summary>
 [<AbstractClass>]
-/// <summary>TBD</summary>
 type Optimizer(model:Model) =
 
     /// <summary>TBD</summary>
@@ -211,7 +220,7 @@ type optim =
                 if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
                     let duration = System.DateTime.Now - start
                     let durationStr = duration.ToString(@"d\.hh\:mm\:ss")
-                    printf "%s%s | %3d | %d | %d/%d | %e %s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix
+                    printfn "%s%s | %3d | %d | %d/%d | %e %s%s" printPrefix durationStr (i+1) (epoch+1) (bi+1) dataloader.length lScalar status printPostfix
                 lPrev <- lScalar
                 not stop
             ) |> Seq.iter ignore

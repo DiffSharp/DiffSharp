@@ -1,3 +1,8 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace Tests
 
 open NUnit.Framework
@@ -15,7 +20,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsNormal () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let meanCorrect = combo.tensor(10.)
             let stddevCorrect = combo.tensor(3.5)
             let d = Normal(meanCorrect, stddevCorrect)
@@ -31,17 +36,17 @@ type TestDistributions () =
             let logprob = d.logprob(combo.tensor(20.))
             let logprobCorrect = combo.tensor(-6.2533)
 
-            Assert.AreEqual(batchShapeCorrect, batchShape)
-            Assert.AreEqual(eventShapeCorrect, eventShape)
-            Assert.AreEqual(meanCorrect, mean)
-            Assert.AreEqual(stddevCorrect, stddev)
+            Assert.CheckEqual(batchShapeCorrect, batchShape)
+            Assert.CheckEqual(eventShapeCorrect, eventShape)
+            Assert.CheckEqual(meanCorrect, mean)
+            Assert.CheckEqual(stddevCorrect, stddev)
             Assert.True(samplesMean.allclose(meanCorrect, 0.1))
             Assert.True(samplesStddev.allclose(stddevCorrect, 0.1))
             Assert.True(logprob.allclose(logprobCorrect, 0.1))
 
     [<Test>]
     member _.TestDistributionsNormalBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let meanCorrect = combo.tensor([10., 20.])
             let stddevCorrect = combo.tensor([3.5, 1.2])
             let d = Normal(meanCorrect, stddevCorrect)
@@ -57,17 +62,17 @@ type TestDistributions () =
             let logprob = d.logprob(combo.tensor([20., 21.]))
             let logprobCorrect = combo.tensor([-6.2533, -1.4485])
 
-            Assert.AreEqual(batchShapeCorrect, batchShape)
-            Assert.AreEqual(eventShapeCorrect, eventShape)
-            Assert.AreEqual(meanCorrect, mean)
-            Assert.AreEqual(stddevCorrect, stddev)            
+            Assert.CheckEqual(batchShapeCorrect, batchShape)
+            Assert.CheckEqual(eventShapeCorrect, eventShape)
+            Assert.CheckEqual(meanCorrect, mean)
+            Assert.CheckEqual(stddevCorrect, stddev)            
             Assert.True(samplesMean.allclose(meanCorrect, 0.1))
             Assert.True(samplesStddev.allclose(stddevCorrect, 0.1))
             Assert.True(logprob.allclose(logprobCorrect, 0.1))
 
     [<Test>]
     member _.TestDistributionsUniform () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let lowCorrect = combo.tensor(0.5)
             let highCorrect = combo.tensor(10.5)
             let rangeCorrect = highCorrect - lowCorrect
@@ -89,11 +94,11 @@ type TestDistributions () =
             let logprob = d.logprob(combo.tensor(8.))
             let logprobCorrect = combo.tensor(-2.3026)
 
-            Assert.AreEqual(batchShapeCorrect, batchShape)
-            Assert.AreEqual(eventShapeCorrect, eventShape)
-            Assert.AreEqual(lowCorrect, low)
-            Assert.AreEqual(highCorrect, high)
-            Assert.AreEqual(rangeCorrect, range)
+            Assert.CheckEqual(batchShapeCorrect, batchShape)
+            Assert.CheckEqual(eventShapeCorrect, eventShape)
+            Assert.CheckEqual(lowCorrect, low)
+            Assert.CheckEqual(highCorrect, high)
+            Assert.CheckEqual(rangeCorrect, range)
             Assert.True(mean.allclose(meanCorrect, 0.1, 0.1))
             Assert.True(stddev.allclose(stddevCorrect, 0.1, 0.1))
             Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -102,7 +107,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsUniformBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let lowCorrect = combo.tensor([0.5, 0., -5.])
             let highCorrect = combo.tensor([10.5, 1., 5.])
             let rangeCorrect = highCorrect - lowCorrect
@@ -124,11 +129,11 @@ type TestDistributions () =
             let logprob = d.logprob(combo.tensor([8., 0.2, 4.]))
             let logprobCorrect = combo.tensor([-2.3026, 0., -2.3026])
 
-            Assert.AreEqual(batchShapeCorrect, batchShape)
-            Assert.AreEqual(eventShapeCorrect, eventShape)
-            Assert.AreEqual(lowCorrect, low)
-            Assert.AreEqual(highCorrect, high)
-            Assert.AreEqual(rangeCorrect, range)
+            Assert.CheckEqual(batchShapeCorrect, batchShape)
+            Assert.CheckEqual(eventShapeCorrect, eventShape)
+            Assert.CheckEqual(lowCorrect, low)
+            Assert.CheckEqual(highCorrect, high)
+            Assert.CheckEqual(rangeCorrect, range)
             Assert.True(mean.allclose(meanCorrect, 0.1, 0.1))
             Assert.True(stddev.allclose(stddevCorrect, 0.1, 0.1))
             Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -137,7 +142,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsBernoulli () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -164,8 +169,8 @@ type TestDistributions () =
                 let logprob = d.logprob(combo.tensor(0.2))
                 let logprobCorrect = combo.tensor(-0.5004)
 
-                Assert.AreEqual(batchShapeCorrect, batchShape)
-                Assert.AreEqual(eventShapeCorrect, eventShape)
+                Assert.CheckEqual(batchShapeCorrect, batchShape)
+                Assert.CheckEqual(eventShapeCorrect, eventShape)
                 Assert.True(probsCorrect.allclose(probs, 0.1, 0.1))
                 Assert.True(logitsCorrect.allclose(logits, 0.1, 0.1))
                 Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -174,7 +179,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsBernoulliBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -195,7 +200,7 @@ type TestDistributions () =
                 let eventShapeCorrect = [||]
                 let probs = d.probs
                 let logits = d.logits
-                let samples = d.sample(10*numEmpiricalSamples)
+                let samples = d.sample(numEmpiricalSamples)
                 let samplesMean = samples.mean(0)
                 let samplesStddev = samples.stddev(0)
                 let meanCorrect = probs
@@ -206,8 +211,8 @@ type TestDistributions () =
                 let logprobCorrect = combo.tensor([[-0.6931, -0.2231, -1.2040],
                                                     [-0.2231, -1.6094, -0.9163]])
 
-                Assert.AreEqual(batchShapeCorrect, batchShape)
-                Assert.AreEqual(eventShapeCorrect, eventShape)
+                Assert.CheckEqual(batchShapeCorrect, batchShape)
+                Assert.CheckEqual(eventShapeCorrect, eventShape)
                 Assert.True(probsCorrect.allclose(probs, 0.1, 0.1))
                 Assert.True(logitsCorrect.allclose(logits, 0.1, 0.1))
                 Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -216,7 +221,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsCategorical () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -244,8 +249,8 @@ type TestDistributions () =
                 let logprob = d.logprob(combo.tensor(0))
                 let logprobCorrect = combo.tensor(-2.30259)
 
-                Assert.AreEqual(batchShapeCorrect, batchShape)
-                Assert.AreEqual(eventShapeCorrect, eventShape)
+                Assert.CheckEqual(batchShapeCorrect, batchShape)
+                Assert.CheckEqual(eventShapeCorrect, eventShape)
                 Assert.True(probsCorrect.allclose(probs, 0.1, 0.1))
                 Assert.True(logitsCorrect.allclose(logits, 0.1, 0.1))
                 Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -254,7 +259,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsCategoricalBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let probsCorrect = combo.tensor([[0.1, 0.2, 0.7],
                                                 [0.2, 0.5, 0.3]])
             let logitsCorrect = probsToLogits probsCorrect false
@@ -273,8 +278,8 @@ type TestDistributions () =
             let logprob = d.logprob(combo.tensor([0, 1]))
             let logprobCorrect = combo.tensor([-2.30259, -0.693147])
 
-            Assert.AreEqual(batchShapeCorrect, batchShape)
-            Assert.AreEqual(eventShapeCorrect, eventShape)
+            Assert.CheckEqual(batchShapeCorrect, batchShape)
+            Assert.CheckEqual(eventShapeCorrect, eventShape)
             Assert.True(probsCorrect.allclose(probs, 0.1, 0.1))
             Assert.True(logitsCorrect.allclose(logits, 0.1, 0.1))
             Assert.True(samplesMean.allclose(meanCorrect, 0.1, 0.1))
@@ -283,7 +288,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsEmpirical () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([1,2,3])
             let logWeights = combo.tensor([1,2,3])
 
@@ -317,8 +322,8 @@ type TestDistributions () =
             Assert.True(distMeanCorrect.allclose(distMean, 0.1))
             Assert.True(distStddevCorrect.allclose(distStddev, 0.1))
             Assert.True(distEffectiveSampleSizeCorrect.allclose(distEffectiveSampleSize, 0.1))
-            Assert.AreEqual(distMinCorrect, distMin)
-            Assert.AreEqual(distMaxCorrect, distMax)
+            Assert.CheckEqual(distMinCorrect, distMin)
+            Assert.CheckEqual(distMaxCorrect, distMax)
             Assert.True(distExpectationSinCorrect.allclose(distExpectationSin, 0.1))
             Assert.True(distMapSinMeanCorrect.allclose(distMapSinMean, 0.1))
             Assert.True(distMeanCorrect.allclose(distEmpiricalMean, 0.1))
@@ -328,7 +333,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsEmpiricalCombineDuplicatesMode () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([0,1,2,2,2,2,3,4,4,5,5,5,6,7,7,8,9])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592, 0.4845, 0.7710, 0.3588, 0.8622, 0.7621, 0.6102, 0.9421, 0.0774, 0.8294, 0.7371, 0.3742])
 
@@ -337,36 +342,36 @@ type TestDistributions () =
             let distModeCorrect = combo.tensor(5)
             let distLength = dist.length
             let distLengthCorrect = 17
-            Assert.AreEqual(distModeCorrect, distMode)
-            Assert.AreEqual(distLengthCorrect, distLength)
+            Assert.CheckEqual(distModeCorrect, distMode)
+            Assert.CheckEqual(distLengthCorrect, distLength)
 
             let distCombined = Empirical(values.unstack(), weights=weights).combineDuplicates()
             let distCombinedMode = distCombined.mode
             let distCombinedModeCorrect = combo.tensor(5)
             let distCombinedLength = distCombined.length
             let distCombinedLengthCorrect = 10
-            Assert.AreEqual(distCombinedModeCorrect, distCombinedMode)
-            Assert.AreEqual(distCombinedLengthCorrect, distCombinedLength)
+            Assert.CheckEqual(distCombinedModeCorrect, distCombinedMode)
+            Assert.CheckEqual(distCombinedLengthCorrect, distCombinedLength)
 
             let distUnweighted = Empirical(values.unstack())
             let distUnweightedMode = distUnweighted.mode
             let distUnweightedModeCorrect = combo.tensor(2)
             let distUnweightedLength = distUnweighted.length
             let distUnweightedLengthCorrect = 17
-            Assert.AreEqual(distUnweightedModeCorrect, distUnweightedMode)
-            Assert.AreEqual(distUnweightedLengthCorrect, distUnweightedLength)
+            Assert.CheckEqual(distUnweightedModeCorrect, distUnweightedMode)
+            Assert.CheckEqual(distUnweightedLengthCorrect, distUnweightedLength)
 
             let distUnweightedCombined = Empirical(values.unstack()).combineDuplicates()
             let distUnweightedCombinedMode = distUnweightedCombined.mode
             let distUnweightedCombinedModeCorrect = combo.tensor(2)
             let distUnweightedCombinedLength = distUnweightedCombined.length
             let distUnweightedCombinedLengthCorrect = 10
-            Assert.AreEqual(distUnweightedCombinedModeCorrect, distUnweightedCombinedMode)
-            Assert.AreEqual(distUnweightedCombinedLengthCorrect, distUnweightedCombinedLength)
+            Assert.CheckEqual(distUnweightedCombinedModeCorrect, distUnweightedCombinedMode)
+            Assert.CheckEqual(distUnweightedCombinedLengthCorrect, distUnweightedCombinedLength)
 
     [<Test>]
     member _.TestDistributionsEmpiricalResampleFilter () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([0,1,2,3,4,5])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592])
 
@@ -386,10 +391,10 @@ type TestDistributions () =
 
             Assert.True(distMeanCorrect.allclose(distMean, 0.1))
             Assert.True(distStddevCorrect.allclose(distStddev, 0.1))
-            Assert.AreEqual(distWeightedCorrect, distWeighted)
+            Assert.CheckEqual(distWeightedCorrect, distWeighted)
             Assert.True(distMeanCorrect.allclose(distResampledMean, 0.1))
             Assert.True(distStddevCorrect.allclose(distResampledStddev, 0.1))
-            Assert.AreEqual(distResampledWeightedCorrect, distResampledWeighted)
+            Assert.CheckEqual(distResampledWeightedCorrect, distResampledWeighted)
 
             let distResampledMinMax = dist.resample(numEmpiricalSamples, minIndex=1, maxIndex=3)
             let distResampledMinMaxMean = distResampledMinMax.mean
@@ -401,7 +406,7 @@ type TestDistributions () =
 
             Assert.True(distResampledMinMaxMeanCorrect.allclose(distResampledMinMaxMean, 0.1))
             Assert.True(distResampledMinMaxStddevCorrect.allclose(distResampledMinMaxStddev, 0.1))
-            Assert.AreEqual(distResampledMinMaxWeightedCorrect, distResampledMinMaxWeighted)
+            Assert.CheckEqual(distResampledMinMaxWeightedCorrect, distResampledMinMaxWeighted)
 
             let distFiltered = dist.filter(fun v -> v > combo.tensor(0) && v < combo.tensor(3))
             let distFilteredMean = distFiltered.mean
@@ -413,7 +418,7 @@ type TestDistributions () =
 
             Assert.True(distFilteredMeanCorrect.allclose(distFilteredMean, 0.1))
             Assert.True(distFilteredStddevCorrect.allclose(distFilteredStddev, 0.1))
-            Assert.AreEqual(distFilteredWeightedCorrect, distFilteredWeighted)
+            Assert.CheckEqual(distFilteredWeightedCorrect, distFilteredWeighted)
 
     [<Test>]
     member _.TestDistributionsEmpiricalThin () =
@@ -421,5 +426,5 @@ type TestDistributions () =
         let dist = Empirical(values)
         let distThinned = dist.thin(4)
         let distThinnedValues = distThinned.values
-        let distThinnedValuesCorrect = [1;4;7;10]
-        Assert.AreEqual(distThinnedValuesCorrect, distThinnedValues)
+        let distThinnedValuesCorrect = [| 1;4;7;10 |]
+        Assert.CheckEqual(distThinnedValuesCorrect, distThinnedValues)

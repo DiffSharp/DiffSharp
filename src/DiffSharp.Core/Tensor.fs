@@ -1,13 +1,15 @@
-﻿namespace DiffSharp
+﻿// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
+namespace DiffSharp
 
 open DiffSharp.Backends
 open DiffSharp.Util
 open System
-open System.Diagnostics.CodeAnalysis
 
 #nowarn "1182" // turn off compiler-generated unused variable warnings in this file only
-
-type scalar = IConvertible
 
 /// <summary>
 ///   Represents a multi-dimensional data type containing elements of a single data type.
@@ -23,28 +25,28 @@ type scalar = IConvertible
 [<CustomEquality; CustomComparison>]
 type Tensor = 
     internal 
-    | Tensor of primalRaw:RawTensor
+    | Tensor0 of primalRaw:RawTensor
     | TensorF of primal:Tensor * derivative:Tensor * nestingTag:uint32
     | TensorR of primal:Tensor * derivative:(Tensor ref) * parentOp:TensorOp * fanout:(uint32 ref) * nestingTag:uint32
 
     /// Gets the value of the tensor ignoring its first derivative
     member t.primal =
         match t with
-        | Tensor(_) -> t
+        | Tensor0(_) -> t
         | TensorF(tp,_,_) -> tp
         | TensorR(tp,_,_,_,_) -> tp
 
     /// Gets the value of the tensor ignoring all its derivatives
     member t.primalDeep =
         match t with
-        | Tensor(_) -> t
+        | Tensor0(_) -> t
         | TensorF(tp,_,_) -> tp.primalDeep
         | TensorR(tp,_,_,_,_) -> tp.primalDeep
 
     /// Gets the raw value of the tensor ignoring all its derivatives
     member t.primalRaw =
         match t with
-        | Tensor(tp) -> tp
+        | Tensor0(tp) -> tp
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
@@ -52,7 +54,7 @@ type Tensor =
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
-        | Tensor(tp) -> Tensor(tp.Cast(dtype))
+        | Tensor0(tp) -> Tensor0(tp.Cast(dtype))
         | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
         | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
 
@@ -66,10 +68,10 @@ type Tensor =
 
         if t.backend = backend then t else
         match t with
-        | Tensor(tp) -> 
+        | Tensor0(tp) -> 
             let tpflat = tp.ViewT([|tp.Nelement|]) //
             let tpflatValues = tpflat.ToValues()
-            Tensor(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
+            Tensor0(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
@@ -77,7 +79,7 @@ type Tensor =
     member t.move(device: Device) =
         if t.device = device then t else
         match t with
-        | Tensor(tp) -> Tensor(tp.MoveTo(device))
+        | Tensor0(tp) -> Tensor0(tp.MoveTo(device))
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
@@ -117,6 +119,12 @@ type Tensor =
     /// Returns a new tensor with each element converted to type int64
     member t.int64() = t.cast(Dtype.Int64)
 
+    /// Returns a new tensor with each element converted to type float16
+    member t.float16() = t.cast(Dtype.Float16)
+
+    /// Returns a new tensor with each element converted to type bfloat16
+    member t.bfloat16() = t.cast(Dtype.BFloat16)
+
     /// Returns a new tensor with each element converted to type float32
     member t.float32() = t.cast(Dtype.Float32)
 
@@ -145,7 +153,7 @@ type Tensor =
     member t.depth =
         let rec depth x d =
             match x with
-            | Tensor(_) -> d
+            | Tensor0(_) -> d
             | TensorF(tp,_,_) -> depth tp (d + 1)
             | TensorR(tp,_,_,_,_) -> depth tp (d + 1)
         depth t 0
@@ -153,7 +161,7 @@ type Tensor =
     /// Gets the parent operation of a tensor used in reverse-mode differentiation
     member t.parentOp =
         match t with
-        | Tensor(_) -> failwith "Cannot get parent operation of constant Tensor"
+        | Tensor0(_) -> failwith "Cannot get parent operation of constant Tensor"
         | TensorF(_)-> failwith "Cannot get parent operation of TensorF"
         | TensorR(_,_,o,_,_) -> o
 
@@ -161,37 +169,37 @@ type Tensor =
     member t.derivative
         with get() =
             match t with
-            | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+            | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
             | TensorF(_,td,_) -> td
             | TensorR(_,td,_,_,_) -> !td
         and set(value) =
             match t with
-            | Tensor(_) -> failwith "Cannot set derivative of constant Tensor"
+            | Tensor0(_) -> failwith "Cannot set derivative of constant Tensor"
             | TensorF(_) -> failwith "Cannot set derivative of TensorF"
             | TensorR(_,td,_,_,_) -> td := value
 
     member t.derivativeDeep =
         match t with
-        | Tensor(_) -> failwith "Cannot get derivative of constant Tensor"
+        | Tensor0(_) -> failwith "Cannot get derivative of constant Tensor"
         | TensorF(_,td,_) -> 
             match td with
-            | Tensor(_) -> td
+            | Tensor0(_) -> td
             | _ -> td.derivativeDeep
         | TensorR(_,td,_,_,_) -> 
             match !td with
-            | Tensor(_) -> !td
+            | Tensor0(_) -> !td
             | _ -> (!td).derivativeDeep
 
     /// Gets the fanout of a tensor used in reverse-mode differentiation
     member t.fanout
         with get() =
             match t with
-            | Tensor(_) -> failwith "Cannot get fanout of constant Tensor"
+            | Tensor0(_) -> failwith "Cannot get fanout of constant Tensor"
             | TensorF(_) -> failwith "Cannot get fanout of TensorF"
             | TensorR(_,_,_,f,_) -> !f
         and set(value) =
             match t with
-            | Tensor(_) -> failwith "Cannot set fanout of constant Tensor"
+            | Tensor0(_) -> failwith "Cannot set fanout of constant Tensor"
             | TensorF(_) -> failwith "Cannot set fanout of TensorF"
             | TensorR(_,_,_,f,_) -> f := value
 
@@ -238,7 +246,7 @@ type Tensor =
     /// Indicates if a tensor includes support for forward or reverse-mode differentiation
     member t.isNoDiff() =
         match t with
-        | Tensor(_) -> true
+        | Tensor0(_) -> true
         | _ -> false
 
     /// Gets the shape of the tensor
@@ -259,13 +267,13 @@ type Tensor =
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
-        | Tensor(_),  Tensor(_)  -> true
-        | Tensor(_),  TensorF(_) -> false
-        | Tensor(_),  TensorR(_) -> false
-        | TensorF(_), Tensor(_)  -> false
+        | Tensor0(_), Tensor0(_) -> true
+        | Tensor0(_), TensorF(_) -> false
+        | Tensor0(_), TensorR(_) -> false
+        | TensorF(_), Tensor0(_) -> false
         | TensorF(_), TensorF(_) -> true
         | TensorF(_), TensorR(_) -> false
-        | TensorR(_), Tensor(_)  -> false
+        | TensorR(_), Tensor0(_) -> false
         | TensorR(_), TensorF(_) -> false
         | TensorR(_), TensorR(_) -> true
 
@@ -307,7 +315,6 @@ type Tensor =
     /// Returns the tensor after standardization (z-score normalization)
     member t.standardize() =
         let stddev = t.stddev()
-        print stddev
         if stddev = t.zeroLike() || stddev.hasnan() then
             t.zerosLike()
         else
@@ -316,7 +323,7 @@ type Tensor =
     /// Returns a string summarising the tensor
     member t.summary() =
         match t with
-        | Tensor(_) -> sprintf "Tensor %A" t.shape
+        | Tensor0(_) -> sprintf "Tensor %A" t.shape
         | TensorF(_) -> sprintf "TensorF %A" t.shape
         | TensorR(_,_,o,_,_) -> 
             let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
@@ -332,7 +339,7 @@ type Tensor =
             | :? Tensor as t ->
                 p <- p |> List.append [t]
                 match t with
-                | Tensor(_) -> sprintf "Tensor %A" t.shape
+                | Tensor0(_) -> sprintf "Tensor %A" t.shape
                 | TensorF(_) -> sprintf "TensorF %A" t.shape
                 | TensorR(_,_,o,_,_) -> 
                     let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
@@ -354,6 +361,14 @@ type Tensor =
         let ps = parents t 1
         p |> List.rev, ps
 
+    override t.ToString() = 
+        let rec fmt extra (t: Tensor) =
+            match t with
+            | Tensor0(p) -> p.GetString(extra)
+            | TensorF(tp,_,_) -> fmt (extra + ", fwd") tp
+            | TensorR(tp,_,_,_,_) -> fmt (extra + ", rev") tp
+        fmt "" t
+
     override t.Equals(other) =
         match other with
         | :? Tensor as tensor -> t.primalRaw.Equals(tensor.primalRaw)
@@ -372,53 +387,89 @@ type Tensor =
             | _ -> failwith "Cannot compare Tensor with another type"
 
     /// Get the scalar zero tensor for the current configuration
-    static member Zero = Tensor(RawTensor.Zero())
+    static member Zero = Tensor0(RawTensor.Zero())
 
     /// Get the scalar one tensor for the current configuration
-    static member One = Tensor(RawTensor.One())
+    static member One = Tensor0(RawTensor.One())
 
     /// Convert a scalar tensor to a float32 value
-    static member op_Explicit(tensor:Tensor):single = tensor.toScalar() |> Convert.ToSingle
+    static member op_Explicit(tensor:Tensor):single = tensor.toScalar().toSingle()
 
     /// Convert a scalar tensor to a float64 value
-    static member op_Explicit(tensor:Tensor):double = tensor.toScalar() |> Convert.ToDouble
+    static member op_Explicit(tensor:Tensor):double = tensor.toScalar().toDouble()
 
     /// Convert a scalar tensor to a byte value
-    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar() |> Convert.ToByte
+    static member op_Explicit(tensor:Tensor):byte = tensor.toScalar().toByte()
 
     /// Convert a scalar tensor to a signed byte value
-    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar() |> Convert.ToSByte
+    static member op_Explicit(tensor:Tensor):int8 = tensor.toScalar().toSByte()
 
     /// Convert a scalar tensor to an int16 value
-    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar() |> Convert.ToInt16
+    static member op_Explicit(tensor:Tensor):int16 = tensor.toScalar().toInt16()
 
     /// Convert a scalar tensor to an int32 value
-    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar() |> Convert.ToInt32
+    static member op_Explicit(tensor:Tensor):int32 = tensor.toScalar().toInt32()
 
     /// Convert a scalar tensor to an int64 value
-    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar() |> Convert.ToInt64
+    static member op_Explicit(tensor:Tensor):int64 = tensor.toScalar().toInt64()
 
     /// Convert a scalar tensor to a boolean value
-    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar() |> Convert.ToBoolean
+    static member op_Explicit(tensor:Tensor):bool = tensor.toScalar().toBool()
 
     interface System.IConvertible with
-        override t.GetTypeCode() = TypeCode.Object
-        override t.ToSingle(_) = Tensor.op_Explicit(t)
-        override t.ToDouble(_) = Tensor.op_Explicit(t)
-        override t.ToByte(_) = Tensor.op_Explicit(t)
-        override t.ToSByte(_) = Tensor.op_Explicit(t)
-        override t.ToInt16(_) = Tensor.op_Explicit(t)
-        override t.ToInt32(_) = Tensor.op_Explicit(t)
-        override t.ToInt64(_) = Tensor.op_Explicit(t)
-        override t.ToBoolean(_) = Tensor.op_Explicit(t)
-        override t.ToChar(_) = failwithf "Cannot convert Tensor to Char"
-        override t.ToDateTime(_) = failwithf "Cannot convert Tensor to DateTime"
-        override t.ToDecimal(_) = failwithf "Cannot convert Tensor to Decimal"
-        override t.ToString(_) = failwithf "Cannot convert Tensor to String"
-        override t.ToType(_,_) = failwithf "Cannot convert Tensor to Type"
-        override t.ToUInt16(_) = failwithf "Cannot convert Tensor to UInt16"
-        override t.ToUInt32(_) = failwithf "Cannot convert Tensor to UInt32"
-        override t.ToUInt64(_) = failwithf "Cannot convert Tensor to UInt64"
+        override t.GetTypeCode() =
+            match t.dtype with 
+            | Dtype.Byte -> TypeCode.Byte
+            | Dtype.Int8 -> TypeCode.SByte
+            | Dtype.Int16 -> TypeCode.Int16
+            | Dtype.Int32 -> TypeCode.Int32
+            | Dtype.Int64 -> TypeCode.Int64
+            | Dtype.Float32 -> TypeCode.Single
+            | Dtype.Float64 -> TypeCode.Double
+            | Dtype.Bool -> TypeCode.Boolean
+            | Dtype.BFloat16 -> TypeCode.Single
+            | Dtype.Float16 -> TypeCode.Single
+
+        override t.ToSingle(fmt) = t.toScalar().ToSingle(fmt)
+        override t.ToDouble(fmt) = t.toScalar().ToDouble(fmt)
+        override t.ToByte(fmt) = t.toScalar().ToByte(fmt)
+        override t.ToSByte(fmt) = t.toScalar().ToSByte(fmt)
+        override t.ToInt16(fmt) = t.toScalar().ToInt16(fmt)
+        override t.ToInt32(fmt) = t.toScalar().ToInt32(fmt)
+        override t.ToInt64(fmt) = t.toScalar().ToInt64(fmt)
+        override t.ToBoolean(fmt) = t.toScalar().ToBoolean(fmt)
+        override t.ToChar(fmt) = t.toScalar().ToChar(fmt)
+        override t.ToDateTime(fmt) = t.toScalar().ToDateTime(fmt)
+        override t.ToDecimal(fmt) = t.toScalar().ToDecimal(fmt)
+        override t.ToString(fmt) = t.toScalar().ToString(fmt)
+        override t.ToType(ty, fmt) = t.toScalar().ToType(ty, fmt)
+        override t.ToUInt16(fmt) = t.toScalar().ToUInt16(fmt)
+        override t.ToUInt32(fmt) = t.toScalar().ToUInt32(fmt)
+        override t.ToUInt64(fmt) = t.toScalar().ToUInt64(fmt)
+
+    /// Convert a scalar tensor to a float32 value
+    member t.toSingle() = t.toScalar().toSingle()
+
+    /// Convert a scalar tensor to a float64 value
+    member t.toDouble() = t.toScalar().toDouble()
+
+    /// Convert a scalar tensor to a byte value
+    member t.toByte() = t.toScalar().toByte()
+
+    /// Convert a scalar tensor to a signed byte value
+    member t.toSByte() = t.toScalar().toSByte()
+
+    /// Convert a scalar tensor to an int16 value
+    member t.toInt16() = t.toScalar().toInt16()
+
+    /// Convert a scalar tensor to an int32 value
+    member t.toInt32() = t.toScalar().toInt32()
+
+    /// Convert a scalar tensor to an int64 value
+    member t.toInt64() = t.toScalar().toInt64()
+
+    /// Convert a scalar tensor to a boolean value
+    member t.toBool() = t.toScalar().toBool()
 
     /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
     /// given tolerances.
@@ -431,51 +482,51 @@ type Tensor =
     /// shape and configuration of the input tensor.
     member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
     member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor filled with the given scalar value for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
     member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.scalarLike(scalar:IConvertible, ?dtype, ?device, ?backend) = 
+    member a.scalarLike(scalar:scalar, ?dtype, ?device, ?backend) = 
         a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with random values drawn from the standard normal distribution, for the
 
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with random integer values drawn from the given range, for the
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
     member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        Tensor(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a scalar '0' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.zeroLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.zeroLike(?dtype, ?device, ?backend) = Tensor0(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a scalar '1' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.oneLike(?dtype, ?device, ?backend) = Tensor(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.oneLike(?dtype, ?device, ?backend) = Tensor0(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
@@ -499,10 +550,10 @@ type Tensor =
     ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
     ///  the element type and configuration of the input tensor.
     /// </summary>
-    member a.like(value, ?dtype, ?device, ?backend) = Tensor(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.like(value, ?dtype, ?device, ?backend) = Tensor0(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// Returns a new tensor with underlying storage copied.
-    member a.clone() = Tensor(a.primalRaw.Clone())
+    member a.clone() = Tensor0(a.primalRaw.Clone())
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
@@ -511,22 +562,22 @@ type Tensor =
         a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Computes element-wise (\a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.lt(b:Tensor) = Tensor(a.primalRaw.LtTT(b.primalRaw))
+    member a.lt(b:Tensor) = Tensor0(a.primalRaw.LtTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.gt(b:Tensor) = Tensor(a.primalRaw.GtTT(b.primalRaw))
+    member a.gt(b:Tensor) = Tensor0(a.primalRaw.GtTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &lt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.le(b:Tensor) =Tensor(a.primalRaw.LeTT(b.primalRaw))
+    member a.le(b:Tensor) =Tensor0(a.primalRaw.LeTT(b.primalRaw))
 
     /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
-    member a.ge(b:Tensor) = Tensor(a.primalRaw.GeTT(b.primalRaw))
+    member a.ge(b:Tensor) = Tensor0(a.primalRaw.GeTT(b.primalRaw))
 
     /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
-    member a.isinf() = Tensor(a.primalRaw.IsInfT())
+    member a.isinf() = Tensor0(a.primalRaw.IsInfT())
 
     /// <summary>Returns a new tensor with boolean elements representing if each element is NaN or not. Complex values are considered NaN when either their real and/or imaginary part is NaN.</summary>
-    member a.isnan() = Tensor(a.primalRaw.IsNaNT())
+    member a.isnan() = Tensor0(a.primalRaw.IsNaNT())
 
     /// Gets if any value in the tensor is +/- INF.
     member a.hasinf() = a.isinf().sum() > a.zeroLike(dtype=Dtype.Int64)
@@ -592,10 +643,21 @@ type Tensor =
         if d |> List.isEmpty then failwithf "Empty diagonal"
         Tensor.stack(d)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of the elements of the diagonal of the input 2-D matrix.</summary>
     member a.trace() = let d:Tensor = a.diagonal() in d.sum()
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new view of the object tensor with singleton dimensions expanded to a larger size.</summary>
+    /// <remarks>
+    ///   <para>Passing -1 as the size for a dimension means not changing the size of that dimension.</para>
+    ///   <para>The tensor can be also expanded to a larger number of dimensions, and the new ones will be appended 
+    ///         at the front. For the new dimensions, the size cannot be set to -1.
+    ///   </para>
+    ///   <para>
+    ///      Expanding a tensor does not allocate new memory, but only creates a new view on the existing tensor
+    ///      where a dimension of size one is expanded to a larger size by setting the stride to 0. Any dimension
+    ///      of size 1 can be expanded to an arbitrary value without allocating new memory.
+    ///   </para>
+    /// </remarks>
     member a.expand(newShape:seq<int>) =
         let newShape = newShape|>Shape.create
         if a.shape = newShape then a 
@@ -603,7 +665,7 @@ type Tensor =
             let newShape = Shape.completeExpand a.shape newShape  // Handles -1 semantics
             Shape.checkCanExpand a.shape newShape
             match a with
-            | Tensor(ap) -> Tensor(ap.Expand(newShape))
+            | Tensor0(ap) -> Tensor0(ap.Expand(newShape))
             | TensorF(ap,ad,at) ->
                 let cp = ap.expand(newShape)
                 let cd = ad.expand(newShape)
@@ -612,7 +674,7 @@ type Tensor =
                 let cp = ap.expand(newShape)
                 TensorR(cp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Expand this tensor to the same size as the other.</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
 
     /// <summary>Convert tensor to an image tensor with shape Channels x Height x Width</summary>
@@ -696,7 +758,6 @@ type Tensor =
         let pixels:Tensor = Tensor.create(pixels, ?dtype=dtype, ?device=device, ?backend=backend)
         if normalize then pixels.normalize() else pixels
 
-    /// <summary>TBD</summary>
     member internal t.GetSlice(bounds:int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
@@ -706,11 +767,11 @@ type Tensor =
             fullBounds.[i, j] <- v)
         // printfn "t.GetSlice fullBounds\n %A" fullBounds
         match t with
-        | Tensor(ap) -> Tensor(ap.GetSlice(fullBounds))
+        | Tensor0(ap) -> Tensor0(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
         | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Get the item at the given index as a scalar tensor.</summary>
     member t.Item
         with get([<System.ParamArray>] index:int[]) =
             if t.dim = 0 then failwith "Cannot index a scalar Tensor"
@@ -718,18 +779,35 @@ type Tensor =
             let bounds = Array2D.init index.Length 3 (fun i j -> if j=2 then 1 else index.[i])
             t.GetSlice(bounds)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// Creates a new tensor from the given data, using the given element type and configuration.
+    /// </summary>
+    /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    /// <remarks>The fastest creation technique is a one dimensional array matching the desired dtype. Then use 'view' to reshape.</remarks>
     static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        // Fast paths to create directly from 1D array matching the dtype
+        match value, defaultArg dtype Dtype.Default with
+        | (:? (int32[]) as arr), Dtype.Int32 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (single[]) as arr), Dtype.Float32 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (double[]) as arr), Dtype.Float64 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (byte[]) as arr), Dtype.Byte -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int8[]) as arr), Dtype.Int8 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int16[]) as arr), Dtype.Int16 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int64[]) as arr), Dtype.Int64 -> Tensor0(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | _ -> 
         let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
         | Some (array, shape) -> 
             let array = array |> Array.map float32
-            let value = arrayND shape (fun ii -> array.[indexToFlatIndex shape ii])
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+            let value = ArrayND.init shape (fun ii -> array.[indexToFlatIndex shape ii])
+            Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
         | None ->
-            Tensor(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+            Tensor0(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         let cols = defaultArg cols rows
         if rows <= 0 || cols <= 0 then Tensor.create([], ?dtype=dtype, ?device=device, ?backend=backend)
@@ -737,7 +815,10 @@ type Tensor =
             let vals = Array2D.init rows cols (fun i j -> if i = j then 1 else 0)
             Tensor.create(vals, ?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates sequence of tensors along a new dimension.</summary>
+    /// <remarks>All tensors need to be of the same shape.</remarks>
+    /// <param name="tensors">sequence of tensors to concatenate</param>
+    /// <param name="dim">dimension to insert. Has to be between 0 and the number of dimensions of concatenated tensors (inclusive)</param>
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
@@ -745,7 +826,7 @@ type Tensor =
         let shapes = tensors |> Array.map (fun t -> t.shape)
         Shape.checkCanStack shapes dim |> ignore
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | Tensor0(ap) -> Tensor0(ap.StackTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
@@ -755,22 +836,27 @@ type Tensor =
             let cp = Tensor.stack(ap,dim=dim)
             TensorR(cp, ref (cp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Removes a tensor dimension.</summary>
+    /// <param name="dim">The dimension to remove, defaults to 0.</param>
+    /// <returns>Returns an array of all slices along a given dimension.</returns>
     member a.unstack (?dim:int) =
         let dim = defaultArg dim 0 
         Shape.checkCanUnstack a.shape |> ignore
         match a with
-        | Tensor(ap) -> ap.UnstackT(dim) |> Array.map Tensor
+        | Tensor0(ap) -> ap.UnstackT(dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
 
-    /// <summary>TBD</summary>
+    /// <summary>Concatenates the given sequence of seq tensors in the given dimension.</summary>
+    /// <remarks>All tensors must either have the same shape (except in the concatenating dimension) or be empty.</remarks>
+    /// <param name="tensors">The tensors to concatenate.</param>
+    /// <param name="dim">The dimension over which the tensors are concatenated, defaults to 0.</param>
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
         // TODO: check if all Tensors are of the same nesting variety (Tensor, TensorF, or TensorR), have the same nesting tag, and have the same dtype, device, backend
         match Seq.head tensors with
-        | Tensor(ap) -> Tensor(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
+        | Tensor0(ap) -> Tensor0(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let ad = tensors |> Seq.map (fun t -> t.derivative)
@@ -780,37 +866,39 @@ type Tensor =
             let cp = Tensor.cat(ap, dim=dim)
             TensorR(cp, ref (cp.zeroLike()), CatTs(tensors, dim), ref 0u, at)
 
-    /// <summary>TBD</summary>
+    /// <summary>Splits the tensor into chunks. Each chunk is a view of the original tensor.</summary>
+    /// <param name="sizes">List of sizes for each chunk</param>
+    /// <param name="dim">The dimension along which to split the tensor, defaults to 0.</param>
     member a.split (sizes: seq<int>, ?dim: int) =
         let dim = defaultArg dim 0
         let sizes = sizes |> Seq.toArray
         match a with
-        | Tensor(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map Tensor
+        | Tensor0(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map Tensor0
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
-    /// <summary>TBD</summary>
+    /// <summary>Pipeline the tensor into a function.</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
 
-    static member inline internal OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev) =
+    static member inline internal OpUnary(a, fRaw:RawTensor->RawTensor, fTensor, dfTensorFwd, dfTensorRev) =
         match a with
-        | Tensor(ap)           -> Tensor(fRaw(ap))
+        | Tensor0(ap)           -> Tensor0(fRaw(ap))
         | TensorF(ap,ad,at)    -> let cp = fTensor(ap) in TensorF(cp, dfTensorFwd(cp,ap,ad), at)
         | TensorR(ap,_,_,_,at) -> let cp = fTensor(ap) in TensorR(cp, ref (a.zeroLike()), dfTensorRev(a), ref 0u, at)
 
-    static member inline internal OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
+    static member inline internal OpBinary(a, b, fRaw: RawTensor * RawTensor -> RawTensor, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT) =
         match a, b with
-        | Tensor(ap),           Tensor(bp)                      -> Tensor(fRaw(ap, bp))
-        | Tensor(_),            TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
-        | Tensor(_),            TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorF(ap,ad,at),    Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
+        | Tensor0(ap),          Tensor0(bp)                     -> Tensor0(fRaw(ap, bp))
+        | Tensor0(_),           TensorF(bp,bd,bt)               -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
+        | Tensor0(_),           TensorR(bp,_,_,_,bt)            -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
+        | TensorF(ap,ad,at),    Tensor0(_)                      -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let cp = fTensor(ap,bp) in TensorF(cp, dfTensorFwdTT(cp,ap,ad,bp,bd), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp,bp,bd), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let cp = fTensor(ap,b)  in TensorF(cp, dfTensorFwdTC(cp,ap,ad), at)
         | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), Tensor(_)                       -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), Tensor0(_)                      -> let cp = fTensor(ap,b)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
         | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let cp = fTensor(ap, b) in TensorR(cp, ref (a.zeroLike()), dfTensorRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let cp = fTensor(a,bp)  in TensorF(cp, dfTensorFwdCT(cp, bp, bd), bt)
@@ -819,8 +907,9 @@ type Tensor =
         | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let cp = fTensor(a,bp)  in TensorR(cp, ref (a.zeroLike()), dfTensorRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
-    /// <summary>TBD</summary>
-    static member (+) (a:Tensor, b:Tensor) =
+    /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    static member (+) (a:Tensor, b:Tensor) : Tensor =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "+" a.dtype b.dtype 
@@ -829,54 +918,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast + bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.AddTT(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddTT(a,b)
-            let dfTensorRevTC(a,b) = AddTTConst(a)
-            let dfTensorRevCT(a,b) = AddTTConst(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a,b:RawTensor) = b.AddTT0(a)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.expand(b.shape)
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddTT0(b,a)
-            let dfTensorRevTC(a,b) = AddTConstT0(a)
-            let dfTensorRevCT(a,b) = AddTT0Const(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.AddTT0(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd:Tensor) = bd.expand(a.shape)
-            let dfTensorRevTT(a,b) = AddTT0(a,b)
-            let dfTensorRevTC(a,b) = AddTT0Const(a)
-            let dfTensorRevCT(a,b) = AddTConstT0(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 2 && b.dim = 1 && a.shape.[1] = b.shape.[0] then
-            let fRaw(a:RawTensor,b) = a.AddT2T1(b)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = cp.zerosLike() + bd
-            let dfTensorRevTT(a,b) = AddT2T1(a,b)
-            let dfTensorRevTC(a,b) = AddT2T1Const(a)
-            let dfTensorRevCT(a,b) = AddT2ConstT1(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 1 && b.dim = 2 && a.shape.[0] = b.shape.[1] then
-            let fRaw(a,b:RawTensor) = b.AddT2T1(a)
-            let fTensor(a,b) = a + b
-            let dfTensorFwdTT(cp,ap,ad,bp:Tensor,bd:Tensor) = ad + bd
-            let dfTensorFwdTC(cp:Tensor,ap,ad) = ad + cp.zerosLike()
-            let dfTensorFwdCT(cp,bp,bd) = bd
-            let dfTensorRevTT(a,b) = AddT2T1(b,a)
-            let dfTensorRevTC(a,b) = AddT2ConstT1(a)
-            let dfTensorRevCT(a,b) = AddT2T1Const(b)
+            let inline fRaw(a:RawTensor,b) = a.AddTT(b)
+            let inline fTensor(a,b) = a + b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad + bd
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad) = ad
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = bd
+            let inline dfTensorRevTT(a,b) = AddTT(a,b)
+            let inline dfTensorRevTC(a,b:Tensor) = AddTTConst(a)
+            let inline dfTensorRevCT(a:Tensor,b) = AddTTConst(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -884,19 +933,32 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded + bExpanded
 
-    /// <summary>TBD</summary>
-    static member (+) (a:Tensor, b) = a + a.scalarLike(b)
+    /// <summary>Each element of the tensor <paramref name="a" /> is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (+) (a:Tensor, b: scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast + bCast
+        | ValueNone ->
+            let inline fRaw(a:RawTensor) = a.AddTT0(b)
+            let inline fTensor(a) = a + b
+            let inline dfTensorFwd(cp,ap,ad) = ad
+            let inline dfTensorRev(a) = AddTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member (+) (a, b:Tensor) = b.scalarLike(a) + b
+    /// <summary>The scalar <paramref name="a" /> is added to each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (+) (a: scalar, b:Tensor) : Tensor = b + a
 
-    /// <summary>TBD</summary>
-    member a.add(b:Tensor) = a + b
+    /// <summary>Each element of the object tensor is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    member a.add(b:Tensor) : Tensor = a + b
 
-    /// <summary>TBD</summary>
-    member a.add(b) = a + a.scalarLike(b)
+    /// <summary>Each element of the object tensor is added to the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    member a.add(b:scalar) : Tensor = a + b
 
-    /// <summary>TBD</summary>
+    /// <summary>Subtracts each element of the tensor <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (-) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -906,34 +968,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast - bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.SubTT(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd) = -bd
-            let dfTensorRevTT(a,b) = SubTT(a,b)
-            let dfTensorRevTC(a,b) = SubTTConst(a)
-            let dfTensorRevCT(a,b) = SubTConstT(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.SubT0T(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.expand(b.shape)
-            let dfTensorFwdCT(cp,bp,bd) = -bd
-            let dfTensorRevTT(a,b) = SubT0T(a,b)
-            let dfTensorRevTC(a,b) = SubT0TConst(a)
-            let dfTensorRevCT(a,b) = SubT0ConstT(b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.SubTT0(b)
-            let fTensor(a,b) = a - b
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
-            let dfTensorFwdTC(cp,ap,ad) = ad
-            let dfTensorFwdCT(cp,bp,bd:Tensor) = (-bd).expand(a.shape)
-            let dfTensorRevTT(a,b) = SubTT0(a,b)
-            let dfTensorRevTC(a,b) = SubTT0Const(a)
-            let dfTensorRevCT(a,b) = SubTConstT0(b)
+            let inline fRaw(a:RawTensor,b) = a.SubTT(b)
+            let inline fTensor(a,b) = a - b
+            let inline dfTensorFwdTT(cp,ap,ad,bp,bd) = ad - bd
+            let inline dfTensorFwdTC(cp,ap,ad) = ad
+            let inline dfTensorFwdCT(cp,bp,bd) = -bd
+            let inline dfTensorRevTT(a,b) = SubTT(a,b)
+            let inline dfTensorRevTC(a,b) = SubTTConst(a)
+            let inline dfTensorRevCT(a,b) = SubTConstT(b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -941,19 +983,43 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded - bExpanded
 
-    /// <summary>TBD</summary>
-    static member (-) (a:Tensor, b) = a - a.scalarLike(b)
+    /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the tensor <paramref name="a" />. The resulting tensor is returned.</summary>
+    static member (-) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast - bCast
+        | ValueNone ->
+            let inline fRaw(a:RawTensor) = a.SubTT0(b)
+            let inline fTensor(a) = a - b
+            let inline dfTensorFwd(cp,ap,ad) = ad
+            let inline dfTensorRev(a) = SubTT0Const(a)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member (-) (a, b:Tensor) = b.scalarLike(a) - b
+    /// <summary>Subtracts each element of the tensore <paramref name="b" /> from the scalar <paramref name="a" />. The resulting tensor is returned.</summary>
+    static member (-) (a:scalar, b:Tensor) : Tensor =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
+            let inline fRaw(b:RawTensor) = b.SubFromT0T(a)
+            let inline fTensor(b) = a - b
+            let inline dfTensorFwd(cp,bp,bd) = -bd
+            let inline dfTensorRev(b) = SubT0ConstT(b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Subtracts each element of the object tensor from the corresponding element of the self tensor. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.sub(b:Tensor) = a - b
 
-    /// <summary>TBD</summary>
-    member a.sub(b) = a - a.scalarLike(b)
+    /// <summary>Subtracts the scalar <paramref name="b" /> from the corresponding element of the object tensor. The resulting tensor is returned.</summary>
+    member a.sub(b:scalar) = a - b
 
-    /// <summary>TBD</summary>
+    /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (*) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -963,34 +1029,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast * bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.MulTT(b)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT(a,b)
-            let dfTensorRevTC(a,b) = MulTTConst(a,b)
-            let dfTensorRevCT(a,b) = MulTTConst(b,a)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a,b:RawTensor) = b.MulTT0(a)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT0(b,a)
-            let dfTensorRevTC(a,b) = MulTConstT0(b,a)
-            let dfTensorRevCT(a,b) = MulTT0Const(b,a)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.MulTT0(b)
-            let fTensor(a,b) = a * b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
-            let dfTensorRevTT(a,b) = MulTT0(a,b)
-            let dfTensorRevTC(a,b) = MulTT0Const(a,b)
-            let dfTensorRevCT(a,b) = MulTConstT0(a,b)
+            let inline fRaw(a:RawTensor,b) = a.MulTT(b)
+            let inline fTensor(a,b) = a * b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad * bp) + (ap * bd)
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad * b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = a * bd
+            let inline dfTensorRevTT(a,b) = MulTT(a,b)
+            let inline dfTensorRevTC(a,b) = MulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MulTTConst(b,a)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -998,19 +1044,33 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded * bExpanded
 
-    /// <summary>TBD</summary>
-    static member (*) (a:Tensor, b) = a * a.scalarLike(b)
+    /// <summary>Multiplies each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (*) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast * bCast
+        | ValueNone ->
+            let inline fRaw(a:RawTensor) = a.MulTT0(b)
+            let inline fTensor(a) = a * b
+            let inline dfTensorFwd(cp,ap,ad) = ad * b
+            let inline dfTensorRev(a) = MulTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member (*) (a, b:Tensor) = b.scalarLike(a) * b
+    /// <summary>Multiplies the scalar <paramref name="a" /> by each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (*) (a:scalar, b:Tensor) = b * a
 
-    /// <summary>TBD</summary>
+    /// <summary>Multiplies each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.mul(b:Tensor) = a * b
 
-    /// <summary>TBD</summary>
-    member a.mul(b) = a * a.scalarLike(b)
+    /// <summary>Multiplies each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    member a.mul(b: scalar) = a * b
 
-    /// <summary>TBD</summary>
+    /// <summary>Divides each element of the tensor <paramref name="a" /> by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     static member (/) (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
@@ -1020,34 +1080,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast / bCast
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.DivTT(b)
-            let fTensor(a,b) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivTT(a,b)
-            let dfTensorRevTC(a,b) = DivTTConst(a,b)
-            let dfTensorRevCT(a,b) = DivTConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.DivT0T(b)
-            let fTensor(a,b) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivT0T(a,b)
-            let dfTensorRevTC(a,b) = DivT0TConst(a,b)
-            let dfTensorRevCT(a,b) = DivT0ConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.DivTT0(b)
-            let fTensor(a:Tensor,b:Tensor) = a / b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
-            let dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
-            let dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
-            let dfTensorRevTT(a,b) = DivTT0(a,b)
-            let dfTensorRevTC(a,b) = DivTT0Const(a,b)
-            let dfTensorRevCT(a,b) = DivTConstT0(a,b)
+            let inline fRaw(a:RawTensor,b) = a.DivTT(b)
+            let inline fTensor(a,b) = a / b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ad - bd * cp) / bp
+            let inline dfTensorFwdTC(cp:Tensor,ap:Tensor,ad:Tensor) = ad / b
+            let inline dfTensorFwdCT(cp:Tensor,bp:Tensor,bd:Tensor) = -bd * cp / bp
+            let inline dfTensorRevTT(a,b) = DivTT(a,b)
+            let inline dfTensorRevTC(a,b) = DivTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = DivTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1055,20 +1095,43 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             aExpanded / bExpanded
 
-    /// <summary>TBD</summary>
-    static member (/) (a:Tensor, b) = a / a.scalarLike(b)
+    /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (/) (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
+            let inline fRaw(a:RawTensor) = a.DivTT0(b)
+            let inline fTensor(a) = a / b
+            let inline dfTensorFwd(cp,ap,ad) = ad / b
+            let inline dfTensorRev(a) = DivTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member (/) (a, b:Tensor) = b.scalarLike(a) / b
+    /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member (/) (a:scalar, b:Tensor) =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            aCast / bCast
+        | ValueNone ->
+            let inline fRaw(b:RawTensor) = b.DivFromT0T(a)
+            let inline fTensor(b) = a / b
+            let inline dfTensorFwd(cp,bp,bd) = -bd * cp / bp
+            let inline dfTensorRev(b) = DivT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
     member a.div(b:Tensor) = a / b
 
-    /// <summary>TBD</summary>
-    member a.div(b) = a / a.scalarLike(b)
+    /// <summary>Divides each element of the object tensor by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    member a.div(b:scalar) = a / b
 
-    /// <summary>TBD</summary>
-    static member Pow (a:Tensor, b:Tensor) =
+    static member internal powImpl (a:Tensor, b:Tensor) =
         if a.dtype <> b.dtype then
             match Dtype.widen a.dtype b.dtype with
             | None -> opNotSupported "Pow" a.dtype b.dtype 
@@ -1077,34 +1140,14 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 Tensor.Pow (aCast, bCast)
         elif a.shape = b.shape then
-            let fRaw(a:RawTensor,b) = a.PowTT(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowTT(a,b)
-            let dfTensorRevTC(a,b) = PowTTConst(a,b)
-            let dfTensorRevCT(a,b) = PowTConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif a.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.PowT0T(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowT0T(a,b)
-            let dfTensorRevTC(a,b) = PowT0TConst(a,b)
-            let dfTensorRevCT(a,b) = PowT0ConstT(a,b)
-            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
-        elif b.dim = 0 then
-            let fRaw(a:RawTensor,b) = a.PowTT0(b)
-            let fTensor(a:Tensor,b:Tensor) = a ** b
-            let dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
-            let dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
-            let dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
-            let dfTensorRevTT(a,b) = PowTT0(a,b)
-            let dfTensorRevTC(a,b) = PowTT0Const(a,b)
-            let dfTensorRevCT(a,b) = PowTConstT0(a,b)
+            let inline fRaw(a:RawTensor,b) = a.PowTT(b)
+            let inline fTensor(a:Tensor,b:Tensor) = a ** b
+            let inline dfTensorFwdTT(cp:Tensor,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = (ap ** (bp - 1.)) * (ad * bp + ap * bd * log ap)
+            let inline dfTensorFwdTC(cp,ap,ad) = ad * (ap ** (b - 1.)) * b
+            let inline dfTensorFwdCT(cp,bp,bd) = bd * cp * log a
+            let inline dfTensorRevTT(a,b) = PowTT(a,b)
+            let inline dfTensorRevTC(a,b) = PowTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = PowTConstT(a,b)
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
         else
             let newShape = Shape.broadcast2 a.shape b.shape
@@ -1112,72 +1155,158 @@ type Tensor =
             let bExpanded = b.expand(newShape)
             Tensor.Pow(aExpanded, bExpanded)
 
-    /// <summary>TBD</summary>
-    static member Pow (a:Tensor, b:float) = a ** a.scalarLike(b)
+    static member internal powImpl (a:Tensor, b:scalar) =
+        match tryWidenScalar a.dtype b with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
+            let inline fRaw(a:RawTensor) = a.PowTT0(b)
+            let inline fTensor(a) = Tensor.powImpl (a, b)
+            let inline dfTensorFwd(cp,ap,ad) = ad * (ap ** b.sub(1.)) * b
+            let inline dfTensorRev(a) = PowTT0Const(a,b)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Pow (a:Tensor, b:int) = a ** a.scalarLike(b)
+    static member internal powImpl (a:scalar, b:Tensor) =
+        match tryWidenScalar b.dtype a with
+        | ValueSome tnew ->
+            let aCast = a.cast(tnew)
+            let bCast = b.cast(tnew)
+            Tensor.powImpl(aCast, bCast)
+        | ValueNone ->
+            let inline fRaw(b:RawTensor) = b.PowFromT0T(a)
+            let inline fTensor(b) = Tensor.powImpl (a, b)
+            let inline dfTensorFwd(cp:Tensor,bp:Tensor,bd:Tensor) : Tensor = bd * cp * a.log()
+            let inline dfTensorRev(b) = PowT0ConstT(a,b)
+            Tensor.OpUnary(b, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Pow (a:Tensor, b) = a ** a.scalarLike(b)
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    static member Pow (a:Tensor, b:Tensor) = Tensor.powImpl(a, b)
 
-    /// <summary>TBD</summary>
-    static member Pow (a:float, b:Tensor) = b.scalarLike(a) ** b
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:Tensor, b: scalar) = Tensor.powImpl(a, b)
 
-    /// <summary>TBD</summary>
-    static member Pow (a:int, b:Tensor) = b.scalarLike(a) ** b
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:Tensor, b:float) = Tensor.powImpl(a, (b :> scalar))
 
-    /// <summary>TBD</summary>
-    static member Pow (a, b:Tensor) = b.scalarLike(a) ** b
+    /// <summary>Raises each element of the tensor <paramref name="a" /> to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:Tensor, b:int) = Tensor.powImpl(a, (b :> scalar))
 
-    /// <summary>TBD</summary>
-    member a.pow(b:Tensor) = a ** b
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:scalar, b:Tensor) = Tensor.powImpl(a, b)
 
-    /// <summary>TBD</summary>
-    member a.pow(b) = a ** a.scalarLike(b)
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:float, b:Tensor) = Tensor.powImpl((a :> scalar), b)
 
-    /// <summary>TBD</summary>
-    member a.matmul (b:Tensor) =
-        Shape.checkCanMatmul a.shape b.shape
-        let fRaw(a:RawTensor,b) = a.MatMulT2T2(b)
-        let fTensor(a:Tensor,b) = a.matmul(b)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
-        let dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
-        let dfTensorRevTT(a,b) = MatMulT2T2(a,b)
-        let dfTensorRevTC(a,b) = MatMulT2T2Const(a,b)
-        let dfTensorRevCT(a,b) = MatMulT2ConstT2(a,b)
-        Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+    /// <summary>Raises the scalar <paramref name="a" /> to the power of each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    static member Pow (a:int, b:Tensor) = Tensor.powImpl((a :> scalar), b)
 
-    /// <summary>TBD</summary>
+    /// <summary>Raises each element of the self tensor to the power of each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
+    /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>
+    member a.pow(b:Tensor) = Tensor.powImpl(a, b)
+
+    /// <summary>Raises each element of the self tensor to the power of the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
+    member a.pow(b: scalar) = Tensor.powImpl(a, b)
+
+    /// <summary>Matrix product of two tensors.</summary>
+    ///
+    /// <remarks>
+    /// <para>
+    /// The behavior depends on the dimensionality of the tensors as follows:
+    /// </para>
+    /// 
+    /// <para>
+    /// If both tensors are 1-dimensional, the dot product (scalar) is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If both arguments are 2-dimensional, the matrix-matrix product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    /// If the first argument is 1-dimensional and the second argument is 2-dimensional, a 1 is prepended to its dimension for the purpose of the matrix multiply. After the matrix multiply, the prepended dimension is removed.
+    /// </para>
+    /// 
+    /// <para>
+    ///  If the first argument is 2-dimensional and the second argument is 1-dimensional, the matrix-vector product is returned.
+    /// </para>
+    /// 
+    /// <para>
+    ///  If both arguments are at least 1-dimensional and at least one argument is N-dimensional (where N > 2), then a 
+    ///  batched matrix multiply is returned. If the first argument is 1-dimensional, a 1 is prepended to its dimension for the
+    ///  purpose of the batched matrix multiply and removed after. If the second argument is 1-dimensional, a 1 is appended to
+    ///  its dimension for the purpose of the batched matrix multiple and removed after. The non-matrix (i.e. batch) dimensions
+    ///  are broadcasted (and thus must be broadcastable). For example, if input is a (j \times 1 \times n \times m)(j×1×n×m)
+    ///  tensor and other is a (k \times m \times p)(k×m×p) tensor, out will be an (j \times k \times n \times p)(j×k×n×p)
+    ///  tensor.
+    /// </para>
+    /// </remarks>
+
+    member a.matmul (b:Tensor) : Tensor =
+        if a.dim = 1 && b.dim = 1 then a.dot(b) 
+        // Increase to at least 2x2
+        elif a.dim = 1 && b.dim > 1 then a.unsqueeze(0).matmul(b).squeeze(b.dim-2)
+        elif a.dim > 1 && b.dim = 1 then a.matmul(b.unsqueeze(1)).squeeze(a.dim-1)
+        else
+        let (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart) = Shape.checkCanMatmul a.shape b.shape
+        if aBatchPart = bBatchPart then
+            let inline fRaw(a:RawTensor,b) = a.MatMulTT(b)
+            let inline fTensor(a:Tensor,b) = a.matmul(b)
+            let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.matmul(bp) + ap.matmul(bd)
+            let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.matmul(b)
+            let inline dfTensorFwdCT(cp,bp,bd) = a.matmul(bd)
+            let inline dfTensorRevTT(a,b) = MatMulTT(a,b)
+            let inline dfTensorRevTC(a,b) = MatMulTTConst(a,b)
+            let inline dfTensorRevCT(a,b) = MatMulTConstT(a,b)
+            Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
+        else
+            let newBatchPart = Shape.broadcast2 aBatchPart bBatchPart
+            let aNewShape = Array.append newBatchPart aMatrixPart
+            let bNewShape = Array.append newBatchPart bMatrixPart
+            let aExpanded = a.expand(aNewShape)
+            let bExpanded = b.expand(bNewShape)
+            aExpanded.matmul(bExpanded)
+
+    /// <summary>Computes the dot product (inner product) of two vector (1d-tensors).</summary>
+    /// <param name="b">The vector to multiply this tensor by (1d-tensor).</param>
+    /// <remarks>This function does not broadcast and expects this tensor to be a vector (1d-tensor).   
+    /// The tensors must have the same number of elements.
+    /// </remarks>
     member a.dot(b:Tensor) =
         Shape.checkCanDot a.shape b.shape
         let a:Tensor = a.view([1;a.nelement])
         let b:Tensor = b.view([b.nelement;1])
         a.matmul(b).view([])
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the negative of the elements of <paramref name="a" />.</summary>
     static member (~-) (a:Tensor) =
-        let fRaw(a:RawTensor) = a.NegT()
-        let fTensor(a) = -a
-        let dfTensorFwd(cp,ap,ad) = -ad
-        let dfTensorRev(a) = NegT(a)
+        let inline fRaw(a:RawTensor) = a.NegT()
+        let inline fTensor(a) = -a
+        let inline dfTensorFwd(cp,ap,ad) = -ad
+        let inline dfTensorRev(a) = NegT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the negative of the elements of the object tensor.</summary>
     member a.neg() = -a
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of all elements in the input tensor.</summary>
+    /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(?dtype: Dtype) =
-        let fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
-        let fTensor(a:Tensor) = a.sum(?dtype=dtype)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
-        let dfTensorRev(a) = SumT(a)
+        let inline fRaw(a:RawTensor) = a.SumT(?resultType=dtype)
+        let inline fTensor(a:Tensor) = a.sum(?dtype=dtype)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.sum(?dtype=dtype)
+        let inline dfTensorRev(a) = SumT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-    /// <summary>TBD</summary>
+    /// <summary>Returns the sum of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
+    /// <remarks>If keepdim is <c>true</c>, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension.</remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
+       // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
        let keepDim = defaultArg keepDim false
        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
        let res =
@@ -1197,8 +1326,7 @@ type Tensor =
        let res2 = if keepDim then res.unsqueeze(dim) else res
        res2.castAfterSummation(?dtype=dtype)
 
-    /// Reduce the dimensionality via summation until we reach `newShape`. An expansion
-    /// from newShape to shape must be possible.
+    /// <summary>Sum this tensor to size <paramref name="newShape" />, which must be broadcastable to this tensor size.</summary>
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
         let oldShape = a.shape
         if oldShape = newShape then
@@ -1218,10 +1346,13 @@ type Tensor =
                     result <- result.sum(dim, keepDim=true)
             result.castAfterSummation(?dtype=dtype)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the mean value of all elements in the input tensor</summary>
     member a.mean() = a.sum() / a.nelement
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the mean value of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension.</remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     member a.mean(dim:int, ?keepDim:bool) = 
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         if dim = 0 && a.dim = 0 then a
@@ -1230,16 +1361,24 @@ type Tensor =
            let dv = sm / a.shape.[dim]
            dv
 
-    /// <summary>TBD</summary>
-    // This is the two-pass algorithm better than the naive algorithm
+    /// <summary>Returns the variance of all elements in the input tensor.</summary>
+    /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(?unbiased:bool) = 
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
         let a' = a - a.mean() in (a' * a').sum() / n
 
-    /// <summary>TBD</summary>
-    // TODO: this is the naive algorithm, can be improved for better numerical stability
+    /// <summary>Returns the variance of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>
+    ///   <para>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension(s).</para>
+    ///   <para>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</para>
+    /// </remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
+         // TODO: this is the naive algorithm, can be improved for better numerical stability
         let keepDim = defaultArg keepDim false
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
@@ -1260,14 +1399,28 @@ type Tensor =
         let res = (sSquare - (s * s) / n) / nn
         if keepDim then res.unsqueeze(dim) else res
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim.</summary>
+    /// <remarks>
+    ///   <para>If keepdim is True, the output tensor is of the same size as input except in the dimension dim where it is of size 1. Otherwise, dim is squeezed, resulting in the output tensor having 1 fewer dimension(s).</para>
+    ///   <para>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</para>
+    /// </remarks>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
+    /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
+    /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
 
-    /// <summary>TBD</summary>
-    member probs.multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?normalize:bool) =
+    /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
+    /// <param name="numSamples">The number of samples to draw.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    /// <param name="normalize">Indicates where the probabilities should first be normalized by their sum.</param>
+    member probs.multinomial(numSamples:int, ?normalize:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
         if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
         let dtype = defaultArg dtype Dtype.Int32
@@ -1279,6 +1432,8 @@ type Tensor =
         if probs.dim = 1 then
             let p = 
                 match probs.dtype with
+                | Dtype.Float16
+                | Dtype.BFloat16
                 | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
@@ -1286,15 +1441,20 @@ type Tensor =
         else
             let p = 
                 match probs.dtype with
+                | Dtype.BFloat16
+                | Dtype.Float16
                 | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[,]
-                | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+                | _ -> failwithf "Expecting probs to be floating point, received %A" probs.dtype
             Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     member probs.bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
-        if not (probs.dtype = Dtype.Float32 || probs.dtype = Dtype.Float64) then failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
+        if not probs.dtype.IsFloatingPoint then failwithf "Expecting probs to be floating point, received %A" probs.dtype
         let dtype = defaultArg dtype probs.dtype
         let device = defaultArg device probs.device
         let backend = defaultArg backend probs.backend
@@ -1306,7 +1466,8 @@ type Tensor =
             let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
             Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
 
-    /// <summary>TBD</summary>
+    /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     member a.dropout(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout p
@@ -1318,7 +1479,8 @@ type Tensor =
             let mask = a.fullLike(1.-p).bernoulli()
             a * mask
 
-    /// <summary>TBD</summary>
+    /// <summary>Randomly zero out entire channels (a channel is a 2D feature map, e.g., the jj -th channel of the ii -th sample in the batched input is a 2D tensor \text{input}[i, j]input[i,j] ). Each channel will be zeroed out independently on every forward call with probability p using samples from a Bernoulli distribution</summary>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     member a.dropout2d(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout2d a.shape p
@@ -1330,7 +1492,8 @@ type Tensor =
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1|]).bernoulli()
             a * mask
 
-    /// <summary>TBD</summary>
+    /// <summary>Randomly zero out entire channels (a channel is a 3D feature map, e.g., the jj -th channel of the ii -th sample in the batched input is a 3D tensor \text{input}[i, j]input[i,j] ). Each channel will be zeroed out independently on every forward call with probability p using samples from a Bernoulli distribution.</summary>
+    /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
     member a.dropout3d(?p:double) =
         let p = defaultArg p 0.5
         Shape.checkCanDropout3d a.shape p
@@ -1342,16 +1505,17 @@ type Tensor =
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1;1|]).bernoulli()
             a * mask
 
-    /// <summary>TBD</summary>
     // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
     member internal a.sumT2Dim0() =
-        let fRaw(a:RawTensor) = a.SumT2Dim0()
-        let fTensor(a:Tensor) = a.sumT2Dim0()
-        let dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
-        let dfTensorRev(a) = SumT2Dim0(a)
+        let inline fRaw(a:RawTensor) = a.SumT2Dim0()
+        let inline fTensor(a:Tensor) = a.sumT2Dim0()
+        let inline dfTensorFwd(cp,ap,ad:Tensor):Tensor = ad.sumT2Dim0()
+        let inline dfTensorRev(a) = SumT2Dim0(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     
-    /// <summary>TBD</summary>
+    /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
+    /// <param name="dim0">The first dimension to be transposed.</param>
+    /// <param name="dim1">The second dimension to be transposed.</param>
     member a.transpose(dim0:int, dim1:int) =
         let dim0 = Shape.completeDim a.dim dim0  // Handles -1 semantics
         let dim1 = Shape.completeDim a.dim dim1  // Handles -1 semantics
@@ -1359,68 +1523,76 @@ type Tensor =
         if dim0 = dim1 then
             a
         else
-            let fRaw(a:RawTensor) = a.TransposeT(dim0, dim1)
-            let fTensor(a:Tensor) = a.transpose(dim0, dim1)
-            let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose(dim0, dim1)
-            let dfTensorRev(a) = TransposeT(a, dim0, dim1)
+            let inline fRaw(a:RawTensor) = a.TransposeT(dim0, dim1)
+            let inline fTensor(a:Tensor) = a.transpose(dim0, dim1)
+            let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose(dim0, dim1)
+            let inline dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
     member a.transpose() =
         Shape.checkCanTranspose2d a.dim
-        let fRaw(a:RawTensor) = a.TransposeT2()
-        let fTensor(a:Tensor) = a.transpose()
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
-        let dfTensorRev(a) = TransposeT2(a)
+        let inline fRaw(a:RawTensor) = a.TransposeT2()
+        let inline fTensor(a:Tensor) = a.transpose()
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.transpose()
+        let inline dfTensorRev(a) = TransposeT2(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a tensor with all the dimensions of input of size 1 removed.</summary>
+    /// <remarks>If the tensor has a batch dimension of size 1, then squeeze(input) will also remove the batch dimension, which can lead to unexpected errors.</remarks>
+    /// <param name="dim">If given, the input will be squeezed only in this dimension.</param>
     member a.squeeze(?dim:int) =
         let dim = defaultArg dim -1
-        let fRaw(a:RawTensor) = a.SqueezeT(dim)
-        let fTensor(a:Tensor) = a.squeeze(dim)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.squeeze(dim)
-        let dfTensorRev(a) = SqueezeT(a)
+        let inline fRaw(a:RawTensor) = a.SqueezeT(dim)
+        let inline fTensor(a:Tensor) = a.squeeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.squeeze(dim)
+        let inline dfTensorRev(a) = SqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    member a.unsqueeze(dim:int) =
-        let fRaw(a:RawTensor) = a.UnsqueezeT(dim)
-        let fTensor(a:Tensor) = a.unsqueeze(dim)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
-        let dfTensorRev(a) = UnsqueezeT(a)
+    /// <summary>Returns a new tensor with a dimension of size one inserted at the specified position</summary>
+    /// <param name="dim">The index at which to insert the singleton dimension.</param>
+    member a.unsqueeze(dim:int) : Tensor =
+        let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
+        let inline fTensor(a:Tensor) = a.unsqueeze(dim)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.unsqueeze(dim)
+        let inline dfTensorRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
+    /// <param name="dims">The axis to flip on.</param>
     member a.flip(dims:seq<int>) =
         let dims = dims |> Array.ofSeq
         Shape.checkCanFlip a.dim dims
-        let fRaw(a:RawTensor) = a.FlipT(dims)
-        let fTensor(a:Tensor) = a.flip(dims)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
-        let dfTensorRev(a) = FlipT(a, dims)
+        let inline fRaw(a:RawTensor) = a.FlipT(dims)
+        let inline fTensor(a:Tensor) = a.flip(dims)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.flip(dims)
+        let inline dfTensorRev(a) = FlipT(a, dims)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Dilate the tensor in using the given dilations in each corresponding dimension.</summary>
+    /// <param name="dilations">The dilations to use.</param>
     member a.dilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
         Shape.checkCanDilate a.dim dilations
-        let fRaw(a:RawTensor) = a.DilateT(dilations)
-        let fTensor(a:Tensor) = a.dilate(dilations)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
-        let dfTensorRev(a) = DilateT(a, dilations)
+        let inline fRaw(a:RawTensor) = a.DilateT(dilations)
+        let inline fTensor(a:Tensor) = a.dilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.dilate(dilations)
+        let inline dfTensorRev(a) = DilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Reverse the dilation of the tensor in using the given dilations in each corresponding dimension.</summary>
+    /// <param name="dilations">The dilations to use.</param>
     member a.undilate(dilations:seq<int>) =
         let dilations = dilations |> Array.ofSeq
-        let fRaw(a:RawTensor) = a.UndilateT(dilations)
-        let fTensor(a:Tensor) = a.undilate(dilations)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.undilate(dilations)
-        let dfTensorRev(a) = UndilateT(a, dilations)
+        let inline fRaw(a:RawTensor) = a.UndilateT(dilations)
+        let inline fTensor(a:Tensor) = a.undilate(dilations)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.undilate(dilations)
+        let inline dfTensorRev(a) = UndilateT(a, dilations)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Repeat elements of a tensor</summary>
+    /// <param name="dim">The dimension along which to repeat values.</param>
+    /// <param name="times">The number of repetitions for each element.</param>
     member a.repeat(dim:int, times:int) =
         Shape.checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
@@ -1432,32 +1604,57 @@ type Tensor =
             ret <- ret.addSlice(location, a)
         ret
 
-    /// <summary>TBD</summary>
+    /// <summary>Gathers values along an axis specified by dim.</summary>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
     member a.gather(dim:int, indices:Tensor) =
         Shape.checkCanGather a.shape dim indices.shape indices.dtype
-        let fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
-        let fTensor(a:Tensor) = a.gather(dim, indices)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
-        let dfTensorRev(a) = GatherT(a, dim, indices)
+        let inline fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
+        let inline fTensor(a:Tensor) = a.gather(dim, indices)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.gather(dim, indices)
+        let inline dfTensorRev(a) = GatherT(a, dim, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
+    /// <remarks>
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="shape">The desired shape of returned tensor.</param>
     member a.view(shape:seq<int>) =
         let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
         Shape.checkCanView a.shape shape
-        let fRaw(a:RawTensor) = a.ViewT(shape)
-        let fTensor(a:Tensor) = a.view(shape)
-        let dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
-        let dfTensorRev(a) = ViewT(a, a.shape)
+        let inline fRaw(a:RawTensor) = a.ViewT(shape)
+        let inline fTensor(a:Tensor) = a.view(shape)
+        let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.view(shape)
+        let inline dfTensorRev(a) = ViewT(a, a.shape)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the same data as the object tensor but of a different shape.</summary>
+    /// <remarks>
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="shape">the desired shape</param>
     member t.view(shape:int) = t.view([|shape|])
 
-    /// <summary>TBD</summary>
-    member a.viewAs(b:Tensor) = a.view(b.shape)
+    /// <summary>View this tensor as the same size as other.</summary>
+    /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
+    ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
+    ///   For a tensor to be viewed, the new view size must be compatible with its original size and stride, i.e., each new view dimension must either be a subspace of an original dimension,
+    ///   or only span across original dimensions \(d, d+1, \dots, d+kd,d+1,…,d+k\) that satisfy the following contiguity-like condition that
+    ///   \(\forall i = d, \dots, d+k-1∀i=d,…,d+k−1 ,\) \[\text{stride}[i] = \text{stride}[i+1] \times \text{size}[i+1]\]
+    /// </remarks>
+    /// <param name="other">The result tensor has the same size as other.</param>
+    member a.viewAs(other:Tensor) = a.view(other.shape)
 
-    /// <summary>TBD</summary>
+    /// <summary>Flattens a contiguous range of dims in a tensor.</summary>
+    /// <param name="startDim">The first dim to flatten.</param>
+    /// <param name="endDim">The last dim to flatten.</param>
     member a.flatten(?startDim:int, ?endDim:int) =
         if a.dim < 2 then 
             a
@@ -1479,265 +1676,282 @@ type Tensor =
             let hh = highTensor.expand(a.shape)
             1 - (a.lt(ll) + a.gt(hh)).cast(a.dtype)
         match a with
-        | Tensor(ap)           -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor(result), mask
+        | Tensor0(ap)          -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in Tensor0(result), mask
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
         | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
 
-    /// <summary>TBD</summary>
+    /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
+    /// <param name="low">The lower-bound of the range to be clamped to.</param>
+    /// <param name="high">The upper-bound of the range to be clamped to.</param>
     member a.clamp(?low:scalar, ?high:scalar) = a.clampWithMask(?low=low, ?high=high) |> fst
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.sign() =
-        let fRaw(a:RawTensor) = a.SignT()
-        let fTensor(a:Tensor) = a.sign()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = SignT(a)
+        let inline fRaw(a:RawTensor) = a.SignT()
+        let inline fTensor(a:Tensor) = a.sign()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
     // static member Sign(a:Tensor) = a.sign() // not supported becaose FSharp.Core sign operator returns int
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the floor of the elements of input, the largest integer less than or equal to each element.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.floor() =
-        let fRaw(a:RawTensor) = a.FloorT()
-        let fTensor(a:Tensor) = a.floor()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = FloorT(a)
+        let inline fRaw(a:RawTensor) = a.FloorT()
+        let inline fTensor(a:Tensor) = a.floor()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = FloorT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>floor</c>.</summary>
     static member Floor(a:Tensor) = a.floor() // needed for FSharp.Core floor operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the ceil of the elements of input, the smallest integer greater than or equal to each element.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.ceil() =
-        let fRaw(a:RawTensor) = a.CeilT()
-        let fTensor(a:Tensor) = a.ceil()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = CeilT(a)
+        let inline fRaw(a:RawTensor) = a.CeilT()
+        let inline fTensor(a:Tensor) = a.ceil()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = CeilT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>ceil</c>.</summary>
     static member Ceiling(a:Tensor) = a.ceil() // needed for FSharp.Core ceil operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with each of the elements of input rounded to the closest integer.</summary>
+    /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     member a.round() =
-        let fRaw(a:RawTensor) = a.RoundT()
-        let fTensor(a:Tensor) = a.round()
-        let dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
-        let dfTensorRev(a) = RoundT(a)
+        let inline fRaw(a:RawTensor) = a.RoundT()
+        let inline fTensor(a:Tensor) = a.round()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
+        let inline dfTensorRev(a) = RoundT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>round</c>.</summary>
     static member Round(a:Tensor) = a.round() // needed for FSharp.Core round operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes the element-wise absolute value of the given input tensor.</summary>
     member a.abs() =
-        let fRaw(a:RawTensor) = a.AbsT()
-        let fTensor(a:Tensor) = a.abs()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
-        let dfTensorRev(a) = AbsT(a)
+        let inline fRaw(a:RawTensor) = a.AbsT()
+        let inline fTensor(a:Tensor) = a.abs()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad * ap.sign()
+        let inline dfTensorRev(a) = AbsT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Abs(a:Tensor) = a.abs() // needed for FSharp.Core abs operator overload
+    /// <summary>A method to enable the use of the F# function <c>abs</c>.</summary>
+    static member Abs(a:Tensor) : Tensor = a.abs() // needed for FSharp.Core abs operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the rectified linear unit function element-wise.</summary>
     member a.relu() =
-        let fRaw(a:RawTensor) = a.ReluT()
-        let fTensor(a:Tensor) = a.relu()
-        let dfTensorFwd(cp,ap:Tensor,ad:Tensor) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
-        let dfTensorRev(a) = ReluT(a)
+        let inline fRaw(a:RawTensor) = a.ReluT()
+        let inline fTensor(a:Tensor) = a.relu()
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = let sap = ap.sign() in ad * sap.abs() * (sap + 1.) / 2.
+        let inline dfTensorRev(a) = ReluT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the leaky rectified linear unit function element-wise</summary>
+    /// <remarks>\[\text{LeakyReLU}(x) = \max(0, x) + \text{negative\_slope} * \min(0, x)\]</remarks>
+    /// <param name="negativeSlope">Controls the angle of the negative slope. Default: 0.01.</param>
     member a.leakyRelu(?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
         let zeros = a.zerosLike() in zeros.max(a) + negativeSlope * zeros.min(a)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the sigmoid element-wise function</summary>
+    /// <remarks>\[\text{Sigmoid}(x) = \frac{1}{1 + \exp(-x)}\]</remarks>
     member a.sigmoid() =
-        let fRaw(a:RawTensor) = a.SigmoidT()
-        let fTensor(a:Tensor) = a.sigmoid()
-        let dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
-        let dfTensorRev(a) = SigmoidT(a)
+        let inline fRaw(a:RawTensor) = a.SigmoidT()
+        let inline fTensor(a:Tensor) = a.sigmoid()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
+        let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the exp function element-wise.</summary>
     member a.exp() =
-        let fRaw(a:RawTensor) = a.ExpT()
-        let fTensor(a:Tensor) = a.exp()
-        let dfTensorFwd(cp,ap,ad) = ad * cp
-        let dfTensorRev(a) = ExpT(a)
+        let inline fRaw(a:RawTensor) = a.ExpT()
+        let inline fTensor(a:Tensor) = a.exp()
+        let inline dfTensorFwd(cp,ap,ad) = ad * cp
+        let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>exp</c>.</summary>
     static member Exp(a:Tensor) = a.exp() // needed for FSharp.Core exp operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the natural logarithm of the elements of input.</summary>
+    /// <remarks> \[y_{i} = \log_{e} (x_{i})\]</remarks>
     member a.log() =
-        let fRaw(a:RawTensor) = a.LogT()
-        let fTensor(a:Tensor) = a.log()
-        let dfTensorFwd(cp,ap,ad) = ad / ap
-        let dfTensorRev(a) = LogT(a)
+        let inline fRaw(a:RawTensor) = a.LogT()
+        let inline fTensor(a:Tensor) = a.log()
+        let inline dfTensorFwd(cp,ap,ad) = ad / ap
+        let inline dfTensorRev(a) = LogT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>log</c>.</summary>
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies the softplus function element-wise.</summary>
+    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
     member a.softplus() =
-        let fRaw(a:RawTensor) = a.SoftplusT()
-        let fTensor(a:Tensor) = a.softplus()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
-        let dfTensorRev(a) = SoftplusT(a)
+        let inline fRaw(a:RawTensor) = a.SoftplusT()
+        let inline fTensor(a:Tensor) = a.softplus()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
+        let inline dfTensorRev(a) = SoftplusT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
+    /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
     member a.log10() =
-        let fRaw(a:RawTensor) = a.Log10T()
-        let fTensor(a:Tensor) = a.log10()
-        let dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
-        let dfTensorRev(a) = Log10T(a)
+        let inline fRaw(a:RawTensor) = a.Log10T()
+        let inline fTensor(a:Tensor) = a.log10()
+        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (ap * log10Val)
+        let inline dfTensorRev(a) = Log10T(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>log10</c>.</summary>
     static member Log10(a:Tensor) = a.log10() // needed for FSharp.Core log10 operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the square-root of the elements of input.</summary>
     member a.sqrt() =
-        let fRaw(a:RawTensor) = a.SqrtT()
-        let fTensor(a:Tensor) = a.sqrt()
-        let dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
-        let dfTensorRev(a) = SqrtT(a)
+        let inline fRaw(a:RawTensor) = a.SqrtT()
+        let inline fTensor(a:Tensor) = a.sqrt()
+        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad / (2. * cp)
+        let inline dfTensorRev(a) = SqrtT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>sqrt</c>.</summary>
     static member Sqrt(a:Tensor) = a.sqrt() // needed for FSharp.Core sqrt operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the sine of the elements of input</summary>
     member a.sin() =
-        let fRaw(a:RawTensor) = a.SinT()
-        let fTensor(a:Tensor) = a.sin()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
-        let dfTensorRev(a) = SinT(a)
+        let inline fRaw(a:RawTensor) = a.SinT()
+        let inline fTensor(a:Tensor) = a.sin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cos()
+        let inline dfTensorRev(a) = SinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>sin</c>.</summary>
     static member Sin(a:Tensor) = a.sin() // needed for FSharp.Core sin operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the cosine of the elements of input</summary>
     member a.cos() =
-        let fRaw(a:RawTensor) = a.CosT()
-        let fTensor(a:Tensor) = a.cos()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
-        let dfTensorRev(a) = CosT(a)
+        let inline fRaw(a:RawTensor) = a.CosT()
+        let inline fTensor(a:Tensor) = a.cos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad * ap.sin()
+        let inline dfTensorRev(a) = CosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>cos</c>.</summary>
     static member Cos(a:Tensor) = a.cos() // needed for FSharp.Core cos operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the tangent of the elements of input</summary>
     member a.tan() =
-        let fRaw(a:RawTensor) = a.TanT()
-        let fTensor(a:Tensor) = a.tan()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
-        let dfTensorRev(a) = TanT(a)
+        let inline fRaw(a:RawTensor) = a.TanT()
+        let inline fTensor(a:Tensor) = a.tan()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let cosap = ap.cos() in ad / (cosap * cosap)
+        let inline dfTensorRev(a) = TanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>tan</c>.</summary>
     static member Tan(a:Tensor) = a.tan() // needed for FSharp.Core tan operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the hyperbolic sine of the elements of input.</summary>
     member a.sinh() =
-        let fRaw(a:RawTensor) = a.SinhT()
-        let fTensor(a:Tensor) = a.sinh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
-        let dfTensorRev(a) = SinhT(a)
+        let inline fRaw(a:RawTensor) = a.SinhT()
+        let inline fTensor(a:Tensor) = a.sinh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.cosh()
+        let inline dfTensorRev(a) = SinhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>A method to enable the use of the F# function <c>sinh</c>.</summary>
     static member Sinh(a:Tensor) = a.sinh() // needed for FSharp.Core sinh operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the hyperbolic cosine of the elements of input.</summary>
     member a.cosh() =
-        let fRaw(a:RawTensor) = a.CoshT()
-        let fTensor(a:Tensor) = a.cosh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
-        let dfTensorRev(a) = CoshT(a)
+        let inline fRaw(a:RawTensor) = a.CoshT()
+        let inline fTensor(a:Tensor) = a.cosh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad * ap.sinh()
+        let inline dfTensorRev(a) = CoshT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Cosh(a:Tensor) = a.cosh() // needed for FSharp.Core cosh operator overload
+    /// <summary>A method to enable the use of the F# function <c>cosh</c>.</summary>
+    static member Cosh(t:Tensor) = t.cosh() // needed for FSharp.Core cosh operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the hyperbolic tangent of the elements of input.</summary>
     member a.tanh() =
-        let fRaw(a:RawTensor) = a.TanhT()
-        let fTensor(a:Tensor) = a.tanh()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
-        let dfTensorRev(a) = TanhT(a)
+        let inline fRaw(a:RawTensor) = a.TanhT()
+        let inline fTensor(a:Tensor) = a.tanh()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = let coshap = ap.cosh() in ad / (coshap * coshap)
+        let inline dfTensorRev(a) = TanhT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Tanh(a:Tensor) = a.tanh() // needed for FSharp.Core tanh operator overload
+    /// <summary>A method to enable the use of the F# function <c>tanh</c>.</summary>
+    static member Tanh(t:Tensor) = t.tanh() // needed for FSharp.Core tanh operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the arcsine of the elements of input.</summary>
     member a.asin() =
-        let fRaw(a:RawTensor) = a.AsinT()
-        let fTensor(a:Tensor) = a.asin()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
-        let dfTensorRev(a) = AsinT(a)
+        let inline fRaw(a:RawTensor) = a.AsinT()
+        let inline fTensor(a:Tensor) = a.asin()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. - ap*ap).sqrt()
+        let inline dfTensorRev(a) = AsinT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Asin(a:Tensor) = a.asin() // needed for FSharp.Core asin operator overload
+    /// <summary>A method to enable the use of the F# function <c>asin</c>.</summary>
+    static member Asin(t:Tensor) = t.asin() // needed for FSharp.Core asin operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the arccosine of the elements of input.</summary>
     member a.acos() =
-        let fRaw(a:RawTensor) = a.AcosT()
-        let fTensor(a:Tensor) = a.acos()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
-        let dfTensorRev(a) = AcosT(a)
+        let inline fRaw(a:RawTensor) = a.AcosT()
+        let inline fTensor(a:Tensor) = a.acos()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = -ad / (1. - ap*ap).sqrt()
+        let inline dfTensorRev(a) = AcosT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Acos(a:Tensor) = a.acos() // needed for FSharp.Core acos operator overload
+    /// <summary>A method to enable the use of the F# function <c>acos</c>.</summary>
+    static member Acos(t:Tensor) = t.acos() // needed for FSharp.Core acos operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Returns a new tensor with the arctangent of the elements of input.</summary>
     member a.atan() =
-        let fRaw(a:RawTensor) = a.AtanT()
-        let fTensor(a:Tensor) = a.atan()
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
-        let dfTensorRev(a) = AtanT(a)
+        let inline fRaw(a:RawTensor) = a.AtanT()
+        let inline fTensor(a:Tensor) = a.atan()
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad) = ad / (1. + ap*ap)
+        let inline dfTensorRev(a) = AtanT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    static member Atan(a:Tensor) = a.atan() // needed for FSharp.Core atan operator overload
+    /// <summary>A method to enable the use of the F# function <c>atan</c>.</summary>
+    static member Atan(t:Tensor) = t.atan() // needed for FSharp.Core atan operator overload
 
-    /// <summary>TBD</summary>
+    /// <summary>Add the given tensor as a slice at the given location.</summary>
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
         Shape.checkCanAddSlice a.shape location b.shape
-        let fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
-        let fTensor(a:Tensor,b) = a.addSlice(location, b)
-        let dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
-        let dfTensorFwdTC(cp,ap,ad) = ad
-        let dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
-        let dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
-        let dfTensorRevTC(a,b) = AddTTConstSlice(a)
-        let dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
+        let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
+        let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
+        let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
+        let inline dfTensorFwdTC(cp,ap,ad) = ad
+        let inline dfTensorFwdCT(cp:Tensor,bp,bd) = cp.zerosLike().addSlice(location, bd)
+        let inline dfTensorRevTT(a,b) = AddTTSlice(a,location,b)
+        let inline dfTensorRevTC(a,b) = AddTTConstSlice(a)
+        let inline dfTensorRevCT(a,b) = AddTConstTSlice(location,b)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a softmax function.</summary>
+    /// <remarks>Softmax is defined as: \text{Softmax}(x_{i}) = \frac{\exp(x_i)}{\sum_j \exp(x_j)}.</remarks>
+    /// <param name="dim">A dimension along which softmax will be computed.</param>
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
         let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
         e / esum
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a softmax followed by a logarithm.</summary>
+    /// <param name="dim">A dimension along which softmax will be computed.</param>
     member a.logsoftmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         a - a.logsumexp(dim, keepDim=true)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a logsumexp.</summary>
+    /// <param name="dim">The dimension to reduce.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     member a.logsumexp(dim:int, ?keepDim:bool) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let keepDim = defaultArg keepDim false
@@ -1746,7 +1960,9 @@ type Tensor =
         let res = amax + e.sum(dim).add(System.Single.Epsilon).log()
         if keepDim then res.unsqueeze(dim) else res
 
-    /// <summary>TBD</summary>
+    /// <summary>Creates a criterion that measures the mean squared error (squared L2 norm) between each element in the input and the target.</summary>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
     member input.mseLoss(target:Tensor, ?reduction:string) = 
         if input.shape <> target.shape then failwithf "Expecting input.shape (%A) and target.shape (%A) to be the same" input.shape target.shape
         let reduction = defaultArg reduction "mean"
@@ -1760,7 +1976,10 @@ type Tensor =
         else // reduction = "sum"
             l.sum()
 
-    /// <summary>TBD</summary>
+    /// <summary>Creates a criterion that measures the Binary Cross Entropy between the target and the output</summary>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
     member input.bceLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         if input.shape <> target.shape then failwithf "Expecting input shape (%A) and target shape (%A) to be the same" input.shape target.shape
         if target.max() > target.oneLike() || target.min() < target.zeroLike() then failwith "Expecting target values to be between 0 and 1."
@@ -1780,11 +1999,17 @@ type Tensor =
         else // reduction = "sum"
             l.sum()
 
-    /// <summary>TBD</summary>
+    /// <summary>This criterion combines logsoftmax and nllLoss in a single function</summary>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A optional manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
     member input.crossEntropyLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         input.logsoftmax(dim=1).nllLoss(target, ?weight=weight, ?reduction=reduction)
 
-    /// <summary>TBD</summary>
+    /// <summary>The negative log likelihood loss.</summary>
+    /// <param name="target">The target tensor.</param>
+    /// <param name="weight">A optional manual rescaling weight given to the loss of each batch element.</param>
+    /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
     member input.nllLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         let n, classes, d = 
             if input.dim < 2 
@@ -1837,7 +2062,8 @@ type Tensor =
             else // reduction = "sum"
                 l.sum()
 
-    /// <summary>TBD</summary>
+    /// <summary>Add zero padding to each side of a tensor</summary>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
     member a.pad(paddings:seq<int>) =
         let paddings = paddings |> Array.ofSeq
         Shape.checkCanPad a.shape paddings
@@ -1850,20 +2076,31 @@ type Tensor =
             let ret = a.zerosLike(shape)
             ret.addSlice(paddings, a)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 1D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
     member a.maxpool1di(kernelSize:int, ?stride:int, ?padding:int) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
         Shape.checkCanMaxpool1d a.dtype a.shape kernelSize stride padding  |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 1D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
     member a.maxpool1d(kernelSize:int, ?stride:int, ?padding:int) = a.maxpool1di(kernelSize, ?stride=stride, ?padding=padding) |> fst
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes a partial inverse of maxpool1di</summary>
+    /// <param name="indices">The indices selected by maxpool1di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
     member a.maxunpool1d(indices:Tensor, kernelSize:int, ?stride:int, ?padding:int, ?outputSize:seq<int>) =
         let stride = defaultArg stride kernelSize
         let padding = defaultArg padding 0
@@ -1874,61 +2111,47 @@ type Tensor =
                 let inputSize = a.shape.[2]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputSize-1) * stride - 2*padding + kernelSize)|]
         Shape.checkCanMaxunpool1d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool1DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool1D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool1d(indices, kernelSize, stride=stride, padding=padding, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool1DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 2D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool2di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         Shape.checkCanMaxpool2d a.dtype a.shape kernelSizes strides paddings  |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 2D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool2d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool2di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes a partial inverse of maxpool2di</summary>
+    /// <param name="indices">The indices selected by maxpool2di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
     member a.maxunpool2d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         let outputSize = 
             match outputSize with
             | Some o -> let o = o |> Array.ofSeq in if o.Length <> 4 then failwithf "Expecting outputSize to be 4-dimensional" else o
@@ -1937,61 +2160,47 @@ type Tensor =
                 let inputWidth = a.shape.[3]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputHeight-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputWidth-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1])|]
         Shape.checkCanMaxunpool2d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool2DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool2D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool2d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool2DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 3D max pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSize.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool3di(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         Shape.checkCanMaxpool3d a.dtype a.shape kernelSizes strides paddings |> ignore
         match a with
-        | Tensor(ap)           -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor(result), Tensor(indices)
+        | Tensor0(ap)          -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in Tensor0(result), Tensor0(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
         | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool3DT(a, indices, kernelSizes), ref 0u, at), indices
 
-    /// <summary>TBD</summary>
+    /// <summary>Applies a 3D max pooling over an input signal composed of several input planes.</summary>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
     member a.maxpool3d(?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>) = a.maxpool3di(?kernelSize=kernelSize, ?stride=stride, ?padding=padding, ?kernelSizes=kernelSizes, ?strides=strides, ?paddings=paddings) |> fst
 
-    /// <summary>TBD</summary>
+    /// <summary>Computes a partial inverse of maxpool3di</summary>
+    /// <param name="indices">The indices selected by maxpool3di.</param>
+    /// <param name="kernelSize">The size of the window to take a max over.</param>
+    /// <param name="stride">The stride of the window. Default value is kernelSize.</param>
+    /// <param name="padding">The implicit zero padding to be added on both sides.</param>
+    /// <param name="kernelSizes">The sizes of the window to take a max over.</param>
+    /// <param name="strides">The strides of the window. Default value is kernelSizes.</param>
+    /// <param name="paddings">The implicit zero paddings to be added on corresponding sides.</param>
+    /// <param name="outputSize">The targeted output size.</param>
     member a.maxunpool3d(indices:Tensor, ?kernelSize:int, ?stride:int, ?padding:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputSize:seq<int>) =
-        let kernelSizes =
-            match kernelSize, kernelSizes with
-            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-            | Some k, None -> [|k; k; k|]
-            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
-            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
-        let strides =
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> kernelSizes
-        let paddings =
-            match padding, paddings with
-            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
+        let kernelSizes, strides, paddings = Shape.resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings
         let outputSize = 
             match outputSize with
             | Some o -> let o = o |> Array.ofSeq in if o.Length <> 5 then failwithf "Expecting outputSize to be 5-dimensional" else o
@@ -2001,15 +2210,19 @@ type Tensor =
                 let inputWidth = a.shape.[4]
                 [|indices.shape.[0]; indices.shape.[1]; ((inputDepth-1) * strides.[0] - 2*paddings.[0] + kernelSizes.[0]); ((inputHeight-1) * strides.[1] - 2*paddings.[1] + kernelSizes.[1]); ((inputWidth-1) * strides.[2] - 2*paddings.[2] + kernelSizes.[2])|]
         Shape.checkCanMaxunpool3d a.dtype a.shape indices.dtype indices.shape outputSize |> ignore
-        let fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
-        let fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
-        let dfTensorRev(a) = MaxUnpool3DT(a, indices)
+        let inline fRaw(a:RawTensor) = a.MaxUnpool3D(indices.primalRaw, outputSize)
+        let inline fTensor(a:Tensor) = a.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad.maxunpool3d(indices, kernelSizes=kernelSizes, strides=strides, paddings=paddings, outputSize=outputSize)
+        let inline dfTensorRev(a) = MaxUnpool3DT(a, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>TBD</summary>
-    member a.conv1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
-        // a: input, b: filter
+    /// <summary>Applies a 1D convolution over an input signal composed of several input planes</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit paddings on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    member a.conv1d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int) =
+        let b = filters
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
@@ -2017,14 +2230,14 @@ type Tensor =
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1;1;dilation|])
-        let fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
-        let fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
-        let dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
-        let dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
-        let dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
+        let inline fRaw(a:RawTensor,b) = a.Conv1D(b, stride, padding)
+        let inline fTensor(a:Tensor,b) = a.conv1d(b, stride, padding)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor) = ad.conv1d(bp, stride, padding) + ap.conv1d(bd, stride, padding)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv1d(b, stride, padding)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv1d(bd, stride, padding)
+        let inline dfTensorRevTT(a,b) = Conv1DTT(a,b, stride, padding)
+        let inline dfTensorRevTC(a,b) = Conv1DTTConst(a,b, stride, padding)
+        let inline dfTensorRevCT(a,b) = Conv1DTConstT(a,b, stride, padding)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
     // a: input, NxCxI (batchSize x inputChannels x inputLength)
@@ -2074,16 +2287,21 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0|], bd)
         aderivative, bderivative
     
-    /// <summary>TBD</summary>
-    member a.convTranspose1d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
+    /// <summary>Applies a 1D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    member a.convTranspose1d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int) =
+        let b = filters
         let stride = defaultArg stride 1
         let padding = defaultArg padding 0
         let dilation = defaultArg dilation 1
         let outputPadding = defaultArg outputPadding 0
 
-        let batchSize, inputChannels, kernelLength, outputChannels, outputSize, outputShape =
+        let _, _, _, _, _, outputShape =
             Shape.checkCanConvTranspose1d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape stride padding dilation outputPadding
-        print outputShape
         let mutable b = b
         if dilation > 1 then
             b <- b.dilate([|1; 1; dilation|])
@@ -2093,41 +2311,31 @@ type Tensor =
         let (aderivative:Tensor), _ = Tensor.conv1dReverseDiff(a, b, cderivative, aConst=false, bConst=true, stride=stride, padding=padding)
         aderivative
 
-    /// <summary>TBD</summary>
-    member a.conv2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
-        let strides = 
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> [|1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
-            | _ -> [|1; 1|]
+    /// <summary>Applies a 2D convolution over an input signal composed of several input planes</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    member a.conv2d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
+        let b = filters
+        let strides, paddings, dilations = Shape.resolve2dConvSizes stride strides padding paddings dilation dilations
         Shape.checkCanConv2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
-        let fRaw(a:RawTensor,b) = a.Conv2D(b, strides, paddings)
-        let fTensor(a:Tensor,b) = a.conv2d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, strides=strides, paddings=paddings) + ap.conv2d(bd, strides=strides, paddings=paddings)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, strides=strides, paddings=paddings)
-        let dfTensorRevTT(a,b) = Conv2DTT(a,b, strides, paddings)
-        let dfTensorRevTC(a,b) = Conv2DTTConst(a,b, strides, paddings)
-        let dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
+        let inline fRaw(a:RawTensor,b) = a.Conv2D(b, strides, paddings)
+        let inline fTensor(a:Tensor,b) = a.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv2d(bp, strides=strides, paddings=paddings) + ap.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv2d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv2d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorRevTT(a,b) = Conv2DTT(a,b, strides, paddings)
+        let inline dfTensorRevTC(a,b) = Conv2DTTConst(a,b, strides, paddings)
+        let inline dfTensorRevCT(a,b) = Conv2DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>TBD</summary>
     // a: input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth)
     // b: filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth)
     // t: output, NxKxLxM (batchSize x outputChannels x outputHeight x outputWidth)
@@ -2182,36 +2390,22 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
         aderivative, bderivative
     
-    /// <summary>TBD</summary>
-    member a.convTranspose2d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
-        let strides = 
-            match stride, strides with
-            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
-            | _ -> [|1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
-            | _ -> [|1; 1|]
-        let outputPaddings = 
-            match outputPadding, outputPaddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
-            | Some p, None -> [|p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
-            | _ -> [|0; 0|]
-
-        let batchSize, inputChannels, (kernelHeight, kernelWidth), (outputChannels, outputHeight, outputWidth), outputShape =
+    /// <summary>Applies a 2D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
+    member a.convTranspose2d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        let b = filters
+        let strides, paddings, dilations = Shape.resolve2dConvSizes stride strides padding paddings dilation dilations
+        let outputPaddings = Shape.resolve2dConvOutputPadding outputPadding outputPaddings
+        let _, _, _, _, outputShape =
             Shape.checkCanConvTranspose2d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
-        print outputShape
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]|])
@@ -2221,41 +2415,31 @@ type Tensor =
         let (aderivative:Tensor), _ = Tensor.conv2dReverseDiff(a, b, cderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
         aderivative
 
-    /// <summary>TBD</summary>
-    member a.conv3d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
-        let strides = 
-            match stride, strides with
-            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> [|1; 1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
-            | _ -> [|1; 1; 1|]
+    /// <summary>Applies a 3D convolution over an input signal composed of several input planes</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on corresponding sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    member a.conv3d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>) =
+        let b = filters
+        let strides, paddings, dilations = Shape.resolve3dConvSizes stride strides padding paddings dilation dilations
         Shape.checkCanConv3d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations |> ignore
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
-        let fRaw(a:RawTensor,b) = a.Conv3D(b, strides, paddings)
-        let fTensor(a:Tensor,b) = a.conv3d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv3d(bp, strides=strides, paddings=paddings) + ap.conv3d(bd, strides=strides, paddings=paddings)
-        let dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv3d(b, strides=strides, paddings=paddings)
-        let dfTensorFwdCT(cp,bp,bd) = a.conv3d(bd, strides=strides, paddings=paddings)
-        let dfTensorRevTT(a,b) = Conv3DTT(a,b, strides, paddings)
-        let dfTensorRevTC(a,b) = Conv3DTTConst(a,b, strides, paddings)
-        let dfTensorRevCT(a,b) = Conv3DTConstT(a,b, strides, paddings)
+        let inline fRaw(a:RawTensor,b) = a.Conv3D(b, strides, paddings)
+        let inline fTensor(a:Tensor,b) = a.conv3d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTT(cp,ap:Tensor,ad:Tensor,bp,bd) = ad.conv3d(bp, strides=strides, paddings=paddings) + ap.conv3d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorFwdTC(cp,ap,ad:Tensor) = ad.conv3d(b, strides=strides, paddings=paddings)
+        let inline dfTensorFwdCT(cp,bp,bd) = a.conv3d(bd, strides=strides, paddings=paddings)
+        let inline dfTensorRevTT(a,b) = Conv3DTT(a,b, strides, paddings)
+        let inline dfTensorRevTC(a,b) = Conv3DTTConst(a,b, strides, paddings)
+        let inline dfTensorRevCT(a,b) = Conv3DTConstT(a,b, strides, paddings)
         Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
 
-    /// <summary>TBD</summary>
     // a: input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth)
     // b: filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth)
     // t: output, NxKxLxMxN (batchSize x outputChannels x outputDepth x outputHeight x outputWidth)
@@ -2314,36 +2498,22 @@ type Tensor =
                     bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], bd)
         aderivative, bderivative
 
-    /// <summary>TBD</summary>
-    member a.convTranspose3d(b:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
-        let strides = 
-            match stride, strides with
-            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
-            | Some s, None -> [|s; s; s|]
-            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
-            | _ -> [|1; 1; 1|]
-        let paddings = 
-            match padding, paddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-        let dilations = 
-            match dilation, dilations with
-            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
-            | Some d, None -> [|d; d; d|]
-            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
-            | _ -> [|1; 1; 1|]
-        let outputPaddings = 
-            match outputPadding, outputPaddings with
-            | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
-            | Some p, None -> [|p; p; p|]
-            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting outputPaddings to be 3-dimensional" else p
-            | _ -> [|0; 0; 0|]
-
-        let batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape =
+    /// <summary>Applies a 3D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
+    /// <param name="filters">The filters.</param>
+    /// <param name="stride">The stride of the convolving kernel.</param>
+    /// <param name="padding">The implicit padding on both sides of the input.</param>
+    /// <param name="dilation">The spacing between kernel elements.</param>
+    /// <param name="strides">The strides of the convolving kernel.</param>
+    /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
+    /// <param name="dilations">The spacings between kernel elements.</param>
+    /// <param name="outputPadding">The additional size added to one side of each dimension in the output shape.</param>
+    /// <param name="outputPaddings">The additional sizes added to one side of each dimension in the output shape.</param>
+    member a.convTranspose3d(filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
+        let b = filters
+        let strides, paddings, dilations = Shape.resolve3dConvSizes stride strides padding paddings dilation dilations
+        let outputPaddings = Shape.resolve3dConvOutputPadding outputPadding outputPaddings
+        let _, _, _, _, outputShape =
             Shape.checkCanConvTranspose3d a.deviceType b.deviceType a.dtype b.dtype a.shape b.shape strides paddings dilations outputPaddings
-        print outputShape
         let mutable b = b
         if dilations.[0] > 1 || dilations.[1] > 1 || dilations.[2] > 1 then
             b <- b.dilate([|1; 1; dilations.[0]; dilations.[1]; dilations.[2]|])
@@ -2353,7 +2523,9 @@ type Tensor =
         let (aderivative:Tensor), _ = Tensor.conv3dReverseDiff(a, b, cderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
         aderivative
 
-    /// <summary>TBD</summary>
+    /// <summary>Compute the reverse-mode derivative at the given output tensor.</summary>
+    /// <param name="value">The value to apply.</param>
+    /// <param name="zeroDerivatives">Indicates whether the derivatives should be zeroed or not.</param>
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
@@ -2361,10 +2533,10 @@ type Tensor =
         t.reverseReset(zeroDerivatives)
         t.reversePush(value)
 
-    /// <summary>TBD</summary>
+    /// <summary>See <c>reverse</c></summary>
     member inline t.backward(value) = t.reverse(value)
 
-    /// <summary>TBD</summary>
+    /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
     member t.reverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
             match ts with
@@ -2380,19 +2552,12 @@ type Tensor =
                         | AddTTConst(a) -> reset (a::tt)
                         | AddTT0(a,b) -> reset (a::b::tt)
                         | AddTT0Const(a) -> reset (a::tt)
-                        | AddTConstT0(b) -> reset (b::tt)
-                        | AddT2T1(a,b) -> reset (a::b::tt)
-                        | AddT2T1Const(a) -> reset (a::tt)
-                        | AddT2ConstT1(b) -> reset (b::tt)
                         | SubTT(a,b) -> reset (a::b::tt)
                         | SubTTConst(a) -> reset (a::tt)
                         | SubTConstT(b) -> reset (b::tt)
-                        | SubT0T(a,b) -> reset (a::b::tt)
-                        | SubT0TConst(a) -> reset (a::tt)
-                        | SubT0ConstT(b) -> reset (b::tt)
                         | SubTT0(a,b) -> reset (a::b::tt)
                         | SubTT0Const(a) -> reset (a::tt)
-                        | SubTConstT0(b) -> reset (b::tt)
+                        | SubT0ConstT(b) -> reset (b::tt)
                         | MulTT(a,b) -> reset (a::b::tt)
                         | MulTTConst(a,_) -> reset (a::tt)
                         | MulTT0(a,b) -> reset (a::b::tt)
@@ -2402,23 +2567,17 @@ type Tensor =
                         | DivTTConst(a,_) -> reset (a::tt)
                         | DivTConstT(_,b) -> reset (b::tt)
                         | DivT0T(a,b) -> reset (a::b::tt)
-                        | DivT0TConst(a,_) -> reset (a::tt)
                         | DivT0ConstT(_,b) -> reset (b::tt)
                         | DivTT0(a,b) -> reset (a::b::tt)
                         | DivTT0Const(a,_) -> reset (a::tt)
-                        | DivTConstT0(_,b) -> reset (b::tt)
                         | PowTT(a,b) -> reset (a::b::tt)
                         | PowTTConst(a,_) -> reset (a::tt)
                         | PowTConstT(_,b) -> reset (b::tt)
-                        | PowT0T(a,b) -> reset (a::b::tt)
-                        | PowT0TConst(a,_) -> reset (a::tt)
                         | PowT0ConstT(_,b) -> reset (b::tt)
-                        | PowTT0(a,b) -> reset (a::b::tt)
                         | PowTT0Const(a,_) -> reset (a::tt)
-                        | PowTConstT0(_,b) -> reset (b::tt)
-                        | MatMulT2T2(a,b) -> reset (a::b::tt)
-                        | MatMulT2T2Const(a,_) -> reset (a::tt)
-                        | MatMulT2ConstT2(_,b) -> reset (b::tt)
+                        | MatMulTT(a,b) -> reset (a::b::tt)
+                        | MatMulTTConst(a,_) -> reset (a::tt)
+                        | MatMulTConstT(_,b) -> reset (b::tt)
                         | MaxPool1DT(a,_,_) -> reset (a::tt)
                         | MaxPool2DT(a,_,_) -> reset (a::tt)
                         | MaxPool3DT(a,_,_) -> reset (a::tt)
@@ -2482,8 +2641,13 @@ type Tensor =
                 | _ -> reset tt
         reset [t]
 
-    /// <summary>TBD</summary>
+    /// <summary>Push the given value as part of the reverse-mode computation at the given output tensor.</summary>
+    /// <param name="value">The value to apply.</param>
     member t.reversePush(value:Tensor) =
+        let check (v:Tensor,t:Tensor) = 
+            // check the shapes of the adjoints match the nodes to which they are being propagated
+            assert (Shape.canExpand v.shape t.derivative.shape || Shape.canExpand t.derivative.shape v.shape)
+            (v,t)
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with
             | [] -> ()
@@ -2495,104 +2659,92 @@ type Tensor =
                     t.derivative <- t.derivative + v
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
+                        let td = t.derivative
                         match o with
-                        | AddTT(a,b) -> push ((t.derivative, a) :: (t.derivative, b) :: tt)
-                        | AddTTConst(a) -> push ((t.derivative, a) :: tt)
-                        | AddTT0(a,b) -> push ((t.derivative, a) :: (t.derivative.sum(), b) :: tt)
-                        | AddTT0Const(a) -> push ((t.derivative, a) :: tt)
-                        | AddTConstT0(b) -> push ((t.derivative.sum(), b) :: tt)
-                        | AddT2T1(a,b) -> push ((t.derivative, a) :: (t.derivative.sumT2Dim0(), b) :: tt)
-                        | AddT2T1Const(a) -> push ((t.derivative, a) :: tt)
-                        | AddT2ConstT1(b) -> push ((t.derivative.sumT2Dim0(), b) :: tt)
-                        | SubTT(a,b) -> push ((t.derivative, a) :: (-t.derivative, b) :: tt)
-                        | SubTTConst(a) -> push ((t.derivative, a) :: tt)
-                        | SubTConstT(b) -> push ((-t.derivative, b) :: tt)
-                        | SubT0T(a,b) -> push ((t.derivative.sum(), a) :: (-t.derivative, b) :: tt)
-                        | SubT0TConst(a) -> push ((t.derivative.sum(), a) :: tt)
-                        | SubT0ConstT(b) -> push ((-t.derivative, b) :: tt)
-                        | SubTT0(a,b) -> push ((t.derivative, a) :: (-t.derivative.sum(), b) :: tt)
-                        | SubTT0Const(a) -> push ((t.derivative, a) :: tt)
-                        | SubTConstT0(b) -> push ((-t.derivative.sum(), b) :: tt)      
-                        | MulTT(a,b) -> push ((t.derivative * b.primal, a) :: (t.derivative * a.primal, b) :: tt)
-                        | MulTTConst(a,b) -> push ((t.derivative * b, a) :: tt)
-                        | MulTT0(a,b) -> push ((t.derivative * b.primal, a) :: ((t.derivative * a.primal).sum(), b) :: tt)
-                        | MulTConstT0(a,b) -> push (((t.derivative * a).sum(), b) :: tt)
-                        | MulTT0Const(a,b) -> push ((t.derivative * b, a) :: tt)
-                        | DivTT(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
-                        | DivTTConst(a,b) -> push ((t.derivative / b, a) :: tt)
-                        | DivTConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
-                        | DivT0T(a,b) -> push (((t.derivative / b.primal).sum(), a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))), b) :: tt)
-                        | DivT0TConst(a,b) -> push (((t.derivative / b).sum(), a) :: tt)
-                        | DivT0ConstT(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))), b) :: tt)
-                        | DivTT0(a,b) -> push ((t.derivative / b.primal, a) :: ((t.derivative * (-a.primal / (b.primal * b.primal))).sum(), b) :: tt)
-                        | DivTT0Const(a,b) -> push ((t.derivative / b, a) :: tt)
-                        | DivTConstT0(a,b) -> push (((t.derivative * (-a / (b.primal * b.primal))).sum(), b) :: tt)
-                        | PowTT(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
-                        | PowTTConst(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
-                        | PowTConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
-                        | PowT0T(a,b) -> push (((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal).sum(), a) :: (t.derivative * (a.primal ** b.primal) * log a.primal, b) :: tt)
-                        | PowT0TConst(a,b) -> push (((t.derivative * (a.primal ** (b - 1.)) * b).sum(), a) :: tt)
-                        | PowT0ConstT(a,b) -> push ((t.derivative * (a ** b.primal) * log a, b) :: tt)
-                        | PowTT0(a,b) -> push ((t.derivative * (a.primal ** (b.primal - 1.)) * b.primal, a) :: ((t.derivative * (a.primal ** b.primal) * log a.primal).sum(), b) :: tt)
-                        | PowTT0Const(a,b) -> push ((t.derivative * (a.primal ** (b - 1.)) * b, a) :: tt)
-                        | PowTConstT0(a,b) -> push (((t.derivative * (a ** b.primal) * log a).sum(), b) :: tt)
-                        | MatMulT2T2(a,b) -> push ((t.derivative.matmul(b.primal.transpose()), a) :: (a.primal.transpose().matmul(t.derivative), b) :: tt)
-                        | MatMulT2T2Const(a,b) -> push ((t.derivative.matmul(b.transpose()), a) :: tt)
-                        | MatMulT2ConstT2(a,b) -> push ((a.transpose().matmul(t.derivative), b) :: tt)
-                        | MaxPool1DT(a, indices, kernelSize) -> push ((t.derivative.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
-                        | MaxPool2DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
-                        | MaxPool3DT(a, indices, kernelSizes) -> push ((t.derivative.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
-                        | MaxUnpool1DT(a, indices) -> push ((t.derivative.gather(dim=2, indices=indices), a) :: tt)
-                        | MaxUnpool2DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
-                        | MaxUnpool3DT(a, indices) -> push ((t.derivative.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
+                        | AddTT(a,b) -> push (check(td, a) :: check(td, b) :: tt)
+                        | AddTTConst(a) -> push (check(td, a) :: tt)
+                        | AddTT0(a,b) -> push (check(td, a) :: check(td.sum(), b) :: tt)
+                        | AddTT0Const(a) -> push (check(td, a) :: tt)
+                        | SubTT(a,b) -> push (check(td, a) :: check(-td, b) :: tt)
+                        | SubTTConst(a) -> push (check(td, a) :: tt)
+                        | SubTConstT(b) -> push (check(-td, b) :: tt)
+                        | SubTT0(a,b) -> push (check(td, a) :: check(-td.sum(), b) :: tt)
+                        | SubTT0Const(a) -> push (check(td, a) :: tt)
+                        | SubT0ConstT(b) -> push (check(-td, b) :: tt)
+                        | MulTT(a,b) -> push (check(td * b.primal, a) :: check(td * a.primal, b) :: tt)
+                        | MulTTConst(a,b) -> push (check(td * b, a) :: tt)
+                        | MulTT0(a,b) -> push (check(td * b.primal, a) :: check((td * a.primal).sum(), b) :: tt)
+                        | MulTConstT0(a,b) -> push (check((td * a).sum(), b) :: tt)
+                        | MulTT0Const(a,b) -> push (check(td * b, a) :: tt)
+                        | DivTT(a,b) -> push (check(td / b.primal, a) :: check((td * (-a.primal / (b.primal * b.primal))), b) :: tt)
+                        | DivTTConst(a,b) -> push (check(td / b, a) :: tt)
+                        | DivTConstT(a,b) -> push (check((td * (-a / (b.primal * b.primal))), b) :: tt)
+                        | DivT0T(a,b) -> push (check((td / b.primal).sum(), a) :: check((td * (-a.primal / (b.primal * b.primal))), b) :: tt)
+                        | DivT0ConstT(a,b) -> push (check((td * (a.neg() / (b.primal * b.primal))), b) :: tt)
+                        | DivTT0(a,b) -> push (check(td / b.primal, a) :: check((td * (-a.primal / (b.primal * b.primal))).sum(), b) :: tt)
+                        | DivTT0Const(a,b) -> push (check(td / b, a) :: tt)
+                        | PowTT(a,b) -> push (check(td * (a.primal ** (b.primal - 1.)) * b.primal, a) :: check(td * (a.primal ** b.primal) * log a.primal, b) :: tt)
+                        | PowTTConst(a,b) -> push (check(td * (a.primal ** (b - 1.)) * b, a) :: tt)
+                        | PowTConstT(a,b) -> push (check(td * (a ** b.primal) * log a, b) :: tt)
+                        | PowT0ConstT(a,b) -> push (check(td * (Tensor.Pow(a, b.primal)) * a.log(), b) :: tt)
+                        | PowTT0Const(a,b) -> push (check(td * (a.primal ** (b.sub(1.))) * b, a) :: tt)
+                        | MatMulTT(a,b) -> push (check(td.matmul(b.primal.transpose()), a) :: check(a.primal.transpose(0,1).matmul(td), b) :: tt)
+                        | MatMulTTConst(a,b) -> push (check(td.matmul(b.transpose()), a) :: tt)
+                        | MatMulTConstT(a,b) -> push (check(a.transpose().matmul(td), b) :: tt)
+                        | MaxPool1DT(a, indices, kernelSize) -> push (check(td.maxunpool1d(indices, kernelSize=kernelSize, outputSize=a.shape), a) :: tt)
+                        | MaxPool2DT(a, indices, kernelSizes) -> push (check(td.maxunpool2d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
+                        | MaxPool3DT(a, indices, kernelSizes) -> push (check(td.maxunpool3d(indices, kernelSizes=kernelSizes, outputSize=a.shape), a) :: tt)
+                        | MaxUnpool1DT(a, indices) -> push (check(td.gather(dim=2, indices=indices), a) :: tt)
+                        | MaxUnpool2DT(a, indices) -> push (check(td.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
+                        | MaxUnpool3DT(a, indices) -> push (check(td.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(a), a) :: tt)
                         | Conv1DTT(a,b,stride,padding) -> 
-                            let aderivative, bderivative = Tensor.conv1dReverseDiff(a, b, t.derivative, false, false, stride, padding)
-                            push ((aderivative, a) :: (bderivative, b) :: tt)
+                            let aderivative, bderivative = Tensor.conv1dReverseDiff(a, b, td, false, false, stride, padding)
+                            push (check(aderivative, a) :: check(bderivative, b) :: tt)
                         | Conv1DTTConst(a,b,stride,padding) ->
-                            let aderivative, _ = Tensor.conv1dReverseDiff(a, b, t.derivative, false, true, stride, padding)
-                            push ((aderivative, a) :: tt)                        
+                            let aderivative, _ = Tensor.conv1dReverseDiff(a, b, td, false, true, stride, padding)
+                            push (check(aderivative, a) :: tt)                        
                         | Conv1DTConstT(a,b,stride,padding) ->
-                            let _, bderivative = Tensor.conv1dReverseDiff(a, b, t.derivative, true, false, stride, padding)
-                            push ((bderivative, b) :: tt)                        
+                            let _, bderivative = Tensor.conv1dReverseDiff(a, b, td, true, false, stride, padding)
+                            push (check(bderivative, b) :: tt)                        
                         | Conv2DTT(a,b,stride,padding) -> 
-                            let aderivative, bderivative = Tensor.conv2dReverseDiff(a, b, t.derivative, false, false, stride, padding)
-                            push ((aderivative, a) :: (bderivative, b) :: tt)
+                            let aderivative, bderivative = Tensor.conv2dReverseDiff(a, b, td, false, false, stride, padding)
+                            push (check(aderivative, a) :: check(bderivative, b) :: tt)
                         | Conv2DTTConst(a,b,stride,padding) ->
-                            let aderivative, _ = Tensor.conv2dReverseDiff(a, b, t.derivative, false, true, stride, padding)
-                            push ((aderivative, a) :: tt)
+                            let aderivative, _ = Tensor.conv2dReverseDiff(a, b, td, false, true, stride, padding)
+                            push (check(aderivative, a) :: tt)
                         | Conv2DTConstT(a,b,stride,padding) ->
-                            let _, bderivative = Tensor.conv2dReverseDiff(a, b, t.derivative, true, false, stride, padding)
-                            push ((bderivative, b) :: tt)
+                            let _, bderivative = Tensor.conv2dReverseDiff(a, b, td, true, false, stride, padding)
+                            push (check(bderivative, b) :: tt)
                         | Conv3DTT(a,b,stride,padding) -> 
-                            let aderivative, bderivative = Tensor.conv3dReverseDiff(a, b, t.derivative, false, false, stride, padding)
-                            push ((aderivative, a) :: (bderivative, b) :: tt)
+                            let aderivative, bderivative = Tensor.conv3dReverseDiff(a, b, td, false, false, stride, padding)
+                            push (check(aderivative, a) :: check(bderivative, b) :: tt)
                         | Conv3DTTConst(a,b,stride,padding) ->
-                            let aderivative, _ = Tensor.conv3dReverseDiff(a, b, t.derivative, false, true, stride, padding)
-                            push ((aderivative, a) :: tt)
+                            let aderivative, _ = Tensor.conv3dReverseDiff(a, b, td, false, true, stride, padding)
+                            push (check(aderivative, a) :: tt)
                         | Conv3DTConstT(a,b,stride,padding) ->
-                            let _, bderivative = Tensor.conv3dReverseDiff(a, b, t.derivative, true, false, stride, padding)
-                            push ((bderivative, b) :: tt)
-                        | NegT(a) -> push ((-t.derivative, a) :: tt)
-                        | SumT(a) -> push ((t.derivative.expand(a.shape), a) :: tt)
-                        | SumT2Dim0(a) -> push ((a.zerosLike() + t.derivative, a) :: tt)
-                        | ExpandT(a) -> push ((t.derivative.sumToSize(a.shape), a) :: tt)
+                            let _, bderivative = Tensor.conv3dReverseDiff(a, b, td, true, false, stride, padding)
+                            push (check(bderivative, b) :: tt)
+                        | NegT(a) -> push (check(-td, a) :: tt)
+                        | SumT(a) -> push (check(td.expand(a.shape), a) :: tt)
+                        | SumT2Dim0(a) -> push (check(a.zerosLike() + td, a) :: tt)
+                        | ExpandT(a) -> push (check(td.sumToSize(a.shape), a) :: tt)
                         | StackTs(a,dim) ->
-                            push (List.append (Array.zip (t.derivative.unstack(dim)) a |> Array.toList) tt)
+                            push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), t.derivative.unsqueeze(dim))
-                            push ((a.zeroLike(), a) :: tt)
+                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
+                            push (check(a.zeroLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
-                            push (List.append (Array.zip (t.derivative.split(sizes, dim=dim)) a |> Array.toList) tt)
+                            push (List.append (Array.zip (td.split(sizes, dim=dim)) a |> Array.map check |> Array.toList) tt)
                         | SplitT(a,sizes,dim,i) -> 
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             let locs = (0,sizes) ||> Array.scan (+)
-                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), t.derivative)
-                            push ((a.zeroLike(), a) :: tt)
+                            a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
+                            push (check(a.zeroLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
                             // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
-                            let tflat = t.derivative.flatten()
+                            let tflat = td.flatten()
                             let iflat = indices.flatten()
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
                             for i=0 to tflat.nelement-1 do
@@ -2603,45 +2755,45 @@ type Tensor =
                                 let loc = flatIndexToIndex a.shape i
                                 loc.[dim] <- j
                                 a.derivative <- a.derivative.addSlice(loc, t)
-                            push ((a.zeroLike(), a) :: tt)
-                        | TransposeT(a, dim0, dim1) -> push ((t.derivative.transpose(dim0, dim1), a) :: tt)
-                        | TransposeT2(a) -> push ((t.derivative.transpose(), a) :: tt)
-                        | SqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
-                        | UnsqueezeT(a) -> push ((t.derivative.viewAs(a), a) :: tt)
-                        | FlipT(a, dims) -> push ((t.derivative.flip(dims), a) :: tt)
-                        | DilateT(a, dilations) -> push ((t.derivative.undilate(dilations), a) :: tt)
-                        | UndilateT(a, dilations) -> push ((t.derivative.dilate(dilations), a) :: tt)
-                        | ViewT(a,aShape) -> push (((t.derivative.view(aShape)), a) :: tt)
-                        | ClampT(a, mask) -> push ((t.derivative * mask, a) :: tt)
+                            push (check(a.zeroLike(), a) :: tt)
+                        | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
+                        | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
+                        | SqueezeT(a) -> push (check(td.viewAs(a), a) :: tt)
+                        | UnsqueezeT(a) -> push (check(td.viewAs(a), a) :: tt)
+                        | FlipT(a, dims) -> push (check(td.flip(dims), a) :: tt)
+                        | DilateT(a, dilations) -> push (check(td.undilate(dilations), a) :: tt)
+                        | UndilateT(a, dilations) -> push (check(td.dilate(dilations), a) :: tt)
+                        | ViewT(a,aShape) -> push (check((td.view(aShape)), a) :: tt)
+                        | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShape bounds))
-                            push ((a.zeroLike(), a) :: tt)
-                        | AddTTSlice(a,location,b) -> push ((t.derivative, a) :: (t.derivative.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
-                        | AddTTConstSlice(a) -> push ((t.derivative, a) :: tt)
-                        | AddTConstTSlice(location, b) -> push ((t.derivative.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
-                        | SignT(a) -> push ((a.zerosLike(), a) :: tt)
-                        | FloorT(a) -> push ((a.zerosLike(), a) :: tt)
-                        | CeilT(a) -> push ((a.zerosLike(), a) :: tt)
-                        | RoundT(a) -> push ((a.zerosLike(), a) :: tt)
-                        | AbsT(a) -> push ((t.derivative * a.primal.sign(), a) :: tt)
-                        | ReluT(a) -> let sap = a.primal.sign() in push ((t.derivative * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
-                        | SoftplusT(a) -> push ((t.derivative / (1. + a.primal.neg().exp()), a) :: tt)
-                        | SigmoidT(a) -> push ((t.derivative * t.primal * (1. - t.primal), a) :: tt)
-                        | ExpT(a) -> push ((t.derivative * t.primal, a) :: tt)
-                        | LogT(a) -> push ((t.derivative / a.primal, a) :: tt)
-                        | Log10T(a) -> push ((t.derivative / (a.primal * log10Val), a) :: tt)
-                        | SqrtT(a) -> push ((t.derivative / (2. * t.primal), a) :: tt)
-                        | SinT(a) -> push ((t.derivative * (a.primal.cos()), a) :: tt)
-                        | CosT(a) -> push ((-t.derivative * (a.primal.sin()), a) :: tt)
-                        | TanT(a) -> let cosap = a.primal.cos() in push ((t.derivative / (cosap * cosap), a) :: tt)
-                        | SinhT(a) -> push ((t.derivative * (a.primal.cosh()), a) :: tt)
-                        | CoshT(a) -> push ((t.derivative * (a.primal.sinh()), a) :: tt)
-                        | TanhT(a) -> let coshap = a.primal.cosh() in push ((t.derivative / (coshap * coshap), a) :: tt)
-                        | AsinT(a) -> push ((t.derivative / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
-                        | AcosT(a) -> push ((-t.derivative / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
-                        | AtanT(a) -> push ((t.derivative / (1. + a.primal*a.primal), a) :: tt)
+                            a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShapeNoSqueeze bounds))
+                            push (check(a.zeroLike(), a) :: tt)
+                        | AddTTSlice(a,location,b) -> push (check(td, a) :: check(td.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
+                        | AddTTConstSlice(a) -> push (check(td, a) :: tt)
+                        | AddTConstTSlice(location, b) -> push (check(td.GetSlice(Shape.locationToBounds b.shape location), b):: tt)
+                        | SignT(a) -> push (check(a.zerosLike(), a) :: tt)
+                        | FloorT(a) -> push (check(a.zerosLike(), a) :: tt)
+                        | CeilT(a) -> push (check(a.zerosLike(), a) :: tt)
+                        | RoundT(a) -> push (check(a.zerosLike(), a) :: tt)
+                        | AbsT(a) -> push (check(td * a.primal.sign(), a) :: tt)
+                        | ReluT(a) -> let sap = a.primal.sign() in push (check(td * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
+                        | SoftplusT(a) -> push (check(td / (1. + a.primal.neg().exp()), a) :: tt)
+                        | SigmoidT(a) -> push (check(td * t.primal * (1. - t.primal), a) :: tt)
+                        | ExpT(a) -> push (check(td * t.primal, a) :: tt)
+                        | LogT(a) -> push (check(td / a.primal, a) :: tt)
+                        | Log10T(a) -> push (check(td / (a.primal * log10Val), a) :: tt)
+                        | SqrtT(a) -> push (check(td / (2. * t.primal), a) :: tt)
+                        | SinT(a) -> push (check(td * (a.primal.cos()), a) :: tt)
+                        | CosT(a) -> push (check(-td * (a.primal.sin()), a) :: tt)
+                        | TanT(a) -> let cosap = a.primal.cos() in push (check(td / (cosap * cosap), a) :: tt)
+                        | SinhT(a) -> push (check(td * (a.primal.cosh()), a) :: tt)
+                        | CoshT(a) -> push (check(td * (a.primal.sinh()), a) :: tt)
+                        | TanhT(a) -> let coshap = a.primal.cosh() in push (check(td / (coshap * coshap), a) :: tt)
+                        | AsinT(a) -> push (check(td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
+                        | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
+                        | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -2652,50 +2804,37 @@ and TensorOp =
     | AddTTConst of Tensor
     | AddTT0 of Tensor * Tensor
     | AddTT0Const of Tensor
-    | AddTConstT0 of Tensor
-    | AddT2T1 of Tensor * Tensor
-    | AddT2T1Const of Tensor
-    | AddT2ConstT1 of Tensor
     
     | SubTT of Tensor * Tensor
     | SubTTConst of Tensor
     | SubTConstT of Tensor
-    | SubT0T of Tensor * Tensor
-    | SubT0TConst of Tensor
-    | SubT0ConstT of Tensor
     | SubTT0 of Tensor * Tensor
     | SubTT0Const of Tensor
-    | SubTConstT0 of Tensor
+    | SubT0ConstT of Tensor
 
     | MulTT of Tensor * Tensor
     | MulTTConst of Tensor * Tensor
     | MulTT0 of Tensor * Tensor
-    | MulTT0Const of Tensor * Tensor
+    | MulTT0Const of Tensor * scalar
     | MulTConstT0 of Tensor * Tensor
 
     | DivTT of Tensor * Tensor
     | DivTTConst of Tensor * Tensor
     | DivTConstT of Tensor * Tensor
     | DivT0T of Tensor * Tensor
-    | DivT0TConst of Tensor * Tensor
-    | DivT0ConstT of Tensor * Tensor
+    | DivT0ConstT of scalar * Tensor
     | DivTT0 of Tensor * Tensor
-    | DivTT0Const of Tensor * Tensor
-    | DivTConstT0 of Tensor * Tensor
+    | DivTT0Const of Tensor * scalar
 
     | PowTT of Tensor * Tensor
     | PowTTConst of Tensor * Tensor
     | PowTConstT of Tensor * Tensor
-    | PowT0T of Tensor * Tensor
-    | PowT0TConst of Tensor * Tensor
-    | PowT0ConstT of Tensor * Tensor
-    | PowTT0 of Tensor * Tensor
-    | PowTT0Const of Tensor * Tensor
-    | PowTConstT0 of Tensor * Tensor
+    | PowT0ConstT of scalar * Tensor
+    | PowTT0Const of Tensor * scalar
 
-    | MatMulT2T2 of Tensor * Tensor
-    | MatMulT2T2Const of Tensor * Tensor
-    | MatMulT2ConstT2 of Tensor * Tensor
+    | MatMulTT of Tensor * Tensor
+    | MatMulTTConst of Tensor * Tensor
+    | MatMulTConstT of Tensor * Tensor
 
     | MaxPool1DT of Tensor * Tensor * int
     | MaxUnpool1DT of Tensor * Tensor
@@ -2763,2691 +2902,3 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-
-
-type Tensor with
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option) =
-        // Dims: 1
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int) =
-        // Dims: 1
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let bounds = array2D [[i0min; i0max; i0given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option) =
-        // Dims: 2
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int) =
-        // Dims: 2
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option) =
-        // Dims: 2
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int) =
-        // Dims: 2
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option) =
-        // Dims: 3
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int) =
-        // Dims: 3
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option) =
-        // Dims: 3
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int) =
-        // Dims: 3
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option) =
-        // Dims: 3
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int) =
-        // Dims: 3
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option) =
-        // Dims: 3
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int) =
-        // Dims: 3
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int) =
-        // Dims: 4
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int) =
-        // Dims: 4
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int) =
-        // Dims: 5
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0min:int option, i0max:int option, i1:int, i2:int, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = if i0min.IsSome || i0max.IsSome then 1 else 0
-        let i0min   = defaultArg i0min 0
-        let i0max   = defaultArg i0max (t.shape.[0] - 1)
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2:int, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = if i1min.IsSome || i1max.IsSome then 1 else 0
-        let i1min   = defaultArg i1min 0
-        let i1max   = defaultArg i1max (t.shape.[1] - 1)
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2min:int option, i2max:int option, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = if i2min.IsSome || i2max.IsSome then 1 else 0
-        let i2min   = defaultArg i2min 0
-        let i2max   = defaultArg i2max (t.shape.[2] - 1)
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3min:int option, i3max:int option, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = if i3min.IsSome || i3max.IsSome then 1 else 0
-        let i3min   = defaultArg i3min 0
-        let i3max   = defaultArg i3max (t.shape.[3] - 1)
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4min:int option, i4max:int option, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = if i4min.IsSome || i4max.IsSome then 1 else 0
-        let i4min   = defaultArg i4min 0
-        let i4max   = defaultArg i4max (t.shape.[4] - 1)
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int, i5min:int option, i5max:int option) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = if i5min.IsSome || i5max.IsSome then 1 else 0
-        let i5min   = defaultArg i5min 0
-        let i5max   = defaultArg i5max (t.shape.[5] - 1)
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-    [<ExcludeFromCodeCoverage>]
-    /// <summary></summary> <exclude />
-    member t.GetSlice(i0:int, i1:int, i2:int, i3:int, i4:int, i5:int) =
-        // Dims: 6
-        let i0given = 1
-        let i0min   = i0
-        let i0max   = i0
-        let i1given = 1
-        let i1min   = i1
-        let i1max   = i1
-        let i2given = 1
-        let i2min   = i2
-        let i2max   = i2
-        let i3given = 1
-        let i3min   = i3
-        let i3max   = i3
-        let i4given = 1
-        let i4min   = i4
-        let i4max   = i4
-        let i5given = 1
-        let i5min   = i5
-        let i5max   = i5
-        let bounds = array2D [[i0min; i0max; i0given]; [i1min; i1max; i1given]; [i2min; i2max; i2given]; [i3min; i3max; i3given]; [i4min; i4max; i4given]; [i5min; i5max; i5given]]
-        t.GetSlice(bounds)
-
-[<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
-do()

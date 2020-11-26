@@ -16,11 +16,17 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
     - name: Install dependencies
       run: dotnet restore
+    - name: Install tool dependencies
+      run: dotnet tool restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore --verbosity normal
     - name: Test
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-restore --verbosity normal
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+      run: dotnet test --configuration Release --no-restore --verbosity normal
+    - name: Run fsdocs
+      run: dotnet fsdocs build --eval --strict --property Configuration=Release
