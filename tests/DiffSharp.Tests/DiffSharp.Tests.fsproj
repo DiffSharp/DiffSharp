@@ -23,8 +23,13 @@
     <Compile Include="TestCombo.fs" />
     <Compile Include="TestCombos.fs" />
     <Compile Include="TestTensor.fs" />
+    <Compile Include="TestTensor.Conv.fs" />
+    <Compile Include="TestTensor.MaxPool.fs" />
     <Compile Include="TestDiffSharp.fs" />
     <Compile Include="TestDerivatives.fs" />
+    <Compile Include="TestDerivatives.Conv.fs" />
+    <Compile Include="TestDerivatives.MaxPool.fs" />
+    <Compile Include="Test.Derivatives.Extensions.fs" />
     <Compile Include="TestDistributions.fs" />
     <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
