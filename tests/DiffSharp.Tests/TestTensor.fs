@@ -104,7 +104,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCreate0 () =
-      for combo in Combos.AllDevicesAndBackends do
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
         let t0 = combo.tensor(1.)
         let t0Shape = t0.shape
         let t0Dim = t0.dim
@@ -116,7 +116,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCreate1 () =
-      for combo in Combos.AllDevicesAndBackends do
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
         // create from double list
         let t1 = combo.tensor([1.; 2.; 3.])
         let t1ShapeCorrect = [|3|]
@@ -139,7 +139,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCreate2 () =
-      for combo in Combos.AllDevicesAndBackends do
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
         let t2Values = [[1.; 2.; 3.]; [4.; 5.; 6.]]
         let t2ShapeCorrect = [|2; 3|]
         let t2DimCorrect = 2
@@ -225,7 +225,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCreate3 () =
-      for combo in Combos.AllDevicesAndBackends do
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
         let t3Values = [[[1.; 2.; 3.]; [4.; 5.; 6.]]]
         let t3 = combo.tensor(t3Values)
         let t3ShapeCorrect = [|1; 2; 3|]
@@ -238,7 +238,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorCreate4 () =
-      for combo in Combos.AllDevicesAndBackends do
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
         let t4Values = [[[[1.; 2.]]]]
         let t4 = combo.tensor(t4Values)
         let t4ShapeCorrect = [|1; 1; 1; 2|]
@@ -2685,7 +2685,7 @@ type TestTensor () =
 
         // Test bool type separately
         // Note, PyTorch 'torch.tensor([True, False]).sign()' gives 'tensor([ True, False])'
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let t1Bool = combo.tensor([true;false], dtype=Dtype.Bool)
             let t1BoolSignCorrect = combo.tensor([true; false], dtype=Dtype.Bool)
 
@@ -2750,7 +2750,7 @@ type TestTensor () =
 
         // Test bool separately
         // Note: PyTorch fails on 'torch.tensor([True, False]).abs()'
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let t1 = combo.tensor([true; false], dtype=Dtype.Bool)
             isInvalidOp (fun () -> t1.abs())
 
@@ -2765,7 +2765,7 @@ type TestTensor () =
             Assert.CheckEqual(t1Relu.dtype, combo.dtype)
 
         // Test bool separately
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let t1 = combo.tensor([true; false], dtype=Dtype.Bool)
             isInvalidOp (fun () -> t1.relu())
 

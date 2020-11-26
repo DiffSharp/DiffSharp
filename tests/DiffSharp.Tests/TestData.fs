@@ -68,7 +68,7 @@ type TestData () =
 
     [<Test>]
     member _.TestDataLoaderMove () =
-        for combo1 in Combos.AllDevicesAndBackends do
+        for combo1 in Combos.AllDevicesAndBackendsFloat32 do
             let n, din, dout = 128, 64, 16
             let x = combo1.zeros([n; din])
             let y = combo1.zeros([n; dout])

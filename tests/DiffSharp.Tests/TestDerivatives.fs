@@ -17,7 +17,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddTT () =
         for swap in [true; false] do
-          for combo in Combos.AllDevicesAndBackends do
+          for combo in Combos.AllDevicesAndBackendsFloat32 do
               let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
               let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
               let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -44,7 +44,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddTTConst () =
         for swap in [true; false] do
-          for combo in Combos.AllDevicesAndBackends do
+          for combo in Combos.AllDevicesAndBackendsFloat32 do
               let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
               let fwdy = combo.tensor([4., 5., 6.])
               let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -71,7 +71,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddTT0 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
                 let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -98,7 +98,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddTT0Const () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
                 let fwdy = combo.tensor(4.)
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -125,7 +125,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddTConstT0 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.])
                 let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -152,7 +152,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddT2T1 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([[1., 2.], [3., 4.]]).forwardDiff(combo.tensor([[10., 20.], [30., 40.]]))
                 let fwdy = combo.tensor([5., 6.]).forwardDiff(combo.tensor([50., 60.]))
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -179,7 +179,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddT2T1Const () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([[1., 2.], [3., 4.]]).forwardDiff(combo.tensor([[10., 20.], [30., 40.]]))
                 let fwdy = combo.tensor([5., 6.])
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -206,7 +206,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeAddT2ConstT1 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([[1., 2.], [3., 4.]])
                 let fwdy = combo.tensor([5., 6.]).forwardDiff(combo.tensor([50., 60.]))
                 let fwdz = if swap then fwdy + fwdx else fwdx + fwdy
@@ -232,7 +232,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeExpand () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.]; [2.]]).forwardDiff(combo.tensor([[5.]; [6.]])) // 2x1
             let fwdz = fwdx.expand([2;2;2]) // 2x2x2 = [[[1.;1]; [2.;2]]; [[1.;1]; [2.;2]]]
             let fwdzCorrect = combo.tensor([[[1.;1.]; [2.;2.]]; [[1.;1.]; [2.;2.]]])
@@ -262,7 +262,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestAddWithBroadcastSystematic () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             // This is a somewhat adhoc extra test to do a whole range of additiosn
             // with broadcast, mainly to check that not problems occur in taking the
             // derivatives.
@@ -328,7 +328,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
             let fwdz = fwdx - fwdy
@@ -354,7 +354,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx - fwdy
@@ -380,7 +380,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
             let fwdz = fwdx - fwdy
@@ -406,7 +406,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubT0T () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.).forwardDiff(combo.tensor(10.))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
             let fwdz = fwdx - fwdy
@@ -432,7 +432,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubT0TConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.).forwardDiff(combo.tensor(10.))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx - fwdy
@@ -458,7 +458,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubT0ConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.)
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
             let fwdz = fwdx - fwdy
@@ -484,7 +484,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
             let fwdz = fwdx - fwdy
@@ -510,7 +510,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTT0Const () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor(4.)
             let fwdz = fwdx - fwdy
@@ -536,7 +536,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSubTConstT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
             let fwdz = fwdx - fwdy
@@ -563,7 +563,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeMulTT () =
         for swap in [true; false] do
-          for combo in Combos.AllDevicesAndBackends do
+          for combo in Combos.AllDevicesAndBackendsFloat32 do
               let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
               let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([40., 50., 60.]))
               let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
@@ -590,7 +590,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeMulTTConst () =
         for swap in [true; false] do
-          for combo in Combos.AllDevicesAndBackends do
+          for combo in Combos.AllDevicesAndBackendsFloat32 do
               let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
               let fwdy = combo.tensor([4., 5., 6.])
               let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
@@ -617,7 +617,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeMulTT0 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
                 let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
                 let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
@@ -644,7 +644,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeMulTT0Const () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
                 let fwdy = combo.tensor(4.)
                 let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
@@ -671,7 +671,7 @@ type TestDerivatives () =
     [<Test>]
     member _.TestDerivativeMulTConstT0 () =
         for swap in [true; false] do
-            for combo in Combos.AllDevicesAndBackends do
+            for combo in Combos.AllDevicesAndBackendsFloat32 do
                 let fwdx = combo.tensor([1., 2., 3.])
                 let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(40.))
                 let fwdz = if swap then fwdy * fwdx else fwdx * fwdy
@@ -697,7 +697,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([400., 500., 600.]))
             let fwdz = fwdx / fwdy
@@ -723,7 +723,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx / fwdy
@@ -749,7 +749,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([400., 500., 600.]))
             let fwdz = fwdx / fwdy
@@ -775,7 +775,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivT0T () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.).forwardDiff(combo.tensor(10.))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([400., 500., 600.]))
             let fwdz = fwdx / fwdy
@@ -801,7 +801,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivT0TConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.).forwardDiff(combo.tensor(10.))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx / fwdy
@@ -827,7 +827,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivT0ConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.)
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([400., 500., 600.]))
             let fwdz = fwdx / fwdy
@@ -853,7 +853,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(400.))
             let fwdz = fwdx / fwdy
@@ -879,7 +879,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTT0Const () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([10., 20., 30.]))
             let fwdy = combo.tensor(4.)
             let fwdz = fwdx / fwdy
@@ -905,7 +905,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDivTConstT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(400.))
             let fwdz = fwdx / fwdy
@@ -931,7 +931,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([1.1,1.2,1.3]))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([2.1,2.2,2.3]))
             let fwdz = fwdx ** fwdy
@@ -957,7 +957,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([1.1,1.2,1.3]))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx ** fwdy
@@ -983,7 +983,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([2.1,2.2,2.3]))
             let fwdz = fwdx ** fwdy
@@ -1009,7 +1009,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowT0T () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.5).forwardDiff(combo.tensor(1.25))
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([2.1,2.2,2.3]))
             let fwdz = fwdx ** fwdy
@@ -1035,7 +1035,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowT0TConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.5).forwardDiff(combo.tensor(1.25))
             let fwdy = combo.tensor([4., 5., 6.])
             let fwdz = fwdx ** fwdy
@@ -1061,7 +1061,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowT0ConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor(1.5)
             let fwdy = combo.tensor([4., 5., 6.]).forwardDiff(combo.tensor([2.1,2.2,2.3]))
             let fwdz = fwdx ** fwdy
@@ -1087,7 +1087,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([1.1, 1.2, 1.3]))
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(2.1))
             let fwdz = fwdx ** fwdy
@@ -1113,7 +1113,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTT0Const () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.]).forwardDiff(combo.tensor([1.1, 1.2, 1.3]))
             let fwdy = combo.tensor(4.)
             let fwdz = fwdx ** fwdy
@@ -1139,7 +1139,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativePowTConstT0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1., 2., 3.])
             let fwdy = combo.tensor(4.).forwardDiff(combo.tensor(2.1))
             let fwdz = fwdx ** fwdy
@@ -1166,7 +1166,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMatMulT2T2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[6.2381, 0.0393, 8.2364, 3.9906, 6.2291],
                 [9.8762, 3.2263, 6.2866, 4.7111, 0.0652],
                 [3.5832, 7.9801, 1.9854, 4.4965, 4.1712]])
@@ -1226,7 +1226,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMatMulT2T2Const () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[6.2381, 0.0393, 8.2364, 3.9906, 6.2291],
                 [9.8762, 3.2263, 6.2866, 4.7111, 0.0652],
                 [3.5832, 7.9801, 1.9854, 4.4965, 4.1712]])
@@ -1277,7 +1277,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMatMulT2ConstT2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[6.2381, 0.0393, 8.2364, 3.9906, 6.2291],
                 [9.8762, 3.2263, 6.2866, 4.7111, 0.0652],
                 [3.5832, 7.9801, 1.9854, 4.4965, 4.1712]])
@@ -1332,7 +1332,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestTensorStackTs () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.; 20.]))
             let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.; 40.]))
             let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.; 60.]))
@@ -1363,7 +1363,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeNeg () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = -fwdx
             let fwdzCorrect = combo.tensor([-1.; -2.; -3.])
@@ -1440,7 +1440,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSum () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.sum()
             let fwdzCorrect = combo.tensor(6.)
@@ -1461,7 +1461,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSumT2Dim0 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
             let fwdz = fwdx.sumT2Dim0()
             let fwdzCorrect = combo.tensor([4.; 6.])
@@ -1482,7 +1482,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMean () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.mean()
             let fwdzCorrect = combo.tensor(2.)
@@ -1511,7 +1511,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeVariance () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.variance()
             let fwdzCorrect = combo.tensor(1.0)
@@ -1568,7 +1568,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeStddev () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.stddev()
             let fwdzCorrect = combo.tensor(1.0)
@@ -1598,7 +1598,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeTransposeT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[ 0.,  1.],
                                        [ 2.,  3.],
                                        [ 4.,  5.]],
@@ -1667,7 +1667,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeTransposeT2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.; 2.; 3.]; [4.; 5.; 6.]]).forwardDiff(combo.tensor([[2.; 3.; 4.]; [10.; 20.; 30.]]))
             let fwdz = fwdx.transpose()
             let fwdzCorrect = combo.tensor([[1.; 4.]; [2.; 5.]; [3.; 6.]])
@@ -1688,7 +1688,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSignT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([-1.; 0.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.sign()
             let fwdzCorrect = combo.tensor([-1.; 0.; 1.])
@@ -1709,7 +1709,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeFloorT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.floor()
             let fwdzCorrect = combo.tensor([0.; 0.; 0.; 0.; 0.])
@@ -1730,7 +1730,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeCeilT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.ceil()
             let fwdzCorrect = combo.tensor([1.; 1.; 1.; 1.; 1.])
@@ -1751,7 +1751,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeRoundT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.round()
             let fwdzCorrect = combo.tensor([1.; 0.; 0.; 1.; 1.])
@@ -1772,7 +1772,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAbsT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([-1.; 0.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
             let fwdz = fwdx.abs()
             let fwdzCorrect = combo.tensor([1.; 0.; 3.])
@@ -1793,7 +1793,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeReluT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(combo.tensor([2.; 3.; 4.; 5.; 6.]))
             let fwdz = fwdx.relu()
             let fwdzCorrect = combo.tensor([0.; 0.; 0.; 3.; 10.])
@@ -1814,7 +1814,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeLeakyRelu () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([-1.; -2.; 0.; 3.; 10.]).forwardDiff(combo.tensor([2.; 3.; 4.; 5.; 6.]))
             let fwdz = fwdx.leakyRelu()
             let fwdzCorrect = combo.tensor([-1.0000e-02; -2.0000e-02;  0.0000e+00;  3.0000e+00;  1.0000e+01])
@@ -1839,7 +1839,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSoftplusT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([-1.9908e-01,  9.0179e-01, -5.7899e-01,  1.2083e+00, -4.0689e+04, 2.8907e+05, -6.5848e+05, -1.2992e+05]).forwardDiff(combo.tensor([  765080.1250,  1507281.3750,  -646660.5000,   -90687.9375, 821899.7500,  -180674.6875, -1726284.8750,   212356.4219]))
             let fwdz = fwdx.softplus()
             let fwdzCorrect = combo.tensor([5.9855e-01, 1.2424e+00, 4.4498e-01, 1.4697e+00, 0.0000e+00, 2.8907e+05, 0.0000e+00, 0.0000e+00])
@@ -1860,7 +1860,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSigmoidT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.sigmoid()
             let fwdzCorrect = combo.tensor([0.7206; 0.6199; 0.5502; 0.6415; 0.6993])
@@ -1881,7 +1881,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeExpT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.2856; -1.0535; 1.0162; 0.4207; 1.2780]).forwardDiff(combo.tensor([-1.9015; 0.4606; -0.1030; 0.0466; -0.2321]))
             let fwdz = fwdx.exp()
             let fwdzCorrect = combo.tensor([1.3305; 0.3487; 2.7628; 1.5230; 3.5895])
@@ -1902,7 +1902,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeLogT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.log()
             let fwdzCorrect = combo.tensor([-0.0541; 0.3982; -1.6021; -0.5417; -0.1697])
@@ -1923,7 +1923,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeLog10T () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.log10()
             let fwdzCorrect = combo.tensor([-0.0235;  0.1729; -0.6957; -0.2352; -0.0737])
@@ -1944,7 +1944,7 @@ type TestDerivatives () =
         
     [<Test>]
     member _.TestDerivativeSqrtT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
             let fwdz = fwdx.sqrt()
             let fwdzCorrect = combo.tensor([7.4022; 8.4050; 4.0108; 8.6342; 9.1067])
@@ -1965,7 +1965,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSinT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.sin()
             let fwdzCorrect = combo.tensor([0.8118; 0.9967; 0.2001; 0.5495; 0.7472])
@@ -1986,7 +1986,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeCosT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.cos()
             let fwdzCorrect = combo.tensor([0.5839; 0.0816; 0.9798; 0.8355; 0.6646])
@@ -2007,7 +2007,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeTanT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.tan()
             let fwdzCorrect = combo.tensor([1.3904; 12.2132;  0.2043;  0.6577;  1.1244])
@@ -2028,7 +2028,7 @@ type TestDerivatives () =
     
     [<Test>]
     member _.TestDerivativeSinhT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.sinh()
             let fwdzCorrect = combo.tensor([1.0955; 2.1038; 0.2029; 0.6152; 0.9477])
@@ -2049,7 +2049,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeCoshT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.cosh()
             let fwdzCorrect = combo.tensor([1.4833; 2.3293; 1.0204; 1.1741; 1.3777])
@@ -2070,7 +2070,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeTanhT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 1.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.tanh()
             let fwdzCorrect = combo.tensor([0.7386; 0.9032; 0.1988; 0.5240; 0.6879])
@@ -2091,7 +2091,7 @@ type TestDerivatives () =
     
     [<Test>]
     member _.TestDerivativeAsinT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.asin()
             let fwdzCorrect = combo.tensor([1.2447; 0.5111; 0.2029; 0.6209; 1.0045])
@@ -2112,7 +2112,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAcosT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.acos()
             let fwdzCorrect = combo.tensor([0.3261; 1.0597; 1.3679; 0.9499; 0.5663])
@@ -2133,7 +2133,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAtanT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([0.9473; 0.4891; 0.2015; 0.5818; 0.8439]).forwardDiff(combo.tensor([1.7164; 0.2905; 1.4872; 1.2580; 0.5778]))
             let fwdz = fwdx.atan()
             let fwdzCorrect = combo.tensor([0.7583; 0.4549; 0.1988; 0.5269; 0.7009])
@@ -2154,7 +2154,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeStackTs () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.;20.]))
             let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.;40.]))
             let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.;60.]))
@@ -2185,7 +2185,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeUnstackT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
             let fwdz = dsharp.unstack(fwdx) |> Seq.toArray
             let fwdza = fwdz.[0]
@@ -2228,7 +2228,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeUnstackT_Dim1 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
             let fwdz = fwdx.unstack(dim=1) |> Seq.toArray
             let fwdza = fwdz.[0]
@@ -2261,7 +2261,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeCatTs () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdxa = combo.tensor([1.; 2.]).forwardDiff(combo.tensor([10.;20.]))
             let fwdxb = combo.tensor([3.; 4.]).forwardDiff(combo.tensor([30.;40.]))
             let fwdxc = combo.tensor([5.; 6.]).forwardDiff(combo.tensor([50.;60.]))
@@ -2292,7 +2292,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSplitT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(combo.tensor([10.;20.;30.;40.;50.;60.]))
             let fwdz = fwdx.split([| 1;3;2 |])
             let fwdza = fwdz.[0]
@@ -2335,7 +2335,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSliceT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
             let fwdz = fwdx.[2..]
             let fwdzCorrect = combo.tensor([16.0868; 74.5486; 82.9318])
@@ -2356,7 +2356,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAddTTSlice () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[-0.2754;  0.0172;  0.7105];
                 [-0.1890;  1.7664;  0.5377];
                 [-0.5313; -2.2530; -0.6235];
@@ -2411,7 +2411,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAddTTConstSlice () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[-0.2754;  0.0172;  0.7105];
                 [-0.1890;  1.7664;  0.5377];
                 [-0.5313; -2.2530; -0.6235];
@@ -2464,7 +2464,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeAddTConstTSlice () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[-0.2754;  0.0172;  0.7105];
                 [-0.1890;  1.7664;  0.5377];
                 [-0.5313; -2.2530; -0.6235];
@@ -2512,7 +2512,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSqueezeT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[1.; 2.]]; [[3.;4.]]]).forwardDiff(combo.tensor([[[10.; 20.]]; [[30.;40.]]]))
             let fwdz = fwdx.squeeze()
             let fwdzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
@@ -2533,7 +2533,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeUnsqueezeT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
             let fwdz = fwdx.unsqueeze(1)
             let fwdzCorrect =  combo.tensor([[[1.; 2.]]; [[3.;4.]]])
@@ -2554,7 +2554,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeFlipT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
             let fwdz = fwdx.flip([|0; 1|])
             let fwdzCorrect =  combo.tensor([[4.; 3.]; [2.;1.]])
@@ -2575,7 +2575,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeDilateT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.]]))
             let fwdz = fwdx.dilate([|2; 2|])
             let fwdzCorrect =  combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]])
@@ -2596,7 +2596,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeUndilateT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.; 0.; 2.]; [0.; 0.; 0.]; [3.; 0.; 4.]]).forwardDiff(combo.tensor([[10.; 0.; 20.]; [0.; 0.; 0.]; [30.; 0.; 40.]]))
             let fwdz = fwdx.undilate([|2; 2|])
             let fwdzCorrect =  combo.tensor([[1.;2.];[3.;4.]])
@@ -2638,7 +2638,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeSoftmax () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[4.6815; 5.6441; 7.4689];
                 [9.1976; 8.1241; 7.4521]]).forwardDiff(combo.tensor([[8.0030; 7.0798; 6.8637];
                     [9.5760; 7.4524; 2.6404]]))
@@ -2665,7 +2665,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMaxBinary () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(combo.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
             let fwdy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(combo.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
             let fwdz = dsharp.max(fwdx, fwdy)
@@ -2691,7 +2691,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeMinBinary () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([ 19.3520;   8.9730; -23.6274;  -3.5977; -20.3245]).forwardDiff(combo.tensor([1.9788; 0.2861; 4.2025; 0.5602; 7.9510]))
             let fwdy = combo.tensor([-17.1885;  -4.0684;   4.2405; -21.7158;  12.2048]).forwardDiff(combo.tensor([9.6600; 6.9111; 9.7303; 0.1491; 7.7003]))
             let fwdz = dsharp.min(fwdx, fwdy)
