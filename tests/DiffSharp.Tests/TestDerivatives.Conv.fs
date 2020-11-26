@@ -12,7 +12,7 @@ open DiffSharp.Util
 #nowarn "0058"
 
 [<TestFixture>]
-type TestDerivativesOfConvolutions () =
+type TestDerivativesConv () =
 
     [<Test>]
     member _.TestDerivativeConv1D () =

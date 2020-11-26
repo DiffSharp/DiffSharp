@@ -12,11 +12,11 @@ open DiffSharp.Util
 #nowarn "0058"
 
 [<TestFixture>]
-type TestDerivativesOfMaxPool () =
+type TestDerivativesMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxPool1D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let fwdx = combo.tensor([[[-2.1704, -1.1558,  2.5995,  1.3858, -1.3157, -0.3179,  0.9593,  -2.1432,  0.7169, -1.7999],
                                      [ 0.4564, -0.2262,  0.3495,  0.4587, -0.3858,  0.2349,  0.2978,  0.6288,  1.1539,  0.2121]],
 
@@ -70,7 +70,7 @@ type TestDerivativesOfMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxUnpool1D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let indices = combo.tensor([[[2, 3, 6], [0, 3, 8]], [[2, 3, 6], [0, 3, 6]]], dtype=Dtype.Int32)
             let fwdx = combo.tensor([[[ 2.5995,  1.3858,  0.9593],
                                         [ 0.4564,  0.4587,  1.1539]],
@@ -125,7 +125,7 @@ type TestDerivativesOfMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxPool2D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let fwdx = combo.tensor([[[[ 0.7372,  0.7090,  0.9216,  0.3363,  1.0141, -0.7642,  0.3801, -0.9568],
                                          [-0.3520, -1.2336,  1.8489,  0.9929, -0.8138,  0.0978, -1.3206, -1.5434],
                                          [ 0.6883, -0.2346,  0.1735,  0.6695, -1.9122,  1.1338, -0.1248,  0.2164],
@@ -331,7 +331,7 @@ type TestDerivativesOfMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxUnpool2D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let indices = combo.tensor([[[[10, 21],
                                            [41, 45]],
                              
@@ -549,7 +549,7 @@ type TestDerivativesOfMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxPool3D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let fwdx = combo.tensor([[[[ 0.4633,  0.9173,  0.4568, -1.7660, -0.1077],
                                          [-2.1112,  1.5542,  0.5720, -1.0952, -1.8144],
                                          [ 0.3505, -0.9843, -2.5655, -0.9835,  1.2303],
@@ -851,7 +851,7 @@ type TestDerivativesOfMaxPool () =
 
     [<Test>]
     member _.TestDerivativeMaxUnpool3D () =
-        for combo in Combos.AllExcept16s do
+        for combo in Combos.FloatingPointExcept16s do
             let indices = combo.tensor([[[[ 6,  7],
                                             [16, 17]],
                              
