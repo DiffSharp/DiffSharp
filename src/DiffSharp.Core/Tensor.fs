@@ -1554,7 +1554,7 @@ type Tensor =
             let inline dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>Returns a view of the original tensor with its dimensions permuted.</summary>
+    /// <summary>Returns the original tensor with its dimensions permuted.</summary>
     /// <param name="permutation">The desired ordering of dimensions.</param>
     member a.permute(permutation:seq<int>) =
         let permutation = Seq.toArrayQuick permutation

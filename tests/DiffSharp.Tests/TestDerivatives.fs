@@ -1612,6 +1612,7 @@ type TestDerivatives () =
                                                                                 [[ 60.,  70.],
                                                                                  [ 80.,  90.],
                                                                                  [100., 110.]]]))
+            // Note, this is a swap
             let fwdz = fwdx.permute([2;1;0])
             let fwdzCorrect = combo.tensor([[[ 0.,  6.],
                                                [ 2.,  8.],
@@ -1629,39 +1630,51 @@ type TestDerivatives () =
                                                [ 30.,  90.],
                                                [ 50., 110.]]])
 
-            let revx = combo.tensor([[[ 0.,  1.],
-                                         [ 2.,  3.],
-                                         [ 4.,  5.]],
-
-                                        [[ 6.,  7.],
-                                         [ 8.,  9.],
-                                         [10., 11.]]]).reverseDiff()
-            let revz = revx.permute([2;1;0])
-            let revzCorrect = combo.tensor([[[ 0.,  6.],
-                                             [ 2.,  8.],
-                                             [ 4., 10.]],
-
-                                            [[ 1.,  7.],
-                                             [ 3.,  9.],
-                                             [ 5., 11.]]])
-            revz.reverse(combo.tensor([[[  0., 120.],
-                                         [ 40., 160.],
-                                         [ 80., 200.]],
-
-                                        [[ 20., 140.],
-                                         [ 60., 180.],
-                                         [100., 220.]]]))
-            let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([[[  0.,  20.],
-                                               [ 40.,  60.],
-                                               [ 80., 100.]],
-
-                                              [[120., 140.],
-                                               [160., 180.],
-                                               [200., 220.]]])
-
             Assert.CheckEqual(fwdzCorrect, fwdz)
             Assert.CheckEqual(fwdzdCorrect, fwdzd)
+
+            // Python:
+            (*
+            import torch
+            revx = torch.tensor([[[ 0.,  1.],[ 2.,  3.],[ 4.,  5.]],[[ 6.,  7.],[ 8.,  9.],[10., 11.]]], requires_grad=True)
+            revz = revx.permute([1,2,0])
+            revz.backward(torch.tensor([[[ 0.,  1.],[ 2.,  3.]],[[ 4.,  5.],[ 6.,  7.]],[[ 8.,  9.],[10., 11.]]]))
+            revz
+            revx.grad
+            *)
+
+            let revx = combo.tensor([[[ 0.,  1.],
+                                      [ 2.,  3.],
+                                      [ 4.,  5.]],
+
+                                     [[ 6.,  7.],
+                                      [ 8.,  9.],
+                                      [10., 11.]]]).reverseDiff()
+
+            // Note, this is a rotation
+            let revz = revx.permute([1;2;0])
+            let revzCorrect = combo.tensor([[[ 0.,  6.],
+                                             [ 1.,  7.]],
+                                            [[ 2.,  8.],
+                                             [ 3.,  9.]],
+                                            [[ 4., 10.],
+                                             [ 5., 11.]]])
+
+            revz.reverse(combo.tensor([[[ 0.,  1.],
+                                        [ 2.,  3.]],
+                                       [[ 4.,  5.],
+                                        [ 6.,  7.]],
+                                       [[ 8.,  9.],
+                                        [10., 11.]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ 0.,  2.],
+                                              [ 4.,  6.],
+                                              [ 8., 10.]],
+
+                                             [[ 1.,  3.],
+                                              [ 5.,  7.],
+                                              [ 9., 11.]]])
+
             Assert.CheckEqual(revzCorrect, revz)
             Assert.CheckEqual(revxdCorrect, revxd)
 
