@@ -69,8 +69,8 @@ module Combos =
     let AllExcept16s = makeCombos Dtypes.All
 
     /// This runs though all devices and backends but leaves the default Dtype
-    let AllDevicesAndBackends = 
+    let AllDevicesAndBackendsFloat32 = 
         [ for backend in backends do
             let ds = getDevices (None, Some backend)
             for device in ds do
-              yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
+              yield ComboInfo(defaultDtype=Dtype.Float32, defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
