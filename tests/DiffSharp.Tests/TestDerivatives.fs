@@ -1597,6 +1597,75 @@ type TestDerivatives () =
             Assert.CheckEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member _.TestDerivativePermuteT () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 0.,  1.],
+                                       [ 2.,  3.],
+                                       [ 4.,  5.]],
+
+                                      [[ 6.,  7.],
+                                       [ 8.,  9.],
+                                       [10., 11.]]]).forwardDiff(combo.tensor([[[  0.,  10.],
+                                                                                 [ 20.,  30.],
+                                                                                 [ 40.,  50.]],
+
+                                                                                [[ 60.,  70.],
+                                                                                 [ 80.,  90.],
+                                                                                 [100., 110.]]]))
+            let fwdz = fwdx.permute([2;1;0])
+            let fwdzCorrect = combo.tensor([[[ 0.,  6.],
+                                               [ 2.,  8.],
+                                               [ 4., 10.]],
+
+                                              [[ 1.,  7.],
+                                               [ 3.,  9.],
+                                               [ 5., 11.]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[  0.,  60.],
+                                               [ 20.,  80.],
+                                               [ 40., 100.]],
+
+                                              [[ 10.,  70.],
+                                               [ 30.,  90.],
+                                               [ 50., 110.]]])
+
+            let revx = combo.tensor([[[ 0.,  1.],
+                                         [ 2.,  3.],
+                                         [ 4.,  5.]],
+
+                                        [[ 6.,  7.],
+                                         [ 8.,  9.],
+                                         [10., 11.]]]).reverseDiff()
+            let revz = revx.permute([2;1;0])
+            let revzCorrect = combo.tensor([[[ 0.,  6.],
+                                             [ 2.,  8.],
+                                             [ 4., 10.]],
+
+                                            [[ 1.,  7.],
+                                             [ 3.,  9.],
+                                             [ 5., 11.]]])
+            revz.reverse(combo.tensor([[[  0., 120.],
+                                         [ 40., 160.],
+                                         [ 80., 200.]],
+
+                                        [[ 20., 140.],
+                                         [ 60., 180.],
+                                         [100., 220.]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[  0.,  20.],
+                                               [ 40.,  60.],
+                                               [ 80., 100.]],
+
+                                              [[120., 140.],
+                                               [160., 180.],
+                                               [200., 220.]]])
+
+            Assert.CheckEqual(fwdzCorrect, fwdz)
+            Assert.CheckEqual(fwdzdCorrect, fwdzd)
+            Assert.CheckEqual(revzCorrect, revz)
+            Assert.CheckEqual(revxdCorrect, revxd)
+
+    [<Test>]
     member _.TestDerivativeTransposeT () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[ 0.,  1.],
