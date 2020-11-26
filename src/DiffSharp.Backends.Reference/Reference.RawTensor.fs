@@ -220,8 +220,8 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
 
     override t.TransposeT(dim0, dim1) =
         let permutation = [| 0 .. t.Shape.Length - 1 |]
-        permutation.[dim0] <- permutation.[dim1]
-        permutation.[dim1] <- permutation.[dim0]
+        permutation.[dim0] <- dim1
+        permutation.[dim1] <- dim0
         t.PermuteT(permutation)
 
     override t.TransposeT2() =
