@@ -12,11 +12,11 @@ open DiffSharp.Util
 #nowarn "0058"
 
 [<TestFixture>]
-type TestDerivativesOfConvolutions () =
+type TestDerivativesConv () =
 
     [<Test>]
     member _.TestDerivativeConv1D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                      [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                      [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
@@ -110,7 +110,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv1Dp1 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[ 2.0028; -8.1570;  8.1037; -6.6905];
                                  [ 3.6960; -3.8631; -7.0608; -1.4756];
                                  [ 0.8208; -1.9973;  1.9964; -0.8280]];
@@ -204,7 +204,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv1Ds2p2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                      [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                      [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
@@ -298,7 +298,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv1Ds2p2d3 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[  4.4675;  -3.3205;  -1.5695;   2.6373];
                                      [ -2.0373;  -1.6156;  -5.4200;   2.1263];
                                      [ -7.6023;  -3.8521;   4.1061; -11.9378]];
@@ -392,7 +392,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv1DTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                      [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                      [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
@@ -473,7 +473,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv1DTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                      [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                      [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];
@@ -554,7 +554,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
               [ -4.7983,   3.5090,  -6.9395,  -0.1943],
               [ -3.4793,  -4.3857,  -4.2665,   0.2690],
@@ -828,7 +828,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2Dp1 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
               [ -4.7983,   3.5090,  -6.9395,  -0.1943],
               [ -3.4793,  -4.3857,  -4.2665,   0.2690],
@@ -1134,7 +1134,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2Ds2p2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 0.4834,  0.6182, -1.7554, -0.5000],
               [ 0.4145, -1.8404, -1.3268, -0.1491],
               [-0.5398,  0.3185,  0.6443, -0.4982],
@@ -1424,7 +1424,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2Ds2p2d3 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
               [ -4.7983,   3.5090,  -6.9395,  -0.1943],
               [ -3.4793,  -4.3857,  -4.2665,   0.2690],
@@ -1698,7 +1698,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2DTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
               [ -4.7983,   3.5090,  -6.9395,  -0.1943],
               [ -3.4793,  -4.3857,  -4.2665,   0.2690],
@@ -1937,7 +1937,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2DTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ -0.6265,   1.5129,  -0.4967,   8.2343],
               [ -4.7983,   3.5090,  -6.9395,  -0.1943],
               [ -3.4793,  -4.3857,  -4.2665,   0.2690],
@@ -2152,7 +2152,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                          [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                          [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
@@ -2446,7 +2446,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3Dp1 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                          [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                          [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
@@ -2797,7 +2797,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3Ds2p2 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[-1.5904, -0.8058,  0.4822, -0.3421],
                [ 2.3982, -0.7756,  1.7063, -0.9767],
                [-0.9279, -0.1570,  0.1906, -0.4191],
@@ -3117,7 +3117,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3Ds2p2d3 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 1.9019e-01, -6.0187e-01,  1.6493e+00,  1.7904e+00,  6.4850e-01],
                [-7.6622e-01,  9.0741e-01, -2.0115e-01, -3.1550e-01, -2.8159e-01],
                [-2.9039e-01, -2.2963e-01, -2.2106e-03,  1.0760e+00,  4.7973e-01],
@@ -3491,7 +3491,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv2Ds23p32d23 () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 0.4011, -1.2780,  1.5871, -1.7213],
               [ 0.2381,  1.1069,  0.0987, -0.9293],
               [ 0.3164,  0.8496,  0.9187, -1.1235],
@@ -3781,7 +3781,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3DTTConst () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                          [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                          [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
@@ -4028,7 +4028,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConv3DTConstT () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 2.0403e+00,  5.0188e-01,  4.6880e-01,  8.0736e-01],
                                          [-6.1190e-01,  6.1642e-01, -4.0588e-01, -2.9679e-01],
                                          [-5.6210e-01,  3.6843e-01, -6.6630e-02, -1.3918e+00],
@@ -4244,7 +4244,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConvTranspose1D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[-1.2531,  0.9667,  0.2120, -1.2948,  0.4470,  1.3539],
                                        [-0.3736,  0.8294, -0.8978,  0.1512, -1.9213, -0.0488],
                                        [-0.6830,  0.0080, -0.1773, -1.7092, -0.0818, -0.2670]]])
@@ -4323,7 +4323,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConvTranspose2D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 0.8030,  0.8885, -0.0953],
                                         [-0.2385,  0.6702,  1.9569],
                                         [-1.5686,  0.1328, -1.2335]],
@@ -4466,7 +4466,7 @@ type TestDerivativesOfConvolutions () =
 
     [<Test>]
     member _.TestDerivativeConvTranspose3D () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[[ 0.9873,  2.7076, -0.9461],
                                        [-0.0808,  1.5441, -0.8709],
                                        [-0.8709,  0.3782,  2.0588]],
