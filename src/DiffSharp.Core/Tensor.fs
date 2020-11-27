@@ -2950,14 +2950,13 @@ type UnaryOp() =
     ///    a matrix with shape \(OutShape \times InShape\) and the result of this method
     ///    should have shape \(OutShape\).
     ///
-    ///    For functions with a symmetric Jacobian (e.g. element-wise functions) this will be identical to Reverse
-    ///    and one can just call the other.
+    ///    For some functions this will be identical to Reverse and one can just call the other.
     /// </remarks>
     abstract Forward: fa: Tensor * a: Tensor * ad: Tensor -> Tensor
 
     /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     ///
-    /// <param name="fa">\(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="t">The tangent vector for \(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). Shape is InShape.</param>
     /// <param name="td">The adjoints of \f(a\). Shape is OutShape.</param>
     /// <remarks>
@@ -2966,10 +2965,9 @@ type UnaryOp() =
     ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
     ///    and the result of this method should have shape \(InShape\).
     ///
-    ///    For functions with a symmetric Jacobian (e.g. element-wise functions) this will be identical to Forward
-    ///    and one can just call the other.
+    ///    For some functions this will be identical to Reverse and one can just call the other.
     /// </remarks>
-    abstract Reverse: fa: Tensor * a: Tensor * td: Tensor -> Tensor
+    abstract Reverse: t: Tensor * a: Tensor * td: Tensor -> Tensor
 
 /// Defines an extension implementing a binary function and its gradients
 [<AbstractClass>]
@@ -3006,7 +3004,7 @@ type BinaryOp() =
 
     /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     ///
-    /// <param name="fab">\(f\) applied to \(a\) and \(bp\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="t">\(f\) applied to \(a\) and \(bp\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
     /// <param name="b">The primal of \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
     /// <param name="td">The adjoints of \f(a,b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
@@ -3020,15 +3018,15 @@ type BinaryOp() =
     ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
     ///    and the result of this method should have shape \(InShape\).
     /// </remarks>
-    abstract Reverse: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor * Tensor
-    default op.Reverse(fab, a, b, td) = op.ReverseA(fab, a, b, td), op.ReverseB(fab, a, b, td)
+    abstract Reverse: t: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor * Tensor
+    default op.Reverse(t, a, b, td) = op.ReverseA(t, a, b, td), op.ReverseB(t, a, b, td)
 
     /// <summary>Computes the first "a" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
-    abstract ReverseA: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
+    abstract ReverseA: t: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
 
     /// <summary>Computes the second "b" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
-    abstract ReverseB: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
+    abstract ReverseB: t: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
 
 type Tensor with
     static member Op(ext: UnaryOp) =
