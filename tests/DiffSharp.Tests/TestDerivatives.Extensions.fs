@@ -117,7 +117,6 @@ module TestOps =
                         bderivative }
                 (a,b)
 
-
     let CompareUnaryOps op1 op2 inp dinp dout = 
         let fwdx = dsharp.tensor(inp).forwardDiff(dsharp.tensor(dinp))
         let fwdz : Tensor = op1 fwdx

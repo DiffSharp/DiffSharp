@@ -3029,6 +3029,8 @@ type BinaryOp() =
     abstract ReverseB: t: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
 
 type Tensor with
+    /// <summary>Implement a unary extension operation.</summary>
+    /// <param name="ext">The specification of the extension operation.</param>
     static member Op(ext: UnaryOp) =
         (fun a -> 
             Tensor.OpUnary(a, ext.ComputeRaw, Tensor.Op ext, 
@@ -3036,6 +3038,8 @@ type Tensor with
                 (fun a -> OpT([a], (fun td tp -> [ext.Reverse (tp, a.primal, td)])))
             ))
 
+    /// <summary>Implement a binary extension operation.</summary>
+    /// <param name="ext">The specification of the extension operation.</param>
     static member Op(ext: BinaryOp) =
         (fun (a, b) -> 
             Tensor.OpBinary(a, b, ext.ComputeRaw, Tensor.Op ext, 
