@@ -24,8 +24,8 @@ module TestOps =
                     member _.Forward(fab, a, ad, b, bd) = Tensor.mull(b, ad) + Tensor.mull(a, bd)
                     // Jacobian             = [b; a]
                     // Jacobian.t * td.t    = [b*td; a*td]
-                    member _.ReverseA(a, b, td) = Tensor.mull(b, td)
-                    member _.ReverseB(a, b, td) = Tensor.mull(a, td)
+                    member _.ReverseA(fab, a, b, td) = Tensor.mull(b, td)
+                    member _.ReverseB(fab, a, b, td) = Tensor.mull(a, td)
                 }
                 (a, b)
 
@@ -35,7 +35,7 @@ module TestOps =
                { new UnaryOp() with 
                     member _.ComputeRaw(a) = a.SinT()
                     member _.Forward(fab,a,ad) = a.coss() * ad
-                    member _.Reverse(a,ad) = a.coss() * ad }
+                    member _.Reverse(fab,a,ad) = a.coss() * ad }
                a
 
         member a.coss() = 
@@ -43,7 +43,7 @@ module TestOps =
                { new UnaryOp() with 
                     member _.ComputeRaw(a) = a.CosT()
                     member _.Forward(fa,a,ad) = -a.sinn() * ad 
-                    member _.Reverse(a,ad) = -a.sinn() * ad }
+                    member _.Reverse(fab,a,ad) = -a.sinn() * ad }
                 a
 
     type Tensor with
@@ -64,8 +64,8 @@ module TestOps =
                     member _.Forward(fa, a, ad, b, ab) = (a ** (b - 1.)) * (b * ad + a * log a * ab)
                     member _.ForwardA(fa, a, ad, b) = (a ** (b - 1.)) * b * ad
                     member _.ForwardB(fa, a, b, bd) = fa * log a * bd
-                    member _.ReverseA(a, b, td) = (a ** (b - 1.)) * b * td
-                    member _.ReverseB(a, b, td) = (a ** b) * log a * td }
+                    member _.ReverseA(fab, a, b, td) = (a ** (b - 1.)) * b * td
+                    member _.ReverseB(fab, a, b, td) = (a ** b) * log a * td }
                 (a,b)
 
     type Tensor with
@@ -76,7 +76,7 @@ module TestOps =
                 { new BinaryOp() with 
                     member _.ComputeRaw(a,b) = a.Conv1D(b, stride, padding)
                     member _.Forward(fab, a, ad, b, bd) = ad.conv1dd(b, stride, padding) + a.conv1dd(bd, stride, padding)
-                    member _.ReverseA(a, b, td) = 
+                    member _.ReverseA(fab, a, b, td) = 
                         let batchSize = td.shape.[0]
                         let outputChannels = td.shape.[1]
                         let inputChannels = a.shape.[1]
@@ -97,7 +97,7 @@ module TestOps =
                             aderivative <- aderivative + c
                         aderivative
 
-                    member _.ReverseB(a, b, td) = 
+                    member _.ReverseB(fab, a, b, td) = 
                         let batchSize = td.shape.[0]
                         let outputChannels = td.shape.[1]
                         let inputChannels = a.shape.[1]

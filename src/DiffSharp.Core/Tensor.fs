@@ -1787,7 +1787,7 @@ type Tensor =
     member a.sigmoid() =
         let inline fRaw(a:RawTensor) = a.SigmoidT()
         let inline fTensor(a:Tensor) = a.sigmoid()
-        let inline dfTensorFwd(cp:Tensor,ap,ad) = ad * cp * (1. - cp)
+        let inline dfTensorFwd(cp:Tensor,ap:Tensor,ad:Tensor) = ad * cp * (1. - cp)
         let inline dfTensorRev(a) = SigmoidT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
@@ -1795,8 +1795,17 @@ type Tensor =
     member a.exp() =
         let inline fRaw(a:RawTensor) = a.ExpT()
         let inline fTensor(a:Tensor) = a.exp()
-        let inline dfTensorFwd(cp,ap,ad) = ad * cp
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = ad * cp
         let inline dfTensorRev(a) = ExpT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
+    /// <summary>Applies the softplus function element-wise.</summary>
+    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
+    member a.softplus() =
+        let inline fRaw(a:RawTensor) = a.SoftplusT()
+        let inline fTensor(a:Tensor) = a.softplus()
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = ad / (1. + ap.neg().exp())
+        let inline dfTensorRev(a) = SoftplusT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>A method to enable the use of the F# function <c>exp</c>.</summary>
@@ -1813,15 +1822,6 @@ type Tensor =
 
     /// <summary>A method to enable the use of the F# function <c>log</c>.</summary>
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
-
-    /// <summary>Applies the softplus function element-wise.</summary>
-    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
-    member a.softplus() =
-        let inline fRaw(a:RawTensor) = a.SoftplusT()
-        let inline fTensor(a:Tensor) = a.softplus()
-        let inline dfTensorFwd(cp,ap:Tensor,ad) = ad / (1. + ap.neg().exp())
-        let inline dfTensorRev(a) = SoftplusT(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
     /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
@@ -2821,7 +2821,7 @@ type Tensor =
                         | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
                         | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
-                        | OpT(inps, gradients) -> push (List.zip (gradients td) inps @ tt)
+                        | OpT(inps, deriv) -> push (List.zip (deriv td t.primal) inps @ tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -2929,7 +2929,7 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-    | OpT of inputs: Tensor list * gradients: ((* tangent *) Tensor -> (* input-grad *) Tensor list)
+    | OpT of inputs: Tensor list * deriv: ((* t.derivative *) Tensor -> (* t.primal *) Tensor -> (* input-grad *) Tensor list)
 
 /// Defines an extension implementing a unary function and its gradients
 [<AbstractClass>]
@@ -2949,11 +2949,15 @@ type UnaryOp() =
     ///    Then \(a\) and \(ad\) have shape \(InShape\), the Jacobian of \(f\) is
     ///    a matrix with shape \(OutShape \times InShape\) and the result of this method
     ///    should have shape \(OutShape\).
+    ///
+    ///    For functions with a symmetric Jacobian (e.g. element-wise functions) this will be identical to Reverse
+    ///    and one can just call the other.
     /// </remarks>
     abstract Forward: fa: Tensor * a: Tensor * ad: Tensor -> Tensor
 
     /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     ///
+    /// <param name="fa">\(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). Shape is InShape.</param>
     /// <param name="td">The adjoints of \f(a\). Shape is OutShape.</param>
     /// <remarks>
@@ -2961,8 +2965,11 @@ type UnaryOp() =
     ///    Then \(a\) has shape InShape, \(td\) has shape \(OutShape\), 
     ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
     ///    and the result of this method should have shape \(InShape\).
+    ///
+    ///    For functions with a symmetric Jacobian (e.g. element-wise functions) this will be identical to Forward
+    ///    and one can just call the other.
     /// </remarks>
-    abstract Reverse: a: Tensor * td: Tensor -> Tensor
+    abstract Reverse: fa: Tensor * a: Tensor * td: Tensor -> Tensor
 
 /// Defines an extension implementing a binary function and its gradients
 [<AbstractClass>]
@@ -2999,6 +3006,7 @@ type BinaryOp() =
 
     /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     ///
+    /// <param name="fab">\(f\) applied to \(a\) and \(bp\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
     /// <param name="b">The primal of \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
     /// <param name="td">The adjoints of \f(a,b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
@@ -3012,22 +3020,22 @@ type BinaryOp() =
     ///    the transpose of the Jacobian of \(f\( is a matrix with shape \(InShape \times OutShape\)
     ///    and the result of this method should have shape \(InShape\).
     /// </remarks>
-    abstract Reverse: a: Tensor * b: Tensor * td: Tensor -> Tensor * Tensor
-    default op.Reverse(a, b, td) = op.ReverseA(a, b, td), op.ReverseB(a, b, td)
+    abstract Reverse: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor * Tensor
+    default op.Reverse(fab, a, b, td) = op.ReverseA(fab, a, b, td), op.ReverseB(fab, a, b, td)
 
     /// <summary>Computes the first "a" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
-    abstract ReverseA: a: Tensor * b: Tensor * td: Tensor -> Tensor
+    abstract ReverseA: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
 
     /// <summary>Computes the second "b" half transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
-    abstract ReverseB: a: Tensor * b: Tensor * td: Tensor -> Tensor
+    abstract ReverseB: fab: Tensor * a: Tensor * b: Tensor * td: Tensor -> Tensor
 
 type Tensor with
     static member Op(ext: UnaryOp) =
         (fun a -> 
             Tensor.OpUnary(a, ext.ComputeRaw, Tensor.Op ext, 
                 (fun (fa, a, ad) -> ext.Forward(fa, a, ad)), 
-                (fun a -> OpT([a], (fun td -> [ext.Reverse (a.primal, td)])))
+                (fun a -> OpT([a], (fun td tp -> [ext.Reverse (tp, a.primal, td)])))
             ))
 
     static member Op(ext: BinaryOp) =
@@ -3036,9 +3044,9 @@ type Tensor with
                 (fun (fab, a, ad, b, bd) -> ext.Forward(fab, a, ad, b, bd)), 
                 (fun (fab, a, ad) -> ext.ForwardA(fab, a, ad, b)),
                 (fun (fab, b, db) -> ext.ForwardB(fab, a, b, db)),
-                (fun (a,b) -> OpT([a;b], (fun td -> let da, db = ext.Reverse (a.primal, b.primal, td) in [da; db]))),
-                (fun (a,b) -> OpT([a;b], (fun td -> let da = ext.ReverseA (a.primal, b, td) in [da]))),
-                (fun (a,b) -> OpT([a;b], (fun td -> let db = ext.ReverseB (a, b.primal, td) in [db])))
+                (fun (a,b) -> OpT([a;b], (fun td tp -> let da, db = ext.Reverse (tp, a.primal, b.primal, td) in [da; db]))),
+                (fun (a,b) -> OpT([a;b], (fun td tp -> let da = ext.ReverseA (tp, a.primal, b, td) in [da]))),
+                (fun (a,b) -> OpT([a;b], (fun td tp -> let db = ext.ReverseB (tp, a, b.primal, td) in [db])))
             ))
 
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DiffSharp.Tests")>]
