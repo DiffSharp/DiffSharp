@@ -714,7 +714,7 @@ module ShapeAutoOpens =
         [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 
     /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
-    let boundsToShapeKeepDims (bounds: int[,]) =
+    let boundsToShape (bounds: int[,]) =
         [|for i=0 to bounds.GetLength(0) - 1 do 
              let len = bounds.[i, 1] - bounds.[i, 0] + 1
              yield len|]

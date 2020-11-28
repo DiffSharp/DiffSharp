@@ -2410,6 +2410,21 @@ type TestDerivatives () =
             Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
+    member _.TestDerivativeSliceT_2D () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+
+            let revx = combo.tensor([[54.7919; 70.6440; 16.0868; 74.5486; 82.9318]; 
+                                     [54.7919; 70.6440; 16.0868; 74.5486; 82.9318]]).reverseDiff()
+            let revz = revx.[*,2..2]
+            let revzCorrect = combo.tensor([16.0868; 16.0868])
+            revz.reverse(combo.tensor([0.9360;0.9360]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[0.; 0.; 0.9360; 0.; 0.];[0.; 0.; 0.9360; 0.; 0.]])
+
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member _.TestDerivativeAddTTConstSlice () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[-0.2754;  0.0172;  0.7105];
