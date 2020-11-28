@@ -22,6 +22,8 @@ module TestOps =
                     // Jacobian             = [b; a]
                     // Jacobian * [ad;bd].t = b*ad + a*bd
                     member _.Forward(fab, a, ad, b, bd) = Tensor.mull(b, ad) + Tensor.mull(a, bd)
+                    member _.ForwardA(fab, a, ad, b) = Tensor.mull(b, ad)
+                    member _.ForwardB(fab, a, b, bd) = Tensor.mull(a, bd)
                     // Jacobian             = [b; a]
                     // Jacobian.t * td.t    = [b*td; a*td]
                     member _.ReverseA(fab, a, b, td) = Tensor.mull(b, td)
@@ -76,6 +78,8 @@ module TestOps =
                 { new BinaryOp() with 
                     member _.ComputeRaw(a,b) = a.Conv1D(b, stride, padding)
                     member _.Forward(fab, a, ad, b, bd) = ad.conv1dd(b, stride, padding) + a.conv1dd(bd, stride, padding)
+                    member _.ForwardA(fab, a, ad, b) = ad.conv1dd(b, stride, padding)
+                    member _.ForwardB(fab, a, b, bd) = a.conv1dd(bd, stride, padding)
                     member _.ReverseA(fab, a, b, td) = 
                         let batchSize = td.shape.[0]
                         let outputChannels = td.shape.[1]

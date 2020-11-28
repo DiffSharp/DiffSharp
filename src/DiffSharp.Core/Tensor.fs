@@ -1799,15 +1799,6 @@ type Tensor =
         let inline dfTensorRev(a) = ExpT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
-    /// <summary>Applies the softplus function element-wise.</summary>
-    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
-    member a.softplus() =
-        let inline fRaw(a:RawTensor) = a.SoftplusT()
-        let inline fTensor(a:Tensor) = a.softplus()
-        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = ad / (1. + ap.neg().exp())
-        let inline dfTensorRev(a) = SoftplusT(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-
     /// <summary>A method to enable the use of the F# function <c>exp</c>.</summary>
     static member Exp(a:Tensor) = a.exp() // needed for FSharp.Core exp operator overload
 
@@ -1822,6 +1813,15 @@ type Tensor =
 
     /// <summary>A method to enable the use of the F# function <c>log</c>.</summary>
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
+
+    /// <summary>Applies the softplus function element-wise.</summary>
+    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
+    member a.softplus() =
+        let inline fRaw(a:RawTensor) = a.SoftplusT()
+        let inline fTensor(a:Tensor) = a.softplus()
+        let inline dfTensorFwd(cp,ap:Tensor,ad:Tensor) = ad / (1. + ap.neg().exp())
+        let inline dfTensorRev(a) = SoftplusT(a)
+        Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
     /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
@@ -2956,7 +2956,7 @@ type UnaryOp() =
 
     /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
     ///
-    /// <param name="t">The tangent vector for \(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="t">The primal of the tangent for \(f\) applied to \(a\). Can be useful in reducing recomputation. If \(f: InShape \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). Shape is InShape.</param>
     /// <param name="td">The adjoints of \f(a\). Shape is OutShape.</param>
     /// <remarks>
@@ -2993,18 +2993,16 @@ type BinaryOp() =
     abstract Forward: fab: Tensor * a: Tensor * ad: Tensor * b: Tensor * bd: Tensor -> Tensor
 
     /// <summary>Computes \(Jacobian(f)(ad,0)\).</summary>
-    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    /// <remarks>A naive implementation of this method is <c>op.Forward(fab, a, ad, b, b.zerosLike())</c>. A more efficient implementation is usually possible. </remarks>
     abstract ForwardA: fab: Tensor * a: Tensor * ad: Tensor * b: Tensor -> Tensor
-    default op.ForwardA(fab, a, ad, b) = op.Forward(fab, a, ad, b, b.zerosLike())
 
     /// <summary>Computes \(Jacobian(f)(0, bd)\).</summary>
-    /// <remarks>A default implementation of this method is provided. A more efficient implementation can be given by overriding this default. </remarks>
+    /// <remarks>A naive implementation of this method is <c>op.Forward(fab, a, a.zerosLike(), b, bd)</c>. A more efficient implementation is usually possible. </remarks>
     abstract ForwardB: fab: Tensor * a:Tensor * b: Tensor * bd: Tensor -> Tensor
-    default op.ForwardB(fab, a, b, bd) = op.Forward(fab, a, a.zerosLike(), b, bd)
 
-    /// <summary>Computes the transpose of the Jacobian of \(f\) applied to \(td)\).</summary>
+    /// <summary>Computes the transpose of the Jacobian of \(f(a,b)\) applied to \(td)\).</summary>
     ///
-    /// <param name="t">\(f\) applied to \(a\) and \(bp\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
+    /// <param name="t">The primal of the tangent of \(f\) applied to \(a\) and \(b\). Can be useful in reducing recomputation. If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
     /// <param name="a">The primal of \(a\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape1\).</param>
     /// <param name="b">The primal of \(b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(InShape2\).</param>
     /// <param name="td">The adjoints of \f(a,b\). If \(f: InShape1 \times InShape2 \rightarrow OutShape\) then this has shape \(OutShape\).</param>
