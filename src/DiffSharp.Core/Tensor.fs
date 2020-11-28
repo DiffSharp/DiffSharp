@@ -2670,9 +2670,12 @@ type Tensor =
     /// <param name="value">The value to apply.</param>
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
-            // check the shapes of the tangent derivatives match the nodes to which they are being propagated
+            // Check the shapes of the tangent derivatives match the nodes to which they are being propagated
+            // In some places the 'zero' tensor is being used for the initial tangent derivative so 
+            // the assert takes that into account.
             assert (v.shape.Length = 0 || t.derivative.shape.Length = 0 || v.shape = t.derivative.shape)
             (v,t)
+
         let rec push (ts:(Tensor*Tensor) list) =
             match ts with
             | [] -> ()
