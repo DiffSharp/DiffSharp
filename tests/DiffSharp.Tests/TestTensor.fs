@@ -531,17 +531,17 @@ type TestTensor () =
         Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([ 0 .. 10 ])
-        let t1slice1 = t1.primalRaw.GetSlice(array2D [ [ 3; 4; 0 ] ])
-        let t1slice2 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 0 ] ])
+        let t1slice1 = t1.primalRaw.GetSlice(array2D [ [ 3I; Int 4; 0I ] ])
+        let t1slice2 = t1.primalRaw.GetSlice(array2D [ [ 3I; 3I; 0I ] ])
 
         Assert.CheckEqual(3, (t1slice1.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(4, (t1slice1.GetItem(1) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice1.Dim)
-        Assert.CheckEqual(2, t1slice1.Shape.[0])
+        Assert.CheckEqual(2, t1slice1.Shape.[0].Value)
 
         Assert.CheckEqual(3, (t1slice2.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice2.Dim)
-        Assert.CheckEqual(1, t1slice2.Shape.[0])
+        Assert.CheckEqual(1, t1slice2.Shape.[0].Value)
 
         // TODO: slicing reducing down to scalar
         //let t1slice3 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ] ])
@@ -549,7 +549,7 @@ type TestTensor () =
         //Assert.CheckEqual(0, t1slice3.Dim)
 
         let t2 = combo.tensor([ for i in 0 .. 10 -> [ i*10 .. i*10+10 ] ])
-        let t2slice1 = t2.primalRaw.GetSlice(array2D [ [ 3; 5; 0 ]; [ 3; 5; 0 ] ])
+        let t2slice1 = t2.primalRaw.GetSlice(array2D [ [ 3I; 5I; 0I ]; [ 3I; 5I; 0I ] ])
 
         Assert.CheckEqual(33, t2slice1.GetItem(0, 0) |> Convert.ToInt32)
         Assert.CheckEqual(34, t2slice1.GetItem(0, 1) |> Convert.ToInt32)
@@ -561,16 +561,15 @@ type TestTensor () =
         Assert.CheckEqual(54, t2slice1.GetItem(2, 1) |> Convert.ToInt32)
         Assert.CheckEqual(55, t2slice1.GetItem(2, 2) |> Convert.ToInt32)
 
-        let t2slice2 = t2.primalRaw.GetSlice(array2D [ [ 3; 5; 0 ]; [ 3; 3; 1 ] ])
+        let t2slice2 = t2.primalRaw.GetSlice(array2D [ [ 3I; 5I; 0I ]; [ 3I; 3I; 1I ] ])
         Assert.CheckEqual(33, t2slice2.GetItem(0) |> Convert.ToInt32)
         Assert.CheckEqual(43, t2slice2.GetItem(1) |> Convert.ToInt32)
         Assert.CheckEqual(53, t2slice2.GetItem(2) |> Convert.ToInt32)
 
-        let t2slice3 = t2.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ]; [ 3; 5; 0 ] ])
+        let t2slice3 = t2.primalRaw.GetSlice(array2D [ [ 3I; 3I; 1I ]; [ 3I; 5I; 0I ] ])
         Assert.CheckEqual(33, t2slice3.GetItem(0) |> Convert.ToInt32)
         Assert.CheckEqual(34, t2slice3.GetItem(1) |> Convert.ToInt32)
         Assert.CheckEqual(35, t2slice3.GetItem(2) |> Convert.ToInt32)
-
 
     [<Test>]
     // Test cases of indexing where indexing returns a scalar
@@ -787,7 +786,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorToString () =
-        for combo in Combos.IntegralAndFloatingPoint do 
+        for combo in Combos.IntegralAndFloatingPoint do
             let t0 = combo.tensor(2.)
             let t1 = combo.tensor([[2.]; [2.]])
             let t2 = combo.tensor([[[2.; 2.]]])

@@ -7,6 +7,7 @@ namespace Tests
 
 open System
 open DiffSharp
+open DiffSharp.ShapeChecking
 
 // This captures the expected semantics of different Dtypes
 type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: Dtype, ?defaultFetchDevices: (DeviceType option * Backend option -> Device list)) =
@@ -26,11 +27,17 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.tensor(data: obj, ?device, ?backend, ?dtype) =
         dsharp.tensor(data, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.randn(shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.randn(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.randn(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.randn(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.randn(length:int, ?device, ?backend, ?dtype) =
         dsharp.randn(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.rand(shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.rand(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.rand(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.rand(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
@@ -38,11 +45,17 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.rand(length:int, ?device, ?backend, ?dtype) =
         dsharp.rand(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.randint(low:int, high:int, shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.randint(low, high, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.randint(low:int, high:int, shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.randint(low, high, shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.randint(low:int, high:int, length:int, ?device, ?backend, ?dtype) =
         dsharp.randint(low, high, length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.full(shape:Shape, value, ?device, ?backend, ?dtype) =
+        dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.full(shape:seq<int>, value, ?device, ?backend, ?dtype) =
         dsharp.full(shape, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
@@ -50,17 +63,26 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.full(length:int, value:scalar, ?device, ?backend, ?dtype) =
         dsharp.full(length, value, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.ones(shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.ones(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.ones(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.ones(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.ones(length:int, ?device, ?backend, ?dtype) =
         dsharp.ones(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.zeros(shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.zeros(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member _.zeros(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.zeros(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.zeros(length:int, ?device, ?backend, ?dtype) =
         dsharp.zeros(length, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.empty(shape:Shape, ?device, ?backend, ?dtype) =
+        dsharp.empty(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
     member _.empty(shape:seq<int>, ?device, ?backend, ?dtype) =
         dsharp.empty(shape, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
@@ -117,4 +139,3 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
         | Dtype.Int32 -> arr |> Array2D.map int32 :> Array
         | Dtype.Int64  -> arr |> Array2D.map int64 :> Array
         | Dtype.Bool -> arr |> Array2D.map (fun x -> abs x >= 1.0) :> Array
-

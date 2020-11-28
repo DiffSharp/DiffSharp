@@ -2,13 +2,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />
     <Compile Include="Backend.fs" />
+    <Compile Include="Symbols.fs" />
     <Compile Include="Device.fs" />
     <Compile Include="Dtype.fs" />
-    <Compile Include="Shape.fs" />
+    <Compile Include="IntType.fs" />
+    <Compile Include="ShapeType.fs" />
+    <Compile Include="ShapeFunctions.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Scalar.fs" />
     <Compile Include="RawTensor.fs" />
@@ -18,6 +22,8 @@
     <Compile Include="DiffSharp.Compose.fs" />
     <Compile Include="DiffSharp.Shorten.fs" />
     <Compile Include="DiffSharp.Numerical.fs" />
+    <Compile Include="DiffSharp.ShapeChecking.fs" />
+    <Compile Include="DiffSharp.ShapeChecking.Slicing.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />

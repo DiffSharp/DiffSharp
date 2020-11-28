@@ -5,6 +5,9 @@
 
 namespace DiffSharp
 
+open DiffSharp
+open DiffSharp.ShapeChecking
+
 /// Represents a storage type for elements of a tensor
 [<Struct>]
 type Dtype =
@@ -49,6 +52,9 @@ type Dtype =
         match t with
         | Bool | Byte | Int8 | Int16 | Int32 | Int64 -> Dtype.Int64
         | dt -> dt
+
+    /// Constraint equality
+    static member (=~=) (a:Dtype,b:Dtype) : bool = (a = b)
 
     override x.ToString() = x.Name
 

@@ -69,7 +69,7 @@ type BackendTensorStatics() =
     /// A backend type is delivered consistent with in-memory data - a type for dtype Int32 gets int32 data etc.
     abstract CreateFromFlatArray: data: System.Array * shape: Shape * dtype: Dtype * device: Device -> RawTensor
 
-    /// Get the backend implementation for the given tensor element type and backend.
+    /// Get the implementation for the given backend.
     static member Get(?backend: Backend) =
         hook.Get(?backend=backend)
 
@@ -228,7 +228,7 @@ type RawTensor() =
         let statics = BackendTensorStatics.Get(?backend=backend)
         let device = defaultArg device Device.Default
 
-        statics.CreateFromFlatArray(data, shape, dtype2, device)
+        statics.CreateFromFlatArray(data, Shape.constant shape, dtype2, device)
 
     static member CreateFromFlatArray(values: Array, shape:Shape, ?dtype, ?device, ?backend) =
         let statics = BackendTensorStatics.Get(?backend=backend)
@@ -300,7 +300,7 @@ type RawTensor() =
     abstract CatTs: tensors: RawTensor[] * dim: int -> RawTensor
 
     /// Split the given tensors along the given dimensions
-    abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
+    abstract SplitT: sizes: Int[] * dim: int -> RawTensor[]
 
     /// Get a textual representation of the tensors
     abstract GetString: extra: string -> string
@@ -311,7 +311,7 @@ type RawTensor() =
     ///  The indexes are an Nx3 array.  The first row is the start bounds, the second row is
     ///  the end bounds, the third is 1/0 indicating dimension removal.
     /// </param>
-    abstract GetSlice: fullBounds: int[,] -> RawTensor
+    abstract GetSlice: fullBounds: Int[,] -> RawTensor
 
     /// Gets a .NET object representing the value of the tensor at the given indexes
     abstract GetItem: [<ParamArray>] indexes: int[] -> scalar
@@ -385,7 +385,7 @@ type RawTensor() =
     abstract AddTT0: b: scalar * ?alpha: scalar -> RawTensor
 
     /// Adds a slice of <c>t2</c> at the given location to the tensor
-    abstract AddTTSlice: location: int[] * t2: RawTensor -> RawTensor
+    abstract AddTTSlice: location: Int[] * t2: RawTensor -> RawTensor
 
     /// Returns the element-wise subtraction of two tensors
     abstract SubTT: t2: RawTensor -> RawTensor
@@ -431,31 +431,31 @@ type RawTensor() =
     abstract MatMulTT: t2: RawTensor -> RawTensor
 
     /// Returns the 1D maxpool of a tensor and its chosen maximum indices
-    abstract MaxPool1D: kernelSize: int * stride: int * padding: int -> RawTensor * RawTensor
+    abstract MaxPool1D: kernelSize: Int * stride: Int * padding: Int -> RawTensor * RawTensor
 
     /// Returns the 2D maxpool of a tensor and its chosen maximum indices
-    abstract MaxPool2D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
+    abstract MaxPool2D: kernelSize: Int[] * strides: Int[] * padding: Int[] -> RawTensor * RawTensor
 
     /// Returns the 3D maxpool of a tensor and its chosen maximum indices
-    abstract MaxPool3D: kernelSize: int[] * strides: int[] * padding: int[] -> RawTensor * RawTensor
+    abstract MaxPool3D: kernelSize: Int[] * strides: Int[] * padding: Int[] -> RawTensor * RawTensor
 
     /// Returns the 1D maxunpool of a tensor using the given indices for locations of maximums
-    abstract MaxUnpool1D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool1D: indices: RawTensor * outputSize: Int[] -> RawTensor
 
     /// Returns the 2D maxunpool of a tensor using the given indices for locations of maximums
-    abstract MaxUnpool2D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool2D: indices: RawTensor * outputSize: Int[] -> RawTensor
 
     /// Returns the 3D maxunpool of a tensor using the given indices for locations of maximums
-    abstract MaxUnpool3D: indices: RawTensor * outputSize: int[] -> RawTensor
+    abstract MaxUnpool3D: indices: RawTensor * outputSize: Int[] -> RawTensor
 
     /// Returns the 1D convolution of the tensor
-    abstract Conv1D: kernel: RawTensor * stride: int * padding: int -> RawTensor
+    abstract Conv1D: kernel: RawTensor * stride: Int * padding: Int -> RawTensor
 
     /// Returns the 2D convolution of the tensor
-    abstract Conv2D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
+    abstract Conv2D: kernel: RawTensor * strides: Int[] * padding: Int[] -> RawTensor
 
     /// Returns the 3D convolution of the tensor
-    abstract Conv3D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
+    abstract Conv3D: kernel: RawTensor * strides: Int[] * padding: Int[] -> RawTensor
 
     /// Returns the element-wise negation of the tensor
     abstract NegT: unit -> RawTensor
@@ -482,10 +482,10 @@ type RawTensor() =
     abstract FlipT: dims: int[] -> RawTensor
 
     /// Returns the dilation of the tensor using the given dilations parameters
-    abstract DilateT: dilations: int[] -> RawTensor
+    abstract DilateT: dilations: Int[] -> RawTensor
 
     /// Returns the reverse of the dilation of the tensor using the given dilations parameters
-    abstract UndilateT: dilations: int[] -> RawTensor
+    abstract UndilateT: dilations: Int[] -> RawTensor
 
     /// Returns the tensor with the same values viewed as a different shape
     abstract ViewT: shape: Shape -> RawTensor
@@ -564,7 +564,6 @@ type RawTensor() =
         | _ -> t.NeqTT(t)
 
     default t.GetString(extra: string) =
-        // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
             | TypeCode.Single -> sprintf "%f" (x.toSingle())
@@ -587,7 +586,7 @@ type RawTensor() =
                 if shape.Length = 1 then
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
-                    for i=0 to shape.[0]-1 do
+                    for i=0 to shape.[0].Value-1 do
                         let globalCoords = Array.append externalCoords [|i|]
                         sb.Append(prefix) |> ignore
                         sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
@@ -597,7 +596,7 @@ type RawTensor() =
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
                     let prefix2 = sprintf ",%s%s" (String.replicate (max 1 (shape.Length-1)) "\n       ") (String.replicate (externalCoords.Length+1) " ")
-                    for i=0 to shape.[0]-1 do
+                    for i=0 to shape.[0].Value-1 do
                         sb.Append(prefix) |> ignore
                         print shape.[1..] (Array.append externalCoords [|i|])
                         prefix <- prefix2
@@ -630,7 +629,7 @@ type RawTensor() =
             | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
 
     default t.GetItem(indexes) =
-        let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then indexes.[i] else 1))
+        let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then Int indexes.[i] else 1I))
         t0.ToScalar()
 
     /// Returns a .NET object for the value of a scalar tensor
@@ -682,7 +681,7 @@ type RawTensor() =
     abstract AddScalarInPlace: b: scalar -> unit
 
     /// Adds a slice of <c>t2</c> at the given location to the tensor
-    abstract AddSliceInPlace: location: int[] * t2: RawTensor -> unit
+    abstract AddSliceInPlace: location: Int[] * t2: RawTensor -> unit
 
     /// Modifies the tensor by the element-wise subtraction of two tensors
     abstract SubInPlace: t2: RawTensor -> unit

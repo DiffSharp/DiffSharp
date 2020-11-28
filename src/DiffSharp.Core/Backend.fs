@@ -12,6 +12,8 @@ type Backend =
     | Reference
     /// The LibTorch backend 
     | Torch
+    /// For symbolic analysis of tensors
+    | ShapeChecking
     /// Reserved for future use
     | Other of name: string * code: int
 
@@ -19,6 +21,7 @@ type Backend =
         match x with 
         | Reference -> 0x000
         | Torch -> 0x0100
+        | ShapeChecking -> 0x0200
         | Other (_name, code) -> (code + 3) <<< 8
 
     /// Get the name of the backend
@@ -26,6 +29,7 @@ type Backend =
         match x with 
         | Reference -> "Reference"
         | Torch -> "Torch"
+        | ShapeChecking -> "ShapeChecking"
         | Other (name, _) -> name
 
     override x.ToString() = x.Name
@@ -39,12 +43,16 @@ module Backend =
     let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
 
     /// Get or set the default backend used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
-    let mutable Default = Backend.Reference
+    let mutable Default =
+        if System.Environment.GetEnvironmentVariable("LIVECHECK") <> null then
+            Backend.ShapeChecking
+        else
+            Backend.Reference
 
 type BackendFunctionality<'T>() =
     let mutable last = None
     let backends = System.Collections.Concurrent.ConcurrentDictionary<int, 'T>()
-
+    
     member _.Get(?backend: Backend) =
         let backend = defaultArg backend Backend.Default
         let code = backend.Code

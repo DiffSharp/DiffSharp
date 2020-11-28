@@ -66,7 +66,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member empty(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Empty(shape|>Seq.toArrayQuick, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Empty(shape|>Shape.constant, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given length, element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -74,7 +74,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member empty(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Empty([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Empty(Shape.constant [|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
@@ -89,7 +89,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Zeros(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Zeros(shape|>Shape.constant, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given length, element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -97,7 +97,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Zeros(Shape.constant [|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Get the scalar '1' tensor for the given configuration</summary>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
@@ -112,7 +112,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Ones(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Ones(shape|>Shape.constant, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with '1' values for the given element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -120,7 +120,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Ones(Shape.constant [|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
@@ -129,7 +129,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member full(shape:seq<int>, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Full(shape|>Shape.constant, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with <paramref name="value" />, for the given element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -146,7 +146,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member scalar(value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        dsharp.full(Shape.scalar, value, ?dtype=dtype, ?device=device, ?backend=backend)
+        dsharp.full([| |], value, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>
     /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
@@ -202,7 +202,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Random(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Random(Shape.constant shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -210,7 +210,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.Random(Shape.constant [|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
@@ -218,7 +218,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.RandomNormal(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.RandomNormal(Shape.constant shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
     /// <param name="length">The length of the returned tensor.</param>
@@ -226,7 +226,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.RandomNormal(Shape.constant [|length|], ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
@@ -236,7 +236,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.RandomInt(shape|>Shape.create, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.RandomInt(Shape.constant shape, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
@@ -246,7 +246,7 @@ type dsharp =
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor0(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+        Tensor0(RawTensor.RandomInt(Shape.constant [|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="probs">The input tensor containing probabilities.</param>
@@ -1040,7 +1040,7 @@ type dsharp =
     static member convTranspose3d(input:Tensor, filters:Tensor, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding:int, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings:seq<int>) =
         input.convTranspose3d(filters, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?strides=strides, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
 
-    /// <summary>Add zero padding to each side of a tensor</summary>
+    /// <summary>Add zero padding to each side of each dimension of a tensor</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
     static member pad(input:Tensor, paddings:seq<int>) = input.pad(paddings)
@@ -1177,6 +1177,9 @@ type dsharp with
     /// <param name="mapping">The function is passed the index of each element. The function to apply to each element of the tensor.</param>
     /// <param name="tensor">The input tensor.</param>
     static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
+        // Note, the shape here is correct, but dtype and device are taken from results 
+        if tensor.symbolic then tensor else 
+        
         let tflat = tensor.view(-1)
         let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
         dsharp.stack(items).view(tensor.shape)
@@ -1188,6 +1191,10 @@ type dsharp with
     /// <param name="tensor2">The second input tensor.</param>
     static member mapi2 (mapping:int[]->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) =  // Differentiable map2
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
+
+        // Note, the shape is correct, but dtype and device are taken from results (which must be consistent)
+        if tensor1.symbolic then tensor1 else
+        
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
@@ -1201,6 +1208,10 @@ type dsharp with
     /// <param name="tensor3">The third input tensor.</param>
     static member mapi3 (mapping:int[]->Tensor->Tensor->Tensor->Tensor) (tensor1:Tensor) (tensor2:Tensor) (tensor3:Tensor) =  // Differentiable map3
         if (tensor1.shape <> tensor2.shape) || (tensor2.shape <> tensor3.shape) then failwithf "Expecting tensor1.shape (%A), tensor2.shape (%A), tensor3.shape (%A) to be the same" tensor1.shape tensor2.shape tensor3.shape
+
+        // Note, the shape is correct, but dtype and device are taken from results (which must be consistent)
+        if tensor1.symbolic then tensor1 else
+        
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let tflat3 = tensor3.view(-1)
@@ -1379,6 +1390,7 @@ type dsharp with
     static member fjacobian (f:Tensor->Tensor) x =
         let fx, r = dsharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        // TODO: symbolics
         if x.nelement > fx.nelement then
             fx, dsharp.stack(Array.init fx.nelement (fun i -> r (x.onehotLike(fx.nelement, i))), 0)
         else

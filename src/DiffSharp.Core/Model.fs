@@ -7,8 +7,8 @@ namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
+open DiffSharp.ShapeChecking
 open System.Collections.Generic
-
 
 /// <namespacedoc>
 ///   <summary>Contains types and functionality related to describing models.</summary>
@@ -33,7 +33,7 @@ type Parameter =
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
+    override p.ToString() = sprintf "Parameter(%A)" p.value
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
@@ -108,6 +108,9 @@ type ParameterDict() =
     member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
+    member d.nelementx with get() = [|for t in d.values.Values do t.value.nelementx|] |> Array.sum
+
+    /// <summary>TBD</summary>
     member d.flatten() =
         let ts = [| for t in d.values.Values do t.value.view(-1) |]
         if ts.Length = 0 then dummy else
@@ -116,10 +119,10 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
-        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        let shapes = [|for t in d.values.Values do t.value.shape|]
-        let sizes = [|for s in shapes do shapeLength s|]
-        let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
+        if not (tensors.nelementx =~= d.nelementx) then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
+        let shapes = [|for t in d.values.Values do t.value.shapex|]
+        let sizes = [|for s in shapes do Shape.nelementx s|]
+        let ts = Array.map2 (fun (t:Tensor) (s:Shape) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
         let keys = Dictionary.copyKeys d.values
         for n in keys do
@@ -151,7 +154,7 @@ type Mode =
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
-type Model() =
+type BaseModel() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -159,17 +162,17 @@ type Model() =
     member val ParametersDict = ParameterDict()
 
     /// <summary>TBD</summary>
-    member val SubModelsDict = Dictionary<string, Model>()
+    member val SubModelsDict = Dictionary<string, BaseModel>()
 
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:Model in m.allModels do model.mode <- Mode.Train
+        for model:BaseModel in m.allModels do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:Model in m.allModels do model.mode <- Mode.Eval
+        for model:BaseModel in m.allModels do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
     member m.parametersDict
@@ -182,24 +185,38 @@ type Model() =
         and set parameters = m.parametersDict.unflatten(parameters)
 
     /// <summary>TBD</summary>
-    member m.allModels
-        with get () =
-            if m.SubModelsDict.Count = 0 then [m]
-            else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
+    member m.allModels =
+        if m.SubModelsDict.Count = 0 then [m]
+        else m.subModels
+
+    /// <summary>TBD</summary>
+    member m.subModels = [for sm in m.SubModelsDict.Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
         let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
         if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
+        let (|Pair|_|) (x: obj) =
+            if Reflection.FSharpType.IsTuple (x.GetType()) then  
+                match Reflection.FSharpValue.GetTupleFields(x) with
+                | [| t1; t2 |] -> Some (t1,t2)
+                | _ -> None
+            else
+                None
         for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p -> 
                 m.parametersDict.add(n, p)
-            | :? Model as mm ->
+            | :? BaseModel as mm ->
                 m.SubModelsDict.Add(n, mm)
                 m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
-            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+            | Pair ((:? Parameter as p), (:? string as n))  -> 
+                m.parametersDict.add(n, p)
+            | Pair ((:? BaseModel as mm), (:? string as n))  -> 
+                m.SubModelsDict.Add(n, mm)
+                m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+            | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
 
     /// <summary>TBD</summary>
     member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
@@ -211,55 +228,11 @@ type Model() =
     member m.noDiff() = m.parametersDict.noDiff()
 
     /// <summary>TBD</summary>
-    member m.move(?dtype, ?device, ?backend) = m.parametersDict.move(?dtype=dtype, ?device=device, ?backend=backend)
+    member m.move(?dtype, ?device, ?backend) =
+        m.parametersDict.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
     member m.nparameters = m.parametersDict.nelement
-
-    /// <summary>TBD</summary>
-    abstract member forward: Tensor -> Tensor
-
-    /// <summary>TBD</summary>
-    member m.forwardParameters (input:Tensor) (parameters:Tensor) =
-        m.parameters <- parameters
-        let f = m.forward(input) in m.noDiff(); f
-
-    /// <summary>TBD</summary>
-    member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
-        m.forwardParameters input parameters |> f
-
-    /// <summary>TBD</summary>
-    member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
-        m.forwardCompose (f target) input parameters
-
-    /// <summary>TBD</summary>
-    static member create ps f =
-        let model = { new Model() with override __.forward(x) = f x}
-        model.add(ps)
-        model
-
-    /// <summary>TBD</summary>
-    override m.ToString() =
-        let sb = System.Text.StringBuilder()
-        sb.Append("Model(\n") |> ignore
-        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
-        sb.Append(")") |> ignore
-        sb.ToString()
-
-    /// <summary>TBD</summary>
-    static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
-
-    /// <summary>TBD</summary>
-    static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
-
-    /// <summary>TBD</summary>
-    static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (t:Tensor, m:Model) = m.forward t
 
     /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parameters.save(fileName)
@@ -271,7 +244,59 @@ type Model() =
     member m.save(fileName) = saveBinary m fileName
 
     /// <summary>TBD</summary>
-    static member load(fileName):Model = loadBinary fileName
+    override m.ToString() =
+        let sb = System.Text.StringBuilder()
+        sb.Append("Model(\n") |> ignore
+        for model in m.subModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append(m.parametersDict.ToString()) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
+
+
+[<AbstractClass>]
+type Model<'In, 'Out>() =
+    inherit BaseModel()
+
+    /// <summary>TBD</summary>
+    abstract member forward: 'In -> 'Out
+
+    /// <summary>TBD</summary>
+    static member create (ps: seq<obj>) (f: 'In -> 'Out) : Model<'In, 'Out> =
+        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
+        model.add(ps)
+        model
+
+    /// <summary>TBD</summary>
+    static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
+        Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
+
+    /// <summary>TBD</summary>
+    member m.forwardParameters (input:'In) (parameters:Tensor) =
+        m.parameters <- parameters
+        let f = m.forward(input) in m.noDiff(); f
+
+    /// <summary>TBD</summary>
+    member m.forwardCompose (f:'Out->'Out2) (input:'In) (parameters:Tensor) =
+        m.forwardParameters input parameters |> f
+
+    /// <summary>TBD</summary>
+    member m.forwardLoss (f:'In2->'Out->Tensor) (input:'In) (target:'In2) (parameters:Tensor) =
+        m.forwardCompose (f target) input parameters
+
+    /// <summary>TBD</summary>
+    static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
+    
+    /// <summary>TBD</summary>
+    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] (m.forward >> f)
+
+    /// <summary>TBD</summary>
+    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
+
+    /// <summary>TBD</summary>
+    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
+
+    /// <summary>TBD</summary>
+    static member load(fileName):Model<'In, 'Out> = loadBinary fileName
 
     /// <summary>TBD</summary>
     member m.clone() = 
@@ -279,30 +304,48 @@ type Model() =
         m.save(fileName)
         Model.load(fileName)
 
+type Model = Model<Tensor, Tensor>
+
 /// <summary>Contains functionality related to generating initial paramerter weights.</summary>
 type Weight =
 
     /// <summary>TBD</summary>
-    static member kaiming(fanIn, fanOut, ?a:float) = 
+    static member kaiming(fanIn:Int, fanOut:Int, ?a:float) = 
         // He et al. 2015. https://arxiv.org/abs/1502.01852
         let a = defaultArg a (sqrt 5.)
         let w = dsharp.randn([fanIn; fanOut])
-        let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
+        let s = sqrt (2. / ((1. + a*a) * (float fanIn.ValueOrOne)))
         w * s
+
+    /// <summary>TBD</summary>
+    static member kaiming(fanIn:int, fanOut:int, ?a:float) =
+        Weight.kaiming(Int fanIn, Int fanOut, ?a=a)
 
     /// <summary>TBD</summary>
     static member uniform(shape:Shape, k:float) =
         -k + dsharp.rand(shape) * 2*k
-
+    
+    /// <summary>TBD</summary>
+    static member uniform(shape:seq<int>, k:float) = Weight.uniform (Shape shape, k)
+    
+    /// <summary>TBD</summary>
+    static member uniform(shape:seq<Int>, k:float) = Weight.uniform (Shape shape, k)
 
 /// <summary>A model that applies a linear transformation to the incoming data: \(y = xA^T + b\)</summary>
-type Linear(inFeatures, outFeatures, ?bias:bool) =
+type Linear(inFeatures:Int, outFeatures:Int, ?bias:bool, ?activation: (Tensor->Tensor)) =
     inherit Model()
-    let bias = defaultArg bias true
+    let hasBias = defaultArg bias true
+    let activation = defaultArg activation id
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
-    let k = 1./sqrt (float outFeatures)
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.zero())
+    let k = 1./sqrt (float outFeatures.ValueOrOne)
+    let b = Parameter(if hasBias then Weight.uniform([outFeatures], k) else dsharp.zero())
     do base.add([w;b],["Linear__weight";"Linear__bias"])
+    
+    /// <summary>TBD</summary>
+    member _.weight = w
+
+    /// <summary>TBD</summary>
+    member _.bias = b
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
@@ -310,14 +353,20 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
-        if bias then f + b.value else f
+        let f2 = if hasBias then f + b.value else f
+        let f3 = activation f2
+        f3
 
+    /// <summary>TBD</summary>
+    new (inFeatures: int, outFeatures: int, ?bias:bool, ?activation) =
+       Linear(Int inFeatures, Int outFeatures, ?bias=bias, ?activation=activation)
 
 /// <summary>A model that applies a 1D convolution over an input signal composed of several input planes</summary>
-type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
+type Conv1d(inChannels:Int, outChannels:Int, kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?bias:bool, ?activation: (Tensor->Tensor)) =
     inherit Model()
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSize))
+    let activation = defaultArg activation id
+    let k = 1./ sqrt (float (inChannels*kernelSize).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
@@ -328,15 +377,20 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I]) else f
+        |> activation
 
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool, ?activation) =
+        Conv1d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?bias=bias, ?activation=activation)
 
 /// <summary>A model that applies a 2D convolution over an input signal composed of several input planes</summary>
-type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+type Conv2d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool, ?activation: (Tensor->Tensor)) =
     inherit Model()
     let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
+    let activation = defaultArg activation id
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
@@ -347,15 +401,20 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I]) else f
+        |> activation
 
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool, ?activation) =
+        Conv2d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias, ?activation=activation)
 
 /// <summary>A model that applies a 3D convolution over an input signal composed of several input planes</summary>
-type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+type Conv3d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool, ?activation: (Tensor->Tensor)) =
     inherit Model()
     let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
+    let activation = defaultArg activation id
+    let k = 1./ sqrt (float (inChannels.ValueOrOne*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
@@ -366,15 +425,20 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I; 1I]) else f
+        |> activation
+
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool, ?activation) =
+        Conv3d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias, ?activation=activation)
 
 
 /// <summary>A model that applies a 1D transposed convolution operator over an input image composed of several input planes.</summary>
-type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
+type ConvTranspose1d(inChannels:Int, outChannels:Int, kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?bias:bool, ?outputPadding: Int) =
     inherit Model()
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSize))
-    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSize).ValueOrOne)
+    let w = Parameter <| Weight.uniform([inChannels; outChannels; kernelSize], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["ConvTranspose1d__weight";"ConvTranspose1d__bias"])
 
@@ -383,17 +447,20 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        let f = dsharp.convTranspose1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding)
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I]) else f
 
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool, ?outputPadding: int) =
+        ConvTranspose1d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?bias=bias, ?outputPadding=optInt outputPadding)
 
 /// <summary>A model that applies a 2D transposed convolution operator over an input image composed of several input planes.</summary>
-type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+type ConvTranspose2d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?outputPadding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool, ?outputPaddings:seq<Int>) =
     inherit Model()
     let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
-    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]).ValueOrOne)
+    let w = Parameter <| Weight.uniform([inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["ConvTranspose2d__weight";"ConvTranspose2d__bias"])
 
@@ -402,17 +469,20 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        let f = dsharp.convTranspose2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?outputPadding=outputPadding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations, ?outputPaddings=outputPaddings)
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I]) else f
 
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding: int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?outputPaddings: seq<int>, ?dilations:seq<int>, ?bias:bool) =
+        ConvTranspose2d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?outputPadding=optInt outputPadding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias, ?outputPaddings=optInts outputPaddings)
 
 /// <summary>A model that applies a 3D transposed convolution operator over an input image composed of several input planes.</summary>
-type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+type ConvTranspose3d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?outputPadding:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?outputPaddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool) =
     inherit Model()
     let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
-    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]).ValueOrOne)
+    let w = Parameter <| Weight.uniform([inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
     do base.add([w;b],["ConvTranspose3d__weight";"ConvTranspose3d__bias"])
 
@@ -421,9 +491,12 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        let f = dsharp.convTranspose3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?dilation=dilation, ?outputPadding=outputPadding, ?paddings=paddings, ?dilations=dilations, ?outputPaddings=outputPaddings)
+        if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I; 1I]) else f
 
+    /// <summary>TBD</summary>
+    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?outputPadding: int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?outputPaddings: seq<int>, ?bias:bool) =
+        ConvTranspose3d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?outputPadding=optInt outputPadding, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?outputPaddings=optInts outputPaddings, ?bias=bias)
 
 /// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.</summary>
 type Dropout(?p:double) =
@@ -480,7 +553,7 @@ type Dropout3d(?p:double) =
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm1d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -525,32 +598,34 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim = 2 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            if not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     value.mean(0), value.variance(0, unbiased=false)
                 else
                     _mean.value, _variance.value
-            if m.mode = Mode.Train && trackRunningStats then 
+            if not value.symbolic && m.mode = Mode.Train && trackRunningStats then 
                 let batchSize = value.shape.[0]
                 m.updateStats mean var batchSize
             let res = (value - mean) / (var + eps).sqrt()
             if affine then res * w.value + b.value else res
         elif value.dim = 3 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-            let vt = value.transpose(0,1).view([numFeatures;-1])
+            if not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            let vt = value.transpose(0,1).view([numFeatures; Int -1])
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     vt.mean(1), vt.variance(1, unbiased=false)
                 else
                     _mean.value, _variance.value
-            if m.mode = Mode.Train && trackRunningStats then
+            if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
                 let n = vt.shape.[1]
                 m.updateStats mean var n
-            let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
-            if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
+            let res = (value - mean.view([1I;numFeatures;1I ])) / (var.view([1I;numFeatures;1I]) + eps).sqrt()
+            if affine then res * w.value.view([1I;numFeatures;1I]) + b.value.view([1I;numFeatures;1I]) else res
         else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
 
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm1d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)
 
 /// <summary>Applies Batch Normalization over a 4D input (a mini-batch of 2D inputs with optional additional channel dimension)</summary>
 /// <remarks>
@@ -571,7 +646,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm2d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -615,19 +690,22 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-        let vt = value.transpose(0,1).view([numFeatures;-1])
+        if value.dim <> 4 || not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shapex
+        let vt = value.transpose(0,1).view([numFeatures;Int -1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
                 _mean.value, _variance.value
-        if m.mode = Mode.Train && trackRunningStats then
+        if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
-        let res = (value - mean.view([1;numFeatures;1;1])) / (var.view([1;numFeatures;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
+        let res = (value - mean.view([1I;numFeatures;1I;1I ])) / (var.view([1I;numFeatures;1I;1I]) + eps).sqrt()
+        if affine then res * w.value.view([1I;numFeatures;1I;1I]) + b.value.view([1I;numFeatures;1I;1I]) else res
 
+    /// <summary>TBD</summary>
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm2d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)
 
 /// <summary>Applies Batch Normalization over a 5D input (a mini-batch of 3D inputs with optional additional channel dimension)</summary>
 /// <remarks>
@@ -648,7 +726,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm3d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -692,15 +770,20 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-        let vt = value.transpose(0,1).view([numFeatures;-1])
+        if value.dim <> 5 || not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        let vt = value.transpose(0,1).view([numFeatures; Int -1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
                 _mean.value, _variance.value
-        if m.mode = Mode.Train && trackRunningStats then
+        if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
-        let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res        
+        let res = (value - mean.view([1I;numFeatures;1I;1I;1I])) / (var.view([1I;numFeatures;1I;1I;1I]) + eps).sqrt()
+        if affine then res * w.value.view([1I;numFeatures;1I;1I;1I]) + b.value.view([1I;numFeatures;1I;1I; 1I]) else res        
+
+    /// <summary>TBD</summary>
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm3d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)
+

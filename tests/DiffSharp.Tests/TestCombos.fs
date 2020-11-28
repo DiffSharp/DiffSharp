@@ -52,6 +52,12 @@ module Combos =
               for dtype in dtypes do
                 yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultDtype=dtype, defaultFetchDevices=getDevices) ]
 
+    let ShapeChecking =
+        [ let devices = [ Device.CPU ]
+          for device in devices do
+              for dtype in [ Dtype.Float32 ] do
+                yield ComboInfo(defaultBackend=Backend.ShapeChecking, defaultDevice=device, defaultDtype=dtype, defaultFetchDevices=(fun _ -> devices)) ]
+
     /// These runs though all devices, backends and various Dtype
     let Float32 = makeCombos Dtypes.Float32
     let Integral = makeCombos Dtypes.Integral
