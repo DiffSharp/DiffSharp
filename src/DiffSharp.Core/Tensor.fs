@@ -2958,13 +2958,9 @@ type Tensor =
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-<<<<<<< HEAD
                             if not a.symbolic then 
                               let bounds = bounds |> Array2D.map (fun d -> d.Value)
-                              a.derivative <- a.derivative.addSlice(boundsToLocation bounds, t.derivative.view(boundsToShapeNoSqueeze bounds))
-=======
-                            a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShape bounds))
->>>>>>> 200df6c859377b5edf4d91d79de600fedb49256f
+                              a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShape bounds))
                             push (check(a.zeroLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> push (check(t.derivative, a) :: check(t.derivative.GetSlice(Shape.locationToBounds b.shapex location), b):: tt)
                         | AddTTConstSlice(a) -> push (check(t.derivative, a) :: tt)
