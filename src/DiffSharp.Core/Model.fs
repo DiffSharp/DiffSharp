@@ -39,6 +39,9 @@ type Parameter =
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
 
+    // If the dictionary is empty then the latest 'move' is considered the configuration for the implied empty tensor
+    let mutable dummy = dsharp.zeros(0)
+
     /// <summary>TBD</summary>
     member val values = Dictionary<string, Parameter>()
 
@@ -91,7 +94,9 @@ type ParameterDict() =
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
 
     /// <summary>TBD</summary>
-    member d.move(?dtype, ?device, ?backend) = d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
+    member d.move(?dtype, ?device, ?backend) = 
+        dummy <- dummy.move(?dtype=dtype, ?device=device, ?backend=backend)
+        d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
@@ -104,7 +109,8 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.flatten() =
-        let ts = [for t in d.values.Values do t.value.view(-1)]
+        let ts = [| for t in d.values.Values do t.value.view(-1) |]
+        if ts.Length = 0 then dummy else
         dsharp.cat(ts)
 
     /// <summary>TBD</summary>
