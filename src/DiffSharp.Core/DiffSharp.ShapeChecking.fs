@@ -399,7 +399,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member empty(shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Empty(shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Empty(shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -409,7 +409,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member empty(shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Empty(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Empty(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given length, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -419,7 +419,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member empty(length:Int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Empty(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Empty(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -429,7 +429,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member zeros(shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Zeros(shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Zeros(shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -439,7 +439,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member zeros(shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Zeros(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Zeros(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -449,7 +449,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member zeros(length:Int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Zeros(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Zeros(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -459,7 +459,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member ones(shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Ones(shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Ones(shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -469,7 +469,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member ones(shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Ones(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Ones(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -479,7 +479,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member ones(length:Int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Ones(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Ones(Shape [| length |], ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -490,7 +490,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member full(shape:Shape, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Full(shape, value, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Full(shape, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -501,7 +501,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member full(shape:seq<Int>, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Full(Shape shape, value, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Full(Shape shape, value, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration.
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -512,7 +512,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member full(length:Int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Full(Shape [| length |], value, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Full(Shape [| length |], value, ?dtype=dtype, ?device=device, ?backend=backend))
 
         // /// <summary>TBD</summary>
         // static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = Tensor.eye(rows=rows, ?cols=cols, ?dtype=dtype, ?device=device, ?backend=backend)
@@ -536,7 +536,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member rand(shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Random(shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Random(shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1).
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -546,7 +546,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member rand(shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.Random(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.Random(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -556,7 +556,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member randn(shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.RandomNormal(shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.RandomNormal(shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -566,7 +566,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member randn(shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.RandomNormal(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.RandomNormal(Shape shape, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -578,7 +578,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member randint(low:int, high:int, shape:Shape, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.RandomInt(shape, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.RandomInt(shape, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
         /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).
         ///   This overload acceps potentially symbolic shape information (Shape and Int).
@@ -590,7 +590,7 @@ module ShapedInferenceAutoOpens =
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
         static member randint(low:int, high:int, shape:seq<Int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-            Tensor0(RawTensor.RandomInt(Shape shape, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+            TensorC(RawTensor.RandomInt(Shape shape, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
 
         // /// <summary>TBD</summary>
         // static member multinomial(probs:Tensor, numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
