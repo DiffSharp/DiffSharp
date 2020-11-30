@@ -2354,17 +2354,79 @@ type TestDerivatives () =
             Assert.True(revz.allclose(revzCorrect, 0.01))
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
-
-    [<Test>]
-    member _.TestDerivativeSliceTFinalColumn () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
-            let revx = combo.tensor([54.7919; 70.6440; 16.0868]).reverseDiff()
-            let revz = revx.[2..]
-            let revzCorrect = combo.tensor([16.0868])
-            revz.reverse(combo.tensor([0.9360]))
-            let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([0.; 0.; 0.9360])
+            let fwdx = combo.tensor([1; 2; 3]).forwardDiff(combo.tensor([10; 20; 30]))
+            let fwdz = fwdx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let fwdzCorrect = combo.tensor([1])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([10])
 
+            let revx = combo.tensor([1; 2; 3]).reverseDiff()
+            let revz = revx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let revzCorrect = combo.tensor([1])
+            revz.reverse(combo.tensor([10]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([10; 0; 0])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([1; 2; 3]).forwardDiff(combo.tensor([10; 20; 30]))
+            let fwdz = fwdx.[2..]
+            let fwdzCorrect = combo.tensor([3])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([30])
+
+            let revx = combo.tensor([1; 2; 3]).reverseDiff()
+            let revz = revx.[2..]
+            let revzCorrect = combo.tensor([3])
+            revz.reverse(combo.tensor([30]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([0; 0; 30])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).forwardDiff(combo.tensor([[10; 20; 30]; [40; 50; 60]; [70; 80; 90]]))
+            let fwdz = fwdx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let fwdzCorrect = combo.tensor([[1; 2; 3]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[10; 20; 30]])
+
+            let revx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).reverseDiff()
+            let revz = revx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let revzCorrect = combo.tensor([[1; 2; 3]])
+            revz.reverse(combo.tensor([[10; 20; 30]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[10; 20; 30]; [0; 0; 0]; [0; 0; 0]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).forwardDiff(combo.tensor([[10; 20; 30]; [40; 50; 60]; [70; 80; 90]]))
+            let fwdz = fwdx.[2..]
+            let fwdzCorrect = combo.tensor([[7; 8; 9]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[70; 80; 90]])
+
+            let revx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).reverseDiff()
+            let revz = revx.[2..]
+            let revzCorrect = combo.tensor([[7; 8; 9]])
+            revz.reverse(combo.tensor([[70; 80; 90]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[0; 0; 0]; [0; 0; 0]; [70; 80; 90]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
             Assert.True(revz.allclose(revzCorrect, 0.01))
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
 

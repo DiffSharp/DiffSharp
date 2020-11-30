@@ -2981,8 +2981,12 @@ type TestTensor () =
             let t1 = combo.tensor([1.;2.])
             let t1s1 = t1.[0]
             let t1s2 = t1.[*]
+            let t1s3 = t1.[1..]
+            let t1s4 = t1.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t1s1Correct = combo.tensor(1.)
             let t1s2Correct = combo.tensor([1.;2.])
+            let t1s3Correct = combo.tensor([2.])
+            let t1s4Correct = combo.tensor([1.])
 
             let t2 = combo.tensor([[1.;2.];[3.;4.]])
             let t2s1 = t2.[0]
@@ -2991,12 +2995,16 @@ type TestTensor () =
             let t2s4 = t2.[0,*]
             let t2s5 = t2.[*,0]
             let t2s6 = t2.[*,*]
+            let t2s7 = t2.[1..]
+            let t2s8 = t2.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t2s1Correct = combo.tensor([1.;2.])
             let t2s2Correct = combo.tensor([[1.;2.];[3.;4.]])
             let t2s3Correct = combo.tensor(1.)
             let t2s4Correct = combo.tensor([1.;2.])
             let t2s5Correct = combo.tensor([1.;3.])
             let t2s6Correct = combo.tensor([[1.;2.];[3.;4.]])
+            let t2s7Correct = combo.tensor([[3.; 4.]])
+            let t2s8Correct = combo.tensor([[1.; 2.]])
 
             let t2b = combo.tensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
             let t2bs1 = t2b.[1..,2..]
@@ -3049,6 +3057,8 @@ type TestTensor () =
 
             Assert.CheckEqual(t1s1Correct, t1s1)
             Assert.CheckEqual(t1s2Correct, t1s2)
+            Assert.CheckEqual(t1s3Correct, t1s3)
+            Assert.CheckEqual(t1s4Correct, t1s4)
 
             Assert.CheckEqual(t2s1Correct, t2s1)
             Assert.CheckEqual(t2s2Correct, t2s2)
@@ -3056,6 +3066,8 @@ type TestTensor () =
             Assert.CheckEqual(t2s4Correct, t2s4)
             Assert.CheckEqual(t2s5Correct, t2s5)
             Assert.CheckEqual(t2s6Correct, t2s6)
+            Assert.CheckEqual(t2s7Correct, t2s7)
+            Assert.CheckEqual(t2s8Correct, t2s8)
 
             Assert.CheckEqual(t2bs1Correct, t2bs1)
             Assert.CheckEqual(t2bs2Correct, t2bs2)
