@@ -1,3 +1,8 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace Tests
 
 open NUnit.Framework
@@ -377,7 +382,7 @@ type TestModel () =
     member _.TestModelDropout () =
         let m = Dropout(1.)
         let x = dsharp.randn([10;10])
-        
+        Assert.CheckEqual(m.parameters.shape, [| 0 |])
         m.train()
         let xtrain = x --> m
         Assert.CheckEqual(x.zerosLike(), xtrain)

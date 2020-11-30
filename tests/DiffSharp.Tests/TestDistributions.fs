@@ -1,3 +1,8 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace Tests
 
 open NUnit.Framework
@@ -15,7 +20,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsNormal () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let meanCorrect = combo.tensor(10.)
             let stddevCorrect = combo.tensor(3.5)
             let d = Normal(meanCorrect, stddevCorrect)
@@ -41,7 +46,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsNormalBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let meanCorrect = combo.tensor([10., 20.])
             let stddevCorrect = combo.tensor([3.5, 1.2])
             let d = Normal(meanCorrect, stddevCorrect)
@@ -67,7 +72,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsUniform () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let lowCorrect = combo.tensor(0.5)
             let highCorrect = combo.tensor(10.5)
             let rangeCorrect = highCorrect - lowCorrect
@@ -102,7 +107,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsUniformBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let lowCorrect = combo.tensor([0.5, 0., -5.])
             let highCorrect = combo.tensor([10.5, 1., 5.])
             let rangeCorrect = highCorrect - lowCorrect
@@ -137,7 +142,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsBernoulli () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -174,7 +179,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsBernoulliBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -216,7 +221,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsCategorical () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             for logit in [false; true] do
                 let probsCorrect, logitsCorrect, d =
                     if logit then
@@ -254,7 +259,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsCategoricalBatched () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let probsCorrect = combo.tensor([[0.1, 0.2, 0.7],
                                                 [0.2, 0.5, 0.3]])
             let logitsCorrect = probsToLogits probsCorrect false
@@ -283,7 +288,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsEmpirical () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([1,2,3])
             let logWeights = combo.tensor([1,2,3])
 
@@ -328,7 +333,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsEmpiricalCombineDuplicatesMode () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([0,1,2,2,2,2,3,4,4,5,5,5,6,7,7,8,9])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592, 0.4845, 0.7710, 0.3588, 0.8622, 0.7621, 0.6102, 0.9421, 0.0774, 0.8294, 0.7371, 0.3742])
 
@@ -366,7 +371,7 @@ type TestDistributions () =
 
     [<Test>]
     member _.TestDistributionsEmpiricalResampleFilter () =
-        for combo in Combos.AllDevicesAndBackends do
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([0,1,2,3,4,5])
             let weights = combo.tensor([0.0969, 0.1948, 0.7054, 0.0145, 0.7672, 0.1592])
 

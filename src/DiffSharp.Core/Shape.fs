@@ -1,4 +1,8 @@
-﻿namespace DiffSharp
+﻿// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+namespace DiffSharp
 
 open DiffSharp.Util
 
@@ -577,6 +581,121 @@ module rec Shape =
 
     let inline create (xs: seq<int>) = Seq.toArrayQuick xs
 
+    let resolve2dKernelSizes kernelSize kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
+        | _ -> [|1; 1|]
+
+    let resolve3dKernelSizes kernelSize kernelSizes = 
+        match kernelSize, kernelSizes with
+        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+        | Some k, None -> [|k; k; k|]
+        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
+        | _ -> [|1; 1; 1|]
+
+    let resolve2dConvSizes stride strides padding paddings dilation dilations =
+        let strides = 
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
+            | _ -> [|1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d|]
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 2 then failwithf "Expecting dilations to be 2-dimensional" else d
+            | _ -> [|1; 1|]
+        strides, paddings, dilations
+
+    let resolve3dConvSizes stride strides padding paddings dilation dilations =
+        let strides = 
+            match stride, strides with
+            | Some _ , Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> [|1; 1; 1|]
+        let paddings = 
+            match padding, paddings with
+            | Some _ , Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        let dilations = 
+            match dilation, dilations with
+            | Some _ , Some _ -> failwithf "Expecting only one of dilation, dilations"
+            | Some d, None -> [|d; d; d|]
+            | None, Some d -> let d = d |> Array.ofSeq in if d.Length <> 3 then failwithf "Expecting dilations to be 3-dimensional" else d
+            | _ -> [|1; 1; 1|]
+        strides, paddings, dilations
+
+    let resolve2dConvOutputPadding outputPadding outputPaddings =
+        match outputPadding, outputPaddings with
+        | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+        | Some p, None -> [|p; p|]
+        | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting outputPaddings to be 2-dimensional" else p
+        | _ -> [|0; 0|]
+
+    let resolve3dConvOutputPadding outputPadding outputPaddings =
+        match outputPadding, outputPaddings with
+        | Some _ , Some _ -> failwithf "Expecting only one of outputPadding, outputPaddings"
+        | Some p, None -> [|p; p; p|]
+        | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting outputPaddings to be 3-dimensional" else p
+        | _ -> [|0; 0; 0|]
+
+    let resolve2dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to be 2-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 2 then failwithf "Expecting strides to be 2-dimensional" else s
+            | _ -> kernelSizes
+
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 2 then failwithf "Expecting paddings to be 2-dimensional" else p
+            | _ -> [|0; 0|]
+        kernelSizes, strides, paddings
+
+    let resolve3dMaxPoolSizes kernelSize kernelSizes stride strides padding paddings =
+        let kernelSizes =
+            match kernelSize, kernelSizes with
+            | Some _, Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
+            | Some k, None -> [|k; k; k|]
+            | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to be 3-dimensional" else k
+            | _ -> failwithf "Expecting either kernelSize or kernelSizes"
+        let strides =
+            match stride, strides with
+            | Some _, Some _ -> failwithf "Expecting only one of stride, strides"
+            | Some s, None -> [|s; s; s|]
+            | None, Some s -> let s = s |> Array.ofSeq in if s.Length <> 3 then failwithf "Expecting strides to be 3-dimensional" else s
+            | _ -> kernelSizes
+        let paddings =
+            match padding, paddings with
+            | Some _, Some _ -> failwithf "Expecting only one of padding, paddings"
+            | Some p, None -> [|p; p; p|]
+            | None, Some p -> let p = p |> Array.ofSeq in if p.Length <> 3 then failwithf "Expecting paddings to be 3-dimensional" else p
+            | _ -> [|0; 0; 0|]
+        kernelSizes, strides, paddings
+
+
 [<AutoOpen>]
 module ShapeAutoOpens =
 
@@ -594,15 +713,8 @@ module ShapeAutoOpens =
     let boundsToLocation (bounds: int[,]) =
         [|for i=0 to bounds.GetLength(0) - 1 do yield bounds.[i, 0]|]
 
-    /// Converts the array of three-position bounds specifications to a shape.
-    let boundsToShape (bounds: int[,]) =
-        [|for i=0 to bounds.GetLength(0) - 1 do 
-             let len = bounds.[i, 1] - bounds.[i, 0] + 1
-             if bounds.[i, 2] = 0 || len > 1 then 
-                 yield len |]
-
     /// Converts the array of three-position bounds specifications to a shape without squeezing out scalars
-    let boundsToShapeNoSqueeze (bounds: int[,]) =
+    let boundsToShape (bounds: int[,]) =
         [|for i=0 to bounds.GetLength(0) - 1 do 
              let len = bounds.[i, 1] - bounds.[i, 0] + 1
              yield len|]

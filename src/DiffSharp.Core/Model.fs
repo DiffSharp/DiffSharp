@@ -1,4 +1,10 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace rec DiffSharp.Model
+
 open DiffSharp
 open DiffSharp.Util
 open System.Collections.Generic
@@ -44,6 +50,9 @@ type Parameter(value:Tensor) =
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
+
+    // If the dictionary is empty then the latest 'move' is considered the configuration for the implied empty tensor
+    let mutable dummy = dsharp.zeros(0)
 
     /// <summary>TBD</summary>
     member val values = Dictionary<string, Parameter>()
@@ -97,7 +106,9 @@ type ParameterDict() =
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
 
     /// <summary>TBD</summary>
-    member d.move(?dtype, ?device, ?backend) = d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
+    member d.move(?dtype, ?device, ?backend) = 
+        dummy <- dummy.move(?dtype=dtype, ?device=device, ?backend=backend)
+        d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
     member d.primal with get() = d.map(fun (t:Parameter)->t.copyout().primal)
@@ -111,6 +122,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.flatten() =
         let ts = [for t in d.values.Values do t.borrow().view(-1)]
+        if ts.Length = 0 then dummy else
         dsharp.cat(ts)
 
     /// <summary>TBD</summary>
@@ -338,12 +350,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
 /// <summary>A model that applies a 2D convolution over an input signal composed of several input planes</summary>
 type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
-    let kernelSizes = 
-        match kernelSize, kernelSizes with
-        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-        | Some k, None -> [|k; k|]
-        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
-        | _ -> [|1; 1|]
+    let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
@@ -364,12 +371,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
 /// <summary>A model that applies a 3D convolution over an input signal composed of several input planes</summary>
 type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
-    let kernelSizes = 
-        match kernelSize, kernelSizes with
-        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-        | Some k, None -> [|k; k; k|]
-        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
-        | _ -> [|1; 1; 1|]
+    let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
@@ -410,12 +412,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
 /// <summary>A model that applies a 2D transposed convolution operator over an input image composed of several input planes.</summary>
 type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
-    let kernelSizes = 
-        match kernelSize, kernelSizes with
-        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-        | Some k, None -> [|k; k|]
-        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 2 then failwithf "Expecting kernelSizes to have length two" else k
-        | _ -> [|1; 1|]
+    let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
@@ -436,12 +433,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 /// <summary>A model that applies a 3D transposed convolution operator over an input image composed of several input planes.</summary>
 type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
     inherit Model()
-    let kernelSizes = 
-        match kernelSize, kernelSizes with
-        | Some _ , Some _ -> failwithf "Expecting only one of kernelSize, kernelSizes"
-        | Some k, None -> [|k; k; k|]
-        | None, Some k -> let k = k |> Array.ofSeq in if k.Length <> 3 then failwithf "Expecting kernelSizes to have length three" else k
-        | _ -> [|1; 1; 1|]
+    let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)

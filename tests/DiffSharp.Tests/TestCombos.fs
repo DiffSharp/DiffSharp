@@ -1,4 +1,9 @@
-﻿namespace Tests
+﻿// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
+namespace Tests
 
 open DiffSharp
 
@@ -64,8 +69,8 @@ module Combos =
     let AllExcept16s = makeCombos Dtypes.All
 
     /// This runs though all devices and backends but leaves the default Dtype
-    let AllDevicesAndBackends = 
+    let AllDevicesAndBackendsFloat32 = 
         [ for backend in backends do
             let ds = getDevices (None, Some backend)
             for device in ds do
-              yield ComboInfo(defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
+              yield ComboInfo(defaultDtype=Dtype.Float32, defaultBackend=backend, defaultDevice=device, defaultFetchDevices=getDevices) ]
