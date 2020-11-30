@@ -428,6 +428,8 @@ module rec Shape =
 
     /// Checks if the given shape is appropriate for a permute operation and returns information related to the resulting shape.
     let checkCanPermute (shape: Shape) (permutation: int[]) =
+        if shape.Length <> permutation.Length then failwithf "Expecting tensor's shape (%A) and permutation (%A) to have the same dims" shape permutation
+        if Seq.hasDuplicates permutation then failwithf "Expecting permutation (%A) to have no duplicate values" permutation
         let inversePermutation = Array.permute (fun i -> permutation.[i]) [| 0.. shape.Length-1 |]
         let newShape = Array.permute (fun i -> inversePermutation.[i]) shape
         inversePermutation, newShape
