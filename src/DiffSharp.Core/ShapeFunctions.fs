@@ -555,7 +555,7 @@ module Shape =
 
     /// Converts the given location to a three-element bounds array in the context of the given shape.
     let locationToBounds (shape: Shape) (location: Int[]) : Int[,] =
-        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i].Value - 1 else 1I)
+        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i].Value - 1 else 0I)
 
     /// Finds the shape into which `shape1` and `shape2` can be expanded.
     let broadcast2 (shape1: Shape) (shape2: Shape) =

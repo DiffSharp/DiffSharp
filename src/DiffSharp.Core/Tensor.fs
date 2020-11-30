@@ -2831,10 +2831,10 @@ type Tensor =
     /// <param name="value">The value to apply.</param>
     member t.reversePush(value:Tensor) =
         let check (v:Tensor,t:Tensor) = 
-            // Check the shapes of the tangent derivatives match the nodes to which they are being propagated
-            // In some places the 'zero' tensor is being used for the initial tangent derivative so 
-            // the assert takes that into account.
-            assert (v.shape.Length = 0 || t.derivative.shape.Length = 0 || v.shape = t.derivative.shape)
+            // Check that either:
+            // 1. shape of backpropagated adjoint matches shape of primal of node to which it is being propagated
+            // 2. the backpropagated adjoint is zero, indicating that the derivative accumulation was already performed by the code that called check (this behavior is for efficiency reasons, eliminating a zerosLike call for several ops involving sliced tensors)
+            assert (v.shape = t.primal.shape || float(v) = 0.)
             (v,t)
 
         let rec push (ts:(Tensor*Tensor) list) =
