@@ -382,7 +382,7 @@ type TestModel () =
     member _.TestModelDropout () =
         let m = Dropout(1.)
         let x = dsharp.randn([10;10])
-        
+        Assert.CheckEqual(m.parameters.shape, [| 0 |])
         m.train()
         let xtrain = x --> m
         Assert.CheckEqual(x.zerosLike(), xtrain)
