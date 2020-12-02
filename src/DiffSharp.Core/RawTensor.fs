@@ -372,8 +372,14 @@ type RawTensor() =
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is a NaN value
     abstract IsNaNT: unit -> RawTensor
 
-    /// Gets the index of a maximum value of the tensor
+    /// Gets a tensor containing values and indexes of a maximum value of the tensor reducing along the given dimension
+    abstract MaxReduceT: dim: int * keepdim: bool -> RawTensor * RawTensor
+
+    /// Gets the index of a maximum value of the tensor 
     abstract MaxIndexT: unit -> int[]
+
+    /// Gets a tensor containing values and indexes of a minimum value of the tensor reducing along the given dimension
+    abstract MinReduceT: dim: int * keepdim: bool -> RawTensor * RawTensor
 
     /// Gets the index of a minimum value of the tensor
     abstract MinIndexT: unit -> int[]

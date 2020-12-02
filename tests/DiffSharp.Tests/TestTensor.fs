@@ -3556,14 +3556,23 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorArgmaxDim () =
-        for combo in Combos.All do 
+        for combo in Combos.IntegralAndFloatingPointExcept16s do 
             let t1 = combo.tensor([4.;1.;20.;3.])
             let t1Argmax = t1.argmax(0)
-            let t1ArgmaxCorrect = combo.tensor(3, dtype=Dtype.Int32)
+            let t1ArgmaxCorrect = combo.tensor(2, dtype=Dtype.Int32)
+
+            let t1ArgmaxKeepDim = t1.argmax(0, keepDim=true)
+            let t1ArgmaxKeepDimCorrect = combo.tensor([2;2;2;2], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])
             let t2Argmax = t2.argmax(0)
             let t2ArgmaxCorrect = combo.tensor([1,0], dtype=Dtype.Int32)
+
+            let t2ArgmaxKeepDim = t2.argmax(0, keepDim=true)
+            let t2ArgmaxKeepDimCorrect = combo.tensor([[1;0];[1;0]], dtype=Dtype.Int32)
+
+            let t2ArgmaxKeepDim1 = t2.argmax(1, keepDim=true)
+            let t2ArgmaxKeepDim1Correct = combo.tensor([[1;1];[1;1]], dtype=Dtype.Int32)
 
             let t3 = combo.tensor([[[ 7.6884; 65.9125;  4.0114];
                                  [46.7944; 61.5331; 40.1627];
@@ -3588,21 +3597,33 @@ type TestTensor () =
         
 
             Assert.CheckEqual(t1ArgmaxCorrect, t1Argmax)
+            Assert.CheckEqual(t1ArgmaxKeepDimCorrect, t1ArgmaxKeepDim)
             Assert.CheckEqual(t2ArgmaxCorrect, t2Argmax)
+            Assert.CheckEqual(t2ArgmaxKeepDimCorrect, t2ArgmaxKeepDim)
+            Assert.CheckEqual(t2ArgmaxKeepDim1Correct, t2ArgmaxKeepDim1)
             Assert.CheckEqual(t3Argmax0Correct, t3Argmax0)
             Assert.CheckEqual(t3Argmax1Correct, t3Argmax1)
             Assert.CheckEqual(t3Argmax2Correct, t3Argmax2)
 
     [<Test>]
     member _.TestTensorArgminDim () =
-        for combo in Combos.All do 
+        for combo in Combos.IntegralAndFloatingPointExcept16s do 
             let t1 = combo.tensor([4.;1.;20.;3.])
-            let t1Argmax = t1.argmin(0)
-            let t1ArgmaxCorrect = combo.tensor(1, dtype=Dtype.Int32)
+            let t1Argmin = t1.argmin(0)
+            let t1ArgminCorrect = combo.tensor(1, dtype=Dtype.Int32)
+
+            let t1ArgminKeepDim = t1.argmin(0, keepDim=true)
+            let t1ArgminKeepDimCorrect = combo.tensor([1;1;1;1], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])
-            let t2Argmax = t2.argmin(0)
-            let t2ArgmaxCorrect = combo.tensor([0,1], dtype=Dtype.Int32)
+            let t2Argmin = t2.argmin(0)
+            let t2ArgminCorrect = combo.tensor([0,1], dtype=Dtype.Int32)
+
+            let t2ArgminKeepDim = t2.argmin(0, keepDim=true)
+            let t2ArgminKeepDimCorrect = combo.tensor([[0,1],[0,1]], dtype=Dtype.Int32)
+
+            let t2ArgminKeepDim1 = t2.argmin(1, keepDim=true)
+            let t2ArgminKeepDim1Correct = combo.tensor([[0,0],[0,0]], dtype=Dtype.Int32)
 
             let t3 = combo.tensor([[[ 7.6884; 65.9125;  4.0114];
                                  [46.7944; 61.5331; 40.1627];
@@ -3616,20 +3637,24 @@ type TestTensor () =
                                  [71.6328; 18.5912; 27.7328];
                                  [49.9120; 60.3023; 53.0838]]])
 
-            let t3Argmax0 = t3.argmin(0)
-            let t3Argmax0Correct = combo.tensor([[0, 2, 0],[0, 2, 1],[1, 0, 0]],dtype=Dtype.Int32)
+            let t3Argmin0 = t3.argmin(0)
+            let t3Argmin0Correct = combo.tensor([[0, 2, 0],[0, 2, 1],[1, 0, 0]],dtype=Dtype.Int32)
         
-            let t3Argmax1 = t3.argmin(1)
-            let t3Argmax1Correct = combo.tensor([[0, 2, 0],[0, 1, 1],[2, 1, 1]],dtype=Dtype.Int32)
+            let t3Argmin1 = t3.argmin(1)
+            let t3Argmin1Correct = combo.tensor([[0, 2, 0],[0, 1, 1],[2, 1, 1]],dtype=Dtype.Int32)
         
-            let t3Argmax2 = t3.argmin(2)
-            let t3Argmax2Correct = combo.tensor([[2, 2, 1],[0, 2, 0],[2, 1, 0]],dtype=Dtype.Int32)
+            let t3Argmin2 = t3.argmin(2)
+            let t3Argmin2Correct = combo.tensor([[2, 2, 1],[0, 2, 0],[2, 1, 0]],dtype=Dtype.Int32)
 
-            Assert.CheckEqual(t1ArgmaxCorrect, t1Argmax)
-            Assert.CheckEqual(t2ArgmaxCorrect, t2Argmax)
-            Assert.CheckEqual(t3Argmax0Correct, t3Argmax0)
-            Assert.CheckEqual(t3Argmax1Correct, t3Argmax1)
-            Assert.CheckEqual(t3Argmax2Correct, t3Argmax2)
+
+            Assert.CheckEqual(t1ArgminCorrect, t1Argmin)
+            Assert.CheckEqual(t1ArgminKeepDimCorrect, t1ArgminKeepDim)
+            Assert.CheckEqual(t2ArgminCorrect, t2Argmin)
+            Assert.CheckEqual(t2ArgminKeepDimCorrect, t2ArgminKeepDim)
+            Assert.CheckEqual(t2ArgminKeepDim1Correct, t2ArgminKeepDim1)
+            Assert.CheckEqual(t3Argmin0Correct, t3Argmin0)
+            Assert.CheckEqual(t3Argmin1Correct, t3Argmin1)
+            Assert.CheckEqual(t3Argmin2Correct, t3Argmin2)
 
     [<Test>]
     member _.TestTensorMaxBinary () =

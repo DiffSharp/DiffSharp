@@ -496,9 +496,14 @@ module internal RawTensorCPU =
                     if op v results.[b] || (j3 = 0) then
                         results.[b] <- v
                         indexes.[b] <- j3
-        let outShape = if keepDim then shape else (Array.append shape1 shape2)
-        t.MakeLike(results, outShape),
-        t.CreateLike(indexes, dtype=Dtype.Int32).ViewT(outShape)
+        let outShape = Array.append shape1 shape2
+        let resultsT = t.MakeLike(results, outShape)
+        let indexesT = t.CreateLike(indexes, dtype=Dtype.Int32).ViewT(outShape)
+        if keepDim then 
+            resultsT.UnsqueezeT(dim).Expand(t.Shape),
+            indexesT.UnsqueezeT(dim).Expand(t.Shape)
+        else
+            resultsT, indexesT
 
     let inline MinIndexT(t: RawTensorCPU< ^T >) =
         t.FlatIndexToIndex(Seq.minIndex t.Values)
