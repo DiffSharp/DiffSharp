@@ -282,11 +282,11 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<int64> with
         | Some (values, shape) -> (values |> Array.map ofInt64, shape)
         | None -> 
-        match value |> tryFlatArrayAndShape<int8>  with
-        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
-        | None -> 
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
+        | None -> 
+        match value |> tryFlatArrayAndShape<int8>  with
+        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<int16>  with
         | Some (values, shape) -> (values |> Array.map ofInt16, shape)
