@@ -437,6 +437,19 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let result = tt.Ne(t2.TorchTensor)
         t1.MakeLike(result, dtype=Dtype.Bool)
 
+    override t.MaxReduceT(dim, keepDim) = 
+        // LibTorch 1.7.0: Max on float16/bfloat16 causes grief
+        let tt = 
+            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16 then 
+                tt.ToType(ScalarType.Float32)
+            else
+                tt
+        let (struct (maxValues, indexes)) = tt.Max(int64 dim, keepDim=keepDim)
+        let newShape = if keepDim then t.Shape else Array.append (t.Shape.[..dim-1]) (t.Shape.[dim+1..])
+        let maxValuesResult = t.MakeLike(maxValues, shape=newShape)
+        let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64)
+        maxValuesResult, indexesResult
+
     override t.MaxIndexT() = 
 
         // LibTorch 1.7.0: Max on float16/bfloat16 causes grief
@@ -448,10 +461,12 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let res = Array.zeroCreate<int64> t.Dim
         let idxs = Array.zeroCreate t.Dim
         let mutable values = tt
+        // repeatedly reduce, tracking the recorded index for the final maximum eventually selected
         for i = t.Dim - 1 downto 0 do 
             let (struct (values2, indexes)) = values.Max(int64 i)
             values <- values2
             idxs.[i] <- indexes
+
         for i = 0 to t.Dim - 1 do 
             let idx = idxs.[i]
 
@@ -461,14 +476,26 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
                 | 1 -> idx.[res.[0]].ToInt64() 
                 | 2 -> idx.[res.[0], res.[1]].ToInt64() 
                 | 3 -> idx.[res.[0], res.[1], res.[2]].ToInt64() 
-                | _ -> failwith "MaxIndexT > 4d nyi for torch"
+                | 4 -> idx.[res.[0], res.[1], res.[2], res.[3]].ToInt64() 
+                | 5 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4]].ToInt64() 
+                | 6 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4], res.[5]].ToInt64() 
+                | _ -> failwith "MaxIndexT > 6d nyi for torch"
         res |> Array.map int32
 
-    // TODO: use Torch min operation
+    override t.MinReduceT(dim, keepDim) = 
+        match dtype with 
+        | Dtype.Bool -> t.Cast(Dtype.Int8).MinReduceT(dim, keepDim) // TODO: could likely be improved
+        | _ ->
+            // TODO: this implements Min in terms of Max, could likely be improved
+            let v, i = t.NegT().MaxReduceT(dim, keepDim)
+            v.NegT(), i
+
     override t.MinIndexT() = 
         match dtype with 
         | Dtype.Bool -> t.Cast(Dtype.Int8).MinIndexT() // TODO: could likely be improved
-        | _ -> t.NegT().MaxIndexT()
+        | _ -> 
+            // TODO: this implements Min in terms of Max, could likely be improved
+            t.NegT().MaxIndexT()
 
     override t1.AddTT(t2, alpha) =
         let result = 
