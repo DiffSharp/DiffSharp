@@ -3844,6 +3844,12 @@ type TestTensor () =
             Assert.CheckEqual(t6ArgmaxCorrect, t6Argmax)
             Assert.CheckEqual(t6Argmax0Correct, t6Argmax0)
 
+        for combo in Combos.Bool do
+            let t = combo.tensor([true; false])
+            let tArgmax = t.argmax()
+            let tArgmaxCorrect = [| 0 |]
+            Assert.CheckEqual(tArgmaxCorrect, tArgmax)
+
     [<Test>]
     member _.TestTensorArgminDim () =
         for combo in Combos.IntegralAndFloatingPointExcept16s do 
@@ -3925,6 +3931,13 @@ type TestTensor () =
 
             Assert.CheckEqual(t6ArgminCorrect, t6Argmin)
             Assert.CheckEqual(t6Argmin0Correct, t6Argmin0)
+
+        for combo in Combos.Bool do
+            let t = combo.tensor([true; false])
+            let tArgmax = t.argmax()
+            let tArgmaxCorrect = [| 1 |]
+            Assert.CheckEqual(tArgmaxCorrect, tArgmax)
+
     [<Test>]
     member _.TestTensorMaxBinary () =
         for combo in Combos.FloatingPointExcept16s do 

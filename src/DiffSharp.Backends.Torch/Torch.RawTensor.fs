@@ -483,12 +483,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         res |> Array.map int32
 
     override t.MinReduceT(dim, keepDim) = 
-        match dtype with 
-        | Dtype.Bool -> t.Cast(Dtype.Int8).MinReduceT(dim, keepDim) // TODO: could likely be improved
-        | _ ->
-            // TODO: this implements Min in terms of Max, could likely be improved
-            let v, i = t.NegT().MaxReduceT(dim, keepDim)
-            v.NegT(), i
+        // TODO: this implements Min in terms of Max, could likely be improved
+        let v, i = t.NegT().MaxReduceT(dim, keepDim)
+        v.NegT(), i
 
     override t.MinIndexT() = 
         match dtype with 
