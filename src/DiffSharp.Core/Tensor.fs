@@ -592,8 +592,8 @@ type Tensor =
     /// <summary>Returns the indexes of maximum values of the primal of the tensor, reducing the given dimension.</summary>
     /// <remarks>The resulting tensor does not participate in reverse of forward differentiation unless used as input to another operation such as <c>dsharp.gather</c>.</remarks>
     member a.argmax(dim:int, ?keepDim: bool) =
-        if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %d" a.dim
         let keepDim = defaultArg keepDim false
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
         a.primalRaw.MaxReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Gets the index of a minimum value in the tensor.
@@ -604,7 +604,7 @@ type Tensor =
     /// <remarks>The resulting tensor does not participate in reverse of forward differentiation unless used as input to another operation such as <c>dsharp.gather</c>.</remarks>
     member a.argmin(dim: int, ?keepDim: bool) =
         let keepDim = defaultArg keepDim false
-        if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %d" a.dim
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
         a.primalRaw.MinReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Returns the maximum value of all elements in the input tensor.

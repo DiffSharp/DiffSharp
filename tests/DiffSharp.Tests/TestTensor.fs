@@ -3562,17 +3562,17 @@ type TestTensor () =
             let t1ArgmaxCorrect = combo.tensor(2, dtype=Dtype.Int32)
 
             let t1ArgmaxKeepDim = t1.argmax(0, keepDim=true)
-            let t1ArgmaxKeepDimCorrect = combo.tensor([2;2;2;2], dtype=Dtype.Int32)
+            let t1ArgmaxKeepDimCorrect = combo.tensor([2], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])
             let t2Argmax = t2.argmax(0)
             let t2ArgmaxCorrect = combo.tensor([1,0], dtype=Dtype.Int32)
 
             let t2ArgmaxKeepDim = t2.argmax(0, keepDim=true)
-            let t2ArgmaxKeepDimCorrect = combo.tensor([[1;0];[1;0]], dtype=Dtype.Int32)
+            let t2ArgmaxKeepDimCorrect = combo.tensor([[1;0]], dtype=Dtype.Int32)
 
             let t2ArgmaxKeepDim1 = t2.argmax(1, keepDim=true)
-            let t2ArgmaxKeepDim1Correct = combo.tensor([[1;1];[1;1]], dtype=Dtype.Int32)
+            let t2ArgmaxKeepDim1Correct = combo.tensor([[1];[1]], dtype=Dtype.Int32)
 
             let t3 = combo.tensor([[[ 7.6884; 65.9125;  4.0114];
                                  [46.7944; 61.5331; 40.1627];
@@ -3613,17 +3613,17 @@ type TestTensor () =
             let t1ArgminCorrect = combo.tensor(1, dtype=Dtype.Int32)
 
             let t1ArgminKeepDim = t1.argmin(0, keepDim=true)
-            let t1ArgminKeepDimCorrect = combo.tensor([1;1;1;1], dtype=Dtype.Int32)
+            let t1ArgminKeepDimCorrect = combo.tensor([1], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])
             let t2Argmin = t2.argmin(0)
             let t2ArgminCorrect = combo.tensor([0,1], dtype=Dtype.Int32)
 
             let t2ArgminKeepDim = t2.argmin(0, keepDim=true)
-            let t2ArgminKeepDimCorrect = combo.tensor([[0,1],[0,1]], dtype=Dtype.Int32)
+            let t2ArgminKeepDimCorrect = combo.tensor([[0,1]], dtype=Dtype.Int32)
 
             let t2ArgminKeepDim1 = t2.argmin(1, keepDim=true)
-            let t2ArgminKeepDim1Correct = combo.tensor([[0,0],[0,0]], dtype=Dtype.Int32)
+            let t2ArgminKeepDim1Correct = combo.tensor([[0],[0]], dtype=Dtype.Int32)
 
             let t3 = combo.tensor([[[ 7.6884; 65.9125;  4.0114];
                                  [46.7944; 61.5331; 40.1627];

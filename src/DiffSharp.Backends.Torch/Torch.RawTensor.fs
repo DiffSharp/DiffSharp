@@ -440,7 +440,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     override t.MaxReduceT(dim, keepDim) = 
         // LibTorch 1.7.0: Max on float16/bfloat16 causes grief
         let (struct (maxValues, indexes)) = tt.Max(int64 dim, keepDim=keepDim)
-        let newShape = if keepDim then t.Shape else Array.append (t.Shape.[..dim-1]) (t.Shape.[dim+1..])
+        let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let maxValuesResult = t.MakeLike(maxValues, shape=newShape)
         let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
         maxValuesResult, indexesResult

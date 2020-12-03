@@ -479,6 +479,7 @@ module internal RawTensorCPU =
         t.FlatIndexToIndex(Seq.maxIndex t.Values)
 
     let inline MinMaxReduceT op (t: RawTensorCPU< ^T >, dim, keepDim) : RawTensor * RawTensor =
+        let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let shape = t.Shape
         let shape1 = shape.[0..dim-1]
         let n = shape.[dim]
@@ -496,14 +497,9 @@ module internal RawTensorCPU =
                     if op v results.[b] || (j3 = 0) then
                         results.[b] <- v
                         indexes.[b] <- j3
-        let outShape = Array.append shape1 shape2
-        let resultsT = t.MakeLike(results, outShape)
-        let indexesT = t.CreateLike(indexes, dtype=Dtype.Int32).ViewT(outShape)
-        if keepDim then 
-            resultsT.UnsqueezeT(dim).Expand(t.Shape),
-            indexesT.UnsqueezeT(dim).Expand(t.Shape)
-        else
-            resultsT, indexesT
+        let resultsT = t.MakeLike(results, newShape)
+        let indexesT = t.CreateLike(indexes, dtype=Dtype.Int32).ViewT(newShape)
+        resultsT, indexesT
 
     let inline MinIndexT(t: RawTensorCPU< ^T >) =
         t.FlatIndexToIndex(Seq.minIndex t.Values)
