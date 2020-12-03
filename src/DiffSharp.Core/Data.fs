@@ -13,6 +13,7 @@ open System.Net
 open System.IO
 open System.IO.Compression
 
+
 /// <namespacedoc>
 ///   <summary>Contains data sets and components related to data loading.</summary>
 /// </namespacedoc>
@@ -78,6 +79,7 @@ type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transfor
 type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let path = Path.Combine(path, "cifar10") |> Path.GetFullPath
+    let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
     let train = defaultArg train true
     let transform = defaultArg transform id
     let targetTransform = defaultArg targetTransform id
@@ -85,24 +87,26 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
     let file = Path.Combine(path, Path.GetFileName(url))
 
     let loadCIFAR10 fileName =
-            let br = new BinaryReader(File.OpenRead(fileName))
-            [|for _ in 1..10000 do
-                let label = br.ReadBytes(1) |> dsharp.tensor
-                let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32])
-                image/255, label
-            |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
+        let br = new BinaryReader(File.OpenRead(fileName))
+        [|for _ in 1..10000 do
+            let label = br.ReadByte() |> dsharp.tensor
+            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32])
+            image/255, label
+        |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
 
     let data, target =
         Directory.CreateDirectory(path) |> ignore
         if not (File.Exists(file)) then download url file
-        let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
         if not (Directory.Exists(pathExtracted)) then extractTarGz file path
         let files = [|"data_batch_1.bin"; "data_batch_2.bin"; "data_batch_3.bin"; "data_batch_4.bin"; "data_batch_5.bin"; "test_batch.bin"|] |> Array.map (fun f -> Path.Combine(pathExtracted, f))
         if train then
-            failwithf "Not implemented"
+            files.[..4] |> Array.map loadCIFAR10 |> Array.unzip |> fun (d, t) -> dsharp.cat(d), dsharp.cat(t)
         else
             loadCIFAR10 files.[5]
 
+    let _classNames = File.ReadAllLines(Path.Combine(pathExtracted, "batches.meta.txt")) |> Array.take 10
+    member d.classes = _classNames.Length
+    member d.classNames = _classNames
     override d.length = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform target.[i]
 

@@ -16,14 +16,8 @@ type TestData () =
 
     [<Test>]
     member _.TestMNISTDataset () =
-        // Note: this test can fail if http://yann.lecun.com website goes down or file urls change 
-        // or serialized binary format of tensors changes on disk
+        // Note: this test can fail if http://yann.lecun.com website goes down or file urls change
         let folder = System.IO.Path.GetTempPath()
-        try 
-            let path = Path.Combine(folder, "mnist")
-            for file in Directory.GetFiles(path, "*.tensor") do
-               File.Delete(file)
-        with _ -> ()
         let urls =
            ["http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
             "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
@@ -32,7 +26,7 @@ type TestData () =
         let mnist = MNIST(folder, urls=urls, train=false) // MNIST test data
         let mnistLength = mnist.length
         let mnistLengthCorrect = 10000
-        Assert.CheckEqual(mnistLengthCorrect, mnistLength)
+        Assert.AreEqual(mnistLengthCorrect, mnistLength)
 
         let batchSize = 16
         let dataloader = mnist.loader(batchSize=batchSize)
@@ -42,8 +36,8 @@ type TestData () =
         let xShapeCorrect = [|batchSize; 1; 28; 28|]
         let yShape = y.shape
         let yShapeCorrect = [|batchSize|]
-        Assert.CheckEqual(xShapeCorrect, xShape)
-        Assert.CheckEqual(yShapeCorrect, yShape)
+        Assert.AreEqual(xShapeCorrect, xShape)
+        Assert.AreEqual(yShapeCorrect, yShape)
 
         let classes = mnist.classes
         let classesCorrect = 10
@@ -51,6 +45,34 @@ type TestData () =
         let classNamesCorrect = [|"0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"|]
         Assert.AreEqual(classesCorrect, classes)
         Assert.AreEqual(classNamesCorrect, classNames)
+
+    [<Test>]
+    member _.TestCIFAR10Dataset () =
+        // Note: this test can fail if https://www.cs.toronto.edu/~kriz website goes down or file urls change
+        let folder = System.IO.Path.GetTempPath()
+        let url = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
+        let cifar10 = CIFAR10(folder, url=url, train=false) // CIFAR10 test data
+        let cifar10Length = cifar10.length
+        let cifar10LengthCorrect = 10000
+        Assert.AreEqual(cifar10LengthCorrect, cifar10Length)
+
+        let batchSize = 16
+        let dataloader = cifar10.loader(batchSize=batchSize)
+        let epoch = dataloader.epoch()
+        let _, x, y = epoch |> Seq.head
+        let xShape = x.shape
+        let xShapeCorrect = [|batchSize; 3; 32; 32|]
+        let yShape = y.shape
+        let yShapeCorrect = [|batchSize|]
+        Assert.AreEqual(xShapeCorrect, xShape)
+        Assert.AreEqual(yShapeCorrect, yShape)
+
+        let classes = cifar10.classes
+        let classesCorrect = 10
+        let classNames = cifar10.classNames
+        let classNamesCorrect = [|"airplane"; "automobile"; "bird"; "cat"; "deer"; "dog"; "frog"; "horse"; "ship"; "truck"|]
+        Assert.AreEqual(classesCorrect, classes)
+        Assert.AreEqual(classNamesCorrect, classNames)        
 
     [<Test>]
     member _.TestTensorDataset () =
@@ -61,7 +83,7 @@ type TestData () =
         let datasetLength = dataset.length
         let datasetLengthCorrect = n
 
-        Assert.CheckEqual(datasetLengthCorrect, datasetLength)
+        Assert.AreEqual(datasetLengthCorrect, datasetLength)
 
         let batchSize = 16
         let dataloader = dataset.loader(batchSize=batchSize)
@@ -71,8 +93,8 @@ type TestData () =
         let xShapeCorrect = [|batchSize; din|]
         let yShape = y.shape
         let yShapeCorrect = [|batchSize; dout|]
-        Assert.CheckEqual(xShapeCorrect, xShape)
-        Assert.CheckEqual(yShapeCorrect, yShape)
+        Assert.AreEqual(xShapeCorrect, xShape)
+        Assert.AreEqual(yShapeCorrect, yShape)
 
     [<Test>]
     member _.TestImageDataset () =
@@ -136,9 +158,9 @@ type TestData () =
                     let ydtype, ydevice, ybackend = y.dtype, y.device, y.backend
                     let xdtypeCorrect, xdeviceCorrect, xbackendCorrect = combo2.dtype, combo2.device, combo2.backend
                     let ydtypeCorrect, ydeviceCorrect, ybackendCorrect = combo3.dtype, combo3.device, combo3.backend
-                    Assert.CheckEqual(xdtypeCorrect, xdtype)
-                    Assert.CheckEqual(xdeviceCorrect, xdevice)
-                    Assert.CheckEqual(xbackendCorrect, xbackend)
-                    Assert.CheckEqual(ydtypeCorrect, ydtype)
-                    Assert.CheckEqual(ydeviceCorrect, ydevice)
-                    Assert.CheckEqual(ybackendCorrect, ybackend)
+                    Assert.AreEqual(xdtypeCorrect, xdtype)
+                    Assert.AreEqual(xdeviceCorrect, xdevice)
+                    Assert.AreEqual(xbackendCorrect, xbackend)
+                    Assert.AreEqual(ydtypeCorrect, ydtype)
+                    Assert.AreEqual(ydeviceCorrect, ydevice)
+                    Assert.AreEqual(ybackendCorrect, ybackend)
