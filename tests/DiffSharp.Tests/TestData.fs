@@ -23,13 +23,17 @@ type TestData () =
             "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
             "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
             "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"]
-        let mnist = MNIST(folder, urls=urls, train=false) // MNIST test data
-        let mnistLength = mnist.length
-        let mnistLengthCorrect = 10000
-        Assert.AreEqual(mnistLengthCorrect, mnistLength)
+        let mnistTrain = MNIST(folder, urls=urls, train=true)
+        let mnistTest = MNIST(folder, urls=urls, train=false)
+        let mnistTrainLength = mnistTrain.length
+        let mnistTrainLengthCorrect = 60000
+        let mnistTestLength = mnistTest.length
+        let mnistTestLengthCorrect = 10000
+        Assert.AreEqual(mnistTrainLengthCorrect, mnistTrainLength)
+        Assert.AreEqual(mnistTestLengthCorrect, mnistTestLength)
 
         let batchSize = 16
-        let dataloader = mnist.loader(batchSize=batchSize)
+        let dataloader = mnistTrain.loader(batchSize=batchSize)
         let epoch = dataloader.epoch()
         let _, x, y = epoch |> Seq.head
         let xShape = x.shape
@@ -39,9 +43,9 @@ type TestData () =
         Assert.AreEqual(xShapeCorrect, xShape)
         Assert.AreEqual(yShapeCorrect, yShape)
 
-        let classes = mnist.classes
+        let classes = mnistTrain.classes
         let classesCorrect = 10
-        let classNames = mnist.classNames
+        let classNames = mnistTrain.classNames
         let classNamesCorrect = [|"0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"|]
         Assert.AreEqual(classesCorrect, classes)
         Assert.AreEqual(classNamesCorrect, classNames)
@@ -51,13 +55,17 @@ type TestData () =
         // Note: this test can fail if https://www.cs.toronto.edu/~kriz website goes down or file urls change
         let folder = System.IO.Path.GetTempPath()
         let url = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
-        let cifar10 = CIFAR10(folder, url=url, train=false) // CIFAR10 test data
-        let cifar10Length = cifar10.length
-        let cifar10LengthCorrect = 10000
-        Assert.AreEqual(cifar10LengthCorrect, cifar10Length)
+        let cifar10Train = CIFAR10(folder, url=url, train=true)
+        let cifar10Test = CIFAR10(folder, url=url, train=false)
+        let cifar10TrainLength = cifar10Train.length
+        let cifar10TrainLengthCorrect = 50000
+        let cifar10TestLength = cifar10Test.length
+        let cifar10TestLengthCorrect = 10000
+        Assert.AreEqual(cifar10TrainLengthCorrect, cifar10TrainLength)
+        Assert.AreEqual(cifar10TestLengthCorrect, cifar10TestLength)
 
         let batchSize = 16
-        let dataloader = cifar10.loader(batchSize=batchSize)
+        let dataloader = cifar10Train.loader(batchSize=batchSize)
         let epoch = dataloader.epoch()
         let _, x, y = epoch |> Seq.head
         let xShape = x.shape
@@ -67,9 +75,9 @@ type TestData () =
         Assert.AreEqual(xShapeCorrect, xShape)
         Assert.AreEqual(yShapeCorrect, yShape)
 
-        let classes = cifar10.classes
+        let classes = cifar10Train.classes
         let classesCorrect = 10
-        let classNames = cifar10.classNames
+        let classNames = cifar10Train.classNames
         let classNamesCorrect = [|"airplane"; "automobile"; "bird"; "cat"; "deer"; "dog"; "frog"; "horse"; "ship"; "truck"|]
         Assert.AreEqual(classesCorrect, classes)
         Assert.AreEqual(classNamesCorrect, classNames)        

@@ -15,10 +15,10 @@ open System.IO.Compression
 
 
 /// <namespacedoc>
-///   <summary>Contains data sets and components related to data loading.</summary>
+///   <summary>Contains datasets and components related to data loading.</summary>
 /// </namespacedoc>
 ///
-/// <summary>Represents a data set that can load images in batches.</summary>
+/// <summary>Represents a dataset.</summary>
 [<AbstractClass>]
 type Dataset() =
     abstract member length: int
