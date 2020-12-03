@@ -590,7 +590,7 @@ type Tensor =
         a.primalRaw.MinIndexT()
 
     /// <summary>Returns the indexes of maximum values of the primal of the tensor, reducing the given dimension.</summary>
-    /// <remarks>The resulting tensor does not participate in reverse of forward differentiation unless used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
     member a.argmax(dim:int, ?keepDim: bool) =
         let keepDim = defaultArg keepDim false
         Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
@@ -600,8 +600,8 @@ type Tensor =
     member a.argmin() =
         a.primalRaw.MinIndexT()
 
-    /// <summary>Returns the indexes of minimumvalues of the primal of the tensor, reducing the given dimension.</summary>
-    /// <remarks>The resulting tensor does not participate in reverse of forward differentiation unless used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    /// <summary>Returns the indexes of minimum values of the primal of the tensor, reducing the given dimension.</summary>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
     member a.argmin(dim: int, ?keepDim: bool) =
         let keepDim = defaultArg keepDim false
         Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
