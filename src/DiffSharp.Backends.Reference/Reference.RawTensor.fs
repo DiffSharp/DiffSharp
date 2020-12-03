@@ -203,29 +203,26 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, outShape))
 
+    override t.PermuteT(permutation) =
+        let inversePermutation, newShape = Shape.checkCanPermute t.Shape permutation
+        let result = t.ZerosLike(newShape) :?> RawTensorCPU<'T>
+        let rec transpose (shape:Shape) externalCoords = 
+            if shape.Length = 1 then
+                for i=0 to shape.[0]-1 do
+                    let globalCoords = Array.append externalCoords [|i|]
+                    let transposedCoords = Array.permute (fun i -> inversePermutation.[i]) globalCoords
+                    result.[transposedCoords] <- t.[globalCoords]
+            else
+                for i=0 to shape.[0]-1 do
+                    transpose shape.[1..] (Array.append externalCoords [|i|])
+        transpose t.Shape [||]        
+        upcast result
+
     override t.TransposeT(dim0, dim1) =
-        Shape.checkCanTranspose t.Shape dim0 dim1
-        if dim0 = dim1 then
-            let result = Array.copy t.Values
-            t.MakeLike(result, t.Shape)
-        else
-            let shape = Array.copy t.Shape
-            shape.[dim0] <- t.Shape.[dim1]
-            shape.[dim1] <- t.Shape.[dim0]
-            let result = t.ZerosLike(shape) :?> RawTensorCPU<'T>
-            let rec transpose (shape:Shape) externalCoords = 
-                if shape.Length = 1 then
-                    for i=0 to shape.[0]-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        let transposedCoords = Array.copy globalCoords
-                        transposedCoords.[dim0] <- globalCoords.[dim1]
-                        transposedCoords.[dim1] <- globalCoords.[dim0]
-                        result.[transposedCoords] <- t.[globalCoords]
-                else
-                    for i=0 to shape.[0]-1 do
-                        transpose shape.[1..] (Array.append externalCoords [|i|])
-            transpose t.Shape [||]        
-            upcast result
+        let permutation = [| 0 .. t.Shape.Length - 1 |]
+        permutation.[dim0] <- dim1
+        permutation.[dim1] <- dim0
+        t.PermuteT(permutation)
 
     override t.TransposeT2() =
         Shape.checkCanTranspose2d t.Dim
