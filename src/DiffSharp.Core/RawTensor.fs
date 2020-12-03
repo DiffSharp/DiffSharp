@@ -457,6 +457,9 @@ type RawTensor() =
     /// Returns the 3D convolution of the tensor
     abstract Conv3D: kernel: RawTensor * strides: int[] * padding: int[] -> RawTensor
 
+    /// Returns a view of the original tensor with its dimensions permuted
+    abstract PermuteT: permutation: int[] -> RawTensor
+
     /// Returns the element-wise negation of the tensor
     abstract NegT: unit -> RawTensor
 

@@ -51,6 +51,13 @@ module Array =
     // Create a 3D array using a flat representation
     let initFlat3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
 
+    let foralli f (arr: 'T[]) =
+        let mutable i = 0
+        let n = arr.Length
+        while i < n && f i arr.[i] do
+            i <- i + 1
+        (i = n)
+
 module ArrayND = 
     /// Initializes an array with a given shape and initializer function.
     let init (shape: int[]) (f: int[] -> 'T) : obj =
