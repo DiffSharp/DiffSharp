@@ -1624,6 +1624,20 @@ type Tensor =
             let inline dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>Returns the original tensor with its dimensions permuted.</summary>
+    /// <param name="permutation">The desired ordering of dimensions.</param>
+    member a.permute(permutation:seq<int>) =
+        let permutation = Seq.toArrayQuick permutation
+        let inversePermutation, _ = Shape.checkCanPermute a.shapex permutation
+        if permutation |> Array.foralli (fun i j -> i = j) then
+            a
+        else
+            let inline fRaw(a:RawTensor) = a.PermuteT(permutation)
+            let inline fTensor(a:Tensor) = a.permute(permutation)
+            let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.permute(permutation)
+            let inline dfTensorRev(a) = PermuteT(a, inversePermutation)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
     member a.transpose() =
         Shape.checkCanTranspose2d a.dim
@@ -2788,6 +2802,7 @@ type Tensor =
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
                         | GatherT(a,_,_) -> reset (a::tt)
+                        | PermuteT(a,_) -> reset (a::tt)
                         | TransposeT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
@@ -2946,15 +2961,16 @@ type Tensor =
                                 loc.[dim] <- j
                                 a.derivative <- a.derivative.addSlice(loc, t)
                             push (check(a.zeroLike(), a) :: tt)
-                        | TransposeT(a, dim0, dim1) -> push (check(t.derivative.transpose(dim0, dim1), a) :: tt)
-                        | TransposeT2(a) -> push (check(t.derivative.transpose(), a) :: tt)
-                        | SqueezeT(a) -> push (check(t.derivative.viewAs(a), a) :: tt)
-                        | UnsqueezeT(a) -> push (check(t.derivative.viewAs(a), a) :: tt)
-                        | FlipT(a, dims) -> push (check(t.derivative.flip(dims), a) :: tt)
-                        | DilateT(a, dilations) -> push (check(t.derivative.undilatex(dilations), a) :: tt)
-                        | UndilateT(a, dilations) -> push (check(t.derivative.dilatex(dilations), a) :: tt)
-                        | ViewT(a,aShape) -> push (check((t.derivative.viewx(aShape)), a) :: tt)
-                        | ClampT(a, mask) -> push (check(t.derivative * mask, a) :: tt)
+                        | PermuteT(a, inversePermutation) -> push (check(td.permute(inversePermutation), a) :: tt)
+                        | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
+                        | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
+                        | SqueezeT(a) -> push (check(td.viewAs(a), a) :: tt)
+                        | UnsqueezeT(a) -> push (check(td.viewAs(a), a) :: tt)
+                        | FlipT(a, dims) -> push (check(td.flip(dims), a) :: tt)
+                        | DilateT(a, dilations) -> push (check(td.undilatex(dilations), a) :: tt)
+                        | UndilateT(a, dilations) -> push (check(td.dilatex(dilations), a) :: tt)
+                        | ViewT(a,aShape) -> push (check((td.viewx(aShape)), a) :: tt)
+                        | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
                             if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
@@ -2962,30 +2978,30 @@ type Tensor =
                               let bounds = bounds |> Array2D.map (fun d -> d.Value)
                               a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShape bounds))
                             push (check(a.zeroLike(), a) :: tt)
-                        | AddTTSlice(a,location,b) -> push (check(t.derivative, a) :: check(t.derivative.GetSlice(Shape.locationToBounds b.shapex location), b):: tt)
-                        | AddTTConstSlice(a) -> push (check(t.derivative, a) :: tt)
-                        | AddTConstTSlice(location, b) -> push (check(t.derivative.GetSlice(Shape.locationToBounds b.shapex location), b):: tt)
+                        | AddTTSlice(a,location,b) -> push (check(td, a) :: check(td.GetSlice(Shape.locationToBounds b.shapex location), b):: tt)
+                        | AddTTConstSlice(a) -> push (check(td, a) :: tt)
+                        | AddTConstTSlice(location, b) -> push (check(td.GetSlice(Shape.locationToBounds b.shapex location), b):: tt)
                         | SignT(a) -> push (check(a.zerosLike(), a) :: tt)
                         | FloorT(a) -> push (check(a.zerosLike(), a) :: tt)
                         | CeilT(a) -> push (check(a.zerosLike(), a) :: tt)
                         | RoundT(a) -> push (check(a.zerosLike(), a) :: tt)
-                        | AbsT(a) -> push (check(t.derivative * a.primal.sign(), a) :: tt)
-                        | ReluT(a) -> let sap = a.primal.sign() in push (check(t.derivative * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
-                        | SoftplusT(a) -> push (check(t.derivative / (1. + a.primal.neg().exp()), a) :: tt)
-                        | SigmoidT(a) -> push (check(t.derivative * t.primal * (1. - t.primal), a) :: tt)
-                        | ExpT(a) -> push (check(t.derivative * t.primal, a) :: tt)
-                        | LogT(a) -> push (check(t.derivative / a.primal, a) :: tt)
-                        | Log10T(a) -> push (check(t.derivative / (a.primal * log10Val), a) :: tt)
-                        | SqrtT(a) -> push (check(t.derivative / (2. * t.primal), a) :: tt)
-                        | SinT(a) -> push (check(t.derivative * (a.primal.cos()), a) :: tt)
-                        | CosT(a) -> push (check(-t.derivative * (a.primal.sin()), a) :: tt)
-                        | TanT(a) -> let cosap = a.primal.cos() in push (check(t.derivative / (cosap * cosap), a) :: tt)
-                        | SinhT(a) -> push (check(t.derivative * (a.primal.cosh()), a) :: tt)
-                        | CoshT(a) -> push (check(t.derivative * (a.primal.sinh()), a) :: tt)
-                        | TanhT(a) -> let coshap = a.primal.cosh() in push (check(t.derivative / (coshap * coshap), a) :: tt)
-                        | AsinT(a) -> push (check(t.derivative / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
-                        | AcosT(a) -> push (check(-t.derivative / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
-                        | AtanT(a) -> push (check(t.derivative / (1. + a.primal*a.primal), a) :: tt)
+                        | AbsT(a) -> push (check(td * a.primal.sign(), a) :: tt)
+                        | ReluT(a) -> let sap = a.primal.sign() in push (check(td * (sap.abs()) * (sap + 1.) / 2., a) :: tt)
+                        | SoftplusT(a) -> push (check(td / (1. + a.primal.neg().exp()), a) :: tt)
+                        | SigmoidT(a) -> push (check(td * t.primal * (1. - t.primal), a) :: tt)
+                        | ExpT(a) -> push (check(td * t.primal, a) :: tt)
+                        | LogT(a) -> push (check(td / a.primal, a) :: tt)
+                        | Log10T(a) -> push (check(td / (a.primal * log10Val), a) :: tt)
+                        | SqrtT(a) -> push (check(td / (2. * t.primal), a) :: tt)
+                        | SinT(a) -> push (check(td * (a.primal.cos()), a) :: tt)
+                        | CosT(a) -> push (check(-td * (a.primal.sin()), a) :: tt)
+                        | TanT(a) -> let cosap = a.primal.cos() in push (check(td / (cosap * cosap), a) :: tt)
+                        | SinhT(a) -> push (check(td * (a.primal.cosh()), a) :: tt)
+                        | CoshT(a) -> push (check(td * (a.primal.sinh()), a) :: tt)
+                        | TanhT(a) -> let coshap = a.primal.cosh() in push (check(td / (coshap * coshap), a) :: tt)
+                        | AsinT(a) -> push (check(td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
+                        | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
+                        | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
                     else push tt
                 | _ -> push tt
@@ -3063,6 +3079,7 @@ and TensorOp =
     | SplitT of Tensor * Int[] * dim:int * i:int
     | SliceT of Tensor * Int[,]
     | GatherT of Tensor * int * Tensor
+    | PermuteT of Tensor * inversePermutation: int[]
     | TransposeT of Tensor * int * int
     | TransposeT2 of Tensor
     | SqueezeT of Tensor

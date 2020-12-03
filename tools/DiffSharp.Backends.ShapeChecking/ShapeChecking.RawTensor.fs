@@ -118,6 +118,10 @@ type ShapeCheckingTensor(shape: Shape, dtype: Dtype, device: Device) =
         let outShapes = Shape.checkCanSplit shape sizes dim
         outShapes |> Array.map (fun outShape -> t.MakeLike(outShape))
 
+    override t.PermuteT(permutation) =
+        let _, newShape = Shape.checkCanPermute t.Shape permutation
+        t.MakeLike(newShape)
+
     override t.TransposeT(dim0, dim1) =
         Shape.checkCanTranspose t.Shape dim0 dim1
         let shape = Array.copy t.Shape.Dims

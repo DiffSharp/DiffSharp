@@ -648,6 +648,11 @@ type dsharp =
     /// <param name="indices">The the indices of elements to gather.</param>
     static member gather(input:Tensor, dim:int, indices:Tensor) = input.gather(dim, indices)
 
+    /// <summary>Returns the original tensor with its dimensions permuted.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="permutation">The desired ordering of dimensions.</param>
+    static member permute(input:Tensor, permutation:seq<int>) = input.permute(permutation)
+
     /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="dim0">The first dimension to be transposed.</param>

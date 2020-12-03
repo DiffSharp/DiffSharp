@@ -294,6 +294,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
+    override t.PermuteT(permutation) =
+        let _, newShape = Shape.checkCanPermute t.Shape permutation
+        let result = tt.Permute(int64s permutation)
+        t.MakeLike(result, shape=newShape)
+
     override t.TransposeT(dim0, dim1) =
         Shape.checkCanTranspose t.Shape dim0 dim1
         let result = tt.Transpose(int64 dim0, int64 dim1)
