@@ -1554,6 +1554,20 @@ type Tensor =
             let inline dfTensorRev(a) = TransposeT(a, dim0, dim1)
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
+    /// <summary>Returns the original tensor with its dimensions permuted.</summary>
+    /// <param name="permutation">The desired ordering of dimensions.</param>
+    member a.permute(permutation:seq<int>) =
+        let permutation = Seq.toArrayQuick permutation
+        let inversePermutation, _ = Shape.checkCanPermute a.shape permutation
+        if permutation |> Array.foralli (fun i j -> i = j) then
+            a
+        else
+            let inline fRaw(a:RawTensor) = a.PermuteT(permutation)
+            let inline fTensor(a:Tensor) = a.permute(permutation)
+            let inline dfTensorFwd(cp,ap,ad:Tensor) = ad.permute(permutation)
+            let inline dfTensorRev(a) = PermuteT(a, inversePermutation)
+            Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
+
     /// <summary>Returns a tensor that is a transposed version of input with dimensions 0 and 1 swapped.</summary>
     member a.transpose() =
         Shape.checkCanTranspose2d a.dim
@@ -2627,6 +2641,7 @@ type Tensor =
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
                         | GatherT(a,_,_) -> reset (a::tt)
+                        | PermuteT(a,_) -> reset (a::tt)
                         | TransposeT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
                         | SqueezeT(a) -> reset (a::tt)
@@ -2785,6 +2800,7 @@ type Tensor =
                                 loc.[dim] <- j
                                 a.derivative <- a.derivative.addSlice(loc, t)
                             push (check(a.zeroLike(), a) :: tt)
+                        | PermuteT(a, inversePermutation) -> push (check(td.permute(inversePermutation), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
                         | SqueezeT(a) -> push (check(td.viewAs(a), a) :: tt)
@@ -2902,6 +2918,7 @@ and TensorOp =
     | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
     | GatherT of Tensor * int * Tensor
+    | PermuteT of Tensor * inversePermutation: int[]
     | TransposeT of Tensor * int * int
     | TransposeT2 of Tensor
     | SqueezeT of Tensor
