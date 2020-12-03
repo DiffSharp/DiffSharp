@@ -611,7 +611,7 @@ type Tensor =
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
     /// Returns the element-wise maximum of the elements in the two tensors.
-    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
+    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2
 
     /// Returns the element-wise maximum of the tensor and the given scalar
     member a.max(b:scalar) = a.max(a.scalarLike(b))
@@ -620,13 +620,10 @@ type Tensor =
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
     /// Returns the element-wise minimum of the elements in the two tensors.
-    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2
 
     /// Returns the element-wise minimum of the tensor and the given scalar
-    member a.minScalar(b:scalar) = a.min(a.scalarLike(b))
-
-    /// Returns the maximums and indexes of the tensor reducing the given dimension
-    member a.min(dim:int, keepdim: bool) = failwith "tbd"
+    member a.min(b:scalar) = a.min(a.scalarLike(b))
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
