@@ -587,7 +587,7 @@ type Tensor =
 
     /// Gets the index of a maximum value in the tensor.
     member a.argmax() =
-        a.primalRaw.MinIndexT()
+        a.primalRaw.MaxIndexT()
 
     /// <summary>Returns the indexes of maximum values of the primal of the tensor, reducing the given dimension.</summary>
     /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
