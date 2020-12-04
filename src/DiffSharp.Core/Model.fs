@@ -332,10 +332,9 @@ type Weight =
     static member uniform(shape:seq<Int>, k:float) = Weight.uniform (Shape shape, k)
 
 /// <summary>A model that applies a linear transformation to the incoming data: \(y = xA^T + b\)</summary>
-type Linear(inFeatures:Int, outFeatures:Int, ?bias:bool, ?activation: (Tensor->Tensor)) =
+type Linear(inFeatures:Int, outFeatures:Int, ?bias:bool) =
     inherit Model()
     let hasBias = defaultArg bias true
-    let activation = defaultArg activation id
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures.ValueOrOne)
     let b = Parameter(if hasBias then Weight.uniform([outFeatures], k) else dsharp.zero())
@@ -353,19 +352,16 @@ type Linear(inFeatures:Int, outFeatures:Int, ?bias:bool, ?activation: (Tensor->T
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
-        let f2 = if hasBias then f + b.value else f
-        let f3 = activation f2
-        f3
-
+        if hasBias then f + b.value else f
+        
     /// <summary>TBD</summary>
-    new (inFeatures: int, outFeatures: int, ?bias:bool, ?activation) =
-       Linear(Int inFeatures, Int outFeatures, ?bias=bias, ?activation=activation)
+    new (inFeatures: int, outFeatures: int, ?bias:bool) =
+       Linear(Int inFeatures, Int outFeatures, ?bias=bias)
 
 /// <summary>A model that applies a 1D convolution over an input signal composed of several input planes</summary>
-type Conv1d(inChannels:Int, outChannels:Int, kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?bias:bool, ?activation: (Tensor->Tensor)) =
+type Conv1d(inChannels:Int, outChannels:Int, kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?bias:bool) =
     inherit Model()
     let bias = defaultArg bias true
-    let activation = defaultArg activation id
     let k = 1./ sqrt (float (inChannels*kernelSize).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
@@ -378,18 +374,16 @@ type Conv1d(inChannels:Int, outChannels:Int, kernelSize:Int, ?stride:Int, ?paddi
     override _.forward(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I]) else f
-        |> activation
 
     /// <summary>TBD</summary>
-    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool, ?activation) =
-        Conv1d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?bias=bias, ?activation=activation)
+    new (inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?bias:bool) =
+        Conv1d(Int inChannels, Int outChannels, Int kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?bias=bias)
 
 /// <summary>A model that applies a 2D convolution over an input signal composed of several input planes</summary>
-type Conv2d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool, ?activation: (Tensor->Tensor)) =
+type Conv2d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool) =
     inherit Model()
     let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let activation = defaultArg activation id
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
@@ -402,18 +396,16 @@ type Conv2d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padd
     override _.forward(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I]) else f
-        |> activation
 
     /// <summary>TBD</summary>
-    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool, ?activation) =
-        Conv2d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias, ?activation=activation)
+    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+        Conv2d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias)
 
 /// <summary>A model that applies a 3D convolution over an input signal composed of several input planes</summary>
-type Conv3d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool, ?activation: (Tensor->Tensor)) =
+type Conv3d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padding:Int, ?dilation:Int, ?kernelSizes:seq<Int>, ?strides:seq<Int>, ?paddings:seq<Int>, ?dilations:seq<Int>, ?bias:bool) =
     inherit Model()
     let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let activation = defaultArg activation id
     let k = 1./ sqrt (float (inChannels.ValueOrOne*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]).ValueOrOne)
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
@@ -426,11 +418,10 @@ type Conv3d(inChannels:Int, outChannels:Int, ?kernelSize:Int, ?stride:Int, ?padd
     override _.forward(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shapex.[0]; outChannels]).view([value.shapex.[0]; outChannels; 1I; 1I; 1I]) else f
-        |> activation
 
     /// <summary>TBD</summary>
-    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool, ?activation) =
-        Conv3d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias, ?activation=activation)
+    new (inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padding:int, ?dilation:int, ?kernelSizes:seq<int>, ?strides:seq<int>, ?paddings:seq<int>, ?dilations:seq<int>, ?bias:bool) =
+        Conv3d(Int inChannels, Int outChannels, ?kernelSize=optInt kernelSize, ?stride=optInt stride, ?padding=optInt padding, ?dilation=optInt dilation, ?kernelSizes=optInts kernelSizes, ?strides=optInts strides, ?paddings=optInts paddings, ?dilations=optInts dilations, ?bias=bias)
 
 
 /// <summary>A model that applies a 1D transposed convolution operator over an input image composed of several input planes.</summary>
