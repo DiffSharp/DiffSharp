@@ -885,13 +885,14 @@ type TestModel () =
     [<Test>]
     member _.TestModelVAE () =
         // Fits a little VAE to structured noise
-        let xdim, zdim, n = 16, 4, 32
+        let xdim, zdim, n = 8, 4, 16
         let m = VAE(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
-        let lr, steps = 1e-3, 200
+        let lr, steps = 1e-3, 50
         let optimizer = Adam(m, lr=dsharp.tensor(lr))
-        let mutable loss = 0.
+        let loss0 = float <| m.loss(x)
+        let mutable loss = loss0
         for _ in 0..steps do
             m.reverseDiff()
             let l = m.loss(x)
@@ -899,4 +900,4 @@ type TestModel () =
             optimizer.step()
             loss <- float l
 
-        Assert.Less(loss, 100.)
+        Assert.Less(loss, loss0/2.)
