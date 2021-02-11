@@ -90,7 +90,7 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
         let br = new BinaryReader(File.OpenRead(fileName))
         [|for _ in 1..10000 do
             let label = br.ReadByte() |> dsharp.tensor
-            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32])
+            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32]) // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
             image/255, label
         |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
 
@@ -109,6 +109,40 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
     member d.classNames = _classNames
     override d.length = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform target.[i]
+
+
+type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+    inherit Dataset()
+    let path = Path.Combine(path, "cifar100") |> Path.GetFullPath
+    let pathExtracted = Path.Combine(path, "cifar-100-binary")
+    let train = defaultArg train true
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
+    let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz"
+    let file = Path.Combine(path, Path.GetFileName(url))
+
+    let loadCIFAR100 fileName n =
+        let br = new BinaryReader(File.OpenRead(fileName))
+        [|for _ in 1..n do
+            let labelCoarse = br.ReadByte() |> dsharp.tensor
+            let labelFine = br.ReadByte() |> dsharp.tensor
+            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32]) // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
+            image/255, labelCoarse, labelFine
+        |] |> Array.unzip3 |> fun (i, lc, lf) -> dsharp.stack(i), dsharp.stack(lc), dsharp.stack(lf)
+
+    let data, _, targetFine =
+        Directory.CreateDirectory(path) |> ignore
+        if not (File.Exists(file)) then download url file
+        if not (Directory.Exists(pathExtracted)) then extractTarGz file path
+        if train then loadCIFAR100 (Path.Combine(pathExtracted, "train.bin")) 50000
+        else loadCIFAR100 (Path.Combine(pathExtracted, "test.bin")) 10000
+
+    let _classNamesCoarse = File.ReadAllLines(Path.Combine(pathExtracted, "coarse_label_names.txt")) |> Array.take 20
+    let _classNamesFine = File.ReadAllLines(Path.Combine(pathExtracted, "fine_label_names.txt")) |> Array.take 100
+    member d.classes = _classNamesFine.Length
+    member d.classNames = _classNamesFine
+    override d.length = data.shape.[0]
+    override d.item(i) = transform data.[i], targetTransform targetFine.[i]    
 
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
@@ -134,7 +168,7 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             let cols = r.ReadInt32() |> IPAddress.NetworkToHostOrder
             let n = defaultArg n maxitems
             r.ReadBytes(n * rows * cols)
-            |> Array.map float32
+            |> Array.map float32 // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
             |> dsharp.tensor
             |> dsharp.view ([n; 1; 28; 28])
             |> fun t -> t / 255

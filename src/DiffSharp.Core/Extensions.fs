@@ -231,7 +231,7 @@ module ExtensionAutoOpens =
             stream.Read(buffer, 0, 100) |> ignore
             let name = Encoding.ASCII.GetString(buffer).Trim(Convert.ToChar(0)).Trim()
             if String.IsNullOrWhiteSpace(name) then stop <- true
-            if not stop then
+            else
                 stream.Seek(24L, SeekOrigin.Current) |> ignore
                 stream.Read(buffer, 0, 12) |> ignore
                 let size = Convert.ToInt32(Encoding.ASCII.GetString(buffer, 0, 12).Trim(Convert.ToChar(0)).Trim(), 8)
