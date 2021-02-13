@@ -5,12 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Tensor.fs" />
+    <Compile Include="Image.fs" />
+    <Compile Include="Pyplot.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
     <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />
+    <PackageReference Include="Python.Runtime.AllPlatforms" Version="3.7.2.4" />
   </ItemGroup>
 </Project>
