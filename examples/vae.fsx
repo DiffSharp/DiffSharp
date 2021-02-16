@@ -1,9 +1,9 @@
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
+#I "../tests/DiffSharp.Tests.ShapeChecking/bin/Debug/netcoreapp3.1"
 #r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
-#r "DiffSharp.Backends.Torch.dll"
 #r "DiffSharp.Backends.ShapeChecking.dll"
+#r "System.Runtime.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
@@ -30,6 +30,8 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
+//#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks\bin\Debug\netstandard2.0\FSharp.Tools.LiveChecks.dll"
+
 open System
 open DiffSharp
 open DiffSharp.Model
@@ -39,11 +41,14 @@ open DiffSharp.ShapeChecking
 
 let Assert b = if not b then failwith "assertion constraint failed"
 
+[<ShapeCheck("X")>]
+let f (x: Int) = ()
+
 /// Variational auto-encoder example in DiffSharp (shape-aware)
 //
 // See https://www.compart.com/en/unicode/block/U+1D400 for nice italic characters
-//[<ShapeCheck( "𝑋", "𝑌", "𝑍" )>]
-[<ShapeCheck>]
+[<ShapeCheck( "𝑋", "𝑌", "𝑍" )>]
+//[<ShapeCheck>]
 type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
     inherit Model()
     let xyDim = xDim * yDim 
@@ -58,7 +63,7 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
     let ndims = dims.Length
     let enc = [| for i in 0..ndims-2 do
                     Linear(dims.[i], dims.[i+1])
-                 Linear(dims.[ndims-2], dims.[ndims-1])|]
+                 Linear(dims.[ndims-2], dims.[ndims-1]) |]
     let dec = [|for i in 0..ndims-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
         base.add([for m in enc -> box m])
@@ -96,12 +101,12 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
         let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
         bce + kl
 
-    //[<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
+    [<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
     member _.sample(?numSamples:Int) = 
         let numSamples = defaultArg numSamples (Int 1)
         dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
-    //[<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |] , ReturnShape=[| "𝐵"; "𝑋*𝑌" |] )>]
+    [<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |] , ReturnShape=[| "𝐵"; "𝑋*𝑌" |] )>]
     override m.forward(x) =
         let x, _, _ = m.encodeDecode(x) in x
 
@@ -110,7 +115,10 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
     new (xDim:int, yDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
         VAE(Int xDim, Int yDim, Int zDim, ?hDims = Option.map (Seq.map Int) hDims, ?activation=activation, ?activationLast=activationLast)
 
-dsharp.config(backend=Backend.Torch, device=Device.CPU)
+
+
+(*
+dsharp.config(backend=Backend.Reference, device=Device.CPU)
 dsharp.seed(0)
 
 let trainSet = MNIST("./mnist", train=true, transform=id)
@@ -119,7 +127,7 @@ let trainLoader = trainSet.loader(batchSize=32, shuffle=true)
 let model = VAE(28, 28, 16, [512; 256])
 printfn "%A" model
 
-let optimizer = Adam(model, lr=dsharp.tensor(0.001))
+let optimizer = Adam(model, learningRate=dsharp.tensor(0.001))
 
 let epochs = 2
 for epoch = 0 to epochs do
@@ -136,3 +144,5 @@ for epoch = 0 to epochs do
             let samples = model.sample(Int 64).view([-1; 1; 28; 28])
             samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
 
+*)
+printfn "hello"

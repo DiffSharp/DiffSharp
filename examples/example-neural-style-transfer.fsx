@@ -1,5 +1,5 @@
 ﻿(*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
 #r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"

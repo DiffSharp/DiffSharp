@@ -25,6 +25,27 @@
         https://donsyme.pkgs.visualstudio.com/TorchSharp/_packaging/packages2/nuget/v3/index.json
     </RestoreSources>
     -->
+
+    <!-- F# local build packages -->
+    <!--     C:\GitHub\dsyme\fsharp>.\build -pack -->
+    <RestoreSources Condition="Exists('C:\GitHub\dsyme\fsharp\artifacts\packages\Debug\Shipping')">
+      $(RestoreSources);C:\GitHub\dsyme\fsharp\artifacts\packages\Debug\Shipping;
+    </RestoreSources>
+
+    <RestoreSources Condition="Exists('C:\GitHub\dsyme\fsharp\artifacts\packages\Release\Shipping')">
+      $(RestoreSources);C:\GitHub\dsyme\fsharp\artifacts\packages\Release\Shipping;
+    </RestoreSources>
+
+    <!-- Z3 local build packages -->
+    <!--     E:\GitHub\dsyme\z3> python scripts/mk_make.py -dash-dash-dotnet -->
+    <!--     E:\GitHub\dsyme\z3> cd build -->
+    <!--     E:\GitHub\dsyme\z3\build> nmake -->
+    <!--
+    <RestoreSources Condition="Exists('E:\GitHub\dsyme\z3\build')">
+      $(RestoreSources);E:\GitHub\dsyme\z3\build;
+    </RestoreSources>
+    -->
+
     <!-- turn on unused variable warnings -->
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
     <!-- turn on documentation warnings -->

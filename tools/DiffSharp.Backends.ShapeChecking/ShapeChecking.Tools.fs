@@ -24,17 +24,6 @@ module ShapeCheckingAutoOpens =
     /// Create a symbol in the global symbol context of the given name
     let (?) (syms: SymScope) (name: string) : Int = syms.CreateIntVar(name)
 
-    //// This is the handle for embedding integer symbols via integers
-
-    //let integerSymCount = ConcurrentDictionary<int, ISym>()
-    //let integerSyms = ConcurrentDictionary<int, ISym>()
-    //IntegerSyms <-
-    //    { new IIntegerSyms with
-    //        member _.GetOrCreateIntegerSym(n:int) = 
-    //            match integerSyms.TryGetValue(n) with 
-    //            | true, sym -> Some sym 
-    //            | _ -> failwithf "no sym for integer sym %d found" n }
-
 [<AutoOpen>]
 module Tools =
 
@@ -207,50 +196,55 @@ module Tools =
                 printfn "%O: assuming sample value '%O' for model parameter %s" loc dflt p.Name
                 dflt
 
-        member _.GetArg optionals givenArgInfo (p: ParameterInfo) loc =
+        member _.GetArg optionals givenArgInfo (p: ParameterInfo) loc : obj * Diagnostic[] =
             let pty = p.ParameterType
             let pts = pty.ToString()
             if pts = "DiffSharp.Int" then
-                getSymbolicIntArg givenArgInfo p loc |> box
+                getSymbolicIntArg givenArgInfo p loc |> box, [||]
             elif pts = "DiffSharp.Shape" then
-                getSymbolicShapeArg givenArgInfo p loc |> box
+                getSymbolicShapeArg givenArgInfo p loc |> box, [||]
             elif pts = "DiffSharp.Tensor" then
-                getSymbolicTensorArg givenArgInfo p loc |> box
+                getSymbolicTensorArg givenArgInfo p loc |> box, [||]
             elif pts = "DiffSharp.ShapeChecking.ISymScope" || pts = "DiffSharp.ShapeChecking.SymScope" then
-                syms |> box
+                syms |> box, [||]
             elif pts = "System.Int32" then 
-                getSampleArg givenArgInfo p 1 loc |> box
+                getSampleArg givenArgInfo p 1 loc |> box, [||]
             elif pts = "System.Single" then 
-                getSampleArg givenArgInfo p 1.0f loc |> box
+                getSampleArg givenArgInfo p 1.0f loc |> box, [||]
             elif pts = "System.Double" then 
-                getSampleArg givenArgInfo p 1.0 loc |> box
+                getSampleArg givenArgInfo p 1.0 loc |> box, [||]
             elif pts = "System.Boolean" then 
-                getSampleArg givenArgInfo p true loc |> box
+                getSampleArg givenArgInfo p true loc |> box, [||]
             elif pts = "System.String" then 
-                getSampleArg givenArgInfo p "" loc|> box
+                getSampleArg givenArgInfo p "" loc|> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Int]" then 
-                getSymbolicIntArg givenArgInfo p loc |> Some |> box
+                getSymbolicIntArg givenArgInfo p loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Shape]" then 
-                getSymbolicShapeArg givenArgInfo p loc |> Some |> box
+                getSymbolicShapeArg givenArgInfo p loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Tensor]" then 
                 // Only lay down an optional tensor arg if ndims info has actually been given
-                givenArgInfo |> Option.bind (fun _ -> getSymbolicTensorArg givenArgInfo p loc |> Some) |> box
+                givenArgInfo |> Option.bind (fun _ -> getSymbolicTensorArg givenArgInfo p loc |> Some) |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Boolean]" then 
-                getSampleArg givenArgInfo p true loc |> Some |> box
+                getSampleArg givenArgInfo p true loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Int32]" then 
-                getSampleArg givenArgInfo p 1 loc |> Some |> box
+                getSampleArg givenArgInfo p 1 loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Single]" then 
-                getSampleArg givenArgInfo p 1.0f loc |> Some |> box
+                getSampleArg givenArgInfo p 1.0f loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Double]" then 
-                getSampleArg givenArgInfo p 1.0 loc |> Some |> box
+                getSampleArg givenArgInfo p 1.0 loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.String]" then 
-                getSampleArg givenArgInfo p "" loc |> Some |> box
+                getSampleArg givenArgInfo p "" loc |> Some |> box, [||]
             elif pts.StartsWith("Microsoft.FSharp.Core.FSharpOption`1[") then 
-                if optionals then 
-                    printfn "%O: Optional model parameter '%s' has unknown type '%O'" loc p.Name p.ParameterType
-                null // None
+                let warns = 
+                    if optionals then 
+                        let msg = sprintf "Optional model parameter '%s' has unknown type '%O' for shape checking. A 'None' value will be assumed." p.Name p.ParameterType
+                        [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |]
+                    else
+                        [| |]
+                null, warns
             else 
-                failwithf "%O: Model parameter '%s' has unknown type '%O'. Consider changing the type or extending the shape checking tools to understand this type of argument" loc p.Name p.ParameterType
+                let msg = sprintf "Model parameter '%s' has unknown type '%O' for shape checking. A 'null' value will be assumed. Consider changing the type or extending the shape checking tools to understand this type of argument" p.Name p.ParameterType
+                null, [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |]
 
         member t.GetParams optionals  (ps: ParameterInfo[]) (givenArgInfos: obj[]) loc =
             [| for i in 0 .. ps.Length - 1 do 
@@ -259,105 +253,124 @@ module Tools =
                     p.Name, t.GetArg optionals givenArgInfo p loc |]
 
     // Constrain the return shape
-    let constrainReturnValueByShapeInfo env syms (retActual: obj) (shapeInfo: obj) (retParam: ParameterInfo) loc =
+    let constrainReturnValueByShapeInfo env syms (retActual: obj) (shapeInfo: obj) (retParam: ParameterInfo) loc : Result<unit, Diagnostic> * Diagnostic[] =
         match retActual, shapeInfo with 
-        | null, _ | _, null ->  Ok ()
+        | null, _ | _, null ->  Ok (), [| |]
         | (:? Tensor | :? Shape | :? Int), info -> 
             let logic = ParserLogic(env, syms, loc) 
-            let retReqd = logic.GetArg false (Some (info, loc)) retParam loc 
+            let retReqd, warns = logic.GetArg false (Some (info, loc)) retParam loc 
             match retReqd, retActual with 
             | (:? Tensor as retReqd), (:? Tensor as retActual) ->
                 if not (retActual.shapex =~= retReqd.shapex) then
                     let msg = sprintf "Shape mismatch. Expected a tensor with shape '%O' but got shape '%O'" retReqd.shapex retActual.shapex
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }
+                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
                 else
-                   Ok ()
+                   Ok (), warns
             | (:? Shape as retReqd), (:? Shape as retActual) ->
                 if not (retActual =~= retReqd) then
                     let msg = sprintf "Shape mismatch. Expected shape '%O' but got shape '%O'" retReqd retActual
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }
+                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
                 else
-                   Ok ()
+                   Ok (), warns
             | (:? Int as retReqd), (:? Int as retActual) ->
                 if not (retActual =~= retReqd) then
                     let msg = sprintf "Shape mismatch. Expected '%O' but got '%O'" retReqd retActual
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }
+                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
                 else
-                   Ok ()
-            | _ -> Ok ()
+                   Ok (), warns
+            | _, _ -> 
+                let msg = sprintf "Unknown return type for shape checking"
+                Ok(), Array.append [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |] warns
         | _ -> 
             let msg = sprintf "Unexpected return from method with ReturnShape attribute" 
-            Error { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 }
+            Error { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 }, [| |]
 
-    let makeModelAndRunShapeChecks (syms: SymScope) optionals (ctor: ConstructorInfo) ctorGivenArgs tloc methLocs =
-        let ctorArgs = ParserLogic(Map.empty, syms, tloc).GetParams optionals (ctor.GetParameters()) ctorGivenArgs tloc
-        let env = 
-            ctorArgs 
-            |> Array.choose (fun (nm, v) -> 
-                  match v with
-                  | :? Int as n -> Some (nm, n)
-                  | :? int as n -> Some (nm, Int n)
-                  | :? (option<int>) as n when n.IsSome -> Some (nm, Int n.Value)
-                  | :? (option<Int>) as n when n.IsSome -> Some (nm, n.Value)
-                  | _ -> None)
-            |> Map.ofArray
-        let model = 
-           try ctor.Invoke(Array.map snd ctorArgs) |> Ok
-           with :?TargetInvocationException as e -> Error (DiagnosticFromException tloc e.InnerException)
-        match model with 
-        | Error e -> ctorArgs, Error e, [| |], [| e |]
-        | Ok model ->
-
+    let invokeShapeCheckMeth (syms: SymScope) optionals env (meth: MethodInfo) (attr:  ShapeCheckAttribute) (file, sl, sc, el, ec) (model: obj) =
         let diags = ResizeArray()
         let methCalls = ResizeArray()
-        for meth in ctor.DeclaringType.GetMethods() do
-          // Use a better location for the method attribute if given
-          let mloc =
-             methLocs 
-             |> Array.tryFind (fun (methName, _file, _sl, _sc, _el, _ec) -> methName = meth.Name)
-             |> function 
-                | None -> tloc
-                | Some (_, file, sl, sc, el, ec) -> { File=file; StartLine=sl; StartColumn=sc; EndLine=el; EndColumn=ec} 
-
-          if not meth.ContainsGenericParameters && not meth.DeclaringType.ContainsGenericParameters then
-            for attr in meth.GetCustomAttributes(typeof<ShapeCheckAttribute>, true) do
-                printfn "meth %s has attr"  meth.Name
+        if not meth.ContainsGenericParameters && not meth.DeclaringType.ContainsGenericParameters then
+                // Use a better location for the method attribute if given
+                let mloc = { File=file; StartLine=sl; StartColumn=sc; EndLine=el; EndColumn=ec} 
+                      
                 try 
                     syms.Push()
-                    let attr = attr :?> ShapeCheckAttribute
                     let args = ParserLogic(env, syms, mloc).GetParams optionals (meth.GetParameters()) attr.GivenArgs mloc
+
+                    let argValues = 
+                        [| for (_, (arg, warns)) in args do
+                            diags.AddRange warns
+                            arg |]
 
                     let res =
                         try 
-                            meth.Invoke (model, Array.map snd args) |> Ok
+                            meth.Invoke (model, argValues) |> Ok
                         with :?TargetInvocationException as e -> 
                             let e = e.InnerException
-                            printfn "meth %s error, res = %A" meth.Name e
                             Error (DiagnosticFromException mloc e)
 
                     match res with
                     | Ok retActual -> 
-                       printfn "meth %s ok, res = %A" meth.Name retActual
-                       match constrainReturnValueByShapeInfo env syms retActual attr.ReturnShape meth.ReturnParameter mloc with 
-                       | Ok () -> ()
-                       | Error diag -> diags.Add diag
+                        let retOk, retWarns = constrainReturnValueByShapeInfo env syms retActual attr.ReturnShape meth.ReturnParameter mloc 
+                        diags.AddRange retWarns
+                        match retOk with
+                        | Ok () -> ()
+                        | Error diag -> diags.Add diag
 
-                       // Show extra information about over-constrained variables
-                       let moreDiags = syms.GetAdditionalDiagnostics()
+                        // Show extra information about over-constrained variables
+                        let moreDiags = syms.GetAdditionalDiagnostics()
                   
-                       for (severity, loc2, msg) in moreDiags do   
+                        for (severity, loc2, msg) in moreDiags do   
                             let stack = Array.append (Option.toArray loc2) [| mloc |]
                             diags.Add ({ Severity=severity; LocationStack=stack; Message = msg; Number=1996 })
-                       methCalls.Add(meth, args, Ok retActual)
+                        methCalls.Add(meth, args, Ok retActual)
                     | Error e -> 
-                       methCalls.Add(meth, args, Error e)
-                       diags.Add e
+                        methCalls.Add(meth, args, Error e)
+                        diags.Add e
                 finally
                     syms.Pop()
-        for diag in diags do  
-           printfn "%s" diag.Message
-           
-        ctorArgs, Ok model, methCalls.ToArray(), diags.ToArray()
+        diags.ToArray(), methCalls.ToArray()
+
+    let makeModelAndRunShapeChecks (syms: SymScope) optionals (ctor: ConstructorInfo) ctorGivenArgs tloc subTargets =
+        let diags = ResizeArray()
+        let calls = ResizeArray()
+        
+        let ctorArgs = ParserLogic(Map.empty, syms, tloc).GetParams optionals (ctor.GetParameters()) ctorGivenArgs tloc
+        let ctorArgValues = 
+            [| for (nm, (arg, warns)) in ctorArgs do
+                diags.AddRange warns
+                (nm, arg) |]
+
+        let env = 
+            ctorArgValues 
+            |> Array.choose (fun (nm, v) -> 
+                    match v with
+                    | :? Int as n -> Some (nm, n)
+                    | :? int as n -> Some (nm, Int n)
+                    | :? (option<int>) as n when n.IsSome -> Some (nm, Int n.Value)
+                    | :? (option<Int>) as n when n.IsSome -> Some (nm, n.Value)
+                    | _ -> None)
+            |> Map.ofArray
+        
+        // Invoke the constructor to target the model
+        let model = 
+            try ctor.Invoke(Array.map snd ctorArgValues) |> Ok
+            with :? TargetInvocationException as e -> Error (DiagnosticFromException tloc e.InnerException)
+
+        match model with 
+        | Error e ->
+            ctorArgValues, Error e, [| |], [| e |]
+        | Ok model ->
+
+            // Invoke each shape check target in model
+            for (subTargetMeth: MethodInfo, subTargetAttr: obj, subTargetLoc) in subTargets do
+                match subTargetAttr with 
+                | :? ShapeCheckAttribute as subTargetAttr ->
+                    let methDiags, methCalls = invokeShapeCheckMeth syms optionals env subTargetMeth subTargetAttr subTargetLoc model
+                    diags.AddRange(methDiags)
+                    calls.AddRange(methCalls)
+                | _ -> ()
+
+            ctorArgValues, Ok (model), calls.ToArray(), diags.ToArray()
 
 /// When added a to model or its methods, indicates that ShapeCheck tooling should analyse the shapes
 /// of the construct.
@@ -389,42 +402,48 @@ type ShapeCheckAttribute internal (given: obj[]) =
     /// back
     ///
     /// TODO: see if there are standard types somewhere to use for this
-    member attr.Invoke(targetType: System.Type, 
-             methLocs: (string * string * int * int * int * int)[],
-             locFile: string, 
-             locStartLine: int, 
-             locStartColumn: int, 
-             locEndLine: int, 
-             locEndColumn: int) 
+    member attr.RunChecks(target: obj (* System.Type | System.MethodInfo *) ,
+             loc: (string * int * int * int * int), 
+             subTargets: (MethodInfo * obj * (string * int * int * int * int))[]) 
             : (int (* severity *) * 
                int (* number *) * 
                (string * int * int * int * int)[] *  (* location stack *)
                string (* message*))[] =
 
-
         let _ = System.Runtime.InteropServices.NativeLibrary.Load("libz3", System.Reflection.Assembly.GetExecutingAssembly(), Nullable())
         let optionals = true
-        let ctors = targetType.GetConstructors()
+        let (locFile, locStartLine, locStartColumn, locEndLine, locEndColumn) = loc
+        
         let syms = SymScope()
-        let ctor = 
-            ctors 
-            |> Array.tryFind (fun ctor -> 
-                ctor.GetParameters() |> Array.exists (fun p -> 
-                    let pt = p.ParameterType.ToString()
-                    pt.Contains("DiffSharp.Int") || pt.Contains("DiffSharp.Shape")))
-            |> function 
-               | None -> 
-                   //printf "couldn't find a model constructor taking Int or Shape parameter, assuming first constructor is target of live check"
-                   ctors.[0]
-               | Some c -> c
+        let diags =
+            match target with 
+            | :? System.Type as targetType -> 
+                let ctors = targetType.GetConstructors()
+                let ctor = 
+                    ctors 
+                    |> Array.tryFind (fun ctor -> 
+                        ctor.GetParameters() |> Array.exists (fun p -> 
+                            let pt = p.ParameterType.ToString()
+                            pt.Contains("DiffSharp.Int") || pt.Contains("DiffSharp.Shape")))
+                    |> function 
+                       | None -> 
+                           //printf "couldn't find a model constructor taking Int or Shape parameter, assuming first constructor is target of live check"
+                           ctors.[0]
+                       | Some c -> c
 
-        printfn "attr.GivenArgs = %A" attr.GivenArgs
-        let tloc = { File = locFile; StartLine = locStartLine; StartColumn = locStartColumn; EndLine = locEndLine; EndColumn= locEndColumn }
-        let _, _, _, diags = makeModelAndRunShapeChecks syms optionals ctor attr.GivenArgs tloc methLocs
+                let tloc = { File = locFile; StartLine = locStartLine; StartColumn = locStartColumn; EndLine = locEndLine; EndColumn= locEndColumn }
+                let _, _, _, diags = makeModelAndRunShapeChecks syms optionals ctor attr.GivenArgs tloc subTargets
+                diags
+            | :? System.Reflection.MethodInfo as meth -> 
+                let methDiags, _methCalls = invokeShapeCheckMeth syms optionals Map.empty meth attr loc null
+                methDiags
+            | _ -> 
+                [| |]
+
         [| for diag in diags -> 
             let stack = 
                 [| for m in diag.LocationStack do
-                     (m.File, m.StartLine, m.StartColumn, m.EndLine, m.EndColumn) |]
+                        (m.File, m.StartLine, m.StartColumn, m.EndLine, m.EndColumn) |]
             (diag.Severity, diag.Number, stack, diag.Message) |]
 
 [<AutoOpen>]
