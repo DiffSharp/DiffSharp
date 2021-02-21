@@ -7,6 +7,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
+open DiffSharp.IO
 open DiffSharp.Util
 open System
 
