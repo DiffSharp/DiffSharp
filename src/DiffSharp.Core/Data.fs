@@ -8,7 +8,6 @@ namespace rec DiffSharp.Data
 open DiffSharp
 open DiffSharp.Compose
 open DiffSharp.Util
-// open System
 open System.Net
 open System.IO
 open System.IO.Compression
@@ -24,9 +23,28 @@ type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
     member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
-    member t.Item
+    member d.Item
         with get(i:int) =
-            t.item(i)
+            d.item(i)
+    member d.GetSlice(imin:int option, imax:int option) =
+        let imin   = defaultArg imin 0
+        let imax   = defaultArg imax d.length
+        if imin >= imax then failwithf "Expecting imin (%A) < imax (%A)" imin imax
+        DatasetSubset(d, [|imin..imax|])
+    member d.filter(predicate:Tensor->Tensor->bool) =
+        let indices = ResizeArray<int>()
+        for i in 0..d.length-1 do
+            let data, target = d.item(i)
+            if predicate data target then
+                indices.Add(i)
+        if indices.Count = 0 then failwithf "Could not find any data items for which the predicate is true"
+        DatasetSubset(d, indices.ToArray())
+
+
+type DatasetSubset(dataset:Dataset, indices:int[]) =
+    inherit Dataset()
+    override d.length = indices.Length
+    override d.item(i) = dataset.item(indices.[i])
 
 
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =

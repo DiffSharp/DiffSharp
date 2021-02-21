@@ -132,7 +132,6 @@ type TestData () =
         let dataset = TensorDataset(x, y)
         let datasetLength = dataset.length
         let datasetLengthCorrect = n
-
         Assert.AreEqual(datasetLengthCorrect, datasetLength)
 
         let batchSize = 16
@@ -145,6 +144,38 @@ type TestData () =
         let yShapeCorrect = [|batchSize; dout|]
         Assert.AreEqual(xShapeCorrect, xShape)
         Assert.AreEqual(yShapeCorrect, yShape)
+
+    [<Test>]
+    member _.TestDatasetSlice () =
+        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]])
+        let y = dsharp.tensor([1,0,1,1,2,3])
+        let dataset = TensorDataset(x, y)
+        let dataset2 = dataset.[1..2]
+        let dataset2Length = dataset2.length
+        let dataset2LengthCorrect = 2
+        Assert.AreEqual(dataset2LengthCorrect, dataset2Length)
+
+        let loader = dataset2.loader(batchSize=dataset2.length)
+        let _, bx, by = loader.epoch() |> Seq.head
+        Assert.True(x.[1..2].allclose(bx))
+        Assert.True(y.[1..2].allclose(by))
+  
+    [<Test>]
+    member _.TestDatasetFilter () =
+        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]])
+        let y = dsharp.tensor([1,0,1,1,2,3])
+        let dataset = TensorDataset(x, y)
+        let dataset2 = dataset.filter(fun _ t -> (int t) = 1)
+        let dataset2Length = dataset2.length
+        let dataset2LengthCorrect = 3
+        Assert.AreEqual(dataset2LengthCorrect, dataset2Length)
+
+        let loader = dataset2.loader(batchSize=dataset2.length)
+        let _, bx, by = loader.epoch() |> Seq.head
+        let bxCorrect = dsharp.tensor([[1,2,3], [7,8,9], [10,11,12]])
+        let byCorrect = dsharp.tensor([1,1,1])
+        Assert.True(bxCorrect.allclose(bx))
+        Assert.True(byCorrect.allclose(by))
 
     [<Test>]
     member _.TestImageDataset () =
