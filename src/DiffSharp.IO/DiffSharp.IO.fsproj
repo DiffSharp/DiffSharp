@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Image.fs" />
-    <Compile Include="Pyplot.fs" />
+    <Compile Include="Plot.fs" />
   </ItemGroup>
 
   <ItemGroup>

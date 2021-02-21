@@ -58,6 +58,28 @@ module helpers =
             failwithf "Error or timeout while running process %s" executable
 
 
+// This is a lightweight wrapper roughly compatible with the matplotlib.pyplot API
+// https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.html#module-matplotlib.pyplot
+// - It works by creating little Python scripts on the fly for plotting, then running the Python
+// interpreter to save the resulting plots to a file (e.g., png, pdf)
+// - The intention is to cover the typical use cases for a machine learning user (e.g., line plots, histograms)
+// - We expect to have a local Python distribution in the machine, with matplotlib package installed
+// - This design is cross-platform and easier to maintain longer-term compared with deeper Python integration
+// solutions like pythonnet http://pythonnet.github.io/ which need platform-specific and Python-version-specific 
+// dependency packages that seem to be not well maintained
+//
+// Example:
+//
+// let y1 = dsharp.randn(10)
+// let y2 = dsharp.randn(10)
+// let plt = Pyplot()
+// plt.figure((10., 6.))
+// plt.plot(y1, label="first")
+// plt.plot(y2, label="second", alpha=0.5)
+// plt.legend()
+// plt.tightLayout()
+// plt.savefig("test.png")
+
 type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
     let pythonExecutable = defaultArg pythonExecutable "python"
     let timeoutMilliseconds = defaultArg timeoutMilliseconds 10000
