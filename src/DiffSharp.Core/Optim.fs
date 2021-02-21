@@ -36,7 +36,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
     let mutable momInit = false
-    let mutable momBuffer = ParameterDict()
+    let mutable momBuffer = ParametersDict()
 
     /// <summary>TBD</summary>
     override o.updateRule name t = 
@@ -68,8 +68,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
     let eps = defaultArg eps (dsharp.tensor(1e-8))
     let reversible = defaultArg reversible false
     let mutable stateStep = 0
-    let mutable stateExpAvg = ParameterDict()
-    let mutable stateExpAvgSq = ParameterDict()
+    let mutable stateExpAvg = ParametersDict()
+    let mutable stateExpAvgSq = ParametersDict()
 
     /// <summary>TBD</summary>
     override o.updateRule name t =

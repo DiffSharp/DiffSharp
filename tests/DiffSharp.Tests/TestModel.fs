@@ -43,7 +43,7 @@ type TestModel () =
     member _.TestParameterDictFlattenUnflatten () =
         let d1t1 = Parameter <| dsharp.randn([15;5])
         let d1t2 = Parameter <| dsharp.randn(4)
-        let d1 = ParameterDict()
+        let d1 = ParametersDict()
         d1.add("w", d1t1)
         d1.add("b", d1t2)
         let d1flat = d1.flatten()
@@ -52,7 +52,7 @@ type TestModel () =
 
         let d2t1 = Parameter <| dsharp.randn([15;5])
         let d2t2 = Parameter <| dsharp.randn(4)
-        let d2 = ParameterDict()
+        let d2 = ParametersDict()
         d2.add("w", d2t1)
         d2.add("b", d2t2)
         let d2flat = d2.flatten()

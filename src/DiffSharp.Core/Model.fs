@@ -37,7 +37,7 @@ type Parameter =
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
-type ParameterDict() =
+type ParametersDict() =
 
     // If the dictionary is empty then the latest 'move' is considered the configuration for the implied empty tensor
     let mutable dummy = dsharp.zeros(0)
@@ -57,14 +57,14 @@ type ParameterDict() =
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
+    member d.add(parameters:ParametersDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
 
     /// <summary>TBD</summary>
     member d.copy() = d.map(fun (t:Tensor) -> t)
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
-        let ret = ParameterDict()
+        let ret = ParametersDict()
         for KeyValue(n, p) in d.values do ret.values.Add(f(n,p))
         ret
 
@@ -75,13 +75,13 @@ type ParameterDict() =
     member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
 
     /// <summary>TBD</summary>
-    member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
+    member d.set(parameters:ParametersDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
 
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
 
     /// <summary>TBD</summary>
-    member d.forwarddiff(derivatives:ParameterDict, ?tag:uint32) = 
+    member d.forwarddiff(derivatives:ParametersDict, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
 
@@ -116,7 +116,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
-        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
+        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParametersDict.nelement (%A) to be the same" tensors.nelement d.nelement
         let shapes = [|for t in d.values.Values do t.value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
@@ -135,7 +135,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     override d.ToString() =
         let sb = System.Text.StringBuilder()
-        sb.Append("ParameterDict(") |> ignore
+        sb.Append("ParametersDict(") |> ignore
         let mutable prefix = ""
         for KeyValue(n, p) in d.values do 
             sb.Append(sprintf "%s%A:%A" prefix n p) |> ignore
@@ -156,7 +156,7 @@ type Model() =
     val mutable mode: Mode
 
     /// <summary>TBD</summary>
-    member val ParametersDict = ParameterDict()
+    member val ParametersDict = ParametersDict()
 
     /// <summary>TBD</summary>
     member val SubModelsDict = Dictionary<string, Model>()
@@ -202,7 +202,7 @@ type Model() =
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
     /// <summary>TBD</summary>
-    member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
+    member m.forwardDiff(derivatives:ParametersDict) = m.parametersDict.forwarddiff(derivatives)
 
     /// <summary>TBD</summary>
     member m.reverseDiff() = m.parametersDict.reverseDiff()
