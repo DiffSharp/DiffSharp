@@ -248,9 +248,6 @@ type dsharp with
     static member toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) = fun (a:Tensor) -> a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?asciiPalette=asciiPalette)
 
     /// <summary>TBD</summary>
-    static member saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) = fun (a:Tensor) -> a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
-
-    /// <summary>TBD</summary>
     static member cast(dtype:Dtype) = fun (a:Tensor) -> a.cast(dtype)
 
     /// <summary>TBD</summary>
