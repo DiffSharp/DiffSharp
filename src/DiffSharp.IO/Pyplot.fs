@@ -1,28 +1,92 @@
 namespace DiffSharp.IO
 
 open DiffSharp
-open Python.Runtime
+open System.IO
+open System.Diagnostics
 
-type Pyplot() =
-    let _gil = Py.GIL()
-    let scope = Py.CreateScope()
-    let exec(code) = scope.Exec(code)
-    let _prep = exec("import matplotlib.pyplot as plt")
-    // let pyList (l:float32[]) =
-    //     let sb = System.Text.StringBuilder()
-    //     let mutable prefix = "["
-    //     for v in l do
-    //         sb.Append(prefix) |> ignore
-    //         sb.Append(v) |> ignore
-    //         prefix <- ", "
-    //     sb.Append("]") |> ignore
-    //     sb.ToString()
-    member _.plot(y:Tensor, ?label:string) =
+
+[<AutoOpen>]
+module helpers =
+    let tensorToPython (t:Tensor) =
+        let printVal (x:scalar) = 
+            match x.GetTypeCode() with 
+            | System.TypeCode.Single -> sprintf "%f" (x.toSingle())
+            | System.TypeCode.Double -> sprintf "%f" (x.toDouble())
+            | System.TypeCode.Int32 -> sprintf "%d" (x.toInt32())
+            | System.TypeCode.Int64 -> sprintf "%d" (x.toInt64())
+            | System.TypeCode.Byte -> sprintf "%d" (x.toByte())
+            | System.TypeCode.SByte -> sprintf "%d" (x.toSByte())
+            | System.TypeCode.Int16 -> sprintf "%d" (x.toInt16())
+            | System.TypeCode.Boolean -> if (x.toBool()) then "True" else "False"
+            | _ -> x.ToString()
+        let sb = System.Text.StringBuilder()
+        match t.dim with
+        | 0 -> 
+            sb.Append(printVal (t.toScalar())) |> ignore
+        | _ ->
+            let rec print (shape:Shape) externalCoords = 
+                if shape.Length = 1 then
+                    sb.Append("[") |> ignore
+                    let mutable prefix = ""
+                    for i=0 to shape.[0]-1 do
+                        let globalCoords = Array.append externalCoords [|i|]
+                        sb.Append(prefix) |> ignore
+                        sb.Append(printVal (t.Item(globalCoords))) |> ignore
+                        prefix <- ", "
+                    sb.Append("]") |> ignore
+                else
+                    sb.Append("[") |> ignore
+                    let mutable prefix = ""
+                    for i=0 to shape.[0]-1 do
+                        sb.Append(prefix) |> ignore
+                        print shape.[1..] (Array.append externalCoords [|i|])
+                        prefix <- ", "
+                    sb.Append("]") |> ignore
+            print t.shape [||]
+        sb.ToString()
+
+
+type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
+    let pythonExecutable = defaultArg pythonExecutable "python"
+    let timeoutMilliseconds = defaultArg timeoutMilliseconds 10000
+    let preamble = "import matplotlib.pyplot as plt"
+    let mutable _lines = [|preamble|]
+    let reset () = _lines <- [|preamble|]
+    let add l = _lines <- Array.append _lines [|l|]
+    let run() =
+        let fileName = Path.GetTempFileName()
+        File.WriteAllLines(fileName, _lines)
+        let success =
+            try
+                let p = Process.Start(pythonExecutable, fileName)
+                p.WaitForExit(timeoutMilliseconds)
+            with
+                | _ -> false
+        if not success then
+            printfn "Python process error or timeout, skipping plotting."
+
+    member _.script = _lines |> Array.fold (fun r s -> r + s + "\n") ""
+    member _.addPython(l) = add(l)
+    member _.plot(x:Tensor, y:Tensor, ?alpha, ?label) =
+        if x.dim <> 1 || y.dim <> 1 then failwithf "Expecting tensors x (%A) and y (%A) to be 1d" x.shape y.shape
+        let alpha = defaultArg alpha 1.
         let label = defaultArg label ""
-        // let y = y |> Seq.map float32 |> Seq.toArray |> pyList
-        let y = y.ToString()
-        exec(sprintf "plt.plot(%s, label='%s')" y label)
-    member _.savefig(fileName) = exec(sprintf "plt.savefig('%s')" fileName)
-    member _.show() = exec("plt.show()")
-    member _.legend() = exec("plt.legend()")
-    member _.tight_layout() = exec("plt.tight_layout()")
+        add(sprintf "plt.plot(%s, %s, alpha=%A, label='%s')" (tensorToPython x) (tensorToPython y) alpha label)
+    member p.plot(y:Tensor, ?alpha, ?label) =
+        let x = dsharp.arangeLike(y, y.nelement)
+        p.plot(x, y, ?alpha=alpha, ?label=label)
+    member p.hist(x:Tensor, ?weights, ?bins, ?density, ?label) =
+        let weights = defaultArg weights (dsharp.onesLike(x))
+        let bins = defaultArg bins 10
+        let density = defaultArg density false
+        let label = defaultArg label ""
+        add(sprintf "plt.hist(%s, weights=%s, bins=%A, density=%s, label='%s')" (tensorToPython x) (tensorToPython weights) bins (if density then "True" else "False") label)
+    member _.figure(?figSize) = 
+        let figSize = defaultArg figSize (6.4, 4.8)
+        add(sprintf "plt.figure(figsize=(%A,%A))" (fst figSize) (snd figSize))
+    member _.legend() = add("plt.legend()")
+    member _.tightLayout() = add("plt.tight_layout()")
+    member _.savefig(fileName) =
+        add(sprintf "plt.savefig('%s')" fileName)
+        run()
+        reset()
