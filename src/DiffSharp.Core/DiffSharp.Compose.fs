@@ -13,6 +13,10 @@ module DiffSharp.Compose
 // static member sub(b:Tensor) = fun (a:Tensor) -> a.sub(b)
 
 type dsharp with
+    /// <summary>TBD</summary>
+    static member tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (value:obj) -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    
+    /// <summary>TBD</summary>
     /// <summary>Returns a tensor where each row contains <paramref name="numSamples"/> indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="numSamples">Number of samples to draw</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>

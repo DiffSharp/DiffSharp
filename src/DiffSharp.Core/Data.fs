@@ -13,11 +13,12 @@ open System.Net
 open System.IO
 open System.IO.Compression
 
+
 /// <namespacedoc>
-///   <summary>Contains data sets and components related to data loading.</summary>
+///   <summary>Contains datasets and components related to data loading.</summary>
 /// </namespacedoc>
 ///
-/// <summary>Represents a data set that can load images in batches.</summary>
+/// <summary>Represents a dataset.</summary>
 [<AbstractClass>]
 type Dataset() =
     abstract member length: int
@@ -26,6 +27,7 @@ type Dataset() =
     member t.Item
         with get(i:int) =
             t.item(i)
+
 
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let shuffle = defaultArg shuffle false
@@ -44,11 +46,104 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, 
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
 
+
 type TensorDataset(data:Tensor, target:Tensor) =
     inherit Dataset()
     do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
     override d.length = data.shape.[0]
     override d.item(i) = data.[i], target.[i]
+
+
+type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+    inherit Dataset()
+    let fileExtension = defaultArg fileExtension "png"
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
+    let subdirs = Directory.GetDirectories(path) |> Array.sort
+    let filesInSubdirs = [|for subdir in subdirs do
+                            let files = Directory.GetFiles(subdir, "*."+fileExtension)
+                            if files.Length > 0 then files|]
+    let _classes = filesInSubdirs.Length
+    let data = [|for i in 0.._classes-1 do
+                    let files = filesInSubdirs.[i]
+                    yield! Array.map (fun file -> file, i) files|]
+    let _classNames = Array.map (fun (f:string[]) -> DirectoryInfo(f.[0]).Parent.Name) filesInSubdirs
+    member d.classes = _classes
+    member d.classNames = _classNames
+    override d.length = data.Length
+    override d.item(i) =
+        let fileName, category = data.[i]
+        transform (dsharp.loadImage(fileName, ?resize=resize)), targetTransform (dsharp.tensor(category))
+
+
+type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+    inherit Dataset()
+    let path = Path.Combine(path, "cifar10") |> Path.GetFullPath
+    let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
+    let train = defaultArg train true
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
+    let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
+    let file = Path.Combine(path, Path.GetFileName(url))
+
+    let loadCIFAR10 fileName =
+        let br = new BinaryReader(File.OpenRead(fileName))
+        [|for _ in 1..10000 do
+            let label = br.ReadByte() |> dsharp.tensor
+            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32]) // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
+            image/255, label
+        |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
+
+    let data, target =
+        Directory.CreateDirectory(path) |> ignore
+        if not (File.Exists(file)) then download url file
+        if not (Directory.Exists(pathExtracted)) then extractTarGz file path
+        let files = [|"data_batch_1.bin"; "data_batch_2.bin"; "data_batch_3.bin"; "data_batch_4.bin"; "data_batch_5.bin"; "test_batch.bin"|] |> Array.map (fun f -> Path.Combine(pathExtracted, f))
+        if train then
+            files.[..4] |> Array.map loadCIFAR10 |> Array.unzip |> fun (d, t) -> dsharp.cat(d), dsharp.cat(t)
+        else
+            loadCIFAR10 files.[5]
+
+    let _classNames = File.ReadAllLines(Path.Combine(pathExtracted, "batches.meta.txt")) |> Array.take 10
+    member d.classes = _classNames.Length
+    member d.classNames = _classNames
+    override d.length = data.shape.[0]
+    override d.item(i) = transform data.[i], targetTransform target.[i]
+
+
+type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+    inherit Dataset()
+    let path = Path.Combine(path, "cifar100") |> Path.GetFullPath
+    let pathExtracted = Path.Combine(path, "cifar-100-binary")
+    let train = defaultArg train true
+    let transform = defaultArg transform id
+    let targetTransform = defaultArg targetTransform id
+    let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz"
+    let file = Path.Combine(path, Path.GetFileName(url))
+
+    let loadCIFAR100 fileName n =
+        let br = new BinaryReader(File.OpenRead(fileName))
+        [|for _ in 1..n do
+            let labelCoarse = br.ReadByte() |> dsharp.tensor
+            let labelFine = br.ReadByte() |> dsharp.tensor
+            let image = br.ReadBytes(3*1024) |> Array.map float32 |> dsharp.tensor |> dsharp.view([3; 32; 32]) // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
+            image/255, labelCoarse, labelFine
+        |] |> Array.unzip3 |> fun (i, lc, lf) -> dsharp.stack(i), dsharp.stack(lc), dsharp.stack(lf)
+
+    let data, _, targetFine =
+        Directory.CreateDirectory(path) |> ignore
+        if not (File.Exists(file)) then download url file
+        if not (Directory.Exists(pathExtracted)) then extractTarGz file path
+        if train then loadCIFAR100 (Path.Combine(pathExtracted, "train.bin")) 50000
+        else loadCIFAR100 (Path.Combine(pathExtracted, "test.bin")) 10000
+
+    let _classNamesCoarse = File.ReadAllLines(Path.Combine(pathExtracted, "coarse_label_names.txt")) |> Array.take 20
+    let _classNamesFine = File.ReadAllLines(Path.Combine(pathExtracted, "fine_label_names.txt")) |> Array.take 100
+    member d.classes = _classNamesFine.Length
+    member d.classNames = _classNamesFine
+    override d.length = data.shape.[0]
+    override d.item(i) = transform data.[i], targetTransform targetFine.[i]    
+
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
@@ -62,25 +157,9 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
                     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
-    let filesProcessed = [for file in files do Path.ChangeExtension(file, ".tensor")]
-    let data, target = 
-        Directory.CreateDirectory(path) |> ignore
-        let mutable data = dsharp.zero()
-        let mutable target = dsharp.zero()
-        if train then
-            if not (File.Exists(files.[0])) then download urls.[0] files.[0]
-            if not (File.Exists(files.[1])) then download urls.[1] files.[1]
-            if File.Exists(filesProcessed.[0]) then data <-    dsharp.load(filesProcessed.[0]) else data <-    MNIST.LoadMNISTImages(files.[0]); dsharp.save(data, filesProcessed.[0])
-            if File.Exists(filesProcessed.[1]) then target <- dsharp.load(filesProcessed.[1]) else target <- MNIST.LoadMNISTLabels(files.[1]); dsharp.save(target, filesProcessed.[1])
-        else
-            if not (File.Exists(files.[2])) then download urls.[2] files.[2]
-            if not (File.Exists(files.[3])) then download urls.[3] files.[3]
-            if File.Exists(filesProcessed.[2]) then data <-    dsharp.load(filesProcessed.[2]) else data <-    MNIST.LoadMNISTImages(files.[2]); dsharp.save(data, filesProcessed.[2])
-            if File.Exists(filesProcessed.[3]) then target <- dsharp.load(filesProcessed.[3]) else target <- MNIST.LoadMNISTLabels(files.[3]); dsharp.save(target, filesProcessed.[3])
-        data, target
 
-    static member internal LoadMNISTImages(filename, ?n:int) =
-        let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
+    let loadMNISTImages(filename:string) (n:option<int>) =
+        let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2051 -> // Images
@@ -89,13 +168,13 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             let cols = r.ReadInt32() |> IPAddress.NetworkToHostOrder
             let n = defaultArg n maxitems
             r.ReadBytes(n * rows * cols)
-            |> Array.map float32
+            |> Array.map float32 // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
             |> dsharp.tensor
             |> dsharp.view ([n; 1; 28; 28])
             |> fun t -> t / 255
         | _ -> failwith "Given file is not in the MNIST format."
-    static member internal LoadMNISTLabels(filename, ?n:int) =
-        let r = new BinaryReader(new GZipStream(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress))
+    let loadMNISTLabels(filename:string) (n:option<int>) =
+        let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2049 -> // Labels
@@ -106,5 +185,19 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             |> dsharp.tensor
             |> dsharp.view ([n])
         | _ -> failwith "Given file is not in the MNIST format."
+
+    let data, target = 
+        Directory.CreateDirectory(path) |> ignore
+        if train then
+            if not (File.Exists(files.[0])) then download urls.[0] files.[0]
+            if not (File.Exists(files.[1])) then download urls.[1] files.[1]
+            loadMNISTImages files.[0] None, loadMNISTLabels files.[1] None
+        else
+            if not (File.Exists(files.[2])) then download urls.[2] files.[2]
+            if not (File.Exists(files.[3])) then download urls.[3] files.[3]
+            loadMNISTImages files.[2] None, loadMNISTLabels files.[3] None
+
+    member d.classes = 10
+    member d.classNames = Array.init 10 id |> Array.map string
     override d.length = data.shape.[0]
     override d.item(i) = transform data.[i], targetTransform target.[i]

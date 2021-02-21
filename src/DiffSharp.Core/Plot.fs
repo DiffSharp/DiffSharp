@@ -1,4 +1,4 @@
-namespace DiffSharp.IO
+namespace DiffSharp.Plot
 
 open DiffSharp
 open System.IO

@@ -6,11 +6,20 @@
 /// Contains utilities related to the DiffSharp programming model.
 namespace DiffSharp.Util
 
+open DiffSharp
 open System
 open System.Collections
+open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open FSharp.Reflection
-open DiffSharp
+open System.IO
+open System.IO.Compression
+open System.Text
+open System.Net
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Formatters.Binary
+open SixLabors.ImageSharp
+open SixLabors.ImageSharp.Processing
 
 /// Represents a differentiation nesting level.
 type NestingLevel =
@@ -282,11 +291,11 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<int64> with
         | Some (values, shape) -> (values |> Array.map ofInt64, shape)
         | None -> 
-        match value |> tryFlatArrayAndShape<int8>  with
-        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
-        | None -> 
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
+        | None -> 
+        match value |> tryFlatArrayAndShape<int8>  with
+        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<int16>  with
         | Some (values, shape) -> (values |> Array.map ofInt16, shape)
@@ -322,3 +331,164 @@ module DataConverter =
 
     let dataOfValuesForBool (value:obj) =
         dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
+
+
+/// Contains auto-opened utilities related to the DiffSharp programming model.
+[<AutoOpen>]
+module UtilAutoOpens =
+
+    /// Returns a function that memoizes the given function using a lookaside table.
+    let memoize fn =
+        let cache = new Dictionary<_,_>()
+        fun x ->
+            match cache.TryGetValue x with
+            | true, v -> v
+            | false, _ ->
+                let v = fn x
+                cache.Add(x,v)
+                v
+
+    /// Synchronously downloads the given URL to the given local file.
+    let download (url:string) (localFileName:string) =
+        let wc = new WebClient()
+        printfn "Downloading %A to %A" url localFileName
+        wc.DownloadFile(url, localFileName)
+        wc.Dispose()
+
+    /// Saves the given value to the given local file using binary serialization.
+    let saveBinary (object: 'T) (fileName:string) =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Create)
+        let cs = new GZipStream(fs, CompressionMode.Compress)
+        try
+            formatter.Serialize(cs, object)
+            cs.Flush()
+            cs.Close()
+            fs.Close()
+        with
+        | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
+
+    /// Loads the given value from the given local file using binary serialization.
+    let loadBinary (fileName:string):'T =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Open)
+        let cs = new GZipStream(fs, CompressionMode.Decompress)
+        try
+            let object = formatter.Deserialize(cs) :?> 'T
+            cs.Close()
+            fs.Close()
+            object
+        with
+        | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
+
+    /// Saves the given pixel array to a file and optionally resizes it in the process. Resizing uses bicubic interpolation. Supports .png and .jpg formats.
+    let saveImage (pixels:float32[,,]) (fileName:string) (resize:option<int*int>) =
+        let c, h, w = pixels.GetLength(0), pixels.GetLength(1), pixels.GetLength(2)
+        let image = new Image<PixelFormats.RgbaVector>(w, h)
+        for y=0 to h-1 do
+            for x=0 to w-1 do
+                let r, g, b = 
+                    if c = 1 then
+                        let v = float32(pixels.[0, y, x])
+                        v, v, v
+                    else
+                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
+                image.Item(x, y) <- PixelFormats.RgbaVector(r, g, b)
+        let fs = new FileStream(fileName, FileMode.Create)
+        let encoder =
+            if fileName.EndsWith(".jpg") then
+                Formats.Jpeg.JpegEncoder() :> Formats.IImageEncoder
+            elif fileName.EndsWith(".png") then
+                Formats.Png.PngEncoder() :> Formats.IImageEncoder
+            else
+                failwithf "Expecting fileName (%A) to end with .png or .jpg" fileName
+        match resize with
+            | Some(width, height) ->
+                if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
+                image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))
+            | None -> ()
+        image.Save(fs, encoder)
+        fs.Close()
+
+    /// Loads a pixel array from a file and optionally resizes it in the process. Resizing uses bicubic interpolation.
+    let loadImage (fileName:string) (resize:option<int*int>) =
+        let image:Image<PixelFormats.RgbaVector> = Image.Load(fileName)
+        match resize with
+            | Some(width, height) ->
+                if width < 0 || height < 0 then failwithf "Expecting width (%A) and height (%A) >= 0" width height
+                image.Mutate(Action<IImageProcessingContext>(fun x -> x.Resize(width, height) |> ignore))
+            | None -> ()
+        let pixels = Array3D.init 3 image.Height image.Width (fun c y x -> let p = image.Item(x, y)
+                                                                           if c = 0 then p.R
+                                                                           elif c = 1 then p.G
+                                                                           else p.B)
+        pixels
+
+    let extractTarStream (stream:Stream) (outputDir:string) =
+        let buffer:byte[] = Array.zeroCreate 100
+        let mutable stop = false
+        while not stop do
+            stream.Read(buffer, 0, 100) |> ignore
+            let name = Encoding.ASCII.GetString(buffer).Trim(Convert.ToChar(0)).Trim()
+            if String.IsNullOrWhiteSpace(name) then stop <- true
+            else
+                stream.Seek(24L, SeekOrigin.Current) |> ignore
+                stream.Read(buffer, 0, 12) |> ignore
+                let size = Convert.ToInt32(Encoding.ASCII.GetString(buffer, 0, 12).Trim(Convert.ToChar(0)).Trim(), 8)
+                printfn "Extracting %A (%A Bytes)" name size
+                stream.Seek(376L, SeekOrigin.Current) |> ignore
+                let output = Path.Combine(outputDir, name)
+                if not (Directory.Exists(Path.GetDirectoryName(output))) then
+                    Directory.CreateDirectory(Path.GetDirectoryName(output)) |> ignore
+                if size > 0 then
+                    let str = File.Open(output, FileMode.OpenOrCreate, FileAccess.Write)
+                    let buf:byte[] = Array.zeroCreate size
+                    stream.Read(buf, 0, buf.Length) |> ignore
+                    str.Write(buf, 0, buf.Length)
+                    str.Close()
+                let pos = stream.Position
+                let mutable offset = 512L - (pos % 512L)
+                if offset = 512L then
+                    offset <- 0L
+                stream.Seek(offset, SeekOrigin.Current) |> ignore
+
+
+    let extractTarGz (fileName:string) (outputDir:string) =
+        let fs = File.OpenRead(fileName)
+        let gz = new GZipStream(fs, CompressionMode.Decompress)
+        let chunk = 4096
+        let memstr = new MemoryStream()
+        let mutable read = chunk
+        let buffer:byte[] = Array.zeroCreate chunk
+        while read = chunk do
+            read <- gz.Read(buffer, 0, chunk)
+            memstr.Write(buffer, 0, read)
+        gz.Close()
+        fs.Close()
+        memstr.Seek(0L, SeekOrigin.Begin) |> ignore
+        extractTarStream memstr outputDir
+        memstr.Close()
+
+    /// Value of log(sqrt(2*Math.PI)).
+    let logSqrt2Pi = log(sqrt(2. * Math.PI))
+
+    /// Value of log(10).
+    let log10Val = log 10.
+
+    /// Indents all lines of the given string by the given number of spaces.
+    let indentNewLines (str:String) numSpaces =
+        let mutable ret = ""
+        let spaces = String.replicate numSpaces " "
+        str |> Seq.toList |> List.iter (fun c -> 
+                            if c = '\n' then 
+                                ret <- ret + "\n" + spaces
+                            else ret <- ret + string c)
+        ret
+
+    /// Left-pads a string up to the given length.
+    let stringPad (s:string) (width:int) =
+        if s.Length > width then s
+        else String.replicate (width - s.Length) " " + s
+
+    /// Left-pads a string to match the length of another string.
+    let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length

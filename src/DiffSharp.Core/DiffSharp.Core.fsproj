@@ -22,6 +22,8 @@
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Optim.fs" />
+    <Compile Include="Plot.fs" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+  <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />  
   </ItemGroup>
 </Project>
