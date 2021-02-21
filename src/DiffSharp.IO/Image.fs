@@ -3,7 +3,7 @@
 open DiffSharp
 
 [<AutoOpen>]
-module SlicingExtensions =
+module ImageExtensions =
     type Tensor with
         /// <summary>Save tensor to an image file using png or jpg format</summary>
         member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
