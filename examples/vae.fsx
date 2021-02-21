@@ -131,7 +131,7 @@ for epoch = 1 to epochs do
                 validLoss <- validLoss + model.loss(x, normalize=false)
             validLoss <- validLoss / validSet.length
             printfn "Validation loss: %A" (float validLoss)
-            let fileName = sprintf "samples_epoch_%A_minibatch_%A.png" epoch i
+            let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
             printfn "Saving %A samples to %A" numSamples fileName
             let samples = model.sample(numSamples).view([-1; 1; 28; 28])
             samples.saveImage(fileName)
