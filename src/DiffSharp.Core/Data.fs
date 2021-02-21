@@ -48,7 +48,7 @@ type DatasetSubset(dataset:Dataset, indices:int[]) =
 
 
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
-    let shuffle = defaultArg shuffle false
+    let shuffle = defaultArg shuffle true
     let batchSize = min batchSize dataset.length
     let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
@@ -63,6 +63,7 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, 
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
+    member d.batch() = let _, data, target = d.epoch() |> Seq.head in data, target
 
 
 type TensorDataset(data:Tensor, target:Tensor) =
@@ -99,7 +100,9 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
     let path = Path.Combine(path, "cifar10") |> Path.GetFullPath
     let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
     let train = defaultArg train true
-    let transform = defaultArg transform id
+    let cifar10mean = dsharp.tensor([0.4914, 0.4822, 0.4465]).view([3;1;1])
+    let cifar10stddev = dsharp.tensor([0.247, 0.243, 0.261]).view([3;1;1])
+    let transform = defaultArg transform (fun t -> (t - cifar10mean) / cifar10stddev)
     let targetTransform = defaultArg targetTransform id
     let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
     let file = Path.Combine(path, Path.GetFileName(url))
@@ -134,7 +137,9 @@ type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, 
     let path = Path.Combine(path, "cifar100") |> Path.GetFullPath
     let pathExtracted = Path.Combine(path, "cifar-100-binary")
     let train = defaultArg train true
-    let transform = defaultArg transform id
+    let cifar100mean = dsharp.tensor([0.5071, 0.4867, 0.4408]).view([3;1;1])
+    let cifar100stddev = dsharp.tensor([0.2675, 0.2565, 0.2761]).view([3;1;1])
+    let transform = defaultArg transform (fun t -> (t - cifar100mean) / cifar100stddev)
     let targetTransform = defaultArg targetTransform id
     let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz"
     let file = Path.Combine(path, Path.GetFileName(url))

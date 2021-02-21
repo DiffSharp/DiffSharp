@@ -136,8 +136,7 @@ type TestData () =
 
         let batchSize = 16
         let dataloader = dataset.loader(batchSize=batchSize)
-        let epoch = dataloader.epoch()
-        let _, x, y = epoch |> Seq.head
+        let x, y = dataloader.batch()
         let xShape = x.shape
         let xShapeCorrect = [|batchSize; din|]
         let yShape = y.shape
@@ -171,7 +170,7 @@ type TestData () =
         Assert.AreEqual(dataset2LengthCorrect, dataset2Length)
 
         let loader = dataset2.loader(batchSize=dataset2.length)
-        let _, bx, by = loader.epoch() |> Seq.head
+        let bx, by = loader.batch()
         let bxCorrect = dsharp.tensor([[1,2,3], [7,8,9], [10,11,12]])
         let byCorrect = dsharp.tensor([1,1,1])
         Assert.True(bxCorrect.allclose(bx))
