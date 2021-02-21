@@ -45,28 +45,29 @@ module helpers =
             print t.shape [||]
         sb.ToString()
 
+    let runScript executable lines timeoutMilliseconds =
+        let fileName = Path.GetTempFileName()
+        File.WriteAllLines(fileName, lines)
+        let success =
+            try
+                let p = Process.Start(executable, fileName)
+                p.WaitForExit(timeoutMilliseconds)
+            with
+                | _ -> false
+        if not success then
+            failwithf "Error or timeout while running process %s" executable
+
 
 type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
     let pythonExecutable = defaultArg pythonExecutable "python"
     let timeoutMilliseconds = defaultArg timeoutMilliseconds 10000
     let preamble = "import matplotlib.pyplot as plt"
-    let mutable _lines = [|preamble|]
-    let reset () = _lines <- [|preamble|]
-    let add l = _lines <- Array.append _lines [|l|]
-    let run() =
-        let fileName = Path.GetTempFileName()
-        File.WriteAllLines(fileName, _lines)
-        let success =
-            try
-                let p = Process.Start(pythonExecutable, fileName)
-                p.WaitForExit(timeoutMilliseconds)
-            with
-                | _ -> false
-        if not success then
-            printfn "Python process error or timeout, skipping plotting."
+    let mutable lines = [|preamble|]
+    let reset () = lines <- [|preamble|]
+    let add l = lines <- Array.append lines [|l|]
 
-    member _.script = _lines |> Array.fold (fun r s -> r + s + "\n") ""
-    member _.addPython(l) = add(l)
+    member _.script = lines |> Array.fold (fun r s -> r + s + "\n") ""
+    member _.addPython(line) = add(line)
     member _.plot(x:Tensor, y:Tensor, ?alpha, ?label) =
         if x.dim <> 1 || y.dim <> 1 then failwithf "Expecting tensors x (%A) and y (%A) to be 1d" x.shape y.shape
         let alpha = defaultArg alpha 1.
@@ -88,5 +89,5 @@ type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
     member _.tightLayout() = add("plt.tight_layout()")
     member _.savefig(fileName) =
         add(sprintf "plt.savefig('%s')" fileName)
-        run()
+        runScript pythonExecutable lines timeoutMilliseconds
         reset()
