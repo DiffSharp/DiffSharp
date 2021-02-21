@@ -48,7 +48,7 @@ type DatasetSubset(dataset:Dataset, indices:int[]) =
 
 
 type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
-    let shuffle = defaultArg shuffle true
+    let shuffle = defaultArg shuffle false
     let batchSize = min batchSize dataset.length
     let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
