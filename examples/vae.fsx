@@ -30,7 +30,7 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
-//#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks\bin\Debug\netstandard2.0\FSharp.Tools.LiveChecks.dll"
+#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks.Analyzer\bin\Debug\netstandard2.0"
 
 open System
 open DiffSharp
