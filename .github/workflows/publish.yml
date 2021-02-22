@@ -2,8 +2,6 @@ name: Build/test/docs/publish
 
 on:
   push:
-    branches:
-      - dev
     tags:        
       - v*             # Push events to v1.2.3 tag
   workflow_dispatch:
