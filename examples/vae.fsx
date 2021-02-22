@@ -1,7 +1,7 @@
 #!/usr/bin/env -S dotnet fsi
 
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
@@ -30,7 +30,6 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
-open System
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
