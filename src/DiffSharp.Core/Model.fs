@@ -222,6 +222,16 @@ type Model() =
     /// <summary>TBD</summary>
     abstract member forward: Tensor -> Tensor
 
+    abstract member getString: unit -> string
+    default m.getString() =
+        if m.allModels |> List.length < 2 then "Model()" // allModels has one element (m) in case there are no submodels
+        else
+        let sb = System.Text.StringBuilder()
+        sb.Append("Model(\n") |> ignore
+        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append(")") |> ignore
+        sb.ToString()
+
     /// <summary>TBD</summary>
     member m.forwardParameters (input:Tensor) (parameters:Tensor) =
         m.parametersVector <- parameters
@@ -236,18 +246,20 @@ type Model() =
         m.forwardCompose (f target) input parameters
 
     /// <summary>TBD</summary>
+    override m.ToString() =
+        // let sb = System.Text.StringBuilder()
+        // sb.Append("Model(\n") |> ignore
+        // for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        // sb.Append(")--nparameters:") |> ignore
+        // sb.Append(m.nparameters) |> ignore
+        // sb.ToString()
+        sprintf "%s - nparameters:%A" (m.getString()) m.nparameters
+
+    /// <summary>TBD</summary>
     static member create ps f =
         let model = { new Model() with override __.forward(x) = f x}
         model.add(ps)
         model
-
-    /// <summary>TBD</summary>
-    override m.ToString() =
-        let sb = System.Text.StringBuilder()
-        sb.Append("Model(\n") |> ignore
-        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
-        sb.Append(")") |> ignore
-        sb.ToString()
 
     /// <summary>TBD</summary>
     static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
@@ -308,7 +320,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     do base.add([w;b],["Linear__weight";"Linear__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -326,7 +338,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.getString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -345,7 +357,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -364,7 +376,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -382,7 +394,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     do base.add([w;b],["ConvTranspose1d__weight";"ConvTranspose1d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.getString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -401,7 +413,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     do base.add([w;b],["ConvTranspose2d__weight";"ConvTranspose2d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -420,7 +432,7 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     do base.add([w;b],["ConvTranspose3d__weight";"ConvTranspose3d__bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -433,7 +445,7 @@ type Dropout(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout()"
+    override _.getString() = sprintf "Dropout()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -445,7 +457,7 @@ type Dropout2d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout2d()"
+    override _.getString() = sprintf "Dropout2d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -457,7 +469,7 @@ type Dropout3d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout3d()"
+    override _.getString() = sprintf "Dropout3d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -523,7 +535,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm1d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -614,7 +626,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm2d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -691,7 +703,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm3d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -758,7 +770,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
         let x, _, _ = m.encodeDecode(x) in x
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
+    override _.getString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
 
     /// <summary>TBD</summary>
     static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
