@@ -252,6 +252,8 @@ type Tensor =
     /// Gets the shape of the tensor
     member t.shape = t.primalRaw.Shape
 
+    member internal t.shapeFullBounds = shapeToFullBounds(t.shape)
+
     /// Gets the number of dimensions of the tensor
     member t.dim = t.primalRaw.Dim
 
@@ -759,13 +761,13 @@ type Tensor =
         if normalize then pixels.normalize() else pixels
 
     member internal t.GetSlice(bounds:int[,]) =
-        // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
-        let fullBounds = Array2D.init t.dim 3 (fun i j -> if j=0 then 0 elif j=1 then t.shape.[i]-1 else 0)
+        let fullBounds = t.shapeFullBounds |> Array2D.copy
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.shape
             fullBounds.[i, j] <- v)
-        // printfn "t.GetSlice fullBounds\n %A" fullBounds
+        if fullBounds = t.shapeFullBounds then t // We don't need to slice as the result of the slicing would be the same with this existing tensor
+        else
         match t with
         | TensorC(ap) -> TensorC(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
