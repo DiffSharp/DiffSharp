@@ -2284,7 +2284,7 @@ type Tensor =
                     let adBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; padding + inputLength - 1; 1]]
                     ad <- ad.GetSlice(adBounds)
                     ad <- ad.view([|batchSize; inputChannels; inputLength|])
-                aderivative <- aderivative + ad
+                aderivative <- aderivative.addSlice([|0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
@@ -2386,7 +2386,7 @@ type Tensor =
                                            [paddings.[1]; paddings.[1] + inputWidth - 1; 1]]
                     ad <- ad.GetSlice(adBounds)
                     ad <- ad.view([|batchSize; inputChannels; inputHeight; inputWidth|])
-                aderivative <- aderivative  + ad
+                aderivative <- aderivative.addSlice([|0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
@@ -2494,7 +2494,7 @@ type Tensor =
                                            [paddings.[2]; paddings.[2] + inputWidth - 1; 1]]
                     ad <- ad.GetSlice(adBounds)
                     ad <- ad.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
-                aderivative <- aderivative  + ad
+                aderivative <- aderivative.addSlice([|0; 0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()

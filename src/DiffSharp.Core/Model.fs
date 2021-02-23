@@ -246,14 +246,7 @@ type Model() =
         m.forwardCompose (f target) input parameters
 
     /// <summary>TBD</summary>
-    override m.ToString() =
-        // let sb = System.Text.StringBuilder()
-        // sb.Append("Model(\n") |> ignore
-        // for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
-        // sb.Append(")--nparameters:") |> ignore
-        // sb.Append(m.nparameters) |> ignore
-        // sb.ToString()
-        sprintf "%s - nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s - nparameters:%A" (m.getString()) m.nparameters
 
     /// <summary>TBD</summary>
     static member create ps f =
