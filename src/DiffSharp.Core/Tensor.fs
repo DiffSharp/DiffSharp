@@ -1641,6 +1641,8 @@ type Tensor =
     /// <param name="shape">The desired shape of returned tensor.</param>
     member a.view(shape:seq<int>) =
         let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
+        if a.shape = shape then a // Do nothing if the shapes are the same
+        else
         Shape.checkCanView a.shape shape
         let inline fRaw(a:RawTensor) = a.ViewT(shape)
         let inline fTensor(a:Tensor) = a.view(shape)
@@ -2275,18 +2277,18 @@ type Tensor =
         let mutable bderivative = b.zeroLike()
         if not aConst then
             // propagate to a
-            aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2|])
+            let mutable ad = a.zeroLike()
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]]
+                let dBounds = array2D [[0; batchSize-1; 0]; [k; k; 0]; [0; cderivative.shape.[2]-1; 0]]
                 let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                let mutable ad = d.conv1d(b, padding=kernelLength-1)
-                if padding > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; padding + inputLength - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputLength|])
-                aderivative <- aderivative.addSlice([|0; 0; 0|], ad)
+                ad <- ad + d.conv1d(b, padding=kernelLength-1)
+            if padding > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; [0; inputChannels-1; 0]; [padding; padding + inputLength - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputLength|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
@@ -2297,7 +2299,7 @@ type Tensor =
                 let mutable bd = aa.conv1d(dd, padding=padding)
                 // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
                 bd <- bd.view([|1; inputChannels; bd.shape.[2]|])
-                let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelLength-1;1]]
+                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelLength-1;0]]
                 bd <- bd.GetSlice(cBounds)
                 bd <- bd.view([|1; inputChannels; kernelLength|])
                 bderivative <- bderivative.addSlice([|k; 0; 0|], bd)                    
@@ -2374,21 +2376,21 @@ type Tensor =
         let mutable bderivative = b.zeroLike()
         if not aConst then
             // propagate to a
-            aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2;3|])
+            let mutable ad = a.zeroLike()
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]; [0; cderivative.shape.[3]-1; 1]]
+                let dBounds = array2D [[0; batchSize-1; 0]; [k; k; 0]; [0; cderivative.shape.[2]-1; 0]; [0; cderivative.shape.[3]-1; 0]]
                 let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; cderivative.shape.[2]; cderivative.shape.[3]|])
-                let mutable ad : Tensor = d.conv2d(b, paddings=[|kernelHeight-1; kernelWidth-1|])
-                if paddings.[0] > 0 || paddings.[1] > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; 
-                                           [0; inputChannels-1; 1]; 
-                                           [paddings.[0]; paddings.[0] + inputHeight - 1; 1]; 
-                                           [paddings.[1]; paddings.[1] + inputWidth - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputHeight; inputWidth|])
-                aderivative <- aderivative.addSlice([|0; 0; 0; 0|], ad)
+                ad <- ad + d.conv2d(b, paddings=[|kernelHeight-1; kernelWidth-1|])
+            if paddings.[0] > 0 || paddings.[1] > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; 
+                                       [0; inputChannels-1; 0]; 
+                                       [paddings.[0]; paddings.[0] + inputHeight - 1; 0]; 
+                                       [paddings.[1]; paddings.[1] + inputWidth - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputHeight; inputWidth|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
@@ -2399,7 +2401,7 @@ type Tensor =
                 let mutable bd = aa.conv2d(dd, paddings=paddings)
                 // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
                 bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]|])
-                let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
+                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
                 bd <- bd.GetSlice(cBounds)
                 bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
                 bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
@@ -2480,22 +2482,23 @@ type Tensor =
         let mutable bderivative = b.zeroLike()
         if not aConst then
             // propagate to a
-            aderivative <- a.zerosLike()
+            // aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2;3;4|])
+            let mutable ad = a.zeroLike()
             for k=0 to outputChannels-1 do
                 let b = bFlipped.[k].view([|inputChannels; 1; kernelDepth; kernelHeight; kernelWidth|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]; [0; cderivative.shape.[3]-1; 1]; [0; cderivative.shape.[4]-1; 1]]
+                let dBounds = array2D [[0; batchSize-1; 0]; [k; k; 0]; [0; cderivative.shape.[2]-1; 0]; [0; cderivative.shape.[3]-1; 0]; [0; cderivative.shape.[4]-1; 0]]
                 let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; cderivative.shape.[2]; cderivative.shape.[3]; cderivative.shape.[4]|])
-                let mutable ad : Tensor = d.conv3d(b, paddings=[|kernelDepth-1; kernelHeight-1; kernelWidth-1|])
-                if paddings.[0] > 0 || paddings.[1] > 0 || paddings.[2] > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; 
-                                           [0; inputChannels-1; 1]; 
-                                           [paddings.[0]; paddings.[0] + inputDepth - 1; 1]; 
-                                           [paddings.[1]; paddings.[1] + inputHeight - 1; 1];
-                                           [paddings.[2]; paddings.[2] + inputWidth - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
-                aderivative <- aderivative.addSlice([|0; 0; 0; 0; 0|], ad)
+                ad <- ad + d.conv3d(b, paddings=[|kernelDepth-1; kernelHeight-1; kernelWidth-1|])
+            if paddings.[0] > 0 || paddings.[1] > 0 || paddings.[2] > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; 
+                                       [0; inputChannels-1; 0]; 
+                                       [paddings.[0]; paddings.[0] + inputDepth - 1; 0]; 
+                                       [paddings.[1]; paddings.[1] + inputHeight - 1; 0];
+                                       [paddings.[2]; paddings.[2] + inputWidth - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
             bderivative <- b.zerosLike()
@@ -2506,7 +2509,7 @@ type Tensor =
                 let mutable bd = aa.conv3d(dd, paddings=paddings)
                 // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
                 bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]; bd.shape.[4]|])
-                let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelDepth-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
+                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelDepth-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
                 bd <- bd.GetSlice(cBounds)
                 bd <- bd.view([|1; inputChannels; kernelDepth; kernelHeight; kernelWidth|])
                 bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], bd)                    
