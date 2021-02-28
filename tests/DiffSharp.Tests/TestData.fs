@@ -244,3 +244,27 @@ type TestData () =
                     Assert.AreEqual(ydtypeCorrect, ydtype)
                     Assert.AreEqual(ydeviceCorrect, ydevice)
                     Assert.AreEqual(ybackendCorrect, ybackend)
+
+    [<Test>]
+    member _.TestDataloaderDroplast () =
+        let ndata = 1000
+        let batchSize = 16
+        let x = dsharp.zeros([ndata; 10])
+        let y = dsharp.zeros([ndata; 1])
+        let dataset = TensorDataset(x, y)
+
+        let loader = dataset.loader(batchSize=batchSize, dropLast=false)
+        let nBatches = loader.length
+        let nBatchesCorrect = 63
+        let mutable nBatchesActual = 0
+        for _ in loader.epoch() do nBatchesActual <- nBatchesActual + 1
+        Assert.AreEqual(nBatchesCorrect, nBatches)
+        Assert.AreEqual(nBatchesCorrect, nBatchesActual)
+
+        let loaderDrop = dataset.loader(batchSize=batchSize, dropLast=true)
+        let nBatchesDrop = loaderDrop.length
+        let nBatchesDropCorrect = 62
+        let mutable nBatchesDropActual = 0
+        for _ in loaderDrop.epoch() do nBatchesDropActual <- nBatchesDropActual + 1
+        Assert.AreEqual(nBatchesDropCorrect, nBatchesDrop)
+        Assert.AreEqual(nBatchesDropCorrect, nBatchesDropActual)

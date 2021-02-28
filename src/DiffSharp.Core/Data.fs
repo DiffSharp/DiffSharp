@@ -22,7 +22,7 @@ open System.IO.Compression
 type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
-    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
+    member d.loader(batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?dropLast=dropLast, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
     member d.Item
         with get(i:int) =
             d.item(i)
@@ -47,19 +47,21 @@ type DatasetSubset(dataset:Dataset, indices:int[]) =
     override d.item(i) = dataset.item(indices.[i])
 
 
-type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
-    let shuffle = defaultArg shuffle false
+type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let batchSize = min batchSize dataset.length
+    let shuffle = defaultArg shuffle false
+    let dropLast = defaultArg dropLast true
     let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
     let backend = defaultArg backend Backend.Default
     let targetDtype = defaultArg targetDtype dtype
     let targetDevice = defaultArg targetDevice device
     let targetBackend = defaultArg targetBackend backend
-    member d.length = defaultArg numBatches (dataset.length/batchSize)
+    let datalength = if dropLast then batchSize*(dataset.length/batchSize) else dataset.length
+    member d.length = ((float datalength)/(float batchSize)) |> ceil |> int
     member d.epoch() =
-        let indexer = if shuffle then Random.shuffledIndices (dataset.length) else id
-        let indices = Seq.init dataset.length id |> Seq.map indexer
+        let indexer = if shuffle then Random.shuffledIndices datalength else id
+        let indices = Seq.init datalength id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
