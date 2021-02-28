@@ -2288,18 +2288,11 @@ type Tensor =
             aderivative <- a.zerosLike().addSlice([|0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            bderivative <- b.zerosLike()
             let aa = a.transpose(0, 1)
-            let d = cderivative.transpose(0,1)
-            for k=0 to outputChannels-1 do
-                let dd = d.[k].view([|1; batchSize; cderivative.shape.[2]|])
-                let mutable bd = aa.conv1d(dd, padding=padding)
-                // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                bd <- bd.view([|1; inputChannels; bd.shape.[2]|])
-                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelLength-1;0]]
-                bd <- bd.GetSlice(cBounds)
-                bd <- bd.view([|1; inputChannels; kernelLength|])
-                bderivative <- bderivative.addSlice([|k; 0; 0|], bd)                    
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv1d(cd, padding=padding).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelLength-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)
         aderivative, bderivative
     
     /// <summary>Applies a 1D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
@@ -2385,18 +2378,11 @@ type Tensor =
             aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            bderivative <- b.zerosLike()
             let aa = a.transpose(0, 1)
-            let d = cderivative.transpose(0,1)
-            for k=0 to outputChannels-1 do
-                let dd = d.[k].view([|1; batchSize; cderivative.shape.[2]; cderivative.shape.[3]|])
-                let mutable bd = aa.conv2d(dd, paddings=paddings)
-                // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]|])
-                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
-                bd <- bd.GetSlice(cBounds)
-                // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv2d(cd, paddings=paddings).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)
         aderivative, bderivative
     
     /// <summary>Applies a 2D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
@@ -2487,18 +2473,11 @@ type Tensor =
             aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            bderivative <- b.zerosLike()
             let aa = a.transpose(0, 1)
-            let d = cderivative.transpose(0,1)
-            for k=0 to outputChannels-1 do
-                let dd = d.[k].view([|1; batchSize; cderivative.shape.[2]; cderivative.shape.[3]; cderivative.shape.[4]|])
-                let mutable bd = aa.conv3d(dd, paddings=paddings)
-                // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]; bd.shape.[4]|])
-                let cBounds = array2D [[0;0;0]; [0;inputChannels-1;0]; [0;kernelDepth-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
-                bd <- bd.GetSlice(cBounds)
-                bd <- bd.view([|1; inputChannels; kernelDepth; kernelHeight; kernelWidth|])
-                bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], bd)                    
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv3d(cd, paddings=paddings).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelDepth-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)                
         aderivative, bderivative
 
     /// <summary>Applies a 3D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
