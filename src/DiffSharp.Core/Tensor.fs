@@ -1942,6 +1942,8 @@ type Tensor =
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
         Shape.checkCanAddSlice a.shape location b.shape
+        if a.shape = b.shape && location |> Array.forall ((=) 0) then a + b // No need to do the slice addition below
+        else
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
         let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
