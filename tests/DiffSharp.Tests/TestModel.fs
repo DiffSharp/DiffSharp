@@ -114,11 +114,11 @@ type TestModel () =
     [<Test>]
     member _.TestModelInit () =
         let net = Linear(10, 10)
-        let wBefore = net.parameters.["Linear__weight"]
+        let wBefore = net.parameters.["Linear-weight"]
         net.init(function
-            | "Linear__weight", v -> v.onesLike()
+            | "Linear-weight", v -> v.onesLike()
             | _, v -> v)
-        let wAfter = net.parameters.["Linear__weight"]
+        let wAfter = net.parameters.["Linear-weight"]
         let wAfterCorrect = dsharp.onesLike(wBefore)
         Assert.False(wAfterCorrect.allclose(wBefore))
         Assert.True(wAfterCorrect.allclose(wAfter))

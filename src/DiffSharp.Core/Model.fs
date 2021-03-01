@@ -194,7 +194,6 @@ type Model() =
     /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        // let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
         let names = defaultArg names (Seq.empty) |> Seq.toArray
         if names.Length > 0 then
             if parameters.Length <> names.Length then failwithf "Expecting parameters (%A) and names (%A) to have the same length" parameters.Length names.Length
@@ -206,7 +205,6 @@ type Model() =
             sprintf "%s__%A" name (i+1)
         for i in 0..parameters.Length-1 do
             let p = parameters.[i]
-        // for p, n in Array.zip parameters names do
             match (box p) with
             | :? Parameter as p ->
                 let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
