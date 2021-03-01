@@ -2,6 +2,7 @@
 
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
 // #r "nuget: libtorch-cuda-10.2-linux-x64, 1.7.0.1"
 System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
@@ -63,8 +64,10 @@ let dopt = Adam(discriminator, lr=dsharp.tensor(0.0001), beta1=dsharp.tensor(0.5
 
 let fixedNoise = dsharp.randn([batchSize; nz])
 
-let start = System.DateTime.Now
+let glosses = ResizeArray()
+let dlosses = ResizeArray()
 
+let start = System.DateTime.Now
 for epoch = 1 to epochs do
     for i, x, _ in loader.epoch() do
         // update discriminator
@@ -89,6 +92,7 @@ for epoch = 1 to epochs do
         let dloss = dlossReal + dlossFake
         dloss.reverse()
         dopt.step()
+        dlosses.Add(float dloss)
 
         // update generator
         generator.reverseDiff()
@@ -101,6 +105,7 @@ for epoch = 1 to epochs do
         let gloss = dsharp.bceLoss(doutput, dlabelReal)
         gloss.reverse()
         gopt.step()
+        glosses.Add(float gloss)
 
         printfn "%A Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A / %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz1 dgz2
 
@@ -112,3 +117,10 @@ for epoch = 1 to epochs do
             printfn "Saving fake samples to %A" fakeFileName
             let goutput = fixedNoise --> generator
             goutput.view([-1;1;28;28]).saveImage(fakeFileName, normalize=true)
+
+            let plt = Pyplot()
+            plt.plot(glosses |> dsharp.tensor, label="G")
+            plt.plot(dlosses |> dsharp.tensor, label="D")
+            plt.legend()
+            plt.tightLayout()
+            plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
