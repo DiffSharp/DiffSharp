@@ -13,7 +13,7 @@ open System.IO
 open System.IO.Compression
 open System.Text
 open System.Net
-open System.Runtime.Serialization
+
 
 /// Contains auto-opened utilities related to the DiffSharp programming model.
 [<AutoOpen>]
