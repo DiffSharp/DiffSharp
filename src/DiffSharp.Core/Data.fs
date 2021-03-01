@@ -63,3 +63,13 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
     member d.batch() = let _, data, target = d.epoch() |> Seq.head in data, target
+
+
+type TensorDataset(data:Tensor, target:Tensor) =
+    inherit Dataset()
+    do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
+    override d.length = data.shape.[0]
+    override d.item(i) = data.[i], target.[i]
+
+
+// More datasets (MNIST, CIFAR, etc.) are implemented in DiffSharp.Data project

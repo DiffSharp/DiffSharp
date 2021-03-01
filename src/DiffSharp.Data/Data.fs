@@ -70,13 +70,6 @@ module DataUtil =
         memstr.Close()
 
 
-type TensorDataset(data:Tensor, target:Tensor) =
-    inherit Dataset()
-    do if data.shape.[0] <> target.shape.[0] then failwith "Expecting data and target to have the same size in the first dimension"
-    override d.length = data.shape.[0]
-    override d.item(i) = data.[i], target.[i]
-
-
 type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
     inherit Dataset()
     let fileExtension = defaultArg fileExtension "png"
