@@ -3,7 +3,7 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace DiffSharp.Plot
+namespace DiffSharp.Util
 
 open DiffSharp
 open System.IO

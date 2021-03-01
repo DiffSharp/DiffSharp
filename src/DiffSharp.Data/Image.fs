@@ -3,9 +3,8 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace DiffSharp.Data
+namespace DiffSharp
 
-open DiffSharp
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.Processing
 open System
