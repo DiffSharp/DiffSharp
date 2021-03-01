@@ -1070,28 +1070,6 @@ type dsharp =
     static member toImageString(input:Tensor, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) =
         input.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
 
-    /// <summary>Load an image file as a tensor.</summary>
-    /// <param name="fileName">The file name of the image to load.</param>
-    /// <param name="normalize">If True, shift the image to the range (0, 1).</param>
-    /// <param name="resize">An optional new size for the image.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
-    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
-    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
-        Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?resize=resize, ?dtype=dtype, ?device=device, ?backend=backend)
-
-    /// <summary>Save a given Tensor into an image file.</summary>
-    /// <remarks>If the input tensor has 4 dimensions, then make a single image grid.</remarks>
-    /// <param name="input">The input tensor.</param>
-    /// <param name="fileName">The name of the file to save to.</param>
-    /// <param name="pixelMin">The minimum pixel value.</param>
-    /// <param name="pixelMax">The maximum pixel value.</param>
-    /// <param name="normalize">If True, shift the image to the range (0, 1), by the min and max values specified by range.</param>
-    /// <param name="resize">An optional new size for the image.</param>
-    /// <param name="gridCols">Number of columns of images in the grid.</param>
-    static member saveImage(input:Tensor, fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resize:int*int, ?gridCols:int) =
-        input.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?resize=resize, ?gridCols=gridCols)
-
     /// <summary>Convert the tensor to one with the given element type.</summary>
     /// <remarks>If the element type is unchanged the input tensor will be returned.</remarks>
     /// <param name="input">The input tensor.</param>
