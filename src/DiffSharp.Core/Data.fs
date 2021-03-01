@@ -8,7 +8,6 @@ namespace rec DiffSharp.Data
 open DiffSharp
 open DiffSharp.Compose
 open DiffSharp.Util
-// open System
 open System.Net
 open System.IO
 open System.IO.Compression
@@ -23,28 +22,50 @@ open System.IO.Compression
 type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
-    member d.loader(batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?numBatches=numBatches, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
-    member t.Item
+    member d.loader(batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?dropLast=dropLast, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
+    member d.Item
         with get(i:int) =
-            t.item(i)
+            d.item(i)
+    member d.GetSlice(imin:int option, imax:int option) =
+        let imin   = defaultArg imin 0
+        let imax   = defaultArg imax d.length
+        if imin >= imax then failwithf "Expecting imin (%A) < imax (%A)" imin imax
+        DatasetSubset(d, [|imin..imax|])
+    member d.filter(predicate:Tensor->Tensor->bool) =
+        let indices = ResizeArray<int>()
+        for i in 0..d.length-1 do
+            let data, target = d.item(i)
+            if predicate data target then
+                indices.Add(i)
+        if indices.Count = 0 then failwithf "Could not find any data items for which the predicate is true"
+        DatasetSubset(d, indices.ToArray())
 
 
-type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?numBatches:int, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
-    let shuffle = defaultArg shuffle false
+type DatasetSubset(dataset:Dataset, indices:int[]) =
+    inherit Dataset()
+    override d.length = indices.Length
+    override d.item(i) = dataset.item(indices.[i])
+
+
+type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
     let batchSize = min batchSize dataset.length
+    let shuffle = defaultArg shuffle false
+    let dropLast = defaultArg dropLast true
     let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
     let backend = defaultArg backend Backend.Default
     let targetDtype = defaultArg targetDtype dtype
     let targetDevice = defaultArg targetDevice device
     let targetBackend = defaultArg targetBackend backend
-    member d.length = defaultArg numBatches (dataset.length/batchSize)
+    let datalength = if dropLast then batchSize*(dataset.length/batchSize) else dataset.length
+    member d.length = ((float datalength)/(float batchSize)) |> ceil |> int
     member d.epoch() =
-        let indexer = if shuffle then Random.shuffledIndices (dataset.length) else id
-        let indices = Seq.init dataset.length id |> Seq.map indexer
+        let indexer = if shuffle then Random.shuffledIndices datalength else id
+        let indices = Seq.init datalength id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
+    member d.batch() = let _, data, target = d.epoch() |> Seq.head in data, target
 
 
 type TensorDataset(data:Tensor, target:Tensor) =
@@ -81,7 +102,9 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
     let path = Path.Combine(path, "cifar10") |> Path.GetFullPath
     let pathExtracted = Path.Combine(path, "cifar-10-batches-bin")
     let train = defaultArg train true
-    let transform = defaultArg transform id
+    let cifar10mean = dsharp.tensor([0.4914, 0.4822, 0.4465]).view([3;1;1])
+    let cifar10stddev = dsharp.tensor([0.247, 0.243, 0.261]).view([3;1;1])
+    let transform = defaultArg transform (fun t -> (t - cifar10mean) / cifar10stddev)
     let targetTransform = defaultArg targetTransform id
     let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
     let file = Path.Combine(path, Path.GetFileName(url))
@@ -116,7 +139,9 @@ type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, 
     let path = Path.Combine(path, "cifar100") |> Path.GetFullPath
     let pathExtracted = Path.Combine(path, "cifar-100-binary")
     let train = defaultArg train true
-    let transform = defaultArg transform id
+    let cifar100mean = dsharp.tensor([0.5071, 0.4867, 0.4408]).view([3;1;1])
+    let cifar100stddev = dsharp.tensor([0.2675, 0.2565, 0.2761]).view([3;1;1])
+    let transform = defaultArg transform (fun t -> (t - cifar100mean) / cifar100stddev)
     let targetTransform = defaultArg targetTransform id
     let url = defaultArg url "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz"
     let file = Path.Combine(path, Path.GetFileName(url))

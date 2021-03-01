@@ -179,7 +179,7 @@ type dsharp with
     static member flatten(startDim:int, ?endDim:int) = fun (a:Tensor) -> a.flatten(startDim=startDim, ?endDim=endDim)
 
     /// <summary>TBD</summary>
-    static member leakyRelu(negativeSlope:float) = fun (a:Tensor) -> a.leakyRelu(negativeSlope=negativeSlope)
+    static member leakyRelu(?negativeSlope:float) = fun (a:Tensor) -> a.leakyRelu(?negativeSlope=negativeSlope)
 
     /// <summary>TBD</summary>
     static member softmax(dim:int) = fun (a:Tensor) -> a.softmax(dim)

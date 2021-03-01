@@ -1,7 +1,7 @@
 #!/usr/bin/env -S dotnet fsi
 
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
@@ -30,7 +30,6 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
-open System
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
@@ -131,7 +130,7 @@ for epoch = 1 to epochs do
                 validLoss <- validLoss + model.loss(x, normalize=false)
             validLoss <- validLoss / validSet.length
             printfn "Validation loss: %A" (float validLoss)
-            let fileName = sprintf "samples_epoch_%A_minibatch_%A.png" epoch i
+            let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
             printfn "Saving %A samples to %A" numSamples fileName
             let samples = model.sample(numSamples).view([-1; 1; 28; 28])
             samples.saveImage(fileName)
