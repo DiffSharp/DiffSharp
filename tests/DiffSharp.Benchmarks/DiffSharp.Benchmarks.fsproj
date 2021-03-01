@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
+    <ProjectReference Include="..\..\src\DiffSharp.Data\DiffSharp.Data.fsproj" />
     
     <!-- note, python torch can't easily co-habitate with TorchSHarp torch due to conflicting native binaries -->
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />

@@ -8,6 +8,7 @@ namespace Tests
 open NUnit.Framework
 open DiffSharp
 open DiffSharp.Util
+open DiffSharp.Data
 open System
 
 [<TestFixture>]
