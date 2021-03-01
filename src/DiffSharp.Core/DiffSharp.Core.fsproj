@@ -22,7 +22,6 @@
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Optim.fs" />
-    <Compile Include="Plot.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 </Project>
