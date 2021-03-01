@@ -114,6 +114,8 @@ type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
         add(sprintf "plt.figure(figsize=(%A,%A))" (fst figSize) (snd figSize))
     member _.legend() = add("plt.legend()")
     member _.tightLayout() = add("plt.tight_layout()")
+    member _.xlabel(label) = add(sprintf "plt.xlabel('%s')" label)
+    member _.ylabel(label) = add(sprintf "plt.ylabel('%s')" label)
     member _.savefig(fileName) =
         add(sprintf "plt.savefig('%s')" fileName)
         runScript pythonExecutable lines timeoutMilliseconds
