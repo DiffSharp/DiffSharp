@@ -1,34 +1,11 @@
 #!/usr/bin/env -S dotnet fsi
 
-(*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"
-(*** condition: fsx ***)
-#if FSX
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // FSX
-(*** condition: ipynb ***)
-#if IPYNB
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // IPYNB
+// #r "nuget: libtorch-cuda-10.2-linux-x64, 1.7.0.1"
+System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
-(*** condition: fsx ***)
-#if FSX
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // FSX
-
-(*** condition: ipynb ***)
-#if IPYNB
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
-
-// Set up formatting for notebooks
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
-#endif // IPYNB
 
 open DiffSharp
 open DiffSharp.Compose
@@ -38,89 +15,100 @@ open DiffSharp.Optim
 open DiffSharp.Util
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
-dsharp.seed(0)
+dsharp.seed(2)
 
-let nz = 100
-let ngf = 2
-let ndf = 2
-let nc = 3
+
+let nz = 128
 
 let generator =
-    dsharp.view([-1; nz; 1; 1])
-    --> ConvTranspose2d(nz, ngf*8, 2, 1, 0, bias=false)
-    --> BatchNorm2d(ngf*8)
-    --> dsharp.relu
-    --> ConvTranspose2d(ngf*8, ngf*4, 4, 2, 1, bias=false)
-    --> BatchNorm2d(ngf*4)
-    --> dsharp.relu
-    --> ConvTranspose2d(ngf*4, ngf*2, 4, 2, 1, bias=false)
-    --> BatchNorm2d(ngf*2)
-    --> dsharp.relu
-    --> ConvTranspose2d(ngf*2, ngf, 4, 2, 1, bias=false)
-    --> BatchNorm2d(ngf)
-    --> dsharp.relu
-    --> ConvTranspose2d(ngf, nc, 4, 2, 1, bias=false)
+    dsharp.view([-1;nz])
+    --> Linear(nz, 256)
+    --> dsharp.leakyRelu(0.2)
+    --> Linear(256, 512)
+    --> dsharp.leakyRelu(0.2)
+    --> Linear(512, 1024)
+    --> dsharp.leakyRelu(0.2)
+    --> Linear(1024, 28*28)
     --> dsharp.tanh
 
 let discriminator =
-    Conv2d(nc, ndf, 2, 2, 1, bias=false)
-    --> dsharp.leakyRelu 0.2
-    --> Conv2d(ndf, ndf*2, 2, 2, 1, bias=false)
-    --> BatchNorm2d(ndf*2)
-    --> dsharp.leakyRelu 0.2
-    --> Conv2d(ndf*2, ndf*4, 2, 2, 1, bias=false)
-    --> BatchNorm2d(ndf*4)
-    --> dsharp.leakyRelu 0.2
-    --> Conv2d(ndf*4, ndf*8, 2, 2, 1, bias=false)
-    --> BatchNorm2d(ndf*8)
-    --> dsharp.leakyRelu 0.2
-    --> Conv2d(ndf*8, 1, 2, 2, 0, bias=false)
+    dsharp.view([-1; 28*28])
+    --> Linear(28*28, 1024)
+    --> dsharp.leakyRelu(0.2)
+    --> dsharp.dropout(0.3)
+    --> Linear(1024, 512)
+    --> dsharp.leakyRelu(0.2)
+    --> dsharp.dropout(0.3)
+    --> Linear(512, 256)
+    --> dsharp.leakyRelu(0.2)
+    --> dsharp.dropout(0.3)
+    --> Linear(256, 1)
     --> dsharp.sigmoid
-    --> dsharp.view([-1; 1])
 
-// let x = dsharp.randn([16; 3; 32; 32])
-// let d = x --> discriminator
-// print d.shape
-// print discriminator.nparameters
+print "Generator"
+print generator
 
-// let z = dsharp.randn([16; nz])
-// let g = z --> generator
-// print g.shape
-// print generator.nparameters
-// g.saveImage("g_sample.png", normalize=true)
+print "Discriminator"
+print discriminator
 
-let epochs = 2
-let batchSize = 32
-let validInterval = 250
-let numSamples = 32
+let epochs = 10
+let batchSize = 64
+let validInterval = 32
 
-let cifar10 = CIFAR10("../data", train=false)
-let cifar10bird = cifar10.filter(fun _ t -> cifar10.classNames.[int t] = "bird")
+let mnist = MNIST("../data", train=true, transform=fun t -> (t - 0.5) / 0.5)
+let loader = mnist.loader(batchSize=batchSize, shuffle=true)
 
-let loader = cifar10bird.loader(batchSize=batchSize, shuffle=true)
+let gopt = Adam(generator, lr=dsharp.tensor(0.0001), beta1=dsharp.tensor(0.5))
+let dopt = Adam(discriminator, lr=dsharp.tensor(0.0001), beta1=dsharp.tensor(0.5))
 
-let gopt = Adam(generator, lr=dsharp.tensor(0.001))
-let dopt = Adam(discriminator, lr=dsharp.tensor(0.001))
+let fixedNoise = dsharp.randn([batchSize; nz])
+
+let start = System.DateTime.Now
 
 for epoch = 1 to epochs do
     for i, x, _ in loader.epoch() do
-
+        // update discriminator
+        generator.noDiff()
+        // generator.reverseDiff()
         discriminator.reverseDiff()
-        let label = dsharp.full([batchSize; 1], 1)
-        let output = x --> discriminator
-        let l = dsharp.bceLoss(output, label)
-        // l.reverse()
-        // dopt.step()
 
-        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i loader.length (float(l))
+        let doutput = x --> discriminator
+        let dx = doutput.mean() |> float
+        let dlabelReal = dsharp.ones([batchSize; 1])
+        let dlossReal = dsharp.bceLoss(doutput, dlabelReal)
+        // dlossReal.reverse()
 
-        // if i % validInterval = 0 then
-        //     let mutable validLoss = dsharp.zero()
-        //     for _, x, _ in validLoader.epoch() do
-        //         validLoss <- validLoss + model.loss(x, normalize=false)
-        //     validLoss <- validLoss / validSet.length
-        //     printfn "Validation loss: %A" (float validLoss)
-        //     let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
-        //     printfn "Saving %A samples to %A" numSamples fileName
-        //     let samples = model.sample(numSamples).view([-1; 1; 28; 28])
-        //     samples.saveImage(fileName)
+        let z = dsharp.randn([batchSize; nz])
+        let goutput = z --> generator
+        let doutput = goutput --> discriminator
+        let dgz1 = doutput.mean() |> float
+        let dlabelFake = dsharp.zeros([batchSize; 1])
+        let dlossFake = dsharp.bceLoss(doutput, dlabelFake)
+        // dlossFake.reverse(zeroDerivatives=false)
+
+        let dloss = dlossReal + dlossFake
+        dloss.reverse()
+        dopt.step()
+
+        // update generator
+        generator.reverseDiff()
+        discriminator.noDiff()
+
+        let goutput = z --> generator
+        let doutput = goutput --> discriminator
+        let dgz2 = doutput.mean() |> float
+        let dlabelReal = dsharp.ones([batchSize; 1])
+        let gloss = dsharp.bceLoss(doutput, dlabelReal)
+        gloss.reverse()
+        gopt.step()
+
+        printfn "%A Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A / %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz1 dgz2
+
+        if i % validInterval = 0 then
+            let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+            printfn "Saving real samples to %A" realFileName
+            x.saveImage(realFileName, normalize=true)
+            let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+            printfn "Saving fake samples to %A" fakeFileName
+            let goutput = fixedNoise --> generator
+            goutput.view([-1;1;28;28]).saveImage(fakeFileName, normalize=true)
