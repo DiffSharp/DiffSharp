@@ -157,6 +157,7 @@ type Model() =
 
     /// <summary>TBD</summary>
     let parameterDict = ParameterDict()
+    let parameterPrefixes = Dictionary<string, int>()
 
     /// <summary>TBD</summary>
     member val subModels = Dictionary<string, Model>()
@@ -193,15 +194,27 @@ type Model() =
     /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
-        if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
-        for p, n in Array.zip parameters names do
+        // let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
+        let names = defaultArg names (Seq.empty) |> Seq.toArray
+        if names.Length > 0 then
+            if parameters.Length <> names.Length then failwithf "Expecting parameters (%A) and names (%A) to have the same length" parameters.Length names.Length
+            for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
+        let nextName (name:string) =
+            let name = if name.Contains("__") then name.Split("__").[0] else name
+            let i = parameterPrefixes.GetValueOrDefault name
+            parameterPrefixes.[name] <- i+1
+            sprintf "%s__%A" name (i+1)
+        for i in 0..parameters.Length-1 do
+            let p = parameters.[i]
+        // for p, n in Array.zip parameters names do
             match (box p) with
-            | :? Parameter as p -> 
+            | :? Parameter as p ->
+                let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
                 m.parameters.add(n, p)
             | :? Model as mm ->
+                let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
                 m.subModels.Add(n, mm)
-                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
     /// <summary>TBD</summary>
@@ -310,7 +323,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.zero())
-    do base.add([w;b],["Linear__weight";"Linear__bias"])
+    do base.add([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
@@ -328,7 +341,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
+    do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
@@ -347,7 +360,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
+    do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
@@ -366,7 +379,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+    do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
@@ -384,7 +397,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose1d__weight";"ConvTranspose1d__bias"])
+    do base.add([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
@@ -403,7 +416,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose2d__weight";"ConvTranspose2d__bias"])
+    do base.add([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
@@ -422,7 +435,7 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose3d__weight";"ConvTranspose3d__bias"])
+    do base.add([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
@@ -499,7 +512,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -590,7 +603,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm2d__weight";"BatchNorm2d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -667,7 +680,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm3d__weight";"BatchNorm3d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value

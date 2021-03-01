@@ -913,3 +913,22 @@ type TestModel () =
             loss <- float l
 
         Assert.Less(loss, loss0/2.)
+
+    [<Test>]
+    member _.TestModelParameterNames () =
+        let lin1 = Linear(10, 10)
+        let lin1Names = lin1.parameters.values.Keys |> Seq.toArray
+        let lin1NamesCorrect = [|"Linear-weight"; "Linear-bias"|]
+
+        let lin2 = lin1 --> lin1
+        let lin2Names = lin2.parameters.values.Keys |> Seq.toArray
+        let lin2NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"|]
+
+        let lin3 = lin1 --> lin1 --> lin1
+        let lin3Names = lin3.parameters.values.Keys |> Seq.toArray
+        let lin3NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"; "Linear-weight__3"; "Linear-bias__3"|]
+
+        Assert.AreEqual(lin1NamesCorrect, lin1Names)
+        Assert.AreEqual(lin2NamesCorrect, lin2Names)
+        Assert.AreEqual(lin3NamesCorrect, lin3Names)
+
