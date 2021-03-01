@@ -3523,6 +3523,14 @@ type TestTensor () =
             Assert.CheckEqual(tClampedCorrect, tClamped)
 
     [<Test>]
+    member _.TestTensorClampInf () =
+        for combo in Combos.FloatingPointExcept16s do 
+            let t = combo.tensor([System.Double.NegativeInfinity, System.Double.PositiveInfinity])
+            let tClamped = dsharp.clamp(t, -100, 100)
+            let tClampedCorrect = combo.tensor([-100, 100])
+            Assert.CheckEqual(tClampedCorrect, tClamped)
+
+    [<Test>]
     member _.TestTensorView () =
         for combo in Combos.All do 
             let t = combo.randint(0, 2, [10;10])
