@@ -570,8 +570,8 @@ type RawTensor() =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
-            | TypeCode.Single -> sprintf "%g" (x.toSingle())
-            | TypeCode.Double -> sprintf "%g" (x.toDouble())
+            | TypeCode.Single -> let p = sprintf "%g" (x.toSingle()) in if p.Contains(".") then p else p + "."
+            | TypeCode.Double -> let p = sprintf "%g" (x.toDouble()) in if p.Contains(".") then p else p + "."
             | TypeCode.Int32 -> sprintf "%d" (x.toInt32())
             | TypeCode.Int64 -> sprintf "%d" (x.toInt64())
             | TypeCode.Byte -> sprintf "%d" (x.toByte())

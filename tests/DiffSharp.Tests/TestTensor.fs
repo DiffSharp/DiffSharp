@@ -808,8 +808,8 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float16
                 | BFloat16
-                | Float32 -> ".000000"
-                | Float64 -> ".000000"
+                | Float32 -> "."
+                | Float64 -> "."
             let dtypeText = 
                 if combo.dtype = Dtype.Default then
                     ""
