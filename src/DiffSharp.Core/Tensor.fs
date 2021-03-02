@@ -1677,8 +1677,8 @@ type Tensor =
         let lowTensor, highTensor = 
             match low, high with
             | Some l, Some h -> a.like(l), a.like(h)
-            | Some l, None   -> a.like(l), a.max()
-            | None,   Some h -> a.min(), a.like(h)
+            | Some l, None   -> a.like(l), a.like(System.Double.PositiveInfinity) // Having PositiveInfinity as upper limit is critical here, using a.max() does not work for some edge cases
+            | None,   Some h -> a.like(System.Double.NegativeInfinity), a.like(h) // Having NegativeInfinity as lower limit is critical here, using a.min() does not work for some edge cases
             | None, None     -> failwithf "Expecting at least one of low, high"
         let mask() = // one-zero mask where the clamped values are zero and the rest are one
             let ll = lowTensor.expand(a.shape)
