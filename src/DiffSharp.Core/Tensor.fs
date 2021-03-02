@@ -367,8 +367,8 @@ type Tensor =
         let rec fmt extra (t: Tensor) =
             match t with
             | TensorC(p) -> p.GetString(extra)
-            | TensorF(tp,td,_) -> fmt (extra + ", fwd") tp
-            | TensorR(tp,td,_,_,_) -> fmt (extra + ", rev") tp
+            | TensorF(tp,_,_) -> fmt (extra + ", fwd") tp
+            | TensorR(tp,_,_,_,_) -> fmt (extra + ", rev") tp
         fmt "" t
 
     override t.Equals(other) =
