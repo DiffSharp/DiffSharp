@@ -16,8 +16,7 @@ open DiffSharp.Optim
 open DiffSharp.Util
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
-dsharp.seed(2)
-
+dsharp.seed(4)
 
 let nz = 128
 
@@ -53,46 +52,48 @@ print "Discriminator"
 print discriminator
 
 let epochs = 10
-let batchSize = 64
-let validInterval = 32
+let batchSize = 16
+let validInterval = 100
 
 let mnist = MNIST("../data", train=true, transform=fun t -> (t - 0.5) / 0.5)
 let loader = mnist.loader(batchSize=batchSize, shuffle=true)
 
-let gopt = Adam(generator, lr=dsharp.tensor(0.0001), beta1=dsharp.tensor(0.5))
-let dopt = Adam(discriminator, lr=dsharp.tensor(0.0001), beta1=dsharp.tensor(0.5))
+let gopt = Adam(generator, lr=dsharp.tensor(0.0002), beta1=dsharp.tensor(0.5))
+let dopt = Adam(discriminator, lr=dsharp.tensor(0.0002), beta1=dsharp.tensor(0.5))
 
 let fixedNoise = dsharp.randn([batchSize; nz])
 
 let glosses = ResizeArray()
 let dlosses = ResizeArray()
+let dxs = ResizeArray()
+let dgzs = ResizeArray()
 
 let start = System.DateTime.Now
 for epoch = 1 to epochs do
     for i, x, _ in loader.epoch() do
+        let labelReal = dsharp.ones([batchSize; 1])
+        let labelFake = dsharp.zeros([batchSize; 1])
+
         // update discriminator
         generator.noDiff()
-        // generator.reverseDiff()
         discriminator.reverseDiff()
 
         let doutput = x --> discriminator
         let dx = doutput.mean() |> float
-        let dlabelReal = dsharp.ones([batchSize; 1])
-        let dlossReal = dsharp.bceLoss(doutput, dlabelReal)
-        // dlossReal.reverse()
+        let dlossReal = dsharp.bceLoss(doutput, labelReal)
 
         let z = dsharp.randn([batchSize; nz])
         let goutput = z --> generator
         let doutput = goutput --> discriminator
-        let dgz1 = doutput.mean() |> float
-        let dlabelFake = dsharp.zeros([batchSize; 1])
-        let dlossFake = dsharp.bceLoss(doutput, dlabelFake)
-        // dlossFake.reverse(zeroDerivatives=false)
+        let dgz = doutput.mean() |> float
+        let dlossFake = dsharp.bceLoss(doutput, labelFake)
 
         let dloss = dlossReal + dlossFake
         dloss.reverse()
         dopt.step()
         dlosses.Add(float dloss)
+        dxs.Add(float dx)
+        dgzs.Add(float dgz)
 
         // update generator
         generator.reverseDiff()
@@ -100,27 +101,36 @@ for epoch = 1 to epochs do
 
         let goutput = z --> generator
         let doutput = goutput --> discriminator
-        let dgz2 = doutput.mean() |> float
-        let dlabelReal = dsharp.ones([batchSize; 1])
-        let gloss = dsharp.bceLoss(doutput, dlabelReal)
+        let gloss = dsharp.bceLoss(doutput, labelReal)
         gloss.reverse()
         gopt.step()
         glosses.Add(float gloss)
 
-        printfn "%A Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A / %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz1 dgz2
+        printfn "%A Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz
 
         if i % validInterval = 0 then
             let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
             printfn "Saving real samples to %A" realFileName
-            x.saveImage(realFileName, normalize=true)
+            ((x+1)/2).saveImage(realFileName, normalize=false)
             let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
             printfn "Saving fake samples to %A" fakeFileName
             let goutput = fixedNoise --> generator
-            goutput.view([-1;1;28;28]).saveImage(fakeFileName, normalize=true)
+            ((goutput.view([-1;1;28;28])+1)/2).saveImage(fakeFileName, normalize=false)
 
             let plt = Pyplot()
-            plt.plot(glosses |> dsharp.tensor, label="G")
-            plt.plot(dlosses |> dsharp.tensor, label="D")
+            plt.plot(glosses |> dsharp.tensor, label="Generator")
+            plt.plot(dlosses |> dsharp.tensor, label="Discriminator")
+            plt.xlabel("Iterations")
+            plt.ylabel("Loss")
             plt.legend()
             plt.tightLayout()
             plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
+
+            let plt = Pyplot()
+            plt.plot(dxs |> dsharp.tensor, label="d(x)")
+            plt.plot(dgzs |> dsharp.tensor, label="d(g(z))")
+            plt.xlabel("Iterations")
+            plt.ylabel("Score")
+            plt.legend()
+            plt.tightLayout()
+            plt.savefig (sprintf "gan_score_epoch_%A_minibatch_%A.pdf" epoch (i+1))            
