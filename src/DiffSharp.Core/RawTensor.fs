@@ -572,8 +572,8 @@ type RawTensor() =
             match x.GetTypeCode() with 
             // "%g" has the desired behavior that is a combination of "%e" and "%f"
             // One edge case example is "%g" prints "2" for 2.0 but we prefer "2."
-            | TypeCode.Single -> let p = sprintf "%g" (x.toSingle()) in if p.Contains(".") || p.Contains("e") then p else p + "."
-            | TypeCode.Double -> let p = sprintf "%g" (x.toDouble()) in if p.Contains(".") || p.Contains("e") then p else p + "."
+            | TypeCode.Single -> let p = sprintf "%g" (x.toSingle()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
+            | TypeCode.Double -> let p = sprintf "%g" (x.toDouble()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
             | TypeCode.Int32 -> sprintf "%d" (x.toInt32())
             | TypeCode.Int64 -> sprintf "%d" (x.toInt64())
             | TypeCode.Byte -> sprintf "%d" (x.toByte())

@@ -3003,6 +3003,17 @@ type TestTensor () =
             isInvalidOp(fun () -> combo.tensor([1.0]).log())
 
     [<Test>]
+    member _.TestTensorSafeLog () =
+        for combo in Combos.FloatingPointExcept16s do 
+            let t1 = combo.tensor([0.; -5.; System.Double.NegativeInfinity; 0.6505; 0.3781; 0.4025])
+            let epsilon = 1e-12
+            let t1Log = t1.safelog(epsilon)
+            let t1LogCorrect = combo.tensor([-27.631, -27.631, -27.631, -0.430014, -0.972597, -0.91006])
+
+            Assert.True(t1Log.allclose(t1LogCorrect, 0.01))
+            Assert.CheckEqual(t1Log.dtype, combo.dtype)
+
+    [<Test>]
     member _.TestTensorLog10T () =
         for combo in Combos.FloatingPointExcept16s do 
             let t1 = combo.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
