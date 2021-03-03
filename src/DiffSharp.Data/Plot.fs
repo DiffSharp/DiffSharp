@@ -60,7 +60,7 @@ module helpers =
             with
                 | _ -> false
         if not success then
-            failwithf "Error or timeout while running process %s" executable
+            printfn "Warning: cannot plot due to error or timeout while running %s" executable
 
 
 // This is a lightweight wrapper roughly compatible with the matplotlib.pyplot API
