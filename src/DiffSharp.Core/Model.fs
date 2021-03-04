@@ -224,12 +224,12 @@ type BaseModel() =
             | :? Model as mm ->
                 let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
                 m.SubModelsDict.Add(n, mm)
-                parameterDict.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
+                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | Pair ((:? Parameter as p), (:? string as n))  -> 
-                parameterDict.add(n, p)
+                m.parameters.add(n, p)
             | Pair ((:? BaseModel as mm), (:? string as n))  -> 
                 m.SubModelsDict.Add(n, mm)
-                parameterDict.add(parameterDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+                m.parameters.add(parameterDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
 
     /// <summary>TBD</summary>
