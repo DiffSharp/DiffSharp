@@ -134,8 +134,9 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
             let stop = fullBounds.[i,1] + 1
 
             let len = stop - start
-            use idxs = Int64Tensor.Arange((int64 start).ToScalar(), (int64 stop).ToScalar(), 1L.ToScalar(), tt.DeviceType, tt.DeviceIndex)
-            res <- res.IndexSelect(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
+            if len <> t.Shape.[i] then // Slice only when there is something to slice in this dimension
+                use idxs = Int64Tensor.Arange((int64 start).ToScalar(), (int64 stop).ToScalar(), 1L.ToScalar(), tt.DeviceType, tt.DeviceIndex)
+                res <- res.IndexSelect(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
             if fullBounds.[i, 2] = 1 && len = 1 then 
                 res <- res.Squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
             else
@@ -291,6 +292,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let results = tt.SplitWithSizes(int64s sizes, dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
+
+    override t.PermuteT(permutation) =
+        let _, newShape = Shape.checkCanPermute t.Shape permutation
+        let result = tt.Permute(int64s permutation)
+        t.MakeLike(result, shape=newShape)
 
     override t.TransposeT(dim0, dim1) =
         Shape.checkCanTranspose t.Shape dim0 dim1

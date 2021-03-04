@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "DiffSharp.Tests": {
-      "commandName": "Project",
-      "nativeDebugging": false
-    }
-  }
-}

@@ -426,6 +426,14 @@ module rec Shape =
     let checkCanTranspose2d (dim: int) =
         if dim <> 2 then failwith "Expecting dim=2 when no specific dimensions are given to transpose. Consider using general transpose(dim0, dim1)."
 
+    /// Checks if the given shape is appropriate for a permute operation and returns information related to the resulting shape.
+    let checkCanPermute (shape: Shape) (permutation: int[]) =
+        if shape.Length <> permutation.Length then failwithf "Expecting tensor's shape (%A) and permutation (%A) to have the same dims" shape permutation
+        if Seq.hasDuplicates permutation then failwithf "Expecting permutation (%A) to have no duplicate values" permutation
+        let inversePermutation = Array.permute (fun i -> permutation.[i]) [| 0.. shape.Length-1 |]
+        let newShape = Array.permute (fun i -> inversePermutation.[i]) shape
+        inversePermutation, newShape
+
     /// Checks if the given shape is appropriate for a flip operation.
     let checkCanFlip (dim: int) (dims: int[]) =
         if dims.Length > dim then failwithf "Expecting dims (list of dimension indices to flip) of length less than Tensor's dimensions, received %A, %A" dims.Length dim
@@ -522,7 +530,7 @@ module rec Shape =
 
     /// Converts the given location to a three-element bounds array in the context of the given shape.
     let locationToBounds (shape: Shape) (location: int[]) =
-        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 1)
+        Array2D.init location.Length 3 (fun i j -> if j=0 then location.[i] elif j=1 then location.[i] + shape.[i] - 1 else 0)
 
     /// Computes the shape that results from a flatten operation.
     let flatten (startDim: int) (endDim: int) (shape: Shape) =
@@ -718,6 +726,9 @@ module ShapeAutoOpens =
         [|for i=0 to bounds.GetLength(0) - 1 do 
              let len = bounds.[i, 1] - bounds.[i, 0] + 1
              yield len|]
+
+    let shapeToFullBounds (shape: Shape) =
+        Array2D.init (shape.Length) 3 (fun i j -> if j=0 then 0 elif j=1 then shape.[i]-1 else 0)
 
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
     let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =

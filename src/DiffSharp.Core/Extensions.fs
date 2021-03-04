@@ -8,11 +8,7 @@ namespace DiffSharp.Util
 open System
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
-open System.IO
-open System.IO.Compression
-open System.Net
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Formatters.Binary
+
 
 /// <summary>
 ///   Contains extensions to the F# Array module. 
@@ -50,6 +46,13 @@ module Array =
 
     // Create a 3D array using a flat representation
     let initFlat3D i j k f = Array.init (i*j*k) (fun ijk -> f (ijk/j/k) ((ijk/k)%j) (ijk%k))
+
+    let foralli f (arr: 'T[]) =
+        let mutable i = 0
+        let n = arr.Length
+        while i < n && f i arr.[i] do
+            i <- i + 1
+        (i = n)
 
 module ArrayND = 
     /// Initializes an array with a given shape and initializer function.
@@ -126,74 +129,6 @@ module ExtensionAutoOpens =
     /// Indicates if a value is not null.
     [<ExcludeFromCodeCoverage>]
     let inline notNull value = not (obj.ReferenceEquals(value, null))
-
-    /// Returns a function that memoizes the given function using a lookaside table.
-    let memoize fn =
-        let cache = new Dictionary<_,_>()
-        fun x ->
-            match cache.TryGetValue x with
-            | true, v -> v
-            | false, _ ->
-                let v = fn x
-                cache.Add(x,v)
-                v
-
-    /// Synchronously downloads the given URL to the given local file.
-    let download (url:string) (localFileName:string) =
-        let wc = new WebClient()
-        printfn "Downloading %A to %A" url localFileName
-        wc.DownloadFile(url, localFileName)
-        wc.Dispose()
-
-    /// Saves the given value to the given local file using binary serialization.
-    let saveBinary (object: 'T) (fileName:string) =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Create)
-        let cs = new GZipStream(fs, CompressionMode.Compress)
-        try
-            formatter.Serialize(cs, object)
-            cs.Flush()
-            cs.Close()
-            fs.Close()
-        with
-        | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
-
-    /// Loads the given value from the given local file using binary serialization.
-    let loadBinary (fileName:string):'T =
-        let formatter = BinaryFormatter()
-        let fs = new FileStream(fileName, FileMode.Open)
-        let cs = new GZipStream(fs, CompressionMode.Decompress)
-        try
-            let object = formatter.Deserialize(cs) :?> 'T
-            cs.Close()
-            fs.Close()
-            object
-        with
-        | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
-
-    /// Value of log(sqrt(2*Math.PI)).
-    let logSqrt2Pi = log(sqrt(2. * Math.PI))
-
-    /// Value of log(10).
-    let log10Val = log 10.
-
-    /// Indents all lines of the given string by the given number of spaces.
-    let indentNewLines (str:String) numSpaces =
-        let mutable ret = ""
-        let spaces = String.replicate numSpaces " "
-        str |> Seq.toList |> List.iter (fun c -> 
-                            if c = '\n' then 
-                                ret <- ret + "\n" + spaces
-                            else ret <- ret + string c)
-        ret
-
-    /// Left-pads a string up to the given length.
-    let stringPad (s:string) (width:int) =
-        if s.Length > width then s
-        else String.replicate (width - s.Length) " " + s
-
-    /// Left-pads a string to match the length of another string.
-    let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
 
     /// Creates a non-jagged 3D array from jagged data.
     let array3D data = 

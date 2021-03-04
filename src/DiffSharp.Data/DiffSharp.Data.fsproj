@@ -5,13 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Torch.RawTensor.fs" />
+    <Compile Include="Image.fs" />
+    <Compile Include="Data.fs" />
+    <Compile Include="Plot.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiffSharp.Core\DiffSharp.Core.fsproj" />
-    <PackageReference Include="TorchSharp" Version="$(TorchSharpVersion)" />
-	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+  	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

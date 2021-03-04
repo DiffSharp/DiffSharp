@@ -81,7 +81,7 @@ type ParameterDict() =
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
 
     /// <summary>TBD</summary>
-    member d.forwarddiff(derivatives:ParameterDict, ?tag:uint32) = 
+    member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
         d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
 
@@ -156,7 +156,8 @@ type BaseModel() =
     val mutable mode: Mode
 
     /// <summary>TBD</summary>
-    member val ParametersDict = ParameterDict()
+    let parameterDict = ParameterDict()
+    let parameterPrefixes = Dictionary<string, int>()
 
     /// <summary>TBD</summary>
     member val SubModelsDict = Dictionary<string, BaseModel>()
@@ -172,14 +173,14 @@ type BaseModel() =
         for model:BaseModel in m.allModels do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
-    member m.parametersDict
-        with get () = m.ParametersDict
-        and set parameters = m.ParametersDict.set(parameters)
+    member m.parameters
+        with get () = parameterDict
+        and set parameters = parameterDict.set(parameters)
 
     /// <summary>TBD</summary>
-    member m.parameters
-        with get () = m.parametersDict.flatten()
-        and set parameters = m.parametersDict.unflatten(parameters)
+    member m.parametersVector
+        with get () = m.parameters.flatten()
+        and set parameters = m.parameters.unflatten(parameters)
 
     /// <summary>TBD</summary>
     member m.allModels
@@ -188,57 +189,72 @@ type BaseModel() =
             else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
+    member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
+
+    /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
         let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.init (parameters.Length) (fun i -> sprintf "m__%s__%d" (Random.UUID()) i)) |> Seq.toArray
-        if parameters.Length <> names.Length then failwithf "Expecting parameters.Length (%A) and names.Length (%A) to be same" parameters.Length names.Length
-        for p, n in Array.zip parameters names do
+        let names = defaultArg names (Seq.empty) |> Seq.toArray
+        if names.Length > 0 then
+            if parameters.Length <> names.Length then failwithf "Expecting parameters (%A) and names (%A) to have the same length" parameters.Length names.Length
+            for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
+        let nextName (name:string) =
+            let name = if name.Contains("__") then name.Split("__").[0] else name
+            let i = parameterPrefixes.GetValueOrDefault name
+            parameterPrefixes.[name] <- i+1
+            sprintf "%s__%A" name (i+1)
+        for i in 0..parameters.Length-1 do
+            let p = parameters.[i]
             match (box p) with
-            | :? Parameter as p -> 
-                m.parametersDict.add(n, p)
-            | :? BaseModel as mm ->
+            | :? Parameter as p ->
+                let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
+                m.parameters.add(n, p)
+            | :? Model as mm ->
+                let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
                 m.SubModelsDict.Add(n, mm)
-                m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+                parameterDict.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | :? (Parameter * string) as pn -> 
                 let (p,n) = pn
-                m.parametersDict.add(n, p)
+                parameterDict.add(n, p)
             | :? (BaseModel * string) as mmn -> 
                 let (mm,n) = mmn
                 m.SubModelsDict.Add(n, mm)
-                m.parametersDict.add(mm.parametersDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+                parameterDict.add(parameterDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
             | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
 
     /// <summary>TBD</summary>
-    member m.forwardDiff(derivatives:ParameterDict) = m.parametersDict.forwarddiff(derivatives)
+    member m.forwardDiff(derivatives:ParameterDict) = m.parameters.forwardDiff(derivatives)
 
     /// <summary>TBD</summary>
-    member m.reverseDiff() = m.parametersDict.reverseDiff()
+    member m.reverseDiff() = m.parameters.reverseDiff()
 
     /// <summary>TBD</summary>
-    member m.noDiff() = m.parametersDict.noDiff()
+    member m.noDiff() = m.parameters.noDiff()
 
     /// <summary>TBD</summary>
-    member m.move(?dtype, ?device, ?backend) = m.parametersDict.move(?dtype=dtype, ?device=device, ?backend=backend)
+    member m.move(?dtype, ?device, ?backend) = m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    member m.nparameters = m.parametersDict.nelement
+    member m.nparameters = m.parameters.nelement
 
     /// <summary>TBD</summary>
-    member m.saveParameters(fileName) = m.parameters.save(fileName)
+    member m.saveParameters(fileName) = m.parametersVector.save(fileName)
 
-    /// <summary>TBD</summary>
-    member m.loadParameters(fileName) = m.parameters <- Tensor.load(fileName)
-
-    /// <summary>TBD</summary>
-    member m.save(fileName) = saveBinary m fileName
-
-    /// <summary>TBD</summary>
-    override m.ToString() =
+    abstract member getString: unit -> string
+    default m.getString() =
+        if m.allModels |> List.length < 2 then "Model()" // allModels has one element (m) in case there are no submodels
+        else
         let sb = System.Text.StringBuilder()
         sb.Append("Model(\n") |> ignore
         for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
+
+    /// <summary>TBD</summary>
+    member m.save(fileName) = saveBinary m fileName
+
+    /// <summary>TBD</summary>
+    override m.ToString() = sprintf "%s - nparameters:%A" (m.getString()) m.nparameters
 
 
 [<AbstractClass>]
@@ -260,7 +276,7 @@ type Model<'In, 'Out>() =
 
     /// <summary>TBD</summary>
     member m.forwardParameters (input:'In) (parameters:Tensor) =
-        m.parameters <- parameters
+        m.parametersVector <- parameters
         let f = m.forward(input) in m.noDiff(); f
 
     /// <summary>TBD</summary>
@@ -279,6 +295,11 @@ type Model<'In, 'Out>() =
 
     /// <summary>TBD</summary>
     static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
+
+    member m.saveParameters(fileName) = m.parametersVector.save(fileName)
+
+    /// <summary>TBD</summary>
+    member m.loadParameters(fileName) = m.parametersVector <- Tensor.load(fileName)
 
     /// <summary>TBD</summary>
     static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
@@ -317,10 +338,10 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.zero())
-    do base.add([w;b],["Linear__weight";"Linear__bias"])
+    do base.add([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -335,10 +356,10 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv1d__weight";"Conv1d__bias"])
+    do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.getString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -354,10 +375,10 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv2d__weight";"Conv2d__bias"])
+    do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -373,10 +394,10 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["Conv3d__weight";"Conv3d__bias"])
+    do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -391,10 +412,10 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose1d__weight";"ConvTranspose1d__bias"])
+    do base.add([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.getString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -410,10 +431,10 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose2d__weight";"ConvTranspose2d__bias"])
+    do base.add([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -429,10 +450,10 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
-    do base.add([w;b],["ConvTranspose3d__weight";"ConvTranspose3d__bias"])
+    do base.add([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.getString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -445,7 +466,7 @@ type Dropout(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout()"
+    override _.getString() = sprintf "Dropout()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -457,7 +478,7 @@ type Dropout2d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout2d()"
+    override _.getString() = sprintf "Dropout2d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -469,7 +490,7 @@ type Dropout3d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "Dropout3d()"
+    override _.getString() = sprintf "Dropout3d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -506,7 +527,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm1d__weight";"BatchNorm1d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -535,7 +556,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm1d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -597,7 +618,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm2d__weight";"BatchNorm2d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -626,7 +647,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm2d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -674,7 +695,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm3d__weight";"BatchNorm3d__bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([w;b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -703,7 +724,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
+    override _.getString() = sprintf "BatchNorm3d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -718,4 +739,74 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
             let n = vt.shape.[1]
             m.updateStats mean var n
         let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res        
+        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res
+
+
+/// <summary>Variational Auto-Encoder</summary>
+type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
+    inherit Model()
+    let hDims = defaultArg hDims (let d = (xDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
+    let activation = defaultArg activation dsharp.relu
+    let activationLast = defaultArg activationLast dsharp.sigmoid
+    let dims =
+        if hDims.Length = 0 then
+            [|xDim; zDim|]
+        else
+            Array.append (Array.append [|xDim|] hDims) [|zDim|]
+            
+    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
+    let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
+    do 
+        base.add([for m in enc -> box m])
+        base.add([for m in dec -> box m])
+
+    let encode x =
+        let mutable x = x
+        for i in 0..enc.Length-3 do
+            x <- activation <| enc.[i].forward(x)
+        let mu = enc.[enc.Length-2].forward(x)
+        let logVar = enc.[enc.Length-1].forward(x)
+        mu, logVar
+
+    let sampleLatent mu (logVar:Tensor) =
+        let std = dsharp.exp(0.5*logVar)
+        let eps = dsharp.randnLike(std)
+        eps.mul(std).add(mu)
+
+    let decode z =
+        let mutable h = z
+        for i in 0..dec.Length-2 do
+            h <- activation <| dec.[i].forward(h)
+        activationLast <| dec.[dec.Length-1].forward(h)
+
+    /// <summary>TBD</summary>
+    member _.encodeDecode(x:Tensor) =
+        let batchSize = x.shape.[0]
+        let mu, logVar = encode (x.view([batchSize; xDim]))
+        let z = sampleLatent mu logVar
+        decode z, mu, logVar
+
+    /// <summary>TBD</summary>
+    override m.forward(x) =
+        let x, _, _ = m.encodeDecode(x) in x
+
+    /// <summary>TBD</summary>
+    override _.getString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
+
+    /// <summary>TBD</summary>
+    static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
+        let bce = dsharp.bceLoss(xRecon, x.viewAs(xRecon), reduction="sum")
+        let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
+        bce + kl
+
+    /// <summary>TBD</summary>
+    member m.loss(x, ?normalize:bool) =
+        let normalize = defaultArg normalize true
+        let xRecon, mu, logVar = m.encodeDecode x
+        let loss = VAE.loss(xRecon, x, mu, logVar)
+        if normalize then loss / x.shape.[0] else loss
+
+    /// <summary>TBD</summary>
+    member _.sample(?numSamples:int) = 
+        let numSamples = defaultArg numSamples 1
+        dsharp.randn([|numSamples; zDim|]) |> decode
