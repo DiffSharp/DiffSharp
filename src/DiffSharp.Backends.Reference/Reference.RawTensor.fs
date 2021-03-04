@@ -320,6 +320,7 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
 
     override t.MoveTo(device: Device) = t.MakeLike(values, shape, device=device)
 
+    override t.SetImmutable() = isMutable <- false
     override t.SetMutable() = isMutable <- true
     override t.IsMutable = isMutable
     member t.SetValues(tmp: RawTensor) = checkMutable(); values <- (tmp :?> RawTensorCPU<'T>).Values

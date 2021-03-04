@@ -15,25 +15,37 @@ open System.Collections.Generic
 /// </namespacedoc>
 ///
 /// <summary>Represents a parameter in a model.</summary>
-/// <remarks>A parameter is a mutable register holding a tensor.</remarks>
-type Parameter =
-    val mutable value:Tensor
-    new(value) = {value=value}
+/// <remarks>A parameter is a mutable register holding a tensor. The initial tensor is transferred-in. </remarks>
+type Parameter(value:Tensor) =
+    let reg = TensorRegister(value)
+    //do 
+    //  if value.isMutable then failwith "the parameter tensor is already mutable and is already being used in another parameter"
+    //  value.setMutable() |> ignore
+
+    member p.borrow() = reg.borrow()
+
+    member p.getTensorRegister() = reg
+    
+    /// Set the value of the parameter, transferring ownership of the tensor and making it the new mutable
+    /// contents of the parameter
+    member p.transferin(v) = reg.transferin(v)
+
+    member p.copyout() = reg.copyout()
 
     /// <summary>TBD</summary>
-    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
+    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = reg.transferin (p.borrow().forwardDiff(derivative, ?tag=tag))
 
     /// <summary>TBD</summary>
-    member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
+    member p.reverseDiff(?tag:uint32) = reg.transferin (p.borrow().reverseDiff(?tag=tag))
 
     /// <summary>TBD</summary>
-    member p.noDiff() = p.value <- p.value.noDiff()
+    member p.noDiff() = reg.transferin (p.borrow().noDiff())
 
     /// <summary>TBD</summary>
-    member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
+    member p.move(?dtype, ?device, ?backend) = reg.transferin (p.borrow().move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
-    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
+    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" (reg.borrow()).shape (reg.borrow())
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
@@ -46,9 +58,9 @@ type ParameterDict() =
     member val values = Dictionary<string, Parameter>()
 
     /// <summary>TBD</summary>
-    member d.Item
-        with get key = d.values.[key].value
-        and set key v = d.values.[key].value <- v
+    member d.copyout(key) = d.values.[key].copyout()
+    member d.borrow(key) = d.values.[key].borrow()
+    member d.transferin(key, v) = d.values.[key].transferin(v)
 
     /// <summary>TBD</summary>
     member d.add(name, parameter) = d.values.Add(name, parameter)
@@ -60,7 +72,7 @@ type ParameterDict() =
     member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.copy() = d.map(fun (t:Tensor) -> t)
+    member d.copy() = d.map(fun (t:Parameter) -> t.copyout())
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
@@ -69,13 +81,13 @@ type ParameterDict() =
         ret
 
     /// <summary>TBD</summary>
-    member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.value) in nn, Parameter(tt))
+    member d.map(f:string*Parameter->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p) in nn, Parameter(tt))
 
     /// <summary>TBD</summary>
-    member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
+    member d.map(f:Parameter->Tensor) = d.map(fun (n,p) -> n, f p)
 
     /// <summary>TBD</summary>
-    member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
+    member d.transferin(parameters:ParameterDict) = d.iter(fun (n, p) -> p.transferin (parameters.borrow(n)))
 
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
@@ -83,7 +95,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.copyout(n), tag))
 
     /// <summary>TBD</summary>
     member d.reverseDiff(?tag:uint32) = 
@@ -99,17 +111,17 @@ type ParameterDict() =
         d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
 
     /// <summary>TBD</summary>
-    member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
+    member d.primal with get() = d.map(fun (t:Parameter)->t.copyout().primal)
 
     /// <summary>TBD</summary>
-    member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
+    member d.derivative with get() = d.map(fun (t:Parameter)->t.copyout().derivative)
 
     /// <summary>TBD</summary>
-    member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
+    member d.nelement with get() = [|for t in d.values.Values do t.borrow().nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
     member d.flatten() =
-        let ts = [| for t in d.values.Values do t.value.view(-1) |]
+        let ts = [for t in d.values.Values do t.borrow().view(-1)]
         if ts.Length = 0 then dummy else
         dsharp.cat(ts)
 
@@ -117,13 +129,13 @@ type ParameterDict() =
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        let shapes = [|for t in d.values.Values do t.value.shape|]
+        let shapes = [|for t in d.values.Values do t.borrow().shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
         let keys = Dictionary.copyKeys d.values
         for n in keys do
-            d.[n] <- ts.[i]
+            d.transferin (n, ts.[i])
             i <- i+1
 
     /// <summary>TBD</summary>
@@ -175,7 +187,7 @@ type Model() =
     /// <summary>TBD</summary>
     member m.parameters
         with get () = parameterDict
-        and set parameters = parameterDict.set(parameters)
+        and set parameters = parameterDict.transferin(parameters)
 
     /// <summary>TBD</summary>
     member m.parametersVector
@@ -189,7 +201,7 @@ type Model() =
             else [for sm in m.subModels.Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
-    member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
+    member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.transferin(f(n, p.borrow()))
 
     /// <summary>TBD</summary>
     member m.add(parameters:seq<obj>, ?names:seq<string>) =
@@ -328,8 +340,10 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.matmul(value, w.value)
-        if bias then f + b.value else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.matmul(value, w)
+        if bias then f + b else f
 
 
 /// <summary>A model that applies a 1D convolution over an input signal composed of several input planes</summary>
@@ -346,8 +360,10 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv1d(value, w, ?stride=stride, ?padding=padding, ?dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
 /// <summary>A model that applies a 2D convolution over an input signal composed of several input planes</summary>
@@ -365,8 +381,10 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv2d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
 
 /// <summary>A model that applies a 3D convolution over an input signal composed of several input planes</summary>
@@ -384,8 +402,10 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.conv3d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
 
 /// <summary>A model that applies a 1D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -402,8 +422,10 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose1d(value, w, ?stride=stride, ?padding=padding, ?dilation=dilation)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
 
 /// <summary>A model that applies a 2D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -421,8 +443,10 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose2d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
 
 /// <summary>A model that applies a 3D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -440,8 +464,10 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
 
     /// <summary>TBD</summary>
     override _.forward(value) =
-        let f = dsharp.convTranspose3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        let b = b.borrow()
+        let w = w.borrow()
+        let f = dsharp.convTranspose3d(value, w, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
+        if bias then f + b.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
 
 
 /// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.</summary>
@@ -506,55 +532,61 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
-    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
-    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let _b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([_w;_b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
-    member _.mean = _mean.value
+    member _.mean = _mean.copyout()
 
     /// <summary>TBD</summary>
-    member _.variance = _variance.value
+    member _.variance = _variance.copyout()
 
     /// <summary>TBD</summary>
-    member _.stddev = _variance.value.sqrt()
+    member _.stddev = _variance.borrow().sqrt()
 
     /// <summary>TBD</summary>
-    member _.weight = w.value
+    member _.weight = _w.copyout()
 
     /// <summary>TBD</summary>
-    member _.bias = b.value
+    member _.bias = _b.copyout()
 
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        let mean = _mean.borrow()
+        let variance = _variance.borrow()
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "BatchNorm1d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
+        let w = _w.borrow()
+        let b = _b.borrow()
+        let mean = _mean.borrow()
+        let variance = _variance.borrow()
         if value.dim = 2 then
             if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     value.mean(0), value.variance(0, unbiased=false)
                 else
-                    _mean.value, _variance.value
+                    mean, variance
             if m.mode = Mode.Train && trackRunningStats then 
                 let batchSize = value.shape.[0]
                 m.updateStats mean var batchSize
             let res = (value - mean) / (var + eps).sqrt()
-            if affine then res * w.value + b.value else res
+            if affine then res * w + b else res
         elif value.dim = 3 then
             if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let vt = value.transpose(0,1).view([numFeatures;-1])
@@ -562,12 +594,12 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     vt.mean(1), vt.variance(1, unbiased=false)
                 else
-                    _mean.value, _variance.value
+                    _mean.copyout(), _variance.copyout()
             if m.mode = Mode.Train && trackRunningStats then
                 let n = vt.shape.[1]
                 m.updateStats mean var n
             let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
-            if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
+            if affine then res * w.view([1;numFeatures;1]) + b.view([1;numFeatures;1]) else res
         else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
 
 
@@ -597,37 +629,39 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
-    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
-    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let _b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([_w;_b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
-    member _.mean = _mean.value
+    member _.mean = _mean.copyout()
 
     /// <summary>TBD</summary>
-    member _.variance = _variance.value
+    member _.variance = _variance.copyout()
 
     /// <summary>TBD</summary>
-    member _.stddev = _variance.value.sqrt()
+    member _.stddev = _variance.copyout().sqrt()
 
     /// <summary>TBD</summary>
-    member _.weight = w.value
+    member _.weight = _w.copyout()
 
     /// <summary>TBD</summary>
-    member _.bias = b.value
+    member _.bias = _b.copyout()
 
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        let mean = _mean.borrow()
+        let variance = _variance.borrow()
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "BatchNorm2d(%A)" numFeatures
@@ -636,16 +670,18 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     override m.forward(value) =
         if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
+        let w = _w.borrow()
+        let b = _b.borrow()
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
-                _mean.value, _variance.value
+                _mean.copyout(), _variance.copyout()
         if m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
         let res = (value - mean.view([1;numFeatures;1;1])) / (var.view([1;numFeatures;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
+        if affine then res * w.view([1;numFeatures;1;1]) + b.view([1;numFeatures;1;1]) else res
 
 
 /// <summary>Applies Batch Normalization over a 5D input (a mini-batch of 3D inputs with optional additional channel dimension)</summary>
@@ -674,37 +710,39 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
-    let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
-    let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
+    let _w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
+    let _b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.add([w;b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.add([_w;_b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
 
     /// <summary>TBD</summary>
-    member _.mean = _mean.value
+    member _.mean = _mean.copyout()
 
     /// <summary>TBD</summary>
-    member _.variance = _variance.value
+    member _.variance = _variance.copyout()
 
     /// <summary>TBD</summary>
-    member _.stddev = _variance.value.sqrt()
+    member _.stddev = _variance.borrow().sqrt()
 
     /// <summary>TBD</summary>
-    member _.weight = w.value
+    member _.weight = _w.copyout()
 
     /// <summary>TBD</summary>
-    member _.bias = b.value
+    member _.bias = _b.copyout()
 
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
+        let mean = _mean.borrow()
+        let variance = _variance.borrow()
+        _mean.transferin <| (1 - momentum) * mean + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
+        _variance.transferin <| (1 - momentum) * variance + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "BatchNorm3d(%A)" numFeatures
@@ -712,18 +750,19 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        let w = _w.borrow()
+        let b = _b.borrow()
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
-                _mean.value, _variance.value
+                _mean.copyout(), _variance.copyout()
         if m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
         let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res
-
+        if affine then res * w.view([1;numFeatures;1;1;1]) + b.view([1;numFeatures;1;1;1]) else res        
 
 /// <summary>Variational Auto-Encoder</summary>
 type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =

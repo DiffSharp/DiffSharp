@@ -34,7 +34,7 @@ type ModelStyle1b() =
         |> fc1.forward
         |> dsharp.relu
         |> fc2.forward
-        |> dsharp.mul p.value
+        |> dsharp.mul (p.borrow())
 
 [<TestFixture>]
 type TestModel () =
@@ -47,7 +47,7 @@ type TestModel () =
         d1.add("w", d1t1)
         d1.add("b", d1t2)
         let d1flat = d1.flatten()
-        let d1flatCorrect = dsharp.cat([d1t1.value.flatten(); d1t2.value.flatten()])
+        let d1flatCorrect = dsharp.cat([d1t1.borrow().flatten(); d1t2.borrow().flatten()])
         Assert.CheckEqual(d1flatCorrect, d1flat)
 
         let d2t1 = Parameter <| dsharp.randn([15;5])
@@ -89,7 +89,7 @@ type TestModel () =
                     >> fc1.forward
                     >> dsharp.relu
                     >> fc2.forward
-                    >> dsharp.mul p.value)
+                    >> dsharp.mul (p.borrow()))
         Assert.CheckEqual(683, net2.nparameters)
 
     [<Test>]
@@ -114,14 +114,14 @@ type TestModel () =
     [<Test>]
     member _.TestModelInit () =
         let net = Linear(10, 10)
-        let wBefore = net.parameters.["Linear-weight"]
+        let wBefore = net.parameters.values.["Linear-weight"]
         net.init(function
             | "Linear-weight", v -> v.onesLike()
             | _, v -> v)
-        let wAfter = net.parameters.["Linear-weight"]
-        let wAfterCorrect = dsharp.onesLike(wBefore)
-        Assert.False(wAfterCorrect.allclose(wBefore))
-        Assert.True(wAfterCorrect.allclose(wAfter))
+        let wAfter = net.parameters.values.["Linear-weight"]
+        let wAfterCorrect = dsharp.onesLike(wBefore.borrow())
+        Assert.False(wAfterCorrect.allclose(wBefore.borrow()))
+        Assert.True(wAfterCorrect.allclose(wAfter.borrow()))
 
     [<Test>]
     member _.TestModelCompose () =
