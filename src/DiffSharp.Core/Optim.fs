@@ -23,7 +23,7 @@ type Optimizer(model:Model) =
     member val model = model
 
     /// <summary>TBD</summary>
-    member o.step() = model.parametersDict.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member o.step() = model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
     /// <summary>TBD</summary>
     abstract member updateRule: string -> Tensor -> Tensor
@@ -48,7 +48,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
+                momBuffer <- model.parameters.map(fun (t:Tensor) -> t.derivative)
                 momInit <- true
             let mb = momBuffer.[name]
             let mb = mb.mul(mom).add(d)
@@ -79,8 +79,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
         if stateStep = 0 then
-            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvg <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
         stateStep <- stateStep + 1
         let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))

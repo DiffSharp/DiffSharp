@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - dev
+    tags:        
+      - v*             # Push events to v1.2.3 tag
   workflow_dispatch:
 
 jobs:
@@ -13,10 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.301
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:

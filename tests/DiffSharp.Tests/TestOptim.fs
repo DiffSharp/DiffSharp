@@ -56,7 +56,7 @@ type TestOptim () =
         let net = Linear(din, dout)
         let lr, epochs = 1e-1, 250
         let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parameters
+        let mutable p = net.parametersVector
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
                 let g = dsharp.grad (loss inputs targets) p
