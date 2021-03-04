@@ -43,6 +43,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{5A3BA68C
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Benchmarks.Python", "tests\DiffSharp.Benchmarks.Python\DiffSharp.Benchmarks.Python.fsproj", "{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Data", "src\DiffSharp.Data\DiffSharp.Data.fsproj", "{4F470580-35C4-429C-B378-18ADEC387016}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -185,6 +187,18 @@ Global
 		{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E}.Release|x64.Build.0 = Release|Any CPU
 		{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E}.Release|x86.ActiveCfg = Release|Any CPU
 		{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E}.Release|x86.Build.0 = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|x64.Build.0 = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Debug|x86.Build.0 = Debug|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|x64.ActiveCfg = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|x64.Build.0 = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|x86.ActiveCfg = Release|Any CPU
+		{4F470580-35C4-429C-B378-18ADEC387016}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -201,6 +215,7 @@ Global
 		{BDB58D88-5B54-4A29-953F-70E0F5E8A519} = {5A3BA68C-154C-4DBB-A830-DE10880AF4E1}
 		{ABBE6F39-9A71-4AE9-9D18-A5C8C2980532} = {7BD8D35F-E131-4F4D-A67E-5AA66890D5E0}
 		{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E} = {7BD8D35F-E131-4F4D-A67E-5AA66890D5E0}
+		{4F470580-35C4-429C-B378-18ADEC387016} = {C5BDB3A9-0CDD-404F-A2DC-E24A0D151559}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89C67BAA-8BDB-467F-AF4D-D4C32E614CBB}

@@ -474,7 +474,7 @@ module MoreTools =
                     |> String.concat ","
                 printfn "%s(%s)" typeof<'T>.FullName argText
                       
-                for (KeyValue(a,b)) in model.parametersDict.values |> Seq.toArray |> Seq.sortBy (fun (KeyValue(a,_)) -> a) do
+                for (KeyValue(a,b)) in model.parameters.values |> Seq.toArray |> Seq.sortBy (fun (KeyValue(a,_)) -> a) do
                     printfn "   %s : %O" a b.value.shapex
 
                 // Probe the forward function for shape behaviour
