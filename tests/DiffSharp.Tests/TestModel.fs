@@ -112,6 +112,18 @@ type TestModel () =
         Assert.CheckEqual([| 1;20 |], y.shape)
 
     [<Test>]
+    member _.TestModelInit () =
+        let net = Linear(10, 10)
+        let wBefore = net.parameters.values.["Linear-weight"]
+        net.init(function
+            | "Linear-weight", v -> v.onesLike()
+            | _, v -> v)
+        let wAfter = net.parameters.values.["Linear-weight"]
+        let wAfterCorrect = dsharp.onesLike(wBefore.borrow())
+        Assert.False(wAfterCorrect.allclose(wBefore.borrow()))
+        Assert.True(wAfterCorrect.allclose(wAfter.borrow()))
+
+    [<Test>]
     member _.TestModelCompose () =
         let net1 = ModelStyle1a()
         let net2 = ModelStyle1b()
@@ -126,34 +138,34 @@ type TestModel () =
     member _.TestModelParametersDiff () =
         let net = ModelStyle1a()
 
-        Assert.True(net.parameters.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff())
 
-        let p = net.parameters
+        let p = net.parametersVector
         let p = p.forwardDiff(p.onesLike())
-        net.parameters <- p
-        Assert.True(net.parameters.isForwardDiff())
+        net.parametersVector <- p
+        Assert.True(net.parametersVector.isForwardDiff())
 
         net.noDiff()
-        Assert.True(net.parameters.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff())
 
-        let p = net.parameters
+        let p = net.parametersVector
         let p = p.reverseDiff()
-        net.parameters <- p
-        Assert.True(net.parameters.isReverseDiff())
+        net.parametersVector <- p
+        Assert.True(net.parametersVector.isReverseDiff())
 
         net.noDiff()
-        Assert.True(net.parameters.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff())
 
-        let p = net.parameters
+        let p = net.parametersVector
         let x = dsharp.randn([1;10])
         ignore <| dsharp.grad (net.forwardCompose dsharp.sum x) p
-        Assert.True(net.parameters.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff())
 
     [<Test>]
     member _.TestModelForwardParameters () =
         let net = ModelStyle1a()
         let f = net.forwardParameters
-        let p = net.parameters
+        let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
         Assert.CheckEqual([|1;20|], y.shape)
@@ -162,7 +174,7 @@ type TestModel () =
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
         let f = net.forwardCompose dsharp.sin
-        let p = net.parameters
+        let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
         Assert.CheckEqual([|1;20|], y.shape)
@@ -171,7 +183,7 @@ type TestModel () =
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
         let f = net.forwardLoss dsharp.mseLoss
-        let p = net.parameters
+        let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
         let y = f x t p
@@ -180,16 +192,16 @@ type TestModel () =
     [<Test>]
     member _.TestModelSaveLoadParameters () =
         let net1 = ModelStyle1a()
-        let p1 = net1.parameters
+        let p1 = net1.parametersVector
         let fileName = System.IO.Path.GetTempFileName()
         net1.saveParameters(fileName)
 
         let net2 = ModelStyle1a()
-        let p2 = net2.parameters
+        let p2 = net2.parametersVector
         Assert.AreNotEqual(p1, p2)
 
         net2.loadParameters(fileName)
-        let p2 = net2.parameters
+        let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
@@ -200,12 +212,12 @@ type TestModel () =
     [<Test>]
     member _.TestModelSaveLoad () =
         let net1 = ModelStyle1a()
-        let p1 = net1.parameters
+        let p1 = net1.parametersVector
         let fileName = System.IO.Path.GetTempFileName()
         net1.save(fileName)
 
         let net2 = Model.load(fileName)
-        let p2 = net2.parameters
+        let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
@@ -218,23 +230,23 @@ type TestModel () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
-            Assert.CheckEqual(combo1.dtype, net.parameters.dtype)
-            Assert.CheckEqual(combo1.device, net.parameters.device)
-            Assert.CheckEqual(combo1.backend, net.parameters.backend)
+            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
+            Assert.CheckEqual(combo1.device, net.parametersVector.device)
+            Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
             for combo2 in Combos.FloatingPointExcept16s do
                 // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 net.move(combo2.dtype, combo2.device, combo2.backend)
-                Assert.CheckEqual(combo2.dtype, net.parameters.dtype)
-                Assert.CheckEqual(combo2.device, net.parameters.device)
-                Assert.CheckEqual(combo2.backend, net.parameters.backend)
+                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
+                Assert.CheckEqual(combo2.device, net.parametersVector.device)
+                Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
 
     [<Test>]
     member _.TestModelClone () =
         let net1 = ModelStyle1a()
-        let p1 = net1.parameters
+        let p1 = net1.parametersVector
 
         let net2 = net1.clone()
-        let p2 = net2.parameters
+        let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
@@ -272,7 +284,7 @@ type TestModel () =
 
         let lr, steps = 1e-2, 1000
         let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parameters
+        let mutable p = net.parametersVector
         for _ in 0..steps do
             let g = dsharp.grad (loss inputs targets) p
             p <- p - lr * g
@@ -382,7 +394,7 @@ type TestModel () =
     member _.TestModelDropout () =
         let m = Dropout(1.)
         let x = dsharp.randn([10;10])
-        Assert.CheckEqual(m.parameters.shape, [| 0 |])
+        Assert.CheckEqual(m.parametersVector.shape, [| 0 |])
         m.train()
         let xtrain = x --> m
         Assert.CheckEqual(x.zerosLike(), xtrain)
@@ -881,3 +893,42 @@ type TestModel () =
                                                [  0.0364,  -8.8851]]]]).unsqueeze(0)
 
         Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
+    
+    [<Test>]
+    member _.TestModelVAE () =
+        // Fits a little VAE to structured noise
+        let xdim, zdim, n = 8, 4, 16
+        let m = VAE(xdim*xdim, zdim)
+        let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
+
+        let lr, steps = 1e-3, 50
+        let optimizer = Adam(m, lr=dsharp.tensor(lr))
+        let loss0 = float <| m.loss(x)
+        let mutable loss = loss0
+        for _ in 0..steps do
+            m.reverseDiff()
+            let l = m.loss(x)
+            l.reverse()
+            optimizer.step()
+            loss <- float l
+
+        Assert.Less(loss, loss0/2.)
+
+    [<Test>]
+    member _.TestModelParameterNames () =
+        let lin1 = Linear(10, 10)
+        let lin1Names = lin1.parameters.values.Keys |> Seq.toArray
+        let lin1NamesCorrect = [|"Linear-weight"; "Linear-bias"|]
+
+        let lin2 = lin1 --> lin1
+        let lin2Names = lin2.parameters.values.Keys |> Seq.toArray
+        let lin2NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"|]
+
+        let lin3 = lin1 --> lin1 --> lin1
+        let lin3Names = lin3.parameters.values.Keys |> Seq.toArray
+        let lin3NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"; "Linear-weight__3"; "Linear-bias__3"|]
+
+        Assert.AreEqual(lin1NamesCorrect, lin1Names)
+        Assert.AreEqual(lin2NamesCorrect, lin2Names)
+        Assert.AreEqual(lin3NamesCorrect, lin3Names)
+

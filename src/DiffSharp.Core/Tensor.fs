@@ -286,6 +286,8 @@ type Tensor internal (data: TensorData) =
     /// Gets the shape of the tensor
     member t.shape = t.primalRaw.Shape
 
+    member internal t.shapeFullBounds = shapeToFullBounds(t.shape)
+
     /// Gets the number of dimensions of the tensor
     member t.dim = t.primalRaw.Dim
 
@@ -780,51 +782,14 @@ type Tensor internal (data: TensorData) =
             sb.AppendLine() |> ignore
         sb.ToString()
 
-    /// <summary>Save tensor to an image file using png or jpg format</summary>
-    member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) =
-        let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
-        let c, h, w = pixels.shape.[0], pixels.shape.[1], pixels.shape.[2]        
-        let image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector>(w, h)
-        for y=0 to h-1 do
-            for x=0 to w-1 do
-                let r, g, b = 
-                    if c = 1 then
-                        let v = float32(pixels.[0, y, x])
-                        v, v, v
-                    else
-                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
-                image.Item(x, y) <- SixLabors.ImageSharp.PixelFormats.RgbaVector(r, g, b)
-        let fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create)
-        let encoder =
-            if fileName.EndsWith(".jpg") then
-                SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() :> SixLabors.ImageSharp.Formats.IImageEncoder
-            elif fileName.EndsWith(".png") then
-                SixLabors.ImageSharp.Formats.Png.PngEncoder() :> SixLabors.ImageSharp.Formats.IImageEncoder
-            else
-                failwithf "Expecting fileName (%A) to end with .png or .jpg" fileName
-        image.Save(fs, encoder)
-        fs.Close()
-
-    /// <summary>Load an image file and return it as a tensor</summary>
-    static member loadImage(fileName:string, ?normalize:bool, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
-        let normalize = defaultArg normalize false
-        let image:SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.RgbaVector> = SixLabors.ImageSharp.Image.Load(fileName)
-        let pixels = Array3D.init 3 image.Height image.Width (fun c y x -> let p = image.Item(x, y)
-                                                                           if c = 0 then p.R
-                                                                           elif c = 1 then p.G
-                                                                           else p.B)
-        let mutable pixels:Tensor = Tensor.create(pixels, ?dtype=dtype, ?device=device, ?backend=backend)
-        if normalize then pixels <- pixels.normalize()
-        pixels
-
     member internal t.GetSlice(bounds:int[,]) =
-        // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
-        let fullBounds = Array2D.init t.dim 3 (fun i j -> if j=0 then 0 elif j=1 then t.shape.[i]-1 else 0)
+        let fullBounds = t.shapeFullBounds |> Array2D.copy
         bounds |> Array2D.iteri (fun i j v -> 
             if j=1 && v >= t.shape.[i] then failwithf "Index outside the bounds of Tensor shape %A" t.shape
             fullBounds.[i, j] <- v)
-        // printfn "t.GetSlice fullBounds\n %A" fullBounds
+        if fullBounds = t.shapeFullBounds then t // We don't need to slice as the result of the slicing would be the same with this existing tensor
+        else
         match t.data with
         | TensorC(ap) -> TensorC(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
@@ -1704,6 +1669,8 @@ type Tensor internal (data: TensorData) =
     /// <param name="shape">The desired shape of returned tensor.</param>
     member a.view(shape:seq<int>) =
         let shape = shape |> Shape.create |> Shape.complete a.nelement  // Handles -1 semantics
+        if a.shape = shape then a // Do nothing if the shapes are the same
+        else
         Shape.checkCanView a.shape shape
         let inline fRaw(a:RawTensor) = a.ViewT(shape)
         let inline fTensor(a:Tensor) = a.view(shape)
@@ -2003,6 +1970,8 @@ type Tensor internal (data: TensorData) =
     member a.addSlice(location:seq<int>, b:Tensor) =
         let location = location |> Seq.toArray
         Shape.checkCanAddSlice a.shape location b.shape
+        if a.shape = b.shape && location |> Array.forall ((=) 0) then a + b // No need to do the slice addition below
+        else
         let inline fRaw(a:RawTensor,b) = a.AddTTSlice(location, b)
         let inline fTensor(a:Tensor,b) = a.addSlice(location, b)
         let inline dfTensorFwdTT(cp,ap,ad:Tensor,bp:Tensor,bd:Tensor) = ad.addSlice(location, bd)
@@ -2338,32 +2307,20 @@ type Tensor internal (data: TensorData) =
         let mutable bderivative = b.zerosLike()
         if not aConst then
             // propagate to a
-            //aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2|])
-            for k=0 to outputChannels-1 do
-                let b = bFlipped.[k].view([|inputChannels; 1; kernelLength|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]]
-                let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; -1|])
-                let mutable ad = d.conv1d(b, padding=kernelLength-1)
-                if padding > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; [0; inputChannels-1; 1]; [padding; padding + inputLength - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputLength|])
-                aderivative <- aderivative + ad
+            let mutable ad = cderivative.conv1d(bFlipped.transpose(0, 1), padding=kernelLength-1)
+            if padding > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; [0; inputChannels-1; 0]; [padding; padding + inputLength - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputLength|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            //bderivative <- b.zerosLike()
-            for n=0 to batchSize-1 do
-                let aa = a.[n].view([|inputChannels; 1; inputLength|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
-                let d = cderivative.[n]
-                for k=0 to outputChannels-1 do
-                    let dd = d.[k].view([|1; 1; cderivative.shape.[2]|])
-                    let mutable bd = aa.conv1d(dd, padding=padding)
-                    bd <- bd.view([|1; inputChannels; bd.shape.[2]|])
-                    let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelLength-1;1]]
-                    bd <- bd.GetSlice(cBounds)                 
-                    bd <- bd.view([|1; inputChannels; kernelLength|])
-                    bderivative <- bderivative.addSlice([|k; 0; 0|], bd)
+            let aa = a.transpose(0, 1)
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv1d(cd, padding=padding).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelLength-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)
         aderivative, bderivative
     
     /// <summary>Applies a 1D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
@@ -2437,36 +2394,23 @@ type Tensor internal (data: TensorData) =
         let mutable bderivative = b.zerosLike()
         if not aConst then
             // propagate to a
-            //aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2;3|])
-            for k=0 to outputChannels-1 do
-                let b = bFlipped.[k].view([|inputChannels; 1; kernelHeight; kernelWidth|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]; [0; cderivative.shape.[3]-1; 1]]
-                let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; cderivative.shape.[2]; cderivative.shape.[3]|])
-                let mutable ad : Tensor = d.conv2d(b, paddings=[|kernelHeight-1; kernelWidth-1|])
-                if paddings.[0] > 0 || paddings.[1] > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; 
-                                           [0; inputChannels-1; 1]; 
-                                           [paddings.[0]; paddings.[0] + inputHeight - 1; 1]; 
-                                           [paddings.[1]; paddings.[1] + inputWidth - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputHeight; inputWidth|])
-                aderivative <- aderivative  + ad
+            let mutable ad = cderivative.conv2d(bFlipped.transpose(0, 1), paddings=[|kernelHeight-1; kernelWidth-1|])
+            if paddings.[0] > 0 || paddings.[1] > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; 
+                                       [0; inputChannels-1; 0]; 
+                                       [paddings.[0]; paddings.[0] + inputHeight - 1; 0]; 
+                                       [paddings.[1]; paddings.[1] + inputWidth - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputHeight; inputWidth|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            //bderivative <- b.zerosLike()
-            for n=0 to batchSize-1 do
-                let aa = a.[n].view([|inputChannels; 1; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
-                let d = cderivative.[n]
-                for k=0 to outputChannels-1 do
-                    let dd = d.[k].view([|1; 1; cderivative.shape.[2]; cderivative.shape.[3]|])
-                    let mutable bd = aa.conv2d(dd, paddings=paddings)
-                    // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                    bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]|])
-                    let cBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
-                    bd <- bd.GetSlice(cBounds)                 
-                    bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                    bderivative <- bderivative.addSlice([|k; 0; 0; 0|], bd)
+            let aa = a.transpose(0, 1)
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv2d(cd, paddings=paddings).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)
         aderivative, bderivative
     
     /// <summary>Applies a 2D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
@@ -2544,37 +2488,24 @@ type Tensor internal (data: TensorData) =
         let mutable bderivative = b.zerosLike()
         if not aConst then
             // propagate to a
-            //aderivative <- a.zerosLike()
             let bFlipped = b.flip([|2;3;4|])
-            for k=0 to outputChannels-1 do
-                let b = bFlipped.[k].view([|inputChannels; 1; kernelDepth; kernelHeight; kernelWidth|])
-                let dBounds = array2D [[0; batchSize-1; 1]; [k; k; 1]; [0; cderivative.shape.[2]-1; 1]; [0; cderivative.shape.[3]-1; 1]; [0; cderivative.shape.[4]-1; 1]]
-                let d = cderivative.GetSlice(dBounds).view([|batchSize; 1; cderivative.shape.[2]; cderivative.shape.[3]; cderivative.shape.[4]|])
-                let mutable ad : Tensor = d.conv3d(b, paddings=[|kernelDepth-1; kernelHeight-1; kernelWidth-1|])
-                if paddings.[0] > 0 || paddings.[1] > 0 || paddings.[2] > 0 then
-                    let adBounds = array2D [[0; batchSize-1; 1]; 
-                                           [0; inputChannels-1; 1]; 
-                                           [paddings.[0]; paddings.[0] + inputDepth - 1; 1]; 
-                                           [paddings.[1]; paddings.[1] + inputHeight - 1; 1];
-                                           [paddings.[2]; paddings.[2] + inputWidth - 1; 1]]
-                    ad <- ad.GetSlice(adBounds)
-                    ad <- ad.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
-                aderivative <- aderivative  + ad
+            let mutable ad = cderivative.conv3d(bFlipped.transpose(0, 1), paddings=[|kernelDepth-1; kernelHeight-1; kernelWidth-1|])
+            if paddings.[0] > 0 || paddings.[1] > 0 || paddings.[2] > 0 then
+                let adBounds = array2D [[0; batchSize-1; 0]; 
+                                       [0; inputChannels-1; 0]; 
+                                       [paddings.[0]; paddings.[0] + inputDepth - 1; 0]; 
+                                       [paddings.[1]; paddings.[1] + inputHeight - 1; 0];
+                                       [paddings.[2]; paddings.[2] + inputWidth - 1; 0]]
+                ad <- ad.GetSlice(adBounds)
+                ad <- ad.view([|batchSize; inputChannels; inputDepth; inputHeight; inputWidth|])
+            aderivative <- a.zerosLike().addSlice([|0; 0; 0; 0; 0|], ad)
         if not bConst then
             // propagate to b
-            //bderivative <- b.zerosLike()
-            for n=0 to batchSize-1 do
-                let aa = a.[n].view([|inputChannels; 1; inputDepth; inputHeight; inputWidth|]) // treat size-one batch of a c-channel image as a size-c batch of one-channel images
-                let d = cderivative.[n]
-                for k=0 to outputChannels-1 do
-                    let dd = d.[k].view([|1; 1; cderivative.shape.[2]; cderivative.shape.[3]; cderivative.shape.[4]|])
-                    let mutable bd = aa.conv3d(dd, paddings=paddings)
-                    // bd <- bd.view([|1; inputChannels; kernelHeight; kernelWidth|])
-                    bd <- bd.view([|1; inputChannels; bd.shape.[2]; bd.shape.[3]; bd.shape.[4]|])
-                    let bdBounds = array2D [[0;0;1]; [0;inputChannels-1;1]; [0;kernelDepth-1;1]; [0;kernelHeight-1;1]; [0;kernelWidth-1;1]]
-                    bd <- bd.GetSlice(bdBounds)
-                    bd <- bd.view([|1; inputChannels; kernelDepth; kernelHeight; kernelWidth|])
-                    bderivative <- bderivative.addSlice([|k; 0; 0; 0; 0|], bd)
+            let aa = a.transpose(0, 1)
+            let cd = cderivative.transpose(0, 1)
+            let bd = aa.conv3d(cd, paddings=paddings).transpose(0, 1)
+            let bdBounds = array2D [[0;outputChannels-1;0]; [0;inputChannels-1;0]; [0;kernelDepth-1;0]; [0;kernelHeight-1;0]; [0;kernelWidth-1;0]]
+            bderivative <- bd.GetSlice(bdBounds)                
         aderivative, bderivative
 
     /// <summary>Applies a 3D transposed convolution operator over an input signal composed of several input planes, sometimes also called 'deconvolution'.</summary>
