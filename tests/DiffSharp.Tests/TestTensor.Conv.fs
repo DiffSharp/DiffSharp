@@ -1595,8 +1595,8 @@ type TestTensorConvolutions () =
             Assert.True(t3s2Correct.allclose(t3s2, 0.01))
             Assert.True(t3s13Correct.allclose(t3s13, 0.01))
             Assert.True(t3s2p1Correct.allclose(t3s2p1, 0.01))
-            Assert.True(t3s23p32Correct.allclose(t3s23p32, 0.01))
-            Assert.True(t3p1d2Correct.allclose(t3p1d2, 0.01))
+            Assert.True(t3s23p32Correct.allclose(t3s23p32, 0.02))
+            Assert.True(t3p1d2Correct.allclose(t3p1d2, 0.02))
             Assert.True(t3p22d23Correct.allclose(t3p22d23, 0.01))
             Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
 
