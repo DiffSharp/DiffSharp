@@ -2,6 +2,7 @@
 #I "../tests/DiffSharp.Tests.ShapeChecking/bin/Debug/netcoreapp3.1"
 #r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.ShapeChecking.dll"
 #r "System.Runtime.dll"
 (*** condition: fsx ***)
@@ -41,8 +42,14 @@ open DiffSharp.ShapeChecking
 
 let Assert b = if not b then failwith "assertion constraint failed"
 
-[<ShapeCheck("X")>]
-let f (x: Int) = ()
+[<ShapeCheck("N,M")>]
+let f (x: Tensor) = 
+   //let res = x.transpose(1,2)
+   let res = dsharp.cat[x;x;x;x] //x.transpose(1,2)
+   res
+
+
+(*
 
 /// Variational auto-encoder example in DiffSharp (shape-aware)
 //
@@ -117,7 +124,6 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
 
 
 
-(*
 dsharp.config(backend=Backend.Reference, device=Device.CPU)
 dsharp.seed(0)
 
@@ -145,4 +151,3 @@ for epoch = 0 to epochs do
             samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
 
 *)
-printfn "hello"

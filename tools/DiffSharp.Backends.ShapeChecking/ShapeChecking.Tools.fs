@@ -9,6 +9,13 @@ open DiffSharp.Backends.ShapeChecking
 open System.Runtime.CompilerServices
 open System.Collections.Concurrent
 
+type ShapeCheckingReturnType =
+    ((int (* severity *) * 
+      string (* prefix *) * 
+      int (* number *) * 
+      (string * int * int * int * int)[] * (* stack locations *)
+      (* message *) string)[])
+
 [<AutoOpen>]
 module ShapeCheckingAutoOpens =
     type SymScope with 
@@ -346,8 +353,8 @@ module Tools =
                     match v with
                     | :? Int as n -> Some (nm, n)
                     | :? int as n -> Some (nm, Int n)
-                    | :? (option<int>) as n when n.IsSome -> Some (nm, Int n.Value)
-                    | :? (option<Int>) as n when n.IsSome -> Some (nm, n.Value)
+                    | :? (int option) as n when n.IsSome -> Some (nm, Int n.Value)
+                    | :? (Int option) as n when n.IsSome -> Some (nm, n.Value)
                     | _ -> None)
             |> Map.ofArray
         
@@ -405,10 +412,7 @@ type ShapeCheckAttribute internal (given: obj[]) =
     member attr.RunChecks(target: obj (* System.Type | System.MethodInfo *) ,
              loc: (string * int * int * int * int), 
              subTargets: (MethodInfo * obj * (string * int * int * int * int))[]) 
-            : (int (* severity *) * 
-               int (* number *) * 
-               (string * int * int * int * int)[] *  (* location stack *)
-               string (* message*))[] =
+            : ShapeCheckingReturnType =
 
         let _ = System.Runtime.InteropServices.NativeLibrary.Load("libz3", System.Reflection.Assembly.GetExecutingAssembly(), Nullable())
         let optionals = true
@@ -444,7 +448,7 @@ type ShapeCheckAttribute internal (given: obj[]) =
             let stack = 
                 [| for m in diag.LocationStack do
                         (m.File, m.StartLine, m.StartColumn, m.EndLine, m.EndColumn) |]
-            (diag.Severity, diag.Number, stack, diag.Message) |]
+            (diag.Severity, "SC", diag.Number, stack, diag.Message) |]
 
 [<AutoOpen>]
 module MoreTools =

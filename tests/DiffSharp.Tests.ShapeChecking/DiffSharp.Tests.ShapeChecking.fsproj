@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\..\tools\DiffSharp.Backends.ShapeChecking\DiffSharp.Backends.ShapeChecking.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />

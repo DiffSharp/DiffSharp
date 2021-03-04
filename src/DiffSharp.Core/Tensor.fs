@@ -1385,9 +1385,8 @@ type Tensor =
           if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.dim
           // Note: symbolics skip this
           if a.symbolic then 
-              let outputShape = Array.copy a.shapex.Dims
-              outputShape.[dim] <- 1I
-              a.zerosLikex(shape=Shape outputShape)
+              let outputShape = Shape [ yield! a.shapex.Dims.[0..dim-1]; yield! a.shapex.Dims.[dim+1..] ]
+              a.zerosLikex(shape=outputShape)
           else
             let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0I elif j=1 then a.shapex.[i]-1 else 0I)
             sBounds.[dim, 1] <- 0I
