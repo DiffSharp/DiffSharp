@@ -763,6 +763,9 @@ module ShapeAutoOpens =
              let len = bounds.[i, 1] - bounds.[i, 0] + 1
              yield len|]
 
+    let shapeToFullBounds (shape: Shape) =
+        Array2D.init (shape.Length) 3 (fun i j -> if j=0 then 0I elif j=1 then shape.[i]-1I else 0I)
+
     /// Mirrors the coordinates in the given dimensions in the context of the given shape.
     let mirrorCoordinates (coordinates: int[]) (shape: int[]) (mirrorDims: int[]) =
         if coordinates.Length <> shape.Length then failwithf "Expecting coordinates and shape of the same dimension, received %A, %A" coordinates.Length shape.Length

@@ -1,5 +1,7 @@
+#!/usr/bin/env -S dotnet fsi
+
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests.ShapeChecking/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests.ShapeChecking/bin/Debug/net5.0"
 #r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Reference.dll"
@@ -84,7 +86,7 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
         let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
 
-    let latent mu (logVar:Tensor) =
+    let sampleLatent mu (logVar:Tensor) =
         let std = dsharp.exp(0.5*logVar)
         let eps = dsharp.randnLike(std)
         eps.mul(std).add(mu)
@@ -96,26 +98,25 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
         activationLast <| dec.[dec.Length-1].forward(h)
 
     member _.encodeDecode(x:Tensor) =
-        let mu, logVar = encode (x.viewx(Shape [|Int -1; xyDim|]))
-        let z = latent mu logVar
+        let mu, logVar = encode (x.view([-1; xDim]))
+        let z = sampleLatent mu logVar
         decode z, mu, logVar
-
-    [<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |], ReturnShape=[| |])>]
-    member m.loss(x: Tensor) =
-        let xRecon, mu, logVar = m.encodeDecode x
-        let target = x.view(Shape [|Int -1; xyDim|])
-        let bce = dsharp.bceLoss(xRecon, target, reduction="sum") 
-        let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
-        bce + kl
-
-    [<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
-    member _.sample(?numSamples:Int) = 
-        let numSamples = defaultArg numSamples (Int 1)
-        dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
     [<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |] , ReturnShape=[| "𝐵"; "𝑋*𝑌" |] )>]
     override m.forward(x) =
         let x, _, _ = m.encodeDecode(x) in x
+
+    override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
+
+    //[<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
+    static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
+        let bce = dsharp.bceLoss(xRecon, x.viewAs(xRecon), reduction="sum")
+        let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
+        bce + kl
+
+    member _.sample(?numSamples:Int) = 
+        let numSamples = defaultArg numSamples (Int 1)
+        dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xyDim hDims zDim
 
@@ -127,27 +128,39 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
 dsharp.config(backend=Backend.Reference, device=Device.CPU)
 dsharp.seed(0)
 
-let trainSet = MNIST("./mnist", train=true, transform=id)
-let trainLoader = trainSet.loader(batchSize=32, shuffle=true)
+let epochs = 2
+let batchSize = 32
+let validInterval = 250
+let numSamples = 32
 
-let model = VAE(28, 28, 16, [512; 256])
-printfn "%A" model
+let trainSet = MNIST("../data", train=true, transform=id)
+let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
+let validSet = MNIST("../data", train=false, transform=id)
+let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
+
+let model = VAE(28*28, 20, [400])
+printfn "Model: %A" model
 
 let optimizer = Adam(model, learningRate=dsharp.tensor(0.001))
 
-let epochs = 2
-for epoch = 0 to epochs do
+for epoch = 1 to epochs do
     for i, x, _ in trainLoader.epoch() do
         printfn "loader: x.shapex = %A" x.shapex
         model.reverseDiff()
         let l = model.loss(x)
         l.reverse()
         optimizer.step()
-        printfn "epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
+        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
 
-        if i % 250 = 249 then
-            printfn "Saving samples"
-            let samples = model.sample(Int 64).view([-1; 1; 28; 28])
-            samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
+        if i % validInterval = 0 then
+            let mutable validLoss = dsharp.zero()
+            for _, x, _ in validLoader.epoch() do
+                validLoss <- validLoss + model.loss(x, normalize=false)
+            validLoss <- validLoss / validSet.length
+            printfn "Validation loss: %A" (float validLoss)
+            let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
+            printfn "Saving %A samples to %A" numSamples fileName
+            let samples = model.sample(numSamples).view([-1; 1; 28; 28])
+            samples.saveImage(fileName)
 
 *)

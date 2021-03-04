@@ -27,15 +27,15 @@ type ModelOptimizer(model:Model) =
     inherit Optimizer()
 
     /// <summary>TBD</summary>
-    member val model = model
+    member o.step() = model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
     /// <summary>TBD</summary>
-    member o.step() = model.parametersDict.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member val model = model
 
 /// <summary>TBD</summary>
-type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
     inherit ModelOptimizer(model)
-    let learningRate = defaultArg learningRate (dsharp.tensor(1e-3))
+    let lr = defaultArg lr (dsharp.tensor(1e-3))
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
     let mutable momInit = false
@@ -51,7 +51,7 @@ type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightD
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.parametersDict.map(fun (t:Tensor) -> t.derivative)
+                momBuffer <- model.parameters.map(fun (t:Tensor) -> t.derivative)
                 momInit <- true
             let mb = momBuffer.[name]
             let mb = mb.mul(mom).add(d)
@@ -59,13 +59,13 @@ type SGD(model, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightD
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
-        t - learningRate * d
+        t - lr * d
 
 
 /// <summary>TBD</summary>
-type Adam(model, ?learningRate:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
+type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
     inherit ModelOptimizer(model)
-    let learningRate = defaultArg learningRate (dsharp.tensor(1e-3))
+    let lr = defaultArg lr (dsharp.tensor(1e-3))
     let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
     let eps = defaultArg eps (dsharp.tensor(1e-8))
@@ -82,8 +82,8 @@ type Adam(model, ?learningRate:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
         if stateStep = 0 then
-            stateExpAvg <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.parametersDict.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvg <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
+            stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
         stateStep <- stateStep + 1
         let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
@@ -92,7 +92,7 @@ type Adam(model, ?learningRate:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor
         let biasCorrection1 = 1. - beta1 ** stateStep
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
-        let stepSize = learningRate / biasCorrection1
+        let stepSize = lr / biasCorrection1
         t - stepSize * (expAvg/denom)
 
 
@@ -229,8 +229,8 @@ type optim =
             ) |> Seq.iter ignore
 
     /// <summary>TBD</summary>
-    static member sgd(f, x0:Tensor, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
-        let learningRate = defaultArg learningRate (dsharp.tensor(0.001))
+    static member sgd(f, x0:Tensor, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let lr = defaultArg lr (dsharp.tensor(0.001))
         let mutable momBuffer = dsharp.zero()
         let mutable momInit = false
         let nesterov = defaultArg nesterov true
@@ -245,12 +245,12 @@ type optim =
                 if nesterov then p <- p.add(momBuffer*mom)
                 else p <- momBuffer
             | None -> ()
-            f, x - learningRate * p
+            f, x - lr * p
         optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
     /// <summary>TBD</summary>
-    static member adam(f, x0:Tensor, ?learningRate:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
-        let learningRate = defaultArg learningRate (dsharp.tensor(1e-3))
+    static member adam(f, x0:Tensor, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?iters:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let lr = defaultArg lr (dsharp.tensor(1e-3))
         let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
         let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
         let eps = defaultArg eps (dsharp.tensor(1e-8))
@@ -266,16 +266,16 @@ type optim =
             let biasCorrection2 = 1. - beta2 ** step
             let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
             let p = expAvg / denom
-            let stepSize = learningRate / biasCorrection1
+            let stepSize = lr / biasCorrection1
             f, x - stepSize * p
         optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
     /// <summary>TBD</summary>
-    static member sgd(model, dataloader, loss, ?learningRate:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
-        let optimizer = SGD(model, ?learningRate=learningRate, ?momentum=momentum, ?nesterov=nesterov, ?weightDecay=weightDecay, ?reversible=reversible)
+    static member sgd(model, dataloader, loss, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let optimizer = SGD(model, ?lr=lr, ?momentum=momentum, ?nesterov=nesterov, ?weightDecay=weightDecay, ?reversible=reversible)
         optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
     /// <summary>TBD</summary>
-    static member adam(model, dataloader, loss, ?learningRate:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
-        let optimizer = Adam(model, ?learningRate=learningRate, ?beta1=beta1, ?beta2=beta2, ?eps=eps, ?weightDecay=weightDecay, ?reversible=reversible)
+    static member adam(model, dataloader, loss, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+        let optimizer = Adam(model, ?lr=lr, ?beta1=beta1, ?beta2=beta2, ?eps=eps, ?weightDecay=weightDecay, ?reversible=reversible)
         optim.optimizeModel(model, optimizer, dataloader, loss, ?iters=iters, ?epochs=epochs, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)

@@ -8,9 +8,14 @@ namespace DiffSharp.Util
 
 open System
 open System.Collections
+open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open FSharp.Reflection
-open DiffSharp
+open System.IO
+open System.IO.Compression
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Formatters.Binary
+
 
 /// Represents a differentiation nesting level.
 type NestingLevel =
@@ -282,11 +287,11 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<int64> with
         | Some (values, shape) -> (values |> Array.map ofInt64, shape)
         | None -> 
-        match value |> tryFlatArrayAndShape<int8>  with
-        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
-        | None -> 
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
+        | None -> 
+        match value |> tryFlatArrayAndShape<int8>  with
+        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<int16>  with
         | Some (values, shape) -> (values |> Array.map ofInt16, shape)
@@ -322,3 +327,69 @@ module DataConverter =
 
     let dataOfValuesForBool (value:obj) =
         dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
+
+
+/// Contains auto-opened utilities related to the DiffSharp programming model.
+[<AutoOpen>]
+module UtilAutoOpens =
+
+    /// Returns a function that memoizes the given function using a lookaside table.
+    let memoize fn =
+        let cache = new Dictionary<_,_>()
+        fun x ->
+            match cache.TryGetValue x with
+            | true, v -> v
+            | false, _ ->
+                let v = fn x
+                cache.Add(x,v)
+                v
+
+    /// Saves the given value to the given local file using binary serialization.
+    let saveBinary (object: 'T) (fileName:string) =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Create)
+        let cs = new GZipStream(fs, CompressionMode.Compress)
+        try
+            formatter.Serialize(cs, object)
+            cs.Flush()
+            cs.Close()
+            fs.Close()
+        with
+        | :? SerializationException as e -> failwithf "Cannot save to file. %A" e.Message
+
+    /// Loads the given value from the given local file using binary serialization.
+    let loadBinary (fileName:string):'T =
+        let formatter = BinaryFormatter()
+        let fs = new FileStream(fileName, FileMode.Open)
+        let cs = new GZipStream(fs, CompressionMode.Decompress)
+        try
+            let object = formatter.Deserialize(cs) :?> 'T
+            cs.Close()
+            fs.Close()
+            object
+        with
+        | :? SerializationException as e -> failwithf "Cannot load from file. %A" e.Message
+
+    /// Value of log(sqrt(2*Math.PI)).
+    let logSqrt2Pi = log(sqrt(2. * Math.PI))
+
+    /// Value of log(10).
+    let log10Val = log 10.
+
+    /// Indents all lines of the given string by the given number of spaces.
+    let indentNewLines (str:String) numSpaces =
+        let mutable ret = ""
+        let spaces = String.replicate numSpaces " "
+        str |> Seq.toList |> List.iter (fun c -> 
+                            if c = '\n' then 
+                                ret <- ret + "\n" + spaces
+                            else ret <- ret + string c)
+        ret
+
+    /// Left-pads a string up to the given length.
+    let stringPad (s:string) (width:int) =
+        if s.Length > width then s
+        else String.replicate (width - s.Length) " " + s
+
+    /// Left-pads a string to match the length of another string.
+    let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
