@@ -1,5 +1,7 @@
+#!/usr/bin/env -S dotnet fsi
+
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
@@ -28,7 +30,6 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
-open System
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
@@ -60,7 +61,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
         let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
 
-    let latent mu (logVar:Tensor) =
+    let sampleLatent mu (logVar:Tensor) =
         let std = dsharp.exp(0.5*logVar)
         let eps = dsharp.randnLike(std)
         eps.mul(std).add(mu)
@@ -73,7 +74,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 
     member _.encodeDecode(x:Tensor) =
         let mu, logVar = encode (x.view([-1; xDim]))
-        let z = latent mu logVar
+        let z = sampleLatent mu logVar
         decode z, mu, logVar
 
     override m.forward(x) =
@@ -82,13 +83,15 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
 
     static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
-        let bce = dsharp.bceLoss(xRecon, x.view([|-1; 28*28|]), reduction="sum")
+        let bce = dsharp.bceLoss(xRecon, x.viewAs(xRecon), reduction="sum")
         let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
         bce + kl
 
-    member m.loss(x) =
+    member m.loss(x, ?normalize:bool) =
+        let normalize = defaultArg normalize true
         let xRecon, mu, logVar = m.encodeDecode x
-        VAE.loss(xRecon, x, mu, logVar)
+        let loss = VAE.loss(xRecon, x, mu, logVar)
+        if normalize then loss / x.shape.[0] else loss
 
     member _.sample(?numSamples:int) = 
         let numSamples = defaultArg numSamples 1
@@ -98,25 +101,37 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
-let trainSet = MNIST("./mnist", train=true, transform=id)
-let trainLoader = trainSet.loader(batchSize=32, shuffle=true)
+let epochs = 2
+let batchSize = 32
+let validInterval = 250
+let numSamples = 32
 
-let model = VAE(28*28, 16, [512; 256])
-printfn "%A" model
+let trainSet = MNIST("../data", train=true, transform=id)
+let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
+let validSet = MNIST("../data", train=false, transform=id)
+let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
+
+let model = VAE(28*28, 20, [400])
+printfn "Model: %A" model
 
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
-let epochs = 2
-for epoch = 0 to epochs do
+for epoch = 1 to epochs do
     for i, x, _ in trainLoader.epoch() do
         model.reverseDiff()
         let l = model.loss(x)
         l.reverse()
         optimizer.step()
-        printfn "epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
+        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
 
-        if i % 250 = 0 then
-            printfn "Saving samples"
-            let samples = model.sample(64).view([-1; 1; 28; 28])
-            samples.saveImage(sprintf "samples_%A_%A.png" epoch i)
+        if i % validInterval = 0 then
+            let mutable validLoss = dsharp.zero()
+            for _, x, _ in validLoader.epoch() do
+                validLoss <- validLoss + model.loss(x, normalize=false)
+            validLoss <- validLoss / validSet.length
+            printfn "Validation loss: %A" (float validLoss)
+            let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
+            printfn "Saving %A samples to %A" numSamples fileName
+            let samples = model.sample(numSamples).view([-1; 1; 28; 28])
+            samples.saveImage(fileName)
 

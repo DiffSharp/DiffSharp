@@ -13,6 +13,10 @@ module DiffSharp.Compose
 // static member sub(b:Tensor) = fun (a:Tensor) -> a.sub(b)
 
 type dsharp with
+    /// <summary>TBD</summary>
+    static member tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (value:obj) -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    
+    /// <summary>TBD</summary>
     /// <summary>Returns a tensor where each row contains <paramref name="numSamples"/> indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="numSamples">Number of samples to draw</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
@@ -175,7 +179,7 @@ type dsharp with
     static member flatten(startDim:int, ?endDim:int) = fun (a:Tensor) -> a.flatten(startDim=startDim, ?endDim=endDim)
 
     /// <summary>TBD</summary>
-    static member leakyRelu(negativeSlope:float) = fun (a:Tensor) -> a.leakyRelu(negativeSlope=negativeSlope)
+    static member leakyRelu(?negativeSlope:float) = fun (a:Tensor) -> a.leakyRelu(?negativeSlope=negativeSlope)
 
     /// <summary>TBD</summary>
     static member softmax(dim:int) = fun (a:Tensor) -> a.softmax(dim)
@@ -242,9 +246,6 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) = fun (a:Tensor) -> a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?asciiPalette=asciiPalette)
-
-    /// <summary>TBD</summary>
-    static member saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool) = fun (a:Tensor) -> a.saveImage(fileName=fileName, ?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
 
     /// <summary>TBD</summary>
     static member cast(dtype:Dtype) = fun (a:Tensor) -> a.cast(dtype)
