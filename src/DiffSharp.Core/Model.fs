@@ -726,11 +726,11 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
 
 /// <summary>Variational Auto-Encoder</summary>
-type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
+type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let hDims = defaultArg hDims (let d = (xDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
-    let activation = defaultArg activation dsharp.relu
-    let activationLast = defaultArg activationLast dsharp.sigmoid
+    let nonlinearity = defaultArg nonlinearity dsharp.relu
+    let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
     let dims =
         if hDims.Length = 0 then
             [|xDim; zDim|]
@@ -746,7 +746,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
     let encode x =
         let mutable x = x
         for i in 0..enc.Length-3 do
-            x <- activation <| enc.[i].forward(x)
+            x <- nonlinearity <| enc.[i].forward(x)
         let mu = enc.[enc.Length-2].forward(x)
         let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
@@ -759,8 +759,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
     let decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- activation <| dec.[i].forward(h)
-        activationLast <| dec.[dec.Length-1].forward(h)
+            h <- nonlinearity <| dec.[i].forward(h)
+        nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
     /// <summary>TBD</summary>
     member _.encodeDecode(x:Tensor) =
