@@ -155,11 +155,11 @@ let tok = TextTokenizer()
 let dataset = tok.dataset(text, seqLen)
 let loader = dataset.loader(batchSize=4)
 
-let rnn = RNN(tok.length, tok.length, numLayers=1, batchFirst=true)
+let rnn = RNN(tok.length, tok.length, numLayers=3, batchFirst=true)
 print rnn
-let optimizer = Adam(rnn, lr=dsharp.tensor(0.001))
+let optimizer = Adam(rnn, lr=dsharp.tensor(0.0005))
 
-let epochs = 5
+let epochs = 15
 let start = System.DateTime.Now
 for epoch = 1 to epochs do
     for i, x, t in loader.epoch() do
@@ -167,6 +167,7 @@ for epoch = 1 to epochs do
         let target = t.[*,1..]
         // printfn "input  %A" input.shape
         // printfn "target %A" target.shape
+        rnn.reset()
         rnn.reverseDiff()
         let output = input --> rnn
         // printfn "output %A" output.shape
