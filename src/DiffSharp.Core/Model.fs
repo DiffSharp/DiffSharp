@@ -320,7 +320,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let bias = defaultArg bias true
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.zero())
+    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     do base.add([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
@@ -338,7 +338,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
@@ -357,7 +357,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
@@ -376,7 +376,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
@@ -394,7 +394,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
     /// <summary>TBD</summary>
@@ -413,7 +413,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
     /// <summary>TBD</summary>
@@ -432,7 +432,7 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
     /// <summary>TBD</summary>
