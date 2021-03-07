@@ -124,9 +124,9 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
 
 let text = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
 
-type TextTokenizer(?sampleText) = 
-    let sampleText = defaultArg sampleText """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
-    let chars = sampleText |> Seq.distinct |> Seq.toArray
+type TextTokenizer(?example) = 
+    let example = defaultArg example """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
+    let chars = example |> Seq.distinct |> Seq.toArray
     member _.length = chars.Length
     member _.charToIndex(c) =
         let i = 
@@ -151,13 +151,19 @@ type TextTokenizer(?sampleText) =
 
 
 let seqLen = 32
-let tok = TextTokenizer()
+let tok = TextTokenizer(text)
 let dataset = tok.dataset(text, seqLen)
 let loader = dataset.loader(batchSize=4)
 
-let rnn = RNN(tok.length, tok.length, numLayers=3, batchFirst=true)
+let rnn = RNN(tok.length, 512, numLayers=2, batchFirst=true)
+let net =
+    rnn
+    --> dsharp.view([-1; 512])
+    --> Linear(512, tok.length)
+
 print rnn
-let optimizer = Adam(rnn, lr=dsharp.tensor(0.0005))
+let optimizer = Adam(net, lr=dsharp.tensor(0.0005))
+
 
 let epochs = 15
 let start = System.DateTime.Now
@@ -165,22 +171,16 @@ for epoch = 1 to epochs do
     for i, x, t in loader.epoch() do
         let input =  x.[*,..seqLen-2]
         let target = t.[*,1..]
-        // printfn "input  %A" input.shape
-        // printfn "target %A" target.shape
         rnn.reset()
-        rnn.reverseDiff()
-        let output = input --> rnn
-        // printfn "output %A" output.shape
-        // printfn ""
-        let loss = dsharp.crossEntropyLoss(output.transpose(1, 2), target)
+        net.reverseDiff()
+        let output = input --> net
+        let loss = dsharp.crossEntropyLoss(output.view([-1;tok.length]), target.view(-1))
         loss.reverse()
         optimizer.step()
         print loss
 
-
-// let mutable c = ["e"]
-// for i in 0..5 do
-//     let cc = c |> List.last |> tok.textToTensor |> dsharp.unsqueeze(1) |> rnn.forward |> dsharp.squeeze(1) |> tok.tensorToText
-//     c <- c@[cc]
-
-// print c
+rnn.reset()
+let mutable c = "a"
+for i in 0..15 do
+    print c
+    c <- c |> tok.textToTensor |> dsharp.unsqueeze(1) |> net.forward |> dsharp.squeeze(1) |> tok.tensorToText
