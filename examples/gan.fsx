@@ -71,70 +71,70 @@ let train lr =
     let dopt = Adam(discriminator, lr=lr, beta1=dsharp.tensor(0.5))
     let start = System.DateTime.Now
     for epoch = 1 to epochs do
-        for i, x, _ in loader.epoch() |> Seq.truncate 20 do
-            let labelReal = dsharp.ones([batchSize; 1])
-            let labelFake = dsharp.zeros([batchSize; 1])
+      for i, x, _ in loader.epoch() |> Seq.truncate 20 do
+        let labelReal = dsharp.ones([batchSize; 1])
+        let labelFake = dsharp.zeros([batchSize; 1])
 
-            // update discriminator
-            generator.stripDiff()
-            discriminator.reverseDiff()
+        // update discriminator
+        generator.stripDiff()
+        discriminator.reverseDiff()
 
-            let doutput = x --> discriminator
-            let dx = doutput.mean() |> float
-            let dlossReal = dsharp.bceLoss(doutput, labelReal)
+        let doutput = x --> discriminator
+        let dx = doutput.mean() |> float
+        let dlossReal = dsharp.bceLoss(doutput, labelReal)
 
-            let z = dsharp.randn([batchSize; nz])
-            let goutput = z --> generator
-            let doutput = goutput --> discriminator
-            let dgz = doutput.mean() |> float
-            let dlossFake = dsharp.bceLoss(doutput, labelFake)
+        let z = dsharp.randn([batchSize; nz])
+        let goutput = z --> generator
+        let doutput = goutput --> discriminator
+        let dgz = doutput.mean() |> float
+        let dlossFake = dsharp.bceLoss(doutput, labelFake)
 
-            let dloss = dlossReal + dlossFake
-            dloss.reverse()
-            dopt.step()
-            dlosses.Add(float dloss)
-            dxs.Add(float dx)
-            dgzs.Add(float dgz)
+        let dloss = dlossReal + dlossFake
+        dloss.reverse()
+        dopt.step()
+        dlosses.Add(float dloss)
+        dxs.Add(float dx)
+        dgzs.Add(float dgz)
 
-            // update generator
-            generator.reverseDiff()
-            discriminator.stripDiff()
+        // update generator 
+        generator.reverseDiff()
+        discriminator.stripDiff()
 
-            let goutput = z --> generator
-            let doutput = goutput --> discriminator
-            let gloss = dsharp.bceLoss(doutput, labelReal)
-            gloss.reverse()
-            gopt.step()
-            glosses.Add(gloss)
+        let goutput = z --> generator
+        let doutput = goutput --> discriminator
+        let gloss = dsharp.bceLoss(doutput, labelReal)
+        gloss.reverse()
+        gopt.step()
+        glosses.Add(gloss)
 
-            printfn "%A lr: %0.8f Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A" (System.DateTime.Now - start) (float lr) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz
+        printfn "%A lr: %0.8f Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A" (System.DateTime.Now - start) (float lr) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz
 
-            //if i % validInterval = 0 then
-            //    let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
-            //    printfn "Saving real samples to %A" realFileName
-            //    ((x+1)/2).saveImage(realFileName, normalize=false)
-            //    let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
-            //    printfn "Saving fake samples to %A" fakeFileName
-            //    let goutput = fixedNoise --> generator
-            //    ((goutput.view([-1;1;28;28])+1)/2).saveImage(fakeFileName, normalize=false)
+        //if i % validInterval = 0 then
+        //    let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+        //    printfn "Saving real samples to %A" realFileName
+        //    ((x+1)/2).saveImage(realFileName, normalize=false)
+        //    let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+        //    printfn "Saving fake samples to %A" fakeFileName
+        //    let goutput = fixedNoise --> generator
+        //    ((goutput.view([-1;1;28;28])+1)/2).saveImage(fakeFileName, normalize=false)
 
-            //    let plt = Pyplot()
-            //    plt.plot(glosses |> dsharp.tensor, label="Generator")
-            //    plt.plot(dlosses |> dsharp.tensor, label="Discriminator")
-            //    plt.xlabel("Iterations")
-            //    plt.ylabel("Loss")
-            //    plt.legend()
-            //    plt.tightLayout()
-            //    plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
+        //    let plt = Pyplot()
+        //    plt.plot(glosses |> dsharp.tensor, label="Generator")
+        //    plt.plot(dlosses |> dsharp.tensor, label="Discriminator")
+        //    plt.xlabel("Iterations")
+        //    plt.ylabel("Loss")
+        //    plt.legend()
+        //    plt.tightLayout()
+        //    plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
 
-            //    let plt = Pyplot()
-            //    plt.plot(dxs |> dsharp.tensor, label="d(x)")
-            //    plt.plot(dgzs |> dsharp.tensor, label="d(g(z))")
-            //    plt.xlabel("Iterations")
-            //    plt.ylabel("Score")
-            //    plt.legend()
-            //    plt.tightLayout()
-            //    plt.savefig (sprintf "gan_score_epoch_%A_minibatch_%A.pdf" epoch (i+1))       
+        //    let plt = Pyplot()
+        //    plt.plot(dxs |> dsharp.tensor, label="d(x)")
+        //    plt.plot(dgzs |> dsharp.tensor, label="d(g(z))")
+        //    plt.xlabel("Iterations")
+        //    plt.ylabel("Score")
+        //    plt.legend()
+        //    plt.tightLayout()
+        //    plt.savefig (sprintf "gan_score_epoch_%A_minibatch_%A.pdf" epoch (i+1))       
     Seq.sum glosses
 
 //train (dsharp.tensor(0.0002))
