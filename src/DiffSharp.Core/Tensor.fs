@@ -231,6 +231,9 @@ type Tensor =
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep
 
+    ///  Returns the input tensor but with any support for automatic differentiation removed.
+    member t.stripDiff() = t.primal
+
     /// Indicates if a tensor includes support for forward-mode differentiation
     member t.isForwardDiff() =
         match t with

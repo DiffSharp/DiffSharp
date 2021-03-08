@@ -30,6 +30,9 @@ type Parameter =
     member p.noDiff() = p.value <- p.value.noDiff()
 
     /// <summary>TBD</summary>
+    member p.stripDiff() = p.value <- p.value.stripDiff()
+
+    /// <summary>TBD</summary>
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
@@ -92,6 +95,9 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
+
+    /// <summary>TBD</summary>
+    member d.stripDiff() = d.iter(fun (_, p) -> p.stripDiff())
 
     /// <summary>TBD</summary>
     member d.move(?dtype, ?device, ?backend) = 
@@ -223,6 +229,9 @@ type Model() =
 
     /// <summary>TBD</summary>
     member m.noDiff() = m.parameters.noDiff()
+
+    /// <summary>TBD</summary>
+    member m.stripDiff() = m.parameters.stripDiff()
 
     /// <summary>TBD</summary>
     member m.move(?dtype, ?device, ?backend) = m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
