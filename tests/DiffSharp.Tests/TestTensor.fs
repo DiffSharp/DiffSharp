@@ -808,8 +808,8 @@ type TestTensor () =
                 | Int64 -> ""
                 | Float16
                 | BFloat16
-                | Float32 -> ".000000"
-                | Float64 -> ".000000"
+                | Float32 -> "."
+                | Float64 -> "."
             let dtypeText = 
                 if combo.dtype = Dtype.Default then
                     ""
@@ -3003,6 +3003,17 @@ type TestTensor () =
             isInvalidOp(fun () -> combo.tensor([1.0]).log())
 
     [<Test>]
+    member _.TestTensorSafeLog () =
+        for combo in Combos.FloatingPointExcept16s do 
+            let t1 = combo.tensor([0.; -5.; System.Double.NegativeInfinity; 0.6505; 0.3781; 0.4025])
+            let epsilon = 1e-12
+            let t1Log = t1.safelog(epsilon)
+            let t1LogCorrect = combo.tensor([-27.631, -27.631, -27.631, -0.430014, -0.972597, -0.91006])
+
+            Assert.True(t1Log.allclose(t1LogCorrect, 0.01))
+            Assert.CheckEqual(t1Log.dtype, combo.dtype)
+
+    [<Test>]
     member _.TestTensorLog10T () =
         for combo in Combos.FloatingPointExcept16s do 
             let t1 = combo.tensor([0.1285; 0.5812; 0.6505; 0.3781; 0.4025])
@@ -3520,6 +3531,14 @@ type TestTensor () =
             let t = combo.tensor([-4,-3,-2,-1,0,1,2,3,4])
             let tClamped = dsharp.clamp(t, -2, 3)
             let tClampedCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
+            Assert.CheckEqual(tClampedCorrect, tClamped)
+
+    [<Test>]
+    member _.TestTensorClampInf () =
+        for combo in Combos.FloatingPointExcept16s do 
+            let t = combo.tensor([System.Double.NegativeInfinity, System.Double.PositiveInfinity])
+            let tClamped = dsharp.clamp(t, -100, 100)
+            let tClampedCorrect = combo.tensor([-100, 100])
             Assert.CheckEqual(tClampedCorrect, tClamped)
 
     [<Test>]

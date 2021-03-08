@@ -787,6 +787,11 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     static member log(input:Tensor) = input.log()
 
+    /// <summary>Returns the logarithm of the tensor after clamping the tensor so that all its elements are greater than epsilon. This is to avoid a -inf result for elements equal to zero.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="epsilon">The smallest value a tensor element can take before the logarithm is applied. Default: 1e-12</param>
+    static member safelog(input:Tensor, ?epsilon:float) = input.safelog(?epsilon=epsilon)
+
     /// <summary>Returns a new tensor with the logarithm to the base 10 of the elements of input.</summary>
     /// <remarks>\[y_{i} = \log_{10} (x_{i})\]</remarks>
     /// <param name="input">The input tensor.</param>
