@@ -113,15 +113,6 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
         r.hidden <- dsharp.stack(newhs)
         if batchFirst then output.transpose(0, 1) else output
 
-
-// let rnn = RNN(32, 10, bidirectional=true, numLayers=2, bias=false, dropout=0.3)
-// let x = dsharp.randn([4; 16; 32])
-// print rnn.hidden.shape
-// let h = x --> rnn
-// print rnn.hidden.shape
-// print h.shape 
-// rnn.reset()
-
 let text = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
 
 type TextTokenizer(?example) = 
@@ -135,13 +126,14 @@ type TextTokenizer(?example) =
             with
             | _ -> failwithf "Given char '%A' is not a part of this tokenizer %A" c chars
         i
-    member t.textToIndices(text) = text |> Seq.map t.charToIndex |> Seq.toArray
+    member t.textToIndices(text:string) = text |> Seq.map t.charToIndex |> Seq.toArray
     member t.indicesToTensor(indices) = indices |> Array.map (fun i -> dsharp.onehot(t.length, i)) |> dsharp.stack
-    member t.textToTensor(text) = t.textToIndices(text) |> t.indicesToTensor
     member t.indexToChar(index) = chars.[index]
+    member t.textToTensor(texts:string[]) = texts |> Array.map (t.textToIndices >> t.indicesToTensor) |> dsharp.stack
     member t.tensorToText(tensor:Tensor) =
-        if tensor.dim <> 2 then failwithf "Expecting a 2d tensor with shape seqLen x features, received tensor with shape %A" tensor.shape
-        [|for i in 0..tensor.shape.[0]-1 do tensor.[i].argmax().[0]|] |> Array.map t.indexToChar |> System.String
+        if tensor.dim <> 3 then failwithf "Expecting a 3d tensor with shape batchSize x seqLen x features, received tensor with shape %A" tensor.shape 
+        let t2text (tens:Tensor) = [|for i in 0..tens.shape.[0]-1 do tens.[i].argmax().[0]|] |> Array.map t.indexToChar |> System.String |> string
+        [|for i in 0..tensor.shape.[0]-1 do tensor.[i] |> t2text|]
     member t.dataset(text:string, seqLength) =
         if seqLength > text.Length then failwithf "Expecting text.Length (%A) >= seqLength (%A)" text.Length seqLength
         let sequences = [|for i in 0..(text.Length - seqLength + 1)-1 do text.Substring(i, seqLength)|] |> Array.map t.textToIndices
@@ -153,7 +145,7 @@ type TextTokenizer(?example) =
 let seqLen = 32
 let tok = TextTokenizer(text)
 let dataset = tok.dataset(text, seqLen)
-let loader = dataset.loader(batchSize=4)
+let loader = dataset.loader(batchSize=4, shuffle=true)
 
 let rnn = RNN(tok.length, 512, numLayers=2, batchFirst=true)
 let net =
@@ -165,22 +157,18 @@ print rnn
 let optimizer = Adam(net, lr=dsharp.tensor(0.0005))
 
 
-let epochs = 15
-let start = System.DateTime.Now
-for epoch = 1 to epochs do
-    for i, x, t in loader.epoch() do
-        let input =  x.[*,..seqLen-2]
-        let target = t.[*,1..]
-        rnn.reset()
-        net.reverseDiff()
-        let output = input --> net
-        let loss = dsharp.crossEntropyLoss(output.view([-1;tok.length]), target.view(-1))
-        loss.reverse()
-        optimizer.step()
-        print loss
+// let epochs = 5
+// let start = System.DateTime.Now
+// for epoch = 1 to epochs do
+//     for i, x, t in loader.epoch() do
+//         let input =  x.[*,..seqLen-2]
+//         let target = t.[*,1..]
+//         rnn.reset()
+//         net.reverseDiff()
+//         let output = input --> net
+//         let loss = dsharp.crossEntropyLoss(output.view([-1;tok.length]), target.view(-1))
+//         loss.reverse()
+//         optimizer.step()
+//         print loss
 
-rnn.reset()
-let mutable c = "a"
-for i in 0..15 do
-    print c
-    c <- c |> tok.textToTensor |> dsharp.unsqueeze(1) |> net.forward |> dsharp.squeeze(1) |> tok.tensorToText
+// WORK IN PROGRESS
