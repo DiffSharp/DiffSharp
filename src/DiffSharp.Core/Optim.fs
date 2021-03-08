@@ -10,6 +10,7 @@ open DiffSharp.Shorten
 open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Util
+open DiffSharp.Numerical.Shorten
 
 /// <namespacedoc>
 ///   <summary>Contains types and functionality related to optimizing tensor models and functions.</summary>
@@ -233,8 +234,10 @@ type optim =
         let nesterov = defaultArg nesterov true
         let mutable p = dsharp.zero()
         let update x =
-            let f, g = dsharp.fg f x
-            printfn $"f = {f}, g = {g}"
+            let v, g = dsharp.fg f x
+            printfn $"v = {v}, g = {g}"
+            //let nf, ng = dsharp.numfg 0.0000001 f x
+            //printfn $"v = {v}, g = {g}, nf = {nf}, ng = {ng}"
             p <- g
             match momentum with
             | Some mom ->
@@ -243,7 +246,7 @@ type optim =
                 if nesterov then p <- p.add(momBuffer*mom)
                 else p <- momBuffer
             | None -> ()
-            f, x - lr * p
+            v, x - lr * p
         optim.optimizeFun(update, x0, ?iters=iters, ?threshold=threshold, ?print=print, ?printEvery=printEvery, ?printPrefix=printPrefix, ?printPostfix=printPostfix)
 
     /// <summary>TBD</summary>

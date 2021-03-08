@@ -76,7 +76,8 @@ let train lr =
         let labelFake = dsharp.zeros([batchSize; 1])
 
         // update discriminator
-        generator.stripDiff()
+        //printfn "i = %d" i
+        generator.noDiff()
         discriminator.reverseDiff()
 
         let doutput = x --> discriminator
@@ -98,7 +99,7 @@ let train lr =
 
         // update generator 
         generator.reverseDiff()
-        discriminator.stripDiff()
+        discriminator.noDiff()
 
         let goutput = z --> generator
         let doutput = goutput --> discriminator
