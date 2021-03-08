@@ -591,28 +591,44 @@ type Tensor =
     member a.hasinfnan() = a.hasinf() || a.hasnan()
 
     /// Gets the index of a maximum value in the tensor.
-    member a.argmax() = a.primalRaw.MaxIndexT()
+    member a.argmax() =
+        a.primalRaw.MaxIndexT()
+
+    /// <summary>Returns the indexes of maximum values of the primal of the tensor, reducing the given dimension.</summary>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    member a.argmax(dim:int, ?keepDim: bool) =
+        let keepDim = defaultArg keepDim false
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
+        a.primalRaw.MaxReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Gets the index of a minimum value in the tensor.
-    member a.argmin() = a.primalRaw.MinIndexT()
+    member a.argmin() =
+        a.primalRaw.MinIndexT()
+
+    /// <summary>Returns the indexes of minimum values of the primal of the tensor, reducing the given dimension.</summary>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    member a.argmin(dim: int, ?keepDim: bool) =
+        let keepDim = defaultArg keepDim false
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
+        a.primalRaw.MinReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Returns the maximum value of all elements in the input tensor.
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
+    /// Returns the element-wise maximum of the elements in the two tensors.
+    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2
+
+    /// Returns the element-wise maximum of the tensor and the given scalar
+    member a.max(b:scalar) = a.max(a.scalarLike(b))
+
     /// Returns the minimum value of all elements in the input tensor.
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
-    /// Returns the element-wise maximum of the elements in the two tensors.
-    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
-
-    /// Returns the element-wise maximum of the tensor and the given data.
-    member a.max(b) = a.max(a.like(b))
-
     /// Returns the element-wise minimum of the elements in the two tensors.
-    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2
 
-    /// Returns the element-wise minimum of the tensor and the given data.
-    member a.min(b) = a.min(a.like(b))
+    /// Returns the element-wise minimum of the tensor and the given scalar
+    member a.min(b:scalar) = a.min(a.scalarLike(b))
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
