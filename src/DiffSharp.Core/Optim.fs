@@ -234,6 +234,7 @@ type optim =
         let mutable p = dsharp.zero()
         let update x =
             let f, g = dsharp.fg f x
+            printfn $"f = {f}, g = {g}"
             p <- g
             match momentum with
             | Some mom ->

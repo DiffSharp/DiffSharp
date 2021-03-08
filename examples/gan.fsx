@@ -5,7 +5,7 @@
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
 // #r "nuget: libtorch-cuda-10.2-linux-x64, 1.7.0.1"
-System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+//System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -15,122 +15,131 @@ open DiffSharp.Data
 open DiffSharp.Optim
 open DiffSharp.Util
 
-dsharp.config(backend=Backend.Torch, device=Device.CPU)
-dsharp.seed(4)
-
 let nz = 128
 
-let generator =
-    dsharp.view([-1;nz])
-    --> Linear(nz, 256)
-    --> dsharp.leakyRelu(0.2)
-    --> Linear(256, 512)
-    --> dsharp.leakyRelu(0.2)
-    --> Linear(512, 1024)
-    --> dsharp.leakyRelu(0.2)
-    --> Linear(1024, 28*28)
-    --> dsharp.tanh
 
-let discriminator =
-    dsharp.view([-1; 28*28])
-    --> Linear(28*28, 1024)
-    --> dsharp.leakyRelu(0.2)
-    --> dsharp.dropout(0.3)
-    --> Linear(1024, 512)
-    --> dsharp.leakyRelu(0.2)
-    --> dsharp.dropout(0.3)
-    --> Linear(512, 256)
-    --> dsharp.leakyRelu(0.2)
-    --> dsharp.dropout(0.3)
-    --> Linear(256, 1)
-    --> dsharp.sigmoid
+dsharp.config(backend=Backend.Torch, device=Device.CPU)
+let train lr = 
+    dsharp.seed(4)
+    let mnist = MNIST("../data", train=true, transform=fun t -> (t - 0.5) / 0.5)
 
-print "Generator"
-print generator
+    let generator =
+        dsharp.view([-1;nz])
+        --> Linear(nz, 256)
+        --> dsharp.leakyRelu(0.2)
+        --> Linear(256, 512)
+        --> dsharp.leakyRelu(0.2)
+        --> Linear(512, 1024)
+        --> dsharp.leakyRelu(0.2)
+        --> Linear(1024, 28*28)
+        --> dsharp.tanh
 
-print "Discriminator"
-print discriminator
+    let discriminator =
+        dsharp.view([-1; 28*28])
+        --> Linear(28*28, 1024)
+        --> dsharp.leakyRelu(0.2)
+        --> dsharp.dropout(0.3)
+        --> Linear(1024, 512)
+        --> dsharp.leakyRelu(0.2)
+        --> dsharp.dropout(0.3)
+        --> Linear(512, 256)
+        --> dsharp.leakyRelu(0.2)
+        --> dsharp.dropout(0.3)
+        --> Linear(256, 1)
+        --> dsharp.sigmoid
 
-let epochs = 10
-let batchSize = 16
-let validInterval = 100
+    print "Generator"
+    print generator
 
-let mnist = MNIST("../data", train=true, transform=fun t -> (t - 0.5) / 0.5)
-let loader = mnist.loader(batchSize=batchSize, shuffle=true)
+    print "Discriminator"
+    print discriminator
 
-let gopt = Adam(generator, lr=dsharp.tensor(0.0002), beta1=dsharp.tensor(0.5))
-let dopt = Adam(discriminator, lr=dsharp.tensor(0.0002), beta1=dsharp.tensor(0.5))
+    let epochs = 1
+    let batchSize = 16
+    let validInterval = 100
 
-let fixedNoise = dsharp.randn([batchSize; nz])
+    let fixedNoise = dsharp.randn([batchSize; nz])
 
-let glosses = ResizeArray()
-let dlosses = ResizeArray()
-let dxs = ResizeArray()
-let dgzs = ResizeArray()
+    let glosses = ResizeArray()
+    let dlosses = ResizeArray()
+    let dxs = ResizeArray()
+    let dgzs = ResizeArray()
 
-let start = System.DateTime.Now
-for epoch = 1 to epochs do
-    for i, x, _ in loader.epoch() do
-        let labelReal = dsharp.ones([batchSize; 1])
-        let labelFake = dsharp.zeros([batchSize; 1])
+    let loader = mnist.loader(batchSize=batchSize, shuffle=false)
 
-        // update discriminator
-        generator.noDiff()
-        discriminator.reverseDiff()
+    let gopt = Adam(generator, lr=lr, beta1=dsharp.tensor(0.5))
+    let dopt = Adam(discriminator, lr=lr, beta1=dsharp.tensor(0.5))
+    let start = System.DateTime.Now
+    for epoch = 1 to epochs do
+        for i, x, _ in loader.epoch() |> Seq.truncate 20 do
+            let labelReal = dsharp.ones([batchSize; 1])
+            let labelFake = dsharp.zeros([batchSize; 1])
 
-        let doutput = x --> discriminator
-        let dx = doutput.mean() |> float
-        let dlossReal = dsharp.bceLoss(doutput, labelReal)
+            // update discriminator
+            generator.noDiff()
+            discriminator.reverseDiff()
 
-        let z = dsharp.randn([batchSize; nz])
-        let goutput = z --> generator
-        let doutput = goutput --> discriminator
-        let dgz = doutput.mean() |> float
-        let dlossFake = dsharp.bceLoss(doutput, labelFake)
+            let doutput = x --> discriminator
+            let dx = doutput.mean() |> float
+            let dlossReal = dsharp.bceLoss(doutput, labelReal)
 
-        let dloss = dlossReal + dlossFake
-        dloss.reverse()
-        dopt.step()
-        dlosses.Add(float dloss)
-        dxs.Add(float dx)
-        dgzs.Add(float dgz)
+            let z = dsharp.randn([batchSize; nz])
+            let goutput = z --> generator
+            let doutput = goutput --> discriminator
+            let dgz = doutput.mean() |> float
+            let dlossFake = dsharp.bceLoss(doutput, labelFake)
 
-        // update generator
-        generator.reverseDiff()
-        discriminator.noDiff()
+            let dloss = dlossReal + dlossFake
+            dloss.reverse()
+            dopt.step()
+            dlosses.Add(float dloss)
+            dxs.Add(float dx)
+            dgzs.Add(float dgz)
 
-        let goutput = z --> generator
-        let doutput = goutput --> discriminator
-        let gloss = dsharp.bceLoss(doutput, labelReal)
-        gloss.reverse()
-        gopt.step()
-        glosses.Add(float gloss)
+            // update generator
+            generator.reverseDiff()
+            discriminator.noDiff()
 
-        printfn "%A Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz
+            let goutput = z --> generator
+            let doutput = goutput --> discriminator
+            let gloss = dsharp.bceLoss(doutput, labelReal)
+            gloss.reverse()
+            gopt.step()
+            glosses.Add(gloss)
 
-        if i % validInterval = 0 then
-            let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
-            printfn "Saving real samples to %A" realFileName
-            ((x+1)/2).saveImage(realFileName, normalize=false)
-            let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
-            printfn "Saving fake samples to %A" fakeFileName
-            let goutput = fixedNoise --> generator
-            ((goutput.view([-1;1;28;28])+1)/2).saveImage(fakeFileName, normalize=false)
+            printfn "%A lr: %0.8f Epoch: %A/%A minibatch: %A/%A gloss: %A dloss: %A d(x): %A d(g(z)): %A" (System.DateTime.Now - start) (float lr) epoch epochs (i+1) loader.length (float gloss) (float dloss) dx dgz
 
-            let plt = Pyplot()
-            plt.plot(glosses |> dsharp.tensor, label="Generator")
-            plt.plot(dlosses |> dsharp.tensor, label="Discriminator")
-            plt.xlabel("Iterations")
-            plt.ylabel("Loss")
-            plt.legend()
-            plt.tightLayout()
-            plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
+            //if i % validInterval = 0 then
+            //    let realFileName = sprintf "gan_real_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+            //    printfn "Saving real samples to %A" realFileName
+            //    ((x+1)/2).saveImage(realFileName, normalize=false)
+            //    let fakeFileName = sprintf "gan_fake_samples_epoch_%A_minibatch_%A.png" epoch (i+1)
+            //    printfn "Saving fake samples to %A" fakeFileName
+            //    let goutput = fixedNoise --> generator
+            //    ((goutput.view([-1;1;28;28])+1)/2).saveImage(fakeFileName, normalize=false)
 
-            let plt = Pyplot()
-            plt.plot(dxs |> dsharp.tensor, label="d(x)")
-            plt.plot(dgzs |> dsharp.tensor, label="d(g(z))")
-            plt.xlabel("Iterations")
-            plt.ylabel("Score")
-            plt.legend()
-            plt.tightLayout()
-            plt.savefig (sprintf "gan_score_epoch_%A_minibatch_%A.pdf" epoch (i+1))            
+            //    let plt = Pyplot()
+            //    plt.plot(glosses |> dsharp.tensor, label="Generator")
+            //    plt.plot(dlosses |> dsharp.tensor, label="Discriminator")
+            //    plt.xlabel("Iterations")
+            //    plt.ylabel("Loss")
+            //    plt.legend()
+            //    plt.tightLayout()
+            //    plt.savefig (sprintf "gan_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
+
+            //    let plt = Pyplot()
+            //    plt.plot(dxs |> dsharp.tensor, label="d(x)")
+            //    plt.plot(dgzs |> dsharp.tensor, label="d(g(z))")
+            //    plt.xlabel("Iterations")
+            //    plt.ylabel("Score")
+            //    plt.legend()
+            //    plt.tightLayout()
+            //    plt.savefig (sprintf "gan_score_epoch_%A_minibatch_%A.pdf" epoch (i+1))       
+    Seq.sum glosses
+
+//train (dsharp.tensor(0.0002))
+//printfn "---------------"
+//train (dsharp.tensor(0.0002))
+//printfn "---------------"
+Optim.optim.sgd (train, x0=dsharp.tensor(0.0003), lr=dsharp.tensor(0.1))
+
