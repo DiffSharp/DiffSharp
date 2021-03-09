@@ -329,11 +329,11 @@ type Tensor =
     member t.summary() =
         match t with
         | TensorC(_) -> sprintf "Tensor %A" t.shape
-        | TensorF(_) -> sprintf "TensorF %A" t.shape
-        | TensorR(_,_,o,_,_) -> 
+        | TensorF(_, _, at) -> sprintf "TensorF(%A, _, %A)" t.shape at
+        | TensorR(_,_,o,_,at) -> 
             let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
             let fields = c.GetFields()
-            sprintf "TensorR %A %s" t.shape c.Name
+            sprintf "TensorR-%s(%A, _, _, _, %A)" c.Name t.shape at 
 
     /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
 

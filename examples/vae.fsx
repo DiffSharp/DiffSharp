@@ -3,6 +3,7 @@
 (*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
@@ -33,6 +34,7 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
+open DiffSharp.Util
 open DiffSharp.Data
 
 
@@ -101,30 +103,39 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
-let epochs = 2
-let batchSize = 32
-let validInterval = 250
-let numSamples = 32
+let v (x: double) = dsharp.tensor(x)
 
 let trainSet = MNIST("../data", train=true, transform=id)
-let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
 let validSet = MNIST("../data", train=false, transform=id)
-let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
+let train(lr, epochs, maxbatches) = 
+    let maxbatches = defaultArg maxbatches System.Int32.MaxValue
+    let batchSize = 32
+    let validInterval = 250
+    let numSamples = 32
 
-let model = VAE(28*28, 20, [400])
-printfn "Model: %A" model
+    let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
 
-let optimizer = Adam(model, lr=dsharp.tensor(0.001))
+    let model = VAE(28*28, 20, [400])
+    printfn "Model: %A lr: %A" model lr
 
-for epoch = 1 to epochs do
-    for i, x, _ in trainLoader.epoch() do
-        model.reverseDiff()
+    let optimizer = Adam(model, lr=lr, reversible=true, beta1=v 0.5)
+
+    let tag = GlobalNestingLevel.Next()
+    let losses = ResizeArray()
+    for epoch = 1 to epochs do
+      for i, x, _ in trainLoader.epoch() |> Seq.truncate maxbatches do
+        model.reverseDiff(tag)
         let l = model.loss(x)
         l.reverse()
         optimizer.step()
-        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
+        model.stripDiff()
+        printfn $"l.primal = {l.primal}"
+        losses.Add(l.primal)
+
+        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A lr: %A" epoch epochs i trainLoader.length (float(l)) lr
 
         if i % validInterval = 0 then
+            let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
             let mutable validLoss = dsharp.zero()
             for _, x, _ in validLoader.epoch() do
                 validLoss <- validLoss + model.loss(x, normalize=false)
@@ -134,4 +145,13 @@ for epoch = 1 to epochs do
             printfn "Saving %A samples to %A" numSamples fileName
             let samples = model.sample(numSamples).view([-1; 1; 28; 28])
             samples.saveImage(fileName)
+
+    Seq.last losses
+
+// Unoptimized learning rate
+//train (v 0.001, 2, None)
+
+
+// Unoptimized learning rate
+Optim.optim.sgd ((fun hyp -> train(hyp, 1, Some 20)), x0=dsharp.tensor(0.00001), lr=dsharp.tensor(0.000000001))
 

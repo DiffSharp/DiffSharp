@@ -225,7 +225,7 @@ type Model() =
     member m.forwardDiff(derivatives:ParameterDict) = m.parameters.forwardDiff(derivatives)
 
     /// <summary>TBD</summary>
-    member m.reverseDiff() = m.parameters.reverseDiff()
+    member m.reverseDiff(?tag) = m.parameters.reverseDiff(?tag=tag)
 
     /// <summary>TBD</summary>
     member m.noDiff() = m.parameters.noDiff()
