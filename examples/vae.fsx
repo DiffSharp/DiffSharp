@@ -58,6 +58,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let encode x =
         let mutable x = x
         for i in 0..enc.Length-3 do
+            let v = enc.[i].forward(x)
             x <- nonlinearity <| enc.[i].forward(x)
         let mu = enc.[enc.Length-2].forward(x)
         let logVar = enc.[enc.Length-1].forward(x)
@@ -107,8 +108,10 @@ let v (x: double) = dsharp.tensor(x)
 
 let trainSet = MNIST("../data", train=true, transform=id)
 let validSet = MNIST("../data", train=false, transform=id)
-let train(lr, epochs, maxbatches) = 
-    let maxbatches = defaultArg maxbatches System.Int32.MaxValue
+let train(learningRate) = 
+    if float learningRate < 0.0 then failwith "learning rate went below zero"
+    let numEpochs = 2
+    let batchSize = 32
     let batchSize = 32
     let validInterval = 250
     let numSamples = 32
@@ -116,42 +119,89 @@ let train(lr, epochs, maxbatches) =
     let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
 
     let model = VAE(28*28, 20, [400])
-    printfn "Model: %A lr: %A" model lr
+    printfn "Model: %A lr: %A" model learningRate
 
-    let optimizer = Adam(model, lr=lr, reversible=true, beta1=v 0.5)
+    let optimizer = Adam(model, lr=learningRate, reversible=true)
+
+    let score() =
+        let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
+        let mutable validLoss = dsharp.zero()
+        for _, x, _ in validLoader.epoch() do
+            validLoss <- validLoss + model.loss(x, normalize=false)
+        validLoss <- validLoss / validSet.length
+        float validLoss
 
     let tag = GlobalNestingLevel.Next()
     let losses = ResizeArray()
-    for epoch = 1 to epochs do
-      for i, x, _ in trainLoader.epoch() |> Seq.truncate maxbatches do
+    for epoch = 1 to numEpochs do
+      for i, x, _ in trainLoader.epoch() do
         model.reverseDiff(tag)
         let l = model.loss(x)
         l.reverse()
         optimizer.step()
         model.stripDiff()
-        printfn $"l.primal = {l.primal}"
+        //let l = dsharp.log l
+        //printfn $"l.primal = {l.primal}"
+        //if l.primal.isForwardDiff() then printfn $"l.primal.derivative = {l.primal.derivative}"
         losses.Add(l.primal)
 
-        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A lr: %A" epoch epochs i trainLoader.length (float(l)) lr
+        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A lr: %A" epoch numEpochs i trainLoader.length (float(l)) learningRate
 
         if i % validInterval = 0 then
-            let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
-            let mutable validLoss = dsharp.zero()
-            for _, x, _ in validLoader.epoch() do
-                validLoss <- validLoss + model.loss(x, normalize=false)
-            validLoss <- validLoss / validSet.length
-            printfn "Validation loss: %A" (float validLoss)
-            let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
-            printfn "Saving %A samples to %A" numSamples fileName
-            let samples = model.sample(numSamples).view([-1; 1; 28; 28])
-            samples.saveImage(fileName)
+            //let validLoss = score()
+            //printfn "Validation loss: %A" (float validLoss)
+            //let fileName = sprintf "vae_samples_epoch_%A_minibatch_%A.png" epoch i
+            //printfn "Saving %A samples to %A" numSamples fileName
+            //let samples = model.sample(numSamples).view([-1; 1; 28; 28])
+            //samples.saveImage(fileName)
 
-    Seq.last losses
+            let plt = Pyplot()
+            plt.plot(losses |> dsharp.tensor, label="Losses")
+            plt.xlabel("Iterations")
+            plt.ylabel("Loss")
+            plt.legend()
+            plt.tightLayout()
+            plt.savefig (sprintf "vae_loss_graph_epoch_%A_minibatch_%A_lr_%f.pdf" epoch (i+1) (float lr))
+
+    let validLoss = score()
+    printfn "Validation loss: %A" (float validLoss)
+
+    let fileName = sprintf "vae_samples_loss_lr_%f.txt" (float learningRate)
+    System.IO.File.WriteAllText(fileName, sprintf "Validation loss: %A" (float validLoss))
+
+    let avgLosses = losses.ToArray()  |> Seq.map float |> Seq.windowed 5 |> Seq.map Seq.average 
+    let fileName = sprintf "vae_samples_losses_lr_%f.txt" (float learningRate)
+    System.IO.File.WriteAllLines(fileName, Array.mapi (fun i k -> sprintf $"%d{i}, %f{k}") (Array.ofSeq avgLosses))
+
+    // Optimize the learning rate via the sum of losses on the final epoch
+    losses |> Seq.sum
+    
+    // Returning running averages
+    losses.ToArray()  |> Seq.map float |> Seq.windowed 10 |> Seq.map Seq.average 
+
+
+// Optimize the learning rate starting with a very poor learning rate
+//Optim.optim.sgd ((fun hyp -> train(hyp, 1, Some 200)), x0=dsharp.tensor(0.00001), lr=dsharp.tensor(0.00000000001))
+//Optim.optim.sgd ((fun hyp -> train(hyp, 1, None)), x0=dsharp.tensor(0.000783917), lr=dsharp.tensor(0.00000000001))
+Optim.optim.sgd (train, x0=v 0.00001, lr=dsharp.tensor(0.0000000002))
+
+// Optimize the learning rate starting with the one given in the paper
+//Optim.optim.sgd ((fun hyp -> train(hyp, 2, None)), x0=dsharp.tensor(0.001), lr=dsharp.tensor(0.00000000001))
+//Optim.optim.sgd ((fun hyp -> train(hyp, 2, None)), x0=dsharp.tensor(0.00136211), lr=dsharp.tensor(0.0000000002))
 
 // Unoptimized learning rate
 //train (v 0.001, 2, None)
 
+let losses1 = train (v 0.0001, 2, None) // a poor learning rate
+let losses2 = train (v 0.001, 2, None)   // the one in the sample python code
+let losses3 = train (v 0.00136211, 2, None)  // the hyper-optimized one 
 
-// Unoptimized learning rate
-Optim.optim.sgd ((fun hyp -> train(hyp, 1, Some 20)), x0=dsharp.tensor(0.00001), lr=dsharp.tensor(0.000000001))
-
+let plt = Pyplot()
+plt.plot(losses1 |> dsharp.tensor, label="lr=0.00010")
+plt.plot(losses2 |> dsharp.tensor, label="lr=0.00100")
+plt.plot(losses3 |> dsharp.tensor, label="lr=0.00136")
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
+plt.legend()
+plt.tightLayout()
+plt.savefig (sprintf "vae_loss_graph.pdf")
