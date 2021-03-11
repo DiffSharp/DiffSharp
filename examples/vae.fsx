@@ -40,16 +40,9 @@ open DiffSharp.ShapeChecking
 
 let Assert b = if not b then failwith "assertion constraint failed"
 
-/// Variational auto-encoder example in DiffSharp (shape-aware)
-//
-// See https://www.compart.com/en/unicode/block/U+1D400 for nice italic characters
-//[<ShapeCheck( "𝑋", "𝑌", "𝑍" )>]
-[<ShapeCheck>]
-type VAE(xDim:Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
+type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let xyDim = xDim * yDim 
-    do Assert (xDim >~ Int 0 ) 
-    do Assert (yDim >~ Int 0 ) 
     let hDims = defaultArg hDims (let d = (xyDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
     let nonlinearity = defaultArg nonlinearity dsharp.relu
     let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
@@ -98,22 +91,17 @@ type VAE(xDim:Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->Tensor, ?non
         let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
         bce + kl
 
-    [<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |], ReturnShape=[| |])>]
     member m.loss(x, ?normalize:bool) =
         let normalize = defaultArg normalize true
         let xRecon, mu, logVar = m.encodeDecode x
         let loss = VAE.loss(xRecon, x, mu, logVar)
         if normalize then loss / x.shape.[0] else loss
 
-    //[<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
-    member _.sample(?numSamples:Int) = 
-        let numSamples = defaultArg numSamples (Int 1)
+    member _.sample(?numSamples:int) = 
+        let numSamples = defaultArg numSamples 1
         dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xyDim hDims zDim
-
-    new (xDim:int, yDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
-        VAE(Int xDim, Int yDim, Int zDim, ?hDims = Option.map (Seq.map Int) hDims, ?activation=activation, ?activationLast=activationLast)
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)

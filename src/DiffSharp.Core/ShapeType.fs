@@ -3,9 +3,11 @@
 open DiffSharp.Util
 
 #if !NO_SYMBOLIC_SHAPES
+open DiffSharp.ShapeChecking
     
 /// Represents the shape of a tensor.  Each dimension may be symbolic.
 [<Struct; CustomEquality; NoComparison>]
+[<Symbolic>]
 type Shape internal (values: int[], dims: Int[]) = 
 
     static member inline internal unop (x: Shape) f1 f2 =
@@ -126,6 +128,20 @@ type Shape internal (values: int[], dims: Int[]) =
     member internal _.ValuesRaw = values
 
     member internal _.DimsRaw = dims
+
+    static member ParseSymbolic(env: Map<string, ISym>, syms: ISymScope, spec: obj, location: obj) : Shape =
+        match spec with 
+        | :? System.Reflection.ParameterInfo as p ->
+            failwithf "%O: argument '%s' needs shape information in ShapeCheck attribute, e.g. [<ShapeCheck([| 1;4;2 |])>] or [<ShapeCheck([| \"N\";\"M\" |])>]  or [<ShapeCheck([| \"N\";\"M\" |])>]  or [<ShapeCheck([| \"N,M\" |])>] " location p.Name
+        | :? int as n -> Shape [| n |]
+        | :? (obj[]) as specs -> Shape [| for spec2 in specs -> Int.ParseSymbolic(env, syms, spec2, location) |]
+        | :? string as text ->
+            let parser = SymbolParser(env, syms, location)
+            let toks = parser.TryParseShapeExpr(text)
+            match toks with 
+            | Some (es, true) -> Shape (Array.map Int.FromSymbol es)
+            | _ -> failwithf "%O: invalid shape %s" location text
+        | specObj -> failwithf "%O: invalid type for shape specification %s" location (specObj.GetType().ToString())
 
 #else
 

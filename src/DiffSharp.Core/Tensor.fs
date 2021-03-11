@@ -6,6 +6,7 @@
 namespace DiffSharp
 
 open DiffSharp.Backends
+open DiffSharp.ShapeChecking
 open DiffSharp.Util
 open System
 
@@ -23,6 +24,7 @@ open System
 ///  </code>
 /// </example>
 [<CustomEquality; CustomComparison>]
+[<Symbolic>]
 type Tensor = 
     internal 
     | TensorC of primalRaw:RawTensor

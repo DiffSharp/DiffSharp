@@ -9,7 +9,6 @@
   <ItemGroup>
     <Compile Include="ShapeChecking.Symbols.fs" />
     <Compile Include="ShapeChecking.RawTensor.fs" />
-    <Compile Include="ShapeChecking.Tools.fs" />
   </ItemGroup>
 
   <ItemGroup>
