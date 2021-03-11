@@ -58,8 +58,6 @@ let f (x: Tensor) =
 type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let xyDim = xDim * yDim 
-    do Assert (xDim >~ Int 0 ) 
-    do Assert (yDim >~ Int 0 ) 
     let hDims = defaultArg hDims (let d = (xyDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
     let nonlinearity = defaultArg nonlinearity dsharp.relu
     let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
@@ -121,7 +119,7 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->T
 
 
 
-dsharp.config(backend=Backend.Reference, device=Device.CPU)
+dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
 let epochs = 2
