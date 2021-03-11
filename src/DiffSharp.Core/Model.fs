@@ -257,7 +257,7 @@ type Model() =
         m.forwardCompose (f target) input parameters
 
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s - nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparameters
 
     /// <summary>TBD</summary>
     static member create ps f =
@@ -320,7 +320,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let bias = defaultArg bias true
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.zero())
+    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     do base.add([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
@@ -338,7 +338,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
@@ -357,7 +357,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
@@ -376,7 +376,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
@@ -394,7 +394,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
     /// <summary>TBD</summary>
@@ -413,7 +413,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
     /// <summary>TBD</summary>
@@ -432,7 +432,7 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let bias = defaultArg bias true
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
-    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.zero()
+    let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.add([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
     /// <summary>TBD</summary>
@@ -726,11 +726,11 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
 
 /// <summary>Variational Auto-Encoder</summary>
-type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
+type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let hDims = defaultArg hDims (let d = (xDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
-    let activation = defaultArg activation dsharp.relu
-    let activationLast = defaultArg activationLast dsharp.sigmoid
+    let nonlinearity = defaultArg nonlinearity dsharp.relu
+    let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
     let dims =
         if hDims.Length = 0 then
             [|xDim; zDim|]
@@ -746,7 +746,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
     let encode x =
         let mutable x = x
         for i in 0..enc.Length-3 do
-            x <- activation <| enc.[i].forward(x)
+            x <- nonlinearity <| enc.[i].forward(x)
         let mu = enc.[enc.Length-2].forward(x)
         let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
@@ -759,8 +759,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activ
     let decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- activation <| dec.[i].forward(h)
-        activationLast <| dec.[dec.Length-1].forward(h)
+            h <- nonlinearity <| dec.[i].forward(h)
+        nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
     /// <summary>TBD</summary>
     member _.encodeDecode(x:Tensor) =
