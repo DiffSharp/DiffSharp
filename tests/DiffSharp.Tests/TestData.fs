@@ -15,6 +15,7 @@ open DiffSharp.Util
 type TestData () =
 
     [<Test>]
+    [<Ignore("https://github.com/DiffSharp/DiffSharp/issues/289")>]
     member _.TestMNISTDataset () =
         // Note: this test can fail if http://yann.lecun.com website goes down or file urls change
         let cd = Directory.GetCurrentDirectory()
