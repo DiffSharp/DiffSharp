@@ -24,20 +24,46 @@ type Optimizer(model:Model) =
     member val model = model
 
     /// <summary>TBD</summary>
-    member o.step() = model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member o.step() = o.updatePre(); model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
     /// <summary>TBD</summary>
     abstract member updateRule: string -> Tensor -> Tensor
 
+    /// <summary>TBD</summary>
+    abstract member updatePre: unit -> unit
+
 
 /// <summary>TBD</summary>
-type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
+/// <param name="llr">hyper learning rate</param>
+/// <param name="hyperdescent">use hyperdescent for learning rate</param>
+type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent:bool) =
     inherit Optimizer(model)
-    let lr = defaultArg lr (dsharp.tensor(1e-3))
+    let hyperdescent = defaultArg hyperdescent false
+    let mutable llr = defaultArg llr (dsharp.tensor(1e-4))
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
     let mutable momInit = false
     let mutable momBuffer = ParameterDict()
+
+    // Fixed single learning rate
+    
+    let mutable lr = defaultArg lr (dsharp.tensor(1e-3))
+
+    // Per parameter grad-with-respect-to-learning rates
+    let mutable glrDictInit = false
+    let mutable glrDict = ParameterDict()
+    // Hyper-gradient of learning rate 
+    let mutable h = dsharp.zero()
+
+    /// <summary>TBD</summary>
+    override o.updatePre () = 
+        if hyperdescent then
+            if not glrDictInit then 
+                glrDict <- model.parameters.map(fun (t: Tensor) -> t.zeroLike())
+                glrDictInit <- true
+            // hypergradient of the learning rate is the dot product of derivatives and previous grads
+            h <- model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
+            lr <- lr - llr * h
 
     /// <summary>TBD</summary>
     override o.updateRule name t = 
@@ -57,13 +83,17 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
+        // see Fig 4 and 5 of https://arxiv.org/pdf/1703.04782.pdf
+        let glr = if nesterov then -d - (match momentum with Some mom -> momBuffer.[name] * mom | None -> dsharp.zero()) else -d
+        glrDict.[name] <- glr
         t - lr * d
 
-
 /// <summary>TBD</summary>
-type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
+type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent: bool) =
     inherit Optimizer(model)
-    let lr = defaultArg lr (dsharp.tensor(1e-3))
+    let mutable lr = defaultArg lr (dsharp.tensor(1e-3))
+    let mutable llr = defaultArg llr (dsharp.tensor(1e-4))
+    let hyperdescent = defaultArg hyperdescent false
     let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
     let eps = defaultArg eps (dsharp.tensor(1e-8))
@@ -72,6 +102,28 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
     let mutable stateExpAvg = ParameterDict()
     let mutable stateExpAvgSq = ParameterDict()
 
+    // Per parameter grad-with-respect-to-learning rates
+    let mutable glrDictInit = false
+    let mutable glrDict = ParameterDict()
+    // Hyper-gradient of learning rate
+    let mutable h = dsharp.zero()
+
+    member o.learningRate = lr
+
+    /// <summary>TBD</summary>
+    override o.updatePre () = 
+        if stateStep = 0 then
+            stateExpAvg <- model.parameters.map(fun (t:Tensor) -> t.zerosLike().add(eps))
+            stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike().add(eps))
+        stateStep <- stateStep + 1
+        if hyperdescent then
+            if not glrDictInit then
+                glrDict <- model.parameters.map(fun (t: Tensor) -> t.zerosLike())
+                glrDictInit <- true
+            // hypergradient is the dot product of derivatives and previous grads
+            h  <- model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
+            lr <- lr - llr * h
+ 
     /// <summary>TBD</summary>
     override o.updateRule name t =
         let mutable d = t.derivative
@@ -79,10 +131,6 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
-        if stateStep = 0 then
-            stateExpAvg <- model.parameters.map(fun (t:Tensor) -> t.zerosLike().add(eps))
-            stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike().add(eps))
-        stateStep <- stateStep + 1
         let expAvg = stateExpAvg.[name].mul(beta1).add((d*(1.-beta1)).add(eps))
         let expAvgSq = stateExpAvgSq.[name].mul(beta2).add((d*d*(1.-beta2)).add(eps))
         stateExpAvg.[name] <- expAvg
@@ -91,6 +139,9 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt())
         let stepSize = lr / biasCorrection1
+        if hyperdescent then
+            let glr = -(expAvg/biasCorrection1) / ((expAvgSq/biasCorrection2).sqrt().add(eps))
+            glrDict.[name] <- glr
         t - stepSize * (expAvg/denom)
 
 /// <summary>TBD</summary>
@@ -111,7 +162,6 @@ type optim =
         let mutable fx = dsharp.zero()
         let mutable xMin = dsharp.zero()
         let mutable fxMin = System.Double.MaxValue
-        let mutable xMax = dsharp.zero()
         let mutable fxMax = System.Double.MinValue
         let mutable fxPrev = System.Double.MinValue    
         let mutable i = -1

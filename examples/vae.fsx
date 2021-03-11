@@ -108,11 +108,10 @@ let v (x: double) = dsharp.tensor(x)
 
 let trainSet = MNIST("../data", train=true, transform=id)
 let validSet = MNIST("../data", train=false, transform=id)
-let train(lr, beta1, beta2, numEpochs, dataLimit) = 
+let train(lr, beta1, beta2, numEpochs, dataLimit, hd) = 
     if float lr < 0.0 then failwith "learning rate went below zero"
     let numEpochs = defaultArg numEpochs 2
     let dataLimit = defaultArg dataLimit System.Int32.MaxValue
-    let batchSize = 32
     let batchSize = 32
     let validInterval = 250
     let numSamples = 32
@@ -122,7 +121,7 @@ let train(lr, beta1, beta2, numEpochs, dataLimit) =
     let model = VAE(28*28, 20, [400])
     printfn "Model: %A lr: %A" model lr
 
-    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, reversible=true)
+    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, hyperdescent=hd, llr=v 0.0000001)
 
     let score() =
         let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
@@ -146,7 +145,7 @@ let train(lr, beta1, beta2, numEpochs, dataLimit) =
         //if l.primal.isForwardDiff() then printfn $"l.primal.derivative = {l.primal.derivative}"
         losses.Add(l.primal)
 
-        printfn $"lr: %f{float lr} beta1: %f{float beta1} beta2: %f{float beta2} epoch: {epoch}/{numEpochs} minibatch: {i}/{trainLoader.length} loss: %f{float l}" 
+        printfn $"lr: %f{float optimizer.learningRate} beta1: %f{float beta1} beta2: %f{float beta2} epoch: {epoch}/{numEpochs} minibatch: {i}/{trainLoader.length} loss: %f{float l}" 
 
         //if i % validInterval = 0 then
         //    //let validLoss = score()
@@ -193,7 +192,12 @@ let train(lr, beta1, beta2, numEpochs, dataLimit) =
 //Optim.optim.sgd ((fun hyp -> train(hyp, 2, None)), x0=dsharp.tensor(0.00136211), lr=dsharp.tensor(0.0000000002))
 
 // Unoptimized learning rate
-//train (v 0.001, 2, None)
+
+// Hyperdescent of learning rate
+let losses1 = train (v 0.001, v 0.9, v 0.999, None, None, true)
+let losses2 = train (v 0.0001, v 0.9, v 0.999, None, None, true)
+let losses3 = train (v 0.001, v 0.9, v 0.999, None, None, false)
+let losses4 = train (v 0.0001, v 0.9, v 0.999, None, None, false)
 
 //let losses1 = train (v 0.0001, 2, None) // a poor learning rate
 //let losses2 = train (v 0.001, 2, None)   // the one in the sample python code
@@ -240,9 +244,9 @@ let train(lr, beta1, beta2, numEpochs, dataLimit) =
 //                 x0=dsharp.tensor([log 0.001; log (1.0-0.9); log (1.0-0.999)]), lr=v 0.0001)
 
 //lr: 0.001185 beta1: 0.587597 beta2: 0.999432
-let lr = 0.001075
-let beta1 = 0.777373
-let beta2 = 0.999467
+//let lr = 0.001075
+//let beta1 = 0.777373
+//let beta2 = 0.999467
 
 
 //lr: 0.002416485222056508 beta1: 0.8328096866607666 beta2: 0.9990000128746033 epoch: 2/2 minibatch: 99/1875 loss: 143.86788940429688
@@ -252,11 +256,13 @@ let beta2 = 0.999467
 //0.00:07:06 |   9 | 1.505446e+004 +
 //Model: VAE(784, [|400|], 20) lr: tensor(0.00243481, fwd)
 
-let losses1 = train (v lr, v beta1, v beta2, None, None)
-let losses2 = train (v 0.001, v 0.9, v 0.999, None, None)
+//let losses1 = train (v lr, v beta1, v beta2, None, None, false)
+//let losses2 = train (v 0.001, v 0.9, v 0.999, None, None, false)
 let plt = Pyplot()
-plt.plot(losses1 |> dsharp.tensor, label= $"lr={lr}, beta1={beta1}, beta2={beta2}")
-plt.plot(losses2 |> dsharp.tensor, label="lr=0.001, beta1=0.9")
+plt.plot(losses1 |> dsharp.tensor, label="lr=0.001 (adaptive)")
+plt.plot(losses2 |> dsharp.tensor, label="lr=0.0001 (adaptive)")
+plt.plot(losses3 |> dsharp.tensor, label="lr=0.001")
+plt.plot(losses4 |> dsharp.tensor, label="lr=0.0001")
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
 plt.legend()
