@@ -60,7 +60,7 @@ module helpers =
             with
                 | _ -> false
         if not success then
-            failwithf "Error or timeout while running process %s" executable
+            printfn "Warning: cannot plot due to error or timeout while running %s" executable
 
 
 // This is a lightweight wrapper roughly compatible with the matplotlib.pyplot API
@@ -114,6 +114,8 @@ type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
         add(sprintf "plt.figure(figsize=(%A,%A))" (fst figSize) (snd figSize))
     member _.legend() = add("plt.legend()")
     member _.tightLayout() = add("plt.tight_layout()")
+    member _.xlabel(label) = add(sprintf "plt.xlabel('%s')" label)
+    member _.ylabel(label) = add(sprintf "plt.ylabel('%s')" label)
     member _.savefig(fileName) =
         add(sprintf "plt.savefig('%s')" fileName)
         runScript pythonExecutable lines timeoutMilliseconds

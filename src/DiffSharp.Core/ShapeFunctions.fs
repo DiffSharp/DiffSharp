@@ -546,6 +546,15 @@ module Shape =
         else
             shape
 
+    let checkCanMinMaxReduce (dim: int) (keepDim: bool) (shape: Shape) =
+        if dim >= shape.Length || dim < 0 then failwithf "Expecting dim to be between 0 and %d" shape.Length
+        let part1 = shape.[..dim-1]
+        let part2 = shape.[dim+1..]
+        Shape
+          [| yield! part1.Dims
+             if keepDim then yield 1I
+             yield! part2.Dims |] 
+
     /// Checks if the given shape is appropriate for an unsqueeze operation and returns the resulting shape.
     let checkCanUnsqueeze (dim: int) (shape: Shape) =
         if dim < 0 || dim > shape.Length then failwithf "Expecting dim in range [0, %A] but received %A" shape.Length dim

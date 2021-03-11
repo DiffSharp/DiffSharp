@@ -372,8 +372,14 @@ type RawTensor() =
     /// Returns a boolean tensor where each element indicates if the corresponding element in the tensor is a NaN value
     abstract IsNaNT: unit -> RawTensor
 
-    /// Gets the index of a maximum value of the tensor
+    /// Gets a tensor containing values and indexes of a maximum value of the tensor reducing along the given dimension
+    abstract MaxReduceT: dim: int * keepdim: bool -> RawTensor * RawTensor
+
+    /// Gets the index of a maximum value of the tensor 
     abstract MaxIndexT: unit -> int[]
+
+    /// Gets a tensor containing values and indexes of a minimum value of the tensor reducing along the given dimension
+    abstract MinReduceT: dim: int * keepdim: bool -> RawTensor * RawTensor
 
     /// Gets the index of a minimum value of the tensor
     abstract MinIndexT: unit -> int[]
@@ -569,8 +575,10 @@ type RawTensor() =
     default t.GetString(extra: string) =
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
-            | TypeCode.Single -> sprintf "%f" (x.toSingle())
-            | TypeCode.Double -> sprintf "%f" (x.toDouble())
+            // "%g" has the desired behavior that is a combination of "%e" and "%f"
+            // One edge case example is "%g" prints "2" for 2.0 but we prefer "2."
+            | TypeCode.Single -> let p = sprintf "%g" (x.toSingle()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
+            | TypeCode.Double -> let p = sprintf "%g" (x.toDouble()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
             | TypeCode.Int32 -> sprintf "%d" (x.toInt32())
             | TypeCode.Int64 -> sprintf "%d" (x.toInt64())
             | TypeCode.Byte -> sprintf "%d" (x.toByte())
