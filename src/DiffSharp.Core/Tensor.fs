@@ -587,29 +587,48 @@ type Tensor =
     /// Gets if any value in the tensor is NaN.
     member a.hasnan() = a.isnan().sum() > a.zeroLike(dtype=Dtype.Int64)
 
+    /// Gets if any value in the tensor is NaN or +/- INF.
+    member a.hasinfnan() = a.hasinf() || a.hasnan()
+
     /// Gets the index of a maximum value in the tensor.
-    member a.argmax() = a.primalRaw.MaxIndexT()
+    member a.argmax() =
+        a.primalRaw.MaxIndexT()
+
+    /// <summary>Returns the indexes of maximum values of the primal of the tensor, reducing the given dimension.</summary>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    member a.argmax(dim:int, ?keepDim: bool) =
+        let keepDim = defaultArg keepDim false
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
+        a.primalRaw.MaxReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Gets the index of a minimum value in the tensor.
-    member a.argmin() = a.primalRaw.MinIndexT()
+    member a.argmin() =
+        a.primalRaw.MinIndexT()
+
+    /// <summary>Returns the indexes of minimum values of the primal of the tensor, reducing the given dimension.</summary>
+    /// <remarks>The resulting tensor does not participate in reverse or forward differentiation. It can be used as input to another operation such as <c>dsharp.gather</c>.</remarks>
+    member a.argmin(dim: int, ?keepDim: bool) =
+        let keepDim = defaultArg keepDim false
+        Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
+        a.primalRaw.MinReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
     /// Returns the maximum value of all elements in the input tensor.
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
+    /// Returns the element-wise maximum of the elements in the two tensors.
+    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2
+
+    /// Returns the element-wise maximum of the tensor and the given scalar
+    member a.max(b:scalar) = a.max(a.scalarLike(b))
+
     /// Returns the minimum value of all elements in the input tensor.
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
-    /// Returns the element-wise maximum of the elements in the two tensors.
-    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2.
-
-    /// Returns the element-wise maximum of the tensor and the given data.
-    member a.max(b) = a.max(a.like(b))
-
     /// Returns the element-wise minimum of the elements in the two tensors.
-    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2.
+    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2
 
-    /// Returns the element-wise minimum of the tensor and the given data.
-    member a.min(b) = a.min(a.like(b))
+    /// Returns the element-wise minimum of the tensor and the given scalar
+    member a.min(b:scalar) = a.min(a.scalarLike(b))
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
@@ -1674,8 +1693,8 @@ type Tensor =
         let lowTensor, highTensor = 
             match low, high with
             | Some l, Some h -> a.like(l), a.like(h)
-            | Some l, None   -> a.like(l), a.max()
-            | None,   Some h -> a.min(), a.like(h)
+            | Some l, None   -> a.like(l), a.like(System.Double.PositiveInfinity) // Having PositiveInfinity as upper limit is critical here, using a.max() does not work for some edge cases
+            | None,   Some h -> a.like(System.Double.NegativeInfinity), a.like(h) // Having NegativeInfinity as lower limit is critical here, using a.min() does not work for some edge cases
             | None, None     -> failwithf "Expecting at least one of low, high"
         let mask() = // one-zero mask where the clamped values are zero and the rest are one
             let ll = lowTensor.expand(a.shape)
@@ -1699,7 +1718,7 @@ type Tensor =
         let inline dfTensorFwd(cp:Tensor,ap,ad) = cp.zerosLike()
         let inline dfTensorRev(a) = SignT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
-    // static member Sign(a:Tensor) = a.sign() // not supported becaose FSharp.Core sign operator returns int
+    // static member Sign(a:Tensor) = a.sign() // not supported because FSharp.Core sign operator returns int
 
     /// <summary>Returns a new tensor with the floor of the elements of input, the largest integer less than or equal to each element.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
@@ -1794,6 +1813,11 @@ type Tensor =
 
     /// <summary>A method to enable the use of the F# function <c>log</c>.</summary>
     static member Log(a:Tensor) = a.log() // needed for FSharp.Core log operator overload
+
+    /// <summary>Returns the logarithm of the tensor after clamping the tensor so that all its elements are greater than epsilon. This is to avoid a -inf result for elements equal to zero.</summary>
+    member a.safelog(?epsilon:float) =
+        let epsilon = defaultArg epsilon 1e-12
+        a.clamp(low=epsilon).log()
 
     /// <summary>Applies the softplus function element-wise.</summary>
     /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
@@ -1990,7 +2014,8 @@ type Tensor =
     /// <param name="reduction">Optionally specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the sum of the output will be divided by the number of elements in the output, 'sum': the output will be summed. Note: size_average and reduce are in the process of being deprecated, and in the meantime, specifying either of those two args will override reduction. Default: 'mean'.</param>
     member input.bceLoss(target:Tensor, ?weight:Tensor, ?reduction:string) =
         if input.shape <> target.shape then failwithf "Expecting input shape (%A) and target shape (%A) to be the same" input.shape target.shape
-        if target.max() > target.oneLike() || target.min() < target.zeroLike() then failwith "Expecting target values to be between 0 and 1."
+        if float (input.max()) > 1. || float (input.min()) < 0. then failwithf "Expecting input values to be between 0 and 1, received %A %.20f %A.20f" input (float (input.max())) (float (input.min()))
+        if float (target.max()) > 1. || float (target.min()) < 0. then failwithf "Expecting target values to be between 0 and 1, received %A" target
         if input.dim < 1 then let ret:Tensor = input.view(-1).bceLoss(target.view(-1), ?weight=weight, ?reduction=reduction) in if ret.dim = 0 then ret else ret.[0]
         else
         let n = input.shape.[0]
@@ -1998,8 +2023,9 @@ type Tensor =
         if weight.shape.[0] <> n then failwithf "Expecting weight to be a vector of size %A, but received %A" n weight.shape.[0]
         let reduction = defaultArg reduction "mean"
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
+        let epsilon = 1e-12
         let clampLog = -100
-        let l = -weight.unsqueeze(1)*(target * input.log().clamp(low=clampLog) + (1.-target) * (1.-input).log().clamp(low=clampLog))
+        let l = -weight.unsqueeze(1)*(target * input.safelog(epsilon).clamp(low=clampLog) + (1.-target) * (1.-input).safelog(epsilon).clamp(low=clampLog))
         if reduction = "none" then
             l
         elif reduction = "mean" then
@@ -2620,6 +2646,8 @@ type Tensor =
             // 1. shape of backpropagated adjoint matches shape of primal of node to which it is being propagated
             // 2. the backpropagated adjoint is zero, indicating that the derivative accumulation was already performed by the code that called check (this behavior is for efficiency reasons, eliminating a zerosLike call for several ops involving sliced tensors)
             assert (v.shape = t.primal.shape || float(v) = 0.)
+            // The following is good for debugging NaN cases during gradient descent, but probably shouldn't be enabled by default. This is about where we would like the user to discover a NaN case (during differentiation or after differentiation).
+            // assert not (v.hasinfnan())
             (v,t)
 
         let rec push (ts:(Tensor*Tensor) list) =
