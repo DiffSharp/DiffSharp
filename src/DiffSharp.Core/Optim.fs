@@ -109,7 +109,9 @@ type optim =
         let mutable status = ""
         let mutable x = x0
         let mutable fx = dsharp.zero()
+        let mutable xMin = dsharp.zero()
         let mutable fxMin = System.Double.MaxValue
+        let mutable xMax = dsharp.zero()
         let mutable fxMax = System.Double.MinValue
         let mutable fxPrev = System.Double.MinValue    
         let mutable i = -1
@@ -132,6 +134,7 @@ type optim =
                 status <- sprintf "Iters=%d reached" iters
                 stop <- true
             elif fxScalar < fxMin then
+                xMin <- x
                 fxMin <- fxScalar
                 status <- "- New min"
             elif fxScalar > fxMax then
@@ -143,6 +146,7 @@ type optim =
                 status <- "+"
             else
                 status <- ""
+            status <- sprintf " (Best min is %A at x = %A)" fxMin xMin
 
             let duration = System.DateTime.Now - start
             if print && ((i+1) % printEvery = 0 || i = 0 || stop) then
@@ -233,7 +237,7 @@ type optim =
         let nesterov = defaultArg nesterov true
         let mutable p = dsharp.zero()
         let update x =
-            let v, g = dsharp.fg f x
+            let v, g = dsharp.fwdGrad f x
             printfn $"v = {v}, g = {g}"
             //let nf, ng = dsharp.numfg 0.0000001 f x
             //printfn $"v = {v}, g = {g}, nf = {nf}, ng = {ng}"
@@ -264,7 +268,7 @@ type optim =
             expAvgSq <- expAvgSq.mul(beta2).add(g*g*(1.-beta2))
             let biasCorrection1 = 1. - beta1 ** step
             let biasCorrection2 = 1. - beta2 ** step
-            let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
+            let denom = (expAvgSq.sqrt().add(eps) / biasCorrection2.sqrt()).add(eps)
             let p = expAvg / denom
             let stepSize = lr / biasCorrection1
             f, x - stepSize * p

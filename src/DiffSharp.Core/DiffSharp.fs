@@ -1328,6 +1328,13 @@ type dsharp with
         if x.dim <> 0 then failwithf "f must be a function of a scalar, encountered f:%A->%A" x.shape fx.shape
         fx, d
 
+    static member fwdGrad f (x:Tensor) =
+        if x.dim > 1 then failwithf "f must be a function of a scalar or vector, encountered f:%A->?" x.shape 
+        if x.dim = 0 then dsharp.fdiff f x
+        else 
+            let fxs, ds = Array.init x.nelement (fun i -> dsharp.evalForwardDiff f x (x.onehotLike(x.nelement, i))) |> Array.unzip
+            fxs.[0], dsharp.stack ds
+
     /// <summary>TBD</summary>
     static member diff f x = dsharp.fdiff f x |> snd
 
