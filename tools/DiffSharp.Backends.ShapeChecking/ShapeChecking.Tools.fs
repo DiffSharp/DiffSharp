@@ -20,10 +20,10 @@ type ShapeCheckingReturnType =
 module ShapeCheckingAutoOpens =
     type SymScope with 
         member syms.CreateFreshIntVar(name:string, ?location:SourceLocation) =
-            Int.FromSymbol (syms.CreateFreshVar(name, ?location=location))
+            Int.FromSymbol (syms.CreateVar(name, ?location=location, fresh=true))
 
         member syms.CreateIntVar(name:string, ?location:SourceLocation) =
-            Int.FromSymbol (syms.CreateVar(name, ?location=location))
+            Int.FromSymbol (syms.CreateVar(name, ?location=location, fresh=false))
 
         /// Create an inferred symbol 
         member syms.Infer = syms.CreateFreshIntVar("?")
@@ -54,147 +54,24 @@ module Tools =
           Message = err.Message
           LocationStack = Array.append [| loc |] stack }
 
-    let (|Integer|_|) toks = 
-        match toks with 
-        | Choice1Of3 c :: rest -> Some (c, rest)
-        | _ -> None
-    let (|Ident|_|) toks = 
-        match toks with 
-        | Choice3Of3 c :: rest -> Some (c, rest)
-        | _ -> None
-    let (|Symbol|_|) toks = 
-        match toks with 
-        | Choice2Of3 c :: rest -> Some (c, rest)
-        | _ -> None
+    type ParserLogic(env: Map<string, ISym>, syms: SymScope) =
 
-    type ParserLogic(env: Map<string, Int>, syms: SymScope, loc) =
-        //printfn "making symbolic for model parameter %s, givenArgInfo = %A" p.Name givenArgInfo
-        let isSymbolChar c =
-                c = '+' || 
-                c = '/' || 
-                c = '*' || 
-                c = '×' || // OK, I like unicode
-                c = '-' || 
-                c = '[' || 
-                c = ']' || 
-                c = ',' || 
-                c = '(' || 
-                c = ')' 
-        let tokenize (text: string) = 
-            [ let mutable i = 0 
-              while i < text.Length do
-                    if Char.IsDigit (text, i) then
-                        let start = i
-                        while i < text.Length && (Char.IsDigit (text, i)) do
-                            i <- i + 1
-                        yield Choice1Of3 (Int32.Parse text.[start..i-1])
-                    elif text.[i] = '+' || 
-                         text.[i] = '/' || 
-                         text.[i] = '*' || 
-                         text.[i] = '×' || // OK, I like unicode
-                         text.[i] = '-' || 
-                         text.[i] = '[' || 
-                         text.[i] = ']' || 
-                         text.[i] = ',' || 
-                         text.[i] = '(' || 
-                         text.[i] = ')' then
-                        let tok = text.[i..i]
-                        i <- i + tok.Length
-                        yield Choice2Of3 tok
-                    elif Char.IsLetter (text, i) || (Char.IsSymbol (text, i) && not (isSymbolChar text.[i])) then
-                        let start = i
-                        while i < text.Length  && (Char.IsLetter (text, i) || (Char.IsSymbol (text, i) && not (isSymbolChar text.[i])) || Char.IsDigit (text, i)) do
-                            if Char.IsSurrogatePair(text, i) then 
-                                i <- i + 2
-                            else
-                                i <- i + 1
-                        yield Choice3Of3 text.[start..i-1]
-                    elif Char.IsWhiteSpace (text, i) then
-                        i <- i + 1
-                    else  
-                        failwithf "%O: unknown character '%c' in expression" loc text.[i] ]
-        let rec (|Expr|_|) toks = 
-            match toks with 
-            | DivExpr (e1, Symbol("+", Expr (e2, rest))) -> Some (syms.Create("add", [| e1; e2 |]), rest)
-            | DivExpr (e1, Symbol("-", Expr (e2, rest))) -> Some (syms.Create("sub", [| e1; e2 |]), rest)
-            | DivExpr (e, rest) -> Some (e, rest)
-            | _ -> None
-        and (|DivExpr|_|) toks = 
-            match toks with 
-            | MulExpr (e1, Symbol("/", MulExpr (e2, rest))) -> Some (syms.Create("div", [| e1; e2 |]), rest)
-            | MulExpr (e, rest) -> Some (e, rest)
-            | _ -> None
-        and (|MulExpr|_|) toks = 
-            match toks with 
-            | AtomExpr (e1, Symbol("*", MulExpr (e2, rest))) -> Some (syms.Create("mul", [| e1; e2 |]), rest)
-            | AtomExpr (e, rest) -> Some (e, rest)
-            | _ -> None
-        and (|AtomExpr|_|) toks = 
-            match toks with 
-            | Symbol ("(", Expr (e, Symbol (")", rest))) -> Some (e, rest)
-            | Integer (n, rest) -> Some (syms.CreateConst n, rest)
-            | Ident (n, rest) -> 
-                match env.TryFind n with 
-                | Some sym -> Some ((sym.AsSymbol(syms) :?> Sym), rest)
-                | None -> Some (syms.CreateVar (n, loc), rest)
-            | _ -> None
-        and (|IntExprs|_|) toks = 
-            match toks with 
-            | Expr (e, Symbol (("," | "×"), IntExprs (es, rest))) -> Some (e :: es, rest)
-            | Expr (e, rest) -> Some ([e], rest)
-            | _ -> None
-        and (|ShapeExpr|_|) toks = 
-            match toks with 
-            | Symbol ("[", IntExprs (es, Symbol ("]", rest))) -> Some (Shape (Array.map Int.FromSymbol (Array.ofList es)), rest)
-            | IntExprs (es, rest) -> Some (Shape (Array.map Int.FromSymbol (Array.ofList es)), rest)
-            | _ -> None
+        let getSymbolicArg givenArgInfo (p: ParameterInfo) loc : obj =
+            let pty = p.ParameterType
+            let spec =
+                match givenArgInfo with 
+                | Some (obj, _) -> obj
+                | None ->  box p
 
-        let parseSymbolicIntArg (spec: string) (loc: SourceLocation) : Int =
-            let toks = tokenize spec
-            let sym = 
-                match toks with 
-                | Expr (e, []) -> e
-                | _ -> failwithf "%O: invalid expression %s" loc spec
-            Int.FromSymbol sym
-
-        let parseSymbolicShapeArg (spec: string) (loc: SourceLocation) : Shape =
-            let toks = tokenize spec
-            match toks with 
-            | ShapeExpr (e, []) -> e
-            | _ -> failwithf "%O: invalid shape %s" loc spec
-
-        let getSymbolicIntArg (givenArgInfo: (obj * SourceLocation) option) (p: ParameterInfo) (loc: SourceLocation) : Int =
-            //printfn "making symbolic for model parameter %s, givenArgInfo = %A" p.Name givenArgInfo
-            match givenArgInfo with 
-            | Some (:? int as n, _) -> Int n 
-            | Some (:? string as text, loc) -> parseSymbolicIntArg text loc
-            | Some (arg, loc) -> failwithf "%O: unknown specification %A for argument '%s'" loc arg p.Name
-            | None -> syms.CreateIntVar(p.Name, loc) 
-
-        let getSymbolicShapeArg (givenArgInfo: (obj * SourceLocation) option) (p: ParameterInfo) (loc: SourceLocation) : Shape =
-            //printfn "making symbolic for model parameter %s" p.Name
-            match givenArgInfo with 
-            | Some (:? int as n, _) -> Shape [| n |]
-            | Some (:? string as nm, loc) -> parseSymbolicShapeArg nm loc
-            | Some (:? (obj[]) as specs, loc) -> 
-                Shape [| for nm in specs -> 
-                            match nm with 
-                            | :? int as n -> Int n
-                            | :? string as spec -> parseSymbolicIntArg spec loc 
-                            | arg -> failwithf "%O: unknown specification %A for argument '%s'" loc arg p.Name |]
-            | Some (arg, loc) -> failwithf "%O: unknown specification %A for argument '%s'" loc arg p.Name
-            | None -> failwithf "%O: argument '%s' needs shape information in ShapeCheck attribute, e.g. [<ShapeCheck([| 1;4;2 |])>] or [<ShapeCheck([| \"N\";\"M\" |])>] " loc p.Name
-
-        let getSymbolicTensorArg givenArgInfo (p: ParameterInfo) loc : Tensor =
-            let shape = getSymbolicShapeArg givenArgInfo p loc
-            dsharp.zeros(shape)
+            let res = pty.GetType().InvokeMember("ParseSymbolic", BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.InvokeMethod,null, null, [| box env; box (syms :> ISymScope); box spec; box loc |])
+            res
 
         let getSampleArg (givenArgInfo: (obj * SourceLocation) option) (p: ParameterInfo) (dflt: 'T) loc : 'T =
             //printfn "making symbolic for model parameter %s" p.Name
             match givenArgInfo with 
-            | Some (:? 'T as n, _) -> n 
+            | Some (:? 'T as n, _) -> n
             | Some (:? string as spec, _) when typeof<'T> = typeof<int> -> 
-                let s = parseSymbolicIntArg spec loc
+                let s = Int.ParseSymbolic(env, syms, spec, loc)
                 if s.IsSymbolic then
                     failwithf "%O: This shape check uses a symbol where a integer value is expected.  Either update your model to use the special 'Int' (capitalised) type for dimensions, indexes and shapes (TODO: give link to guide), or change to a specific integer value" loc
                 s.Value |> box |> unbox
@@ -206,12 +83,8 @@ module Tools =
         member _.GetArg optionals givenArgInfo (p: ParameterInfo) loc : obj * Diagnostic[] =
             let pty = p.ParameterType
             let pts = pty.ToString()
-            if pts = "DiffSharp.Int" then
-                getSymbolicIntArg givenArgInfo p loc |> box, [||]
-            elif pts = "DiffSharp.Shape" then
-                getSymbolicShapeArg givenArgInfo p loc |> box, [||]
-            elif pts = "DiffSharp.Tensor" then
-                getSymbolicTensorArg givenArgInfo p loc |> box, [||]
+            if p.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0 then
+                getSymbolicArg givenArgInfo p loc |> box, [||]
             elif pts = "DiffSharp.ShapeChecking.ISymScope" || pts = "DiffSharp.ShapeChecking.SymScope" then
                 syms |> box, [||]
             elif pts = "System.Int32" then 
@@ -224,13 +97,8 @@ module Tools =
                 getSampleArg givenArgInfo p true loc |> box, [||]
             elif pts = "System.String" then 
                 getSampleArg givenArgInfo p "" loc|> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Int]" then 
-                getSymbolicIntArg givenArgInfo p loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Shape]" then 
-                getSymbolicShapeArg givenArgInfo p loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[DiffSharp.Tensor]" then 
-                // Only lay down an optional tensor arg if ndims info has actually been given
-                givenArgInfo |> Option.bind (fun _ -> getSymbolicTensorArg givenArgInfo p loc |> Some) |> box, [||]
+            elif optionals && pty.IsGenericType && pty.GetGenericTypeDefinition().FullName = "Microsoft.FSharp.Core.FSharpOption`1" then 
+                getSymbolicArg givenArgInfo p loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Boolean]" then 
                 getSampleArg givenArgInfo p true loc |> Some |> box, [||]
             elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Int32]" then 
@@ -260,37 +128,18 @@ module Tools =
                     p.Name, t.GetArg optionals givenArgInfo p loc |]
 
     // Constrain the return shape
-    let constrainReturnValueByShapeInfo env syms (retActual: obj) (shapeInfo: obj) (retParam: ParameterInfo) loc : Result<unit, Diagnostic> * Diagnostic[] =
-        match retActual, shapeInfo with 
+    let constrainReturnValueByShapeInfo env syms (retActual: obj) (retInfo: obj) (retParam: ParameterInfo) loc : Result<unit, Diagnostic> * Diagnostic[] =
+        match retActual, retInfo with 
         | null, _ | _, null ->  Ok (), [| |]
-        | (:? Tensor | :? Shape | :? Int), info -> 
-            let logic = ParserLogic(env, syms, loc) 
-            let retReqd, warns = logic.GetArg false (Some (info, loc)) retParam loc 
-            match retReqd, retActual with 
-            | (:? Tensor as retReqd), (:? Tensor as retActual) ->
-                if not (retActual.shapex =~= retReqd.shapex) then
-                    let msg = sprintf "Shape mismatch. Expected a tensor with shape '%O' but got shape '%O'" retReqd.shapex retActual.shapex
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
-                else
-                   Ok (), warns
-            | (:? Shape as retReqd), (:? Shape as retActual) ->
-                if not (retActual =~= retReqd) then
-                    let msg = sprintf "Shape mismatch. Expected shape '%O' but got shape '%O'" retReqd retActual
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
-                else
-                   Ok (), warns
-            | (:? Int as retReqd), (:? Int as retActual) ->
-                if not (retActual =~= retReqd) then
-                    let msg = sprintf "Shape mismatch. Expected '%O' but got '%O'" retReqd retActual
-                    Error { Severity=2; LocationStack=[| loc |]; Message=msg; Number=1999 }, warns
-                else
-                   Ok (), warns
-            | _, _ -> 
-                let msg = sprintf "Unknown return type for shape checking"
-                Ok(), Array.append [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |] warns
         | _ -> 
-            let msg = sprintf "Unexpected return from method with ReturnShape attribute" 
-            Error { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 }, [| |]
+            let logic = ParserLogic(env, syms) 
+            let retReqd, warns = logic.GetArg false (Some (retInfo, loc)) retParam loc 
+            let retActualTy = retActual.GetType()
+            try 
+                retActualTy.InvokeMember("ConstrainSymbolic", BindingFlags.InvokeMethod ||| BindingFlags.Instance ||| BindingFlags.Public ||| BindingFlags.NonPublic, null, retActual, [| retReqd |])
+                   |> ignore
+                Ok(), warns
+            with exn -> Error { Severity=2; LocationStack=[| loc |]; Message=exn.Message; Number=1999 }, warns
 
     let invokeShapeCheckMeth (syms: SymScope) optionals env (meth: MethodInfo) (attr:  ShapeCheckAttribute) (file, sl, sc, el, ec) (model: obj) =
         let diags = ResizeArray()
@@ -301,7 +150,7 @@ module Tools =
                       
                 try 
                     syms.Push()
-                    let args = ParserLogic(env, syms, mloc).GetParams optionals (meth.GetParameters()) attr.GivenArgs mloc
+                    let args = ParserLogic(env, syms).GetParams optionals (meth.GetParameters()) attr.GivenArgs mloc
 
                     let argValues = 
                         [| for (_, (arg, warns)) in args do
@@ -337,11 +186,11 @@ module Tools =
                     syms.Pop()
         diags.ToArray(), methCalls.ToArray()
 
-    let makeModelAndRunShapeChecks (syms: SymScope) optionals (ctor: ConstructorInfo) ctorGivenArgs tloc subTargets =
+    let makeModelAndInvokeShapeChecks (syms: SymScope) optionals (ctor: ConstructorInfo) ctorGivenArgs tloc subTargets =
         let diags = ResizeArray()
         let calls = ResizeArray()
         
-        let ctorArgs = ParserLogic(Map.empty, syms, tloc).GetParams optionals (ctor.GetParameters()) ctorGivenArgs tloc
+        let ctorArgs = ParserLogic(Map.empty, syms).GetParams optionals (ctor.GetParameters()) ctorGivenArgs tloc
         let ctorArgValues = 
             [| for (nm, (arg, warns)) in ctorArgs do
                 diags.AddRange warns
@@ -351,10 +200,10 @@ module Tools =
             ctorArgValues 
             |> Array.choose (fun (nm, v) -> 
                     match v with
-                    | :? Int as n -> Some (nm, n)
-                    | :? int as n -> Some (nm, Int n)
-                    | :? (int option) as n when n.IsSome -> Some (nm, Int n.Value)
-                    | :? (Int option) as n when n.IsSome -> Some (nm, n.Value)
+                    | :? Int as n -> Some (nm, n.AsSymbol(syms))
+                    | :? int as n -> Some (nm, (Int n).AsSymbol(syms))
+                    | :? (int option) as n when n.IsSome -> Some (nm, (Int n.Value).AsSymbol(syms))
+                    | :? (Int option) as n when n.IsSome -> Some (nm, n.Value.AsSymbol(syms))
                     | _ -> None)
             |> Map.ofArray
         
@@ -425,18 +274,16 @@ type ShapeCheckAttribute internal (given: obj[]) =
                 let ctors = targetType.GetConstructors()
                 let ctor = 
                     ctors 
-                    |> Array.tryFind (fun ctor -> 
-                        ctor.GetParameters() |> Array.exists (fun p -> 
-                            let pt = p.ParameterType.ToString()
-                            pt.Contains("DiffSharp.Int") || pt.Contains("DiffSharp.Shape")))
+                    // Prefer a constructor which accepts symbolic inputs
+                    |> Array.tryFind (fun ctor -> ctor.GetParameters() |> Array.exists (fun p -> p.ParameterType.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0))
                     |> function 
                        | None -> 
-                           //printf "couldn't find a model constructor taking Int or Shape parameter, assuming first constructor is target of live check"
+                           //printf "couldn't find a model constructor taking a symbolic parameter, assuming first constructor is target of live check"
                            ctors.[0]
                        | Some c -> c
 
                 let tloc = { File = locFile; StartLine = locStartLine; StartColumn = locStartColumn; EndLine = locEndLine; EndColumn= locEndColumn }
-                let _, _, _, diags = makeModelAndRunShapeChecks syms optionals ctor attr.GivenArgs tloc subTargets
+                let _, _, _, diags = makeModelAndInvokeShapeChecks syms optionals ctor attr.GivenArgs tloc subTargets
                 diags
             | :? System.Reflection.MethodInfo as meth -> 
                 let methDiags, _methCalls = invokeShapeCheckMeth syms optionals Map.empty meth attr loc null
@@ -465,17 +312,14 @@ module MoreTools =
                 let ctors = typeof<'T>.GetConstructors()
                 let ctor = 
                     ctors 
-                    |> Array.tryFind (fun ctor -> 
-                        ctor.GetParameters() |> Array.exists (fun p -> 
-                            let pt = p.ParameterType.ToString()
-                            pt.Contains("DiffSharp.Int")))
+                    |> Array.tryFind (fun ctor -> ctor.GetParameters() |> Array.exists (fun p -> p.ParameterType.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0))
                     |> function 
-                        | None -> ctors.[0] // failwith "couldn't find a model constructor taking Int parameter"
+                        | None -> ctors.[0]
                         | Some c -> c
                 let loc = { File = caller; StartLine = callerLine; StartColumn = 0; EndLine = callerLine; EndColumn= 80 }
 
                 // TODO: use _diags
-                let ctorArgs, model, methCalls, _diags = makeModelAndRunShapeChecks syms optionals ctor [| |] loc [| |]
+                let ctorArgs, model, methCalls, _diags = makeModelAndInvokeShapeChecks syms optionals ctor [| |] loc [| |]
                 match model with 
                 | Error e -> 
                    printfn "%O: error DS1998 - %s" loc e.Message

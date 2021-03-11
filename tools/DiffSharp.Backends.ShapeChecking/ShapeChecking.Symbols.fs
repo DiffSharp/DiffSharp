@@ -120,19 +120,20 @@ type SymScope() =
             synAssertions.Add(zexpr)
             true
 
-    member syms.CreateFreshVar (name: string, ?location: SourceLocation) : Sym =
-        let zsym = zctx.MkFreshConst(name, zctx.IntSort)
-        mapping.[zsym.Id] <- (name, location)
-        vars.Add(zsym)
-        Sym (syms, zsym)
-
-    member syms.CreateVar (name: string, ?location: SourceLocation) : Sym =
-        let zbytes = System.Text.Encoding.UTF7.GetBytes(name)
-        let zname = String(Array.map char zbytes)
-        let zsym = zctx.MkConst(zname, zctx.IntSort)
-        mapping.[zsym.Id] <- (name, location)
-        vars.Add(zsym)
-        Sym (syms, zsym)
+    member syms.CreateVar (name: string, ?location: SourceLocation, ?fresh: bool) : Sym =
+        let fresh = defaultArg fresh false
+        if fresh then 
+            let zsym = zctx.MkFreshConst(name, zctx.IntSort)
+            mapping.[zsym.Id] <- (name, location)
+            vars.Add(zsym)
+            Sym (syms, zsym)
+        else
+            let zbytes = System.Text.Encoding.UTF7.GetBytes(name)
+            let zname = String(Array.map char zbytes)
+            let zsym = zctx.MkConst(zname, zctx.IntSort)
+            mapping.[zsym.Id] <- (name, location)
+            vars.Add(zsym)
+            Sym (syms, zsym)
 
     /// Create a symbol var with the given name and constrain it to be equal to the 
     /// given constant value
@@ -157,12 +158,12 @@ type SymScope() =
             let args = args |> Array.map (fun (Sym x) -> x)
             syms.Create(f, args) :> ISym
 
-        override syms.CreateFreshVar (name: string, location) : ISym =
-            let loc = 
+        override syms.CreateVar (name: string, location, ?fresh) : ISym =
+            let loc =
                 match location with 
                 | :? SourceLocation as loc ->  loc
                 | _ -> { File = "?"; StartLine = 0; StartColumn = 0; EndLine = 0; EndColumn= 80 }
-            syms.CreateFreshVar (name, loc) :> ISym
+            syms.CreateVar (name, loc, ?fresh=fresh) :> ISym
 
         override syms.AssertConstraint(func: string, args: ISym[]) =
             let args = args |> Array.map (fun (Sym x) -> x)

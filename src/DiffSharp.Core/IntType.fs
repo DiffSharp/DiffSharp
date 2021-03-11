@@ -15,6 +15,7 @@ open DiffSharp.Util
 ///  it can always be assumed that the symbol is empty.
 /// </remarks>
 [<Struct; CustomEquality; CustomComparison>]
+[<Symbolic>]
 type Int internal (n: int, sym: ISym) = 
 
     static member inline internal unop (x: Int) f1 f2 =
@@ -193,6 +194,24 @@ Call stack: %A""" (sym.ToString()) (System.Diagnostics.StackTrace(fNeedFileInfo=
         match x.TryGetValue() with 
         | ValueNone -> string sym
         | ValueSome v -> string v
+
+    static member ParseSymbolic(env: Map<string, ISym>, syms: ISymScope, spec: obj, location: obj) : Int =
+        match spec with 
+        | :? System.Reflection.ParameterInfo as p -> Int.FromSymbol (syms.CreateVar(p.Name, location, fresh=false))
+        | :? int as n -> Int(n)
+        | :? string as text ->
+            let parser = SymbolParser(env, syms, location)
+            let toks = parser.TryParseIntExpr(text)
+            let sym = 
+                match toks with 
+                | Some (e, true) -> e
+                | _ -> failwithf "%O: invalid expression %s" location text
+            Int.FromSymbol sym
+        | specObj -> failwithf "%O: invalid type for integer specification %s" location (specObj.GetType().ToString())
+
+    member this.ConstrainSymbolic(other: Int) : unit =
+        if not (this =~= other) then
+            failwithf "Shape mismatch. Expected '%O' but got '%O'" other this
 
 #else
 
