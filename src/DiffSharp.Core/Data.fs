@@ -20,6 +20,7 @@ type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
     member d.loader(batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?dropLast=dropLast, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
+    override d.ToString() = sprintf "Dataset(%A)" d.length
     member d.Item
         with get(i:int) =
             d.item(i)

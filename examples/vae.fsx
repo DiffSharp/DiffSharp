@@ -55,18 +55,14 @@ let f (x: Tensor) =
 
 /// Variational auto-encoder example in DiffSharp (shape-aware)
 //
-// See https://www.compart.com/en/unicode/block/U+1D400 for nice italic characters
-[<ShapeCheck( "𝑋", "𝑌", "𝑍" )>]
-//[<ShapeCheck>]
-type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
+type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let xyDim = xDim * yDim 
     do Assert (xDim >~ Int 0 ) 
     do Assert (yDim >~ Int 0 ) 
-    //do if not (xDim =~= yDim ) then failwith "over constrained"
     let hDims = defaultArg hDims (let d = (xyDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
-    let activation = defaultArg activation dsharp.relu
-    let activationLast = defaultArg activationLast dsharp.sigmoid
+    let nonlinearity = defaultArg nonlinearity dsharp.relu
+    let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
     let dims = [| yield xyDim; yield! hDims; yield zDim |]
             
     let ndims = dims.Length
@@ -81,7 +77,7 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
     let encode (x: Tensor) =
         let mutable x = x
         for i in 0..enc.Length-3 do
-            x <- activation <| enc.[i].forward(x)
+            x <- nonlinearity <| enc.[i].forward(x)
         let mu = enc.[enc.Length-2].forward(x)
         let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
@@ -94,8 +90,8 @@ type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?activation:Tensor->Ten
     let decode (z: Tensor) =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- activation <| dec.[i].forward(h)
-        activationLast <| dec.[dec.Length-1].forward(h)
+            h <- nonlinearity <| dec.[i].forward(h)
+        nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
     member _.encodeDecode(x:Tensor) =
         let mu, logVar = encode (x.view([-1; xDim]))

@@ -237,6 +237,14 @@ type ShapeCheckingTensor(shape: Shape, dtype: Dtype, device: Device) =
     override _.RandomIntInPlace(_low, _high) = checkMutable()
     override _.ZerosInPlace() = checkMutable()
 
+    override t.MaxReduceT(dim, keepDim) =
+        let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
+        t.MakeLike(newShape), t.MakeLike(dtype=Dtype.Int32, shape=newShape)
+
+    override t.MinReduceT(dim, keepDim) =
+        let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
+        t.MakeLike(newShape), t.MakeLike(dtype=Dtype.Int32, shape=newShape)
+
     override t1.MatMulTT(t2) = 
         let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
         if not (Shape t1BatchPart =~= Shape t2BatchPart) then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape

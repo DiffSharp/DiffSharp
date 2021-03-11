@@ -3,7 +3,7 @@
   <PropertyGroup>
 
     <LibTorchNugetVersion>1.7.0.1</LibTorchNugetVersion>
-    <TorchSharpVersion>0.3.52357</TorchSharpVersion>
+    <TorchSharpVersion>0.3.52363</TorchSharpVersion>
     <FSharpCoreVersion>5.0.0</FSharpCoreVersion>
     <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
