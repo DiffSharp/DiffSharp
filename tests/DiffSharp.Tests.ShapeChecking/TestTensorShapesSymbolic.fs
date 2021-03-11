@@ -4,21 +4,6 @@ open NUnit.Framework
 open DiffSharp
 open DiffSharp.ShapeChecking
 
-[<AutoOpen>]
-module ShapeCheckingAutoOpens =
-    type SymScope with 
-        member syms.CreateFreshIntVar(name:string, ?location:SourceLocation) =
-            Int.FromSymbol (syms.CreateVar(name, ?location=location, fresh=true))
-
-        member syms.CreateIntVar(name:string, ?location:SourceLocation) =
-            Int.FromSymbol (syms.CreateVar(name, ?location=location, fresh=false))
-
-        /// Create an inferred symbol 
-        member syms.Infer = syms.CreateFreshIntVar("?")
-
-    /// Create a symbol in the global symbol context of the given name
-    let (?) (syms: SymScope) (name: string) : Int = syms.CreateIntVar(name)
-
 [<TestFixture>]
 type TestTensorShapesSymbolic () =
     let ShapeChecking =
