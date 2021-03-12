@@ -52,8 +52,6 @@ type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weig
     // Per parameter grad-with-respect-to-learning rates
     let mutable glrDictInit = false
     let mutable glrDict = ParameterDict()
-    // Hyper-gradient of learning rate 
-    let mutable h = dsharp.zero()
 
     /// <summary>TBD</summary>
     override o.updatePre () = 
@@ -62,8 +60,10 @@ type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weig
                 glrDict <- model.parameters.map(fun (t: Tensor) -> t.zeroLike())
                 glrDictInit <- true
             // hypergradient of the learning rate is the dot product of derivatives and previous grads
-            h <- model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
-            lr <- lr - llr * h
+            let dsz = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+            let glrsz = glrDict.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+            let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
+            lr <- lr * (1 - llr * (h / dsz / glrsz))
 
     /// <summary>TBD</summary>
     override o.updateRule name t = 
@@ -105,8 +105,6 @@ type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Ten
     // Per parameter grad-with-respect-to-learning rates
     let mutable glrDictInit = false
     let mutable glrDict = ParameterDict()
-    // Hyper-gradient of learning rate
-    let mutable h = dsharp.zero()
 
     member o.learningRate = lr
 
@@ -121,8 +119,14 @@ type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Ten
                 glrDict <- model.parameters.map(fun (t: Tensor) -> t.zerosLike())
                 glrDictInit <- true
             // hypergradient is the dot product of derivatives and previous grads
-            h  <- model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
-            lr <- lr - llr * h
+            let dsz = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+            let glrsz = glrDict.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+            printfn $"dsz = {dsz}"
+            printfn $"glrsz = {glrsz}"
+            let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
+            printfn $"h = {h}"
+            if stateStep > 1 then 
+                lr <- lr * (1 - llr * h / dsz / glrsz)
  
     /// <summary>TBD</summary>
     override o.updateRule name t =

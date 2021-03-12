@@ -110,9 +110,9 @@ let trainSet = MNIST("../data", train=true, transform=id)
 let validSet = MNIST("../data", train=false, transform=id)
 let train(lr, beta1, beta2, numEpochs, dataLimit, hd) = 
     if float lr < 0.0 then failwith "learning rate went below zero"
-    let numEpochs = defaultArg numEpochs 2
+    let numEpochs = defaultArg numEpochs 10
     let dataLimit = defaultArg dataLimit System.Int32.MaxValue
-    let batchSize = 32
+    let batchSize = 128
     let validInterval = 250
     let numSamples = 32
 
@@ -121,7 +121,7 @@ let train(lr, beta1, beta2, numEpochs, dataLimit, hd) =
     let model = VAE(28*28, 20, [400])
     printfn "Model: %A lr: %A" model lr
 
-    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, hyperdescent=hd, llr=v 0.0000001)
+    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, hyperdescent=hd, llr=v 0.05)
 
     let score() =
         let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
@@ -195,9 +195,9 @@ let train(lr, beta1, beta2, numEpochs, dataLimit, hd) =
 
 // Hyperdescent of learning rate
 let losses1 = train (v 0.001, v 0.9, v 0.999, None, None, true)
-let losses2 = train (v 0.0001, v 0.9, v 0.999, None, None, true)
+//let losses2 = train (v 0.0001, v 0.9, v 0.999, None, None, true)
 let losses3 = train (v 0.001, v 0.9, v 0.999, None, None, false)
-let losses4 = train (v 0.0001, v 0.9, v 0.999, None, None, false)
+//let losses4 = train (v 0.0001, v 0.9, v 0.999, None, None, false)
 
 //let losses1 = train (v 0.0001, 2, None) // a poor learning rate
 //let losses2 = train (v 0.001, 2, None)   // the one in the sample python code
@@ -260,9 +260,9 @@ let losses4 = train (v 0.0001, v 0.9, v 0.999, None, None, false)
 //let losses2 = train (v 0.001, v 0.9, v 0.999, None, None, false)
 let plt = Pyplot()
 plt.plot(losses1 |> dsharp.tensor, label="lr=0.001 (adaptive)")
-plt.plot(losses2 |> dsharp.tensor, label="lr=0.0001 (adaptive)")
+//plt.plot(losses2 |> dsharp.tensor, label="lr=0.0001 (adaptive)")
 plt.plot(losses3 |> dsharp.tensor, label="lr=0.001")
-plt.plot(losses4 |> dsharp.tensor, label="lr=0.0001")
+//plt.plot(losses4 |> dsharp.tensor, label="lr=0.0001")
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
 plt.legend()
