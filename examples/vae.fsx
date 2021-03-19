@@ -121,7 +121,7 @@ let train(lr, beta1, beta2, numEpochs, dataLimit, hd) =
     let model = VAE(28*28, 20, [400])
     printfn "Model: %A lr: %A" model lr
 
-    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, hyperdescent=hd, llr=v 0.05)
+    let optimizer = Adam(model, lr=lr, beta1=beta1, beta2=beta2, hyperdescent=hd, hyperlr=v 0.05)
 
     let score() =
         let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)

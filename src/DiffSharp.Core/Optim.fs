@@ -34,12 +34,12 @@ type Optimizer(model:Model) =
 
 
 /// <summary>TBD</summary>
-/// <param name="llr">hyper learning rate</param>
-/// <param name="hyperdescent">use hyperdescent for learning rate</param>
-type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent:bool) =
+/// hyperlr: hyper learning rate
+/// hyperdescent: use hyperdescent for learning rate
+type SGD(model, ?lr:Tensor, ?hyperlr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent:bool) =
     inherit Optimizer(model)
     let hyperdescent = defaultArg hyperdescent false
-    let mutable llr = defaultArg llr (dsharp.tensor(1e-4))
+    let mutable hyperlr = defaultArg hyperlr (dsharp.tensor(1e-4))
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
     let mutable momInit = false
@@ -50,20 +50,21 @@ type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weig
     let mutable lr = defaultArg lr (dsharp.tensor(1e-3))
 
     // Per parameter grad-with-respect-to-learning rates
-    let mutable glrDictInit = false
-    let mutable glrDict = ParameterDict()
+    let mutable grauDictInit = false
+    let mutable grauDict = ParameterDict()
 
     /// <summary>TBD</summary>
     override o.updatePre () = 
         if hyperdescent then
-            if not glrDictInit then 
-                glrDict <- model.parameters.map(fun (t: Tensor) -> t.zeroLike())
-                glrDictInit <- true
-            // hypergradient of the learning rate is the dot product of derivatives and previous grads
-            let dsz = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
-            let glrsz = glrDict.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
-            let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
-            lr <- lr * (1 - llr * (h / dsz / glrsz))
+            if not grauDictInit then 
+                grauDict <- model.parameters.map(fun (t: Tensor) -> t.zeroLike())
+                grauDictInit <- true
+            else
+                // hypergradient of the learning rate is the dot product of derivatives and previous grads
+                let dsz = model.parameters.values |> Seq.map (fun (KeyValue(_,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+                let grausz = grauDict.values |> Seq.map (fun (KeyValue(_,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+                let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(grauDict.[nm].view([-1]))) |> Seq.sum
+                lr <- lr * (1 - hyperlr * (h / dsz / grausz))
 
     /// <summary>TBD</summary>
     override o.updateRule name t = 
@@ -84,15 +85,15 @@ type SGD(model, ?lr:Tensor, ?llr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weig
             else d <- mb
         | None -> ()   
         // see Fig 4 and 5 of https://arxiv.org/pdf/1703.04782.pdf
-        let glr = if nesterov then -d - (match momentum with Some mom -> momBuffer.[name] * mom | None -> dsharp.zero()) else -d
-        glrDict.[name] <- glr
+        let grau = if nesterov then -d - (match momentum with Some mom -> momBuffer.[name] * mom | None -> dsharp.zero()) else -d
+        grauDict.[name] <- grau
         t - lr * d
 
 /// <summary>TBD</summary>
-type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent: bool) =
+type Adam(model, ?lr:Tensor, ?hyperlr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool, ?hyperdescent: bool) =
     inherit Optimizer(model)
     let mutable lr = defaultArg lr (dsharp.tensor(1e-3))
-    let mutable llr = defaultArg llr (dsharp.tensor(1e-4))
+    let mutable hyperlr = defaultArg hyperlr (dsharp.tensor(1e-4))
     let hyperdescent = defaultArg hyperdescent false
     let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
@@ -103,8 +104,8 @@ type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Ten
     let mutable stateExpAvgSq = ParameterDict()
 
     // Per parameter grad-with-respect-to-learning rates
-    let mutable glrDictInit = false
-    let mutable glrDict = ParameterDict()
+    let mutable grauDictInit = false
+    let mutable grauDict = ParameterDict()
 
     member o.learningRate = lr
 
@@ -115,18 +116,15 @@ type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Ten
             stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike().add(eps))
         stateStep <- stateStep + 1
         if hyperdescent then
-            if not glrDictInit then
-                glrDict <- model.parameters.map(fun (t: Tensor) -> t.zerosLike())
-                glrDictInit <- true
-            // hypergradient is the dot product of derivatives and previous grads
-            let dsz = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
-            let glrsz = glrDict.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
-            printfn $"dsz = {dsz}"
-            printfn $"glrsz = {glrsz}"
-            let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(glrDict.[nm].view([-1]))) |> Seq.sum
-            printfn $"h = {h}"
-            if stateStep > 1 then 
-                lr <- lr * (1 - llr * h / dsz / glrsz)
+            if not grauDictInit then
+                grauDict <- model.parameters.map(fun (t: Tensor) -> t.zerosLike())
+                grauDictInit <- true
+            else
+                // hypergradient is the dot product of derivatives and previous grads
+                let dSz = model.parameters.values |> Seq.map (fun (KeyValue(_,p)) -> p.value.derivative * p.value.derivative |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+                let grauSz = grauDict.values |> Seq.map (fun (KeyValue(_,p)) -> p.value * p.value |> dsharp.sum) |> Seq.sum |> dsharp.sqrt
+                let h = model.parameters.values |> Seq.map (fun (KeyValue(nm,p)) -> p.value.derivative.view([-1]).dot(grauDict.[nm].view([-1]))) |> Seq.sum
+                lr <- lr * (1 - hyperlr * (h / dSz / grauSz))
  
     /// <summary>TBD</summary>
     override o.updateRule name t =
@@ -142,11 +140,10 @@ type Adam(model, ?lr:Tensor, ?llr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Ten
         let biasCorrection1 = 1. - beta1 ** stateStep
         let biasCorrection2 = 1. - beta2 ** stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt())
-        let stepSize = lr / biasCorrection1
+        let grau = (expAvg/denom) / biasCorrection1
         if hyperdescent then
-            let glr = -(expAvg/biasCorrection1) / ((expAvgSq/biasCorrection2).sqrt().add(eps))
-            glrDict.[name] <- glr
-        t - stepSize * (expAvg/denom)
+            grauDict.[name] <- -grau
+        t - lr * grau
 
 /// <summary>TBD</summary>
 type optim =
