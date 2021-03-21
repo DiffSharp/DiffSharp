@@ -176,6 +176,12 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
                     "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
+    // Alternative URLs that work when LeCun's site is not responding
+    // let urls = List.ofSeq <| defaultArg urls (Seq.ofList
+    //                ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"])                    
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
 
     let loadMNISTImages(filename:string) (n:option<int>) =
