@@ -113,8 +113,6 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
         r.hidden <- dsharp.stack(newhs)
         if batchFirst then output.transpose(0, 1) else output
 
-let text = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
-
 type TextTokenizer(?example) = 
     let example = defaultArg example """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
     let chars = example |> Seq.distinct |> Seq.toArray
@@ -143,6 +141,11 @@ type TextTokenizer(?example) =
 
 
 let seqLen = 32
+
+// let text = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
+download ""
+let text = System.IO.File.ReadAllText("./shakespeare.txt")
+
 let tok = TextTokenizer(text)
 let dataset = tok.dataset(text, seqLen)
 let loader = dataset.loader(batchSize=4, shuffle=true)
@@ -157,18 +160,31 @@ print rnn
 let optimizer = Adam(net, lr=dsharp.tensor(0.0005))
 
 
-// let epochs = 5
-// let start = System.DateTime.Now
-// for epoch = 1 to epochs do
-//     for i, x, t in loader.epoch() do
-//         let input =  x.[*,..seqLen-2]
-//         let target = t.[*,1..]
-//         rnn.reset()
-//         net.reverseDiff()
-//         let output = input --> net
-//         let loss = dsharp.crossEntropyLoss(output.view([-1;tok.length]), target.view(-1))
-//         loss.reverse()
-//         optimizer.step()
-//         print loss
+let losses = ResizeArray()
+
+let epochs = 5
+let validInterval = 100
+
+let start = System.DateTime.Now
+for epoch = 1 to epochs do
+    for i, x, t in loader.epoch() do
+        let input =  x.[*,..seqLen-2]
+        let target = t.[*,1..]
+        rnn.reset()
+        net.reverseDiff()
+        let output = input --> net
+        let loss = dsharp.crossEntropyLoss(output.view([-1;tok.length]), target.view(-1))
+        loss.reverse()
+        optimizer.step()
+        losses.Add(float loss)
+        printfn "%A Epoch: %A/%A minibatch: %A/%A goss: %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float loss)
+
+        if i % validInterval = 0 then
+            let plt = Pyplot()
+            plt.plot(losses |> dsharp.tensor)
+            plt.xlabel("Iterations")
+            plt.ylabel("Loss")
+            plt.tightLayout()
+            plt.savefig (sprintf "rnn_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
 
 // WORK IN PROGRESS
