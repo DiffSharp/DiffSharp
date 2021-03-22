@@ -17,6 +17,7 @@ type TestDerivativesConv () =
     [<Test>]
     member _.TestDerivativeConv1D () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
+         if combo.device.DeviceType <> DeviceType.CUDA then
             let fwdx = combo.tensor([[[  0.1264;   5.3183;   6.6905; -10.6416];
                                      [ 13.8060;   4.5253;   2.8568;  -3.2037];
                                      [ -0.5796;  -2.7937;  -3.3662;  -1.3017]];

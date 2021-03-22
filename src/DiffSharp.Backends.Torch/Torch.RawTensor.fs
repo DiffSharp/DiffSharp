@@ -119,33 +119,20 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     member _.TorchTensor = tt
 
     override t.GetSlice(fullBounds:int[,]) =
+        let n = fullBounds.GetLength(0)
+
         let newShape = Shape.checkCanGetSlice t.Shape fullBounds
-        // For float16 and bfloat16, switch to float32 then cast back, LibTorch 1.7.0 says "index_select" not implemented for 'Half'
-        let tt =
-            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
-                tt.to_type(ScalarType.Float32)
-            else
-                tt
 
-        let mutable res = tt
-        let mutable dim = 0 
-        for i=0 to (fullBounds.GetLength(0) - 1) do
-            let start = fullBounds.[i,0]
-            let stop = fullBounds.[i,1] + 1
-
-            let len = stop - start
-            if len <> t.Shape.[i] then // Slice only when there is something to slice in this dimension
-                use idxs = Int64Tensor.arange((int64 start).ToScalar(), (int64 stop).ToScalar(), 1L.ToScalar(), tt.device_type, tt.device_index)
-                res <- res.index_select(int64 dim, idxs)  // yield len // if len=1 then squeeze this dimension
-            if fullBounds.[i, 2] = 1 && len = 1 then 
-                res <- res.squeeze(int64 dim)  // yield len // if len=1 then squeeze this dimension
-            else
-                dim <- dim + 1
-        let res = 
-            if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
-                res.to_type(toTorchType dtype)
-            else
-                res
+        let indices =
+            Array.init n (fun i -> 
+                let start = fullBounds.[i,0]
+                let stop = fullBounds.[i,1] + 1
+                let len = stop - start
+                if fullBounds.[i,2] = 1 && len = 1 then
+                    TorchTensorIndex.Single(int64 start)
+                else
+                    TorchTensorIndex.Slice(start=int64 start, stop=int64 stop))
+        let res = tt.index(indices)
         t.MakeLike(tt=res, shape=newShape)
 
     override t.Clone() =
