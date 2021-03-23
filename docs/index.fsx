@@ -14,7 +14,7 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 
 ✅ Nested and Mixed-Mode Differentiation
 
-✅ PyTorch Familiar Naming and idioms
+✅ PyTorch Familiar Naming and Idioms
 
 ✅ F# for Robust Functional AI Programming 
 
@@ -43,18 +43,21 @@ Please see [API Overview](api-overview.html) for a list of available operations.
 Practical, Familiar and Efficient
 ----------------------------
 
-DiffSharp uses PyTorch C++ tensors (minus the derivative computation graph) as the default
-raw-tensor backend. It is tested on Linux and Windows. This includs support for CUDA 11.1.
+DiffSharp uses PyTorch C++ tensors (minus the gradient computation) as the default
+raw-tensor backend. It is tested on Linux and Windows and includes support for CUDA 11.1.
 
-DiffSharp uses [the incredible F# Progamming Language](https://fsharp.org) for tensor programming.
-F# code is generally faster and more **robust** than equivalent Python code, while
-still being succinct and compact like Python. This allows 
-large-scale tensor programming while focusing on the tensor programming domain.
-
+DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming.
+F# code is generally faster and more robust than equivalent Python code, while
+still being succinct and compact like Python, making it an ideal modern AI and machine
+learning implementation language. This allows fluent and productive tensor programming while
+focusing on the tensor programming domain.
 To learn more about "F# as a Better Python" see this video:
 
 <iframe width="280" height="157" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="F# as a Better Python" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
+naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
+There are some improvements and DiffSharp supports a richer gradient/differentiation API.
 
 
 Quick usage examples
@@ -62,6 +65,8 @@ Quick usage examples
 
 Below is a  series of simple samples using DiffSharp. You can access this sample as a [script](index.fsx) or a [.NET Interactive Jupyter Notebook](index.ipynb)
 (open in [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)).
+If using Visual Studio Code you can download, edit and execute these notebooks
+using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
 First reference the package:
 
@@ -126,7 +131,7 @@ open DiffSharp.Optim
 
 let epochs = 2
 let batchSize = 32
-let limit = 5
+let numBatches = 5
 
 let trainSet = MNIST("../data", train=true, transform=id)
 let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
@@ -140,22 +145,26 @@ let lr = dsharp.tensor(0.001)
 let optimizer = Adam(model, lr=lr)
 
 for epoch = 1 to epochs do
-   for i, x, _ in trainLoader.epoch() |> Seq.truncate limit do
-      model.reverseDiff()
-      let l = model.loss(x)
-      l.reverse()
-      optimizer.step()
-      print $"Epoch: {epoch} minibatch: {i} loss: {l}" 
+    let batches = trainLoader.epoch() |> Seq.truncate numBatches
+    for i, x, _ in batches do
+        model.reverseDiff()
+        let l = model.loss(x)
+        l.reverse()
+        optimizer.step()
+        print $"Epoch: {epoch} minibatch: {i} loss: {l}" 
 
 let validLoss = 
-      validLoader.epoch() 
-      |> Seq.sumBy (fun (_, x, _) -> model.loss(x, normalize=false))
+    validLoader.epoch() 
+    |> Seq.sumBy (fun (_, x, _) -> model.loss(x, normalize=false))
 
-print $"Validation loss: {validLoss/ validSet.length}"
-validLoss
+print $"Validation loss: {validLoss/validSet.length}"
 
 
 (**
+
+Numerous other model definition and gradient/training patterns are supported, see
+the [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples) directory.
+
 Current features and roadmap
 ----------------------------
 
