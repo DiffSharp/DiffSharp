@@ -52,7 +52,7 @@
      <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' == 'refs/tags/v$(Version)'">$(Version)</PackageVersion>
      <!-- untagged build on CI uses unique -->
      <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' != 'refs/tags/v$(Version)'">$(Version)-preview-$(GITHUB_RUN_ID)</PackageVersion>
-     <PackageOutputPath>$(MSBuildThisFileDirectory)/bin/packages</PackageOutputPath>
+     <PackageOutputPath>$(MSBuildThisFileDirectory)bin/packages</PackageOutputPath>
 
      <NuspecProperties>Authors=$(Authors);Owners=$(Owners);ProjectId=$(MSBuildProjectName);PackageVersion=$(PackageVersion);TorchSharpVersion=$(TorchSharpVerion);LibTorchNugetVersion=$(LibTorchNugetVersion)</NuspecProperties>
 
