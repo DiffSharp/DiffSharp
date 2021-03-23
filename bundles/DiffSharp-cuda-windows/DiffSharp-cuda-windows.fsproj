@@ -13,7 +13,7 @@
     <ProjectReference Include="..\..\src\DiffSharp.Data\DiffSharp.Data.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
     <!--  reference a libtorch runtime redist -->
-    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="libtorch-cuda-11.1-win-x64" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
 </Project>

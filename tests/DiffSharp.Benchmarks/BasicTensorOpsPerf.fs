@@ -115,10 +115,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.From(rawData :?> int32[])
-                | Dtype.Int64 -> Int64Tensor.From(rawData :?> int64[])
-                | Dtype.Float32 -> Float32Tensor.From(rawData :?> single[])
-                | Dtype.Float64 -> Float64Tensor.From(rawData :?> double[])
+                | Dtype.Int32 -> Int32Tensor.from(rawData :?> int32[])
+                | Dtype.Int64 -> Int64Tensor.from(rawData :?> int64[])
+                | Dtype.Float32 -> Float32Tensor.from(rawData :?> single[])
+                | Dtype.Float64 -> Float64Tensor.from(rawData :?> double[])
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
@@ -154,10 +154,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.Zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("zeros")>]
@@ -192,10 +192,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.Ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("ones")>]
@@ -230,10 +230,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.RandomIntegers(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.Random([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.randint(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int64 -> Int64Tensor.randint(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float32 -> Float64Tensor.rand([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Float64 -> Float32Tensor.rand([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("rand")>]
@@ -266,7 +266,7 @@ type BasicTensorOps() =
     member perf.addition_TorchSharp() = 
         let n = perf.configure(Backend.Torch, 10)
         for _ in 1 .. n do 
-            res4 <- torchTensor.Add(torchTensor)
+            res4 <- torchTensor.add(torchTensor)
 
     [<Benchmark; BenchmarkCategory("addition")>]
     member perf.addition_RawTensor_Torch() = 
@@ -299,7 +299,7 @@ type BasicTensorOps() =
     member perf.addScalar_TorchSharp() = 
         let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
-            res4 <- torchTensor.Add(torchScalar)
+            res4 <- torchTensor.add(torchScalar)
 
     [<Benchmark; BenchmarkCategory("addScalar")>]
     member perf.addScalar_RawTensor_Torch() = 
@@ -331,7 +331,7 @@ type BasicTensorOps() =
     member perf.addWithAlpha_TorchSharp() = 
         let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
-            res4 <- torchTensor.Add(torchTensor, alpha=torchScalar)
+            res4 <- torchTensor.add(torchTensor, alpha=torchScalar)
 
     [<Benchmark; BenchmarkCategory("addWithAlpha")>]
     member perf.addWithAlpha_RawTensor_Torch() = 
@@ -363,7 +363,7 @@ type BasicTensorOps() =
     member perf.addInPlace_TorchSharp() = 
         let n = perf.configure(Backend.Torch, 10) 
         for _ in 1 .. n do 
-            res4 <- torchTensor.AddInPlace(torchTensor)
+            res4 <- torchTensor.add_(torchTensor)
 
     [<Benchmark; BenchmarkCategory("addInPlace")>]
     member perf.addInPlace_RawTensor_Torch() = 
@@ -399,7 +399,7 @@ type BasicTensorOps() =
     member perf.matmul_TorchSharp() = 
         let n = perf.configure(Backend.Torch, 1) 
         for _ in 1 .. n do 
-            res4 <- matrixTorchTensor.MatMul(matrixTorchTensor)
+            res4 <- matrixTorchTensor.matmul(matrixTorchTensor)
 
     [<Benchmark; BenchmarkCategory("matmul")>]
     member perf.matmul_RawTensor_Torch() = 
