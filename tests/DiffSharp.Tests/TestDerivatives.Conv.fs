@@ -3602,11 +3602,11 @@ type TestDerivativesConv () =
                 [-1.0455e+00,  3.5461e+00,  6.6268e-01],
                 [-1.0636e+00,  5.4188e-01, -1.1473e-02]]]]).unsqueeze(0)
 
-            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
-            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
-            Assert.True(revz.allclose(revzCorrect, 0.01))
-            Assert.True(revxd.allclose(revxdCorrect, 0.01))
-            Assert.True(revyd.allclose(revydCorrect, 0.01))
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.05, 0.005))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05, 0.005))
+            Assert.True(revz.allclose(revzCorrect, 0.05, 0.005))
+            Assert.True(revxd.allclose(revxdCorrect, 0.05, 0.005))
+            Assert.True(revyd.allclose(revydCorrect, 0.05, 0.005))
 
     [<Test>]
     member _.TestDerivativeConv2Ds23p32d23 () =
@@ -3892,11 +3892,11 @@ type TestDerivativesConv () =
               [[ 0.7823, -0.4810],
                [ 0.7753, -0.7699]]]])
 
-            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
-            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
-            Assert.True(revz.allclose(revzCorrect, 0.01))
-            Assert.True(revxd.allclose(revxdCorrect, 0.01))
-            Assert.True(revyd.allclose(revydCorrect, 0.01))
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.05, 0.005))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05, 0.005))
+            Assert.True(revz.allclose(revzCorrect, 0.05, 0.005))
+            Assert.True(revxd.allclose(revxdCorrect, 0.05, 0.005))
+            Assert.True(revyd.allclose(revydCorrect, 0.05, 0.005))
 
     [<Test>]
     member _.TestDerivativeConv3DTTConst () =
