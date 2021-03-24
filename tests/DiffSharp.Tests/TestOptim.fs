@@ -55,12 +55,12 @@ type TestOptim () =
         // Trains a linear regressor
         let net = Linear(din, dout)
         let lr, epochs = 1e-1, 250
-        let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parametersVector
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
-                let g = dsharp.grad (loss inputs targets) p
-                p <- p - lr * g
+                let loss p = net.asFunction inputs p |> dsharp.mseLoss targets
+                let g = dsharp.grad loss net.parametersVector
+                net.parametersVector <- net.parametersVector - lr * g
+
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
