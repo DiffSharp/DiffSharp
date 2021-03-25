@@ -18,6 +18,18 @@ open DiffSharp.Backends
 open TorchSharp
 open TorchSharp.Tensor
 
+type TorchDevice = Torch.Device
+type Device = DiffSharp.Device
+
+[<AutoOpen>]
+module Extensions =
+    type DiffSharp.DeviceType with 
+        member x.ToTorch : TorchSharp.DeviceType = enum (int x)
+
+    type DiffSharp.Device with 
+        member x.ToTorch = TorchSharp.Device(x.DeviceType.ToTorch, x.DeviceIndex)
+
+
 /// For testing perf costs of the TorchSharp layer - going straght to the C++
 module Ext =
     open System.Runtime.InteropServices
@@ -154,10 +166,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.zeros([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.zeros([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Int64 -> Int64Tensor.zeros([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float32 -> Float64Tensor.zeros([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float64 -> Float32Tensor.zeros([| int64 perf.tensorSize |] , Device.Default.ToTorch)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("zeros")>]
@@ -192,10 +204,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.ones([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.ones([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Int64 -> Int64Tensor.ones([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float32 -> Float64Tensor.ones([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float64 -> Float32Tensor.ones([| int64 perf.tensorSize |] , Device.Default.ToTorch)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("ones")>]
@@ -230,10 +242,10 @@ type BasicTensorOps() =
         for _ in 1 .. n do 
             res4 <- 
                 match dtype with 
-                | Dtype.Int32 -> Int32Tensor.randint(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Int64 -> Int64Tensor.randint(10L, [| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float32 -> Float64Tensor.rand([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
-                | Dtype.Float64 -> Float32Tensor.rand([| int64 perf.tensorSize |] , enum (int Device.Default.DeviceType), Device.Default.DeviceIndex)
+                | Dtype.Int32 -> Int32Tensor.randint(10L, [| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Int64 -> Int64Tensor.randint(10L, [| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float32 -> Float64Tensor.rand([| int64 perf.tensorSize |] , Device.Default.ToTorch)
+                | Dtype.Float64 -> Float32Tensor.rand([| int64 perf.tensorSize |] , Device.Default.ToTorch)
                 | _ -> failwith "unknown dtype in perf testing"
 
     [<Benchmark; BenchmarkCategory("rand")>]
