@@ -1,6 +1,7 @@
 ﻿(*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
@@ -27,7 +28,7 @@ System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.Get
 
 // Set up formatting for notebooks
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
+Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
@@ -58,7 +59,6 @@ Now examine the device and backend:
 let device = t.device
 let backend = t.backend
 
-(*** include-fsi-output ***)
 (** 
 
 To move a tensor to the GPU use the following:
